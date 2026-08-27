@@ -4,14 +4,14 @@ var CARD_W = 1080;
 var CARD_H = 1350;
 
 function wrapTextCard(ctx, text, maxWidth) {
-  var chars = text.split("");
+  var words = text.split(" ");
   var lines = [];
   var current = "";
-  chars.forEach(function (ch) {
-    var test = current + ch;
+  words.forEach(function (word) {
+    var test = current ? current + " " + word : word;
     if (ctx.measureText(test).width > maxWidth && current) {
       lines.push(current);
-      current = ch;
+      current = word;
     } else {
       current = test;
     }

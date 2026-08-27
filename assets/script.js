@@ -62,17 +62,23 @@ function initWellForm() {
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    var input = document.getElementById("concernInput").value.trim();
-    var resultEl = document.getElementById("wellResult");
     var wellMsg = document.getElementById("wellMsg");
-    if (!input) {
-      if (wellMsg) wellMsg.textContent = "고민이나 마음 상태를 몇 단어로 적어주세요.";
-      return;
+    try {
+      var input = document.getElementById("concernInput").value.trim();
+      var resultEl = document.getElementById("wellResult");
+      if (!input) {
+        if (wellMsg) wellMsg.textContent = "고민이나 마음 상태를 몇 단어로 적어주세요.";
+        return;
+      }
+      if (wellMsg) wellMsg.textContent = "";
+      var verse = matchConcernVerse(input);
+      resultEl.style.display = "block";
+      renderVerseInto("wellVerseCard", verse);
+      document.getElementById("concernInput").blur();
+      resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (err) {
+      if (wellMsg) wellMsg.textContent = "일시적인 오류가 발생했어요. 새로고침 후 다시 시도해주세요.";
     }
-    if (wellMsg) wellMsg.textContent = "";
-    var verse = matchConcernVerse(input);
-    resultEl.style.display = "block";
-    renderVerseInto("wellVerseCard", verse);
   });
 }
 
