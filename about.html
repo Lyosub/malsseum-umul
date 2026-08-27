@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>사이트 소개 | 말씀우물</title>
+<meta name="description" content="말씀우물이 어떤 사이트인지, 이름의 유래와 주요 기능을 소개합니다.">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap">
+  <section class="hero">
+    <h1>말씀우물 소개</h1>
+    <p>매일의 갈증을 안고 찾아오는 우물가처럼</p>
+  </section>
+
+  <div class="card">
+    <h3 style="margin-top:0;color:var(--well-deep);">'말씀우물'이라는 이름</h3>
+    <p style="color:var(--text-soft);font-size:14px;">
+      요한복음 4장, 사마리아 여인은 목마름을 안고 우물가로 나왔다가 예수님을 만납니다. "내가 주는 물을 마시는 자는 영원히 목마르지 아니하리니 내가 주는 물은 그 속에서 영생하도록 솟아나는 샘물이 되리라"(요 4:14).
+    </p>
+    <p style="color:var(--text-soft);font-size:14px;">
+      흥미롭게도 이 본문에서 "야곱의 우물"과 예수님이 말씀하신 "솟아나는 샘물"은 헬라어로 같은 단어, <strong style="color:var(--well);">πηγή(페게)</strong>로 쓰였습니다. 그리고 "말씀"은 잘 알려진 대로 <strong style="color:var(--well);">λόγος(로고스)</strong>입니다.
+    </p>
+    <p style="color:var(--text-soft);font-size:14px;margin-bottom:0;">
+      매일의 고민과 목마름을 안고 우물가로 나왔던 그 여인처럼, 이곳에서도 말씀이라는 샘물을 길어 올려가시길 바라는 마음으로 '말씀우물'이라 이름 붙였습니다.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;color:var(--well-deep);">어떤 사이트인가요?</h3>
+    <p style="color:var(--text-soft);font-size:14px;margin-bottom:0;">
+      말씀우물은 매일 조금씩 말씀을 가까이 두고 싶은 분들을 위한 작은 신앙 도구 모음입니다. 거창한 앱이 아니라, 하루 1분이라도 말씀 한 구절을 길어 올릴 수 있도록 돕는 것이 목표입니다.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;color:var(--well-deep);">이런 기능들이 있어요</h3>
+    <p style="font-size:14.5px;line-height:2;margin:0;">
+      📢 <strong>공지사항</strong> — 말씀우물의 새로운 소식<br>
+      📅 <strong>이달의 일정</strong> — 이번 달 캘린더로 보는 일정<br>
+      📖 <strong>말씀 카드</strong> — 하루·주간·월간 말씀<br>
+      💧 <strong>말씀우물</strong> — 고민이나 마음 상태를 적으면 그에 맞는 말씀·묵상·기도문 안내<br>
+      📚 <strong>성경 읽기</strong> — 책과 장을 골라 성경 본문 바로 읽기<br>
+      ✍️ <strong>나의 기록</strong> — 감사노트·기도제목·하루인사 기록, 출석 체크, 친구들과 그룹 만들어 함께 출석<br>
+      🧭 <strong>MBTI 성경인물</strong> — 16가지 유형과 닮은 성경 속 인물, 이달의 성경인물이 매달 순환 소개<br>
+      📱 <strong>이달의 배경화면</strong> — 이번 달 말씀과 달력이 담긴 휴대폰 배경화면 다운로드
+    </p>
+  </div>
+
+  <div class="card" style="text-align:center;">
+    <p style="color:var(--text-soft);font-size:14px;margin:0 0 12px;">이제 말씀우물을 둘러보러 가볼까요?</p>
+    <a href="index.html" class="btn block">홈으로 가기</a>
+  </div>
+</div>
+<footer class="site">
+  💧 말씀우물 · <a href="privacy.html">개인정보처리방침</a><br>
+  성경 인용: 개역개정판, ⓒ 대한성서공회
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="assets/auth.js"></script>
+<script>
+  initHeaderAuthState();
+</script>
+</body>
+</html>
