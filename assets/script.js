@@ -41,10 +41,12 @@ function initWellForm() {
     e.preventDefault();
     var input = document.getElementById("concernInput").value.trim();
     var resultEl = document.getElementById("wellResult");
+    var wellMsg = document.getElementById("wellMsg");
     if (!input) {
-      resultEl.innerHTML = '<p class="msg">고민이나 마음 상태를 몇 단어로 적어주세요.</p>';
+      if (wellMsg) wellMsg.textContent = "고민이나 마음 상태를 몇 단어로 적어주세요.";
       return;
     }
+    if (wellMsg) wellMsg.textContent = "";
     var verse = matchConcernVerse(input);
     resultEl.style.display = "block";
     renderVerseInto("wellVerseCard", verse);
