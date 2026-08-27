@@ -176,3 +176,68 @@ begin
     order by total_days desc;
 end;
 $$;
+
+-- 관리자 표시 (본인이 직접 켤 수 없도록 profiles의 일반 UPDATE 정책과 분리해서 관리)
+alter table profiles add column if not exists is_admin boolean not null default false;
+
+-- ⚠️ 최초 관리자 지정은 SQL Editor에서 아래처럼 수동으로 한 번 실행할 것 (가입 후 본인 이메일로):
+--   update profiles set is_admin = true where user_id = (select id from auth.users where email = '본인이메일@example.com');
+
+-- 공지사항 (관리자만 작성/수정/삭제, 누구나 조회 가능)
+create table if not exists announcements (
+  id bigint generated always as identity primary key,
+  title text not null,
+  content text not null,
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table announcements enable row level security;
+
+create policy "공지사항은 누구나 조회 가능" on announcements
+  for select using (true);
+
+create policy "관리자만 공지사항 작성" on announcements
+  for insert with check (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );
+
+create policy "관리자만 공지사항 수정" on announcements
+  for update using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );
+
+create policy "관리자만 공지사항 삭제" on announcements
+  for delete using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );
+
+-- 이달의 일정 (캘린더, 관리자만 작성/수정/삭제, 누구나 조회 가능)
+create table if not exists calendar_events (
+  id bigint generated always as identity primary key,
+  event_date date not null,
+  title text not null,
+  description text,
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table calendar_events enable row level security;
+
+create policy "일정은 누구나 조회 가능" on calendar_events
+  for select using (true);
+
+create policy "관리자만 일정 작성" on calendar_events
+  for insert with check (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );
+
+create policy "관리자만 일정 수정" on calendar_events
+  for update using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );
+
+create policy "관리자만 일정 삭제" on calendar_events
+  for delete using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );
