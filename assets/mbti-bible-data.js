@@ -84,3 +84,13 @@ var MBTI_BIBLE = {
     desc: "홍해를 건넌 직후, 미리암은 소고를 들고 춤추며 즉흥적으로 승리의 찬양을 이끌었습니다. 그의 표현력과 현장의 감정을 즉각 행동으로 옮기는 에너지는 이스라엘 공동체 전체의 기쁨을 하나로 모았습니다. ESFP의 생동감 있는 표현력과 사람들과 함께 순간을 나누는 능력이 미리암을 통해 드러납니다."
   }
 };
+
+// 이달의 성경인물 — 16유형을 월별로 순환 (매달 1개씩, 16개월 주기로 반복)
+var MBTI_TYPE_ORDER = Object.keys(MBTI_BIBLE);
+
+function getFeaturedMbtiType() {
+  var now = new Date();
+  var monthsSinceEpoch = now.getFullYear() * 12 + now.getMonth();
+  var idx = monthsSinceEpoch % MBTI_TYPE_ORDER.length;
+  return MBTI_TYPE_ORDER[idx];
+}

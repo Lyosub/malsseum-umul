@@ -28,10 +28,10 @@ function wrapText(ctx, text, maxWidth) {
 
 function loadWallpaperFonts() {
   var specs = [
-    '700 160px "Gaegu"',
+    '400 160px "Jua"',
     '400 38px "Pretendard"',
-    '700 46px "Gowun Batang"',
-    '400 30px "Gowun Batang"'
+    '400 46px "Gamja Flower"',
+    '400 30px "Gamja Flower"'
   ];
   var promises = specs.map(function (spec) {
     return document.fonts.load(spec).catch(function () {});
@@ -55,12 +55,56 @@ function drawWallpaper(canvas, verse) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, WALL_W, WALL_H);
 
-  // 은은한 태양 글로우
-  var glow = ctx.createRadialGradient(WALL_W / 2, WALL_H * 0.62, 20, WALL_W / 2, WALL_H * 0.62, WALL_W * 0.55);
-  glow.addColorStop(0, "rgba(255, 230, 180, 0.35)");
+  // 은은한 태양 글로우 (달력과 말씀 사이 여백에 배치)
+  var sunY = WALL_H * 0.40;
+  var glow = ctx.createRadialGradient(WALL_W / 2, sunY, 20, WALL_W / 2, sunY, WALL_W * 0.6);
+  glow.addColorStop(0, "rgba(255, 230, 180, 0.4)");
   glow.addColorStop(1, "rgba(255, 230, 180, 0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, WALL_W, WALL_H);
+
+  // 태양(달)
+  ctx.beginPath();
+  ctx.arc(WALL_W / 2, sunY, 90, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255, 245, 225, 0.85)";
+  ctx.fill();
+
+  // 새 (V자 실루엣, 자연스러운 디테일)
+  function drawBird(bx, by, size) {
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(bx - size, by);
+    ctx.quadraticCurveTo(bx - size / 2, by - size / 2, bx, by);
+    ctx.quadraticCurveTo(bx + size / 2, by - size / 2, bx + size, by);
+    ctx.stroke();
+  }
+  drawBird(260, WALL_H * 0.34, 24);
+  drawBird(330, WALL_H * 0.37, 18);
+  drawBird(760, WALL_H * 0.33, 20);
+
+  // 먼 산 실루엣
+  ctx.fillStyle = "rgba(20, 15, 10, 0.16)";
+  ctx.beginPath();
+  ctx.moveTo(0, WALL_H * 0.50);
+  ctx.quadraticCurveTo(WALL_W * 0.2, WALL_H * 0.45, WALL_W * 0.42, WALL_H * 0.49);
+  ctx.quadraticCurveTo(WALL_W * 0.6, WALL_H * 0.53, WALL_W * 0.8, WALL_H * 0.47);
+  ctx.quadraticCurveTo(WALL_W * 0.92, WALL_H * 0.44, WALL_W, WALL_H * 0.48);
+  ctx.lineTo(WALL_W, WALL_H * 0.56);
+  ctx.lineTo(0, WALL_H * 0.56);
+  ctx.closePath();
+  ctx.fill();
+
+  // 가까운 산 실루엣
+  ctx.fillStyle = "rgba(15, 10, 8, 0.28)";
+  ctx.beginPath();
+  ctx.moveTo(0, WALL_H * 0.57);
+  ctx.quadraticCurveTo(WALL_W * 0.25, WALL_H * 0.52, WALL_W * 0.5, WALL_H * 0.565);
+  ctx.quadraticCurveTo(WALL_W * 0.7, WALL_H * 0.6, WALL_W, WALL_H * 0.545);
+  ctx.lineTo(WALL_W, WALL_H * 0.62);
+  ctx.lineTo(0, WALL_H * 0.62);
+  ctx.closePath();
+  ctx.fill();
 
   // 물결 실루엣 (하단)
   ctx.fillStyle = "rgba(20, 15, 10, 0.18)";
@@ -82,7 +126,7 @@ function drawWallpaper(canvas, verse) {
   var monthLabel = MONTH_NAMES_KR[now.getMonth()];
 
   // 월 타이틀
-  ctx.font = '700 150px "Gaegu"';
+  ctx.font = '400 150px "Jua"';
   ctx.fillText(monthLabel, WALL_W / 2, 260);
 
   // 달력 그리드 (요일 정렬 없이 1~말일 순서로만 배치)
@@ -102,28 +146,17 @@ function drawWallpaper(canvas, verse) {
     var row = Math.floor(idx / cols);
     var x = startX + col * cellW;
     var y = startY + row * cellH;
-    var isToday = d === now.getDate();
-    if (isToday) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(x, y - 12, 30, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,255,255,0.28)";
-      ctx.fill();
-      ctx.restore();
-      ctx.fillStyle = "#ffffff";
-    } else {
-      ctx.fillStyle = "rgba(255,255,255,0.85)";
-    }
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
     ctx.fillText(String(d), x, y);
   }
 
   // 말씀 영역
   ctx.shadowBlur = 10;
   ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.font = '400 30px "Gowun Batang", serif';
+  ctx.font = '400 30px "Gamja Flower", serif';
   ctx.fillText(verse.ref, WALL_W / 2, WALL_H * 0.68);
 
-  ctx.font = '700 44px "Gowun Batang", serif';
+  ctx.font = '400 44px "Gamja Flower", serif';
   ctx.fillStyle = "#ffffff";
   var maxTextWidth = WALL_W * 0.8;
   var lines = wrapText(ctx, verse.text, maxTextWidth);

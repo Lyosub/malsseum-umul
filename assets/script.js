@@ -13,6 +13,29 @@ function initHomeCard() {
   renderVerseInto("homeVerseCard", getVerseFor("daily"));
 }
 
+function handleCharImgError(imgEl) {
+  var placeholder = document.createElement("div");
+  placeholder.style.cssText = "width:140px;height:140px;margin:0 auto 12px;border-radius:50%;background:var(--well-light);display:flex;align-items:center;justify-content:center;font-size:44px;color:#fff;";
+  placeholder.textContent = "🧑";
+  imgEl.replaceWith(placeholder);
+}
+
+function initFeaturedMbti() {
+  var el = document.getElementById("featuredMbti");
+  if (!el || typeof MBTI_BIBLE === "undefined") return;
+  var type = getFeaturedMbtiType();
+  var v = MBTI_BIBLE[type];
+  var imgPath = "assets/characters/" + type + ".png";
+  el.innerHTML =
+    '<img src="' + imgPath + '" alt="' + type + ' ' + v.figure + ' 캐릭터" ' +
+      'style="width:140px;height:140px;object-fit:contain;margin:0 auto 12px;display:block;" ' +
+      'onerror="handleCharImgError(this)">' +
+    '<div style="text-align:center;font-weight:800;color:var(--well-deep);">' + type + ' — ' + v.figure + '</div>' +
+    '<div style="text-align:center;font-size:13px;color:var(--gold);margin:4px 0 10px;">' + v.verse.ref + '</div>' +
+    '<p style="text-align:center;font-size:13.5px;color:var(--text-soft);">' + v.desc + '</p>' +
+    '<a href="mbti.html" class="btn block" style="margin-top:10px;">MBTI 성경인물 더 보기</a>';
+}
+
 function initVerseTabs() {
   var tabs = document.querySelectorAll(".tabs button");
   if (!tabs.length) return;
@@ -75,6 +98,9 @@ function initMbtiGrid() {
       var type = item.getAttribute("data-type");
       var v = MBTI_BIBLE[type];
       detail.innerHTML =
+        '<img src="assets/characters/' + type + '.png" alt="' + type + ' ' + v.figure + ' 캐릭터" ' +
+          'style="width:120px;height:120px;object-fit:contain;margin:0 auto 10px;display:block;" ' +
+          'onerror="handleCharImgError(this)">' +
         '<h3>' + type + ' — ' + v.figure + '</h3>' +
         '<div class="sub">' + v.verse.ref + '</div>' +
         '<p style="font-style:italic;color:var(--text-soft);">"' + v.verse.text + '"</p>' +
