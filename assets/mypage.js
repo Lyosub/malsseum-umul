@@ -71,14 +71,7 @@ function ensureProfile(session) {
   return client.from("profiles").upsert({ user_id: session.user.id, nickname: nickname }).then(function () {});
 }
 
-function generateInviteCode() {
-  var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  var code = "";
-  for (var i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
+// 초대 코드는 create_group RPC(schema.sql)가 서버에서 생성함 — 클라이언트에서는 만들지 않음
 
 function initGroup(userId) {
   var client = getClient();
@@ -146,20 +139,15 @@ function initGroup(userId) {
         return;
       }
       msg.textContent = "생성 중...";
-      var code = generateInviteCode();
-      client.from("groups").insert({ name: name, invite_code: code, created_by: userId })
-        .select().single()
-        .then(function (res) {
-          if (res.error) {
-            msg.textContent = "그룹 생성에 실패했어요.";
-            return;
-          }
-          return client.from("group_members").insert({ group_id: res.data.id, user_id: userId })
-            .then(function () {
-              msg.textContent = "";
-              showGroup(res.data);
-            });
-        });
+      client.rpc("create_group", { p_name: name }).then(function (res) {
+        if (res.error || !res.data || !res.data.length) {
+          msg.textContent = "그룹 생성에 실패했어요.";
+          return;
+        }
+        msg.textContent = "";
+        var row = res.data[0];
+        showGroup({ id: row.group_id, name: row.group_name, invite_code: row.invite_code });
+      });
     });
   }
 

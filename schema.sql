@@ -91,6 +91,43 @@ create policy "본인 멤버십만 조회" on group_members
 create policy "본인 멤버십만 등록" on group_members
   for insert with check (auth.uid() = user_id);
 
+-- 그룹 생성 (그룹 생성 직후엔 아직 본인이 멤버가 아니라서 groups의 SELECT 정책(멤버만 조회)에
+-- 걸려 방금 만든 행을 못 읽어오는 문제가 있었음 — 생성+본인 멤버 등록을 한 트랜잭션으로 묶어서 해결)
+create or replace function create_group(p_name text)
+returns table(group_id bigint, group_name text, invite_code text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_code text;
+  v_id bigint;
+  v_chars text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  v_tries int := 0;
+begin
+  loop
+    v_code := '';
+    for i in 1..6 loop
+      v_code := v_code || substr(v_chars, (floor(random() * length(v_chars)) + 1)::int, 1);
+    end loop;
+    exit when not exists (select 1 from groups g where g.invite_code = v_code);
+    v_tries := v_tries + 1;
+    if v_tries > 10 then
+      raise exception '초대 코드 생성에 실패했습니다. 다시 시도해주세요.';
+    end if;
+  end loop;
+
+  insert into groups (name, invite_code, created_by)
+  values (p_name, v_code, auth.uid())
+  returning id into v_id;
+
+  insert into group_members (group_id, user_id)
+  values (v_id, auth.uid());
+
+  return query select v_id, p_name, v_code;
+end;
+$$;
+
 -- 초대 코드로 그룹 참여 (RLS를 우회해 코드로 그룹을 찾은 뒤 본인을 멤버로 등록)
 create or replace function join_group_by_code(p_code text)
 returns table(group_id bigint, group_name text)
