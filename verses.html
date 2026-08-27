@@ -20,7 +20,7 @@
 <div class="wrap">
   <section class="hero">
     <h1>말씀 카드</h1>
-    <p>날짜에 따라 자동으로 바뀌는 말씀입니다</p>
+    <p>하루·주간·월간, 기간마다 한 번씩 말씀을 뽑아보세요</p>
   </section>
 
   <div class="tabs">
@@ -29,7 +29,10 @@
     <button data-kind="monthly">이번 달</button>
   </div>
 
-  <div id="verseCard" class="verse-card"></div>
+  <button id="drawBtn" class="btn block">오늘의 말씀 뽑기 🎲</button>
+  <p class="msg" id="drawMsg" style="text-align:center;"></p>
+
+  <div id="verseCard" class="verse-card" style="display:none;"></div>
 
   <p class="msg" style="text-align:center;">캡처해서 저장하거나 오늘의 묵상 노트에 옮겨 적어보세요.</p>
 </div>

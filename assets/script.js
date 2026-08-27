@@ -36,24 +36,74 @@ function initFeaturedMbti() {
     '<a href="mbti.html" class="btn block" style="margin-top:10px;">MBTI 성경인물 더 보기</a>';
 }
 
+var DRAW_LABELS = {
+  daily: { draw: "오늘의 말씀 뽑기 🎲", already: "오늘은 이미 뽑으셨어요. 내일 다시 뽑을 수 있어요." },
+  weekly: { draw: "이번 주 말씀 뽑기 🎲", already: "이번 주는 이미 뽑으셨어요. 다음 주에 다시 뽑을 수 있어요." },
+  monthly: { draw: "이번 달 말씀 뽑기 🎲", already: "이번 달은 이미 뽑으셨어요. 다음 달에 다시 뽑을 수 있어요." }
+};
+
+function renderDrawnVerseInto(elId, verse, kind) {
+  var el = document.getElementById(elId);
+  if (!el || !verse) return;
+  var extra = "";
+  if (kind === "monthly" && verse.keyword) {
+    extra =
+      '<div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.25);">' +
+        '<div style="font-size:12px;opacity:0.8;letter-spacing:0.03em;margin-bottom:6px;">이달의 키워드</div>' +
+        '<div style="font-weight:800;font-size:17px;margin-bottom:10px;">' + verse.keyword + '</div>' +
+        (verse.interpretation ? '<div style="font-size:13px;line-height:1.7;opacity:0.92;">' + verse.interpretation + '</div>' : '') +
+      '</div>';
+  }
+  el.innerHTML =
+    '<div class="ref">' + verse.ref + '</div>' +
+    '<div class="text">' + verse.text + '</div>' +
+    (verse.note ? '<div class="note">' + verse.note + '</div>' : '') +
+    extra;
+}
+
 function initVerseTabs() {
   var tabs = document.querySelectorAll(".tabs button");
-  if (!tabs.length) return;
+  var drawBtn = document.getElementById("drawBtn");
+  var drawMsg = document.getElementById("drawMsg");
+  var cardEl = document.getElementById("verseCard");
+  if (!tabs.length || !drawBtn || !cardEl) return;
 
-  function show(kind) {
-    renderVerseInto("verseCard", getVerseFor(kind));
-    tabs.forEach(function (t) {
-      t.classList.toggle("active", t.getAttribute("data-kind") === kind);
-    });
+  var currentKind = "daily";
+
+  function refresh() {
+    var existing = getDrawnVerse(currentKind);
+    if (existing) {
+      renderDrawnVerseInto("verseCard", existing, currentKind);
+      cardEl.style.display = "block";
+      drawBtn.style.display = "none";
+      drawMsg.textContent = DRAW_LABELS[currentKind].already;
+    } else {
+      cardEl.style.display = "none";
+      drawBtn.style.display = "block";
+      drawBtn.textContent = DRAW_LABELS[currentKind].draw;
+      drawMsg.textContent = "";
+    }
   }
 
   tabs.forEach(function (tab) {
     tab.addEventListener("click", function () {
-      show(tab.getAttribute("data-kind"));
+      currentKind = tab.getAttribute("data-kind");
+      tabs.forEach(function (t) {
+        t.classList.toggle("active", t === tab);
+      });
+      refresh();
     });
   });
 
-  show("daily");
+  drawBtn.addEventListener("click", function () {
+    var verse = drawRandomVerse(currentKind);
+    renderDrawnVerseInto("verseCard", verse, currentKind);
+    cardEl.style.display = "block";
+    drawBtn.style.display = "none";
+    drawMsg.textContent = DRAW_LABELS[currentKind].already;
+  });
+
+  refresh();
 }
 
 function renderWellVerseInto(elId, verse) {
