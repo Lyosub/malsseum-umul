@@ -19,8 +19,8 @@ function wrapTextWeekly(ctx, text, maxWidth) {
   return lines;
 }
 
-function waitForSingleDayFont(triesLeft) {
-  if (document.fonts.check('400 40px "Single Day"')) {
+function waitForCardFont(triesLeft) {
+  if (document.fonts.check('400 40px "East Sea Dokdo"')) {
     return Promise.resolve(true);
   }
   if (triesLeft <= 0) {
@@ -28,19 +28,19 @@ function waitForSingleDayFont(triesLeft) {
   }
   return new Promise(function (resolve) {
     setTimeout(function () {
-      resolve(waitForSingleDayFont(triesLeft - 1));
+      resolve(waitForCardFont(triesLeft - 1));
     }, 200);
   });
 }
 
 function loadWeeklyCardFonts() {
-  var specs = ['400 72px "Single Day"', '400 46px "Single Day"', '400 30px "Pretendard"'];
+  var specs = ['400 72px "East Sea Dokdo"', '400 46px "East Sea Dokdo"', '400 30px "Pretendard"'];
   var promises = specs.map(function (spec) {
     return document.fonts.load(spec).catch(function () {});
   });
   return Promise.all(promises)
     .then(function () { return document.fonts.ready; })
-    .then(function () { return waitForSingleDayFont(15); });
+    .then(function () { return waitForCardFont(15); });
 }
 
 function drawCardNatureScene(ctx, W, H) {
@@ -124,7 +124,7 @@ function drawWeeklyCard(canvas, msg) {
   ctx.shadowColor = "rgba(0,0,0,0.4)";
   ctx.shadowBlur = 14;
 
-  ctx.font = '400 76px "Single Day"';
+  ctx.font = '400 76px "East Sea Dokdo"';
   ctx.fillStyle = "#ffffff";
   var titleLines = wrapTextWeekly(ctx, msg.title, W * 0.82);
   var titleY = 190;
@@ -135,7 +135,7 @@ function drawWeeklyCard(canvas, msg) {
   var afterTitleY = titleY + (titleLines.length - 1) * 84 + 90;
 
   ctx.shadowBlur = 10;
-  ctx.font = '400 48px "Single Day"';
+  ctx.font = '400 48px "East Sea Dokdo"';
   ctx.fillStyle = "#ffffff";
   var verseLines = wrapTextWeekly(ctx, '"' + msg.verseText + '"', W * 0.78);
   verseLines.forEach(function (line, i) {
@@ -144,7 +144,7 @@ function drawWeeklyCard(canvas, msg) {
 
   var refY = afterTitleY + verseLines.length * 60 + 46;
   ctx.shadowBlur = 6;
-  ctx.font = '400 32px "Single Day"';
+  ctx.font = '400 32px "East Sea Dokdo"';
   ctx.fillStyle = "rgba(255,255,255,0.9)";
   ctx.fillText("(" + msg.verseRef + ")", W / 2, refY);
 
