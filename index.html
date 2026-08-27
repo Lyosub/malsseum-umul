@@ -26,27 +26,16 @@
 
   <div id="homeVerseCard" class="verse-card"></div>
 
-  <div class="card">
-    <h3 style="margin-top:0;color:var(--well-deep);">📢 공지사항</h3>
-    <div id="homeAnnouncements"></div>
-    <a href="notice.html" class="btn ghost block" style="margin-top:10px;">공지사항 전체 보기</a>
-  </div>
-
   <div class="nav-cards">
-    <a class="nav-card" href="wallpaper.html" style="grid-column: 1 / -1;">
-      <div class="icon">📱</div>
-      <div class="title">이달의 배경화면 (NEW)</div>
-      <div class="desc">이번 달 말씀+달력 배경화면 다운로드</div>
+    <a class="nav-card" href="notice.html">
+      <div class="icon">📢</div>
+      <div class="title">공지사항</div>
+      <div class="desc">새로운 소식 확인</div>
     </a>
     <a class="nav-card" href="calendar.html">
       <div class="icon">📅</div>
       <div class="title">이달의 일정</div>
       <div class="desc">캘린더로 보는 일정</div>
-    </a>
-    <a class="nav-card" href="notice.html">
-      <div class="icon">📢</div>
-      <div class="title">공지사항</div>
-      <div class="desc">새로운 소식 확인</div>
     </a>
     <a class="nav-card" href="verses.html">
       <div class="icon">📖</div>
@@ -58,20 +47,25 @@
       <div class="title">말씀우물</div>
       <div class="desc">고민을 적으면 말씀이</div>
     </a>
-    <a class="nav-card" href="mbti.html">
-      <div class="icon">🧭</div>
-      <div class="title">MBTI 성경인물</div>
-      <div class="desc">나와 닮은 성경 속 인물</div>
+    <a class="nav-card" href="read.html">
+      <div class="icon">📚</div>
+      <div class="title">성경 읽기</div>
+      <div class="desc">책·장 골라서 바로 읽기</div>
     </a>
     <a class="nav-card" href="mypage.html">
       <div class="icon">✍️</div>
       <div class="title">나의 기록</div>
       <div class="desc">감사노트·기도제목·출석</div>
     </a>
-    <a class="nav-card" href="read.html">
-      <div class="icon">📚</div>
-      <div class="title">성경 읽기</div>
-      <div class="desc">책·장 골라서 바로 읽기</div>
+    <a class="nav-card" href="mbti.html">
+      <div class="icon">🧭</div>
+      <div class="title">MBTI 성경인물</div>
+      <div class="desc">나와 닮은 성경 속 인물</div>
+    </a>
+    <a class="nav-card" href="wallpaper.html">
+      <div class="icon">📱</div>
+      <div class="title">이달의 배경화면</div>
+      <div class="desc">말씀+달력 배경화면 다운로드</div>
     </a>
   </div>
 
@@ -102,13 +96,11 @@
 <script src="assets/supabase-config.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>
-<script src="assets/notice.js"></script>
 <script src="assets/script.js"></script>
 <script>
   initHomeCard();
   initFeaturedMbti();
   initHeaderAuthState();
-  loadAnnouncements("homeAnnouncements", 2);
 </script>
 </body>
 </html>
