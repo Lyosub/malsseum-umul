@@ -56,6 +56,21 @@ function initVerseTabs() {
   show("daily");
 }
 
+function renderWellVerseInto(elId, verse) {
+  var el = document.getElementById(elId);
+  if (!el || !verse) return;
+  el.innerHTML =
+    '<div class="well-ref">' + verse.ref + '</div>' +
+    '<div class="well-verse-text">"' + verse.text + '"</div>' +
+    '<hr class="well-divider">' +
+    '<div class="well-label">묵상</div>' +
+    '<p class="well-meditation">' + (verse.meditation || "") + '</p>' +
+    '<div class="well-prayer-box">' +
+      '<div class="well-label">오늘의 기도</div>' +
+      '<p class="well-prayer-text">' + (verse.prayer || "") + '</p>' +
+    '</div>';
+}
+
 function initWellForm() {
   var form = document.getElementById("wellForm");
   if (!form) return;
@@ -73,7 +88,7 @@ function initWellForm() {
       if (wellMsg) wellMsg.textContent = "";
       var verse = matchConcernVerse(input);
       resultEl.style.display = "block";
-      renderVerseInto("wellVerseCard", verse);
+      renderWellVerseInto("wellVerseCard", verse);
       document.getElementById("concernInput").blur();
       resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (err) {
