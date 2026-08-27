@@ -28,10 +28,10 @@ function wrapText(ctx, text, maxWidth) {
 
 function loadWallpaperFonts() {
   var specs = [
-    '400 160px "Jua"',
+    '800 160px "Pretendard"',
     '400 38px "Pretendard"',
-    '400 46px "Gamja Flower"',
-    '400 30px "Gamja Flower"'
+    '400 46px "Pretendard"',
+    '400 30px "Pretendard"'
   ];
   var promises = specs.map(function (spec) {
     return document.fonts.load(spec).catch(function () {});
@@ -126,7 +126,7 @@ function drawWallpaper(canvas, verse) {
   var monthLabel = MONTH_NAMES_KR[now.getMonth()];
 
   // 월 타이틀
-  ctx.font = '400 150px "Jua"';
+  ctx.font = '800 150px "Pretendard"';
   ctx.fillText(monthLabel, WALL_W / 2, 260);
 
   // 달력 그리드 (요일 정렬 없이 1~말일 순서로만 배치)
@@ -153,10 +153,10 @@ function drawWallpaper(canvas, verse) {
   // 말씀 영역
   ctx.shadowBlur = 10;
   ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.font = '400 30px "Gamja Flower", serif';
+  ctx.font = '400 30px "Pretendard", serif';
   ctx.fillText(verse.ref, WALL_W / 2, WALL_H * 0.68);
 
-  ctx.font = '400 44px "Gamja Flower", serif';
+  ctx.font = '400 44px "Pretendard", serif';
   ctx.fillStyle = "#ffffff";
   var maxTextWidth = WALL_W * 0.8;
   var lines = wrapText(ctx, verse.text, maxTextWidth);

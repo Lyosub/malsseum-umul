@@ -29,9 +29,9 @@ function firstSentence(text) {
 
 function loadCardFonts() {
   var specs = [
-    '400 130px "Jua"',
-    '400 44px "Gamja Flower"',
-    '400 32px "Gamja Flower"',
+    '800 130px "Pretendard"',
+    '400 44px "Pretendard"',
+    '400 32px "Pretendard"',
     '400 30px "Pretendard"'
   ];
   var promises = specs.map(function (spec) {
@@ -59,23 +59,23 @@ function drawMbtiCard(canvas, type, data) {
   ctx.shadowBlur = 12;
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = '400 130px "Jua"';
+  ctx.font = '800 130px "Pretendard"';
   ctx.fillText(type, CARD_W / 2, 220);
 
   ctx.font = '400 34px "Pretendard", sans-serif';
   ctx.fillStyle = "rgba(255,255,255,0.9)";
   ctx.fillText("나와 닮은 성경 속 인물", CARD_W / 2, 280);
 
-  ctx.font = '400 56px "Gamja Flower", serif';
+  ctx.font = '400 56px "Pretendard", serif';
   ctx.fillStyle = "#ffffff";
   ctx.fillText(data.figure, CARD_W / 2, 400);
 
-  ctx.font = '400 32px "Gamja Flower", serif';
+  ctx.font = '400 32px "Pretendard", serif';
   ctx.fillStyle = "rgba(255,255,255,0.85)";
   ctx.fillText(data.verse.ref, CARD_W / 2, 460);
 
   ctx.shadowBlur = 8;
-  ctx.font = '400 36px "Gamja Flower", serif';
+  ctx.font = '400 36px "Pretendard", serif';
   ctx.fillStyle = "#ffffff";
   var verseLines = wrapTextCard(ctx, '"' + data.verse.text + '"', CARD_W * 0.82);
   var vy = 540;
