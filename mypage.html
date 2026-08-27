@@ -46,6 +46,35 @@
     <h3 style="margin-top:0;">지난 기록</h3>
     <div id="noteList"></div>
   </div>
+
+  <div class="card" id="groupSection">
+    <h3 style="margin-top:0;">우리 그룹</h3>
+    <p class="msg" id="groupMsg"></p>
+
+    <div id="groupNone" style="display:none;">
+      <p style="color:var(--text-soft);font-size:13.5px;">친구들과 그룹을 만들거나, 초대받은 코드로 참여해서 함께 출석해보세요.</p>
+      <form id="createGroupForm" style="margin-bottom:16px;">
+        <div class="form-row">
+          <label for="groupNameInput">새 그룹 만들기</label>
+          <input type="text" id="groupNameInput" placeholder="예: 중등부 3반">
+        </div>
+        <button type="submit" class="btn block">그룹 만들기</button>
+      </form>
+      <form id="joinGroupForm">
+        <div class="form-row">
+          <label for="joinCodeInput">초대 코드로 참여하기</label>
+          <input type="text" id="joinCodeInput" placeholder="6자리 코드 입력">
+        </div>
+        <button type="submit" class="btn ghost block">참여하기</button>
+      </form>
+    </div>
+
+    <div id="groupHas" style="display:none;">
+      <p style="margin:0 0 4px;font-weight:700;" id="groupName"></p>
+      <p style="color:var(--text-soft);font-size:13px;margin-top:0;">초대 코드: <strong id="groupCode" style="color:var(--well);"></strong> (친구에게 공유해보세요)</p>
+      <div id="leaderboardList" style="margin-top:14px;"></div>
+    </div>
+  </div>
 </div>
 
 <div class="wrap auth-gate" id="loginGate">
@@ -67,8 +96,11 @@
     }
     document.getElementById("loginGate").style.display = "none";
     document.getElementById("pageContent").style.display = "block";
-    initAttendance(session.user.id);
-    initNotes(session.user.id);
+    ensureProfile(session).then(function () {
+      initAttendance(session.user.id);
+      initNotes(session.user.id);
+      initGroup(session.user.id);
+    });
   });
 </script>
 </body>

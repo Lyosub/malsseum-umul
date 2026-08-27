@@ -78,7 +78,8 @@ function initMbtiGrid() {
         '<h3>' + type + ' — ' + v.figure + '</h3>' +
         '<div class="sub">' + v.verse.ref + '</div>' +
         '<p style="font-style:italic;color:var(--text-soft);">"' + v.verse.text + '"</p>' +
-        '<p>' + v.desc + '</p>';
+        '<p>' + v.desc + '</p>' +
+        '<button class="btn block" onclick="saveMbtiCard(\'' + type + '\')">📸 카드로 저장하기</button>';
       detail.classList.add("open");
       detail.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });

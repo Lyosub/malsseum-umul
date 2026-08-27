@@ -64,6 +64,130 @@ function initAttendance(userId) {
   refreshStreak();
 }
 
+function ensureProfile(session) {
+  var client = getClient();
+  if (!client) return Promise.resolve();
+  var nickname = (session.user.user_metadata && session.user.user_metadata.nickname) || "익명";
+  return client.from("profiles").upsert({ user_id: session.user.id, nickname: nickname }).then(function () {});
+}
+
+function generateInviteCode() {
+  var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  var code = "";
+  for (var i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+function initGroup(userId) {
+  var client = getClient();
+  var section = document.getElementById("groupSection");
+  if (!client || !section) return;
+
+  var noGroupEl = document.getElementById("groupNone");
+  var hasGroupEl = document.getElementById("groupHas");
+
+  function renderLeaderboard(groupId) {
+    client.rpc("get_group_leaderboard", { p_group_id: groupId }).then(function (res) {
+      var list = document.getElementById("leaderboardList");
+      if (!list) return;
+      var rows = res.data || [];
+      if (res.error || !rows.length) {
+        list.innerHTML = '<p class="msg">아직 출석 기록이 없어요.</p>';
+        return;
+      }
+      list.innerHTML = rows.map(function (r, i) {
+        var mine = r.user_id === userId ? " (나)" : "";
+        return (
+          '<div class="note-item">' +
+            '<div class="content">' + (i + 1) + '위 · ' + escapeHtml(r.nickname) + mine + '</div>' +
+            '<div class="meta">' + r.total_days + '일 출석</div>' +
+          '</div>'
+        );
+      }).join("");
+    });
+  }
+
+  function showGroup(group) {
+    noGroupEl.style.display = "none";
+    hasGroupEl.style.display = "block";
+    document.getElementById("groupName").textContent = group.name;
+    document.getElementById("groupCode").textContent = group.invite_code;
+    renderLeaderboard(group.id);
+  }
+
+  function loadMyGroup() {
+    client.from("group_members")
+      .select("group_id")
+      .eq("user_id", userId)
+      .limit(1)
+      .then(function (res) {
+        var rows = res.data || [];
+        if (!rows.length) {
+          noGroupEl.style.display = "block";
+          hasGroupEl.style.display = "none";
+          return;
+        }
+        client.from("groups").select("*").eq("id", rows[0].group_id).single().then(function (gRes) {
+          if (gRes.data) showGroup(gRes.data);
+        });
+      });
+  }
+
+  var createForm = document.getElementById("createGroupForm");
+  if (createForm) {
+    createForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var msg = document.getElementById("groupMsg");
+      var name = document.getElementById("groupNameInput").value.trim();
+      if (!name) {
+        msg.textContent = "그룹 이름을 입력해주세요.";
+        return;
+      }
+      msg.textContent = "생성 중...";
+      var code = generateInviteCode();
+      client.from("groups").insert({ name: name, invite_code: code, created_by: userId })
+        .select().single()
+        .then(function (res) {
+          if (res.error) {
+            msg.textContent = "그룹 생성에 실패했어요.";
+            return;
+          }
+          return client.from("group_members").insert({ group_id: res.data.id, user_id: userId })
+            .then(function () {
+              msg.textContent = "";
+              showGroup(res.data);
+            });
+        });
+    });
+  }
+
+  var joinForm = document.getElementById("joinGroupForm");
+  if (joinForm) {
+    joinForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var msg = document.getElementById("groupMsg");
+      var code = document.getElementById("joinCodeInput").value.trim().toUpperCase();
+      if (!code) {
+        msg.textContent = "초대 코드를 입력해주세요.";
+        return;
+      }
+      msg.textContent = "참여 중...";
+      client.rpc("join_group_by_code", { p_code: code }).then(function (res) {
+        if (res.error || !res.data || !res.data.length) {
+          msg.textContent = "초대 코드를 찾을 수 없어요.";
+          return;
+        }
+        msg.textContent = "";
+        showGroup({ id: res.data[0].group_id, name: res.data[0].group_name, invite_code: code });
+      });
+    });
+  }
+
+  loadMyGroup();
+}
+
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
