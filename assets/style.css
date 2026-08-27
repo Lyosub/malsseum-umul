@@ -1,15 +1,13 @@
 :root {
-  --bg: #f8f2e9;
+  --bg: #f3f7f6;
   --card-bg: #ffffff;
-  --text: #2b2620;
-  --text-soft: #8a7d6c;
-  --border: #ece0cd;
-  --well: #c1682f;
-  --well-deep: #7c3c1c;
-  --gold: #dfa257;
-  --sunset-top: #24304f;
-  --sunset-mid: #b85c38;
-  --sunset-glow: #f0b562;
+  --text: #1e2b2c;
+  --text-soft: #6f7f7e;
+  --border: #e2ebe9;
+  --well: #14707a;
+  --well-deep: #0e3d44;
+  --well-light: #6bc6c9;
+  --gold: #c9932f;
   --radius: 18px;
   --max: 720px;
   --font-serif-kr: "Gowun Batang", "Noto Serif KR", serif;
@@ -123,7 +121,7 @@ header.site nav a:hover {
 
 .nav-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(124, 60, 28, 0.1);
+  box-shadow: 0 8px 20px rgba(14, 61, 68, 0.1);
 }
 
 .nav-card .icon { font-size: 22px; }
@@ -139,13 +137,13 @@ header.site nav a:hover {
 }
 
 .verse-card {
-  background: linear-gradient(165deg, var(--sunset-top) 0%, var(--well-deep) 45%, var(--well) 78%, var(--sunset-glow) 130%);
+  background: linear-gradient(180deg, var(--well-light) 0%, var(--well) 45%, var(--well-deep) 100%);
   color: #fff;
   border-radius: 20px;
   padding: 34px 26px;
   margin: 18px 0;
   text-align: center;
-  box-shadow: 0 14px 30px rgba(124, 60, 28, 0.18);
+  box-shadow: 0 14px 30px rgba(14, 61, 68, 0.2);
 }
 
 .verse-card .ref {
