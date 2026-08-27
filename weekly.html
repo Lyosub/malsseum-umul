@@ -29,6 +29,9 @@
 
   <div class="well-card" id="weeklyCard"></div>
 
+  <!-- 브라우저가 Single Day 폰트를 실제로 로드하도록 강제하는 숨김 요소 (캔버스 폰트 로딩 안정화용) -->
+  <div style="position:absolute;left:-9999px;top:-9999px;font-family:'Single Day';font-size:40px;" aria-hidden="true">먼저된 우리 가나다ABC</div>
+
   <div class="card">
     <label for="bgImageInput" style="display:block;font-size:12.5px;color:var(--text-soft);margin-bottom:6px;">배경 이미지 (선택, GPT 등으로 만든 이미지를 올리면 카드 배경으로 사용해요)</label>
     <input type="file" id="bgImageInput" accept="image/*" style="width:100%;">

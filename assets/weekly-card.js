@@ -19,12 +19,28 @@ function wrapTextWeekly(ctx, text, maxWidth) {
   return lines;
 }
 
+function waitForSingleDayFont(triesLeft) {
+  if (document.fonts.check('400 40px "Single Day"')) {
+    return Promise.resolve(true);
+  }
+  if (triesLeft <= 0) {
+    return Promise.resolve(false);
+  }
+  return new Promise(function (resolve) {
+    setTimeout(function () {
+      resolve(waitForSingleDayFont(triesLeft - 1));
+    }, 200);
+  });
+}
+
 function loadWeeklyCardFonts() {
   var specs = ['400 72px "Single Day"', '400 46px "Single Day"', '400 30px "Pretendard"'];
   var promises = specs.map(function (spec) {
     return document.fonts.load(spec).catch(function () {});
   });
-  return Promise.all(promises).then(function () { return document.fonts.ready; });
+  return Promise.all(promises)
+    .then(function () { return document.fonts.ready; })
+    .then(function () { return waitForSingleDayFont(15); });
 }
 
 function drawCardNatureScene(ctx, W, H) {
