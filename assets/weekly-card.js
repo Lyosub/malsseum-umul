@@ -154,6 +154,20 @@ function drawWeeklyCard(canvas, msg) {
   ctx.fillText("💧 말씀우물", W / 2, H - 60);
 }
 
+function tryAutoLoadWeeklyBg(weekLabel) {
+  var msg = document.getElementById("bgImageMsg");
+  var path = "assets/weekly-backgrounds/" + weekLabel + ".png";
+  var img = new Image();
+  img.onload = function () {
+    weeklyBgImage = img;
+    if (msg) msg.textContent = "이번 주 배경 이미지를 자동으로 불러왔어요.";
+  };
+  img.onerror = function () {
+    // assets/weekly-backgrounds/에 해당 주차 이미지가 없으면 기본 배경(자연 풍경)을 그대로 사용
+  };
+  img.src = path;
+}
+
 function initBgImageUpload() {
   var input = document.getElementById("bgImageInput");
   var msg = document.getElementById("bgImageMsg");
@@ -167,7 +181,7 @@ function initBgImageUpload() {
       var img = new Image();
       img.onload = function () {
         weeklyBgImage = img;
-        if (msg) msg.textContent = "배경 이미지가 적용됐어요. 카드를 저장해보세요.";
+        if (msg) msg.textContent = "직접 올린 이미지로 바꿨어요. 카드를 저장해보세요.";
       };
       img.onerror = function () {
         if (msg) msg.textContent = "이미지를 불러오지 못했어요.";
@@ -198,6 +212,7 @@ function initWeeklyPage() {
       '<p class="well-prayer-text">' + WEEKLY_MESSAGE.application + '</p>' +
     '</div>';
 
+  tryAutoLoadWeeklyBg(WEEKLY_MESSAGE.weekLabel);
   initBgImageUpload();
 
   var downloadBtn = document.getElementById("downloadWeeklyBtn");
