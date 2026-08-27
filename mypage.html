@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마이페이지 | 말씀우물</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav>
+    <a href="#" id="logoutBtn">로그아웃</a>
+  </nav>
+</header>
+<div class="wrap" id="pageContent" style="display:none;">
+  <section class="hero">
+    <h1>나의 기록</h1>
+    <p>출석과 하루의 마음을 남겨보세요</p>
+  </section>
+
+  <div class="card streak">
+    <div class="num" id="streakNum">0</div>
+    <div class="label">일 연속 출석</div>
+    <button id="checkinBtn" class="btn" style="margin-top:14px;">오늘 출석 체크하기</button>
+    <p class="msg" id="streakMsg"></p>
+  </div>
+
+  <div class="card">
+    <div class="pill-toggle">
+      <button data-type="greeting" class="active">하루 인사</button>
+      <button data-type="gratitude">감사노트</button>
+      <button data-type="prayer">기도제목</button>
+    </div>
+    <form id="noteForm">
+      <input type="hidden" id="noteType" value="greeting">
+      <div class="form-row">
+        <textarea id="contentInput" placeholder="오늘 하루 인사, 감사한 일, 기도하고 싶은 제목을 자유롭게 적어보세요"></textarea>
+      </div>
+      <button type="submit" class="btn block">기록하기</button>
+      <p class="msg" id="formMsg"></p>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">지난 기록</h3>
+    <div id="noteList"></div>
+  </div>
+</div>
+
+<div class="wrap auth-gate" id="loginGate">
+  <p>로그인이 필요한 페이지예요.</p>
+  <a href="login.html" class="btn">로그인하러 가기</a>
+</div>
+
+<footer class="site">💧 말씀우물 · <a href="privacy.html">개인정보처리방침</a></footer>
+<script src="assets/supabase-config.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/mypage.js"></script>
+<script>
+  initLogoutButton();
+  getSession().then(function (session) {
+    if (!session) {
+      document.getElementById("loginGate").style.display = "block";
+      return;
+    }
+    document.getElementById("loginGate").style.display = "none";
+    document.getElementById("pageContent").style.display = "block";
+    initAttendance(session.user.id);
+    initNotes(session.user.id);
+  });
+</script>
+</body>
+</html>

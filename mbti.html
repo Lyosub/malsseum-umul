@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBTI별 성경 인물 해석 | 말씀우물</title>
+<meta name="description" content="16가지 MBTI 유형과 닮은 성경 속 인물을 만나보세요. 나의 성격과 신앙 여정을 함께 생각해보는 시간.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap">
+  <section class="hero">
+    <h1>MBTI별 성경 인물</h1>
+    <p>내 유형을 눌러 닮은 성경 속 인물을 만나보세요</p>
+  </section>
+
+  <div id="mbtiGrid" class="mbti-grid"></div>
+
+  <div id="mbtiDetail" class="mbti-detail card"></div>
+
+  <p class="msg" style="text-align:center;">※ 성격 유형과 인물의 연결은 신학적으로 확정된 해석이 아니라, 성경 속 인물의 이야기를 성격이라는 렌즈로 함께 묵상해보기 위한 시도입니다.</p>
+</div>
+<footer class="site">
+  💧 말씀우물 · <a href="privacy.html">개인정보처리방침</a><br>
+  성경 인용: 개역개정판, ⓒ 대한성서공회
+</footer>
+<script src="assets/mbti-bible-data.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/script.js"></script>
+<script>
+  initMbtiGrid();
+  initHeaderAuthState();
+</script>
+</body>
+</html>
