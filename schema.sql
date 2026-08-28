@@ -483,12 +483,19 @@ as $$
 $$;
 
 -- 관리자 전용: 기록 삭제 (부적절한 내용 등을 관리자가 지울 수 있도록)
+-- 성의 없이 쓴 감사노트/기도제목을 관리자가 삭제하면, 그 글로 받은 포인트도 함께 회수한다.
+-- (그 날 다른 감사노트/기도제목이 남아있으면 이미 그걸로 조건을 채운 것이므로 포인트는 그대로 둔다)
 create or replace function admin_delete_note(p_note_id bigint)
 returns boolean
 language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_user_id uuid;
+  v_type text;
+  v_ref_date date;
+  v_remaining_count int;
 begin
   if not exists (
     select 1 from profiles where user_id = auth.uid() and is_admin = true
@@ -496,7 +503,25 @@ begin
     raise exception '관리자만 삭제할 수 있습니다.';
   end if;
 
+  select user_id, type, (created_at at time zone 'Asia/Seoul')::date
+  into v_user_id, v_type, v_ref_date
+  from notes where id = p_note_id;
+
   delete from notes where id = p_note_id;
+
+  if v_type in ('gratitude', 'prayer') then
+    select count(*) into v_remaining_count
+    from notes
+    where user_id = v_user_id
+      and type in ('gratitude', 'prayer')
+      and (created_at at time zone 'Asia/Seoul')::date = v_ref_date;
+
+    if v_remaining_count = 0 then
+      delete from points_ledger
+      where user_id = v_user_id and action_type = 'note' and ref_date = v_ref_date;
+    end if;
+  end if;
+
   return true;
 end;
 $$;
