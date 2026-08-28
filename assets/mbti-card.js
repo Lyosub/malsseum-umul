@@ -36,6 +36,33 @@ function loadCharacterImage(type) {
   });
 }
 
+function loadCharacterBackground(type) {
+  return new Promise(function (resolve) {
+    var img = new Image();
+    img.onload = function () { resolve(img); };
+    img.onerror = function () { resolve(null); };
+    img.src = "assets/character-backgrounds/" + type + ".png";
+  });
+}
+
+function drawCoverBg(ctx, img, W, H) {
+  var imgRatio = img.width / img.height;
+  var cardRatio = W / H;
+  var sx, sy, sw, sh;
+  if (imgRatio > cardRatio) {
+    sh = img.height;
+    sw = sh * cardRatio;
+    sx = (img.width - sw) / 2;
+    sy = 0;
+  } else {
+    sw = img.width;
+    sh = sw / cardRatio;
+    sx = 0;
+    sy = (img.height - sh) / 2;
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+}
+
 function loadCardFonts() {
   var specs = [
     '800 130px "Pretendard"',
@@ -51,56 +78,70 @@ function loadCardFonts() {
   });
 }
 
-function drawMbtiCard(canvas, type, data, W, H, charImg) {
+function drawMbtiCard(canvas, type, data, W, H, charImg, bgImg) {
   W = W || CARD_W;
   H = H || CARD_H;
   var ctx = canvas.getContext("2d");
   canvas.width = W;
   canvas.height = H;
 
-  var grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, "#6bc6c9");
-  grad.addColorStop(0.45, "#14707a");
-  grad.addColorStop(1, "#0e3d44");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
+  if (bgImg) {
+    drawCoverBg(ctx, bgImg, W, H);
 
-  // 인물 이미지 뒤 은은한 광원
-  var bgGlow = ctx.createRadialGradient(W / 2, H * 0.33, 10, W / 2, H * 0.33, W * 0.55);
-  bgGlow.addColorStop(0, "rgba(255,255,255,0.16)");
-  bgGlow.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = bgGlow;
-  ctx.fillRect(0, 0, W, H);
+    // 인물 사진 위에서도 글씨가 잘 읽히도록 위/아래를 좀 더 어둡게, 인물 주변은 밝게
+    var photoOverlay = ctx.createLinearGradient(0, 0, 0, H);
+    photoOverlay.addColorStop(0, "rgba(4,14,18,0.6)");
+    photoOverlay.addColorStop(0.2, "rgba(4,14,18,0.15)");
+    photoOverlay.addColorStop(0.42, "rgba(4,14,18,0.1)");
+    photoOverlay.addColorStop(0.6, "rgba(4,14,18,0.4)");
+    photoOverlay.addColorStop(1, "rgba(4,14,18,0.6)");
+    ctx.fillStyle = photoOverlay;
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    var grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "#6bc6c9");
+    grad.addColorStop(0.45, "#14707a");
+    grad.addColorStop(1, "#0e3d44");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
 
-  // 가장자리 은은한 빛 입자
-  [[0.12, 0.12, 8], [0.85, 0.08, 5], [0.91, 0.3, 4], [0.08, 0.36, 5],
-   [0.14, 0.63, 4], [0.89, 0.66, 6], [0.1, 0.85, 5], [0.83, 0.9, 4]].forEach(function (d) {
+    // 인물 이미지 뒤 은은한 광원
+    var bgGlow = ctx.createRadialGradient(W / 2, H * 0.33, 10, W / 2, H * 0.33, W * 0.55);
+    bgGlow.addColorStop(0, "rgba(255,255,255,0.16)");
+    bgGlow.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = bgGlow;
+    ctx.fillRect(0, 0, W, H);
+
+    // 가장자리 은은한 빛 입자
+    [[0.12, 0.12, 8], [0.85, 0.08, 5], [0.91, 0.3, 4], [0.08, 0.36, 5],
+     [0.14, 0.63, 4], [0.89, 0.66, 6], [0.1, 0.85, 5], [0.83, 0.9, 4]].forEach(function (d) {
+      ctx.beginPath();
+      ctx.arc(W * d[0], H * d[1], d[2], 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.28)";
+      ctx.fill();
+    });
+
+    // 하단 물결 실루엣 (우물 컨셉)
+    ctx.fillStyle = "rgba(255,255,255,0.07)";
     ctx.beginPath();
-    ctx.arc(W * d[0], H * d[1], d[2], 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,255,255,0.28)";
+    ctx.moveTo(0, H * 0.86);
+    ctx.bezierCurveTo(W * 0.25, H * 0.83, W * 0.35, H * 0.9, W * 0.6, H * 0.87);
+    ctx.bezierCurveTo(W * 0.8, H * 0.85, W * 0.9, H * 0.91, W, H * 0.88);
+    ctx.lineTo(W, H);
+    ctx.lineTo(0, H);
+    ctx.closePath();
     ctx.fill();
-  });
 
-  // 하단 물결 실루엣 (우물 컨셉)
-  ctx.fillStyle = "rgba(255,255,255,0.07)";
-  ctx.beginPath();
-  ctx.moveTo(0, H * 0.86);
-  ctx.bezierCurveTo(W * 0.25, H * 0.83, W * 0.35, H * 0.9, W * 0.6, H * 0.87);
-  ctx.bezierCurveTo(W * 0.8, H * 0.85, W * 0.9, H * 0.91, W, H * 0.88);
-  ctx.lineTo(W, H);
-  ctx.lineTo(0, H);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = "rgba(255,255,255,0.05)";
-  ctx.beginPath();
-  ctx.moveTo(0, H * 0.91);
-  ctx.bezierCurveTo(W * 0.3, H * 0.94, W * 0.5, H * 0.89, W * 0.75, H * 0.93);
-  ctx.bezierCurveTo(W * 0.9, H * 0.95, W * 0.95, H * 0.92, W, H * 0.94);
-  ctx.lineTo(W, H);
-  ctx.lineTo(0, H);
-  ctx.closePath();
-  ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.05)";
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.91);
+    ctx.bezierCurveTo(W * 0.3, H * 0.94, W * 0.5, H * 0.89, W * 0.75, H * 0.93);
+    ctx.bezierCurveTo(W * 0.9, H * 0.95, W * 0.95, H * 0.92, W, H * 0.94);
+    ctx.lineTo(W, H);
+    ctx.lineTo(0, H);
+    ctx.closePath();
+    ctx.fill();
+  }
 
   ctx.textAlign = "center";
   ctx.shadowColor = "rgba(0,0,0,0.25)";
@@ -179,9 +220,10 @@ function saveMbtiCard(type) {
 
   var size = (typeof getSelectedSize === "function") ? getSelectedSize("mbtiSizePicker", "post") : { w: CARD_W, h: CARD_H };
 
-  Promise.all([loadCardFonts(), loadCharacterImage(type)]).then(function (results) {
+  Promise.all([loadCardFonts(), loadCharacterImage(type), loadCharacterBackground(type)]).then(function (results) {
     var charImg = results[1];
-    drawMbtiCard(canvas, type, data, size.w, size.h, charImg);
+    var bgImg = results[2];
+    drawMbtiCard(canvas, type, data, size.w, size.h, charImg, bgImg);
     var link = document.createElement("a");
     link.download = "말씀우물_" + type + "_성경인물카드.png";
     link.href = canvas.toDataURL("image/png");
