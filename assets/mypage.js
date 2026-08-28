@@ -8,12 +8,25 @@ function todayStr() {
   return d.getFullYear() + "-" + m + "-" + day;
 }
 
+function loadTotalPoints(userId) {
+  var client = getClient();
+  var pointsNum = document.getElementById("pointsNum");
+  if (!client || !pointsNum) return;
+  client.from("points_ledger").select("points").eq("user_id", userId).then(function (res) {
+    var rows = res.data || [];
+    var total = rows.reduce(function (sum, r) { return sum + r.points; }, 0);
+    pointsNum.textContent = total;
+  });
+}
+
 function initAttendance(userId) {
   var client = getClient();
   var checkBtn = document.getElementById("checkinBtn");
   var streakNum = document.getElementById("streakNum");
   var streakMsg = document.getElementById("streakMsg");
   if (!client || !checkBtn) return;
+
+  loadTotalPoints(userId);
 
   function refreshStreak() {
     client.from("attendance")
@@ -58,6 +71,7 @@ function initAttendance(userId) {
         return;
       }
       refreshStreak();
+      loadTotalPoints(userId);
     });
   });
 
@@ -95,7 +109,7 @@ function initGroup(userId) {
         return (
           '<div class="note-item">' +
             '<div class="content">' + (i + 1) + '위 · ' + escapeHtml(r.nickname) + mine + '</div>' +
-            '<div class="meta">' + r.total_days + '일 출석</div>' +
+            '<div class="meta">' + r.total_points + '점 · ' + r.total_days + '일 출석</div>' +
           '</div>'
         );
       }).join("");
@@ -250,6 +264,7 @@ function initNotes(userId) {
       msg.textContent = "기록되었습니다.";
       document.getElementById("contentInput").value = "";
       loadNotes();
+      loadTotalPoints(userId);
     });
   });
 

@@ -276,3 +276,107 @@ create policy "관리자만 일정 삭제" on calendar_events
   for delete using (
     exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
   );
+
+-- ===== 포인트 시스템 =====
+-- 출석 +1점 / 7일 연속 출석마다 +1점 보너스 / 감사노트·기도제목 +2점(하루 1건만 인정)
+-- 클라이언트가 직접 points_ledger에 쓰지 못하게 하고(RLS는 SELECT만 허용), 트리거로만 적립되게 해서
+-- 포인트 조작을 막는다.
+create table if not exists points_ledger (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  action_type text not null check (action_type in ('attendance', 'streak_bonus', 'note', 'quiz')),
+  points integer not null,
+  ref_date date not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, action_type, ref_date)
+);
+
+alter table points_ledger enable row level security;
+
+create policy "본인 포인트만 조회" on points_ledger
+  for select using (auth.uid() = user_id);
+
+create or replace function award_attendance_points()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_streak integer := 1;
+  v_check date := new.date - 1;
+begin
+  insert into points_ledger (user_id, action_type, points, ref_date)
+  values (new.user_id, 'attendance', 1, new.date)
+  on conflict (user_id, action_type, ref_date) do nothing;
+
+  while exists (select 1 from attendance where user_id = new.user_id and date = v_check) loop
+    v_streak := v_streak + 1;
+    v_check := v_check - 1;
+  end loop;
+
+  if v_streak % 7 = 0 then
+    insert into points_ledger (user_id, action_type, points, ref_date)
+    values (new.user_id, 'streak_bonus', 1, new.date)
+    on conflict (user_id, action_type, ref_date) do nothing;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_attendance_points on attendance;
+create trigger trg_attendance_points
+  after insert on attendance
+  for each row execute function award_attendance_points();
+
+create or replace function award_note_points()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.type in ('gratitude', 'prayer') then
+    insert into points_ledger (user_id, action_type, points, ref_date)
+    values (new.user_id, 'note', 2, (new.created_at at time zone 'Asia/Seoul')::date)
+    on conflict (user_id, action_type, ref_date) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notes_points on notes;
+create trigger trg_notes_points
+  after insert on notes
+  for each row execute function award_note_points();
+
+-- 그룹 리더보드를 출석일수 대신 총 포인트 기준으로 (반환 컬럼이 바뀌므로 함수를 다시 정의)
+drop function if exists get_group_leaderboard(bigint);
+
+create or replace function get_group_leaderboard(p_group_id bigint)
+returns table(user_id uuid, nickname text, total_days bigint, total_points bigint)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from group_members gm
+    where gm.group_id = p_group_id and gm.user_id = auth.uid()
+  ) then
+    raise exception '이 그룹의 멤버만 조회할 수 있습니다.';
+  end if;
+
+  return query
+    select
+      p.user_id,
+      p.nickname,
+      (select count(*) from attendance a where a.user_id = p.user_id)::bigint as total_days,
+      (select coalesce(sum(pl.points), 0) from points_ledger pl where pl.user_id = p.user_id)::bigint as total_points
+    from group_members gm
+    join profiles p on p.user_id = gm.user_id
+    where gm.group_id = p_group_id
+    order by total_points desc;
+end;
+$$;

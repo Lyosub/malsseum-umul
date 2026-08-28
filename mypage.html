@@ -26,10 +26,19 @@
   </section>
 
   <div class="card streak">
-    <div class="num" id="streakNum">0</div>
-    <div class="label">일 연속 출석</div>
+    <div style="display:flex;justify-content:center;gap:40px;">
+      <div>
+        <div class="num" id="streakNum">0</div>
+        <div class="label">일 연속 출석</div>
+      </div>
+      <div>
+        <div class="num" id="pointsNum">0</div>
+        <div class="label">총 포인트</div>
+      </div>
+    </div>
     <button id="checkinBtn" class="btn" style="margin-top:14px;">오늘 출석 체크하기</button>
     <p class="msg" id="streakMsg"></p>
+    <p class="msg" style="margin-top:2px;">출석 +1점 · 7일 연속 출석 보너스 +1점 · 감사노트/기도제목 +2점(하루 1건)</p>
   </div>
 
   <div class="card">
