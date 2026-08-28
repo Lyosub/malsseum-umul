@@ -62,25 +62,35 @@ function initSignupForm() {
 
     msg.textContent = "가입 처리 중...";
 
-    client.auth.signUp({
-      email: email,
-      password: password,
-      options: { data: { nickname: nickname } }
-    }).then(function (res) {
-      if (res.error) {
-        msg.textContent = "가입 실패: " + res.error.message;
+    function doSignUp() {
+      client.auth.signUp({
+        email: email,
+        password: password,
+        options: { data: { nickname: nickname } }
+      }).then(function (res) {
+        if (res.error) {
+          msg.textContent = "가입 실패: " + res.error.message;
+          return;
+        }
+        if (res.data && res.data.session) {
+          msg.textContent = "가입 완료! 이동 중...";
+          window.location.href = "mypage.html";
+          return;
+        }
+        msg.textContent = "가입 완료! 이메일 인증 후 로그인해주세요.";
+        form.reset();
+      }).catch(function () {
+        msg.textContent = "네트워크 오류로 가입하지 못했어요.";
+      });
+    }
+
+    client.rpc("is_nickname_taken", { p_nickname: nickname }).then(function (res) {
+      if (!res.error && res.data === true) {
+        msg.textContent = "이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해주세요.";
         return;
       }
-      if (res.data && res.data.session) {
-        msg.textContent = "가입 완료! 이동 중...";
-        window.location.href = "mypage.html";
-        return;
-      }
-      msg.textContent = "가입 완료! 이메일 인증 후 로그인해주세요.";
-      form.reset();
-    }).catch(function () {
-      msg.textContent = "네트워크 오류로 가입하지 못했어요.";
-    });
+      doSignUp();
+    }).catch(doSignUp);
   });
 }
 

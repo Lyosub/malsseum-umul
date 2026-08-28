@@ -41,7 +41,7 @@ create policy "본인 노트만 삭제" on notes
 -- 프로필 (닉네임) — 그룹 리더보드 표시용
 create table if not exists profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  nickname text not null,
+  nickname text not null unique,
   created_at timestamptz not null default now()
 );
 
@@ -52,6 +52,17 @@ create policy "본인 프로필만 조회" on profiles
 
 create policy "본인 프로필만 생성" on profiles
   for insert with check (auth.uid() = user_id);
+
+-- 회원가입 화면에서 로그인 전에도 닉네임 중복 여부를 확인할 수 있도록 하는 함수
+-- (profiles의 SELECT 정책이 본인 것만 허용하므로, RLS를 우회해 exists 여부만 알려준다)
+create or replace function is_nickname_taken(p_nickname text)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists(select 1 from profiles where nickname = p_nickname);
+$$;
 
 create policy "본인 프로필만 수정" on profiles
   for update using (auth.uid() = user_id);
