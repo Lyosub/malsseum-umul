@@ -71,6 +71,11 @@ function initSignupForm() {
         msg.textContent = "가입 실패: " + res.error.message;
         return;
       }
+      if (res.data && res.data.session) {
+        msg.textContent = "가입 완료! 이동 중...";
+        window.location.href = "mypage.html";
+        return;
+      }
       msg.textContent = "가입 완료! 이메일 인증 후 로그인해주세요.";
       form.reset();
     }).catch(function () {
