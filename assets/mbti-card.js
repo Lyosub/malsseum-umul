@@ -27,6 +27,15 @@ function firstSentence(text) {
   return text.length > 60 ? text.slice(0, 60) + "..." : text;
 }
 
+function loadCharacterImage(type) {
+  return new Promise(function (resolve) {
+    var img = new Image();
+    img.onload = function () { resolve(img); };
+    img.onerror = function () { resolve(null); };
+    img.src = "assets/characters/" + type + ".png";
+  });
+}
+
 function loadCardFonts() {
   var specs = [
     '800 130px "Pretendard"',
@@ -42,7 +51,7 @@ function loadCardFonts() {
   });
 }
 
-function drawMbtiCard(canvas, type, data, W, H) {
+function drawMbtiCard(canvas, type, data, W, H, charImg) {
   W = W || CARD_W;
   H = H || CARD_H;
   var ctx = canvas.getContext("2d");
@@ -68,19 +77,38 @@ function drawMbtiCard(canvas, type, data, W, H) {
   ctx.fillStyle = "rgba(255,255,255,0.9)";
   ctx.fillText("나와 닮은 성경 속 인물", W / 2, H * 0.207);
 
+  var figureY, verseRefY, vy;
+  if (charImg) {
+    var boxSize = H * 0.19;
+    var boxTop = H * 0.235;
+    var scale = Math.min(boxSize / charImg.width, boxSize / charImg.height);
+    var drawW = charImg.width * scale;
+    var drawH = charImg.height * scale;
+    ctx.shadowBlur = 0;
+    ctx.drawImage(charImg, W / 2 - drawW / 2, boxTop + (boxSize - drawH) / 2, drawW, drawH);
+    ctx.shadowColor = "rgba(0,0,0,0.25)";
+    ctx.shadowBlur = 12;
+    figureY = H * 0.5;
+    verseRefY = H * 0.54;
+    vy = H * 0.585;
+  } else {
+    figureY = H * 0.296;
+    verseRefY = H * 0.341;
+    vy = H * 0.4;
+  }
+
   ctx.font = '400 56px "Pretendard", serif';
   ctx.fillStyle = "#ffffff";
-  ctx.fillText(data.figure, W / 2, H * 0.296);
+  ctx.fillText(data.figure, W / 2, figureY);
 
   ctx.font = '400 32px "Pretendard", serif';
   ctx.fillStyle = "rgba(255,255,255,0.85)";
-  ctx.fillText(data.verse.ref, W / 2, H * 0.341);
+  ctx.fillText(data.verse.ref, W / 2, verseRefY);
 
   ctx.shadowBlur = 8;
   ctx.font = '400 36px "Pretendard", serif';
   ctx.fillStyle = "#ffffff";
   var verseLines = wrapTextCard(ctx, '"' + data.verse.text + '"', W * 0.82);
-  var vy = H * 0.4;
   verseLines.forEach(function (line, i) {
     ctx.fillText(line, W / 2, vy + i * 50);
   });
@@ -107,8 +135,9 @@ function saveMbtiCard(type) {
 
   var size = (typeof getSelectedSize === "function") ? getSelectedSize("mbtiSizePicker", "post") : { w: CARD_W, h: CARD_H };
 
-  loadCardFonts().then(function () {
-    drawMbtiCard(canvas, type, data, size.w, size.h);
+  Promise.all([loadCardFonts(), loadCharacterImage(type)]).then(function (results) {
+    var charImg = results[1];
+    drawMbtiCard(canvas, type, data, size.w, size.h, charImg);
     var link = document.createElement("a");
     link.download = "말씀우물_" + type + "_성경인물카드.png";
     link.href = canvas.toDataURL("image/png");
