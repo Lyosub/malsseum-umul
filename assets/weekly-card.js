@@ -19,28 +19,14 @@ function wrapTextWeekly(ctx, text, maxWidth) {
   return lines;
 }
 
-function waitForCardFont(triesLeft) {
-  if (document.fonts.check('400 40px "East Sea Dokdo"')) {
-    return Promise.resolve(true);
-  }
-  if (triesLeft <= 0) {
-    return Promise.resolve(false);
-  }
-  return new Promise(function (resolve) {
-    setTimeout(function () {
-      resolve(waitForCardFont(triesLeft - 1));
-    }, 200);
-  });
-}
-
 function loadWeeklyCardFonts() {
-  var specs = ['400 72px "East Sea Dokdo"', '400 46px "East Sea Dokdo"', '400 30px "Pretendard"'];
+  var specs = ['800 76px "Pretendard"', '400 48px "Pretendard"', '400 30px "Pretendard"'];
   var promises = specs.map(function (spec) {
     return document.fonts.load(spec).catch(function () {});
   });
-  return Promise.all(promises)
-    .then(function () { return document.fonts.ready; })
-    .then(function () { return waitForCardFont(15); });
+  return Promise.all(promises).then(function () {
+    return document.fonts.ready;
+  });
 }
 
 function drawCardNatureScene(ctx, W, H) {
@@ -194,11 +180,11 @@ function drawWeeklyCard(canvas, msg, W, H) {
 
   ctx.textAlign = "center";
 
-  ctx.font = '400 76px "East Sea Dokdo"';
+  ctx.font = '800 76px "Pretendard"';
   var titleLines = wrapTextWeekly(ctx, msg.title, W * 0.82);
   var titleGap = 84;
 
-  ctx.font = '400 48px "East Sea Dokdo"';
+  ctx.font = '400 48px "Pretendard"';
   var verseLines = wrapTextWeekly(ctx, '"' + msg.verseText + '"', W * 0.78);
   var verseGap = 60;
 
@@ -232,7 +218,7 @@ function drawWeeklyCard(canvas, msg, W, H) {
 
   ctx.shadowColor = "rgba(0,0,0,0.4)";
   ctx.shadowBlur = 14;
-  ctx.font = '400 76px "East Sea Dokdo"';
+  ctx.font = '800 76px "Pretendard"';
   ctx.fillStyle = "#ffffff";
   titleLines.forEach(function (line, i) {
     ctx.fillText(line, W / 2, titleY + i * titleGap);
@@ -240,14 +226,14 @@ function drawWeeklyCard(canvas, msg, W, H) {
 
   var afterTitleY = titleY + afterTitleRel;
   ctx.shadowBlur = 10;
-  ctx.font = '400 48px "East Sea Dokdo"';
+  ctx.font = '400 48px "Pretendard"';
   verseLines.forEach(function (line, i) {
     ctx.fillText(line, W / 2, afterTitleY + i * verseGap);
   });
 
   var refY = titleY + refYRel;
   ctx.shadowBlur = 6;
-  ctx.font = '400 32px "East Sea Dokdo"';
+  ctx.font = '400 32px "Pretendard"';
   ctx.fillStyle = "rgba(255,255,255,0.9)";
   ctx.fillText("(" + msg.verseRef + ")", W / 2, refY);
 
