@@ -42,24 +42,53 @@
   </div>
 
   <div class="card">
-    <div class="pill-toggle">
-      <button data-type="greeting" class="active">하루 인사</button>
-      <button data-type="gratitude">감사노트</button>
-      <button data-type="prayer">기도제목</button>
-    </div>
-    <form id="noteForm">
-      <input type="hidden" id="noteType" value="greeting">
+    <div class="well-label" style="margin-top:0;">🙋 하루 인사</div>
+    <form class="note-form" data-type="greeting">
       <div class="form-row">
-        <textarea id="contentInput" placeholder="오늘 하루 인사, 감사한 일, 기도하고 싶은 제목을 자유롭게 적어보세요"></textarea>
+        <textarea placeholder="오늘 하루 인사를 자유롭게 적어보세요"></textarea>
       </div>
       <button type="submit" class="btn block">기록하기</button>
-      <p class="msg" id="formMsg"></p>
+      <p class="msg"></p>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="well-label" style="margin-top:0;">🙏 감사노트</div>
+    <form class="note-form" data-type="gratitude">
+      <div class="form-row">
+        <textarea placeholder="오늘 감사한 일을 자유롭게 적어보세요"></textarea>
+      </div>
+      <button type="submit" class="btn block">기록하기</button>
+      <p class="msg"></p>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="well-label" style="margin-top:0;">🕊️ 기도제목</div>
+    <form class="note-form" data-type="prayer">
+      <div class="form-row">
+        <textarea placeholder="기도하고 싶은 제목을 자유롭게 적어보세요"></textarea>
+      </div>
+      <button type="submit" class="btn block">기록하기</button>
+      <p class="msg"></p>
     </form>
   </div>
 
   <div class="card">
     <h3 style="margin-top:0;">지난 기록</h3>
-    <div id="noteList"></div>
+
+    <div class="well-label" style="margin-top:0;">🙋 하루 인사</div>
+    <div id="noteListGreeting"></div>
+
+    <hr class="well-divider">
+
+    <div class="well-label">🙏 감사노트</div>
+    <div id="noteListGratitude"></div>
+
+    <hr class="well-divider">
+
+    <div class="well-label">🕊️ 기도제목</div>
+    <div id="noteListPrayer"></div>
   </div>
 
   <div class="card" id="groupSection">

@@ -202,14 +202,12 @@ function escapeHtml(str) {
 }
 
 var NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목" };
+var NOTE_LIST_IDS = { greeting: "noteListGreeting", gratitude: "noteListGratitude", prayer: "noteListPrayer" };
 
 function initNotes(userId) {
   var client = getClient();
-  var form = document.getElementById("noteForm");
-  var typeInput = document.getElementById("noteType");
-  var typeButtons = document.querySelectorAll(".pill-toggle button");
-  var list = document.getElementById("noteList");
-  if (!client || !form) return;
+  var forms = document.querySelectorAll(".note-form");
+  if (!client || !forms.length) return;
 
   var noteItemsById = {};
 
@@ -219,7 +217,7 @@ function initNotes(userId) {
     var dateStr = (d.getMonth() + 1) + "." + d.getDate();
     return (
       '<div class="note-item" data-note-id="' + item.id + '">' +
-        '<div class="meta">' + NOTE_LABELS[item.type] + " · " + dateStr + '</div>' +
+        '<div class="meta">' + dateStr + '</div>' +
         '<div data-role="body">' +
           '<div class="content">' + escapeHtml(item.content) + '</div>' +
           '<div style="margin-top:8px;display:flex;gap:8px;">' +
@@ -231,26 +229,7 @@ function initNotes(userId) {
     );
   }
 
-  function loadNotes() {
-    if (!list) return;
-    list.innerHTML = '<p class="msg">불러오는 중...</p>';
-    client.from("notes")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(50)
-      .then(function (res) {
-        var items = res.data || [];
-        noteItemsById = {};
-        if (!items.length) {
-          list.innerHTML = '<p class="msg">아직 기록이 없어요. 오늘 첫 기록을 남겨보세요.</p>';
-          return;
-        }
-        list.innerHTML = items.map(renderNoteItem).join("");
-      });
-  }
-
-  list.addEventListener("click", function (e) {
+  function handleListClick(e) {
     var btn = e.target.closest("button[data-action]");
     if (!btn) return;
     var itemEl = btn.closest(".note-item");
@@ -287,38 +266,67 @@ function initNotes(userId) {
       if (!newContent) return;
       client.from("notes").update({ content: newContent }).eq("id", noteId).then(function () { loadNotes(); });
     }
+  }
+
+  Object.keys(NOTE_LIST_IDS).forEach(function (type) {
+    var el = document.getElementById(NOTE_LIST_IDS[type]);
+    if (el) el.addEventListener("click", handleListClick);
   });
 
-  typeButtons.forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      typeButtons.forEach(function (b) { b.classList.remove("active"); });
-      btn.classList.add("active");
-      typeInput.value = btn.getAttribute("data-type");
+  function loadNotes() {
+    Object.keys(NOTE_LIST_IDS).forEach(function (type) {
+      var el = document.getElementById(NOTE_LIST_IDS[type]);
+      if (el) el.innerHTML = '<p class="msg">불러오는 중...</p>';
     });
-  });
+    client.from("notes")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(150)
+      .then(function (res) {
+        var items = res.data || [];
+        noteItemsById = {};
+        var grouped = { greeting: [], gratitude: [], prayer: [] };
+        items.forEach(function (item) {
+          if (grouped[item.type]) grouped[item.type].push(item);
+        });
+        Object.keys(NOTE_LIST_IDS).forEach(function (type) {
+          var el = document.getElementById(NOTE_LIST_IDS[type]);
+          if (!el) return;
+          var rows = grouped[type];
+          el.innerHTML = rows.length
+            ? rows.map(renderNoteItem).join("")
+            : '<p class="msg">아직 기록이 없어요.</p>';
+        });
+      });
+  }
 
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    var msg = document.getElementById("formMsg");
-    var content = document.getElementById("contentInput").value.trim();
-    if (!content) {
-      msg.textContent = "내용을 입력해주세요.";
-      return;
-    }
-    msg.textContent = "저장 중...";
-    client.from("notes").insert({
-      user_id: userId,
-      type: typeInput.value,
-      content: content
-    }).then(function (res) {
-      if (res.error) {
-        msg.textContent = "저장에 실패했어요.";
+  forms.forEach(function (form) {
+    var type = form.getAttribute("data-type");
+    var textarea = form.querySelector("textarea");
+    var msg = form.querySelector(".msg");
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var content = textarea.value.trim();
+      if (!content) {
+        msg.textContent = "내용을 입력해주세요.";
         return;
       }
-      msg.textContent = "기록되었습니다.";
-      document.getElementById("contentInput").value = "";
-      loadNotes();
-      loadTotalPoints(userId);
+      msg.textContent = "저장 중...";
+      client.from("notes").insert({
+        user_id: userId,
+        type: type,
+        content: content
+      }).then(function (res) {
+        if (res.error) {
+          msg.textContent = "저장에 실패했어요.";
+          return;
+        }
+        msg.textContent = "기록되었습니다.";
+        textarea.value = "";
+        loadNotes();
+        loadTotalPoints(userId);
+      });
     });
   });
 
