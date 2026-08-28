@@ -138,14 +138,25 @@ function getVerseFor(kind) {
   return BLESSING_POOL[idx % BLESSING_POOL.length];
 }
 
-// 방문자별로 "뽑기" — 하루/주간/월간마다 한 번씩만 무작위로 뽑고, 같은 기간 안에는 뽑은 결과를 그대로 보여줌
+// 이번 주의 월요일 날짜를 구한다 (월요일 00:00 기준으로 주간이 바뀌도록)
+function getMondayOfWeek(date) {
+  var d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  var day = d.getDay(); // 0=일, 1=월, ... 6=토
+  var diffToMonday = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diffToMonday);
+  return d;
+}
+
+// 방문자별로 "뽑기" — 하루는 매일 00:00, 주간은 월요일 00:00, 월간은 매달 1일 00:00에 리셋되어
+// 같은 기간 안에는 뽑은 결과를 그대로 보여줌
 function getPeriodKey(kind) {
   var now = new Date();
   if (kind === "daily") {
     return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
   }
   if (kind === "weekly") {
-    return now.getFullYear() + "-W" + getWeekIndex();
+    var monday = getMondayOfWeek(now);
+    return monday.getFullYear() + "-" + (monday.getMonth() + 1) + "-" + monday.getDate();
   }
   return now.getFullYear() + "-" + (now.getMonth() + 1);
 }
