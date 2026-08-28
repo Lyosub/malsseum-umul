@@ -23,8 +23,12 @@
 </header>
 <div class="wrap">
   <section class="hero">
-    <h1 id="calMonthLabel">이달의 일정</h1>
-    <p>이번 달 말씀우물 일정을 확인해보세요</p>
+    <div style="display:flex;align-items:center;justify-content:center;gap:18px;">
+      <button id="calPrevBtn" aria-label="이전 달" style="background:none;border:none;font-size:24px;color:var(--well);cursor:pointer;padding:4px 10px;line-height:1;">‹</button>
+      <h1 id="calMonthLabel" style="margin:0;">이달의 일정</h1>
+      <button id="calNextBtn" aria-label="다음 달" style="background:none;border:none;font-size:24px;color:var(--well);cursor:pointer;padding:4px 10px;line-height:1;">›</button>
+    </div>
+    <p>말씀우물 일정을 확인해보세요</p>
   </section>
 
   <div class="card">
