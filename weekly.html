@@ -38,7 +38,10 @@
     <p class="msg" id="bgImageMsg"></p>
   </div>
 
-  <button id="downloadWeeklyBtn" class="btn block">📸 말씀 카드 저장하기</button>
+  <p style="font-size:12.5px;color:var(--text-soft);margin:14px 0 6px;">저장할 사이즈를 골라주세요</p>
+  <div class="tabs" id="weeklySizePicker"></div>
+
+  <button id="downloadWeeklyBtn" class="btn block" style="margin-top:12px;">📸 말씀 카드 저장하기</button>
   <canvas id="weeklyCardCanvas" style="display:none;"></canvas>
 
   <p class="msg" style="text-align:center;">이번 주 예배 말씀의 핵심만 간단히 정리했어요.</p>
@@ -48,6 +51,7 @@
   성경 인용: 개역개정판, ⓒ 대한성서공회
 </footer>
 <script src="assets/weekly-message-data.js"></script>
+<script src="assets/card-sizes.js"></script>
 <script src="assets/supabase-config.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>

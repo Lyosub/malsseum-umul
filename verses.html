@@ -34,6 +34,13 @@
 
   <div id="verseCard" class="verse-card" style="display:none;"></div>
 
+  <div id="verseSaveArea" style="display:none;">
+    <p style="font-size:12.5px;color:var(--text-soft);margin:14px 0 6px;">저장할 사이즈를 골라주세요</p>
+    <div class="tabs" id="verseSizePicker"></div>
+    <button class="btn block" style="margin-top:12px;" onclick="saveVerseCard()">📸 말씀 카드 저장하기</button>
+  </div>
+  <canvas id="verseCardCanvas" style="display:none;"></canvas>
+
   <p class="msg" style="text-align:center;">캡처해서 저장하거나 오늘의 묵상 노트에 옮겨 적어보세요.</p>
 </div>
 <footer class="site">
@@ -41,6 +48,7 @@
   성경 인용: 개역개정판, ⓒ 대한성서공회
 </footer>
 <script src="assets/verses-data.js"></script>
+<script src="assets/card-sizes.js"></script>
 <script src="assets/supabase-config.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>

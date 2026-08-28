@@ -42,17 +42,19 @@ function loadCardFonts() {
   });
 }
 
-function drawMbtiCard(canvas, type, data) {
+function drawMbtiCard(canvas, type, data, W, H) {
+  W = W || CARD_W;
+  H = H || CARD_H;
   var ctx = canvas.getContext("2d");
-  canvas.width = CARD_W;
-  canvas.height = CARD_H;
+  canvas.width = W;
+  canvas.height = H;
 
-  var grad = ctx.createLinearGradient(0, 0, 0, CARD_H);
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, "#6bc6c9");
   grad.addColorStop(0.45, "#14707a");
   grad.addColorStop(1, "#0e3d44");
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, CARD_W, CARD_H);
+  ctx.fillRect(0, 0, W, H);
 
   ctx.textAlign = "center";
   ctx.shadowColor = "rgba(0,0,0,0.25)";
@@ -60,41 +62,41 @@ function drawMbtiCard(canvas, type, data) {
 
   ctx.fillStyle = "#ffffff";
   ctx.font = '800 130px "Pretendard"';
-  ctx.fillText(type, CARD_W / 2, 220);
+  ctx.fillText(type, W / 2, H * 0.163);
 
   ctx.font = '400 34px "Pretendard", sans-serif';
   ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.fillText("나와 닮은 성경 속 인물", CARD_W / 2, 280);
+  ctx.fillText("나와 닮은 성경 속 인물", W / 2, H * 0.207);
 
   ctx.font = '400 56px "Pretendard", serif';
   ctx.fillStyle = "#ffffff";
-  ctx.fillText(data.figure, CARD_W / 2, 400);
+  ctx.fillText(data.figure, W / 2, H * 0.296);
 
   ctx.font = '400 32px "Pretendard", serif';
   ctx.fillStyle = "rgba(255,255,255,0.85)";
-  ctx.fillText(data.verse.ref, CARD_W / 2, 460);
+  ctx.fillText(data.verse.ref, W / 2, H * 0.341);
 
   ctx.shadowBlur = 8;
   ctx.font = '400 36px "Pretendard", serif';
   ctx.fillStyle = "#ffffff";
-  var verseLines = wrapTextCard(ctx, '"' + data.verse.text + '"', CARD_W * 0.82);
-  var vy = 540;
+  var verseLines = wrapTextCard(ctx, '"' + data.verse.text + '"', W * 0.82);
+  var vy = H * 0.4;
   verseLines.forEach(function (line, i) {
-    ctx.fillText(line, CARD_W / 2, vy + i * 50);
+    ctx.fillText(line, W / 2, vy + i * 50);
   });
 
   var descY = vy + verseLines.length * 50 + 60;
   ctx.font = '400 30px "Pretendard", sans-serif';
   ctx.fillStyle = "rgba(255,255,255,0.92)";
-  var descLines = wrapTextCard(ctx, firstSentence(data.desc), CARD_W * 0.78);
+  var descLines = wrapTextCard(ctx, firstSentence(data.desc), W * 0.78);
   descLines.forEach(function (line, i) {
-    ctx.fillText(line, CARD_W / 2, descY + i * 44);
+    ctx.fillText(line, W / 2, descY + i * 44);
   });
 
   ctx.shadowBlur = 0;
   ctx.font = '400 28px "Pretendard", sans-serif';
   ctx.fillStyle = "rgba(255,255,255,0.7)";
-  ctx.fillText("💧 말씀우물", CARD_W / 2, CARD_H - 60);
+  ctx.fillText("💧 말씀우물", W / 2, H - 60);
 }
 
 function saveMbtiCard(type) {
@@ -103,8 +105,10 @@ function saveMbtiCard(type) {
   var data = MBTI_BIBLE[type];
   if (!data) return;
 
+  var size = (typeof getSelectedSize === "function") ? getSelectedSize("mbtiSizePicker", "post") : { w: CARD_W, h: CARD_H };
+
   loadCardFonts().then(function () {
-    drawMbtiCard(canvas, type, data);
+    drawMbtiCard(canvas, type, data, size.w, size.h);
     var link = document.createElement("a");
     link.download = "말씀우물_" + type + "_성경인물카드.png";
     link.href = canvas.toDataURL("image/png");

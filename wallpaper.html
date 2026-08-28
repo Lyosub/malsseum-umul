@@ -26,7 +26,10 @@
 
   <canvas id="wallCanvas" class="wall-preview"></canvas>
 
-  <button id="downloadBtn" class="btn block">📱 배경화면 저장하기</button>
+  <p style="font-size:12.5px;color:var(--text-soft);margin:14px 0 6px;text-align:center;">저장할 사이즈를 골라주세요</p>
+  <div class="tabs" id="wallSizePicker"></div>
+
+  <button id="downloadBtn" class="btn block" style="margin-top:12px;">📱 배경화면 저장하기</button>
 
   <p class="msg" style="text-align:center;">아이폰: 저장 후 [설정 → 배경화면 → 새로운 배경화면 추가]에서 선택하세요.<br>안드로이드: 저장 후 사진을 길게 눌러 [배경화면으로 설정]을 선택하세요.</p>
 </div>
@@ -35,6 +38,7 @@
   성경 인용: 개역개정판, ⓒ 대한성서공회
 </footer>
 <script src="assets/verses-data.js"></script>
+<script src="assets/card-sizes.js"></script>
 <script src="assets/supabase-config.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>

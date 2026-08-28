@@ -41,7 +41,9 @@ function loadWallpaperFonts() {
   });
 }
 
-function drawWallpaper(canvas, verse) {
+function drawWallpaper(canvas, verse, W, H) {
+  var WALL_W = W || 1080;
+  var WALL_H = H || 2340;
   var ctx = canvas.getContext("2d");
   canvas.width = WALL_W;
   canvas.height = WALL_H;
@@ -184,14 +186,22 @@ function initWallpaperPage() {
     drawWallpaper(canvas, verse);
   });
 
+  if (typeof initSizePicker === "function") {
+    initSizePicker("wallSizePicker", function () {}, "wallpaper");
+  }
+
   if (downloadBtn) {
     downloadBtn.addEventListener("click", function () {
+      var size = (typeof getSelectedSize === "function") ? getSelectedSize("wallSizePicker", "wallpaper") : { w: 1080, h: 2340 };
       var now = new Date();
       var fileName = "말씀우물_" + (now.getMonth() + 1) + "월_배경화면.png";
-      var link = document.createElement("a");
-      link.download = fileName;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      loadWallpaperFonts().then(function () {
+        drawWallpaper(canvas, verse, size.w, size.h);
+        var link = document.createElement("a");
+        link.download = fileName;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
     });
   }
 }

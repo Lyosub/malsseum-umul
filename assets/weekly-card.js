@@ -108,9 +108,10 @@ function drawCoverImage(ctx, img, W, H) {
   ctx.fillRect(0, 0, W, H);
 }
 
-function drawWeeklyCard(canvas, msg) {
+function drawWeeklyCard(canvas, msg, W, H) {
+  W = W || 1080;
+  H = H || 1350;
   var ctx = canvas.getContext("2d");
-  var W = 1080, H = 1350;
   canvas.width = W;
   canvas.height = H;
 
@@ -127,7 +128,7 @@ function drawWeeklyCard(canvas, msg) {
   ctx.font = '400 76px "East Sea Dokdo"';
   ctx.fillStyle = "#ffffff";
   var titleLines = wrapTextWeekly(ctx, msg.title, W * 0.82);
-  var titleY = 190;
+  var titleY = H * 0.16;
   titleLines.forEach(function (line, i) {
     ctx.fillText(line, W / 2, titleY + i * 84);
   });
@@ -215,12 +216,17 @@ function initWeeklyPage() {
   tryAutoLoadWeeklyBg(WEEKLY_MESSAGE.weekLabel);
   initBgImageUpload();
 
+  if (typeof initSizePicker === "function") {
+    initSizePicker("weeklySizePicker", function () {}, "post");
+  }
+
   var downloadBtn = document.getElementById("downloadWeeklyBtn");
   var canvas = document.getElementById("weeklyCardCanvas");
   if (downloadBtn && canvas) {
     downloadBtn.addEventListener("click", function () {
+      var size = getSelectedSize("weeklySizePicker", "post");
       loadWeeklyCardFonts().then(function () {
-        drawWeeklyCard(canvas, WEEKLY_MESSAGE);
+        drawWeeklyCard(canvas, WEEKLY_MESSAGE, size.w, size.h);
         var link = document.createElement("a");
         link.download = "말씀우물_이번주말씀_" + WEEKLY_MESSAGE.weekLabel + ".png";
         link.href = canvas.toDataURL("image/png");

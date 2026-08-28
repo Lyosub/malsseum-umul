@@ -61,33 +61,39 @@ function renderDrawnVerseInto(elId, verse, kind) {
     extra;
 }
 
+var _currentDrawnVerse = null;
+var _currentDrawnKind = "daily";
+
 function initVerseTabs() {
   var tabs = document.querySelectorAll(".tabs button");
   var drawBtn = document.getElementById("drawBtn");
   var drawMsg = document.getElementById("drawMsg");
   var cardEl = document.getElementById("verseCard");
+  var saveArea = document.getElementById("verseSaveArea");
   if (!tabs.length || !drawBtn || !cardEl) return;
 
-  var currentKind = "daily";
-
   function refresh() {
-    var existing = getDrawnVerse(currentKind);
+    var existing = getDrawnVerse(_currentDrawnKind);
     if (existing) {
-      renderDrawnVerseInto("verseCard", existing, currentKind);
+      _currentDrawnVerse = existing;
+      renderDrawnVerseInto("verseCard", existing, _currentDrawnKind);
       cardEl.style.display = "block";
       drawBtn.style.display = "none";
-      drawMsg.textContent = DRAW_LABELS[currentKind].already;
+      if (saveArea) saveArea.style.display = "block";
+      drawMsg.textContent = DRAW_LABELS[_currentDrawnKind].already;
     } else {
+      _currentDrawnVerse = null;
       cardEl.style.display = "none";
       drawBtn.style.display = "block";
-      drawBtn.textContent = DRAW_LABELS[currentKind].draw;
+      drawBtn.textContent = DRAW_LABELS[_currentDrawnKind].draw;
+      if (saveArea) saveArea.style.display = "none";
       drawMsg.textContent = "";
     }
   }
 
   tabs.forEach(function (tab) {
     tab.addEventListener("click", function () {
-      currentKind = tab.getAttribute("data-kind");
+      _currentDrawnKind = tab.getAttribute("data-kind");
       tabs.forEach(function (t) {
         t.classList.toggle("active", t === tab);
       });
@@ -96,14 +102,119 @@ function initVerseTabs() {
   });
 
   drawBtn.addEventListener("click", function () {
-    var verse = drawRandomVerse(currentKind);
-    renderDrawnVerseInto("verseCard", verse, currentKind);
+    var verse = drawRandomVerse(_currentDrawnKind);
+    _currentDrawnVerse = verse;
+    renderDrawnVerseInto("verseCard", verse, _currentDrawnKind);
     cardEl.style.display = "block";
     drawBtn.style.display = "none";
-    drawMsg.textContent = DRAW_LABELS[currentKind].already;
+    if (saveArea) saveArea.style.display = "block";
+    drawMsg.textContent = DRAW_LABELS[_currentDrawnKind].already;
   });
 
+  if (typeof initSizePicker === "function") {
+    initSizePicker("verseSizePicker", function () {}, "post");
+  }
+
   refresh();
+}
+
+function wrapTextGeneric(ctx, text, maxWidth) {
+  var words = text.split(" ");
+  var lines = [];
+  var current = "";
+  words.forEach(function (word) {
+    var test = current ? current + " " + word : word;
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = test;
+    }
+  });
+  if (current) lines.push(current);
+  return lines;
+}
+
+function loadVerseCardFonts() {
+  var specs = ['800 56px "Pretendard"', '700 40px "Pretendard"', '400 28px "Pretendard"'];
+  var promises = specs.map(function (spec) {
+    return document.fonts.load(spec).catch(function () {});
+  });
+  return Promise.all(promises).then(function () { return document.fonts.ready; });
+}
+
+function drawVerseCardImage(canvas, verse, kind, W, H) {
+  W = W || 1080;
+  H = H || 1350;
+  var ctx = canvas.getContext("2d");
+  canvas.width = W;
+  canvas.height = H;
+
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, "#6bc6c9");
+  grad.addColorStop(0.45, "#14707a");
+  grad.addColorStop(1, "#0e3d44");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = "center";
+  ctx.shadowColor = "rgba(0,0,0,0.25)";
+  ctx.shadowBlur = 12;
+
+  var kindLabel = { daily: "오늘의 말씀", weekly: "이번 주 말씀", monthly: "이번 달 말씀" }[kind] || "말씀";
+  ctx.font = '400 28px "Pretendard"';
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.fillText(kindLabel, W / 2, H * 0.14);
+
+  ctx.font = '700 40px "Pretendard"';
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(verse.ref, W / 2, H * 0.19);
+
+  ctx.shadowBlur = 8;
+  ctx.font = '800 44px "Pretendard"';
+  var lines = wrapTextGeneric(ctx, '"' + verse.text + '"', W * 0.8);
+  var y = H * 0.28;
+  lines.forEach(function (line, i) {
+    ctx.fillText(line, W / 2, y + i * 60);
+  });
+
+  var afterY = y + lines.length * 60 + 50;
+  if (kind === "monthly" && verse.keyword) {
+    ctx.shadowBlur = 6;
+    ctx.font = '400 26px "Pretendard"';
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText("이달의 키워드", W / 2, afterY);
+    ctx.font = '800 38px "Pretendard"';
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(verse.keyword, W / 2, afterY + 50);
+  } else if (verse.note) {
+    ctx.shadowBlur = 6;
+    ctx.font = '400 26px "Pretendard"';
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    var noteLines = wrapTextGeneric(ctx, verse.note, W * 0.72);
+    noteLines.forEach(function (line, i) {
+      ctx.fillText(line, W / 2, afterY + i * 36);
+    });
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.font = '400 24px "Pretendard"';
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.fillText("💧 말씀우물", W / 2, H - 50);
+}
+
+function saveVerseCard() {
+  var canvas = document.getElementById("verseCardCanvas");
+  if (!canvas || !_currentDrawnVerse) return;
+  var size = (typeof getSelectedSize === "function") ? getSelectedSize("verseSizePicker", "post") : { w: 1080, h: 1350 };
+
+  loadVerseCardFonts().then(function () {
+    drawVerseCardImage(canvas, _currentDrawnVerse, _currentDrawnKind, size.w, size.h);
+    var link = document.createElement("a");
+    link.download = "말씀우물_" + _currentDrawnKind + "_말씀카드.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
 }
 
 function renderWellVerseInto(elId, verse) {
@@ -176,8 +287,13 @@ function initMbtiGrid() {
         '<div class="sub">' + v.verse.ref + '</div>' +
         '<p style="font-style:italic;color:var(--text-soft);">"' + v.verse.text + '"</p>' +
         '<p>' + v.desc + '</p>' +
-        '<button class="btn block" onclick="saveMbtiCard(\'' + type + '\')">📸 카드로 저장하기</button>';
+        '<p style="font-size:12.5px;color:var(--text-soft);margin:10px 0 6px;">저장할 사이즈를 골라주세요</p>' +
+        '<div class="tabs" id="mbtiSizePicker"></div>' +
+        '<button class="btn block" style="margin-top:10px;" onclick="saveMbtiCard(\'' + type + '\')">📸 카드로 저장하기</button>';
       detail.classList.add("open");
+      if (typeof initSizePicker === "function") {
+        initSizePicker("mbtiSizePicker", function () {}, "post");
+      }
       detail.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   });
