@@ -38,6 +38,9 @@ create policy "본인 노트만 작성" on notes
 create policy "본인 노트만 삭제" on notes
   for delete using (auth.uid() = user_id);
 
+create policy "본인 노트만 수정" on notes
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 -- 프로필 (닉네임) — 그룹 리더보드 표시용
 create table if not exists profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,

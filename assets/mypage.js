@@ -208,6 +208,26 @@ function initNotes(userId) {
   var list = document.getElementById("noteList");
   if (!client || !form) return;
 
+  var noteItemsById = {};
+
+  function renderNoteItem(item) {
+    noteItemsById[item.id] = item;
+    var d = new Date(item.created_at);
+    var dateStr = (d.getMonth() + 1) + "." + d.getDate();
+    return (
+      '<div class="note-item" data-note-id="' + item.id + '">' +
+        '<div class="meta">' + NOTE_LABELS[item.type] + " · " + dateStr + '</div>' +
+        '<div data-role="body">' +
+          '<div class="content">' + escapeHtml(item.content) + '</div>' +
+          '<div style="margin-top:8px;display:flex;gap:8px;">' +
+            '<button type="button" class="btn ghost" data-action="edit" style="padding:6px 14px;font-size:12.5px;">수정</button>' +
+            '<button type="button" class="btn ghost" data-action="delete" style="padding:6px 14px;font-size:12.5px;">삭제</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
   function loadNotes() {
     if (!list) return;
     list.innerHTML = '<p class="msg">불러오는 중...</p>';
@@ -218,22 +238,53 @@ function initNotes(userId) {
       .limit(50)
       .then(function (res) {
         var items = res.data || [];
+        noteItemsById = {};
         if (!items.length) {
           list.innerHTML = '<p class="msg">아직 기록이 없어요. 오늘 첫 기록을 남겨보세요.</p>';
           return;
         }
-        list.innerHTML = items.map(function (item) {
-          var d = new Date(item.created_at);
-          var dateStr = (d.getMonth() + 1) + "." + d.getDate();
-          return (
-            '<div class="note-item">' +
-              '<div class="meta">' + NOTE_LABELS[item.type] + " · " + dateStr + '</div>' +
-              '<div class="content">' + escapeHtml(item.content) + '</div>' +
-            '</div>'
-          );
-        }).join("");
+        list.innerHTML = items.map(renderNoteItem).join("");
       });
   }
+
+  list.addEventListener("click", function (e) {
+    var btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    var itemEl = btn.closest(".note-item");
+    if (!itemEl) return;
+    var noteId = itemEl.getAttribute("data-note-id");
+    var item = noteItemsById[noteId];
+    var action = btn.getAttribute("data-action");
+    var bodyEl = itemEl.querySelector('[data-role="body"]');
+
+    if (action === "delete") {
+      if (!confirm("이 기록을 삭제할까요?")) return;
+      client.from("notes").delete().eq("id", noteId).then(function () { loadNotes(); });
+      return;
+    }
+
+    if (action === "edit") {
+      bodyEl.innerHTML =
+        '<textarea data-role="edit-input" style="margin-bottom:8px;">' + escapeHtml(item.content) + '</textarea>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button type="button" class="btn" data-action="save" style="padding:6px 14px;font-size:12.5px;">저장</button>' +
+          '<button type="button" class="btn ghost" data-action="cancel" style="padding:6px 14px;font-size:12.5px;">취소</button>' +
+        '</div>';
+      return;
+    }
+
+    if (action === "cancel") {
+      loadNotes();
+      return;
+    }
+
+    if (action === "save") {
+      var textarea = itemEl.querySelector('[data-role="edit-input"]');
+      var newContent = textarea.value.trim();
+      if (!newContent) return;
+      client.from("notes").update({ content: newContent }).eq("id", noteId).then(function () { loadNotes(); });
+    }
+  });
 
   typeButtons.forEach(function (btn) {
     btn.addEventListener("click", function () {
