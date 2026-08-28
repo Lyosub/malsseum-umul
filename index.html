@@ -79,13 +79,13 @@
   </div>
 
   <div class="card">
-    <h3 style="margin-top:0;color:var(--well-deep);text-align:center;">💫 이달의 성경인물</h3>
-    <div id="featuredMbti"></div>
-  </div>
-
-  <div class="card">
-    <h3 style="margin-top:0;color:var(--well-deep);">💬 실시간 감사·기도 나눔</h3>
-    <p style="color:var(--text-soft);font-size:12.5px;margin:0 0 14px;">감사노트는 닉네임과 함께, 기도제목은 항상 익명으로 보여요. (로그인 전에는 감사노트도 익명으로 보여요)</p>
+    <h3 style="margin-top:0;color:var(--well-deep);">💬 실시간 나눔</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;margin:0 0 14px;">기도제목은 항상 익명으로 보여요. 하루 인사·감사노트는 로그인한 사람에게만 닉네임이 보여요.</p>
+    <div class="pill-toggle" id="publicFeedTabs">
+      <button data-type="greeting" class="active">하루 인사</button>
+      <button data-type="gratitude">감사노트</button>
+      <button data-type="prayer">기도제목</button>
+    </div>
     <div id="publicFeedList"><p class="msg">불러오는 중...</p></div>
   </div>
 
@@ -101,7 +101,6 @@
   성경 인용: 개역개정판, ⓒ 대한성서공회
 </footer>
 <script src="assets/verses-data.js"></script>
-<script src="assets/mbti-bible-data.js"></script>
 <script src="assets/supabase-config.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>
@@ -109,7 +108,6 @@
 <script src="assets/public-feed.js"></script>
 <script>
   initHomeCard();
-  initFeaturedMbti();
   initHeaderAuthState();
   initPublicFeed();
 </script>

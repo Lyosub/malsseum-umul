@@ -385,7 +385,7 @@ $$;
 -- 감사노트는 로그인한 사람에게만 닉네임 노출, 기도제목은 로그인 여부와 상관없이 항상 익명.
 -- notes 테이블 자체의 RLS(본인만 조회)는 그대로 두고, 이 함수만 SECURITY DEFINER로 우회해서
 -- 정해진 필드(닉네임 마스킹 포함)만 내보낸다 — 원본 테이블 접근 권한은 바뀌지 않는다.
-create or replace function get_public_notes(p_limit integer default 20)
+create or replace function get_public_notes(p_limit integer default 60)
 returns table(id bigint, type text, content text, created_at timestamptz, nickname text)
 language sql
 security definer
@@ -397,12 +397,13 @@ as $$
     n.content,
     n.created_at,
     case
-      when n.type = 'gratitude' and auth.uid() is not null then p.nickname
+      when n.type = 'prayer' then null
+      when auth.uid() is not null then p.nickname
       else null
     end as nickname
   from notes n
   join profiles p on p.user_id = n.user_id
-  where n.type in ('gratitude', 'prayer')
+  where n.type in ('greeting', 'gratitude', 'prayer')
   order by n.created_at desc
   limit p_limit;
 $$;
