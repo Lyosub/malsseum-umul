@@ -505,12 +505,31 @@ $$;
 -- 1) 그룹원의 80% 이상이 그 주(월~일)에 한 번이라도 출석하면 전원에게 +1점
 -- 2) 그룹원 전원이 그 주에 감사노트/기도제목을 최소 1개씩은 쓰고, 그룹 전체 합계가 10개 이상이면 전원에게 +2점
 --    (합계만 보면 몇 명이 몰아 써도 조건이 채워지는 문제가 있어서, "전원 참여 + 합계" 두 조건을 같이 본다)
+-- 단, 이 보너스는 그룹을 만든 사람(host, groups.created_by)이 교사일 때만 적용된다.
+-- 학생끼리만 만든 그룹은 보너스 대상이 아니다 (교사가 지도하는 그룹만 챌린지 인정).
 -- 서버에 정해진 시간마다 도는 스케줄러가 없으므로, 그룹원 아무나 마이페이지를 열 때
 -- "지난주(가장 최근에 끝난 월~일)" 조건을 확인해서 정산하는 방식으로 동작한다.
 -- points_ledger의 unique(user_id, action_type, ref_date) 덕분에 같은 주는 중복 지급되지 않는다.
 alter table points_ledger drop constraint if exists points_ledger_action_type_check;
 alter table points_ledger add constraint points_ledger_action_type_check
   check (action_type in ('attendance', 'streak_bonus', 'note', 'quiz', 'group_attendance_bonus', 'group_notes_bonus'));
+
+-- 그룹원이면 누구나(교사 여부와 무관하게) 확인용으로 호출할 수 있는 자격 여부 조회 함수
+create or replace function get_group_bonus_eligible(p_group_id bigint)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(p.is_teacher, false)
+  from groups g
+  join profiles p on p.user_id = g.created_by
+  where g.id = p_group_id
+    and exists (
+      select 1 from group_members gm
+      where gm.group_id = p_group_id and gm.user_id = auth.uid()
+    );
+$$;
 
 create or replace function evaluate_group_weekly_bonus(p_group_id bigint)
 returns void
@@ -525,9 +544,19 @@ declare
   v_attended_count int;
   v_min_ok_count int;
   v_total_notes int;
+  v_host_is_teacher boolean;
 begin
   if not exists (select 1 from group_members where group_id = p_group_id and user_id = auth.uid()) then
     return;
+  end if;
+
+  select coalesce(p.is_teacher, false) into v_host_is_teacher
+  from groups g
+  join profiles p on p.user_id = g.created_by
+  where g.id = p_group_id;
+
+  if not v_host_is_teacher then
+    return; -- 교사가 만든 그룹이 아니면 챌린지 보너스 대상이 아니다
   end if;
 
   select count(*) into v_member_count from group_members where group_id = p_group_id;

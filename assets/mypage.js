@@ -149,12 +149,25 @@ function initGroup(userId) {
     });
   }
 
+  function renderChallengeBanner(groupId) {
+    var el = document.getElementById("groupChallengeBanner");
+    if (!el) return;
+    client.rpc("get_group_bonus_eligible", { p_group_id: groupId }).then(function (res) {
+      var eligible = !!(res.data);
+      el.innerHTML = eligible
+        ? "🎯 그룹 챌린지: 한 주(월~일) 동안 그룹원의 80% 이상 출석하면 전원 +1점, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 그룹 합계가 10개 이상이면 전원 +2점 (다음 주에 자동 정산돼요)"
+        : "이 그룹은 학생들끼리 만든 그룹이라 챌린지 보너스가 적용되지 않아요. 교사가 만든 그룹만 보너스 대상이에요.";
+    });
+  }
+
   function showGroup(group) {
     noGroupEl.style.display = "none";
     hasGroupEl.style.display = "block";
     document.getElementById("groupName").textContent = group.name;
     document.getElementById("groupCode").textContent = group.invite_code;
+    renderChallengeBanner(group.id);
     // 지난주(월~일) 그룹 챌린지 조건을 확인해서 아직 정산 안 됐으면 그룹 전원에게 보너스 포인트를 지급한다
+    // (교사가 만든 그룹이 아니면 evaluate_group_weekly_bonus 내부에서 조용히 아무것도 하지 않는다)
     client.rpc("evaluate_group_weekly_bonus", { p_group_id: group.id }).catch(function () {}).then(function () {
       renderLeaderboard(group.id);
       renderTodayStatus(group.id);
