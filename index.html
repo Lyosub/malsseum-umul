@@ -83,6 +83,12 @@
     <div id="featuredMbti"></div>
   </div>
 
+  <div class="card">
+    <h3 style="margin-top:0;color:var(--well-deep);">💬 실시간 감사·기도 나눔</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;margin:0 0 14px;">감사노트는 닉네임과 함께, 기도제목은 항상 익명으로 보여요. (로그인 전에는 감사노트도 익명으로 보여요)</p>
+    <div id="publicFeedList"><p class="msg">불러오는 중...</p></div>
+  </div>
+
   <div class="card" style="text-align:center;">
     <p style="color:var(--text-soft);font-size:14px;margin:0 0 12px;">'말씀우물'이 어떤 사이트인지 궁금하다면?</p>
     <a href="about.html" class="btn ghost block">사이트 소개 보기</a>
@@ -100,10 +106,12 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>
 <script src="assets/script.js"></script>
+<script src="assets/public-feed.js"></script>
 <script>
   initHomeCard();
   initFeaturedMbti();
   initHeaderAuthState();
+  initPublicFeed();
 </script>
 </body>
 </html>

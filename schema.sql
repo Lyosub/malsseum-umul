@@ -380,3 +380,96 @@ begin
     order by total_points desc;
 end;
 $$;
+
+-- ===== 실시간 감사·기도 나눔 피드 (홈페이지 공개) =====
+-- 감사노트는 로그인한 사람에게만 닉네임 노출, 기도제목은 로그인 여부와 상관없이 항상 익명.
+-- notes 테이블 자체의 RLS(본인만 조회)는 그대로 두고, 이 함수만 SECURITY DEFINER로 우회해서
+-- 정해진 필드(닉네임 마스킹 포함)만 내보낸다 — 원본 테이블 접근 권한은 바뀌지 않는다.
+create or replace function get_public_notes(p_limit integer default 20)
+returns table(id bigint, type text, content text, created_at timestamptz, nickname text)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    n.id,
+    n.type,
+    n.content,
+    n.created_at,
+    case
+      when n.type = 'gratitude' and auth.uid() is not null then p.nickname
+      else null
+    end as nickname
+  from notes n
+  join profiles p on p.user_id = n.user_id
+  where n.type in ('gratitude', 'prayer')
+  order by n.created_at desc
+  limit p_limit;
+$$;
+
+-- ===== 관리자: 학생 기록 관리 =====
+-- 회원 목록에 최근 기록(타입/시각)을 함께 보여주도록 반환 컬럼 추가 (기존 함수를 다시 정의)
+drop function if exists get_member_list();
+
+create or replace function get_member_list()
+returns table(
+  user_id uuid,
+  nickname text,
+  email text,
+  is_admin boolean,
+  joined_at timestamptz,
+  last_sign_in_at timestamptz,
+  last_note_type text,
+  last_note_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    p.user_id, p.nickname, u.email, p.is_admin, p.created_at, u.last_sign_in_at,
+    (select n.type from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_type,
+    (select n.created_at from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_at
+  from profiles p
+  join auth.users u on u.id = p.user_id
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and admin_p.is_admin = true
+  )
+  order by p.created_at desc;
+$$;
+
+-- 관리자 전용: 전체 학생의 감사노트/기도제목/하루인사 전체 목록 (닉네임 포함, 익명 처리 없음 — 관리자만 볼 수 있음)
+create or replace function get_all_notes_admin(p_limit integer default 200)
+returns table(id bigint, user_id uuid, nickname text, type text, content text, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select n.id, n.user_id, p.nickname, n.type, n.content, n.created_at
+  from notes n
+  join profiles p on p.user_id = n.user_id
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and admin_p.is_admin = true
+  )
+  order by n.created_at desc
+  limit p_limit;
+$$;
+
+-- 관리자 전용: 기록 삭제 (부적절한 내용 등을 관리자가 지울 수 있도록)
+create or replace function admin_delete_note(p_note_id bigint)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from profiles where user_id = auth.uid() and is_admin = true
+  ) then
+    raise exception '관리자만 삭제할 수 있습니다.';
+  end if;
+
+  delete from notes where id = p_note_id;
+  return true;
+end;
+$$;

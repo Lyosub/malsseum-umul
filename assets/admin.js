@@ -37,6 +37,7 @@ function initAdminPage() {
       initAnnouncementForm(session.user.id);
       initEventForm(session.user.id);
       loadMemberList();
+      loadAllNotes();
     });
   });
 }
@@ -48,6 +49,8 @@ function formatDateTime(iso) {
   return d.getFullYear() + "." + pad(d.getMonth() + 1) + "." + pad(d.getDate()) +
     " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
 }
+
+var ADMIN_NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목" };
 
 function loadMemberList() {
   var client = getClient();
@@ -66,6 +69,9 @@ function loadMemberList() {
 
     listEl.innerHTML = members.map(function (m) {
       var lastSeen = formatDateTime(m.last_sign_in_at);
+      var lastNote = m.last_note_type
+        ? ADMIN_NOTE_LABELS[m.last_note_type] + ' (' + formatDateTime(m.last_note_at) + ')'
+        : "아직 없음";
       return (
         '<div class="note-item">' +
           '<div class="content">' +
@@ -74,13 +80,51 @@ function loadMemberList() {
             '<br>' + escapeHtmlAdmin(m.email) +
           '</div>' +
           '<div class="meta">가입: ' + formatDateTime(m.joined_at) +
-            ' · 최근 접속: ' + (lastSeen || "기록 없음") + '</div>' +
+            ' · 최근 접속: ' + (lastSeen || "기록 없음") +
+            '<br>최근 기록: ' + lastNote + '</div>' +
         '</div>'
       );
     }).join("");
   }).catch(function () {
     listEl.innerHTML = '<p class="msg">회원 목록을 불러오지 못했어요.</p>';
   });
+}
+
+function loadAllNotes() {
+  var client = getClient();
+  var listEl = document.getElementById("allNotesList");
+  if (!listEl) return;
+
+  function load() {
+    client.rpc("get_all_notes_admin", { p_limit: 200 }).then(function (res) {
+      var items = res.data || [];
+      if (!items.length) {
+        listEl.innerHTML = '<p class="msg">아직 기록이 없어요.</p>';
+        return;
+      }
+      listEl.innerHTML = items.map(function (item) {
+        return (
+          '<div class="note-item">' +
+            '<div class="meta">' + escapeHtmlAdmin(item.nickname) + ' · ' + ADMIN_NOTE_LABELS[item.type] + ' · ' + formatDateTime(item.created_at) + '</div>' +
+            '<div class="content">' + escapeHtmlAdmin(item.content) + '</div>' +
+            '<button class="btn ghost" data-note-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
+          '</div>'
+        );
+      }).join("");
+      listEl.querySelectorAll("button[data-note-id]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          if (!confirm("이 기록을 삭제할까요?")) return;
+          client.rpc("admin_delete_note", { p_note_id: btn.getAttribute("data-note-id") }).then(function () {
+            load();
+          });
+        });
+      });
+    }).catch(function () {
+      listEl.innerHTML = '<p class="msg">기록을 불러오지 못했어요.</p>';
+    });
+  }
+
+  load();
 }
 
 function initAnnouncementForm(userId) {
