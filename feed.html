@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>실시간 나눔 | 말씀우물</title>
+<meta name="description" content="말씀우물 학생들의 하루 인사, 감사노트, 기도제목을 함께 나눠보세요.">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14707a">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script defer src="assets/pwa.js"></script>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap">
+  <section class="hero">
+    <h1>실시간 나눔</h1>
+    <p>기도제목은 항상 익명으로 보여요. 하루 인사·감사노트는 로그인한 사람에게만 닉네임이 보여요.</p>
+  </section>
+
+  <div class="card">
+    <div class="well-label" style="margin-top:0;">🙋 하루 인사</div>
+    <div id="publicFeedGreeting"><p class="msg">불러오는 중...</p></div>
+  </div>
+
+  <div class="card">
+    <div class="well-label" style="margin-top:0;">🙏 감사노트</div>
+    <div id="publicFeedGratitude"><p class="msg">불러오는 중...</p></div>
+  </div>
+
+  <div class="card">
+    <div class="well-label" style="margin-top:0;">🕊️ 기도제목</div>
+    <div id="publicFeedPrayer"><p class="msg">불러오는 중...</p></div>
+  </div>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  💧 말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a>
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/feed.js"></script>
+<script>
+  initFeedPage();
+  initHeaderAuthState();
+</script>
+</body>
+</html>

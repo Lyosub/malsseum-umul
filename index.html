@@ -76,24 +76,11 @@
       <div class="title">이달의 배경화면</div>
       <div class="desc">말씀+달력 배경화면 다운로드</div>
     </a>
-  </div>
-
-  <div class="card">
-    <h3 style="margin-top:0;color:var(--well-deep);">💬 실시간 나눔</h3>
-    <p style="color:var(--text-soft);font-size:12.5px;margin:0 0 16px;">기도제목은 항상 익명으로 보여요. 하루 인사·감사노트는 로그인한 사람에게만 닉네임이 보여요.</p>
-
-    <div class="well-label" id="publicFeedLabelGreeting" style="margin-top:0;cursor:pointer;">🙋 하루 인사 <span style="color:var(--text-soft);font-weight:400;">▾ 전체보기</span></div>
-    <div id="publicFeedGreeting"><p class="msg">불러오는 중...</p></div>
-
-    <hr class="well-divider">
-
-    <div class="well-label" id="publicFeedLabelGratitude" style="cursor:pointer;">🙏 감사노트 <span style="color:var(--text-soft);font-weight:400;">▾ 전체보기</span></div>
-    <div id="publicFeedGratitude"><p class="msg">불러오는 중...</p></div>
-
-    <hr class="well-divider">
-
-    <div class="well-label" id="publicFeedLabelPrayer" style="cursor:pointer;">🕊️ 기도제목 <span style="color:var(--text-soft);font-weight:400;">▾ 전체보기</span></div>
-    <div id="publicFeedPrayer"><p class="msg">불러오는 중...</p></div>
+    <a class="nav-card" href="feed.html" style="grid-column: 1 / -1;">
+      <div class="icon">💬</div>
+      <div class="title">실시간 나눔</div>
+      <div class="desc">하루인사·감사노트·기도제목</div>
+    </a>
   </div>
 
   <div class="card" style="text-align:center;">
@@ -112,11 +99,9 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>
 <script src="assets/script.js"></script>
-<script src="assets/public-feed.js"></script>
 <script>
   initHomeCard();
   initHeaderAuthState();
-  initPublicFeed();
 </script>
 </body>
 </html>
