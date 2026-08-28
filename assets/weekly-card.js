@@ -108,6 +108,77 @@ function drawCoverImage(ctx, img, W, H) {
   ctx.fillRect(0, 0, W, H);
 }
 
+// 배경에서 글씨를 놓기에 가장 무난한(단조로운) 위치를 화면 중간 대역에서 찾는다
+function findBestTextBandY(ctx, W, H) {
+  var zoneTop = Math.floor(H * 0.26);
+  var zoneBottom = Math.floor(H * 0.76);
+  var zoneH = zoneBottom - zoneTop;
+  var bands = 6;
+  var bandH = zoneH / bands;
+  var fallbackY = zoneTop + zoneH / 2;
+
+  var imgData;
+  try {
+    imgData = ctx.getImageData(0, zoneTop, W, zoneH);
+  } catch (e) {
+    return fallbackY;
+  }
+  var data = imgData.data;
+  var stepX = Math.max(4, Math.floor(W / 90));
+  var stepY = Math.max(2, Math.floor(bandH / 16));
+
+  var bestScore = Infinity;
+  var bestCenterY = fallbackY;
+
+  for (var b = 0; b < bands; b++) {
+    var yStart = Math.floor(b * bandH);
+    var yEnd = Math.floor(yStart + bandH);
+    var sum = 0, sumSq = 0, count = 0;
+    for (var y = yStart; y < yEnd; y += stepY) {
+      var row = y * W;
+      for (var x = 0; x < W; x += stepX) {
+        var idx = (row + x) * 4;
+        var lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+        sum += lum;
+        sumSq += lum * lum;
+        count++;
+      }
+    }
+    if (count === 0) continue;
+    var mean = sum / count;
+    var variance = sumSq / count - mean * mean;
+    var bandCenterY = zoneTop + yStart + bandH / 2;
+    var centerBias = Math.abs(bandCenterY - H * 0.5) * 6;
+    var score = variance + centerBias;
+    if (score < bestScore) {
+      bestScore = score;
+      bestCenterY = bandCenterY;
+    }
+  }
+  return bestCenterY;
+}
+
+// 텍스트 블록 뒤에 은은한 어두운 스크림을 깔아 어떤 배경 위에서도 가독성을 보장
+function drawTextScrim(ctx, W, topY, bottomY) {
+  var pad = 34;
+  var x = W * 0.06;
+  var w = W * 0.88;
+  var y = topY - pad;
+  var h = (bottomY - topY) + pad * 2;
+  var r = 30;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(8, 18, 22, 0.4)";
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawWeeklyCard(canvas, msg, W, H) {
   W = W || 1080;
   H = H || 1350;
@@ -122,32 +193,78 @@ function drawWeeklyCard(canvas, msg, W, H) {
   }
 
   ctx.textAlign = "center";
-  ctx.shadowColor = "rgba(0,0,0,0.4)";
-  ctx.shadowBlur = 14;
 
   ctx.font = '400 76px "East Sea Dokdo"';
-  ctx.fillStyle = "#ffffff";
   var titleLines = wrapTextWeekly(ctx, msg.title, W * 0.82);
-  var titleY = H * 0.16;
+  var titleGap = 84;
+
+  ctx.font = '400 48px "East Sea Dokdo"';
+  var verseLines = wrapTextWeekly(ctx, '"' + msg.verseText + '"', W * 0.78);
+  var verseGap = 60;
+
+  var hasEn = !!msg.verseTextEn;
+  var enLines = [];
+  if (hasEn) {
+    ctx.font = '400 30px "Pretendard", sans-serif';
+    enLines = wrapTextWeekly(ctx, '"' + msg.verseTextEn + '"', W * 0.74);
+  }
+  var enGap = 40;
+
+  // titleY를 0으로 뒀을 때 각 요소의 상대 y 위치 (전체 블록 높이 계산용)
+  var afterTitleRel = (titleLines.length - 1) * titleGap + 90;
+  var refYRel = afterTitleRel + verseLines.length * verseGap + 46;
+  var enStartRel = refYRel + 56;
+  var enRefRel = hasEn ? enStartRel + (enLines.length - 1) * enGap + 42 : refYRel;
+
+  var blockTopRel = -66;
+  var blockBottomRel = enRefRel + 30;
+  var blockCenterRel = (blockTopRel + blockBottomRel) / 2;
+
+  var anchorY = findBestTextBandY(ctx, W, H);
+  var titleY = anchorY - blockCenterRel;
+
+  var minTitleY = H * 0.1 - blockTopRel;
+  var maxTitleY = H - H * 0.12 - blockBottomRel;
+  if (titleY < minTitleY) titleY = minTitleY;
+  if (maxTitleY > minTitleY && titleY > maxTitleY) titleY = maxTitleY;
+
+  drawTextScrim(ctx, W, titleY + blockTopRel, titleY + blockBottomRel);
+
+  ctx.shadowColor = "rgba(0,0,0,0.4)";
+  ctx.shadowBlur = 14;
+  ctx.font = '400 76px "East Sea Dokdo"';
+  ctx.fillStyle = "#ffffff";
   titleLines.forEach(function (line, i) {
-    ctx.fillText(line, W / 2, titleY + i * 84);
+    ctx.fillText(line, W / 2, titleY + i * titleGap);
   });
 
-  var afterTitleY = titleY + (titleLines.length - 1) * 84 + 90;
-
+  var afterTitleY = titleY + afterTitleRel;
   ctx.shadowBlur = 10;
   ctx.font = '400 48px "East Sea Dokdo"';
-  ctx.fillStyle = "#ffffff";
-  var verseLines = wrapTextWeekly(ctx, '"' + msg.verseText + '"', W * 0.78);
   verseLines.forEach(function (line, i) {
-    ctx.fillText(line, W / 2, afterTitleY + i * 60);
+    ctx.fillText(line, W / 2, afterTitleY + i * verseGap);
   });
 
-  var refY = afterTitleY + verseLines.length * 60 + 46;
+  var refY = titleY + refYRel;
   ctx.shadowBlur = 6;
   ctx.font = '400 32px "East Sea Dokdo"';
   ctx.fillStyle = "rgba(255,255,255,0.9)";
   ctx.fillText("(" + msg.verseRef + ")", W / 2, refY);
+
+  if (hasEn) {
+    var enStartY = titleY + enStartRel;
+    ctx.shadowBlur = 6;
+    ctx.font = '400 30px "Pretendard", sans-serif';
+    ctx.fillStyle = "rgba(255,255,255,0.86)";
+    enLines.forEach(function (line, i) {
+      ctx.fillText(line, W / 2, enStartY + i * enGap);
+    });
+
+    var enRefY = titleY + enRefRel;
+    ctx.font = '400 24px "Pretendard", sans-serif';
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.fillText("(" + msg.verseRefEn + ")", W / 2, enRefY);
+  }
 
   ctx.shadowBlur = 0;
   ctx.font = '400 26px "Pretendard"';
@@ -156,41 +273,15 @@ function drawWeeklyCard(canvas, msg, W, H) {
 }
 
 function tryAutoLoadWeeklyBg(weekLabel) {
-  var msg = document.getElementById("bgImageMsg");
   var path = "assets/weekly-backgrounds/" + weekLabel + ".png";
   var img = new Image();
   img.onload = function () {
     weeklyBgImage = img;
-    if (msg) msg.textContent = "이번 주 배경 이미지를 자동으로 불러왔어요.";
   };
   img.onerror = function () {
     // assets/weekly-backgrounds/에 해당 주차 이미지가 없으면 기본 배경(자연 풍경)을 그대로 사용
   };
   img.src = path;
-}
-
-function initBgImageUpload() {
-  var input = document.getElementById("bgImageInput");
-  var msg = document.getElementById("bgImageMsg");
-  if (!input) return;
-
-  input.addEventListener("change", function () {
-    var file = input.files && input.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function (e) {
-      var img = new Image();
-      img.onload = function () {
-        weeklyBgImage = img;
-        if (msg) msg.textContent = "직접 올린 이미지로 바꿨어요. 카드를 저장해보세요.";
-      };
-      img.onerror = function () {
-        if (msg) msg.textContent = "이미지를 불러오지 못했어요.";
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
 }
 
 function initWeeklyPage() {
@@ -202,9 +293,14 @@ function initWeeklyPage() {
   if (labelEl) labelEl.textContent = WEEKLY_MESSAGE.weekLabel + " 예배";
   if (titleEl) titleEl.textContent = WEEKLY_MESSAGE.title;
 
+  var enHtml = WEEKLY_MESSAGE.verseTextEn
+    ? '<div class="well-verse-text" style="font-size:13px;font-style:italic;color:var(--text-soft);margin-top:6px;">"' + WEEKLY_MESSAGE.verseTextEn + '"<br>(' + WEEKLY_MESSAGE.verseRefEn + ')</div>'
+    : '';
+
   cardEl.innerHTML =
     '<div class="well-ref">' + WEEKLY_MESSAGE.verseRef + '</div>' +
     '<div class="well-verse-text">"' + WEEKLY_MESSAGE.verseText + '"</div>' +
+    enHtml +
     '<hr class="well-divider">' +
     '<div class="well-label">요약</div>' +
     '<p class="well-meditation">' + WEEKLY_MESSAGE.summary + '</p>' +
@@ -214,7 +310,6 @@ function initWeeklyPage() {
     '</div>';
 
   tryAutoLoadWeeklyBg(WEEKLY_MESSAGE.weekLabel);
-  initBgImageUpload();
 
   if (typeof initSizePicker === "function") {
     initSizePicker("weeklySizePicker", function () {}, "post");
