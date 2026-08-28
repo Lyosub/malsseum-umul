@@ -418,7 +418,33 @@ drop function if exists get_member_list();
 -- 교사 여부 (회원가입 화면에서는 고를 수 없고, 관리자가 회원 관리에서만 지정할 수 있다)
 alter table profiles add column if not exists is_teacher boolean not null default false;
 
--- 관리자 전용: 특정 회원을 교사/학생으로 지정 (본인이 직접 켤 수 없도록 profiles의 일반 UPDATE 정책과 분리)
+-- ⚠️ 보안 수정: "본인 프로필만 수정" 정책(위 71번째 줄 근처)은 본인 행이라는 것만 확인할 뿐
+-- is_admin/is_teacher 같은 권한 컬럼까지 마음대로 바꾸는 걸 막지는 못했다. 즉 로그인한 사용자가
+-- 브라우저에서 supabase.from('profiles').update({is_admin:true})를 직접 호출하면 그대로 통과되는
+-- 취약점이 있었다. 트리거로 "일반 사용자가 직접 하는 update"에서는 이 두 컬럼을 항상 기존 값으로
+-- 되돌리고, admin_set_teacher()처럼 신뢰된 함수 안에서만 세션 플래그를 켜서 예외적으로 허용한다.
+-- (SQL Editor에서 관리자를 수동으로 지정할 때처럼 auth.uid()가 없는 경우는 그대로 통과시킨다.)
+create or replace function protect_privilege_columns()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is not null and coalesce(current_setting('app.allow_privilege_change', true), '') <> 'true' then
+    new.is_admin := old.is_admin;
+    new.is_teacher := old.is_teacher;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_profiles_protect_privilege on profiles;
+create trigger trg_profiles_protect_privilege
+  before update on profiles
+  for each row execute function protect_privilege_columns();
+
+-- 관리자 전용: 특정 회원을 교사/학생으로 지정 (본인이 직접 켤 수 없도록 위 트리거로 보호되어 있음)
 create or replace function admin_set_teacher(p_user_id uuid, p_is_teacher boolean)
 returns boolean
 language plpgsql
@@ -432,6 +458,7 @@ begin
     raise exception '관리자만 지정할 수 있습니다.';
   end if;
 
+  perform set_config('app.allow_privilege_change', 'true', true);
   update profiles set is_teacher = p_is_teacher where user_id = p_user_id;
   return true;
 end;
@@ -575,8 +602,10 @@ security definer
 set search_path = public
 as $$
 declare
-  v_week_start date := date_trunc('week', current_date)::date - 7;
-  v_week_end date := date_trunc('week', current_date)::date - 1;
+  -- current_date는 DB 세션 시간대(보통 UTC) 기준이라 한국 시간 자정~아침 9시 사이에는 아직
+  -- "어제 날짜"로 계산되어 주 경계가 하루 어긋날 수 있었다. 다른 함수들처럼 한국 시간 기준으로 통일한다.
+  v_week_start date := date_trunc('week', (now() at time zone 'Asia/Seoul')::date)::date - 7;
+  v_week_end date := date_trunc('week', (now() at time zone 'Asia/Seoul')::date)::date - 1;
   v_member_count int;
   v_attended_count int;
   v_min_ok_count int;
@@ -802,5 +831,33 @@ begin
   end if;
 
   return query select v_is_correct, v_correct_option;
+end;
+$$;
+
+-- ===== 출석 날짜 위조 방지 =====
+-- 기존 "본인 출석만 등록" 정책은 auth.uid() = user_id만 확인할 뿐 날짜는 아무 제한이 없어서,
+-- 로그인한 사용자가 브라우저에서 직접 임의의 과거 날짜로 attendance를 여러 번 insert하면
+-- 연속 출석 보너스나 그룹 챌린지를 손쉽게 위조할 수 있는 허점이 있었다.
+-- 클라이언트가 직접 insert하는 길을 막고, "오늘(한국 시간) 날짜로만" 체크인하는 함수로 바꾼다.
+drop policy if exists "본인 출석만 등록" on attendance;
+
+create or replace function check_in_today()
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_today date := (now() at time zone 'Asia/Seoul')::date;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  insert into attendance (user_id, date)
+  values (auth.uid(), v_today)
+  on conflict (user_id, date) do nothing;
+
+  return found;
 end;
 $$;

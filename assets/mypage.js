@@ -64,11 +64,14 @@ function initAttendance(userId) {
 
   checkBtn.addEventListener("click", function () {
     checkBtn.disabled = true;
-    client.from("attendance").insert({ user_id: userId, date: todayStr() }).then(function (res) {
+    client.rpc("check_in_today").then(function (res) {
       if (res.error) {
-        if (streakMsg) streakMsg.textContent = "이미 오늘 출석했거나 오류가 발생했어요.";
+        if (streakMsg) streakMsg.textContent = "오류가 발생했어요. 다시 시도해주세요.";
         checkBtn.disabled = false;
         return;
+      }
+      if (!res.data) {
+        if (streakMsg) streakMsg.textContent = "이미 오늘 출석했어요.";
       }
       refreshStreak();
       loadTotalPoints(userId);
