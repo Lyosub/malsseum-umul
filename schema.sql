@@ -480,7 +480,8 @@ $$;
 
 -- ===== 그룹 주간 챌린지 보너스 (개인이 얻는 포인트와는 별개로 그룹 전체에게 추가 지급) =====
 -- 1) 그룹원의 80% 이상이 그 주(월~일)에 한 번이라도 출석하면 전원에게 +1점
--- 2) 그룹원 전원이 그 주에 감사노트+기도제목을 합쳐 3개 이상 썼으면 전원에게 +2점
+-- 2) 그룹원 전원이 그 주에 감사노트/기도제목을 최소 1개씩은 쓰고, 그룹 전체 합계가 10개 이상이면 전원에게 +2점
+--    (합계만 보면 몇 명이 몰아 써도 조건이 채워지는 문제가 있어서, "전원 참여 + 합계" 두 조건을 같이 본다)
 -- 서버에 정해진 시간마다 도는 스케줄러가 없으므로, 그룹원 아무나 마이페이지를 열 때
 -- "지난주(가장 최근에 끝난 월~일)" 조건을 확인해서 정산하는 방식으로 동작한다.
 -- points_ledger의 unique(user_id, action_type, ref_date) 덕분에 같은 주는 중복 지급되지 않는다.
@@ -499,7 +500,8 @@ declare
   v_week_end date := date_trunc('week', current_date)::date - 1;
   v_member_count int;
   v_attended_count int;
-  v_notes_ok_count int;
+  v_min_ok_count int;
+  v_total_notes int;
 begin
   if not exists (select 1 from group_members where group_id = p_group_id and user_id = auth.uid()) then
     return;
@@ -518,15 +520,22 @@ begin
       where a.user_id = gm.user_id and a.date between v_week_start and v_week_end
     );
 
-  select count(*) into v_notes_ok_count
+  select count(*) into v_min_ok_count
   from group_members gm
   where gm.group_id = p_group_id
-    and (
-      select count(*) from notes n
+    and exists (
+      select 1 from notes n
       where n.user_id = gm.user_id
         and n.type in ('gratitude', 'prayer')
         and (n.created_at at time zone 'Asia/Seoul')::date between v_week_start and v_week_end
-    ) >= 3;
+    );
+
+  select count(*) into v_total_notes
+  from notes n
+  join group_members gm on gm.user_id = n.user_id
+  where gm.group_id = p_group_id
+    and n.type in ('gratitude', 'prayer')
+    and (n.created_at at time zone 'Asia/Seoul')::date between v_week_start and v_week_end;
 
   if v_attended_count::numeric / v_member_count >= 0.8 then
     insert into points_ledger (user_id, action_type, points, ref_date)
@@ -535,7 +544,7 @@ begin
     on conflict (user_id, action_type, ref_date) do nothing;
   end if;
 
-  if v_notes_ok_count = v_member_count then
+  if v_min_ok_count = v_member_count and v_total_notes >= 10 then
     insert into points_ledger (user_id, action_type, points, ref_date)
     select gm.user_id, 'group_notes_bonus', 2, v_week_start
     from group_members gm where gm.group_id = p_group_id
