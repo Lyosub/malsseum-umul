@@ -464,7 +464,7 @@ footer.site a { text-decoration: underline; }
 }
 
 .cal-cell {
-  aspect-ratio: 1;
+  min-height: 52px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -473,6 +473,7 @@ footer.site a { text-decoration: underline; }
   background: var(--card-bg);
   border: 1px solid var(--border);
   position: relative;
+  padding: 4px 2px;
 }
 
 .cal-cell.empty {
@@ -501,6 +502,22 @@ footer.site a { text-decoration: underline; }
   border-radius: 50%;
   background: var(--gold);
   margin-top: 3px;
+}
+
+.cal-event-title {
+  font-size: 9.5px;
+  line-height: 1.2;
+  color: var(--gold);
+  margin-top: 2px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.cal-cell.today .cal-event-title {
+  color: #fff;
 }
 
 .cal-cell.today .cal-dot {

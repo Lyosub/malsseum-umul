@@ -66,12 +66,17 @@ function initCalendarPage() {
         }
         for (var d = 1; d <= totalDays; d++) {
           var ds = dateStr(year, month, d);
-          var hasEvent = !!eventsByDate[ds];
+          var dayEvents = eventsByDate[ds];
           var isToday = ds === todayStr;
+          var titleHtml = "";
+          if (dayEvents && dayEvents.length) {
+            var label = escapeHtmlCal(dayEvents[0].title) + (dayEvents.length > 1 ? " +" + (dayEvents.length - 1) : "");
+            titleHtml = '<span class="cal-event-title">' + label + '</span>';
+          }
           cells.push(
             '<div class="cal-cell' + (isToday ? ' today' : '') + '">' +
               '<span class="cal-day-num">' + d + '</span>' +
-              (hasEvent ? '<span class="cal-dot"></span>' : '') +
+              titleHtml +
             '</div>'
           );
         }
