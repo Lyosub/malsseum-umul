@@ -10,6 +10,16 @@ var FEED_SECTIONS = {
   gratitude: "publicFeedGratitude",
   prayer: "publicFeedPrayer"
 };
+var FEED_CARD_IDS = {
+  greeting: "feedCardGreeting",
+  gratitude: "feedCardGratitude",
+  prayer: "feedCardPrayer"
+};
+var FEED_HERO = {
+  greeting: { title: "🙋 하루 인사", desc: "로그인한 사람에게만 닉네임이 보여요." },
+  gratitude: { title: "🙏 감사노트", desc: "로그인한 사람에게만 닉네임이 보여요." },
+  prayer: { title: "🕊️ 기도제목", desc: "누가 썼는지는 항상 익명으로 보여요." }
+};
 
 function escapeHtmlFeedPage(str) {
   return String(str)
@@ -49,6 +59,22 @@ function renderFeedPageSection(elId, rows) {
 function initFeedPage() {
   var client = getClient();
   if (!client) return;
+
+  var params = new URLSearchParams(window.location.search);
+  var onlyType = params.get("type");
+  if (!FEED_SECTIONS[onlyType]) onlyType = null;
+
+  if (onlyType) {
+    Object.keys(FEED_CARD_IDS).forEach(function (type) {
+      if (type === onlyType) return;
+      var card = document.getElementById(FEED_CARD_IDS[type]);
+      if (card) card.style.display = "none";
+    });
+    var titleEl = document.getElementById("feedHeroTitle");
+    var descEl = document.getElementById("feedHeroDesc");
+    if (titleEl) titleEl.textContent = FEED_HERO[onlyType].title;
+    if (descEl) descEl.textContent = FEED_HERO[onlyType].desc;
+  }
 
   function load() {
     client.rpc("get_public_notes", { p_limit: FEED_FETCH_LIMIT }).then(function (res) {
