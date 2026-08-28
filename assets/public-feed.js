@@ -6,7 +6,8 @@
 
 var PUBLIC_FEED_INTERVAL_MS = 20000;
 var PUBLIC_FEED_PREVIEW_COUNT = 6;
-var PUBLIC_FEED_FETCH_LIMIT = 300;
+var PUBLIC_FEED_FETCH_LIMIT = 100;
+var PUBLIC_FEED_EXPANDED_MAX_HEIGHT = "420px";
 var PUBLIC_FEED_SECTIONS = {
   greeting: { list: "publicFeedGreeting", label: "publicFeedLabelGreeting", title: "🙋 하루 인사" },
   gratitude: { list: "publicFeedGratitude", label: "publicFeedLabelGratitude", title: "🙏 감사노트" },
@@ -53,7 +54,7 @@ function renderFeedSection(type) {
     listEl.innerHTML = '<p class="msg">아직 나눈 이야기가 없어요.</p>';
     return;
   }
-  listEl.innerHTML = shown.map(function (r) {
+  var itemsHtml = shown.map(function (r) {
     var who = r.nickname ? escapeHtmlFeed(r.nickname) : "익명";
     return (
       '<div class="note-item">' +
@@ -62,6 +63,11 @@ function renderFeedSection(type) {
       '</div>'
     );
   }).join("");
+
+  // 전체보기 상태일 땐 글이 아무리 많이 쌓여도 카드 높이는 고정하고, 그 안에서만 스크롤되게 한다
+  listEl.innerHTML = expanded
+    ? '<div style="max-height:' + PUBLIC_FEED_EXPANDED_MAX_HEIGHT + ';overflow-y:auto;padding-right:4px;">' + itemsHtml + '</div>'
+    : itemsHtml;
 }
 
 function initPublicFeed() {
