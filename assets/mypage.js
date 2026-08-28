@@ -121,7 +121,10 @@ function initGroup(userId) {
     hasGroupEl.style.display = "block";
     document.getElementById("groupName").textContent = group.name;
     document.getElementById("groupCode").textContent = group.invite_code;
-    renderLeaderboard(group.id);
+    // 지난주(월~일) 그룹 챌린지 조건을 확인해서 아직 정산 안 됐으면 그룹 전원에게 보너스 포인트를 지급한다
+    client.rpc("evaluate_group_weekly_bonus", { p_group_id: group.id }).catch(function () {}).then(function () {
+      renderLeaderboard(group.id);
+    });
   }
 
   function loadMyGroup() {
