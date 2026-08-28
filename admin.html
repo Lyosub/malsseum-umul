@@ -69,6 +69,46 @@
     </div>
 
     <div class="card">
+      <h3 style="margin-top:0;">수요 성경퀴즈 등록</h3>
+      <p class="msg" style="margin-top:0;">가장 최근에 등록한 퀴즈가 학생들에게 "이번 주 퀴즈"로 보여요.</p>
+      <form id="quizForm">
+        <div class="form-row">
+          <label for="quizQuestion">문제</label>
+          <textarea id="quizQuestion" placeholder="예: 이번 주 설교에서 '카탈라쏘'는 어떤 의미인가요?"></textarea>
+        </div>
+        <div class="form-row">
+          <label for="quizOption1">보기 1</label>
+          <input type="text" id="quizOption1" placeholder="보기 1">
+        </div>
+        <div class="form-row">
+          <label for="quizOption2">보기 2</label>
+          <input type="text" id="quizOption2" placeholder="보기 2">
+        </div>
+        <div class="form-row">
+          <label for="quizOption3">보기 3</label>
+          <input type="text" id="quizOption3" placeholder="보기 3">
+        </div>
+        <div class="form-row">
+          <label for="quizOption4">보기 4</label>
+          <input type="text" id="quizOption4" placeholder="보기 4">
+        </div>
+        <div class="form-row">
+          <label>정답</label>
+          <div class="pill-toggle" id="quizCorrectPicker">
+            <button type="button" data-option="1" class="active">1번</button>
+            <button type="button" data-option="2">2번</button>
+            <button type="button" data-option="3">3번</button>
+            <button type="button" data-option="4">4번</button>
+          </div>
+        </div>
+        <button type="submit" class="btn block">퀴즈 등록</button>
+        <p class="msg" id="quizMsg"></p>
+      </form>
+      <hr class="well-divider">
+      <div id="quizAdminList"></div>
+    </div>
+
+    <div class="card">
       <h3 style="margin-top:0;">회원 관리</h3>
       <p class="msg" id="memberCount"></p>
       <div id="memberList"></div>

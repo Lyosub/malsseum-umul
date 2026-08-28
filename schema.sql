@@ -678,3 +678,129 @@ begin
     order by p.nickname;
 end;
 $$;
+
+-- ===== 수요 성경퀴즈 (객관식 4지선다, 정답 시 +1점) =====
+-- quiz_questions는 정답(correct_option)이 들어있어서 학생이 직접 테이블을 조회하면 정답이 노출된다.
+-- 그래서 RLS로 일반 사용자의 SELECT를 아예 막고, get_current_quiz()/submit_quiz_answer() 두 함수로만
+-- 오가게 해서 정답이 클라이언트로 절대 내려가지 않게 한다(제출 결과로만 알려준다).
+create table if not exists quiz_questions (
+  id bigint generated always as identity primary key,
+  week_start date not null,
+  question text not null,
+  option1 text not null,
+  option2 text not null,
+  option3 text not null,
+  option4 text not null,
+  correct_option smallint not null check (correct_option between 1 and 4),
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table quiz_questions enable row level security;
+
+create policy "관리자만 퀴즈 조회" on quiz_questions
+  for select using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );
+
+create policy "관리자만 퀴즈 작성" on quiz_questions
+  for insert with check (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );
+
+create policy "관리자만 퀴즈 삭제" on quiz_questions
+  for delete using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );
+
+create table if not exists quiz_answers (
+  id bigint generated always as identity primary key,
+  quiz_id bigint not null references quiz_questions(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  selected_option smallint not null,
+  is_correct boolean not null,
+  created_at timestamptz not null default now(),
+  unique (quiz_id, user_id)
+);
+
+alter table quiz_answers enable row level security;
+
+create policy "본인 답안만 조회" on quiz_answers
+  for select using (auth.uid() = user_id);
+
+-- 학생용: 가장 최근에 등록된 퀴즈를 정답 없이 반환하고, 본인이 이미 풀었는지/맞혔는지도 같이 알려준다
+create or replace function get_current_quiz()
+returns table(
+  id bigint,
+  question text,
+  option1 text,
+  option2 text,
+  option3 text,
+  option4 text,
+  week_start date,
+  already_answered boolean,
+  my_selected_option smallint,
+  my_is_correct boolean
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_quiz record;
+begin
+  select * into v_quiz from quiz_questions order by week_start desc, created_at desc limit 1;
+  if v_quiz.id is null then
+    return;
+  end if;
+
+  return query
+    select
+      v_quiz.id, v_quiz.question, v_quiz.option1, v_quiz.option2, v_quiz.option3, v_quiz.option4, v_quiz.week_start,
+      exists(select 1 from quiz_answers qa where qa.quiz_id = v_quiz.id and qa.user_id = auth.uid()) as already_answered,
+      (select qa.selected_option from quiz_answers qa where qa.quiz_id = v_quiz.id and qa.user_id = auth.uid()) as my_selected_option,
+      (select qa.is_correct from quiz_answers qa where qa.quiz_id = v_quiz.id and qa.user_id = auth.uid()) as my_is_correct;
+end;
+$$;
+
+-- 학생용: 답 제출 (정답 여부는 서버에서만 계산해서 클라이언트로 정답을 절대 미리 보내지 않는다)
+create or replace function submit_quiz_answer(p_quiz_id bigint, p_selected_option smallint)
+returns table(correct boolean, correct_option smallint)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_correct_option smallint;
+  v_week_start date;
+  v_is_correct boolean;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  if exists (select 1 from quiz_answers where quiz_id = p_quiz_id and user_id = auth.uid()) then
+    raise exception '이미 참여한 퀴즈예요.';
+  end if;
+
+  select qq.correct_option, qq.week_start into v_correct_option, v_week_start
+  from quiz_questions qq where qq.id = p_quiz_id;
+
+  if v_correct_option is null then
+    raise exception '존재하지 않는 퀴즈예요.';
+  end if;
+
+  v_is_correct := (p_selected_option = v_correct_option);
+
+  insert into quiz_answers (quiz_id, user_id, selected_option, is_correct)
+  values (p_quiz_id, auth.uid(), p_selected_option, v_is_correct);
+
+  if v_is_correct then
+    insert into points_ledger (user_id, action_type, points, ref_date)
+    values (auth.uid(), 'quiz', 1, v_week_start)
+    on conflict (user_id, action_type, ref_date) do nothing;
+  end if;
+
+  return query select v_is_correct, v_correct_option;
+end;
+$$;

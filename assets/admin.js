@@ -36,6 +36,7 @@ function initAdminPage() {
       content.style.display = "block";
       initAnnouncementForm(session.user.id);
       initEventForm(session.user.id);
+      initQuizForm(session.user.id);
       loadMemberList();
       loadAllNotes();
     });
@@ -241,6 +242,105 @@ function initEventForm(userId) {
     }
     client.from("calendar_events").insert({
       event_date: date, title: title, description: description || null, created_by: userId
+    }).then(function (res) {
+      if (res.error) {
+        msg.textContent = "등록에 실패했어요.";
+        return;
+      }
+      msg.textContent = "등록되었습니다.";
+      form.reset();
+      load();
+    });
+  });
+
+  load();
+}
+
+function initQuizForm(userId) {
+  var client = getClient();
+  var form = document.getElementById("quizForm");
+  var list = document.getElementById("quizAdminList");
+  var correctPicker = document.getElementById("quizCorrectPicker");
+  if (!form) return;
+
+  var selectedCorrect = 1;
+
+  if (correctPicker) {
+    correctPicker.querySelectorAll("button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        correctPicker.querySelectorAll("button").forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        selectedCorrect = parseInt(btn.getAttribute("data-option"), 10);
+      });
+    });
+  }
+
+  function load() {
+    if (!list) return;
+    client.from("quiz_questions").select("*").order("created_at", { ascending: false }).then(function (res) {
+      var items = res.data || [];
+      if (!items.length) {
+        list.innerHTML = '<p class="msg">등록된 퀴즈가 없어요.</p>';
+        return;
+      }
+      list.innerHTML = items.map(function (item) {
+        var options = [item.option1, item.option2, item.option3, item.option4];
+        var optionsHtml = options.map(function (opt, i) {
+          var num = i + 1;
+          var isCorrect = num === item.correct_option;
+          return (
+            '<div' + (isCorrect ? ' style="color:var(--well);font-weight:700;"' : '') + '>' +
+              num + '. ' + escapeHtmlAdmin(opt) + (isCorrect ? ' ✓' : '') +
+            '</div>'
+          );
+        }).join("");
+        return (
+          '<div class="note-item">' +
+            '<div class="content"><strong>' + escapeHtmlAdmin(item.question) + '</strong></div>' +
+            '<div class="meta" style="margin-top:6px;">' + optionsHtml + '</div>' +
+            '<button class="btn ghost" data-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
+          '</div>'
+        );
+      }).join("");
+      list.querySelectorAll("button[data-id]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          if (!confirm("이 퀴즈를 삭제할까요?")) return;
+          client.from("quiz_questions").delete().eq("id", btn.getAttribute("data-id")).then(load);
+        });
+      });
+    });
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var msg = document.getElementById("quizMsg");
+    var question = document.getElementById("quizQuestion").value.trim();
+    var options = [
+      document.getElementById("quizOption1").value.trim(),
+      document.getElementById("quizOption2").value.trim(),
+      document.getElementById("quizOption3").value.trim(),
+      document.getElementById("quizOption4").value.trim()
+    ];
+    if (!question || options.some(function (o) { return !o; })) {
+      msg.textContent = "문제와 보기 4개를 모두 입력해주세요.";
+      return;
+    }
+    var todayDate = new Date();
+    var weekStart = new Date(todayDate);
+    var day = weekStart.getDay();
+    var diffToMonday = day === 0 ? -6 : 1 - day;
+    weekStart.setDate(weekStart.getDate() + diffToMonday);
+    var weekStartStr = weekStart.getFullYear() + "-" + String(weekStart.getMonth() + 1).padStart(2, "0") + "-" + String(weekStart.getDate()).padStart(2, "0");
+
+    client.from("quiz_questions").insert({
+      week_start: weekStartStr,
+      question: question,
+      option1: options[0],
+      option2: options[1],
+      option3: options[2],
+      option4: options[3],
+      correct_option: selectedCorrect,
+      created_by: userId
     }).then(function (res) {
       if (res.error) {
         msg.textContent = "등록에 실패했어요.";

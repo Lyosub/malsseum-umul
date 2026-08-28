@@ -37,6 +37,11 @@
   <canvas id="weeklyCardCanvas" style="display:none;"></canvas>
 
   <p class="msg" style="text-align:center;">이번 주 예배 말씀의 핵심만 간단히 정리했어요.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0;color:var(--well-deep);">📝 이번 주 성경퀴즈</h3>
+    <div id="quizSection"><p class="msg">불러오는 중...</p></div>
+  </div>
 </div>
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
@@ -50,9 +55,11 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>
 <script src="assets/weekly-card.js"></script>
+<script src="assets/quiz.js"></script>
 <script>
   initWeeklyPage();
   initHeaderAuthState();
+  initQuizSection();
 </script>
 </body>
 </html>
