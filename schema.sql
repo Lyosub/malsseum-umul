@@ -65,6 +65,14 @@ create table if not exists groups (
   created_at timestamptz not null default now()
 );
 
+-- 그룹 멤버십 (groups의 RLS 정책이 이 테이블을 참조하므로 groups보다 먼저 만들어야 함)
+create table if not exists group_members (
+  group_id bigint not null references groups(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  joined_at timestamptz not null default now(),
+  primary key (group_id, user_id)
+);
+
 alter table groups enable row level security;
 
 create policy "멤버만 그룹 조회" on groups
@@ -74,14 +82,6 @@ create policy "멤버만 그룹 조회" on groups
 
 create policy "로그인 사용자는 그룹 생성 가능" on groups
   for insert with check (auth.uid() = created_by);
-
--- 그룹 멤버십
-create table if not exists group_members (
-  group_id bigint not null references groups(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  joined_at timestamptz not null default now(),
-  primary key (group_id, user_id)
-);
 
 alter table group_members enable row level security;
 
