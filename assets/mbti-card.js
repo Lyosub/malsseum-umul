@@ -65,6 +65,43 @@ function drawMbtiCard(canvas, type, data, W, H, charImg) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
+  // 인물 이미지 뒤 은은한 광원
+  var bgGlow = ctx.createRadialGradient(W / 2, H * 0.33, 10, W / 2, H * 0.33, W * 0.55);
+  bgGlow.addColorStop(0, "rgba(255,255,255,0.16)");
+  bgGlow.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = bgGlow;
+  ctx.fillRect(0, 0, W, H);
+
+  // 가장자리 은은한 빛 입자
+  [[0.12, 0.12, 8], [0.85, 0.08, 5], [0.91, 0.3, 4], [0.08, 0.36, 5],
+   [0.14, 0.63, 4], [0.89, 0.66, 6], [0.1, 0.85, 5], [0.83, 0.9, 4]].forEach(function (d) {
+    ctx.beginPath();
+    ctx.arc(W * d[0], H * d[1], d[2], 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.28)";
+    ctx.fill();
+  });
+
+  // 하단 물결 실루엣 (우물 컨셉)
+  ctx.fillStyle = "rgba(255,255,255,0.07)";
+  ctx.beginPath();
+  ctx.moveTo(0, H * 0.86);
+  ctx.bezierCurveTo(W * 0.25, H * 0.83, W * 0.35, H * 0.9, W * 0.6, H * 0.87);
+  ctx.bezierCurveTo(W * 0.8, H * 0.85, W * 0.9, H * 0.91, W, H * 0.88);
+  ctx.lineTo(W, H);
+  ctx.lineTo(0, H);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255,255,255,0.05)";
+  ctx.beginPath();
+  ctx.moveTo(0, H * 0.91);
+  ctx.bezierCurveTo(W * 0.3, H * 0.94, W * 0.5, H * 0.89, W * 0.75, H * 0.93);
+  ctx.bezierCurveTo(W * 0.9, H * 0.95, W * 0.95, H * 0.92, W, H * 0.94);
+  ctx.lineTo(W, H);
+  ctx.lineTo(0, H);
+  ctx.closePath();
+  ctx.fill();
+
   ctx.textAlign = "center";
   ctx.shadowColor = "rgba(0,0,0,0.25)";
   ctx.shadowBlur = 12;
@@ -125,6 +162,13 @@ function drawMbtiCard(canvas, type, data, W, H, charImg) {
   ctx.font = '400 28px "Pretendard", sans-serif';
   ctx.fillStyle = "rgba(255,255,255,0.7)";
   ctx.fillText("💧 말씀우물", W / 2, H - 60);
+
+  // 전체 가장자리 비네트 (깊이감)
+  var vignette = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.75);
+  vignette.addColorStop(0, "rgba(0,0,0,0)");
+  vignette.addColorStop(1, "rgba(0,0,0,0.18)");
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, W, H);
 }
 
 function saveMbtiCard(type) {
