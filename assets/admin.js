@@ -36,7 +36,50 @@ function initAdminPage() {
       content.style.display = "block";
       initAnnouncementForm(session.user.id);
       initEventForm(session.user.id);
+      loadMemberList();
     });
+  });
+}
+
+function formatDateTime(iso) {
+  if (!iso) return null;
+  var d = new Date(iso);
+  var pad = function (n) { return String(n).padStart(2, "0"); };
+  return d.getFullYear() + "." + pad(d.getMonth() + 1) + "." + pad(d.getDate()) +
+    " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+
+function loadMemberList() {
+  var client = getClient();
+  var countEl = document.getElementById("memberCount");
+  var listEl = document.getElementById("memberList");
+  if (!listEl) return;
+
+  client.rpc("get_member_list").then(function (res) {
+    var members = res.data || [];
+    if (countEl) countEl.textContent = "총 " + members.length + "명";
+
+    if (!members.length) {
+      listEl.innerHTML = '<p class="msg">가입한 회원이 없어요.</p>';
+      return;
+    }
+
+    listEl.innerHTML = members.map(function (m) {
+      var lastSeen = formatDateTime(m.last_sign_in_at);
+      return (
+        '<div class="note-item">' +
+          '<div class="content">' +
+            '<strong>' + escapeHtmlAdmin(m.nickname) + '</strong>' +
+            (m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">관리자</span>' : '') +
+            '<br>' + escapeHtmlAdmin(m.email) +
+          '</div>' +
+          '<div class="meta">가입: ' + formatDateTime(m.joined_at) +
+            ' · 최근 접속: ' + (lastSeen || "기록 없음") + '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }).catch(function () {
+    listEl.innerHTML = '<p class="msg">회원 목록을 불러오지 못했어요.</p>';
   });
 }
 

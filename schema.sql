@@ -194,6 +194,30 @@ alter table profiles add column if not exists is_admin boolean not null default 
 -- ⚠️ 최초 관리자 지정은 SQL Editor에서 아래처럼 수동으로 한 번 실행할 것 (가입 후 본인 이메일로):
 --   update profiles set is_admin = true where user_id = (select id from auth.users where email = '본인이메일@example.com');
 
+-- 관리자 전용 회원 목록 (닉네임/이메일/가입일/최근 접속) — auth.users는 클라이언트에서 직접 조회할 수 없어
+-- SECURITY DEFINER로 우회하되, 호출자가 관리자일 때만 결과를 반환한다
+create or replace function get_member_list()
+returns table(
+  user_id uuid,
+  nickname text,
+  email text,
+  is_admin boolean,
+  joined_at timestamptz,
+  last_sign_in_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select p.user_id, p.nickname, u.email, p.is_admin, p.created_at, u.last_sign_in_at
+  from profiles p
+  join auth.users u on u.id = p.user_id
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and admin_p.is_admin = true
+  )
+  order by p.created_at desc;
+$$;
+
 -- 공지사항 (관리자만 작성/수정/삭제, 누구나 조회 가능)
 create table if not exists announcements (
   id bigint generated always as identity primary key,
