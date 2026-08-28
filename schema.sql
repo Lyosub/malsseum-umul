@@ -415,12 +415,35 @@ $$;
 -- 회원 목록에 최근 기록(타입/시각)을 함께 보여주도록 반환 컬럼 추가 (기존 함수를 다시 정의)
 drop function if exists get_member_list();
 
+-- 교사 여부 (회원가입 화면에서는 고를 수 없고, 관리자가 회원 관리에서만 지정할 수 있다)
+alter table profiles add column if not exists is_teacher boolean not null default false;
+
+-- 관리자 전용: 특정 회원을 교사/학생으로 지정 (본인이 직접 켤 수 없도록 profiles의 일반 UPDATE 정책과 분리)
+create or replace function admin_set_teacher(p_user_id uuid, p_is_teacher boolean)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from profiles where user_id = auth.uid() and is_admin = true
+  ) then
+    raise exception '관리자만 지정할 수 있습니다.';
+  end if;
+
+  update profiles set is_teacher = p_is_teacher where user_id = p_user_id;
+  return true;
+end;
+$$;
+
 create or replace function get_member_list()
 returns table(
   user_id uuid,
   nickname text,
   email text,
   is_admin boolean,
+  is_teacher boolean,
   joined_at timestamptz,
   last_sign_in_at timestamptz,
   last_note_type text,
@@ -431,7 +454,7 @@ security definer
 set search_path = public
 as $$
   select
-    p.user_id, p.nickname, u.email, p.is_admin, p.created_at, u.last_sign_in_at,
+    p.user_id, p.nickname, u.email, p.is_admin, p.is_teacher, p.created_at, u.last_sign_in_at,
     (select n.type from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_type,
     (select n.created_at from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_at
   from profiles p

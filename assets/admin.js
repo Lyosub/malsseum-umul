@@ -73,18 +73,33 @@ function loadMemberList() {
         ? ADMIN_NOTE_LABELS[m.last_note_type] + ' (' + formatDateTime(m.last_note_at) + ')'
         : "아직 없음";
       return (
-        '<div class="note-item">' +
+        '<div class="note-item" data-user-id="' + m.user_id + '">' +
           '<div class="content">' +
             '<strong>' + escapeHtmlAdmin(m.nickname) + '</strong>' +
             (m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">관리자</span>' : '') +
+            (m.is_teacher ? ' <span style="color:var(--well);font-size:12px;">교사</span>' : '') +
             '<br>' + escapeHtmlAdmin(m.email) +
           '</div>' +
           '<div class="meta">가입: ' + formatDateTime(m.joined_at) +
             ' · 최근 접속: ' + (lastSeen || "기록 없음") +
             '<br>최근 기록: ' + lastNote + '</div>' +
+          '<button type="button" class="btn ghost" data-action="toggle-teacher" data-is-teacher="' + m.is_teacher + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">' +
+            (m.is_teacher ? "교사 해제" : "교사로 지정") +
+          '</button>' +
         '</div>'
       );
     }).join("");
+
+    listEl.querySelectorAll('button[data-action="toggle-teacher"]').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var itemEl = btn.closest(".note-item");
+        var targetUserId = itemEl.getAttribute("data-user-id");
+        var nextIsTeacher = btn.getAttribute("data-is-teacher") !== "true";
+        client.rpc("admin_set_teacher", { p_user_id: targetUserId, p_is_teacher: nextIsTeacher }).then(function () {
+          loadMemberList();
+        });
+      });
+    });
   }).catch(function () {
     listEl.innerHTML = '<p class="msg">회원 목록을 불러오지 못했어요.</p>';
   });
