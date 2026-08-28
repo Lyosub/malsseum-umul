@@ -47,10 +47,10 @@
 
     <hr class="well-divider">
 
-    <div class="well-label">👥 그룹 포인트 얻는 법 (개인 포인트와 별개로 그룹 전체에 지급)</div>
-    그룹원 80% 이상이 한 주(월~일) 동안 출석하면 전원 <strong style="color:var(--well);">+1점</strong><br>
-    그룹원 전원이 감사노트/기도제목을 1개 이상씩 쓰고 그룹 합계가 10개 이상이면 전원 <strong style="color:var(--well);">+2점</strong><br>
-    <span style="color:var(--gold);">※ 교사가 만든 그룹만 해당돼요. 학생끼리만 만든 그룹은 적용되지 않아요.</span>
+    <div class="well-label">👥 오이코스 포인트 얻는 법 (개인 포인트와 별개로 오이코스 전체에 지급)</div>
+    오이코스 멤버 80% 이상이 한 주(월~일) 동안 출석하면 전원 <strong style="color:var(--well);">+1점</strong><br>
+    오이코스 멤버 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 <strong style="color:var(--well);">+2점</strong><br>
+    <span style="color:var(--gold);">※ 교사가 만든 오이코스만 해당돼요. 학생끼리만 만든 오이코스는 적용되지 않아요.</span>
 
     <hr class="well-divider">
 
@@ -110,17 +110,17 @@
   </div>
 
   <div class="card" id="groupSection">
-    <h3 style="margin-top:0;">우리 그룹</h3>
+    <h3 style="margin-top:0;">우리 오이코스</h3>
     <p class="msg" id="groupMsg"></p>
 
     <div id="groupNone" style="display:none;">
-      <p style="color:var(--text-soft);font-size:13.5px;">친구들과 그룹을 만들거나, 초대받은 코드로 참여해서 함께 출석해보세요.</p>
+      <p style="color:var(--text-soft);font-size:13.5px;">친구들과 오이코스를 만들거나, 초대받은 코드로 참여해서 함께 출석해보세요.</p>
       <form id="createGroupForm" style="margin-bottom:16px;">
         <div class="form-row">
-          <label for="groupNameInput">새 그룹 만들기</label>
+          <label for="groupNameInput">새 오이코스 만들기</label>
           <input type="text" id="groupNameInput" placeholder="예: 중등부 3반">
         </div>
-        <button type="submit" class="btn block">그룹 만들기</button>
+        <button type="submit" class="btn block">오이코스 만들기</button>
       </form>
       <form id="joinGroupForm">
         <div class="form-row">
@@ -134,7 +134,7 @@
     <div id="groupHas" style="display:none;">
       <p style="margin:0 0 4px;font-weight:700;" id="groupName"></p>
       <p style="color:var(--text-soft);font-size:13px;margin-top:0;">초대 코드: <strong id="groupCode" style="color:var(--well);"></strong> (친구에게 공유해보세요)</p>
-      <p id="groupChallengeBanner" style="color:var(--text-soft);font-size:12px;background:rgba(20,112,122,0.07);padding:10px 12px;border-radius:10px;">🎯 그룹 챌린지: 한 주(월~일) 동안 그룹원의 80% 이상 출석하면 전원 +1점, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 그룹 합계가 10개 이상이면 전원 +2점 (다음 주에 자동 정산돼요)</p>
+      <p id="groupChallengeBanner" style="color:var(--text-soft);font-size:12px;background:rgba(20,112,122,0.07);padding:10px 12px;border-radius:10px;">🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 전원 +1점, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 +2점 (다음 주에 자동 정산돼요)</p>
 
       <h4 style="margin:18px 0 4px;color:var(--well-deep);">오늘의 참여 현황</h4>
       <p style="color:var(--text-soft);font-size:12px;margin:0 0 10px;">내용은 안 보이고, 오늘 했는지 여부만 서로 확인할 수 있어요.</p>

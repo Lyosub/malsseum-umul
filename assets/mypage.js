@@ -155,8 +155,8 @@ function initGroup(userId) {
     client.rpc("get_group_bonus_eligible", { p_group_id: groupId }).then(function (res) {
       var eligible = !!(res.data);
       el.innerHTML = eligible
-        ? "🎯 그룹 챌린지: 한 주(월~일) 동안 그룹원의 80% 이상 출석하면 전원 +1점, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 그룹 합계가 10개 이상이면 전원 +2점 (다음 주에 자동 정산돼요)"
-        : "이 그룹은 학생들끼리 만든 그룹이라 챌린지 보너스가 적용되지 않아요. 교사가 만든 그룹만 보너스 대상이에요.";
+        ? "🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 전원 +1점, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 +2점 (다음 주에 자동 정산돼요)"
+        : "이 오이코스는 학생들끼리 만든 오이코스라 챌린지 보너스가 적용되지 않아요. 교사가 만든 오이코스만 보너스 대상이에요.";
     });
   }
 
@@ -166,8 +166,8 @@ function initGroup(userId) {
     document.getElementById("groupName").textContent = group.name;
     document.getElementById("groupCode").textContent = group.invite_code;
     renderChallengeBanner(group.id);
-    // 지난주(월~일) 그룹 챌린지 조건을 확인해서 아직 정산 안 됐으면 그룹 전원에게 보너스 포인트를 지급한다
-    // (교사가 만든 그룹이 아니면 evaluate_group_weekly_bonus 내부에서 조용히 아무것도 하지 않는다)
+    // 지난주(월~일) 오이코스 챌린지 조건을 확인해서 아직 정산 안 됐으면 오이코스 전원에게 보너스 포인트를 지급한다
+    // (교사가 만든 오이코스가 아니면 evaluate_group_weekly_bonus 내부에서 조용히 아무것도 하지 않는다)
     client.rpc("evaluate_group_weekly_bonus", { p_group_id: group.id }).catch(function () {}).then(function () {
       renderLeaderboard(group.id);
       renderTodayStatus(group.id);
@@ -199,13 +199,13 @@ function initGroup(userId) {
       var msg = document.getElementById("groupMsg");
       var name = document.getElementById("groupNameInput").value.trim();
       if (!name) {
-        msg.textContent = "그룹 이름을 입력해주세요.";
+        msg.textContent = "오이코스 이름을 입력해주세요.";
         return;
       }
       msg.textContent = "생성 중...";
       client.rpc("create_group", { p_name: name }).then(function (res) {
         if (res.error || !res.data || !res.data.length) {
-          msg.textContent = "그룹 생성에 실패했어요.";
+          msg.textContent = "오이코스 생성에 실패했어요.";
           return;
         }
         msg.textContent = "";
