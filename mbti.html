@@ -27,6 +27,11 @@
     <p>내 유형을 눌러 닮은 성경 속 인물을 만나보세요</p>
   </section>
 
+  <div class="card">
+    <h3 style="margin-top:0;color:var(--well-deep);text-align:center;">💫 이달의 성경인물</h3>
+    <div id="featuredMbti"></div>
+  </div>
+
   <div id="mbtiGrid" class="mbti-grid"></div>
 
   <div id="mbtiDetail" class="mbti-detail card"></div>
@@ -49,6 +54,7 @@
 <script src="assets/script.js"></script>
 <script>
   initMbtiGrid();
+  initFeaturedMbti(false);
   initHeaderAuthState();
 </script>
 </body>

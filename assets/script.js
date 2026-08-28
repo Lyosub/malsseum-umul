@@ -20,7 +20,8 @@ function handleCharImgError(imgEl) {
   imgEl.replaceWith(placeholder);
 }
 
-function initFeaturedMbti() {
+function initFeaturedMbti(showLinkBtn) {
+  if (showLinkBtn === undefined) showLinkBtn = true;
   var el = document.getElementById("featuredMbti");
   if (!el || typeof MBTI_BIBLE === "undefined") return;
   var type = getFeaturedMbtiType();
@@ -33,7 +34,7 @@ function initFeaturedMbti() {
     '<div style="text-align:center;font-weight:800;color:var(--well-deep);">' + type + ' — ' + v.figure + '</div>' +
     '<div style="text-align:center;font-size:13px;color:var(--gold);margin:4px 0 10px;">' + v.verse.ref + '</div>' +
     '<p style="text-align:center;font-size:13.5px;color:var(--text-soft);">' + v.desc + '</p>' +
-    '<a href="mbti.html" class="btn block" style="margin-top:10px;">MBTI 성경인물 더 보기</a>';
+    (showLinkBtn ? '<a href="mbti.html" class="btn block" style="margin-top:10px;">MBTI 성경인물 더 보기</a>' : '');
 }
 
 var DRAW_LABELS = {
