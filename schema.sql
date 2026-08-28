@@ -552,3 +552,40 @@ begin
   end if;
 end;
 $$;
+
+-- 그룹원들이 서로 "오늘 출석/하루인사/감사노트/기도제목을 했는지"만 확인할 수 있는 현황판
+-- (내용은 절대 보여주지 않고 완료 여부만 boolean으로 반환한다)
+create or replace function get_group_today_status(p_group_id bigint)
+returns table(
+  user_id uuid,
+  nickname text,
+  attended boolean,
+  wrote_greeting boolean,
+  wrote_gratitude boolean,
+  wrote_prayer boolean
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_today date := (now() at time zone 'Asia/Seoul')::date;
+begin
+  if not exists (select 1 from group_members where group_id = p_group_id and user_id = auth.uid()) then
+    raise exception '이 그룹의 멤버만 조회할 수 있습니다.';
+  end if;
+
+  return query
+    select
+      p.user_id,
+      p.nickname,
+      exists(select 1 from attendance a where a.user_id = p.user_id and a.date = v_today) as attended,
+      exists(select 1 from notes n where n.user_id = p.user_id and n.type = 'greeting' and (n.created_at at time zone 'Asia/Seoul')::date = v_today) as wrote_greeting,
+      exists(select 1 from notes n where n.user_id = p.user_id and n.type = 'gratitude' and (n.created_at at time zone 'Asia/Seoul')::date = v_today) as wrote_gratitude,
+      exists(select 1 from notes n where n.user_id = p.user_id and n.type = 'prayer' and (n.created_at at time zone 'Asia/Seoul')::date = v_today) as wrote_prayer
+    from group_members gm
+    join profiles p on p.user_id = gm.user_id
+    where gm.group_id = p_group_id
+    order by p.nickname;
+end;
+$$;

@@ -116,6 +116,39 @@ function initGroup(userId) {
     });
   }
 
+  function renderTodayStatus(groupId) {
+    client.rpc("get_group_today_status", { p_group_id: groupId }).then(function (res) {
+      var el = document.getElementById("todayStatusList");
+      if (!el) return;
+      var rows = res.data || [];
+      if (res.error || !rows.length) {
+        el.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
+        return;
+      }
+      function badge(done, label) {
+        return (
+          '<span style="display:inline-block;margin:2px 8px 2px 0;font-size:12px;color:' +
+          (done ? "var(--well)" : "var(--text-soft)") + ';">' +
+          (done ? "✅" : "⬜") + ' ' + label + '</span>'
+        );
+      }
+      el.innerHTML = rows.map(function (r) {
+        var mine = r.user_id === userId ? " (나)" : "";
+        return (
+          '<div class="note-item">' +
+            '<div class="content">' + escapeHtml(r.nickname) + mine + '</div>' +
+            '<div class="meta" style="margin-top:4px;">' +
+              badge(r.attended, "출석") +
+              badge(r.wrote_greeting, "하루인사") +
+              badge(r.wrote_gratitude, "감사노트") +
+              badge(r.wrote_prayer, "기도제목") +
+            '</div>' +
+          '</div>'
+        );
+      }).join("");
+    });
+  }
+
   function showGroup(group) {
     noGroupEl.style.display = "none";
     hasGroupEl.style.display = "block";
@@ -124,6 +157,7 @@ function initGroup(userId) {
     // 지난주(월~일) 그룹 챌린지 조건을 확인해서 아직 정산 안 됐으면 그룹 전원에게 보너스 포인트를 지급한다
     client.rpc("evaluate_group_weekly_bonus", { p_group_id: group.id }).catch(function () {}).then(function () {
       renderLeaderboard(group.id);
+      renderTodayStatus(group.id);
     });
   }
 
