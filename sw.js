@@ -1,7 +1,7 @@
 // 말씀우물 PWA 서비스 워커: 앱 셸을 미리 캐시해두되, 온라인일 때는 항상 최신 버전을
 // 먼저 시도하는 네트워크 우선(network-first) 방식으로 처리하고, 오프라인일 때만 캐시로 대체한다.
 // (예전에는 캐시 우선 방식이라 배포 후에도 옛 버전이 계속 보이는 문제가 있었음)
-var CACHE_VERSION = "msu-v8";
+var CACHE_VERSION = "msu-v9";
 var PRECACHE = [
   "./",
   "index.html",
@@ -77,8 +77,13 @@ self.addEventListener("fetch", function (event) {
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // Supabase/CDN/성경 API 등 외부 요청은 그대로 네트워크로 보낸다
 
+  // GitHub Pages가 정적 파일에 max-age=600 캐시를 걸어놔서, cache 옵션을 안 주면
+  // "네트워크 우선"이라 해도 10분 안에는 브라우저가 서버에 물어보지도 않고 예전 응답을
+  // 그대로 재사용해버린다. cache: "no-store"로 매번 진짜 네트워크까지 강제로 보낸다.
+  var freshReq = new Request(req, { cache: "no-store" });
+
   event.respondWith(
-    fetch(req)
+    fetch(freshReq)
       .then(function (res) {
         if (res && res.status === 200) {
           var copy = res.clone();
