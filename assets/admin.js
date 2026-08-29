@@ -294,10 +294,20 @@ function initQuizForm(userId) {
             '</div>'
           );
         }).join("");
+        // week_start(월요일) + 2일 = 학생에게 공개되는 수요일. 이미 지났으면 "공개중", 아니면 날짜를 보여준다.
+        var revealDate = new Date(item.week_start + "T00:00:00");
+        revealDate.setDate(revealDate.getDate() + 2);
+        var todayStr = new Date().toISOString().slice(0, 10);
+        var revealStr = revealDate.getFullYear() + "." + String(revealDate.getMonth() + 1).padStart(2, "0") + "." + String(revealDate.getDate()).padStart(2, "0");
+        var isLive = revealDate.toISOString().slice(0, 10) <= todayStr;
+        var revealBadge = isLive
+          ? '<span style="color:var(--well);font-weight:700;">공개중</span>'
+          : '<span style="color:var(--text-soft);">' + revealStr + '(수) 공개 예정</span>';
         return (
           '<div class="note-item">' +
             '<div class="content"><strong>' + escapeHtmlAdmin(item.question) + '</strong></div>' +
             '<div class="meta" style="margin-top:6px;">' + optionsHtml + '</div>' +
+            '<div class="meta" style="margin-top:6px;">' + revealBadge + '</div>' +
             '<button class="btn ghost" data-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
           '</div>'
         );
@@ -325,11 +335,15 @@ function initQuizForm(userId) {
       msg.textContent = "문제와 보기 4개를 모두 입력해주세요.";
       return;
     }
+    // 언제 등록하든(미리 등록해도) "가장 가까운 다음 수요일"에 공개되도록 week_start를 계산한다.
+    // 예: 토요일에 등록 -> 4일 뒤 수요일이 속한 주의 월요일을 week_start로 저장.
     var todayDate = new Date();
-    var weekStart = new Date(todayDate);
-    var day = weekStart.getDay();
-    var diffToMonday = day === 0 ? -6 : 1 - day;
-    weekStart.setDate(weekStart.getDate() + diffToMonday);
+    var day = todayDate.getDay(); // 0=일 ... 6=토
+    var diffToWed = (3 - day + 7) % 7; // 오늘부터 다음(또는 오늘) 수요일까지 남은 일수
+    var targetWed = new Date(todayDate);
+    targetWed.setDate(todayDate.getDate() + diffToWed);
+    var weekStart = new Date(targetWed);
+    weekStart.setDate(targetWed.getDate() - 2);
     var weekStartStr = weekStart.getFullYear() + "-" + String(weekStart.getMonth() + 1).padStart(2, "0") + "-" + String(weekStart.getDate()).padStart(2, "0");
 
     client.from("quiz_questions").insert({

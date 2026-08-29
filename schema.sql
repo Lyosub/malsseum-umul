@@ -778,7 +778,13 @@ as $$
 declare
   v_quiz record;
 begin
-  select * into v_quiz from quiz_questions order by week_start desc, created_at desc limit 1;
+  -- week_start는 그 주의 월요일 날짜(관리자가 등록할 때 계산). 미리 등록해둬도 학생에게는
+  -- 수요일(week_start + 2일) 00:00(한국시간)이 지나야 보이도록, 그 전까지는 대상에서 제외한다.
+  select * into v_quiz
+  from quiz_questions
+  where (week_start + 2) <= (now() at time zone 'Asia/Seoul')::date
+  order by week_start desc, created_at desc
+  limit 1;
   if v_quiz.id is null then
     return;
   end if;
@@ -813,10 +819,12 @@ begin
   end if;
 
   select qq.correct_option, qq.week_start into v_correct_option, v_week_start
-  from quiz_questions qq where qq.id = p_quiz_id;
+  from quiz_questions qq
+  where qq.id = p_quiz_id
+    and (qq.week_start + 2) <= (now() at time zone 'Asia/Seoul')::date;
 
   if v_correct_option is null then
-    raise exception '존재하지 않는 퀴즈예요.';
+    raise exception '아직 공개되지 않은 퀴즈예요.';
   end if;
 
   v_is_correct := (p_selected_option = v_correct_option);
