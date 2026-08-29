@@ -924,3 +924,29 @@ as $$
   )
   order by g.created_at desc;
 $$;
+
+-- 홈페이지 상단 이벤트 배너: 관리자(교역자)가 등록하면 홈 상단에 보이고, 삭제하면 바로 사라진다.
+-- (여러 개를 등록하면 최신 것부터 위에 쌓여서 보인다 — 특별한 기간 설정 없이 등록/삭제로만 노출을 제어)
+create table if not exists home_banner (
+  id bigint generated always as identity primary key,
+  title text not null,
+  description text,
+  link_url text,
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table home_banner enable row level security;
+
+create policy "이벤트 배너는 누구나 조회 가능" on home_banner
+  for select using (true);
+
+create policy "관리자만 이벤트 배너 작성" on home_banner
+  for insert with check (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );
+
+create policy "관리자만 이벤트 배너 삭제" on home_banner
+  for delete using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+  );

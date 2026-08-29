@@ -29,6 +29,29 @@
 
   <div id="adminContent" style="display:none;">
     <div class="card">
+      <h3 style="margin-top:0;">🎉 홈페이지 상단 이벤트 배너</h3>
+      <p class="msg" style="margin-top:0;">여기 등록하면 홈 화면 맨 위에 바로 보이고, 삭제하면 바로 사라져요.</p>
+      <form id="bannerForm">
+        <div class="form-row">
+          <label for="bannerTitle">제목</label>
+          <input type="text" id="bannerTitle" placeholder="예: 말씀우물 오픈 기념 이벤트">
+        </div>
+        <div class="form-row">
+          <label for="bannerDescription">설명 (선택)</label>
+          <textarea id="bannerDescription" placeholder="이벤트 내용을 간단히 적어주세요"></textarea>
+        </div>
+        <div class="form-row">
+          <label for="bannerLink">연결 링크 (선택)</label>
+          <input type="text" id="bannerLink" placeholder="예: well.html (누르면 이동할 페이지)">
+        </div>
+        <button type="submit" class="btn block">배너 등록</button>
+        <p class="msg" id="bannerMsg"></p>
+      </form>
+      <hr class="well-divider">
+      <div id="bannerAdminList"></div>
+    </div>
+
+    <div class="card">
       <h3 style="margin-top:0;">공지사항 작성</h3>
       <form id="announcementForm">
         <div class="form-row">

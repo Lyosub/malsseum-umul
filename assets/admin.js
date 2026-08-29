@@ -34,6 +34,7 @@ function initAdminPage() {
       }
       gate.style.display = "none";
       content.style.display = "block";
+      initBannerForm(session.user.id);
       initAnnouncementForm(session.user.id);
       initEventForm(session.user.id);
       initQuizForm(session.user.id);
@@ -189,6 +190,70 @@ function loadGroupsAdmin() {
       listEl.innerHTML = '<p class="msg">목록을 불러오지 못했어요.</p>';
     });
   }
+
+  load();
+}
+
+function initBannerForm(userId) {
+  var client = getClient();
+  var form = document.getElementById("bannerForm");
+  var list = document.getElementById("bannerAdminList");
+  if (!form) return;
+
+  function load() {
+    if (!list) return;
+    client.from("home_banner").select("*").order("created_at", { ascending: false }).then(function (res) {
+      var items = res.data || [];
+      if (!items.length) {
+        list.innerHTML = '<p class="msg">등록된 이벤트 배너가 없어요. 지금은 홈 화면에 아무것도 안 보여요.</p>';
+        return;
+      }
+      list.innerHTML = items.map(function (item) {
+        var d = new Date(item.created_at);
+        return (
+          '<div class="note-item">' +
+            '<div class="meta">' + (d.getMonth() + 1) + '.' + d.getDate() + '</div>' +
+            '<div class="content"><strong>' + escapeHtmlAdmin(item.title) + '</strong>' +
+              (item.description ? '<br>' + escapeHtmlAdmin(item.description) : '') +
+              (item.link_url ? '<br><span style="color:var(--well);">→ ' + escapeHtmlAdmin(item.link_url) + '</span>' : '') +
+            '</div>' +
+            '<button class="btn ghost" data-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
+          '</div>'
+        );
+      }).join("");
+      list.querySelectorAll("button[data-id]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          client.from("home_banner").delete().eq("id", btn.getAttribute("data-id")).then(load);
+        });
+      });
+    });
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var msg = document.getElementById("bannerMsg");
+    var title = document.getElementById("bannerTitle").value.trim();
+    var description = document.getElementById("bannerDescription").value.trim();
+    var linkUrl = document.getElementById("bannerLink").value.trim();
+    if (!title) {
+      msg.textContent = "제목을 입력해주세요.";
+      return;
+    }
+    client.from("home_banner").insert({
+      title: title,
+      description: description || null,
+      link_url: linkUrl || null,
+      created_by: userId
+    }).then(function (res) {
+      if (res.error) {
+        msg.textContent = "등록에 실패했어요.";
+        return;
+      }
+      msg.textContent = "등록되었습니다. 홈 화면 상단에 바로 보여요.";
+      form.reset();
+      load();
+    });
+  });
 
   load();
 }
