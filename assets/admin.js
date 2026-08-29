@@ -29,7 +29,7 @@ function initAdminPage() {
     }
     checkIsAdmin(session.user.id).then(function (isAdmin) {
       if (!isAdmin) {
-        gate.innerHTML = '<p>관리자만 접근할 수 있는 페이지예요.</p>';
+        gate.innerHTML = '<p>교역자만 접근할 수 있는 페이지예요.</p>';
         return;
       }
       gate.style.display = "none";
@@ -39,6 +39,7 @@ function initAdminPage() {
       initQuizForm(session.user.id);
       loadMemberList();
       loadAllNotes();
+      loadGroupsAdmin();
     });
   });
 }
@@ -77,8 +78,8 @@ function loadMemberList() {
         '<div class="note-item" data-user-id="' + m.user_id + '">' +
           '<div class="content">' +
             '<strong>' + escapeHtmlAdmin(m.nickname) + '</strong>' +
-            (m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">관리자</span>' : '') +
-            (m.is_teacher ? ' <span style="color:var(--well);font-size:12px;">교사</span>' : '') +
+            (m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">교역자</span>' : '') +
+            (m.is_teacher && !m.is_admin ? ' <span style="color:var(--well);font-size:12px;">교사</span>' : '') +
             '<br>' + escapeHtmlAdmin(m.email) +
           '</div>' +
           '<div class="meta">가입: ' + formatDateTime(m.joined_at) +
@@ -137,6 +138,55 @@ function loadAllNotes() {
       });
     }).catch(function () {
       listEl.innerHTML = '<p class="msg">기록을 불러오지 못했어요.</p>';
+    });
+  }
+
+  load();
+}
+
+// 교역자용: 전체 오이코스 목록 확인 + 해체(삭제). 본인이 만들지 않은 오이코스도 볼 수 있고 해체할 수 있다
+// (delete_group RPC가 "만든 사람 본인이거나 관리자(is_admin)"만 허용하도록 서버에서 확인함)
+function loadGroupsAdmin() {
+  var client = getClient();
+  var listEl = document.getElementById("allGroupsList");
+  if (!listEl) return;
+
+  function load() {
+    client.rpc("get_all_groups_admin").then(function (res) {
+      var items = res.data || [];
+      if (!items.length) {
+        listEl.innerHTML = '<p class="msg">아직 만들어진 오이코스가 없어요.</p>';
+        return;
+      }
+      listEl.innerHTML = items.map(function (item) {
+        return (
+          '<div class="note-item" data-group-id="' + item.id + '">' +
+            '<div class="content"><strong>' + escapeHtmlAdmin(item.name) + '</strong>' +
+              (item.host_is_teacher ? ' <span style="color:var(--well);font-size:12px;">교사 오이코스</span>' : ' <span style="color:var(--text-soft);font-size:12px;">학생 오이코스</span>') +
+            '</div>' +
+            '<div class="meta">만든 사람: ' + escapeHtmlAdmin(item.created_by_nickname) +
+              ' · 초대코드: ' + escapeHtmlAdmin(item.invite_code) +
+              ' · 인원: ' + item.member_count + '명' +
+              '<br>생성일: ' + formatDateTime(item.created_at) + '</div>' +
+            '<button class="btn ghost" data-action="disband" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">해체</button>' +
+          '</div>'
+        );
+      }).join("");
+      listEl.querySelectorAll('button[data-action="disband"]').forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var groupId = btn.closest(".note-item").getAttribute("data-group-id");
+          if (!confirm("이 오이코스를 해체할까요? 멤버십 기록도 함께 사라져요.")) return;
+          client.rpc("delete_group", { p_group_id: groupId }).then(function (res) {
+            if (res.error) {
+              alert("해체에 실패했어요.");
+              return;
+            }
+            load();
+          });
+        });
+      });
+    }).catch(function () {
+      listEl.innerHTML = '<p class="msg">목록을 불러오지 못했어요.</p>';
     });
   }
 
@@ -295,11 +345,15 @@ function initQuizForm(userId) {
           );
         }).join("");
         // week_start(월요일) + 2일 = 학생에게 공개되는 수요일. 이미 지났으면 "공개중", 아니면 날짜를 보여준다.
+        // (toISOString()은 UTC 기준으로 바뀌어서 한국 시간 자정 근처엔 하루 밀려 보일 수 있어 로컬 날짜 성분만 비교한다)
         var revealDate = new Date(item.week_start + "T00:00:00");
         revealDate.setDate(revealDate.getDate() + 2);
-        var todayStr = new Date().toISOString().slice(0, 10);
+        var localDateStr = function (d) {
+          return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+        };
+        var todayStr = localDateStr(new Date());
         var revealStr = revealDate.getFullYear() + "." + String(revealDate.getMonth() + 1).padStart(2, "0") + "." + String(revealDate.getDate()).padStart(2, "0");
-        var isLive = revealDate.toISOString().slice(0, 10) <= todayStr;
+        var isLive = localDateStr(revealDate) <= todayStr;
         var revealBadge = isLive
           ? '<span style="color:var(--well);font-weight:700;">공개중</span>'
           : '<span style="color:var(--text-soft);">' + revealStr + '(수) 공개 예정</span>';

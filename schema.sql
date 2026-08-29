@@ -869,3 +869,58 @@ begin
   return found;
 end;
 $$;
+
+-- ===== 오이코스 해체 + 교역자(is_admin) 전체 오이코스 관리 =====
+-- 오이코스를 만든 사람 본인이거나, 교역자(is_admin=true)면 어떤 오이코스든 해체할 수 있다.
+-- groups가 삭제되면 group_members는 on delete cascade로 같이 지워진다.
+-- (지난주에 이미 지급된 챌린지 포인트는 points_ledger에 user_id로 남아있어 해체해도 회수되지 않는다 — 이미 번 점수이므로)
+create or replace function delete_group(p_group_id bigint)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from groups g
+    where g.id = p_group_id
+      and (
+        g.created_by = auth.uid()
+        or exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
+      )
+  ) then
+    raise exception '이 오이코스를 해체할 권한이 없습니다.';
+  end if;
+
+  delete from groups where id = p_group_id;
+  return true;
+end;
+$$;
+
+-- 교역자 전용: 학생들이 만든 것까지 포함한 전체 오이코스 목록(인원수, 만든 사람, 교사 오이코스 여부 포함)
+create or replace function get_all_groups_admin()
+returns table(
+  id bigint,
+  name text,
+  invite_code text,
+  created_by_nickname text,
+  host_is_teacher boolean,
+  member_count bigint,
+  created_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    g.id, g.name, g.invite_code, p.nickname,
+    coalesce(p.is_teacher, false),
+    (select count(*) from group_members gm where gm.group_id = g.id),
+    g.created_at
+  from groups g
+  join profiles p on p.user_id = g.created_by
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and admin_p.is_admin = true
+  )
+  order by g.created_at desc;
+$$;

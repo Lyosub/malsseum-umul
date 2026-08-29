@@ -97,6 +97,10 @@ function initGroup(userId) {
 
   var noGroupEl = document.getElementById("groupNone");
   var hasGroupEl = document.getElementById("groupHas");
+  var isStaffAdmin = false; // 교역자(is_admin)는 본인이 안 만든 오이코스도 해체할 수 있다
+  var staffAdminReady = client.from("profiles").select("is_admin").eq("user_id", userId).single().then(function (res) {
+    isStaffAdmin = !!(res.data && res.data.is_admin);
+  }).catch(function () {});
 
   function renderLeaderboard(groupId) {
     client.rpc("get_group_leaderboard", { p_group_id: groupId }).then(function (res) {
@@ -175,6 +179,26 @@ function initGroup(userId) {
       renderLeaderboard(group.id);
       renderTodayStatus(group.id);
     });
+
+    // 오이코스를 만든 사람 본인이거나, 교역자(is_admin)면 해체할 수 있다
+    var disbandBtn = document.getElementById("disbandGroupBtn");
+    var disbandMsg = document.getElementById("disbandGroupMsg");
+    if (disbandBtn) {
+      var canDisband = isStaffAdmin || group.created_by === userId;
+      disbandBtn.style.display = canDisband ? "inline-block" : "none";
+      disbandBtn.onclick = function () {
+        if (!confirm("정말 이 오이코스를 해체할까요? 멤버 전원의 참여 정보가 함께 사라지고 되돌릴 수 없어요.")) return;
+        disbandBtn.disabled = true;
+        client.rpc("delete_group", { p_group_id: group.id }).then(function (res) {
+          if (res.error) {
+            if (disbandMsg) disbandMsg.textContent = "해체에 실패했어요.";
+            disbandBtn.disabled = false;
+            return;
+          }
+          loadMyGroup();
+        });
+      };
+    }
   }
 
   function loadMyGroup() {
@@ -240,7 +264,7 @@ function initGroup(userId) {
     });
   }
 
-  loadMyGroup();
+  staffAdminReady.then(loadMyGroup);
 }
 
 function escapeHtml(str) {
