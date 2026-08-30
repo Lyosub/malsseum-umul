@@ -1496,6 +1496,8 @@ create policy "관리자·부장 이벤트 배너 삭제" on home_banner
   );
 
 -- 학생 기록(감사노트/기도제목/하루인사) 조회·삭제: 부장도 가능
+-- (반환 컬럼 구성이 바뀔 수 있으므로 create or replace 전에 기존 함수를 먼저 지운다)
+drop function if exists get_all_notes_admin(integer);
 create or replace function get_all_notes_admin(p_limit integer default 200)
 returns table(id bigint, user_id uuid, nickname text, real_name text, type text, content text, created_at timestamptz)
 language sql
