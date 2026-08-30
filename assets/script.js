@@ -7,6 +7,7 @@ function renderVerseInto(elId, verse) {
     (verse.prayer ? '<div class="qt-section"><span class="qt-label">🙏 오늘의 기도</span><div class="qt-body">' + verse.prayer + '</div></div>' : '');
 
   el.innerHTML =
+    '<div class="verse-card-kicker">💧 오늘의 QT</div>' +
     '<div class="ref">' + verse.ref + '</div>' +
     '<div class="text">' + verse.text + '</div>' +
     (extraHtml

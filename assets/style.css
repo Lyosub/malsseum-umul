@@ -283,9 +283,21 @@ header.site nav a:hover {
   margin-bottom: 12px;
 }
 
+.verse-card-kicker {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+}
+
 .verse-card .text {
   font-family: var(--font-hand);
-  font-size: 19px;
+  font-size: 17px;
   line-height: 1.8;
   font-weight: 700;
   margin: 0 0 14px;
