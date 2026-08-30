@@ -5,7 +5,8 @@ function renderVerseInto(elId, verse) {
     '<div class="ref">' + verse.ref + '</div>' +
     '<div class="text">' + verse.text + '</div>' +
     (verse.interpretation ? '<div class="qt-section"><span class="qt-label">📖 말씀 설명</span><div class="qt-body">' + verse.interpretation + '</div></div>' : '') +
-    (verse.note ? '<div class="qt-section"><span class="qt-label">🙏 오늘의 적용</span><div class="qt-body">' + verse.note + '</div></div>' : '');
+    (verse.note ? '<div class="qt-section"><span class="qt-label">🎯 오늘의 적용</span><div class="qt-body">' + verse.note + '</div></div>' : '') +
+    (verse.prayer ? '<div class="qt-section"><span class="qt-label">🙏 오늘의 기도</span><div class="qt-body">' + verse.prayer + '</div></div>' : '');
 }
 
 function initHomeCard() {
@@ -59,7 +60,8 @@ function renderDrawnVerseInto(elId, verse, kind) {
     '<div class="ref">' + verse.ref + '</div>' +
     '<div class="text">' + verse.text + '</div>' +
     (verse.interpretation ? '<div class="qt-section"><span class="qt-label">📖 말씀 설명</span><div class="qt-body">' + verse.interpretation + '</div></div>' : '') +
-    (verse.note ? '<div class="qt-section"><span class="qt-label">🙏 오늘의 적용</span><div class="qt-body">' + verse.note + '</div></div>' : '') +
+    (verse.note ? '<div class="qt-section"><span class="qt-label">🎯 오늘의 적용</span><div class="qt-body">' + verse.note + '</div></div>' : '') +
+    (verse.prayer ? '<div class="qt-section"><span class="qt-label">🙏 오늘의 기도</span><div class="qt-body">' + verse.prayer + '</div></div>' : '') +
     extra;
 }
 

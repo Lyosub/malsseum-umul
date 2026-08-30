@@ -230,6 +230,16 @@ header.site nav a:hover {
   margin-bottom: 16px;
 }
 
+/* 넓은 화면(컴퓨터)에서는 두 카드를 나란히, 좁은 화면(모바일)에서는 그대로 위아래로 쌓는다 */
+.side-by-side { display: flex; flex-direction: column; gap: 16px; }
+.side-by-side > .card { margin-bottom: 0; }
+
+@media (min-width: 900px) {
+  .side-by-side { flex-direction: row; align-items: flex-start; }
+  .side-by-side > .card:first-child { flex: 2; min-width: 0; }
+  .side-by-side > .card:last-child { flex: 1; min-width: 280px; }
+}
+
 .verse-card {
   background: linear-gradient(180deg, var(--well-light) 0%, var(--well) 45%, var(--well-deep) 100%);
   color: #fff;
