@@ -689,7 +689,9 @@ as $$
 declare
   v_today date := (now() at time zone 'Asia/Seoul')::date;
 begin
-  if not exists (select 1 from group_members where group_id = p_group_id and user_id = auth.uid()) then
+  -- 아래 group_members를 gm으로 한정해야 한다 — 이 함수의 RETURNS TABLE에 user_id라는 이름의
+  -- 출력 컬럼이 있어서, 한정하지 않으면 get_current_quiz와 같은 이유(42702 ambiguous)로 항상 에러가 났다.
+  if not exists (select 1 from group_members gm where gm.group_id = p_group_id and gm.user_id = auth.uid()) then
     raise exception '이 그룹의 멤버만 조회할 수 있습니다.';
   end if;
 
@@ -780,10 +782,14 @@ declare
 begin
   -- week_start는 그 주의 월요일 날짜(관리자가 등록할 때 계산). 미리 등록해둬도 학생에게는
   -- 수요일(week_start + 2일) 00:00(한국시간)이 지나야 보이도록, 그 전까지는 대상에서 제외한다.
-  select * into v_quiz
-  from quiz_questions
-  where (week_start + 2) <= (now() at time zone 'Asia/Seoul')::date
-  order by week_start desc, created_at desc
+  -- (아래 컬럼들을 quiz_questions qq로 명시적으로 한정해야 한다 — 이 함수의 RETURNS TABLE에
+  -- week_start라는 이름의 출력 컬럼이 있어서, 한정하지 않으면 plpgsql이 "그 출력 컬럼을 말하는
+  -- 건지 테이블 컬럼을 말하는 건지 모호하다(42702)"며 항상 에러를 냈었다 — 학생 화면에는
+  -- "아직 등록된 퀴즈가 없어요"로만 보여서 여태 못 알아챈 버그)
+  select qq.* into v_quiz
+  from quiz_questions qq
+  where (qq.week_start + 2) <= (now() at time zone 'Asia/Seoul')::date
+  order by qq.week_start desc, qq.created_at desc
   limit 1;
   if v_quiz.id is null then
     return;
