@@ -91,6 +91,7 @@ function loadMemberList() {
             (m.is_teacher ? "교사 해제" : "교사로 지정") +
           '</button>' +
           '<button type="button" class="btn ghost" data-action="award-points" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">달란트 부여</button>' +
+          '<button type="button" class="btn ghost" data-action="edit-real-name" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">본명 수정</button>' +
           (m.is_admin ? '' :
             '<button type="button" class="btn ghost" data-action="delete-user" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:#b3432c;border-color:#b3432c;">탈퇴시키기</button>'
           ) +
@@ -146,6 +147,28 @@ function loadMemberList() {
         client.rpc("admin_award_points", { p_user_id: targetUserId, p_points: amount, p_note: note }).then(function (res) {
           if (res.error) {
             alert("달란트 부여에 실패했어요.");
+            return;
+          }
+          loadMemberList();
+        });
+      });
+    });
+
+    listEl.querySelectorAll('button[data-action="edit-real-name"]').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var itemEl = btn.closest(".note-item");
+        var targetUserId = itemEl.getAttribute("data-user-id");
+        var nickname = itemEl.querySelector("strong").textContent;
+        var newName = prompt('"' + nickname + '" 님의 이름(본명)을 입력해주세요.');
+        if (newName === null) return;
+        newName = newName.trim();
+        if (!newName) {
+          alert("이름을 입력해주세요.");
+          return;
+        }
+        client.rpc("admin_set_real_name", { p_user_id: targetUserId, p_real_name: newName }).then(function (res) {
+          if (res.error) {
+            alert("수정에 실패했어요.");
             return;
           }
           loadMemberList();

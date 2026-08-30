@@ -101,20 +101,19 @@ function initProfileSettings(session) {
   var nicknameInput = document.getElementById("nicknameEditInput");
   var saveNicknameBtn = document.getElementById("saveNicknameBtn");
   var nicknameMsg = document.getElementById("nicknameMsg");
-  var input = document.getElementById("realNameEditInput");
-  var saveBtn = document.getElementById("saveRealNameBtn");
-  var msg = document.getElementById("profileMsg");
-  if (!client || !input || !saveBtn) return;
+  var realNameEl = document.getElementById("profileRealName");
+  if (!client || !nicknameInput) return;
 
   if (emailEl) emailEl.textContent = session.user.email;
 
   var currentNickname = "";
+  // 이름(본명)은 이제 본인이 직접 못 고치고 교역자만 회원 관리에서 수정할 수 있어서, 여기서는 조회만 한다.
   client.from("profiles").select("nickname, real_name").eq("user_id", userId).single().then(function (res) {
     var p = res.data;
     if (!p) return;
     currentNickname = p.nickname;
     if (nicknameInput) nicknameInput.value = p.nickname;
-    if (p.real_name) input.value = p.real_name;
+    if (realNameEl) realNameEl.textContent = p.real_name || "아직 등록되지 않았어요";
   });
 
   if (saveNicknameBtn) {
@@ -148,22 +147,6 @@ function initProfileSettings(session) {
     });
   }
 
-  saveBtn.addEventListener("click", function () {
-    var value = input.value.trim();
-    if (!value) {
-      msg.textContent = "이름을 입력해주세요.";
-      return;
-    }
-    saveBtn.disabled = true;
-    client.from("profiles").update({ real_name: value }).eq("user_id", userId).then(function (res) {
-      saveBtn.disabled = false;
-      if (res.error) {
-        msg.textContent = "저장에 실패했어요.";
-        return;
-      }
-      msg.textContent = "저장되었습니다.";
-    });
-  });
 }
 
 // 초대 코드는 create_group RPC(schema.sql)가 서버에서 생성함 — 클라이언트에서는 만들지 않음

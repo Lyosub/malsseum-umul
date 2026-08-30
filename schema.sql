@@ -428,6 +428,9 @@ alter table profiles add column if not exists is_teacher boolean not null defaul
 -- 취약점이 있었다. 트리거로 "일반 사용자가 직접 하는 update"에서는 이 두 컬럼을 항상 기존 값으로
 -- 되돌리고, admin_set_teacher()처럼 신뢰된 함수 안에서만 세션 플래그를 켜서 예외적으로 허용한다.
 -- (SQL Editor에서 관리자를 수동으로 지정할 때처럼 auth.uid()가 없는 경우는 그대로 통과시킨다.)
+-- real_name도 이 트리거로 함께 보호한다: 회원가입 직후 최초 1회(행이 아직 없어서 insert로 처리됨)는
+-- 그대로 저장되지만, 그 이후 본인이 update로 real_name을 바꾸려 하면 이전 값으로 되돌린다.
+-- 오직 admin_set_real_name()처럼 신뢰된 함수 안에서 세션 플래그를 켰을 때만 예외적으로 통과된다.
 create or replace function protect_privilege_columns()
 returns trigger
 language plpgsql
@@ -438,6 +441,7 @@ begin
   if auth.uid() is not null and coalesce(current_setting('app.allow_privilege_change', true), '') <> 'true' then
     new.is_admin := old.is_admin;
     new.is_teacher := old.is_teacher;
+    new.real_name := old.real_name;
   end if;
   return new;
 end;
@@ -1310,4 +1314,25 @@ as $$
     select 1 from profiles admin_p where admin_p.user_id = auth.uid() and admin_p.is_admin = true
   )
   order by p.created_at desc;
+$$;
+
+-- 교역자 전용: 회원 본명을 수정한다. 이제 본인은 마이페이지에서 본명을 직접 바꿀 수 없고
+-- (위 protect_privilege_columns 트리거가 막음), 교역자만 회원 관리 화면에서 고칠 수 있다.
+create or replace function admin_set_real_name(p_user_id uuid, p_real_name text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from profiles where user_id = auth.uid() and is_admin = true
+  ) then
+    raise exception '교역자만 이름을 수정할 수 있습니다.';
+  end if;
+
+  perform set_config('app.allow_privilege_change', 'true', true);
+  update profiles set real_name = p_real_name where user_id = p_user_id;
+  return true;
+end;
 $$;
