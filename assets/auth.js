@@ -50,8 +50,10 @@ function initSignupForm() {
     var email = document.getElementById("emailInput").value.trim();
     var password = document.getElementById("passwordInput").value;
     var nickname = document.getElementById("nicknameInput").value.trim();
+    var realNameInput = document.getElementById("realNameInput");
+    var realName = realNameInput ? realNameInput.value.trim() : "";
 
-    if (!email || !password || !nickname) {
+    if (!email || !password || !nickname || (realNameInput && !realName)) {
       msg.textContent = "모든 항목을 입력해주세요.";
       return;
     }
@@ -66,7 +68,7 @@ function initSignupForm() {
       client.auth.signUp({
         email: email,
         password: password,
-        options: { data: { nickname: nickname } }
+        options: { data: { nickname: nickname, real_name: realName } }
       }).then(function (res) {
         if (res.error) {
           msg.textContent = "가입 실패: " + res.error.message;

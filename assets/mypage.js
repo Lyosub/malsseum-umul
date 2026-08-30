@@ -84,8 +84,12 @@ function initAttendance(userId) {
 function ensureProfile(session) {
   var client = getClient();
   if (!client) return Promise.resolve();
-  var nickname = (session.user.user_metadata && session.user.user_metadata.nickname) || "익명";
-  return client.from("profiles").upsert({ user_id: session.user.id, nickname: nickname }).then(function () {});
+  var meta = session.user.user_metadata || {};
+  var nickname = meta.nickname || "익명";
+  var payload = { user_id: session.user.id, nickname: nickname };
+  // real_name은 회원가입 때 한 번만 채우고, 기존 값을 빈 값으로 덮어쓰지 않도록 메타데이터에 있을 때만 포함한다.
+  if (meta.real_name) payload.real_name = meta.real_name;
+  return client.from("profiles").upsert(payload).then(function () {});
 }
 
 // 초대 코드는 create_group RPC(schema.sql)가 서버에서 생성함 — 클라이언트에서는 만들지 않음

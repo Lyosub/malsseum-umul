@@ -82,7 +82,7 @@ function loadMemberList() {
             (m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">교역자</span>' : '') +
             (m.is_teacher && !m.is_admin ? ' <span style="color:var(--well);font-size:12px;">교사</span>' : '') +
             ' <span style="color:var(--well);font-size:12px;font-weight:700;">' + m.total_points + '점</span>' +
-            '<br>' + escapeHtmlAdmin(m.email) +
+            '<br>' + (m.real_name ? '본명: ' + escapeHtmlAdmin(m.real_name) + ' · ' : '') + escapeHtmlAdmin(m.email) +
           '</div>' +
           '<div class="meta">가입: ' + formatDateTime(m.joined_at) +
             ' · 최근 접속: ' + (lastSeen || "기록 없음") +

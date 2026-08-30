@@ -1083,3 +1083,41 @@ begin
   return true;
 end;
 $$;
+
+-- 회원가입 시 본명도 함께 받아서 저장한다. 사이트 안에서는 항상 닉네임으로만 활동/노출되고(공개 API/화면 어디에도
+-- real_name을 내보내지 않음), 교역자가 관리자 페이지에서 실제로 누구인지 확인할 때만 쓴다.
+alter table profiles add column if not exists real_name text;
+
+-- get_member_list에 본명을 추가해서 교역자가 회원 관리 화면에서 확인할 수 있게 한다.
+-- (반환 컬럼 구성이 바뀌므로 create or replace 전에 기존 함수를 먼저 지워야 한다)
+drop function if exists get_member_list();
+create or replace function get_member_list()
+returns table(
+  user_id uuid,
+  nickname text,
+  real_name text,
+  email text,
+  is_admin boolean,
+  is_teacher boolean,
+  joined_at timestamptz,
+  last_sign_in_at timestamptz,
+  last_note_type text,
+  last_note_at timestamptz,
+  total_points bigint
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    p.user_id, p.nickname, p.real_name, u.email, p.is_admin, p.is_teacher, p.created_at, u.last_sign_in_at,
+    (select n.type from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_type,
+    (select n.created_at from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_at,
+    (select coalesce(sum(pl.points), 0) from points_ledger pl where pl.user_id = p.user_id)::bigint as total_points
+  from profiles p
+  join auth.users u on u.id = p.user_id
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and admin_p.is_admin = true
+  )
+  order by p.created_at desc;
+$$;
