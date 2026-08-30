@@ -1,5 +1,8 @@
-// 홈 화면에 오이코스별 누적 달란트 순위를 보여준다. 로그인 여부와 상관없이 누구나 볼 수 있는
-// 공개 랭킹이며, 오이코스 이름/인원수/총 달란트만 나오고 개별 멤버 정보는 나오지 않는다.
+// 오이코스별 누적 달란트 순위를 보여준다. 관리자 페이지(모든 오이코스)와 마이페이지의
+// "우리 오이코스" 카드(오이코스에 속한 멤버에게만) 두 곳에서만 쓴다 — 홈페이지에는 공개하지 않는다.
+// get_group_talent_rankings RPC가 서버에서 "오이코스 멤버이거나 교역자인지"를 직접 확인하므로,
+// 권한이 없으면 빈 배열이 내려온다(에러는 아님) — 그 경우와 "진짜로 오이코스가 하나도 없는 경우",
+// 그리고 "RPC 자체가 실패한 경우"를 각각 다른 메시지로 구분해서 보여준다.
 
 function escapeHtmlRankings(str) {
   return String(str)
@@ -16,8 +19,12 @@ function initGroupRankings() {
   if (!client) return;
 
   client.rpc("get_group_talent_rankings").then(function (res) {
+    if (res.error) {
+      listEl.innerHTML = '<p class="msg">순위를 불러오지 못했어요.</p>';
+      return;
+    }
     var rows = res.data || [];
-    if (res.error || !rows.length) {
+    if (!rows.length) {
       listEl.innerHTML = '<p class="msg">아직 만들어진 오이코스가 없어요.</p>';
       return;
     }

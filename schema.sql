@@ -1123,8 +1123,9 @@ as $$
   order by gm.joined_at asc;
 $$;
 
--- 오이코스별 총 달란트 순위 (홈페이지에 공개) — 오이코스 이름/인원수/총 달란트만 보여주고
--- 개별 멤버의 닉네임이나 기록 내용은 노출하지 않는다. 로그인 여부와 무관하게 누구나 조회 가능.
+-- 오이코스별 총 달란트 순위 — 홈페이지에는 공개하지 않고, 오이코스에 속한 멤버 본인이거나
+-- 교역자일 때만 조회 가능(관리자 페이지 / 마이페이지의 "우리 오이코스" 카드에서만 사용).
+-- 오이코스 이름/인원수/총 달란트만 보여주고 개별 멤버의 닉네임이나 기록 내용은 노출하지 않는다.
 create or replace function get_group_talent_rankings()
 returns table(
   id bigint,
@@ -1146,6 +1147,10 @@ as $$
        where gm2.group_id = g.id)::bigint as total_talents
   from groups g
   join profiles p on p.user_id = g.created_by
+  where (
+    exists (select 1 from group_members me where me.user_id = auth.uid())
+    or exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
+  )
   order by total_talents desc, g.created_at asc
   limit 15;
 $$;

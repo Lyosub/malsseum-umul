@@ -173,6 +173,10 @@
       <h4 style="margin:18px 0 4px;color:var(--well-deep);">순위</h4>
       <div id="leaderboardList"></div>
 
+      <h4 style="margin:18px 0 4px;color:var(--well-deep);">🏆 오이코스 전체 순위</h4>
+      <p style="color:var(--text-soft);font-size:12px;margin:0 0 10px;">우리 오이코스를 포함해, 오이코스별 누적 달란트 순위예요.</p>
+      <div id="groupRankingsList"></div>
+
       <button type="button" id="disbandGroupBtn" class="btn ghost" style="display:none;margin-top:18px;padding:8px 16px;font-size:13px;color:#b3432c;border-color:#b3432c;">오이코스 해체하기</button>
       <p class="msg" id="disbandGroupMsg" style="margin-top:6px;"></p>
     </div>
@@ -193,6 +197,7 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>
 <script src="assets/mypage.js"></script>
+<script src="assets/group-rankings.js"></script>
 <script>
   initLogoutButton();
   getSession().then(function (session) {
