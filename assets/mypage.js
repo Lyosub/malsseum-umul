@@ -271,6 +271,76 @@ function initGroup(userId) {
     });
   }
 
+  // 오이코스를 만든 사람이 교사(또는 교역자)일 때만 "학생 초대하기" 검색창을 보여준다.
+  // 검색 결과에는 본명도 함께 보여준다(닉네임(본명) 형태) — 교사가 자기 반 학생을 정확히 찾아
+  // 초대할 수 있게 하려는 예외적 노출이며, 다른 화면에서는 여전히 교역자만 본명을 볼 수 있다.
+  function initGroupInvite(groupId, isCreator) {
+    var section = document.getElementById("groupInviteSection");
+    var input = document.getElementById("inviteSearchInput");
+    var resultsEl = document.getElementById("inviteSearchResults");
+    if (!section || !input || !resultsEl) return;
+
+    section.style.display = "none";
+    if (!isCreator) return;
+
+    client.from("profiles").select("is_teacher, is_admin").eq("user_id", userId).single().then(function (res) {
+      var p = res.data;
+      if (!p || (!p.is_teacher && !p.is_admin)) return;
+      section.style.display = "block";
+    });
+
+    var searchTimer = null;
+    input.oninput = function () {
+      clearTimeout(searchTimer);
+      var q = input.value.trim();
+      if (!q) {
+        resultsEl.innerHTML = "";
+        return;
+      }
+      searchTimer = setTimeout(function () {
+        client.rpc("search_users_for_invite", { p_query: q, p_group_id: groupId }).then(function (res) {
+          var rows = res.data || [];
+          if (res.error) {
+            resultsEl.innerHTML = '<p class="msg">검색에 실패했어요.</p>';
+            return;
+          }
+          if (!rows.length) {
+            resultsEl.innerHTML = '<p class="msg">검색 결과가 없어요.</p>';
+            return;
+          }
+          resultsEl.innerHTML = rows.map(function (r) {
+            var label = escapeHtml(r.nickname) + (r.real_name ? "(" + escapeHtml(r.real_name) + ")" : "");
+            return (
+              '<div class="note-item" data-invite-user="' + r.user_id + '">' +
+                '<div class="content">' + label + '</div>' +
+                '<button type="button" class="btn ghost" data-action="invite" style="margin-top:6px;padding:6px 14px;font-size:12.5px;">초대</button>' +
+              '</div>'
+            );
+          }).join("");
+          resultsEl.querySelectorAll('button[data-action="invite"]').forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var targetUserId = btn.closest("[data-invite-user]").getAttribute("data-invite-user");
+              btn.disabled = true;
+              btn.textContent = "초대 중...";
+              client.rpc("invite_user_to_group", { p_group_id: groupId, p_user_id: targetUserId }).then(function (res2) {
+                if (res2.error) {
+                  btn.disabled = false;
+                  btn.textContent = "초대";
+                  alert("초대에 실패했어요.");
+                  return;
+                }
+                btn.textContent = "✅ 초대됨";
+                renderGroupMembers(groupId);
+                renderLeaderboard(groupId);
+                renderTodayStatus(groupId);
+              });
+            });
+          });
+        });
+      }, 300);
+    };
+  }
+
   function showGroup(group, justJoined) {
     noGroupEl.style.display = "none";
     hasGroupEl.style.display = "block";
@@ -278,6 +348,7 @@ function initGroup(userId) {
     document.getElementById("groupCode").textContent = group.invite_code;
     renderChallengeBanner(group.id);
     renderGroupMembers(group.id);
+    initGroupInvite(group.id, group.created_by === userId);
 
     var flashEl = document.getElementById("groupJoinedFlash");
     if (flashEl) {
@@ -360,7 +431,7 @@ function initGroup(userId) {
         }
         msg.textContent = "";
         var row = res.data[0];
-        showGroup({ id: row.group_id, name: row.group_name, invite_code: row.invite_code });
+        showGroup({ id: row.group_id, name: row.group_name, invite_code: row.invite_code, created_by: userId });
       });
     });
   }

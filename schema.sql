@@ -1212,6 +1212,72 @@ as $$
   order by gm.joined_at asc;
 $$;
 
+-- ===== 오이코스 초대(교사가 학생을 직접 검색해서 추가) =====
+-- 오이코스를 만든 사람이 교사(또는 교역자)면, 초대 코드를 공유하는 대신 닉네임이나 본명으로
+-- 학생을 검색해서 바로 추가할 수 있다(학생의 별도 수락 절차 없이 즉시 멤버로 등록됨).
+-- 검색 결과에는 본명도 함께 내려준다 — 교사가 자기 반 학생을 정확히 찾아 초대할 수 있어야 한다는
+-- 요청에 따른 예외적 노출이며, 그 외 화면(오이코스 멤버 목록 등)에서는 여전히 교역자만 본명을 본다.
+create or replace function search_users_for_invite(p_query text, p_group_id bigint)
+returns table(user_id uuid, nickname text, real_name text)
+language sql
+security definer
+set search_path = public
+as $$
+  select p.user_id, p.nickname, p.real_name
+  from profiles p
+  where (
+    exists (
+      select 1 from groups g
+      where g.id = p_group_id
+        and g.created_by = auth.uid()
+        and exists (
+          select 1 from profiles tp
+          where tp.user_id = auth.uid() and (tp.is_teacher = true or tp.is_admin = true)
+        )
+    )
+    or exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
+  )
+  and p.user_id <> auth.uid()
+  and not exists (select 1 from group_members gm where gm.group_id = p_group_id and gm.user_id = p.user_id)
+  and (p.nickname ilike '%' || p_query || '%' or p.real_name ilike '%' || p_query || '%')
+  order by p.nickname
+  limit 10;
+$$;
+
+-- 검색으로 찾은 학생을 오이코스에 바로 추가한다. 권한 조건은 search_users_for_invite와 동일
+-- (그 오이코스를 만든 교사 본인이거나, 교역자면 어떤 오이코스에든 추가할 수 있음).
+create or replace function invite_user_to_group(p_group_id bigint, p_user_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from groups g
+    where g.id = p_group_id
+      and (
+        (
+          g.created_by = auth.uid()
+          and exists (
+            select 1 from profiles tp
+            where tp.user_id = auth.uid() and (tp.is_teacher = true or tp.is_admin = true)
+          )
+        )
+        or exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
+      )
+  ) then
+    raise exception '이 오이코스에 초대할 권한이 없습니다.';
+  end if;
+
+  insert into group_members (group_id, user_id)
+  values (p_group_id, p_user_id)
+  on conflict on constraint group_members_pkey do nothing;
+
+  return true;
+end;
+$$;
+
 -- get_member_list에 본명을 추가해서 교역자가 회원 관리 화면에서 확인할 수 있게 한다.
 -- (반환 컬럼 구성이 바뀌므로 create or replace 전에 기존 함수를 먼저 지워야 한다)
 drop function if exists get_member_list();
