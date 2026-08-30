@@ -99,24 +99,88 @@ function initBoardPage(userId) {
     });
   }
 
+  function renderPostBody(p) {
+    return (
+      '<div class="meta">' + escapeHtmlBoard(p.nickname || "익명") + ' · ' + timeAgoKoBoard(p.created_at) + '</div>' +
+      '<div class="content">' + escapeHtmlBoard(p.content) + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px;align-items:center;">' +
+        '<button type="button" class="btn ghost board-comment-toggle" data-post-id="' + p.id + '" style="padding:6px 14px;font-size:12.5px;">' +
+          '💬 댓글 <span class="board-comment-count">' + p.comment_count + '</span>개' +
+        '</button>' +
+        (p.user_id === userId
+          ? '<button type="button" class="btn ghost board-post-edit" style="padding:6px 14px;font-size:12.5px;">수정</button>'
+          : "") +
+        ((p.user_id === userId || isStaff)
+          ? '<button type="button" class="btn ghost board-post-delete" data-own="' + (p.user_id === userId) + '" style="padding:6px 14px;font-size:12.5px;">삭제</button>'
+          : "") +
+      '</div>'
+    );
+  }
+
   function renderPost(p) {
-    var canDelete = p.user_id === userId || isStaff;
     return (
       '<div class="board-post" data-post-id="' + p.id + '">' +
-        '<div class="meta">' + escapeHtmlBoard(p.nickname || "익명") + ' · ' + timeAgoKoBoard(p.created_at) + '</div>' +
-        '<div class="content">' + escapeHtmlBoard(p.content) + '</div>' +
-        '<div style="display:flex;gap:8px;margin-top:8px;align-items:center;">' +
-          '<button type="button" class="btn ghost board-comment-toggle" data-post-id="' + p.id + '" style="padding:6px 14px;font-size:12.5px;">' +
-            '💬 댓글 <span class="board-comment-count">' + p.comment_count + '</span>개' +
-          '</button>' +
-          (canDelete
-            ? '<button type="button" class="btn ghost board-post-delete" data-post-id="' + p.id + '" data-own="' + (p.user_id === userId) + '" style="padding:6px 14px;font-size:12.5px;">삭제</button>'
-            : "") +
-        '</div>' +
+        '<div data-role="body">' + renderPostBody(p) + '</div>' +
         '<div class="board-comments" data-post-id="' + p.id + '" style="display:none;margin-top:10px;"></div>' +
       '</div>'
     );
   }
+
+  var postsById = {};
+
+  // 글 목록 안의 모든 클릭(댓글 펼치기/수정/저장/취소/삭제)을 listEl 하나에 위임해서 처리한다.
+  // 개별 버튼마다 리스너를 다는 방식은, 수정 후 저장/취소로 그 버튼들을 다시 그리고 나면
+  // 이전에 붙여둔 리스너가 사라져 먹통이 되는 문제가 있어 이 방식으로 통일한다.
+  listEl.addEventListener("click", function (e) {
+    var postEl = e.target.closest(".board-post");
+    if (!postEl) return;
+    var postId = postEl.getAttribute("data-post-id");
+    var post = postsById[postId];
+    var bodyEl = postEl.querySelector('[data-role="body"]');
+
+    if (e.target.closest(".board-comment-toggle")) {
+      var box = postEl.querySelector('.board-comments[data-post-id="' + postId + '"]');
+      var isOpen = box.style.display === "block";
+      box.style.display = isOpen ? "none" : "block";
+      if (!isOpen) loadComments(postId, box);
+      return;
+    }
+
+    if (e.target.closest(".board-post-delete")) {
+      if (!confirm("이 글을 삭제할까요? 댓글도 함께 삭제돼요.")) return;
+      var isOwn = e.target.closest(".board-post-delete").getAttribute("data-own") === "true";
+      var action = isOwn
+        ? client.from("board_posts").delete().eq("id", postId)
+        : client.rpc("admin_delete_board_post", { p_post_id: postId });
+      action.then(function () { loadPosts(); });
+      return;
+    }
+
+    if (e.target.closest(".board-post-edit")) {
+      bodyEl.innerHTML =
+        '<div class="form-row"><textarea data-role="edit-input">' + escapeHtmlBoard(post.content) + '</textarea></div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button type="button" class="btn" data-action="save" style="padding:6px 14px;font-size:12.5px;">저장</button>' +
+          '<button type="button" class="btn ghost" data-action="cancel" style="padding:6px 14px;font-size:12.5px;">취소</button>' +
+        '</div>';
+      return;
+    }
+
+    if (e.target.closest('[data-action="cancel"]')) {
+      bodyEl.innerHTML = renderPostBody(post);
+      return;
+    }
+
+    if (e.target.closest('[data-action="save"]')) {
+      var newContent = bodyEl.querySelector('[data-role="edit-input"]').value.trim();
+      if (!newContent) return;
+      client.from("board_posts").update({ content: newContent }).eq("id", postId).then(function (res) {
+        if (res.error) return;
+        post.content = newContent;
+        bodyEl.innerHTML = renderPostBody(post);
+      });
+    }
+  });
 
   function loadPosts() {
     client.rpc("get_board_posts", { p_limit: 100 }).then(function (res) {
@@ -131,29 +195,9 @@ function initBoardPage(userId) {
         return;
       }
       listMsg.textContent = "";
+      postsById = {};
+      rows.forEach(function (p) { postsById[p.id] = p; });
       listEl.innerHTML = rows.map(renderPost).join("");
-
-      listEl.querySelectorAll(".board-comment-toggle").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          var postId = btn.getAttribute("data-post-id");
-          var box = listEl.querySelector('.board-comments[data-post-id="' + postId + '"]');
-          var isOpen = box.style.display === "block";
-          box.style.display = isOpen ? "none" : "block";
-          if (!isOpen) loadComments(postId, box);
-        });
-      });
-
-      listEl.querySelectorAll(".board-post-delete").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          if (!confirm("이 글을 삭제할까요? 댓글도 함께 삭제돼요.")) return;
-          var postId = btn.getAttribute("data-post-id");
-          var isOwn = btn.getAttribute("data-own") === "true";
-          var action = isOwn
-            ? client.from("board_posts").delete().eq("id", postId)
-            : client.rpc("admin_delete_board_post", { p_post_id: postId });
-          action.then(function () { loadPosts(); });
-        });
-      });
     }).catch(function () {
       listMsg.textContent = "불러오지 못했어요.";
     });

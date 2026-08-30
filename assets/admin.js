@@ -66,6 +66,7 @@ function initAdminPage() {
       loadMemberList();
       loadAllNotes();
       loadGroupsAdmin();
+      loadBoardAdmin();
     });
   });
 }
@@ -463,6 +464,98 @@ function loadAllNotes() {
   load();
 }
 
+// 교역자·부장용: 자유게시판 글/댓글 전체를 관리자 페이지에서도 확인하고 삭제할 수 있게 한다.
+// (학생들은 board.html에서 본인 글/댓글만 지울 수 있고, 여기서는 남의 글/댓글도 지울 수 있다)
+function loadBoardAdmin() {
+  var client = getClient();
+  var listEl = document.getElementById("boardAdminList");
+  if (!listEl) return;
+
+  var postsById = {};
+
+  function renderComment(c) {
+    return (
+      '<div class="board-comment" data-comment-id="' + c.id + '">' +
+        '<div class="meta">' + escapeHtmlAdmin(c.nickname || "익명") + ' · ' + formatDateTime(c.created_at) + '</div>' +
+        '<div class="content">' + escapeHtmlAdmin(c.content) + '</div>' +
+        '<button type="button" class="btn ghost board-comment-delete" data-comment-id="' + c.id + '">삭제</button>' +
+      '</div>'
+    );
+  }
+
+  function loadComments(postId, container) {
+    container.innerHTML = '<p class="msg">불러오는 중...</p>';
+    client.rpc("get_board_comments", { p_post_id: postId }).then(function (res) {
+      var rows = res.data || [];
+      container.innerHTML = rows.length ? rows.map(renderComment).join("") : '<p class="msg">아직 댓글이 없어요.</p>';
+    });
+  }
+
+  function renderPost(p) {
+    return (
+      '<div class="board-post" data-post-id="' + p.id + '">' +
+        '<div class="meta">' + escapeHtmlAdmin(p.nickname || "익명") + ' · ' + formatDateTime(p.created_at) + '</div>' +
+        '<div class="content">' + escapeHtmlAdmin(p.content) + '</div>' +
+        '<div style="display:flex;gap:8px;margin-top:8px;">' +
+          '<button type="button" class="btn ghost board-comment-toggle" data-post-id="' + p.id + '" style="padding:6px 14px;font-size:12.5px;">💬 댓글 ' + p.comment_count + '개</button>' +
+          '<button type="button" class="btn ghost board-post-delete" data-post-id="' + p.id + '" style="padding:6px 14px;font-size:12.5px;">삭제</button>' +
+        '</div>' +
+        '<div class="board-comments" data-post-id="' + p.id + '" style="display:none;margin-top:10px;"></div>' +
+      '</div>'
+    );
+  }
+
+  function load() {
+    client.rpc("get_board_posts", { p_limit: 200 }).then(function (res) {
+      var rows = res.data || [];
+      if (!rows.length) {
+        listEl.innerHTML = '<p class="msg">아직 올라온 글이 없어요.</p>';
+        return;
+      }
+      postsById = {};
+      rows.forEach(function (p) { postsById[p.id] = p; });
+      listEl.innerHTML = rows.map(renderPost).join("");
+    }).catch(function () {
+      listEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
+    });
+  }
+
+  // 목록 안 클릭을 listEl 하나에 위임: 댓글 펼치기/삭제, 글 삭제를 모두 여기서 처리한다.
+  listEl.addEventListener("click", function (e) {
+    var commentDeleteBtn = e.target.closest(".board-comment-delete");
+    if (commentDeleteBtn) {
+      if (!confirm("이 댓글을 삭제할까요?")) return;
+      var commentId = commentDeleteBtn.getAttribute("data-comment-id");
+      var box = commentDeleteBtn.closest(".board-comments");
+      var postId = box.getAttribute("data-post-id");
+      client.rpc("admin_delete_board_comment", { p_comment_id: commentId }).then(function () {
+        loadComments(postId, box);
+        load();
+      });
+      return;
+    }
+
+    var postEl = e.target.closest(".board-post");
+    if (!postEl) return;
+    var postId = postEl.getAttribute("data-post-id");
+
+    if (e.target.closest(".board-comment-toggle")) {
+      var box2 = postEl.querySelector('.board-comments[data-post-id="' + postId + '"]');
+      var isOpen = box2.style.display === "block";
+      box2.style.display = isOpen ? "none" : "block";
+      if (!isOpen) loadComments(postId, box2);
+      return;
+    }
+
+    if (e.target.closest(".board-post-delete")) {
+      if (!confirm("이 글을 삭제할까요? 댓글도 함께 삭제돼요.")) return;
+      client.rpc("admin_delete_board_post", { p_post_id: postId }).then(load);
+    }
+  });
+
+  load();
+}
+
 // 교역자용: 전체 오이코스 목록 확인 + 해체(삭제). 본인이 만들지 않은 오이코스도 볼 수 있고 해체할 수 있다
 // (delete_group RPC가 "만든 사람 본인이거나 관리자(is_admin)"만 허용하도록 서버에서 확인함)
 function loadGroupsAdmin() {
@@ -585,6 +678,33 @@ function initBannerForm(userId) {
   var list = document.getElementById("bannerAdminList");
   if (!form) return;
 
+  function renderView(item) {
+    var d = new Date(item.created_at);
+    return (
+      '<div class="meta">' + (d.getMonth() + 1) + '.' + d.getDate() + '</div>' +
+      '<div class="content"><strong>' + escapeHtmlAdmin(item.title) + '</strong>' +
+        (item.description ? '<br>' + escapeHtmlAdmin(item.description) : '') +
+        (item.link_url ? '<br><span style="color:var(--well);">→ ' + escapeHtmlAdmin(item.link_url) + '</span>' : '') +
+      '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px;">' +
+        '<button class="btn ghost" data-action="edit" style="padding:6px 14px;font-size:12.5px;">수정</button>' +
+        '<button class="btn ghost" data-action="delete" style="padding:6px 14px;font-size:12.5px;">삭제</button>' +
+      '</div>'
+    );
+  }
+
+  function renderEdit(item) {
+    return (
+      '<div class="form-row"><input type="text" data-field="title" value="' + escapeHtmlAdmin(item.title) + '"></div>' +
+      '<div class="form-row"><input type="text" data-field="description" placeholder="설명(선택)" value="' + escapeHtmlAdmin(item.description || "") + '"></div>' +
+      '<div class="form-row"><input type="text" data-field="link_url" placeholder="링크(선택)" value="' + escapeHtmlAdmin(item.link_url || "") + '"></div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button type="button" class="btn" data-action="save" style="padding:6px 14px;font-size:12.5px;">저장</button>' +
+        '<button type="button" class="btn ghost" data-action="cancel" style="padding:6px 14px;font-size:12.5px;">취소</button>' +
+      '</div>'
+    );
+  }
+
   function load() {
     if (!list) return;
     client.from("home_banner").select("*").order("created_at", { ascending: false }).then(function (res) {
@@ -593,22 +713,41 @@ function initBannerForm(userId) {
         list.innerHTML = '<p class="msg">등록된 이벤트 배너가 없어요. 지금은 홈 화면에 아무것도 안 보여요.</p>';
         return;
       }
+      var itemsById = {};
+      items.forEach(function (item) { itemsById[item.id] = item; });
       list.innerHTML = items.map(function (item) {
-        var d = new Date(item.created_at);
-        return (
-          '<div class="note-item">' +
-            '<div class="meta">' + (d.getMonth() + 1) + '.' + d.getDate() + '</div>' +
-            '<div class="content"><strong>' + escapeHtmlAdmin(item.title) + '</strong>' +
-              (item.description ? '<br>' + escapeHtmlAdmin(item.description) : '') +
-              (item.link_url ? '<br><span style="color:var(--well);">→ ' + escapeHtmlAdmin(item.link_url) + '</span>' : '') +
-            '</div>' +
-            '<button class="btn ghost" data-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
-          '</div>'
-        );
+        return '<div class="note-item" data-id="' + item.id + '">' + renderView(item) + '</div>';
       }).join("");
-      list.querySelectorAll("button[data-id]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          client.from("home_banner").delete().eq("id", btn.getAttribute("data-id")).then(load);
+
+      list.querySelectorAll(".note-item").forEach(function (row) {
+        row.addEventListener("click", function (e) {
+          var btn = e.target.closest("button[data-action]");
+          if (!btn) return;
+          var id = row.getAttribute("data-id");
+          var item = itemsById[id];
+          var action = btn.getAttribute("data-action");
+
+          if (action === "delete") {
+            client.from("home_banner").delete().eq("id", id).then(load);
+            return;
+          }
+          if (action === "edit") {
+            row.innerHTML = renderEdit(item);
+            return;
+          }
+          if (action === "cancel") {
+            row.innerHTML = renderView(item);
+            return;
+          }
+          if (action === "save") {
+            var title = row.querySelector('[data-field="title"]').value.trim();
+            var description = row.querySelector('[data-field="description"]').value.trim();
+            var linkUrl = row.querySelector('[data-field="link_url"]').value.trim();
+            if (!title) return;
+            client.from("home_banner").update({
+              title: title, description: description || null, link_url: linkUrl || null
+            }).eq("id", id).then(load);
+          }
         });
       });
     });
@@ -649,6 +788,29 @@ function initAnnouncementForm(userId) {
   var list = document.getElementById("announcementAdminList");
   if (!form) return;
 
+  function renderView(item) {
+    var d = new Date(item.created_at);
+    return (
+      '<div class="meta">' + (d.getMonth() + 1) + '.' + d.getDate() + '</div>' +
+      '<div class="content"><strong>' + escapeHtmlAdmin(item.title) + '</strong><br>' + escapeHtmlAdmin(item.content) + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px;">' +
+        '<button class="btn ghost" data-action="edit" style="padding:6px 14px;font-size:12.5px;">수정</button>' +
+        '<button class="btn ghost" data-action="delete" style="padding:6px 14px;font-size:12.5px;">삭제</button>' +
+      '</div>'
+    );
+  }
+
+  function renderEdit(item) {
+    return (
+      '<div class="form-row"><input type="text" data-field="title" value="' + escapeHtmlAdmin(item.title) + '"></div>' +
+      '<div class="form-row"><textarea data-field="content">' + escapeHtmlAdmin(item.content) + '</textarea></div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button type="button" class="btn" data-action="save" style="padding:6px 14px;font-size:12.5px;">저장</button>' +
+        '<button type="button" class="btn ghost" data-action="cancel" style="padding:6px 14px;font-size:12.5px;">취소</button>' +
+      '</div>'
+    );
+  }
+
   function load() {
     if (!list) return;
     client.from("announcements").select("*").order("created_at", { ascending: false }).then(function (res) {
@@ -657,19 +819,38 @@ function initAnnouncementForm(userId) {
         list.innerHTML = '<p class="msg">등록된 공지사항이 없어요.</p>';
         return;
       }
+      var itemsById = {};
+      items.forEach(function (item) { itemsById[item.id] = item; });
       list.innerHTML = items.map(function (item) {
-        var d = new Date(item.created_at);
-        return (
-          '<div class="note-item">' +
-            '<div class="meta">' + (d.getMonth() + 1) + '.' + d.getDate() + '</div>' +
-            '<div class="content"><strong>' + escapeHtmlAdmin(item.title) + '</strong><br>' + escapeHtmlAdmin(item.content) + '</div>' +
-            '<button class="btn ghost" data-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
-          '</div>'
-        );
+        return '<div class="note-item" data-id="' + item.id + '">' + renderView(item) + '</div>';
       }).join("");
-      list.querySelectorAll("button[data-id]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          client.from("announcements").delete().eq("id", btn.getAttribute("data-id")).then(load);
+
+      list.querySelectorAll(".note-item").forEach(function (row) {
+        row.addEventListener("click", function (e) {
+          var btn = e.target.closest("button[data-action]");
+          if (!btn) return;
+          var id = row.getAttribute("data-id");
+          var item = itemsById[id];
+          var action = btn.getAttribute("data-action");
+
+          if (action === "delete") {
+            client.from("announcements").delete().eq("id", id).then(load);
+            return;
+          }
+          if (action === "edit") {
+            row.innerHTML = renderEdit(item);
+            return;
+          }
+          if (action === "cancel") {
+            row.innerHTML = renderView(item);
+            return;
+          }
+          if (action === "save") {
+            var title = row.querySelector('[data-field="title"]').value.trim();
+            var contentText = row.querySelector('[data-field="content"]').value.trim();
+            if (!title || !contentText) return;
+            client.from("announcements").update({ title: title, content: contentText }).eq("id", id).then(load);
+          }
         });
       });
     });
@@ -704,6 +885,30 @@ function initEventForm(userId) {
   var list = document.getElementById("eventAdminList");
   if (!form) return;
 
+  function renderView(item) {
+    return (
+      '<div class="meta">' + item.event_date + '</div>' +
+      '<div class="content"><strong>' + escapeHtmlAdmin(item.title) + '</strong>' +
+        (item.description ? '<br>' + escapeHtmlAdmin(item.description) : '') + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px;">' +
+        '<button class="btn ghost" data-action="edit" style="padding:6px 14px;font-size:12.5px;">수정</button>' +
+        '<button class="btn ghost" data-action="delete" style="padding:6px 14px;font-size:12.5px;">삭제</button>' +
+      '</div>'
+    );
+  }
+
+  function renderEdit(item) {
+    return (
+      '<div class="form-row"><input type="date" data-field="event_date" value="' + escapeHtmlAdmin(item.event_date) + '"></div>' +
+      '<div class="form-row"><input type="text" data-field="title" value="' + escapeHtmlAdmin(item.title) + '"></div>' +
+      '<div class="form-row"><input type="text" data-field="description" placeholder="설명(선택)" value="' + escapeHtmlAdmin(item.description || "") + '"></div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button type="button" class="btn" data-action="save" style="padding:6px 14px;font-size:12.5px;">저장</button>' +
+        '<button type="button" class="btn ghost" data-action="cancel" style="padding:6px 14px;font-size:12.5px;">취소</button>' +
+      '</div>'
+    );
+  }
+
   function load() {
     if (!list) return;
     client.from("calendar_events").select("*").order("event_date", { ascending: true }).then(function (res) {
@@ -712,19 +917,41 @@ function initEventForm(userId) {
         list.innerHTML = '<p class="msg">등록된 일정이 없어요.</p>';
         return;
       }
+      var itemsById = {};
+      items.forEach(function (item) { itemsById[item.id] = item; });
       list.innerHTML = items.map(function (item) {
-        return (
-          '<div class="note-item">' +
-            '<div class="meta">' + item.event_date + '</div>' +
-            '<div class="content"><strong>' + escapeHtmlAdmin(item.title) + '</strong>' +
-              (item.description ? '<br>' + escapeHtmlAdmin(item.description) : '') + '</div>' +
-            '<button class="btn ghost" data-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
-          '</div>'
-        );
+        return '<div class="note-item" data-id="' + item.id + '">' + renderView(item) + '</div>';
       }).join("");
-      list.querySelectorAll("button[data-id]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          client.from("calendar_events").delete().eq("id", btn.getAttribute("data-id")).then(load);
+
+      list.querySelectorAll(".note-item").forEach(function (row) {
+        row.addEventListener("click", function (e) {
+          var btn = e.target.closest("button[data-action]");
+          if (!btn) return;
+          var id = row.getAttribute("data-id");
+          var item = itemsById[id];
+          var action = btn.getAttribute("data-action");
+
+          if (action === "delete") {
+            client.from("calendar_events").delete().eq("id", id).then(load);
+            return;
+          }
+          if (action === "edit") {
+            row.innerHTML = renderEdit(item);
+            return;
+          }
+          if (action === "cancel") {
+            row.innerHTML = renderView(item);
+            return;
+          }
+          if (action === "save") {
+            var date = row.querySelector('[data-field="event_date"]').value;
+            var title = row.querySelector('[data-field="title"]').value.trim();
+            var description = row.querySelector('[data-field="description"]').value.trim();
+            if (!date || !title) return;
+            client.from("calendar_events").update({
+              event_date: date, title: title, description: description || null
+            }).eq("id", id).then(load);
+          }
         });
       });
     });
@@ -775,6 +1002,63 @@ function initQuizForm(userId) {
     });
   }
 
+  function quizRevealBadge(item) {
+    // week_start(월요일) + 2일 = 학생에게 공개되는 수요일. 이미 지났으면 "공개중", 아니면 날짜를 보여준다.
+    // (toISOString()은 UTC 기준으로 바뀌어서 한국 시간 자정 근처엔 하루 밀려 보일 수 있어 로컬 날짜 성분만 비교한다)
+    var revealDate = new Date(item.week_start + "T00:00:00");
+    revealDate.setDate(revealDate.getDate() + 2);
+    var localDateStr = function (d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    };
+    var todayStr = localDateStr(new Date());
+    var revealStr = revealDate.getFullYear() + "." + String(revealDate.getMonth() + 1).padStart(2, "0") + "." + String(revealDate.getDate()).padStart(2, "0");
+    var isLive = localDateStr(revealDate) <= todayStr;
+    return isLive
+      ? '<span style="color:var(--well);font-weight:700;">공개중</span>'
+      : '<span style="color:var(--text-soft);">' + revealStr + '(수) 공개 예정</span>';
+  }
+
+  function renderView(item) {
+    var options = [item.option1, item.option2, item.option3, item.option4];
+    var optionsHtml = options.map(function (opt, i) {
+      var num = i + 1;
+      var isCorrect = num === item.correct_option;
+      return (
+        '<div' + (isCorrect ? ' style="color:var(--well);font-weight:700;"' : '') + '>' +
+          num + '. ' + escapeHtmlAdmin(opt) + (isCorrect ? ' ✓' : '') +
+        '</div>'
+      );
+    }).join("");
+    return (
+      '<div class="content"><strong>' + escapeHtmlAdmin(item.question) + '</strong></div>' +
+      '<div class="meta" style="margin-top:6px;">' + optionsHtml + '</div>' +
+      '<div class="meta" style="margin-top:6px;">' + quizRevealBadge(item) + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px;">' +
+        '<button class="btn ghost" data-action="edit" style="padding:6px 14px;font-size:12.5px;">수정</button>' +
+        '<button class="btn ghost" data-action="delete" style="padding:6px 14px;font-size:12.5px;">삭제</button>' +
+      '</div>'
+    );
+  }
+
+  function renderEdit(item) {
+    var pickerBtns = [1, 2, 3, 4].map(function (n) {
+      return '<button type="button"' + (n === item.correct_option ? ' class="active"' : '') +
+        ' data-correct="' + n + '">' + n + '번</button>';
+    }).join("");
+    return (
+      '<div class="form-row"><textarea data-field="question">' + escapeHtmlAdmin(item.question) + '</textarea></div>' +
+      '<div class="form-row"><input type="text" data-field="option1" value="' + escapeHtmlAdmin(item.option1) + '"></div>' +
+      '<div class="form-row"><input type="text" data-field="option2" value="' + escapeHtmlAdmin(item.option2) + '"></div>' +
+      '<div class="form-row"><input type="text" data-field="option3" value="' + escapeHtmlAdmin(item.option3) + '"></div>' +
+      '<div class="form-row"><input type="text" data-field="option4" value="' + escapeHtmlAdmin(item.option4) + '"></div>' +
+      '<div class="form-row"><label>정답</label><div class="pill-toggle">' + pickerBtns + '</div></div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button type="button" class="btn" data-action="save" style="padding:6px 14px;font-size:12.5px;">저장</button>' +
+        '<button type="button" class="btn ghost" data-action="cancel" style="padding:6px 14px;font-size:12.5px;">취소</button>' +
+      '</div>'
+    );
+  }
+
   function load() {
     if (!list) return;
     client.from("quiz_questions").select("*").order("created_at", { ascending: false }).then(function (res) {
@@ -783,43 +1067,58 @@ function initQuizForm(userId) {
         list.innerHTML = '<p class="msg">등록된 퀴즈가 없어요.</p>';
         return;
       }
+      var itemsById = {};
+      items.forEach(function (item) { itemsById[item.id] = item; });
       list.innerHTML = items.map(function (item) {
-        var options = [item.option1, item.option2, item.option3, item.option4];
-        var optionsHtml = options.map(function (opt, i) {
-          var num = i + 1;
-          var isCorrect = num === item.correct_option;
-          return (
-            '<div' + (isCorrect ? ' style="color:var(--well);font-weight:700;"' : '') + '>' +
-              num + '. ' + escapeHtmlAdmin(opt) + (isCorrect ? ' ✓' : '') +
-            '</div>'
-          );
-        }).join("");
-        // week_start(월요일) + 2일 = 학생에게 공개되는 수요일. 이미 지났으면 "공개중", 아니면 날짜를 보여준다.
-        // (toISOString()은 UTC 기준으로 바뀌어서 한국 시간 자정 근처엔 하루 밀려 보일 수 있어 로컬 날짜 성분만 비교한다)
-        var revealDate = new Date(item.week_start + "T00:00:00");
-        revealDate.setDate(revealDate.getDate() + 2);
-        var localDateStr = function (d) {
-          return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-        };
-        var todayStr = localDateStr(new Date());
-        var revealStr = revealDate.getFullYear() + "." + String(revealDate.getMonth() + 1).padStart(2, "0") + "." + String(revealDate.getDate()).padStart(2, "0");
-        var isLive = localDateStr(revealDate) <= todayStr;
-        var revealBadge = isLive
-          ? '<span style="color:var(--well);font-weight:700;">공개중</span>'
-          : '<span style="color:var(--text-soft);">' + revealStr + '(수) 공개 예정</span>';
-        return (
-          '<div class="note-item">' +
-            '<div class="content"><strong>' + escapeHtmlAdmin(item.question) + '</strong></div>' +
-            '<div class="meta" style="margin-top:6px;">' + optionsHtml + '</div>' +
-            '<div class="meta" style="margin-top:6px;">' + revealBadge + '</div>' +
-            '<button class="btn ghost" data-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
-          '</div>'
-        );
+        return '<div class="note-item" data-id="' + item.id + '">' + renderView(item) + '</div>';
       }).join("");
-      list.querySelectorAll("button[data-id]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          if (!confirm("이 퀴즈를 삭제할까요?")) return;
-          client.from("quiz_questions").delete().eq("id", btn.getAttribute("data-id")).then(load);
+
+      list.querySelectorAll(".note-item").forEach(function (row) {
+        var editingCorrect = null;
+
+        row.addEventListener("click", function (e) {
+          var id = row.getAttribute("data-id");
+          var item = itemsById[id];
+
+          var correctBtn = e.target.closest("button[data-correct]");
+          if (correctBtn) {
+            editingCorrect = parseInt(correctBtn.getAttribute("data-correct"), 10);
+            row.querySelectorAll("button[data-correct]").forEach(function (b) {
+              b.classList.toggle("active", b === correctBtn);
+            });
+            return;
+          }
+
+          var btn = e.target.closest("button[data-action]");
+          if (!btn) return;
+          var action = btn.getAttribute("data-action");
+
+          if (action === "delete") {
+            if (!confirm("이 퀴즈를 삭제할까요?")) return;
+            client.from("quiz_questions").delete().eq("id", id).then(load);
+            return;
+          }
+          if (action === "edit") {
+            editingCorrect = item.correct_option;
+            row.innerHTML = renderEdit(item);
+            return;
+          }
+          if (action === "cancel") {
+            row.innerHTML = renderView(item);
+            return;
+          }
+          if (action === "save") {
+            var question = row.querySelector('[data-field="question"]').value.trim();
+            var opts = [1, 2, 3, 4].map(function (n) {
+              return row.querySelector('[data-field="option' + n + '"]').value.trim();
+            });
+            if (!question || opts.some(function (o) { return !o; })) return;
+            client.from("quiz_questions").update({
+              question: question,
+              option1: opts[0], option2: opts[1], option3: opts[2], option4: opts[3],
+              correct_option: editingCorrect
+            }).eq("id", id).then(load);
+          }
         });
       });
     });

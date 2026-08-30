@@ -231,6 +231,44 @@ function drawRandomVerse(kind) {
   return BLESSING_POOL[index];
 }
 
+// localStorage는 기기(브라우저)마다 따로 저장되기 때문에, 로그인한 계정이라면 서버(verse_draws)에
+// 뽑은 결과를 저장해서 모바일/데스크탑 등 어떤 기기로 봐도 같은 결과가 나오게 한다.
+// 비로그인 방문자는 계정이 없으니 기존처럼 localStorage 결과를 그대로 쓴다.
+function getDrawnVerseAsync(kind) {
+  if (typeof getSession !== "function") return Promise.resolve(getDrawnVerse(kind));
+  return getSession().then(function (session) {
+    if (!session) return getDrawnVerse(kind);
+    var client = getClient();
+    return client.from("verse_draws")
+      .select("verse_index")
+      .eq("user_id", session.user.id)
+      .eq("kind", kind)
+      .eq("period_key", getPeriodKey(kind))
+      .then(function (res) {
+        var row = res.data && res.data[0];
+        return row ? (BLESSING_POOL[row.verse_index] || null) : null;
+      });
+  }).catch(function () {
+    return getDrawnVerse(kind);
+  });
+}
+
+function drawRandomVerseAsync(kind) {
+  if (typeof getSession !== "function") return Promise.resolve(drawRandomVerse(kind));
+  return getSession().then(function (session) {
+    if (!session) return drawRandomVerse(kind);
+    var client = getClient();
+    return client.rpc("draw_blessing_verse", {
+      p_kind: kind, p_period_key: getPeriodKey(kind), p_pool_size: BLESSING_POOL.length
+    }).then(function (res) {
+      if (res.error || res.data === null || res.data === undefined) return drawRandomVerse(kind);
+      return BLESSING_POOL[res.data] || drawRandomVerse(kind);
+    });
+  }).catch(function () {
+    return drawRandomVerse(kind);
+  });
+}
+
 function matchConcernVerse(inputText) {
   var text = (inputText || "").toLowerCase();
   var best = null;

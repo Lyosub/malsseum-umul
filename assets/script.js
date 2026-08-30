@@ -76,23 +76,31 @@ function initVerseTabs() {
   var saveArea = document.getElementById("verseSaveArea");
   if (!tabs.length || !drawBtn || !cardEl) return;
 
+  function showDrawn(verse) {
+    _currentDrawnVerse = verse;
+    renderDrawnVerseInto("verseCard", verse, _currentDrawnKind);
+    cardEl.style.display = "block";
+    drawBtn.style.display = "none";
+    if (saveArea) saveArea.style.display = "block";
+    drawMsg.textContent = DRAW_LABELS[_currentDrawnKind].already;
+  }
+
+  function showUndrawn() {
+    _currentDrawnVerse = null;
+    cardEl.style.display = "none";
+    drawBtn.style.display = "block";
+    drawBtn.disabled = false;
+    drawBtn.textContent = DRAW_LABELS[_currentDrawnKind].draw;
+    if (saveArea) saveArea.style.display = "none";
+    drawMsg.textContent = "";
+  }
+
   function refresh() {
-    var existing = getDrawnVerse(_currentDrawnKind);
-    if (existing) {
-      _currentDrawnVerse = existing;
-      renderDrawnVerseInto("verseCard", existing, _currentDrawnKind);
-      cardEl.style.display = "block";
-      drawBtn.style.display = "none";
-      if (saveArea) saveArea.style.display = "block";
-      drawMsg.textContent = DRAW_LABELS[_currentDrawnKind].already;
-    } else {
-      _currentDrawnVerse = null;
-      cardEl.style.display = "none";
-      drawBtn.style.display = "block";
-      drawBtn.textContent = DRAW_LABELS[_currentDrawnKind].draw;
-      if (saveArea) saveArea.style.display = "none";
-      drawMsg.textContent = "";
-    }
+    var thisKind = _currentDrawnKind;
+    getDrawnVerseAsync(thisKind).then(function (existing) {
+      if (thisKind !== _currentDrawnKind) return; // 확인하는 사이 탭을 바꿨으면 무시
+      if (existing) showDrawn(existing); else showUndrawn();
+    });
   }
 
   tabs.forEach(function (tab) {
@@ -106,13 +114,12 @@ function initVerseTabs() {
   });
 
   drawBtn.addEventListener("click", function () {
-    var verse = drawRandomVerse(_currentDrawnKind);
-    _currentDrawnVerse = verse;
-    renderDrawnVerseInto("verseCard", verse, _currentDrawnKind);
-    cardEl.style.display = "block";
-    drawBtn.style.display = "none";
-    if (saveArea) saveArea.style.display = "block";
-    drawMsg.textContent = DRAW_LABELS[_currentDrawnKind].already;
+    drawBtn.disabled = true;
+    var thisKind = _currentDrawnKind;
+    drawRandomVerseAsync(thisKind).then(function (verse) {
+      if (thisKind !== _currentDrawnKind) return;
+      showDrawn(verse);
+    });
   });
 
   if (typeof initSizePicker === "function") {

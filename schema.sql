@@ -2026,3 +2026,80 @@ as $$
   order by n.created_at desc
   limit p_limit;
 $$;
+
+-- 관리자 화면에서 이벤트 배너/성경퀴즈도 수정할 수 있도록(공지사항/이달의 일정은 이미 수정 정책이 있었음) 추가
+create policy "관리자·부장 이벤트 배너 수정" on home_banner
+  for update using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+
+create policy "관리자·부장 퀴즈 수정" on quiz_questions
+  for update using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+
+-- ===== 말씀 카드 "뽑기" 결과를 계정에 동기화 (모바일/데스크탑 등 기기 간 일치) =====
+-- 지금까지는 verses.html에서 오늘/이번 주/이번 달 말씀을 뽑으면 그 결과를 브라우저의
+-- localStorage에만 저장했다. localStorage는 기기(브라우저)마다 완전히 별개라서, 같은
+-- 계정으로 로그인해도 모바일에서 뽑은 말씀과 데스크탑에서 뽑은 말씀이 서로 다르게 보이는
+-- 문제가 있었다. 로그인한 사용자는 이 테이블에 뽑은 결과를 저장해서 기기와 상관없이
+-- 항상 같은 결과가 보이게 한다(비로그인 방문자는 기존처럼 localStorage로만 동작).
+create table if not exists verse_draws (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  kind text not null check (kind in ('daily', 'weekly', 'monthly')),
+  period_key text not null,
+  verse_index integer not null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, kind, period_key)
+);
+alter table verse_draws enable row level security;
+
+create policy "본인 뽑기 기록만 조회" on verse_draws
+  for select using (auth.uid() = user_id);
+
+create or replace function draw_blessing_verse(p_kind text, p_period_key text, p_pool_size integer)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_existing integer;
+  v_index integer;
+  v_inserted integer;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  if p_kind not in ('daily', 'weekly', 'monthly') then
+    raise exception '잘못된 종류입니다.';
+  end if;
+  if p_pool_size is null or p_pool_size < 1 then
+    raise exception '잘못된 요청입니다.';
+  end if;
+
+  select verse_index into v_existing
+  from verse_draws
+  where user_id = auth.uid() and kind = p_kind and period_key = p_period_key;
+
+  if found then
+    return v_existing;
+  end if;
+
+  v_index := floor(random() * p_pool_size)::integer;
+
+  insert into verse_draws (user_id, kind, period_key, verse_index)
+  values (auth.uid(), p_kind, p_period_key, v_index)
+  on conflict (user_id, kind, period_key) do nothing
+  returning verse_index into v_inserted;
+
+  if v_inserted is null then
+    -- 거의 동시에 두 번 요청이 들어와 경합이 생긴 경우: 먼저 들어간 결과를 그대로 반환한다.
+    select verse_index into v_inserted
+    from verse_draws
+    where user_id = auth.uid() and kind = p_kind and period_key = p_period_key;
+  end if;
+
+  return v_inserted;
+end;
+$$;
