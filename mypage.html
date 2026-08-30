@@ -27,7 +27,8 @@
 
   <div class="card" id="profileSection">
     <h3 style="margin-top:0;">내 정보</h3>
-    <p class="msg" style="margin-top:0;" id="profileNicknameLine"></p>
+    <p class="msg" style="margin-top:0;">닉네임: <strong id="profileNickname" style="color:var(--text);"></strong></p>
+    <p class="msg" style="margin-top:2px;">이메일: <strong id="profileEmail" style="color:var(--text);"></strong></p>
     <div class="form-row">
       <label for="realNameEditInput">이름 (본명)</label>
       <input type="text" id="realNameEditInput" placeholder="실제 이름">
@@ -189,7 +190,7 @@
       initAttendance(session.user.id);
       initNotes(session.user.id);
       initGroup(session.user.id);
-      initProfileSettings(session.user.id);
+      initProfileSettings(session);
     });
   });
 </script>

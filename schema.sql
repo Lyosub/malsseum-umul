@@ -311,7 +311,7 @@ declare
 begin
   insert into points_ledger (user_id, action_type, points, ref_date)
   values (new.user_id, 'attendance', 1, new.date)
-  on conflict (user_id, action_type, ref_date) do nothing;
+  on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award' do nothing;
 
   while exists (select 1 from attendance where user_id = new.user_id and date = v_check) loop
     v_streak := v_streak + 1;
@@ -321,7 +321,7 @@ begin
   if v_streak % 7 = 0 then
     insert into points_ledger (user_id, action_type, points, ref_date)
     values (new.user_id, 'streak_bonus', 1, new.date)
-    on conflict (user_id, action_type, ref_date) do nothing;
+    on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award' do nothing;
   end if;
 
   return new;
@@ -343,7 +343,7 @@ begin
   if new.type in ('gratitude', 'prayer') then
     insert into points_ledger (user_id, action_type, points, ref_date)
     values (new.user_id, 'note', 2, (new.created_at at time zone 'Asia/Seoul')::date)
-    on conflict (user_id, action_type, ref_date) do nothing;
+    on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award' do nothing;
   end if;
   return new;
 end;
@@ -659,14 +659,14 @@ begin
     insert into points_ledger (user_id, action_type, points, ref_date)
     select gm.user_id, 'group_attendance_bonus', 1, v_week_start
     from group_members gm where gm.group_id = p_group_id
-    on conflict (user_id, action_type, ref_date) do nothing;
+    on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award' do nothing;
   end if;
 
   if v_min_ok_count = v_member_count and v_total_notes >= 10 then
     insert into points_ledger (user_id, action_type, points, ref_date)
     select gm.user_id, 'group_notes_bonus', 2, v_week_start
     from group_members gm where gm.group_id = p_group_id
-    on conflict (user_id, action_type, ref_date) do nothing;
+    on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award' do nothing;
   end if;
 end;
 $$;
@@ -835,7 +835,7 @@ begin
   if v_is_correct then
     insert into points_ledger (user_id, action_type, points, ref_date)
     values (auth.uid(), 'quiz', 1, v_week_start)
-    on conflict (user_id, action_type, ref_date) do nothing;
+    on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award' do nothing;
   end if;
 
   return query select v_is_correct, v_correct_option;

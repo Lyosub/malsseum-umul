@@ -94,18 +94,22 @@ function ensureProfile(session) {
 
 // 이름(본명) 확인/수정 — real_name 기능이 나오기 전에 가입한 사람은 값이 비어있을 수 있어서
 // 여기서 채우거나 고칠 수 있게 한다. 닉네임은 활동명이라 그대로 유지하고 여기서는 안 바꾼다.
-function initProfileSettings(userId) {
+function initProfileSettings(session) {
+  var userId = session.user.id;
   var client = getClient();
-  var nicknameLine = document.getElementById("profileNicknameLine");
+  var nicknameEl = document.getElementById("profileNickname");
+  var emailEl = document.getElementById("profileEmail");
   var input = document.getElementById("realNameEditInput");
   var saveBtn = document.getElementById("saveRealNameBtn");
   var msg = document.getElementById("profileMsg");
   if (!client || !input || !saveBtn) return;
 
+  if (emailEl) emailEl.textContent = session.user.email;
+
   client.from("profiles").select("nickname, real_name").eq("user_id", userId).single().then(function (res) {
     var p = res.data;
     if (!p) return;
-    if (nicknameLine) nicknameLine.textContent = "현재 닉네임: " + p.nickname;
+    if (nicknameEl) nicknameEl.textContent = p.nickname;
     if (p.real_name) input.value = p.real_name;
   });
 
