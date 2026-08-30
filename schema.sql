@@ -1099,7 +1099,8 @@ $$;
 alter table profiles add column if not exists real_name text;
 
 -- 오이코스 멤버 목록 (닉네임 + 참여일) — "누가 들어왔는지" 바로 확인용. 기록 내용이나 점수는 없이
--- 순수 멤버 명단만 보여준다. 멤버 본인 확인 후에만 조회 가능(다른 오이코스 정보는 볼 수 없음).
+-- 순수 멤버 명단만 보여준다. 그 오이코스 멤버 본인이거나 교역자만 조회 가능
+-- (교역자는 관리자 페이지 오이코스 관리에서 자신이 속하지 않은 오이코스도 봐야 하므로 별도 허용).
 create or replace function get_group_members(p_group_id bigint)
 returns table(user_id uuid, nickname text, joined_at timestamptz, is_host boolean)
 language sql
@@ -1111,8 +1112,9 @@ as $$
   join profiles p on p.user_id = gm.user_id
   join groups g on g.id = gm.group_id
   where gm.group_id = p_group_id
-    and exists (
-      select 1 from group_members me where me.group_id = p_group_id and me.user_id = auth.uid()
+    and (
+      exists (select 1 from group_members me where me.group_id = p_group_id and me.user_id = auth.uid())
+      or exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
     )
   order by gm.joined_at asc;
 $$;

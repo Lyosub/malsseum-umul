@@ -264,7 +264,8 @@ function loadGroupsAdmin() {
             '<div class="meta">만든 사람: ' + escapeHtmlAdmin(item.created_by_nickname) +
               ' · 초대코드: ' + escapeHtmlAdmin(item.invite_code) +
               ' · 인원: ' + item.member_count + '명' +
-              '<br>생성일: ' + formatDateTime(item.created_at) + '</div>' +
+              '<br>생성일: ' + formatDateTime(item.created_at) +
+              '<br><span data-members-for="' + item.id + '">멤버 불러오는 중...</span></div>' +
             '<button class="btn ghost" data-action="award-group-points" style="margin-top:8px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">포인트 부여</button>' +
             '<button class="btn ghost" data-action="disband" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">해체</button>' +
           '</div>'
@@ -290,6 +291,23 @@ function loadGroupsAdmin() {
           renderColumn("📘 교사 오이코스", teacherGroups) +
           renderColumn("🙋 학생 오이코스", studentGroups) +
         '</div>';
+
+      // 각 오이코스마다 실제 멤버 닉네임을 따로 불러와서 채운다 (교역자는 get_group_members가
+      // 멤버가 아니어도 조회를 허용하도록 서버에서 별도로 확인함)
+      items.forEach(function (item) {
+        client.rpc("get_group_members", { p_group_id: item.id }).then(function (res) {
+          var el = listEl.querySelector('[data-members-for="' + item.id + '"]');
+          if (!el) return;
+          var rows = res.data || [];
+          if (res.error || !rows.length) {
+            el.textContent = "멤버 정보를 불러오지 못했어요.";
+            return;
+          }
+          el.textContent = "멤버: " + rows.map(function (r) {
+            return r.nickname + (r.is_host ? "👑" : "");
+          }).join(", ");
+        });
+      });
 
       listEl.querySelectorAll('button[data-action="disband"]').forEach(function (btn) {
         btn.addEventListener("click", function () {
