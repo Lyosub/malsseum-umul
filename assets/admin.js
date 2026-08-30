@@ -144,10 +144,14 @@ function loadMemberDetail(userId, container) {
   });
 }
 
+// 검색어를 다시 불러올 때(달란트 부여 등 후 새로고침)도 유지되도록 모듈 전역에 둔다.
+var MEMBER_SEARCH_QUERY = "";
+
 function loadMemberList() {
   var client = getClient();
   var countEl = document.getElementById("memberCount");
   var listEl = document.getElementById("memberList");
+  var searchInput = document.getElementById("memberSearchInput");
   if (!listEl) return;
 
   client.rpc("get_member_list").then(function (res) {
@@ -196,12 +200,20 @@ function loadMemberList() {
       );
     }
 
+    // 학생이 많아지면 스크롤이 한없이 길어지므로, 검색어로 좁혀서 볼 수 있게 한다.
+    // (검색은 이미 불러온 members 배열 안에서만 걸러내는 것 — 서버에 다시 묻지 않음)
+    function renderList(list) {
+      if (!list.length) {
+        listEl.innerHTML = '<p class="msg">검색 결과가 없어요.</p>';
+        return;
+      }
+
     // 교역자 / 부장 / 교사 / 학생으로 구분해서 보여준다 (한눈에 누가 어떤 역할인지 알아볼 수 있게).
     // 여러 역할을 겸하는 사람은 교역자 > 부장 > 교사 순으로 한 곳에만 속한다(뱃지는 겸직 전부 표시됨).
-    var admins = members.filter(function (m) { return m.is_admin; });
-    var deptHeads = members.filter(function (m) { return m.is_department_head && !m.is_admin; });
-    var teachers = members.filter(function (m) { return m.is_teacher && !m.is_admin && !m.is_department_head; });
-    var students = members.filter(function (m) { return !m.is_teacher && !m.is_admin && !m.is_department_head; });
+    var admins = list.filter(function (m) { return m.is_admin; });
+    var deptHeads = list.filter(function (m) { return m.is_department_head && !m.is_admin; });
+    var teachers = list.filter(function (m) { return m.is_teacher && !m.is_admin && !m.is_department_head; });
+    var students = list.filter(function (m) { return !m.is_teacher && !m.is_admin && !m.is_department_head; });
 
     function renderSection(label, list) {
       if (!list.length) return "";
@@ -326,6 +338,30 @@ function loadMemberList() {
         });
       });
     });
+    } // renderList 끝
+
+    function applyFilter() {
+      var q = MEMBER_SEARCH_QUERY.trim().toLowerCase();
+      if (!q) {
+        renderList(members);
+        return;
+      }
+      renderList(members.filter(function (m) {
+        return (m.nickname && m.nickname.toLowerCase().indexOf(q) !== -1) ||
+          (m.real_name && m.real_name.toLowerCase().indexOf(q) !== -1) ||
+          (m.email && m.email.toLowerCase().indexOf(q) !== -1);
+      }));
+    }
+
+    if (searchInput) {
+      searchInput.value = MEMBER_SEARCH_QUERY;
+      searchInput.oninput = function () {
+        MEMBER_SEARCH_QUERY = searchInput.value;
+        applyFilter();
+      };
+    }
+
+    applyFilter();
   }).catch(function () {
     listEl.innerHTML = '<p class="msg">회원 목록을 불러오지 못했어요.</p>';
   });
