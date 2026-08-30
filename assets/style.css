@@ -15,6 +15,17 @@
   --font-trendy: "Pretendard", -apple-system, sans-serif;
 }
 
+/* 컴퓨터처럼 화면이 넓을 때는 가운데 좁은 폭만 쓰지 않고 좌우로 조금 더 넓게 써서
+   답답해 보이지 않게 한다. 본문 글줄은 너무 길어지면 오히려 읽기 불편해지므로
+   과하지 않게 두 단계로만 늘린다(관리자 페이지의 가로 컬럼 목록도 이만큼은 더 넓어야
+   화면 하나에 더 많이 보인다). */
+@media (min-width: 900px) {
+  :root { --max: 880px; }
+}
+@media (min-width: 1200px) {
+  :root { --max: 1080px; }
+}
+
 * { box-sizing: border-box; }
 
 html, body {
