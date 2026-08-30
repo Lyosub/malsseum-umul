@@ -25,6 +25,18 @@
     <p>출석과 하루의 마음을 남겨보세요</p>
   </section>
 
+  <div class="card" id="profileSection">
+    <h3 style="margin-top:0;">내 정보</h3>
+    <p class="msg" style="margin-top:0;" id="profileNicknameLine"></p>
+    <div class="form-row">
+      <label for="realNameEditInput">이름 (본명)</label>
+      <input type="text" id="realNameEditInput" placeholder="실제 이름">
+      <p class="msg" style="margin-top:6px;">닉네임으로 활동하며, 이름은 공개되지 않아요. 담당 교역자가 관리 목적으로만 확인해요.</p>
+    </div>
+    <button type="button" id="saveRealNameBtn" class="btn block">저장</button>
+    <p class="msg" id="profileMsg"></p>
+  </div>
+
   <div class="card streak">
     <div style="display:flex;justify-content:center;gap:40px;">
       <div>
@@ -177,6 +189,7 @@
       initAttendance(session.user.id);
       initNotes(session.user.id);
       initGroup(session.user.id);
+      initProfileSettings(session.user.id);
     });
   });
 </script>

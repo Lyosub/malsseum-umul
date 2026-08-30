@@ -92,6 +92,41 @@ function ensureProfile(session) {
   return client.from("profiles").upsert(payload).then(function () {});
 }
 
+// 이름(본명) 확인/수정 — real_name 기능이 나오기 전에 가입한 사람은 값이 비어있을 수 있어서
+// 여기서 채우거나 고칠 수 있게 한다. 닉네임은 활동명이라 그대로 유지하고 여기서는 안 바꾼다.
+function initProfileSettings(userId) {
+  var client = getClient();
+  var nicknameLine = document.getElementById("profileNicknameLine");
+  var input = document.getElementById("realNameEditInput");
+  var saveBtn = document.getElementById("saveRealNameBtn");
+  var msg = document.getElementById("profileMsg");
+  if (!client || !input || !saveBtn) return;
+
+  client.from("profiles").select("nickname, real_name").eq("user_id", userId).single().then(function (res) {
+    var p = res.data;
+    if (!p) return;
+    if (nicknameLine) nicknameLine.textContent = "현재 닉네임: " + p.nickname;
+    if (p.real_name) input.value = p.real_name;
+  });
+
+  saveBtn.addEventListener("click", function () {
+    var value = input.value.trim();
+    if (!value) {
+      msg.textContent = "이름을 입력해주세요.";
+      return;
+    }
+    saveBtn.disabled = true;
+    client.from("profiles").update({ real_name: value }).eq("user_id", userId).then(function (res) {
+      saveBtn.disabled = false;
+      if (res.error) {
+        msg.textContent = "저장에 실패했어요.";
+        return;
+      }
+      msg.textContent = "저장되었습니다.";
+    });
+  });
+}
+
 // 초대 코드는 create_group RPC(schema.sql)가 서버에서 생성함 — 클라이언트에서는 만들지 않음
 
 function initGroup(userId) {
