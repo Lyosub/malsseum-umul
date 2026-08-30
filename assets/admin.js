@@ -70,7 +70,7 @@ function loadMemberList() {
       return;
     }
 
-    listEl.innerHTML = members.map(function (m) {
+    function renderMember(m) {
       var lastSeen = formatDateTime(m.last_sign_in_at);
       var lastNote = m.last_note_type
         ? ADMIN_NOTE_LABELS[m.last_note_type] + ' (' + formatDateTime(m.last_note_at) + ')'
@@ -96,7 +96,25 @@ function loadMemberList() {
           ) +
         '</div>'
       );
-    }).join("");
+    }
+
+    // 교역자 / 교사 / 학생으로 구분해서 보여준다 (한눈에 누가 어떤 역할인지 알아볼 수 있게)
+    var admins = members.filter(function (m) { return m.is_admin; });
+    var teachers = members.filter(function (m) { return m.is_teacher && !m.is_admin; });
+    var students = members.filter(function (m) { return !m.is_teacher && !m.is_admin; });
+
+    function renderSection(label, list) {
+      if (!list.length) return "";
+      return (
+        '<div class="well-label" style="margin-top:18px;">' + label + ' (' + list.length + '명)</div>' +
+        list.map(renderMember).join("")
+      );
+    }
+
+    listEl.innerHTML =
+      renderSection("🌟 교역자", admins) +
+      renderSection("📘 교사", teachers) +
+      renderSection("🙋 학생", students);
 
     listEl.querySelectorAll('button[data-action="toggle-teacher"]').forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -167,7 +185,8 @@ function loadAllNotes() {
         listEl.innerHTML = '<p class="msg">아직 기록이 없어요.</p>';
         return;
       }
-      listEl.innerHTML = items.map(function (item) {
+
+      function renderNote(item) {
         return (
           '<div class="note-item">' +
             '<div class="meta">' + escapeHtmlAdmin(item.nickname) + ' · ' + ADMIN_NOTE_LABELS[item.type] + ' · ' + formatDateTime(item.created_at) + '</div>' +
@@ -175,7 +194,28 @@ function loadAllNotes() {
             '<button class="btn ghost" data-note-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
           '</div>'
         );
-      }).join("");
+      }
+
+      // 감사노트 / 기도제목 / 하루인사로 구분해서 보여준다
+      var byType = { gratitude: [], prayer: [], greeting: [] };
+      items.forEach(function (item) {
+        if (byType[item.type]) byType[item.type].push(item);
+      });
+
+      function renderSection(typeKey, icon) {
+        var list = byType[typeKey];
+        if (!list.length) return "";
+        return (
+          '<div class="well-label" style="margin-top:18px;">' + icon + ' ' + ADMIN_NOTE_LABELS[typeKey] + ' (' + list.length + '건)</div>' +
+          list.map(renderNote).join("")
+        );
+      }
+
+      listEl.innerHTML =
+        renderSection("gratitude", "🙏") +
+        renderSection("prayer", "🕊️") +
+        renderSection("greeting", "🙋");
+
       listEl.querySelectorAll("button[data-note-id]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           if (!confirm("이 기록을 삭제할까요?")) return;
@@ -206,7 +246,8 @@ function loadGroupsAdmin() {
         listEl.innerHTML = '<p class="msg">아직 만들어진 오이코스가 없어요.</p>';
         return;
       }
-      listEl.innerHTML = items.map(function (item) {
+
+      function renderGroup(item) {
         return (
           '<div class="note-item" data-group-id="' + item.id + '">' +
             '<div class="content"><strong>' + escapeHtmlAdmin(item.name) + '</strong>' +
@@ -220,7 +261,24 @@ function loadGroupsAdmin() {
             '<button class="btn ghost" data-action="disband" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">해체</button>' +
           '</div>'
         );
-      }).join("");
+      }
+
+      // 교사 오이코스 / 학생 오이코스로 구분해서 보여준다
+      var teacherGroups = items.filter(function (item) { return item.host_is_teacher; });
+      var studentGroups = items.filter(function (item) { return !item.host_is_teacher; });
+
+      function renderSection(label, list) {
+        if (!list.length) return "";
+        return (
+          '<div class="well-label" style="margin-top:18px;">' + label + ' (' + list.length + '개)</div>' +
+          list.map(renderGroup).join("")
+        );
+      }
+
+      listEl.innerHTML =
+        renderSection("📘 교사 오이코스", teacherGroups) +
+        renderSection("🙋 학생 오이코스", studentGroups);
+
       listEl.querySelectorAll('button[data-action="disband"]').forEach(function (btn) {
         btn.addEventListener("click", function () {
           var groupId = btn.closest(".note-item").getAttribute("data-group-id");
