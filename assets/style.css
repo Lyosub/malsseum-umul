@@ -154,7 +154,7 @@ header.site nav a:hover {
   background-size: cover;
   background-position: center;
   border-radius: var(--radius);
-  margin-top: 4px;
+  margin: 4px 0 16px;
 }
 
 .hero .badge {
