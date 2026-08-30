@@ -936,6 +936,9 @@ footer.site a { text-decoration: underline; }
 .install-banner-btn {
   display: block;
   width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
   background: #fff;
   color: var(--well-deep);
   border: none;

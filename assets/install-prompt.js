@@ -13,6 +13,19 @@ function isIosDevice() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 
+// 카카오톡/네이버/인스타그램 등 앱 내장 브라우저에서는 iOS든 안드로이드든 "홈 화면에 추가"
+// 자체가 지원되지 않는다(운영체제가 막아놓은 부분이라 사이트 코드로 우회할 수 없음).
+// 학생들은 단톡방 링크를 타고 카톡 인앱 브라우저로 들어오는 경우가 많아서 따로 안내한다.
+function detectInAppBrowser() {
+  var ua = navigator.userAgent || "";
+  if (/KAKAOTALK/i.test(ua)) return "kakaotalk";
+  if (/NAVER\(/i.test(ua)) return "naver";
+  if (/FBAN|FBAV/i.test(ua)) return "facebook";
+  if (/Instagram/i.test(ua)) return "instagram";
+  if (/Line\//i.test(ua)) return "line";
+  return null;
+}
+
 function wasInstallBannerDismissed() {
   try {
     return localStorage.getItem("msu_install_dismissed") === "1";
@@ -66,8 +79,47 @@ function renderInstallBanner(kind) {
   if (closeBtn) closeBtn.addEventListener("click", dismissInstallBanner);
 }
 
+// 카카오톡은 kakaotalk://web/openExternal?url=... 링크를 자기 브라우저 안에서 탭하면
+// 그 주소를 기기의 기본 브라우저(사파리/크롬)로 대신 열어주는 자체 기능을 제공한다.
+// 네이버/인스타그램/페이스북/라인 등은 이런 우회 링크가 따로 없어서 메뉴 안내만 보여준다.
+function renderInAppBrowserBanner(kind) {
+  var el = document.getElementById("installBanner");
+  if (!el || el.innerHTML) return;
+
+  var actionHtml;
+  if (kind === "kakaotalk") {
+    var escapeUrl = "kakaotalk://web/openExternal?url=" + encodeURIComponent(window.location.href);
+    actionHtml =
+      '<a href="' + escapeUrl + '" class="install-banner-btn">다른 브라우저로 바로 열기</a>' +
+      '<p style="margin:6px 0 0;font-size:11.5px;color:rgba(255,255,255,0.75);text-align:center;">버튼이 안 눌리면 오른쪽 아래 "⋯" 메뉴에서 "다른 브라우저로 열기"를 눌러주세요.</p>';
+  } else {
+    actionHtml =
+      '<p style="margin:0;font-size:12.5px;color:rgba(255,255,255,0.9);">화면 안의 "⋯" 또는 공유 메뉴에서 "다른 브라우저로 열기"를 눌러주세요.</p>';
+  }
+
+  el.innerHTML =
+    '<div class="install-banner">' +
+      '<div class="install-banner-row">' +
+        '<div class="install-banner-text"><strong>📱 앱처럼 설치하기</strong><br>지금 브라우저(카톡 등 앱 안 브라우저)에서는 설치가 안 돼요.</div>' +
+        '<button type="button" class="install-banner-close" id="installCloseBtn" aria-label="닫기">✕</button>' +
+      '</div>' +
+      actionHtml +
+    '</div>';
+
+  var closeBtn = document.getElementById("installCloseBtn");
+  if (closeBtn) closeBtn.addEventListener("click", dismissInstallBanner);
+}
+
 function initInstallBanner() {
   if (isStandaloneApp() || wasInstallBannerDismissed()) return;
+
+  var inAppKind = detectInAppBrowser();
+  if (inAppKind) {
+    // 인앱 브라우저에서는 beforeinstallprompt도 안 뜨고, iOS 안내(사파리 공유 버튼)도
+    // 애초에 다른 브라우저 화면이라 맞지 않으므로 전용 안내로 대체한다.
+    renderInAppBrowserBanner(inAppKind);
+    return;
+  }
 
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault();
