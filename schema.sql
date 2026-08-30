@@ -1341,3 +1341,47 @@ begin
   return true;
 end;
 $$;
+
+-- ===== 교역자 전용: 회원 상세보기 (닉네임/본명 클릭 시 그 사람의 전체 기록을 세세하게 확인) =====
+-- 기본 정보(가입일/최근 접속/총 달란트 등)는 이미 get_member_list에 있으니, 여기서는
+-- 그 외에 필요한 세 가지(작성한 기록 전체, 출석 날짜 전체, 달란트 적립/부여 내역 전체)만 따로 내려준다.
+
+create or replace function get_member_notes_admin(p_user_id uuid, p_limit integer default 200)
+returns table(id bigint, type text, content text, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select n.id, n.type, n.content, n.created_at
+  from notes n
+  where n.user_id = p_user_id
+    and exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
+  order by n.created_at desc
+  limit p_limit;
+$$;
+
+create or replace function get_member_attendance_admin(p_user_id uuid)
+returns table(attend_date date)
+language sql
+security definer
+set search_path = public
+as $$
+  select a.date
+  from attendance a
+  where a.user_id = p_user_id
+    and exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
+  order by a.date desc;
+$$;
+
+create or replace function get_member_points_admin(p_user_id uuid)
+returns table(id bigint, action_type text, points integer, note text, ref_date date, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select pl.id, pl.action_type, pl.points, pl.note, pl.ref_date, pl.created_at
+  from points_ledger pl
+  where pl.user_id = p_user_id
+    and exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
+  order by pl.created_at desc;
+$$;

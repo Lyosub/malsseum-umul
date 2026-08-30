@@ -55,6 +55,70 @@ function formatDateTime(iso) {
 
 var ADMIN_NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목" };
 
+var ADMIN_ACTION_LABELS = {
+  attendance: "출석",
+  streak_bonus: "7일 연속출석 보너스",
+  note: "감사노트/기도제목 작성",
+  quiz: "성경퀴즈 정답",
+  group_attendance_bonus: "오이코스 출석 챌린지",
+  group_notes_bonus: "오이코스 기록 챌린지",
+  admin_award: "교역자가 부여"
+};
+
+// 회원 상세보기: 닉네임/본명 부분을 눌렀을 때, 그 사람의 출석·작성 기록·달란트 내역 전체를
+// 한 번에 불러와서 보여준다 (처음 펼칠 때만 불러오고, 이후에는 열고 닫기만 함).
+function loadMemberDetail(userId, container) {
+  var client = getClient();
+  container.innerHTML = '<p class="msg">불러오는 중...</p>';
+
+  Promise.all([
+    client.rpc("get_member_notes_admin", { p_user_id: userId }),
+    client.rpc("get_member_attendance_admin", { p_user_id: userId }),
+    client.rpc("get_member_points_admin", { p_user_id: userId })
+  ]).then(function (results) {
+    var notes = results[0].data || [];
+    var attendance = results[1].data || [];
+    var points = results[2].data || [];
+
+    var attendanceHtml = attendance.length
+      ? '<p class="msg" style="margin:0 0 10px;">총 ' + attendance.length + '일 · ' +
+          attendance.slice(0, 20).map(function (a) { return a.attend_date; }).join(", ") +
+          (attendance.length > 20 ? " 외 " + (attendance.length - 20) + "일" : "") + '</p>'
+      : '<p class="msg" style="margin:0 0 10px;">출석 기록이 없어요.</p>';
+
+    var notesHtml = notes.length
+      ? notes.map(function (n) {
+          return (
+            '<div class="note-item">' +
+              '<div class="meta">' + ADMIN_NOTE_LABELS[n.type] + ' · ' + formatDateTime(n.created_at) + '</div>' +
+              '<div class="content">' + escapeHtmlAdmin(n.content) + '</div>' +
+            '</div>'
+          );
+        }).join("")
+      : '<p class="msg">작성한 기록이 없어요.</p>';
+
+    var pointsHtml = points.length
+      ? points.map(function (p) {
+          var label = ADMIN_ACTION_LABELS[p.action_type] || p.action_type;
+          var isPlus = p.points >= 0;
+          return (
+            '<div class="note-item">' +
+              '<div class="meta">' + formatDateTime(p.created_at) + ' · ' + label + (p.note ? ' (' + escapeHtmlAdmin(p.note) + ')' : '') + '</div>' +
+              '<div class="content" style="font-weight:700;color:' + (isPlus ? "var(--well)" : "#b3432c") + ';">' + (isPlus ? "+" : "") + p.points + '달란트</div>' +
+            '</div>'
+          );
+        }).join("")
+      : '<p class="msg">달란트 내역이 없어요.</p>';
+
+    container.innerHTML =
+      '<div class="well-label" style="margin-top:14px;">📅 출석</div>' + attendanceHtml +
+      '<div class="well-label">✍️ 작성한 기록 (' + notes.length + '건)</div>' + notesHtml +
+      '<div class="well-label" style="margin-top:14px;">💠 달란트 내역 (' + points.length + '건)</div>' + pointsHtml;
+  }).catch(function () {
+    container.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
+  });
+}
+
 function loadMemberList() {
   var client = getClient();
   var countEl = document.getElementById("memberCount");
@@ -77,16 +141,18 @@ function loadMemberList() {
         : "아직 없음";
       return (
         '<div class="note-item" data-user-id="' + m.user_id + '">' +
-          '<div class="content">' +
+          '<div class="content" data-action="toggle-detail" style="cursor:pointer;">' +
             '<strong>' + escapeHtmlAdmin(m.nickname) + '</strong>' +
             (m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">교역자</span>' : '') +
             (m.is_teacher && !m.is_admin ? ' <span style="color:var(--well);font-size:12px;">교사</span>' : '') +
             ' <span style="color:var(--well);font-size:12px;font-weight:700;">' + m.total_points + '달란트</span>' +
+            ' <span style="color:var(--text-soft);font-size:11px;">(눌러서 상세보기)</span>' +
             '<br>' + (m.real_name ? '본명: ' + escapeHtmlAdmin(m.real_name) + ' · ' : '') + escapeHtmlAdmin(m.email) +
           '</div>' +
           '<div class="meta">가입: ' + formatDateTime(m.joined_at) +
             ' · 최근 접속: ' + (lastSeen || "기록 없음") +
             '<br>최근 기록: ' + lastNote + '</div>' +
+          '<div class="member-detail" data-detail-for="' + m.user_id + '" style="display:none;"></div>' +
           '<button type="button" class="btn ghost" data-action="toggle-teacher" data-is-teacher="' + m.is_teacher + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">' +
             (m.is_teacher ? "교사 해제" : "교사로 지정") +
           '</button>' +
@@ -107,19 +173,36 @@ function loadMemberList() {
     function renderColumn(label, list) {
       if (!list.length) return "";
       return (
-        '<div class="admin-column">' +
-          '<div class="admin-column-title">' + label + ' (' + list.length + '명)</div>' +
+        '<div class="scroll-column">' +
+          '<div class="scroll-column-title">' + label + ' (' + list.length + '명)</div>' +
           list.map(renderMember).join("") +
         '</div>'
       );
     }
 
     listEl.innerHTML =
-      '<div class="admin-columns">' +
+      '<div class="scroll-columns">' +
         renderColumn("🌟 교역자", admins) +
         renderColumn("📘 교사", teachers) +
         renderColumn("🙋 학생", students) +
       '</div>';
+
+    listEl.querySelectorAll('[data-action="toggle-detail"]').forEach(function (el) {
+      el.addEventListener("click", function () {
+        var itemEl = el.closest(".note-item");
+        var targetUserId = itemEl.getAttribute("data-user-id");
+        var detailEl = itemEl.querySelector('[data-detail-for="' + targetUserId + '"]');
+        if (!detailEl) return;
+        if (detailEl.style.display === "block") {
+          detailEl.style.display = "none";
+          return;
+        }
+        detailEl.style.display = "block";
+        if (detailEl.getAttribute("data-loaded") === "true") return;
+        detailEl.setAttribute("data-loaded", "true");
+        loadMemberDetail(targetUserId, detailEl);
+      });
+    });
 
     listEl.querySelectorAll('button[data-action="toggle-teacher"]').forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -233,15 +316,15 @@ function loadAllNotes() {
         var list = byType[typeKey];
         if (!list.length) return "";
         return (
-          '<div class="admin-column">' +
-            '<div class="admin-column-title">' + icon + ' ' + ADMIN_NOTE_LABELS[typeKey] + ' (' + list.length + '건)</div>' +
+          '<div class="scroll-column">' +
+            '<div class="scroll-column-title">' + icon + ' ' + ADMIN_NOTE_LABELS[typeKey] + ' (' + list.length + '건)</div>' +
             list.map(renderNote).join("") +
           '</div>'
         );
       }
 
       listEl.innerHTML =
-        '<div class="admin-columns">' +
+        '<div class="scroll-columns">' +
           renderColumn("gratitude", "🙏") +
           renderColumn("prayer", "🕊️") +
           renderColumn("greeting", "🙋") +
@@ -304,15 +387,15 @@ function loadGroupsAdmin() {
       function renderColumn(label, list) {
         if (!list.length) return "";
         return (
-          '<div class="admin-column">' +
-            '<div class="admin-column-title">' + label + ' (' + list.length + '개)</div>' +
+          '<div class="scroll-column">' +
+            '<div class="scroll-column-title">' + label + ' (' + list.length + '개)</div>' +
             list.map(renderGroup).join("") +
           '</div>'
         );
       }
 
       listEl.innerHTML =
-        '<div class="admin-columns">' +
+        '<div class="scroll-columns">' +
           renderColumn("📘 교사 오이코스", teacherGroups) +
           renderColumn("🙋 학생 오이코스", studentGroups) +
         '</div>';

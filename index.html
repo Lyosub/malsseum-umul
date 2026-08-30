@@ -90,18 +90,23 @@
     <h3 style="margin-top:0;color:var(--well-deep);">💬 실시간 나눔</h3>
     <p style="color:var(--text-soft);font-size:12.5px;margin:0 0 16px;">기도제목은 항상 익명으로 보여요. 하루 인사·감사노트는 로그인한 사람에게만 닉네임이 보여요.</p>
 
-    <a href="feed.html?type=greeting" class="well-label" style="margin-top:0;display:block;text-decoration:none;">🙋 하루 인사 <span style="color:var(--text-soft);font-weight:400;">전체보기 →</span></a>
-    <div id="publicFeedGreeting"><p class="msg">불러오는 중...</p></div>
-
-    <hr class="well-divider">
-
-    <a href="feed.html?type=gratitude" class="well-label" style="display:block;text-decoration:none;">🙏 감사노트 <span style="color:var(--text-soft);font-weight:400;">전체보기 →</span></a>
-    <div id="publicFeedGratitude"><p class="msg">불러오는 중...</p></div>
-
-    <hr class="well-divider">
-
-    <a href="feed.html?type=prayer" class="well-label" style="display:block;text-decoration:none;">🕊️ 기도제목 <span style="color:var(--text-soft);font-weight:400;">전체보기 →</span></a>
-    <div id="publicFeedPrayer"><p class="msg">불러오는 중...</p></div>
+    <div class="scroll-columns">
+      <div class="scroll-column">
+        <div class="scroll-column-title">🙋 하루 인사</div>
+        <a href="feed.html?type=greeting" style="display:block;font-size:12px;color:var(--well);text-decoration:none;margin:-4px 0 8px;">전체보기 →</a>
+        <div id="publicFeedGreeting"><p class="msg">불러오는 중...</p></div>
+      </div>
+      <div class="scroll-column">
+        <div class="scroll-column-title">🙏 감사노트</div>
+        <a href="feed.html?type=gratitude" style="display:block;font-size:12px;color:var(--well);text-decoration:none;margin:-4px 0 8px;">전체보기 →</a>
+        <div id="publicFeedGratitude"><p class="msg">불러오는 중...</p></div>
+      </div>
+      <div class="scroll-column">
+        <div class="scroll-column-title">🕊️ 기도제목</div>
+        <a href="feed.html?type=prayer" style="display:block;font-size:12px;color:var(--well);text-decoration:none;margin:-4px 0 8px;">전체보기 →</a>
+        <div id="publicFeedPrayer"><p class="msg">불러오는 중...</p></div>
+      </div>
+    </div>
   </div>
 
   <div class="card" style="text-align:center;">

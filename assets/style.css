@@ -485,9 +485,10 @@ textarea { min-height: 90px; resize: vertical; }
   box-shadow: 0 16px 34px rgba(124, 60, 28, 0.22);
 }
 
-/* 관리자 페이지의 회원/기록/오이코스 목록을 세로로 쭉 이어붙이는 대신, 항목별로 옆으로
-   나란히 넘겨볼 수 있게 하는 가로 컬럼 레이아웃 (모바일에서는 좌우로 스와이프) */
-.admin-columns {
+/* 목록을 세로로 쭉 이어붙이는 대신, 항목별로 옆으로 나란히 넘겨볼 수 있게 하는 가로 컬럼
+   레이아웃 (모바일에서는 좌우로 스와이프). 관리자 페이지의 회원/기록/오이코스 목록과
+   홈 화면의 "실시간 나눔"(하루인사/감사노트/기도제목)에서 함께 쓴다. */
+.scroll-columns {
   display: flex;
   gap: 12px;
   overflow-x: auto;
@@ -496,7 +497,7 @@ textarea { min-height: 90px; resize: vertical; }
   -webkit-overflow-scrolling: touch;
 }
 
-.admin-column {
+.scroll-column {
   flex: 0 0 78%;
   max-width: 320px;
   background: rgba(20, 112, 122, 0.04);
@@ -505,7 +506,7 @@ textarea { min-height: 90px; resize: vertical; }
   padding: 4px 14px 10px;
 }
 
-.admin-column .admin-column-title {
+.scroll-column .scroll-column-title {
   font-size: 13.5px;
   font-weight: 800;
   color: var(--well-deep);
@@ -515,7 +516,7 @@ textarea { min-height: 90px; resize: vertical; }
   background: inherit;
 }
 
-.admin-column .note-item:first-of-type { padding-top: 4px; }
+.scroll-column .note-item:first-of-type { padding-top: 4px; }
 
 .note-item {
   border-bottom: 1px solid var(--border);
@@ -534,6 +535,15 @@ textarea { min-height: 90px; resize: vertical; }
   font-size: 14px;
   white-space: pre-wrap;
 }
+
+.member-detail {
+  margin-top: 10px;
+  padding: 4px 12px 6px;
+  background: rgba(20, 112, 122, 0.05);
+  border-radius: 12px;
+}
+
+.member-detail .note-item { padding: 10px 0; }
 
 .streak {
   text-align: center;
