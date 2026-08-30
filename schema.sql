@@ -1756,10 +1756,10 @@ $$;
 
 -- ===== 하루 인사 달란트 뽑기 =====
 -- 하루 인사를 남기면 그날 딱 한 번, 0~2점 중 무작위로 달란트를 뽑을 수 있다.
--- 하루 인사를 지우면 뽑았던 점수도 함께 회수되지만(revoke_greeting_draw_on_delete),
--- 뽑기 결과가 0점(꽝)이었던 경우에는 회수할 점수가 없으므로 그 0점 기록을 그대로 남겨두고,
--- draw_greeting_talent()가 그 기록을 보고 재추첨 없이 계속 0을 돌려주게 만든다.
--- (0점을 피하려고 하루 인사를 지웠다가 다시 써서 재추첨을 노리는 것을 막기 위함)
+-- 한 번 뽑힌 결과는 0점이든 1점이든 2점이든 그날 하루 동안 그대로 고정된다 — 하루 인사를
+-- 지웠다가 다시 써도 재추첨되지 않고 처음 뽑은 점수가 그대로 유지된다(draw_greeting_talent가
+-- 그날 이미 뽑은 기록이 있으면 무조건 그 값을 그대로 돌려주기 때문). 원하는 점수가 나올 때까지
+-- 하루 인사를 지웠다 다시 쓰는 식으로 재추첨을 노리는 것을 막기 위함이다.
 alter table points_ledger drop constraint if exists points_ledger_action_type_check;
 alter table points_ledger add constraint points_ledger_action_type_check
   check (action_type in ('attendance', 'streak_bonus', 'note', 'quiz', 'group_attendance_bonus', 'group_notes_bonus', 'admin_award', 'greeting_draw'));
@@ -1853,3 +1853,176 @@ drop trigger if exists trg_notes_revoke_greeting_draw on notes;
 create trigger trg_notes_revoke_greeting_draw
   after delete on notes
   for each row execute function revoke_greeting_draw_on_delete();
+
+-- 하루 인사 달란트 뽑기 결과를 0점뿐 아니라 1점/2점도 그날 하루는 완전히 고정시킨다.
+-- 지금까지는 0점만 "재추첨 불가"로 고정되고 1점/2점은 하루 인사를 지우면 점수가 회수되어
+-- 다시 쓰면 재추첨이 가능했는데, 이제는 몇 점이 나왔든 하루 인사를 지웠다 다시 써도 점수가
+-- 바뀌지 않아야 하므로, 삭제 시 점수를 회수하던 트리거 자체를 없앤다.
+-- (draw_greeting_talent()는 그날 이미 뽑은 기록이 있으면 그 값을 그대로 돌려주므로,
+-- 회수 트리거만 없애면 별도 수정 없이 모든 점수가 자동으로 고정된다)
+drop trigger if exists trg_notes_revoke_greeting_draw on notes;
+drop function if exists revoke_greeting_draw_on_delete();
+
+-- ===== 건의사항 (익명, 교역자·부장 전용 열람) =====
+-- 감사노트/기도제목/하루인사와 같은 notes 테이블을 재사용한다. 학생들의 공개 피드에는 절대
+-- 노출되지 않도록 get_public_notes()의 type 필터(greeting/gratitude/prayer)에는 넣지 않아서
+-- 자동으로 제외되고, 반대로 이미 있는 관리자용 get_all_notes_admin()/get_member_notes_admin()은
+-- type을 가리지 않고 전체를 반환하므로 별도 수정 없이 교역자·부장 화면(학생 기록 관리)에
+-- 자동으로 나타난다. 달란트도 지급되지 않는다(award_note_points()가 'gratitude'/'prayer'만
+-- 검사하므로 건드릴 필요가 없다). 삭제도 기존 admin_delete_note()를 그대로 쓸 수 있다.
+alter table notes drop constraint if exists notes_type_check;
+alter table notes add constraint notes_type_check
+  check (type in ('greeting', 'gratitude', 'prayer', 'suggestion'));
+
+-- ===== 자유게시판 (댓글 포함) =====
+-- 학생들끼리 서로 자유롭게 소통하는 공개 게시판. notes와 달리 "본인만 조회"가 아니라
+-- 로그인한 사람이면 전원 조회 가능하고, 닉네임도 항상 노출한다(익명 게시판의 괴롭힘/뒷담화
+-- 위험을 줄이기 위해 하루인사처럼 닉네임을 붙인다). 달란트는 지급하지 않는다(스팸 방지).
+create table if not exists board_posts (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+alter table board_posts enable row level security;
+
+create policy "로그인한 사람 전체 글 조회" on board_posts
+  for select using (auth.uid() is not null);
+
+create policy "본인 글만 작성" on board_posts
+  for insert with check (auth.uid() = user_id);
+
+create policy "본인 글만 수정" on board_posts
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "본인 글만 삭제" on board_posts
+  for delete using (auth.uid() = user_id);
+
+-- 게시글이 지워지면(본인 삭제든 관리자 삭제든) 댓글도 함께 정리되도록 cascade
+create table if not exists board_comments (
+  id bigint generated always as identity primary key,
+  post_id bigint not null references board_posts(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+alter table board_comments enable row level security;
+
+create policy "로그인한 사람 전체 댓글 조회" on board_comments
+  for select using (auth.uid() is not null);
+
+create policy "본인 댓글만 작성" on board_comments
+  for insert with check (auth.uid() = user_id);
+
+create policy "본인 댓글만 삭제" on board_comments
+  for delete using (auth.uid() = user_id);
+
+-- 목록 조회는 닉네임 join + 댓글 수까지 함께 내려주는 편이 클라이언트에서 편해서 함수로 감싼다.
+-- security definer라 RLS를 우회하므로, 로그인 여부를 함수 안에서 직접 다시 확인해야 한다
+-- (그렇지 않으면 익명 anon key로도 이 함수만 호출해서 전체 글을 읽어갈 수 있게 된다).
+create or replace function get_board_posts(p_limit integer default 100)
+returns table(id bigint, user_id uuid, nickname text, content text, created_at timestamptz, comment_count bigint)
+language sql
+security definer
+set search_path = public
+as $$
+  select bp.id, bp.user_id, p.nickname, bp.content, bp.created_at,
+    (select count(*) from board_comments bc where bc.post_id = bp.id) as comment_count
+  from board_posts bp
+  join profiles p on p.user_id = bp.user_id
+  where auth.uid() is not null
+  order by bp.created_at desc
+  limit p_limit;
+$$;
+
+create or replace function get_board_comments(p_post_id bigint)
+returns table(id bigint, user_id uuid, nickname text, content text, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select bc.id, bc.user_id, p.nickname, bc.content, bc.created_at
+  from board_comments bc
+  join profiles p on p.user_id = bc.user_id
+  where auth.uid() is not null and bc.post_id = p_post_id
+  order by bc.created_at asc;
+$$;
+
+-- 교역자·부장 전용: 부적절한 글/댓글 삭제 (본인 삭제는 RLS 정책으로 이미 가능하므로 별도 함수 불필요)
+create or replace function admin_delete_board_post(p_post_id bigint)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from profiles where user_id = auth.uid() and (is_admin = true or is_department_head = true)
+  ) then
+    raise exception '교역자·부장만 삭제할 수 있습니다.';
+  end if;
+  delete from board_posts where id = p_post_id;
+  return true;
+end;
+$$;
+
+create or replace function admin_delete_board_comment(p_comment_id bigint)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from profiles where user_id = auth.uid() and (is_admin = true or is_department_head = true)
+  ) then
+    raise exception '교역자·부장만 삭제할 수 있습니다.';
+  end if;
+  delete from board_comments where id = p_comment_id;
+  return true;
+end;
+$$;
+
+-- 건의사항은 교역자·부장에게도 "누가 썼는지"는 완전히 익명이어야 한다(내용/시각만 전달).
+-- get_all_notes_admin은 원래 모든 타입의 작성자를 그대로 보여주므로 suggestion만 예외로 가린다.
+create or replace function get_all_notes_admin(p_limit integer default 200)
+returns table(id bigint, user_id uuid, nickname text, real_name text, type text, content text, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select n.id, n.user_id,
+    case when n.type = 'suggestion' then null else p.nickname end,
+    case
+      when n.type = 'suggestion' then null
+      when exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true) then p.real_name
+      else null
+    end,
+    n.type, n.content, n.created_at
+  from notes n
+  join profiles p on p.user_id = n.user_id
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and (admin_p.is_admin = true or admin_p.is_department_head = true)
+  )
+  order by n.created_at desc
+  limit p_limit;
+$$;
+
+-- 회원 상세보기(get_member_notes_admin)는 특정 user_id를 이미 알고 보는 화면이라, 여기에
+-- 건의사항이 섞여 나오면 "이 사람이 이 건의를 썼다"는 게 바로 드러나 익명성이 깨진다.
+-- 그래서 건의사항은 이 함수에서 아예 제외한다(대신 교역자·부장은 "학생 기록 관리"의
+-- 건의사항 칼럼에서 작성자를 모르는 채로 내용만 확인할 수 있다).
+create or replace function get_member_notes_admin(p_user_id uuid, p_limit integer default 200)
+returns table(id bigint, type text, content text, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select n.id, n.type, n.content, n.created_at
+  from notes n
+  where n.user_id = p_user_id
+    and n.type <> 'suggestion'
+    and exists (select 1 from profiles ap where ap.user_id = auth.uid() and (ap.is_admin = true or ap.is_department_head = true))
+  order by n.created_at desc
+  limit p_limit;
+$$;

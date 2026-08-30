@@ -96,6 +96,7 @@ function initNewBadges() {
 
   checkDbLatest("announcements", 'a[href="notice.html"]', "notice");
   checkDbLatest("calendar_events", 'a[href="calendar.html"]', "calendar");
+  checkDbLatest("board_posts", 'a[href="board.html"]', "board");
 }
 
 document.addEventListener("DOMContentLoaded", initNewBadges);

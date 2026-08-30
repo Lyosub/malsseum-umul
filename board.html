@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>자유게시판 | 말씀우물</title>
+<meta name="description" content="말씀우물 학생들이 자유롭게 이야기 나누는 게시판이에요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="자유게시판 | 말씀우물">
+<meta property="og:description" content="말씀우물 학생들이 자유롭게 이야기 나누는 게시판이에요.">
+<meta property="og:image" content="https://logoswell.kr/assets/icons/icon-512.png">
+<meta property="og:url" content="https://logoswell.kr/board.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14707a">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script defer src="assets/pwa.js"></script>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap" id="pageContent" style="display:none;">
+  <section class="hero">
+    <h1>💬 자유게시판</h1>
+    <p>중등부 친구들과 자유롭게 이야기 나눠보세요. 닉네임이 함께 보여요.</p>
+  </section>
+
+  <div class="card">
+    <form id="boardPostForm">
+      <div class="form-row">
+        <textarea id="boardPostInput" placeholder="하고 싶은 이야기를 자유롭게 적어보세요"></textarea>
+      </div>
+      <button type="submit" class="btn block">게시하기</button>
+      <p class="msg" id="boardPostMsg"></p>
+    </form>
+  </div>
+
+  <div class="card">
+    <p class="msg" id="boardListMsg">불러오는 중...</p>
+    <div id="boardList"></div>
+  </div>
+</div>
+
+<div class="wrap auth-gate" id="loginGate" style="display:none;">
+  <p>로그인이 필요한 페이지예요.</p>
+  <a href="login.html" class="btn">로그인하러 가기</a>
+</div>
+
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  💧 말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a>
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/new-badge.js"></script>
+<script src="assets/board.js"></script>
+<script>
+  initLogoutButton();
+  initHeaderAuthState();
+  getSession().then(function (session) {
+    if (!session) {
+      document.getElementById("loginGate").style.display = "block";
+      return;
+    }
+    document.getElementById("pageContent").style.display = "block";
+    initBoardPage(session.user.id);
+    markDbSectionSeen("board", "board_posts");
+  });
+</script>
+</body>
+</html>

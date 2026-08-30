@@ -77,7 +77,7 @@
     <div class="well-label">⚠️ 주의사항</div>
     감사노트/기도제목을 성의 없이 작성하면 우물지기가 확인 후 삭제할 수 있어요. <strong>삭제되면 그 글로 받은 달란트도 함께 회수돼요.</strong><br>
     같은 날 여러 번 써도 달란트는 하루 1번만 인정돼요.<br>
-    하루 인사 달란트 뽑기도 지웠다가 다시 쓰면 다시 뽑을 수 있지만, <strong>뽑은 결과가 0점(꽝)이었다면 다시 써도 항상 0점</strong>으로 고정돼요.
+    하루 인사 달란트 뽑기는 <strong>한 번 뽑으면 그날은 몇 점이 나왔든 그대로 고정</strong>돼요. 하루 인사를 지웠다 다시 써도 점수는 바뀌지 않아요.
   </div>
 
   <div class="card">
@@ -114,6 +114,18 @@
     </form>
   </div>
 
+  <div class="card" id="suggestionCard">
+    <div class="well-label" style="margin-top:0;">📮 건의사항</div>
+    <p style="color:var(--text-soft);font-size:12.5px;margin:0 0 12px;">교역자·부장에게만 전달돼요. 다른 친구들에게는 절대 공개되지 않고, 누가 썼는지도 익명으로 처리돼요.</p>
+    <form class="note-form" data-type="suggestion">
+      <div class="form-row">
+        <textarea placeholder="하고 싶은 이야기, 바라는 점을 자유롭게 적어보세요"></textarea>
+      </div>
+      <button type="submit" class="btn block">건의하기</button>
+      <p class="msg"></p>
+    </form>
+  </div>
+
   <div class="card">
     <h3 style="margin-top:0;">지난 기록</h3>
 
@@ -129,6 +141,11 @@
 
     <div class="well-label">🕊️ 기도제목</div>
     <div id="noteListPrayer"></div>
+
+    <hr class="well-divider">
+
+    <div class="well-label">📮 건의사항 (나에게만 보여요)</div>
+    <div id="noteListSuggestion"></div>
   </div>
 
   <div class="card" id="groupSection">

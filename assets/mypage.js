@@ -454,8 +454,8 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
-var NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목" };
-var NOTE_LIST_IDS = { greeting: "noteListGreeting", gratitude: "noteListGratitude", prayer: "noteListPrayer" };
+var NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목", suggestion: "건의사항" };
+var NOTE_LIST_IDS = { greeting: "noteListGreeting", gratitude: "noteListGratitude", prayer: "noteListPrayer", suggestion: "noteListSuggestion" };
 
 var GREETING_DRAW_MESSAGES = {
   0: "앗, 이번엔 꽝이에요 😅 그래도 하루 인사 남겨줘서 고마워요!",
@@ -639,7 +639,7 @@ function initNotes(userId) {
       .then(function (res) {
         var items = res.data || [];
         noteItemsById = {};
-        var grouped = { greeting: [], gratitude: [], prayer: [] };
+        var grouped = { greeting: [], gratitude: [], prayer: [], suggestion: [] };
         items.forEach(function (item) {
           if (grouped[item.type]) grouped[item.type].push(item);
         });

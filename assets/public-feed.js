@@ -48,6 +48,46 @@ function renderFeedPreview(elId, rows) {
   }).join("");
 }
 
+function renderBoardPreview(rows) {
+  var listEl = document.getElementById("publicFeedBoard");
+  if (!listEl) return;
+  var shown = rows.slice(0, PUBLIC_FEED_PREVIEW_COUNT);
+  if (!shown.length) {
+    listEl.innerHTML = '<p class="msg">아직 올라온 글이 없어요.</p>';
+    return;
+  }
+  listEl.innerHTML = shown.map(function (r) {
+    var who = r.nickname ? escapeHtmlFeed(r.nickname) : "익명";
+    return (
+      '<div class="note-item">' +
+        '<div class="meta">' + who + ' · ' + timeAgoKo(r.created_at) + (r.comment_count ? ' · 댓글 ' + r.comment_count + '개' : '') + '</div>' +
+        '<div class="content">' + escapeHtmlFeed(r.content) + '</div>' +
+      '</div>'
+    );
+  }).join("");
+}
+
+function loadBoardPreview() {
+  var client = getClient();
+  var el = document.getElementById("publicFeedBoard");
+  if (!client || !el) return;
+  getSession().then(function (session) {
+    if (!session) {
+      el.innerHTML = '<p class="msg">로그인하면 볼 수 있어요.</p>';
+      return;
+    }
+    client.rpc("get_board_posts", { p_limit: 20 }).then(function (res) {
+      if (res.error) {
+        el.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
+        return;
+      }
+      renderBoardPreview(res.data || []);
+    }).catch(function () {
+      el.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
+    });
+  });
+}
+
 function initPublicFeed() {
   var client = getClient();
   if (!client) return;
@@ -74,6 +114,7 @@ function initPublicFeed() {
         if (el) el.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
       });
     });
+    loadBoardPreview();
   }
 
   load();

@@ -78,7 +78,7 @@ function formatDateTime(iso) {
     " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
 }
 
-var ADMIN_NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목" };
+var ADMIN_NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목", suggestion: "건의사항" };
 
 var ADMIN_ACTION_LABELS = {
   attendance: "출석",
@@ -412,7 +412,7 @@ function loadAllNotes() {
       function renderNote(item) {
         var writer = item.real_name
           ? escapeHtmlAdmin(item.real_name) + '(' + escapeHtmlAdmin(item.nickname) + ')'
-          : escapeHtmlAdmin(item.nickname);
+          : escapeHtmlAdmin(item.nickname || "익명");
         return (
           '<div class="note-item">' +
             '<div class="meta">' + writer + ' · ' + ADMIN_NOTE_LABELS[item.type] + ' · ' + formatDateTime(item.created_at) + '</div>' +
@@ -422,8 +422,8 @@ function loadAllNotes() {
         );
       }
 
-      // 감사노트 / 기도제목 / 하루인사로 구분해서 보여준다
-      var byType = { gratitude: [], prayer: [], greeting: [] };
+      // 감사노트 / 기도제목 / 하루인사 / 건의사항으로 구분해서 보여준다
+      var byType = { gratitude: [], prayer: [], greeting: [], suggestion: [] };
       items.forEach(function (item) {
         if (byType[item.type]) byType[item.type].push(item);
       });
@@ -441,6 +441,7 @@ function loadAllNotes() {
 
       listEl.innerHTML =
         '<div class="scroll-columns">' +
+          renderColumn("suggestion", "📮") +
           renderColumn("gratitude", "🙏") +
           renderColumn("prayer", "🕊️") +
           renderColumn("greeting", "🙋") +
