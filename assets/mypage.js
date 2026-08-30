@@ -162,6 +162,36 @@ function initGroup(userId) {
     });
   }
 
+  function renderGroupMembers(groupId) {
+    client.rpc("get_group_members", { p_group_id: groupId }).then(function (res) {
+      var el = document.getElementById("groupMembersList");
+      var countEl = document.getElementById("groupMemberCount");
+      if (!el) return;
+      var rows = res.data || [];
+      if (res.error || !rows.length) {
+        el.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
+        return;
+      }
+      if (countEl) countEl.textContent = "(" + rows.length + "명)";
+      el.innerHTML = rows.map(function (r) {
+        var mine = r.user_id === userId ? " (나)" : "";
+        return (
+          '<div class="note-item">' +
+            '<div class="content">' + escapeHtml(r.nickname) + mine +
+              (r.is_host ? ' <span style="color:var(--gold);font-size:12px;">만든 사람</span>' : '') +
+            '</div>' +
+            '<div class="meta">' + formatJoinDate(r.joined_at) + ' 참여</div>' +
+          '</div>'
+        );
+      }).join("");
+    });
+  }
+
+  function formatJoinDate(iso) {
+    var d = new Date(iso);
+    return d.getFullYear() + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + String(d.getDate()).padStart(2, "0");
+  }
+
   function renderTodayStatus(groupId) {
     client.rpc("get_group_today_status", { p_group_id: groupId }).then(function (res) {
       var el = document.getElementById("todayStatusList");
@@ -212,6 +242,7 @@ function initGroup(userId) {
     document.getElementById("groupName").textContent = group.name;
     document.getElementById("groupCode").textContent = group.invite_code;
     renderChallengeBanner(group.id);
+    renderGroupMembers(group.id);
     // 지난주(월~일) 오이코스 챌린지 조건을 확인해서 아직 정산 안 됐으면 오이코스 전원에게 보너스 포인트를 지급한다
     // (교사가 만든 오이코스가 아니면 evaluate_group_weekly_bonus 내부에서 조용히 아무것도 하지 않는다)
     client.rpc("evaluate_group_weekly_bonus", { p_group_id: group.id }).catch(function () {}).then(function () {

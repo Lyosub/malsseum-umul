@@ -1098,6 +1098,25 @@ $$;
 -- real_name을 내보내지 않음), 교역자가 관리자 페이지에서 실제로 누구인지 확인할 때만 쓴다.
 alter table profiles add column if not exists real_name text;
 
+-- 오이코스 멤버 목록 (닉네임 + 참여일) — "누가 들어왔는지" 바로 확인용. 기록 내용이나 점수는 없이
+-- 순수 멤버 명단만 보여준다. 멤버 본인 확인 후에만 조회 가능(다른 오이코스 정보는 볼 수 없음).
+create or replace function get_group_members(p_group_id bigint)
+returns table(user_id uuid, nickname text, joined_at timestamptz, is_host boolean)
+language sql
+security definer
+set search_path = public
+as $$
+  select p.user_id, p.nickname, gm.joined_at, (g.created_by = p.user_id) as is_host
+  from group_members gm
+  join profiles p on p.user_id = gm.user_id
+  join groups g on g.id = gm.group_id
+  where gm.group_id = p_group_id
+    and exists (
+      select 1 from group_members me where me.group_id = p_group_id and me.user_id = auth.uid()
+    )
+  order by gm.joined_at asc;
+$$;
+
 -- get_member_list에 본명을 추가해서 교역자가 회원 관리 화면에서 확인할 수 있게 한다.
 -- (반환 컬럼 구성이 바뀌므로 create or replace 전에 기존 함수를 먼저 지워야 한다)
 drop function if exists get_member_list();
