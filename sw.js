@@ -1,7 +1,7 @@
 // 말씀우물 PWA 서비스 워커: 앱 셸을 미리 캐시해두되, 온라인일 때는 항상 최신 버전을
 // 먼저 시도하는 네트워크 우선(network-first) 방식으로 처리하고, 오프라인일 때만 캐시로 대체한다.
 // (예전에는 캐시 우선 방식이라 배포 후에도 옛 버전이 계속 보이는 문제가 있었음)
-var CACHE_VERSION = "msu-v44";
+var CACHE_VERSION = "msu-v45";
 var PRECACHE = [
   "./",
   "index.html",
@@ -47,6 +47,7 @@ var PRECACHE = [
   "assets/group-rankings.js",
   "assets/board.js",
   "assets/pwa.js",
+  "assets/install-prompt.js",
   "assets/hero-bg.jpg",
   "assets/menu-icons/weekly.png",
   "assets/menu-icons/notice.png",
