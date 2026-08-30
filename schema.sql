@@ -950,3 +950,102 @@ create policy "관리자만 이벤트 배너 삭제" on home_banner
   for delete using (
     exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true)
   );
+
+-- ===== 교역자 수동 점수 부여 =====
+-- 개인 또는 오이코스 전체에게 교역자가 직접 점수를 얹어줄 수 있는 기능. 금액에 한도를 두지 않는다(양수/음수 모두 허용,
+-- 잘못 줬을 때 음수로 보정 가능). action_type을 'admin_award'로 남겨서 다른 자동 적립과 구분하고,
+-- 자동 적립(출석/노트/퀴즈/그룹챌린지)에만 걸려 있던 "하루 1건" unique 제약에서는 제외해 같은 사람에게
+-- 하루에 여러 번 줘도 막히지 않게 한다.
+alter table points_ledger drop constraint if exists points_ledger_action_type_check;
+alter table points_ledger add constraint points_ledger_action_type_check
+  check (action_type in ('attendance', 'streak_bonus', 'note', 'quiz', 'group_attendance_bonus', 'group_notes_bonus', 'admin_award'));
+
+alter table points_ledger add column if not exists note text;
+alter table points_ledger add column if not exists awarded_by uuid references auth.users(id);
+
+alter table points_ledger drop constraint if exists points_ledger_user_id_action_type_ref_date_key;
+create unique index if not exists points_ledger_auto_uniq
+  on points_ledger (user_id, action_type, ref_date)
+  where action_type <> 'admin_award';
+
+-- 교역자 전용: 개인에게 점수 수동 부여
+create or replace function admin_award_points(p_user_id uuid, p_points integer, p_note text default null)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true) then
+    raise exception '교역자만 점수를 부여할 수 있습니다.';
+  end if;
+  if p_points is null or p_points = 0 then
+    raise exception '0이 아닌 점수를 입력해주세요.';
+  end if;
+
+  insert into points_ledger (user_id, action_type, points, ref_date, note, awarded_by)
+  values (p_user_id, 'admin_award', p_points, (now() at time zone 'Asia/Seoul')::date, p_note, auth.uid());
+
+  return true;
+end;
+$$;
+
+-- 교역자 전용: 오이코스(그룹) 전체 멤버에게 동일한 점수를 일괄 부여
+create or replace function admin_award_group_points(p_group_id bigint, p_points integer, p_note text default null)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_count integer := 0;
+begin
+  if not exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true) then
+    raise exception '교역자만 점수를 부여할 수 있습니다.';
+  end if;
+  if p_points is null or p_points = 0 then
+    raise exception '0이 아닌 점수를 입력해주세요.';
+  end if;
+
+  insert into points_ledger (user_id, action_type, points, ref_date, note, awarded_by)
+  select gm.user_id, 'admin_award', p_points, (now() at time zone 'Asia/Seoul')::date, p_note, auth.uid()
+  from group_members gm
+  where gm.group_id = p_group_id;
+
+  get diagnostics v_count = row_count;
+  return v_count;
+end;
+$$;
+
+-- get_member_list에 현재 총 포인트를 추가해서 관리자가 누구에게 얼마나 더 줄지 참고할 수 있게 한다.
+-- (반환 컬럼 구성이 바뀌므로 create or replace 전에 기존 함수를 먼저 지워야 한다)
+drop function if exists get_member_list();
+create or replace function get_member_list()
+returns table(
+  user_id uuid,
+  nickname text,
+  email text,
+  is_admin boolean,
+  is_teacher boolean,
+  joined_at timestamptz,
+  last_sign_in_at timestamptz,
+  last_note_type text,
+  last_note_at timestamptz,
+  total_points bigint
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    p.user_id, p.nickname, u.email, p.is_admin, p.is_teacher, p.created_at, u.last_sign_in_at,
+    (select n.type from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_type,
+    (select n.created_at from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_at,
+    (select coalesce(sum(pl.points), 0) from points_ledger pl where pl.user_id = p.user_id)::bigint as total_points
+  from profiles p
+  join auth.users u on u.id = p.user_id
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and admin_p.is_admin = true
+  )
+  order by p.created_at desc;
+$$;

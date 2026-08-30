@@ -81,6 +81,7 @@ function loadMemberList() {
             '<strong>' + escapeHtmlAdmin(m.nickname) + '</strong>' +
             (m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">교역자</span>' : '') +
             (m.is_teacher && !m.is_admin ? ' <span style="color:var(--well);font-size:12px;">교사</span>' : '') +
+            ' <span style="color:var(--well);font-size:12px;font-weight:700;">' + m.total_points + '점</span>' +
             '<br>' + escapeHtmlAdmin(m.email) +
           '</div>' +
           '<div class="meta">가입: ' + formatDateTime(m.joined_at) +
@@ -89,6 +90,7 @@ function loadMemberList() {
           '<button type="button" class="btn ghost" data-action="toggle-teacher" data-is-teacher="' + m.is_teacher + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">' +
             (m.is_teacher ? "교사 해제" : "교사로 지정") +
           '</button>' +
+          '<button type="button" class="btn ghost" data-action="award-points" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">포인트 부여</button>' +
         '</div>'
       );
     }).join("");
@@ -99,6 +101,28 @@ function loadMemberList() {
         var targetUserId = itemEl.getAttribute("data-user-id");
         var nextIsTeacher = btn.getAttribute("data-is-teacher") !== "true";
         client.rpc("admin_set_teacher", { p_user_id: targetUserId, p_is_teacher: nextIsTeacher }).then(function () {
+          loadMemberList();
+        });
+      });
+    });
+
+    listEl.querySelectorAll('button[data-action="award-points"]').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var itemEl = btn.closest(".note-item");
+        var targetUserId = itemEl.getAttribute("data-user-id");
+        var amountStr = prompt("몇 점을 부여할까요? (보정하려면 음수도 가능해요, 예: -2)");
+        if (amountStr === null) return;
+        var amount = parseInt(amountStr, 10);
+        if (!amount) {
+          alert("0이 아닌 숫자를 입력해주세요.");
+          return;
+        }
+        var note = prompt("사유를 남겨주세요 (선택, 안 남겨도 돼요)") || null;
+        client.rpc("admin_award_points", { p_user_id: targetUserId, p_points: amount, p_note: note }).then(function (res) {
+          if (res.error) {
+            alert("포인트 부여에 실패했어요.");
+            return;
+          }
           loadMemberList();
         });
       });
@@ -169,7 +193,8 @@ function loadGroupsAdmin() {
               ' · 초대코드: ' + escapeHtmlAdmin(item.invite_code) +
               ' · 인원: ' + item.member_count + '명' +
               '<br>생성일: ' + formatDateTime(item.created_at) + '</div>' +
-            '<button class="btn ghost" data-action="disband" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">해체</button>' +
+            '<button class="btn ghost" data-action="award-group-points" style="margin-top:8px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">포인트 부여</button>' +
+            '<button class="btn ghost" data-action="disband" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">해체</button>' +
           '</div>'
         );
       }).join("");
@@ -183,6 +208,28 @@ function loadGroupsAdmin() {
               return;
             }
             load();
+          });
+        });
+      });
+      listEl.querySelectorAll('button[data-action="award-group-points"]').forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var itemEl = btn.closest(".note-item");
+          var groupId = itemEl.getAttribute("data-group-id");
+          var groupName = itemEl.querySelector("strong").textContent;
+          var amountStr = prompt('"' + groupName + '" 오이코스 전원에게 몇 점씩 부여할까요? (음수도 가능해요)');
+          if (amountStr === null) return;
+          var amount = parseInt(amountStr, 10);
+          if (!amount) {
+            alert("0이 아닌 숫자를 입력해주세요.");
+            return;
+          }
+          var note = prompt("사유를 남겨주세요 (선택, 안 남겨도 돼요)") || null;
+          client.rpc("admin_award_group_points", { p_group_id: groupId, p_points: amount, p_note: note }).then(function (res) {
+            if (res.error) {
+              alert("포인트 부여에 실패했어요.");
+              return;
+            }
+            alert((res.data || 0) + "명에게 " + amount + "점씩 부여했어요.");
           });
         });
       });
