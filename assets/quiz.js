@@ -18,7 +18,7 @@ function initQuizSection() {
   getSession().then(function (session) {
     if (!session) {
       section.innerHTML =
-        '<p style="color:var(--text-soft);font-size:13.5px;">로그인하면 이번 주 퀴즈를 풀고 포인트를 받을 수 있어요.</p>' +
+        '<p style="color:var(--text-soft);font-size:13.5px;">로그인하면 이번 주 퀴즈를 풀고 달란트를 받을 수 있어요.</p>' +
         '<a href="login.html" class="btn ghost block">로그인하러 가기</a>';
       return;
     }
@@ -52,7 +52,7 @@ function renderResultView(section, quiz, selected, correctOption, isCorrect) {
         '</div>'
       );
     }).join("") +
-    '<p class="msg" style="margin-top:10px;">' + (isCorrect ? "🎉 정답이에요! +1점 획득" : "아쉬워요, 정답은 위에 표시된 답이에요.") + '</p>';
+    '<p class="msg" style="margin-top:10px;">' + (isCorrect ? "🎉 정답이에요! +1달란트 획득" : "아쉬워요, 정답은 위에 표시된 답이에요.") + '</p>';
 }
 
 function renderQuiz(section, client, quiz) {

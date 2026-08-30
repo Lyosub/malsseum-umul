@@ -97,8 +97,10 @@ function ensureProfile(session) {
 function initProfileSettings(session) {
   var userId = session.user.id;
   var client = getClient();
-  var nicknameEl = document.getElementById("profileNickname");
   var emailEl = document.getElementById("profileEmail");
+  var nicknameInput = document.getElementById("nicknameEditInput");
+  var saveNicknameBtn = document.getElementById("saveNicknameBtn");
+  var nicknameMsg = document.getElementById("nicknameMsg");
   var input = document.getElementById("realNameEditInput");
   var saveBtn = document.getElementById("saveRealNameBtn");
   var msg = document.getElementById("profileMsg");
@@ -106,12 +108,45 @@ function initProfileSettings(session) {
 
   if (emailEl) emailEl.textContent = session.user.email;
 
+  var currentNickname = "";
   client.from("profiles").select("nickname, real_name").eq("user_id", userId).single().then(function (res) {
     var p = res.data;
     if (!p) return;
-    if (nicknameEl) nicknameEl.textContent = p.nickname;
+    currentNickname = p.nickname;
+    if (nicknameInput) nicknameInput.value = p.nickname;
     if (p.real_name) input.value = p.real_name;
   });
+
+  if (saveNicknameBtn) {
+    saveNicknameBtn.addEventListener("click", function () {
+      var value = nicknameInput.value.trim();
+      if (!value) {
+        nicknameMsg.textContent = "닉네임을 입력해주세요.";
+        return;
+      }
+      if (value === currentNickname) {
+        nicknameMsg.textContent = "변경된 내용이 없어요.";
+        return;
+      }
+      saveNicknameBtn.disabled = true;
+      client.rpc("is_nickname_taken", { p_nickname: value }).then(function (checkRes) {
+        if (!checkRes.error && checkRes.data === true) {
+          nicknameMsg.textContent = "이미 사용 중인 닉네임이에요.";
+          saveNicknameBtn.disabled = false;
+          return;
+        }
+        client.from("profiles").update({ nickname: value }).eq("user_id", userId).then(function (res) {
+          saveNicknameBtn.disabled = false;
+          if (res.error) {
+            nicknameMsg.textContent = "저장에 실패했어요.";
+            return;
+          }
+          currentNickname = value;
+          nicknameMsg.textContent = "닉네임이 변경되었습니다.";
+        });
+      });
+    });
+  }
 
   saveBtn.addEventListener("click", function () {
     var value = input.value.trim();
@@ -155,7 +190,7 @@ function initGroup(userId) {
         return (
           '<div class="note-item">' +
             '<div class="content">' + (i + 1) + '위 · ' + escapeHtml(r.nickname) + mine + '</div>' +
-            '<div class="meta">' + r.total_points + '점 · ' + r.total_days + '일 출석</div>' +
+            '<div class="meta">' + r.total_points + '달란트 · ' + r.total_days + '일 출석</div>' +
           '</div>'
         );
       }).join("");
@@ -231,7 +266,7 @@ function initGroup(userId) {
     client.rpc("get_group_bonus_eligible", { p_group_id: groupId }).then(function (res) {
       var eligible = !!(res.data);
       el.innerHTML = eligible
-        ? "🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 전원 +1점, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 +2점 (다음 주에 자동 정산돼요)"
+        ? "🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 전원 +1달란트, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 +2달란트 (다음 주에 자동 정산돼요)"
         : "이 오이코스는 학생들끼리 만든 오이코스라 챌린지 보너스가 적용되지 않아요. 교사가 만든 오이코스만 보너스 대상이에요.";
     });
   }

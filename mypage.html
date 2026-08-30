@@ -27,14 +27,22 @@
 
   <div class="card" id="profileSection">
     <h3 style="margin-top:0;">내 정보</h3>
-    <p class="msg" style="margin-top:0;">닉네임: <strong id="profileNickname" style="color:var(--text);"></strong></p>
-    <p class="msg" style="margin-top:2px;">이메일: <strong id="profileEmail" style="color:var(--text);"></strong></p>
+    <p class="msg" style="margin-top:0;">이메일: <strong id="profileEmail" style="color:var(--text);"></strong></p>
+
     <div class="form-row">
+      <label for="nicknameEditInput">닉네임 (활동명)</label>
+      <input type="text" id="nicknameEditInput" placeholder="말씀우물에서 쓸 이름">
+      <p class="msg" style="margin-top:6px;">오이코스에서 서로 알아볼 수 있게 실명·별명으로 정해주세요. 겹치면 안 돼요.</p>
+    </div>
+    <button type="button" id="saveNicknameBtn" class="btn ghost block">닉네임 저장</button>
+    <p class="msg" id="nicknameMsg"></p>
+
+    <div class="form-row" style="margin-top:16px;">
       <label for="realNameEditInput">이름 (본명)</label>
       <input type="text" id="realNameEditInput" placeholder="실제 이름">
       <p class="msg" style="margin-top:6px;">닉네임으로 활동하며, 이름은 공개되지 않아요. 담당 교역자가 관리 목적으로만 확인해요.</p>
     </div>
-    <button type="button" id="saveRealNameBtn" class="btn block">저장</button>
+    <button type="button" id="saveRealNameBtn" class="btn block">이름 저장</button>
     <p class="msg" id="profileMsg"></p>
   </div>
 
@@ -46,7 +54,7 @@
       </div>
       <div>
         <div class="num" id="pointsNum">0</div>
-        <div class="label">총 포인트</div>
+        <div class="label">총 달란트</div>
       </div>
     </div>
     <button id="checkinBtn" class="btn" style="margin-top:14px;">오늘 출석 체크하기</button>
@@ -54,23 +62,23 @@
   </div>
 
   <div class="card" style="font-size:12.5px;color:var(--text-soft);line-height:1.85;">
-    <div class="well-label" style="margin-top:0;">💠 개인 포인트 얻는 법</div>
-    출석 체크 <strong style="color:var(--well);">+1점</strong> · 7일 연속 출석 보너스 <strong style="color:var(--well);">+1점</strong><br>
-    감사노트/기도제목 작성 <strong style="color:var(--well);">+2점</strong> (하루 1건만 인정)<br>
-    수요 성경퀴즈 정답 <strong style="color:var(--well);">+1점</strong> (<a href="weekly.html" style="color:var(--well);">이번 주 말씀</a>에서 풀 수 있어요)
+    <div class="well-label" style="margin-top:0;">💠 개인 달란트 얻는 법</div>
+    출석 체크 <strong style="color:var(--well);">+1달란트</strong> · 7일 연속 출석 보너스 <strong style="color:var(--well);">+1달란트</strong><br>
+    감사노트/기도제목 작성 <strong style="color:var(--well);">+2달란트</strong> (하루 1건만 인정)<br>
+    수요 성경퀴즈 정답 <strong style="color:var(--well);">+1달란트</strong> (<a href="weekly.html" style="color:var(--well);">이번 주 말씀</a>에서 풀 수 있어요)
 
     <hr class="well-divider">
 
-    <div class="well-label">👥 오이코스 포인트 얻는 법 (개인 포인트와 별개로 오이코스 전체에 지급)</div>
-    오이코스 멤버 80% 이상이 한 주(월~일) 동안 출석하면 전원 <strong style="color:var(--well);">+1점</strong><br>
-    오이코스 멤버 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 <strong style="color:var(--well);">+2점</strong><br>
+    <div class="well-label">👥 오이코스 달란트 얻는 법 (개인 달란트와 별개로 오이코스 전체에 지급)</div>
+    오이코스 멤버 80% 이상이 한 주(월~일) 동안 출석하면 전원 <strong style="color:var(--well);">+1달란트</strong><br>
+    오이코스 멤버 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 <strong style="color:var(--well);">+2달란트</strong><br>
     <span style="color:var(--gold);">※ 교사가 만든 오이코스만 해당돼요. 학생끼리만 만든 오이코스는 적용되지 않아요.</span>
 
     <hr class="well-divider">
 
     <div class="well-label">⚠️ 주의사항</div>
-    감사노트/기도제목을 성의 없이 작성하면 우물지기가 확인 후 삭제할 수 있어요. <strong>삭제되면 그 글로 받은 포인트도 함께 회수돼요.</strong><br>
-    같은 날 여러 번 써도 포인트는 하루 1번만 인정돼요.
+    감사노트/기도제목을 성의 없이 작성하면 우물지기가 확인 후 삭제할 수 있어요. <strong>삭제되면 그 글로 받은 달란트도 함께 회수돼요.</strong><br>
+    같은 날 여러 번 써도 달란트는 하루 1번만 인정돼요.
   </div>
 
   <div class="card">
@@ -149,7 +157,7 @@
       <div id="groupJoinedFlash" class="joined-flash" style="display:none;"></div>
       <p style="margin:0 0 4px;font-weight:700;" id="groupName"></p>
       <p style="color:var(--text-soft);font-size:13px;margin-top:0;">초대 코드: <strong id="groupCode" style="color:var(--well);"></strong> (친구에게 공유해보세요)</p>
-      <p id="groupChallengeBanner" style="color:var(--text-soft);font-size:12px;background:rgba(20,112,122,0.07);padding:10px 12px;border-radius:10px;">🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 전원 +1점, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 +2점 (다음 주에 자동 정산돼요)</p>
+      <p id="groupChallengeBanner" style="color:var(--text-soft);font-size:12px;background:rgba(20,112,122,0.07);padding:10px 12px;border-radius:10px;">🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 전원 +1달란트, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 +2달란트 (다음 주에 자동 정산돼요)</p>
 
       <h4 style="margin:18px 0 4px;color:var(--well-deep);">오이코스 멤버 <span id="groupMemberCount" style="color:var(--text-soft);font-weight:400;font-size:12px;"></span></h4>
       <div id="groupMembersList"></div>

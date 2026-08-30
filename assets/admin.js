@@ -81,7 +81,7 @@ function loadMemberList() {
             '<strong>' + escapeHtmlAdmin(m.nickname) + '</strong>' +
             (m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">교역자</span>' : '') +
             (m.is_teacher && !m.is_admin ? ' <span style="color:var(--well);font-size:12px;">교사</span>' : '') +
-            ' <span style="color:var(--well);font-size:12px;font-weight:700;">' + m.total_points + '점</span>' +
+            ' <span style="color:var(--well);font-size:12px;font-weight:700;">' + m.total_points + '달란트</span>' +
             '<br>' + (m.real_name ? '본명: ' + escapeHtmlAdmin(m.real_name) + ' · ' : '') + escapeHtmlAdmin(m.email) +
           '</div>' +
           '<div class="meta">가입: ' + formatDateTime(m.joined_at) +
@@ -90,7 +90,7 @@ function loadMemberList() {
           '<button type="button" class="btn ghost" data-action="toggle-teacher" data-is-teacher="' + m.is_teacher + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">' +
             (m.is_teacher ? "교사 해제" : "교사로 지정") +
           '</button>' +
-          '<button type="button" class="btn ghost" data-action="award-points" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">포인트 부여</button>' +
+          '<button type="button" class="btn ghost" data-action="award-points" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">달란트 부여</button>' +
           (m.is_admin ? '' :
             '<button type="button" class="btn ghost" data-action="delete-user" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:#b3432c;border-color:#b3432c;">탈퇴시키기</button>'
           ) +
@@ -135,7 +135,7 @@ function loadMemberList() {
       btn.addEventListener("click", function () {
         var itemEl = btn.closest(".note-item");
         var targetUserId = itemEl.getAttribute("data-user-id");
-        var amountStr = prompt("몇 점을 부여할까요? (보정하려면 음수도 가능해요, 예: -2)");
+        var amountStr = prompt("몇 달란트를 부여할까요? (보정하려면 음수도 가능해요, 예: -2)");
         if (amountStr === null) return;
         var amount = parseInt(amountStr, 10);
         if (!amount) {
@@ -145,7 +145,7 @@ function loadMemberList() {
         var note = prompt("사유를 남겨주세요 (선택, 안 남겨도 돼요)") || null;
         client.rpc("admin_award_points", { p_user_id: targetUserId, p_points: amount, p_note: note }).then(function (res) {
           if (res.error) {
-            alert("포인트 부여에 실패했어요.");
+            alert("달란트 부여에 실패했어요.");
             return;
           }
           loadMemberList();
@@ -160,7 +160,7 @@ function loadMemberList() {
         var nickname = itemEl.querySelector("strong").textContent;
         if (!confirm(
           '"' + nickname + '" 님을 정말 탈퇴시킬까요?\n\n' +
-          '출석·감사노트·기도제목·포인트 등 모든 기록이 함께 삭제되고 되돌릴 수 없어요.\n' +
+          '출석·감사노트·기도제목·달란트 등 모든 기록이 함께 삭제되고 되돌릴 수 없어요.\n' +
           '이 사람이 만든 오이코스가 있다면 그 오이코스 자체도 (다른 멤버 것까지) 함께 사라져요.'
         )) return;
         client.rpc("admin_delete_user", { p_user_id: targetUserId }).then(function (res) {
@@ -256,17 +256,19 @@ function loadGroupsAdmin() {
       }
 
       function renderGroup(item) {
+        var creatorName = item.created_by_real_name || item.created_by_nickname;
         return (
           '<div class="note-item" data-group-id="' + item.id + '">' +
             '<div class="content"><strong>' + escapeHtmlAdmin(item.name) + '</strong>' +
               (item.host_is_teacher ? ' <span style="color:var(--well);font-size:12px;">교사 오이코스</span>' : ' <span style="color:var(--text-soft);font-size:12px;">학생 오이코스</span>') +
             '</div>' +
-            '<div class="meta">만든 사람: ' + escapeHtmlAdmin(item.created_by_nickname) +
+            '<div class="meta">만든 사람: ' + escapeHtmlAdmin(creatorName) +
               ' · 초대코드: ' + escapeHtmlAdmin(item.invite_code) +
               ' · 인원: ' + item.member_count + '명' +
+              ' · <strong style="color:var(--gold);">총 ' + item.total_talents + '달란트</strong>' +
               '<br>생성일: ' + formatDateTime(item.created_at) +
               '<br><span data-members-for="' + item.id + '">멤버 불러오는 중...</span></div>' +
-            '<button class="btn ghost" data-action="award-group-points" style="margin-top:8px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">포인트 부여</button>' +
+            '<button class="btn ghost" data-action="award-group-points" style="margin-top:8px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">달란트 부여</button>' +
             '<button class="btn ghost" data-action="disband" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">해체</button>' +
           '</div>'
         );
@@ -292,8 +294,8 @@ function loadGroupsAdmin() {
           renderColumn("🙋 학생 오이코스", studentGroups) +
         '</div>';
 
-      // 각 오이코스마다 실제 멤버 닉네임을 따로 불러와서 채운다 (교역자는 get_group_members가
-      // 멤버가 아니어도 조회를 허용하도록 서버에서 별도로 확인함)
+      // 각 오이코스마다 실제 멤버 명단을 따로 불러와서 채운다 (교역자는 get_group_members가
+      // 멤버가 아니어도 조회를 허용하도록, 그리고 본명까지 함께 내려주도록 서버에서 별도로 확인함)
       items.forEach(function (item) {
         client.rpc("get_group_members", { p_group_id: item.id }).then(function (res) {
           var el = listEl.querySelector('[data-members-for="' + item.id + '"]');
@@ -304,7 +306,7 @@ function loadGroupsAdmin() {
             return;
           }
           el.textContent = "멤버: " + rows.map(function (r) {
-            return r.nickname + (r.is_host ? "👑" : "");
+            return (r.real_name || r.nickname) + (r.is_host ? "👑" : "");
           }).join(", ");
         });
       });
@@ -327,7 +329,7 @@ function loadGroupsAdmin() {
           var itemEl = btn.closest(".note-item");
           var groupId = itemEl.getAttribute("data-group-id");
           var groupName = itemEl.querySelector("strong").textContent;
-          var amountStr = prompt('"' + groupName + '" 오이코스 전원에게 몇 점씩 부여할까요? (음수도 가능해요)');
+          var amountStr = prompt('"' + groupName + '" 오이코스 전원에게 몇 달란트씩 부여할까요? (음수도 가능해요)');
           if (amountStr === null) return;
           var amount = parseInt(amountStr, 10);
           if (!amount) {
@@ -337,10 +339,10 @@ function loadGroupsAdmin() {
           var note = prompt("사유를 남겨주세요 (선택, 안 남겨도 돼요)") || null;
           client.rpc("admin_award_group_points", { p_group_id: groupId, p_points: amount, p_note: note }).then(function (res) {
             if (res.error) {
-              alert("포인트 부여에 실패했어요.");
+              alert("달란트 부여에 실패했어요.");
               return;
             }
-            alert((res.data || 0) + "명에게 " + amount + "점씩 부여했어요.");
+            alert((res.data || 0) + "명에게 " + amount + "달란트씩 부여했어요.");
           });
         });
       });

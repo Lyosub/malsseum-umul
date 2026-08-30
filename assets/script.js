@@ -4,7 +4,8 @@ function renderVerseInto(elId, verse) {
   el.innerHTML =
     '<div class="ref">' + verse.ref + '</div>' +
     '<div class="text">' + verse.text + '</div>' +
-    (verse.note ? '<div class="note">' + verse.note + '</div>' : '');
+    (verse.interpretation ? '<div class="qt-section"><span class="qt-label">📖 말씀 설명</span><div class="qt-body">' + verse.interpretation + '</div></div>' : '') +
+    (verse.note ? '<div class="qt-section"><span class="qt-label">🙏 오늘의 적용</span><div class="qt-body">' + verse.note + '</div></div>' : '');
 }
 
 function initHomeCard() {
@@ -49,16 +50,16 @@ function renderDrawnVerseInto(elId, verse, kind) {
   var extra = "";
   if (kind === "monthly" && verse.keyword) {
     extra =
-      '<div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.25);">' +
-        '<div style="font-size:12px;opacity:0.8;letter-spacing:0.03em;margin-bottom:6px;">이달의 키워드</div>' +
-        '<div style="font-weight:800;font-size:17px;margin-bottom:10px;">' + verse.keyword + '</div>' +
-        (verse.interpretation ? '<div style="font-size:13px;line-height:1.7;opacity:0.92;">' + verse.interpretation + '</div>' : '') +
+      '<div class="qt-section">' +
+        '<span class="qt-label">🗝️ 이달의 키워드</span>' +
+        '<div class="qt-body" style="font-weight:800;font-size:15px;">' + verse.keyword + '</div>' +
       '</div>';
   }
   el.innerHTML =
     '<div class="ref">' + verse.ref + '</div>' +
     '<div class="text">' + verse.text + '</div>' +
-    (verse.note ? '<div class="note">' + verse.note + '</div>' : '') +
+    (verse.interpretation ? '<div class="qt-section"><span class="qt-label">📖 말씀 설명</span><div class="qt-body">' + verse.interpretation + '</div></div>' : '') +
+    (verse.note ? '<div class="qt-section"><span class="qt-label">🙏 오늘의 적용</span><div class="qt-body">' + verse.note + '</div></div>' : '') +
     extra;
 }
 

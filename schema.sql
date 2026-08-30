@@ -987,10 +987,10 @@ set search_path = public
 as $$
 begin
   if not exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true) then
-    raise exception '교역자만 점수를 부여할 수 있습니다.';
+    raise exception '교역자만 달란트를 부여할 수 있습니다.';
   end if;
   if p_points is null or p_points = 0 then
-    raise exception '0이 아닌 점수를 입력해주세요.';
+    raise exception '0이 아닌 달란트를 입력해주세요.';
   end if;
 
   insert into points_ledger (user_id, action_type, points, ref_date, note, awarded_by)
@@ -1011,10 +1011,10 @@ declare
   v_count integer := 0;
 begin
   if not exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true) then
-    raise exception '교역자만 점수를 부여할 수 있습니다.';
+    raise exception '교역자만 달란트를 부여할 수 있습니다.';
   end if;
   if p_points is null or p_points = 0 then
-    raise exception '0이 아닌 점수를 입력해주세요.';
+    raise exception '0이 아닌 달란트를 입력해주세요.';
   end if;
 
   insert into points_ledger (user_id, action_type, points, ref_date, note, awarded_by)
@@ -1108,6 +1108,99 @@ security definer
 set search_path = public
 as $$
   select p.user_id, p.nickname, gm.joined_at, (g.created_by = p.user_id) as is_host
+  from group_members gm
+  join profiles p on p.user_id = gm.user_id
+  join groups g on g.id = gm.group_id
+  where gm.group_id = p_group_id
+    and (
+      exists (select 1 from group_members me where me.group_id = p_group_id and me.user_id = auth.uid())
+      or exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
+    )
+  order by gm.joined_at asc;
+$$;
+
+-- 오이코스별 총 달란트 순위 (홈페이지에 공개) — 오이코스 이름/인원수/총 달란트만 보여주고
+-- 개별 멤버의 닉네임이나 기록 내용은 노출하지 않는다. 로그인 여부와 무관하게 누구나 조회 가능.
+create or replace function get_group_talent_rankings()
+returns table(
+  id bigint,
+  name text,
+  host_is_teacher boolean,
+  member_count bigint,
+  total_talents bigint
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    g.id, g.name, coalesce(p.is_teacher, false),
+    (select count(*) from group_members gm where gm.group_id = g.id)::bigint,
+    (select coalesce(sum(pl.points), 0)
+       from group_members gm2
+       join points_ledger pl on pl.user_id = gm2.user_id
+       where gm2.group_id = g.id)::bigint as total_talents
+  from groups g
+  join profiles p on p.user_id = g.created_by
+  order by total_talents desc, g.created_at asc
+  limit 15;
+$$;
+
+-- 관리자 오이코스 관리 화면에서는 닉네임 대신 본명으로 "누가 만들었는지"를 바로 알아볼 수 있어야 하므로
+-- created_by_real_name을 추가하고(닉네임도 함께 유지), 오이코스별 총 달란트도 같이 보여준다.
+-- (반환 컬럼 구성이 바뀌므로 create or replace 전에 기존 함수를 먼저 지워야 한다)
+drop function if exists get_all_groups_admin();
+create or replace function get_all_groups_admin()
+returns table(
+  id bigint,
+  name text,
+  invite_code text,
+  created_by_nickname text,
+  created_by_real_name text,
+  host_is_teacher boolean,
+  member_count bigint,
+  total_talents bigint,
+  created_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    g.id, g.name, g.invite_code, p.nickname, p.real_name,
+    coalesce(p.is_teacher, false),
+    (select count(*) from group_members gm where gm.group_id = g.id),
+    (select coalesce(sum(pl.points), 0)
+       from group_members gm2
+       join points_ledger pl on pl.user_id = gm2.user_id
+       where gm2.group_id = g.id)::bigint,
+    g.created_at
+  from groups g
+  join profiles p on p.user_id = g.created_by
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and admin_p.is_admin = true
+  )
+  order by g.created_at desc;
+$$;
+
+-- 오이코스 멤버 명단에도 관리자에게만 본명을 함께 보여준다(일반 멤버가 호출하면 real_name은 항상 null —
+-- "이름은 공개되지 않는다"는 약속을 지키기 위해, 관리자 여부를 서버에서 직접 확인해서 결정한다).
+-- (반환 컬럼 구성이 바뀌므로 create or replace 전에 기존 함수를 먼저 지워야 한다)
+drop function if exists get_group_members(bigint);
+create or replace function get_group_members(p_group_id bigint)
+returns table(user_id uuid, nickname text, real_name text, joined_at timestamptz, is_host boolean)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    p.user_id, p.nickname,
+    case
+      when exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
+      then p.real_name
+      else null
+    end as real_name,
+    gm.joined_at, (g.created_by = p.user_id) as is_host
   from group_members gm
   join profiles p on p.user_id = gm.user_id
   join groups g on g.id = gm.group_id
