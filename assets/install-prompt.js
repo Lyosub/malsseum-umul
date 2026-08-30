@@ -42,11 +42,21 @@ function dismissInstallBanner() {
   if (el) el.innerHTML = "";
 }
 
-function renderInstallBanner(kind) {
+function renderInstallBanner(kind, force) {
   var el = document.getElementById("installBanner");
-  if (!el || el.innerHTML) return; // 이미 떠 있으면 중복으로 다시 그리지 않음
+  // force가 true면(실제 beforeinstallprompt가 뒤늦게 도착한 경우) 이미 떠 있는
+  // "수동 설치 안내" 배너를 원탭 설치 버튼으로 덮어써서 더 나은 방식으로 업그레이드한다.
+  if (!el || (el.innerHTML && !force)) return;
 
-  if (kind === "android") {
+  if (kind === "generic-android") {
+    el.innerHTML =
+      '<div class="install-banner">' +
+        '<div class="install-banner-row">' +
+          '<div class="install-banner-text"><strong>📱 앱처럼 설치하기</strong><br>브라우저 메뉴(⋮)에서 "홈 화면에 추가" 또는 "앱 설치"를 선택해보세요.</div>' +
+          '<button type="button" class="install-banner-close" id="installCloseBtn" aria-label="닫기">✕</button>' +
+        '</div>' +
+      '</div>';
+  } else if (kind === "android") {
     el.innerHTML =
       '<div class="install-banner">' +
         '<div class="install-banner-row">' +
@@ -124,12 +134,17 @@ function initInstallBanner() {
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault();
     DEFERRED_INSTALL_PROMPT = e;
-    renderInstallBanner("android");
+    renderInstallBanner("android", true); // 수동 안내가 이미 떠 있어도 원탭 버튼으로 덮어씀
   });
 
   // iOS 사파리는 beforeinstallprompt 자체가 없으므로 그 이벤트를 기다릴 필요 없이 바로 안내한다.
   if (isIosDevice()) {
     renderInstallBanner("ios");
+  } else {
+    // 크롬/엣지는 beforeinstallprompt가 뜨면 위에서 원탭 버튼으로 바로 업그레이드되지만,
+    // 삼성인터넷처럼 이 이벤트 자체를 지원하지 않는 안드로이드 브라우저도 많아서, 일단
+    // "브라우저 메뉴에서 직접 추가" 안내부터 먼저 보여준다(그래야 아무것도 안 뜨는 상황이 없음).
+    renderInstallBanner("generic-android");
   }
 }
 
