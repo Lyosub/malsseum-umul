@@ -297,9 +297,12 @@ function loadAllNotes() {
       }
 
       function renderNote(item) {
+        var writer = item.real_name
+          ? escapeHtmlAdmin(item.real_name) + '(' + escapeHtmlAdmin(item.nickname) + ')'
+          : escapeHtmlAdmin(item.nickname);
         return (
           '<div class="note-item">' +
-            '<div class="meta">' + escapeHtmlAdmin(item.nickname) + ' · ' + ADMIN_NOTE_LABELS[item.type] + ' · ' + formatDateTime(item.created_at) + '</div>' +
+            '<div class="meta">' + writer + ' · ' + ADMIN_NOTE_LABELS[item.type] + ' · ' + formatDateTime(item.created_at) + '</div>' +
             '<div class="content">' + escapeHtmlAdmin(item.content) + '</div>' +
             '<button class="btn ghost" data-note-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
           '</div>'

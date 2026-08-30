@@ -501,13 +501,16 @@ as $$
 $$;
 
 -- 관리자 전용: 전체 학생의 감사노트/기도제목/하루인사 전체 목록 (닉네임 포함, 익명 처리 없음 — 관리자만 볼 수 있음)
+-- 본명도 함께 내려줘서 화면에 "본명(닉네임)" 형태로 누가 썼는지 바로 알아볼 수 있게 한다.
+-- (반환 컬럼 구성이 바뀌므로 create or replace 전에 기존 함수를 먼저 지워야 한다)
+drop function if exists get_all_notes_admin(integer);
 create or replace function get_all_notes_admin(p_limit integer default 200)
-returns table(id bigint, user_id uuid, nickname text, type text, content text, created_at timestamptz)
+returns table(id bigint, user_id uuid, nickname text, real_name text, type text, content text, created_at timestamptz)
 language sql
 security definer
 set search_path = public
 as $$
-  select n.id, n.user_id, p.nickname, n.type, n.content, n.created_at
+  select n.id, n.user_id, p.nickname, p.real_name, n.type, n.content, n.created_at
   from notes n
   join profiles p on p.user_id = n.user_id
   where exists (
