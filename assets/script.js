@@ -199,27 +199,56 @@ function drawVerseCardImage(canvas, verse, kind, W, H, bgImage) {
 
   ctx.textAlign = "center";
   ctx.shadowColor = "rgba(0,0,0,0.25)";
-  ctx.shadowBlur = 12;
 
   var kindLabel = { daily: "오늘의 말씀", weekly: "이번 주 말씀", monthly: "이번 달 말씀" }[kind] || "말씀";
+
+  // 사이즈(폰 배경/게시물/스토리)마다 세로 길이가 달라서, 고정된 비율 위치(H*0.14 등)로 그리면
+  // 세로가 긴 폰 배경화면에서는 글자가 위쪽에 몰리고 아래가 텅 비어 보였다. 실제로 그리기 전에
+  // 텍스트 덩어리의 전체 높이를 먼저 재서, 캔버스 세로 한가운데에 오도록 시작 위치를 계산한다.
+  ctx.font = '800 44px "Pretendard"';
+  var lines = wrapTextGeneric(ctx, '"' + verse.text + '"', W * 0.8);
+
+  var noteLines = [];
+  if (kind !== "monthly" && verse.note) {
+    ctx.font = '400 26px "Pretendard"';
+    noteLines = wrapTextGeneric(ctx, verse.note, W * 0.72);
+  }
+
+  var REF_OFFSET = 68;
+  var QUOTE_START_OFFSET = 190;
+  var QUOTE_LINE_HEIGHT = 60;
+  var GAP_AFTER_QUOTE = 50;
+  var EXTRA_LINE_HEIGHT = 36;
+
+  var quoteEndOffset = QUOTE_START_OFFSET + (lines.length - 1) * QUOTE_LINE_HEIGHT;
+  var hasKeyword = kind === "monthly" && verse.keyword;
+  var extraCount = hasKeyword ? 2 : noteLines.length;
+  var extraLineHeight = hasKeyword ? 50 : EXTRA_LINE_HEIGHT;
+  var blockEndOffset = extraCount > 0
+    ? quoteEndOffset + GAP_AFTER_QUOTE + (extraCount - 1) * extraLineHeight
+    : quoteEndOffset;
+
+  var startY = Math.max(80, (H - (blockEndOffset + 40)) / 2);
+  var refY = startY + REF_OFFSET;
+  var quoteStartY = startY + QUOTE_START_OFFSET;
+
+  ctx.shadowBlur = 12;
   ctx.font = '400 28px "Pretendard"';
   ctx.fillStyle = "rgba(255,255,255,0.85)";
-  ctx.fillText(kindLabel, W / 2, H * 0.14);
+  ctx.fillText(kindLabel, W / 2, startY);
 
   ctx.font = '700 40px "Pretendard"';
   ctx.fillStyle = "#ffffff";
-  ctx.fillText(verse.ref, W / 2, H * 0.19);
+  ctx.fillText(verse.ref, W / 2, refY);
 
   ctx.shadowBlur = 8;
   ctx.font = '800 44px "Pretendard"';
-  var lines = wrapTextGeneric(ctx, '"' + verse.text + '"', W * 0.8);
-  var y = H * 0.28;
   lines.forEach(function (line, i) {
-    ctx.fillText(line, W / 2, y + i * 60);
+    ctx.fillText(line, W / 2, quoteStartY + i * QUOTE_LINE_HEIGHT);
   });
 
-  var afterY = y + lines.length * 60 + 50;
-  if (kind === "monthly" && verse.keyword) {
+  var afterY = quoteStartY + (lines.length - 1) * QUOTE_LINE_HEIGHT + GAP_AFTER_QUOTE;
+  if (hasKeyword) {
     ctx.shadowBlur = 6;
     ctx.font = '400 26px "Pretendard"';
     ctx.fillStyle = "rgba(255,255,255,0.85)";
@@ -227,13 +256,12 @@ function drawVerseCardImage(canvas, verse, kind, W, H, bgImage) {
     ctx.font = '800 38px "Pretendard"';
     ctx.fillStyle = "#ffffff";
     ctx.fillText(verse.keyword, W / 2, afterY + 50);
-  } else if (verse.note) {
+  } else if (noteLines.length) {
     ctx.shadowBlur = 6;
     ctx.font = '400 26px "Pretendard"';
     ctx.fillStyle = "rgba(255,255,255,0.85)";
-    var noteLines = wrapTextGeneric(ctx, verse.note, W * 0.72);
     noteLines.forEach(function (line, i) {
-      ctx.fillText(line, W / 2, afterY + i * 36);
+      ctx.fillText(line, W / 2, afterY + i * EXTRA_LINE_HEIGHT);
     });
   }
 
