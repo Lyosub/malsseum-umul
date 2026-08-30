@@ -149,7 +149,12 @@ header.site nav a:hover {
 
 .hero {
   text-align: center;
-  padding: 28px 0 24px;
+  padding: 40px 20px 34px;
+  background-image: url(hero-bg.jpg);
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--radius);
+  margin-top: 4px;
 }
 
 .hero .badge {
@@ -205,6 +210,7 @@ header.site nav a:hover {
 }
 
 .nav-card .icon { font-size: 22px; }
+.nav-card .icon img { width: 30px; height: 30px; display: block; object-fit: contain; }
 .nav-card .title { font-weight: 700; font-size: 14.5px; }
 .nav-card .desc { font-size: 12.5px; color: var(--text-soft); }
 
