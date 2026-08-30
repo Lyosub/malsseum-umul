@@ -1388,3 +1388,366 @@ as $$
     and exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
   order by pl.created_at desc;
 $$;
+
+-- ===== 부장 역할 신설 =====
+-- 교역자(is_admin)보다 낮은 단계로, 관리자 페이지에 들어올 수는 있지만 민감한 기능
+-- (회원 탈퇴, 본명 조회/수정, 교사 지정, 오이코스 해체)은 할 수 없다.
+-- 허용: 공지사항/이달의 일정/성경퀴즈/이벤트 배너 등록·수정·삭제, 학생 기록(감사노트/기도제목/
+-- 하루인사) 조회·삭제, 회원·오이코스 목록 조회, 개인/오이코스 달란트 부여.
+alter table profiles add column if not exists is_department_head boolean not null default false;
+
+-- 본인이 직접 켤 수 없도록 다른 권한 컬럼들과 함께 보호한다.
+create or replace function protect_privilege_columns()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is not null and coalesce(current_setting('app.allow_privilege_change', true), '') <> 'true' then
+    new.is_admin := old.is_admin;
+    new.is_teacher := old.is_teacher;
+    new.real_name := old.real_name;
+    new.is_department_head := old.is_department_head;
+  end if;
+  return new;
+end;
+$$;
+
+-- 교역자 전용: 부장 지정/해제
+create or replace function admin_set_department_head(p_user_id uuid, p_is_department_head boolean)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from profiles where user_id = auth.uid() and is_admin = true) then
+    raise exception '교역자만 지정할 수 있습니다.';
+  end if;
+
+  perform set_config('app.allow_privilege_change', 'true', true);
+  update profiles set is_department_head = p_is_department_head where user_id = p_user_id;
+  return true;
+end;
+$$;
+
+-- 공지사항: 부장도 작성/수정/삭제 가능
+drop policy if exists "관리자만 공지사항 작성" on announcements;
+create policy "관리자·부장 공지사항 작성" on announcements
+  for insert with check (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+drop policy if exists "관리자만 공지사항 수정" on announcements;
+create policy "관리자·부장 공지사항 수정" on announcements
+  for update using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+drop policy if exists "관리자만 공지사항 삭제" on announcements;
+create policy "관리자·부장 공지사항 삭제" on announcements
+  for delete using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+
+-- 이달의 일정: 부장도 작성/수정/삭제 가능
+drop policy if exists "관리자만 일정 작성" on calendar_events;
+create policy "관리자·부장 일정 작성" on calendar_events
+  for insert with check (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+drop policy if exists "관리자만 일정 수정" on calendar_events;
+create policy "관리자·부장 일정 수정" on calendar_events
+  for update using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+drop policy if exists "관리자만 일정 삭제" on calendar_events;
+create policy "관리자·부장 일정 삭제" on calendar_events
+  for delete using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+
+-- 성경퀴즈: 부장도 조회/작성/삭제 가능 (정답은 어차피 get_current_quiz가 노출하지 않으므로 안전)
+drop policy if exists "관리자만 퀴즈 조회" on quiz_questions;
+create policy "관리자·부장 퀴즈 조회" on quiz_questions
+  for select using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+drop policy if exists "관리자만 퀴즈 작성" on quiz_questions;
+create policy "관리자·부장 퀴즈 작성" on quiz_questions
+  for insert with check (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+drop policy if exists "관리자만 퀴즈 삭제" on quiz_questions;
+create policy "관리자·부장 퀴즈 삭제" on quiz_questions
+  for delete using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+
+-- 이벤트 배너: 부장도 작성/삭제 가능
+drop policy if exists "관리자만 이벤트 배너 작성" on home_banner;
+create policy "관리자·부장 이벤트 배너 작성" on home_banner
+  for insert with check (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+drop policy if exists "관리자만 이벤트 배너 삭제" on home_banner;
+create policy "관리자·부장 이벤트 배너 삭제" on home_banner
+  for delete using (
+    exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true))
+  );
+
+-- 학생 기록(감사노트/기도제목/하루인사) 조회·삭제: 부장도 가능
+create or replace function get_all_notes_admin(p_limit integer default 200)
+returns table(id bigint, user_id uuid, nickname text, real_name text, type text, content text, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select n.id, n.user_id, p.nickname,
+    case when exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true) then p.real_name else null end,
+    n.type, n.content, n.created_at
+  from notes n
+  join profiles p on p.user_id = n.user_id
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and (admin_p.is_admin = true or admin_p.is_department_head = true)
+  )
+  order by n.created_at desc
+  limit p_limit;
+$$;
+
+create or replace function admin_delete_note(p_note_id bigint)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from profiles where user_id = auth.uid() and (is_admin = true or is_department_head = true)
+  ) then
+    raise exception '교역자·부장만 삭제할 수 있습니다.';
+  end if;
+
+  delete from notes where id = p_note_id;
+  return true;
+end;
+$$;
+
+-- 달란트 부여: 부장도 가능
+create or replace function admin_award_points(p_user_id uuid, p_points integer, p_note text default null)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true)) then
+    raise exception '교역자·부장만 달란트를 부여할 수 있습니다.';
+  end if;
+  if p_points is null or p_points = 0 then
+    raise exception '0이 아닌 달란트를 입력해주세요.';
+  end if;
+
+  insert into points_ledger (user_id, action_type, points, ref_date, note, awarded_by)
+  values (p_user_id, 'admin_award', p_points, (now() at time zone 'Asia/Seoul')::date, p_note, auth.uid());
+
+  return true;
+end;
+$$;
+
+create or replace function admin_award_group_points(p_group_id bigint, p_points integer, p_note text default null)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_count integer := 0;
+begin
+  if not exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin = true or p.is_department_head = true)) then
+    raise exception '교역자·부장만 달란트를 부여할 수 있습니다.';
+  end if;
+  if p_points is null or p_points = 0 then
+    raise exception '0이 아닌 달란트를 입력해주세요.';
+  end if;
+
+  insert into points_ledger (user_id, action_type, points, ref_date, note, awarded_by)
+  select gm.user_id, 'admin_award', p_points, (now() at time zone 'Asia/Seoul')::date, p_note, auth.uid()
+  from group_members gm
+  where gm.group_id = p_group_id;
+
+  get diagnostics v_count = row_count;
+  return v_count;
+end;
+$$;
+
+-- 회원 목록: 부장도 조회 가능하지만, 본명은 교역자에게만 보여준다
+-- (반환 컬럼 구성은 그대로라 create or replace만 하면 되지만, 이미 여러 번 재정의된 함수라
+-- 안전하게 drop 후 다시 만든다)
+drop function if exists get_member_list();
+create or replace function get_member_list()
+returns table(
+  user_id uuid,
+  nickname text,
+  real_name text,
+  email text,
+  is_admin boolean,
+  is_teacher boolean,
+  is_department_head boolean,
+  joined_at timestamptz,
+  last_sign_in_at timestamptz,
+  last_note_type text,
+  last_note_at timestamptz,
+  total_points bigint
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    p.user_id, p.nickname,
+    case when exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true) then p.real_name else null end,
+    u.email, p.is_admin, p.is_teacher, p.is_department_head, p.created_at, u.last_sign_in_at,
+    (select n.type from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_type,
+    (select n.created_at from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_at,
+    (select coalesce(sum(pl.points), 0) from points_ledger pl where pl.user_id = p.user_id)::bigint as total_points
+  from profiles p
+  join auth.users u on u.id = p.user_id
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and (admin_p.is_admin = true or admin_p.is_department_head = true)
+  )
+  order by p.created_at desc;
+$$;
+
+-- 오이코스 목록: 부장도 조회 가능하지만, 만든 사람 본명은 교역자에게만 보여준다
+drop function if exists get_all_groups_admin();
+create or replace function get_all_groups_admin()
+returns table(
+  id bigint,
+  name text,
+  invite_code text,
+  created_by_nickname text,
+  created_by_real_name text,
+  host_is_teacher boolean,
+  member_count bigint,
+  total_talents bigint,
+  created_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    g.id, g.name, g.invite_code, p.nickname,
+    case when exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true) then p.real_name else null end,
+    coalesce(p.is_teacher, false),
+    (select count(*) from group_members gm where gm.group_id = g.id),
+    (select coalesce(sum(pl.points), 0)
+       from group_members gm2
+       join points_ledger pl on pl.user_id = gm2.user_id
+       where gm2.group_id = g.id)::bigint,
+    g.created_at
+  from groups g
+  join profiles p on p.user_id = g.created_by
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and (admin_p.is_admin = true or admin_p.is_department_head = true)
+  )
+  order by g.created_at desc;
+$$;
+
+-- 오이코스 멤버 명단: 부장도 (자기 소속이 아닌 오이코스까지) 조회 가능하지만, 본명은 여전히 교역자만
+drop function if exists get_group_members(bigint);
+create or replace function get_group_members(p_group_id bigint)
+returns table(user_id uuid, nickname text, real_name text, joined_at timestamptz, is_host boolean)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    p.user_id, p.nickname,
+    case
+      when exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true)
+      then p.real_name
+      else null
+    end as real_name,
+    gm.joined_at, (g.created_by = p.user_id) as is_host
+  from group_members gm
+  join profiles p on p.user_id = gm.user_id
+  join groups g on g.id = gm.group_id
+  where gm.group_id = p_group_id
+    and (
+      exists (select 1 from group_members me where me.group_id = p_group_id and me.user_id = auth.uid())
+      or exists (select 1 from profiles ap where ap.user_id = auth.uid() and (ap.is_admin = true or ap.is_department_head = true))
+    )
+  order by gm.joined_at asc;
+$$;
+
+-- 오이코스 달란트 순위: 부장도 조회 가능
+create or replace function get_group_talent_rankings()
+returns table(
+  id bigint,
+  name text,
+  host_is_teacher boolean,
+  member_count bigint,
+  total_talents bigint
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    g.id, g.name, coalesce(p.is_teacher, false),
+    (select count(*) from group_members gm where gm.group_id = g.id)::bigint,
+    (select coalesce(sum(pl.points), 0)
+       from group_members gm2
+       join points_ledger pl on pl.user_id = gm2.user_id
+       where gm2.group_id = g.id)::bigint as total_talents
+  from groups g
+  join profiles p on p.user_id = g.created_by
+  where (
+    exists (select 1 from group_members me where me.user_id = auth.uid())
+    or exists (select 1 from profiles ap where ap.user_id = auth.uid() and (ap.is_admin = true or ap.is_department_head = true))
+  )
+  order by total_talents desc, g.created_at asc
+  limit 15;
+$$;
+
+-- 회원 상세보기(출석/기록/달란트 내역): 부장도 조회 가능 (본명은 노출되지 않는 데이터라 그대로 허용)
+create or replace function get_member_notes_admin(p_user_id uuid, p_limit integer default 200)
+returns table(id bigint, type text, content text, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select n.id, n.type, n.content, n.created_at
+  from notes n
+  where n.user_id = p_user_id
+    and exists (select 1 from profiles ap where ap.user_id = auth.uid() and (ap.is_admin = true or ap.is_department_head = true))
+  order by n.created_at desc
+  limit p_limit;
+$$;
+
+create or replace function get_member_attendance_admin(p_user_id uuid)
+returns table(attend_date date)
+language sql
+security definer
+set search_path = public
+as $$
+  select a.date
+  from attendance a
+  where a.user_id = p_user_id
+    and exists (select 1 from profiles ap where ap.user_id = auth.uid() and (ap.is_admin = true or ap.is_department_head = true))
+  order by a.date desc;
+$$;
+
+create or replace function get_member_points_admin(p_user_id uuid)
+returns table(id bigint, action_type text, points integer, note text, ref_date date, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select pl.id, pl.action_type, pl.points, pl.note, pl.ref_date, pl.created_at
+  from points_ledger pl
+  where pl.user_id = p_user_id
+    and exists (select 1 from profiles ap where ap.user_id = auth.uid() and (ap.is_admin = true or ap.is_department_head = true))
+  order by pl.created_at desc;
+$$;

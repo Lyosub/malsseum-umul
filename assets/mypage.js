@@ -108,12 +108,14 @@ function initProfileSettings(session) {
 
   var currentNickname = "";
   // 이름(본명)은 이제 본인이 직접 못 고치고 교역자만 회원 관리에서 수정할 수 있어서, 여기서는 조회만 한다.
-  client.from("profiles").select("nickname, real_name").eq("user_id", userId).single().then(function (res) {
+  client.from("profiles").select("nickname, real_name, is_admin, is_department_head").eq("user_id", userId).single().then(function (res) {
     var p = res.data;
     if (!p) return;
     currentNickname = p.nickname;
     if (nicknameInput) nicknameInput.value = p.nickname;
     if (realNameEl) realNameEl.textContent = p.real_name || "아직 등록되지 않았어요";
+    var adminLink = document.getElementById("adminPageLink");
+    if (adminLink && (p.is_admin || p.is_department_head)) adminLink.style.display = "block";
   });
 
   if (saveNicknameBtn) {

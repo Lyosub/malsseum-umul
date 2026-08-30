@@ -1,11 +1,21 @@
 // 관리자 전용: 공지사항 작성, 이달의 일정 추가
 // auth.js의 getClient(), getSession()에 의존함
 
+// 부장은 교역자(is_admin)보다 낮은 단계의 관리자 페이지 접근 권한이다.
+// CURRENT_IS_ADMIN(교역자)만 탈퇴시키기/본명 수정/교사 지정/오이코스 해체 같은
+// 민감한 버튼을 볼 수 있고, CURRENT_IS_STAFF(교역자 또는 부장)는 페이지 자체에 들어와서
+// 공지/일정/퀴즈/배너 등록, 학생 기록 조회·삭제, 달란트 부여를 할 수 있다.
+var CURRENT_IS_ADMIN = false;
+var CURRENT_IS_STAFF = false;
+
 function checkIsAdmin(userId) {
   var client = getClient();
   if (!client) return Promise.resolve(false);
-  return client.from("profiles").select("is_admin").eq("user_id", userId).single().then(function (res) {
-    return !!(res.data && res.data.is_admin);
+  return client.from("profiles").select("is_admin, is_department_head").eq("user_id", userId).single().then(function (res) {
+    var p = res.data;
+    CURRENT_IS_ADMIN = !!(p && p.is_admin);
+    CURRENT_IS_STAFF = !!(p && (p.is_admin || p.is_department_head));
+    return CURRENT_IS_STAFF;
   }).catch(function () { return false; });
 }
 
@@ -27,9 +37,9 @@ function initAdminPage() {
       gate.innerHTML = '<p>로그인이 필요한 페이지예요.</p><a href="login.html" class="btn">로그인하러 가기</a>';
       return;
     }
-    checkIsAdmin(session.user.id).then(function (isAdmin) {
-      if (!isAdmin) {
-        gate.innerHTML = '<p>교역자만 접근할 수 있는 페이지예요.</p>';
+    checkIsAdmin(session.user.id).then(function (isStaff) {
+      if (!isStaff) {
+        gate.innerHTML = '<p>교역자·부장만 접근할 수 있는 페이지예요.</p>';
         return;
       }
       gate.style.display = "none";
@@ -144,6 +154,7 @@ function loadMemberList() {
           '<div class="content" data-action="toggle-detail" style="cursor:pointer;">' +
             '<strong>' + escapeHtmlAdmin(m.nickname) + '</strong>' +
             (m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">교역자</span>' : '') +
+            (m.is_department_head && !m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">부장</span>' : '') +
             (m.is_teacher && !m.is_admin ? ' <span style="color:var(--well);font-size:12px;">교사</span>' : '') +
             ' <span style="color:var(--well);font-size:12px;font-weight:700;">' + m.total_points + '달란트</span>' +
             ' <span style="color:var(--text-soft);font-size:11px;">(눌러서 상세보기)</span>' +
@@ -153,14 +164,19 @@ function loadMemberList() {
             ' · 최근 접속: ' + (lastSeen || "기록 없음") +
             '<br>최근 기록: ' + lastNote + '</div>' +
           '<div class="member-detail" data-detail-for="' + m.user_id + '" style="display:none;"></div>' +
-          '<button type="button" class="btn ghost" data-action="toggle-teacher" data-is-teacher="' + m.is_teacher + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">' +
-            (m.is_teacher ? "교사 해제" : "교사로 지정") +
-          '</button>' +
-          '<button type="button" class="btn ghost" data-action="award-points" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">달란트 부여</button>' +
-          '<button type="button" class="btn ghost" data-action="edit-real-name" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">본명 수정</button>' +
-          (m.is_admin ? '' :
-            '<button type="button" class="btn ghost" data-action="delete-user" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:#b3432c;border-color:#b3432c;">탈퇴시키기</button>'
-          ) +
+          '<button type="button" class="btn ghost" data-action="award-points" style="margin-top:8px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">달란트 부여</button>' +
+          (CURRENT_IS_ADMIN ?
+            '<button type="button" class="btn ghost" data-action="toggle-teacher" data-is-teacher="' + m.is_teacher + '" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">' +
+              (m.is_teacher ? "교사 해제" : "교사로 지정") +
+            '</button>' +
+            '<button type="button" class="btn ghost" data-action="toggle-dept-head" data-is-dept-head="' + m.is_department_head + '" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">' +
+              (m.is_department_head ? "부장 해제" : "부장으로 지정") +
+            '</button>' +
+            '<button type="button" class="btn ghost" data-action="edit-real-name" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">본명 수정</button>' +
+            (m.is_admin ? '' :
+              '<button type="button" class="btn ghost" data-action="delete-user" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:#b3432c;border-color:#b3432c;">탈퇴시키기</button>'
+            )
+          : '') +
         '</div>'
       );
     }
@@ -210,6 +226,17 @@ function loadMemberList() {
         var targetUserId = itemEl.getAttribute("data-user-id");
         var nextIsTeacher = btn.getAttribute("data-is-teacher") !== "true";
         client.rpc("admin_set_teacher", { p_user_id: targetUserId, p_is_teacher: nextIsTeacher }).then(function () {
+          loadMemberList();
+        });
+      });
+    });
+
+    listEl.querySelectorAll('button[data-action="toggle-dept-head"]').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var itemEl = btn.closest(".note-item");
+        var targetUserId = itemEl.getAttribute("data-user-id");
+        var nextIsDeptHead = btn.getAttribute("data-is-dept-head") !== "true";
+        client.rpc("admin_set_department_head", { p_user_id: targetUserId, p_is_department_head: nextIsDeptHead }).then(function () {
           loadMemberList();
         });
       });
@@ -378,7 +405,9 @@ function loadGroupsAdmin() {
               '<br>생성일: ' + formatDateTime(item.created_at) +
               '<br><span data-members-for="' + item.id + '">멤버 불러오는 중...</span></div>' +
             '<button class="btn ghost" data-action="award-group-points" style="margin-top:8px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">달란트 부여</button>' +
-            '<button class="btn ghost" data-action="disband" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">해체</button>' +
+            (CURRENT_IS_ADMIN ?
+              '<button class="btn ghost" data-action="disband" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">해체</button>'
+            : '') +
           '</div>'
         );
       }
