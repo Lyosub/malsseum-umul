@@ -147,19 +147,55 @@ function loadVerseCardFonts() {
   return Promise.all(promises).then(function () { return document.fonts.ready; });
 }
 
-function drawVerseCardImage(canvas, verse, kind, W, H) {
+// 말씀카드 배경 52장(1080x2340) 중 이번 주(연중 몇 째 주)에 해당하는 걸 매주 자동으로 바꿔서 쓴다.
+// 이미지 폭이 모든 저장 사이즈(1080)와 같아서, 짧은 사이즈(게시물/스토리)는 그냥 위쪽만
+// 자연스럽게 잘려서 쓰이고(캔버스 밖은 자동으로 그려지지 않음) 별도 계산이 필요 없다.
+var VERSE_CARD_BG_COUNT = 52;
+
+function getVerseCardBgIndex() {
+  var now = new Date();
+  var start = new Date(now.getFullYear(), 0, 1);
+  var diffDays = Math.floor((now - start) / 86400000);
+  return (Math.floor(diffDays / 7) % VERSE_CARD_BG_COUNT) + 1;
+}
+
+// 배경 이미지를 미리 불러와둔다. 실패하면(오프라인 등) null로 넘겨서 기존 그라데이션으로 대체된다.
+function loadVerseCardBackground() {
+  return new Promise(function (resolve) {
+    var num = String(getVerseCardBgIndex()).padStart(2, "0");
+    var img = new Image();
+    img.onload = function () { resolve(img); };
+    img.onerror = function () { resolve(null); };
+    img.src = "assets/verse-card-bg/verse-card-bg-" + num + ".jpg";
+  });
+}
+
+function drawVerseCardImage(canvas, verse, kind, W, H, bgImage) {
   W = W || 1080;
   H = H || 1350;
   var ctx = canvas.getContext("2d");
   canvas.width = W;
   canvas.height = H;
 
-  var grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, "#6bc6c9");
-  grad.addColorStop(0.45, "#14707a");
-  grad.addColorStop(1, "#0e3d44");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
+  if (bgImage) {
+    ctx.drawImage(bgImage, 0, 0);
+    // 사진마다 밝기가 제각각이라(하늘이 밝은 사진 등), 흰 글자가 항상 잘 보이도록
+    // 위/아래는 좀 더 어둡게, 가운데는 약하게 어두운 막을 한 겹 씌운다.
+    var scrim = ctx.createLinearGradient(0, 0, 0, H);
+    scrim.addColorStop(0, "rgba(0,0,0,0.45)");
+    scrim.addColorStop(0.25, "rgba(0,0,0,0.3)");
+    scrim.addColorStop(0.75, "rgba(0,0,0,0.3)");
+    scrim.addColorStop(1, "rgba(0,0,0,0.45)");
+    ctx.fillStyle = scrim;
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    var grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "#6bc6c9");
+    grad.addColorStop(0.45, "#14707a");
+    grad.addColorStop(1, "#0e3d44");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
 
   ctx.textAlign = "center";
   ctx.shadowColor = "rgba(0,0,0,0.25)";
@@ -212,8 +248,9 @@ function saveVerseCard() {
   if (!canvas || !_currentDrawnVerse) return;
   var size = (typeof getSelectedSize === "function") ? getSelectedSize("verseSizePicker", "post") : { w: 1080, h: 1350 };
 
-  loadVerseCardFonts().then(function () {
-    drawVerseCardImage(canvas, _currentDrawnVerse, _currentDrawnKind, size.w, size.h);
+  Promise.all([loadVerseCardFonts(), loadVerseCardBackground()]).then(function (results) {
+    var bgImage = results[1];
+    drawVerseCardImage(canvas, _currentDrawnVerse, _currentDrawnKind, size.w, size.h, bgImage);
     var link = document.createElement("a");
     link.download = "말씀우물_" + _currentDrawnKind + "_말씀카드.png";
     link.href = canvas.toDataURL("image/png");
