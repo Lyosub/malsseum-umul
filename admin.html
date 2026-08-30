@@ -29,131 +29,147 @@
 
   <div id="adminContent" style="display:none;">
     <div class="card">
-      <h3 style="margin-top:0;">🎉 홈페이지 상단 이벤트 배너</h3>
-      <p class="msg" style="margin-top:0;">여기 등록하면 홈 화면 맨 위에 바로 보이고, 삭제하면 바로 사라져요.</p>
-      <form id="bannerForm">
-        <div class="form-row">
-          <label for="bannerTitle">제목</label>
-          <input type="text" id="bannerTitle" placeholder="예: 말씀우물 오픈 기념 이벤트">
-        </div>
-        <div class="form-row">
-          <label for="bannerDescription">설명 (선택)</label>
-          <textarea id="bannerDescription" placeholder="이벤트 내용을 간단히 적어주세요"></textarea>
-        </div>
-        <div class="form-row">
-          <label for="bannerLink">연결 링크 (선택)</label>
-          <input type="text" id="bannerLink" placeholder="예: well.html (누르면 이동할 페이지)">
-        </div>
-        <button type="submit" class="btn block">배너 등록</button>
-        <p class="msg" id="bannerMsg"></p>
-      </form>
-      <hr class="well-divider">
-      <div id="bannerAdminList"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-top:0;">공지사항 작성</h3>
-      <form id="announcementForm">
-        <div class="form-row">
-          <label for="announcementTitle">제목</label>
-          <input type="text" id="announcementTitle" placeholder="공지 제목">
-        </div>
-        <div class="form-row">
-          <label for="announcementContent">내용</label>
-          <textarea id="announcementContent" placeholder="공지 내용"></textarea>
-        </div>
-        <button type="submit" class="btn block">공지 등록</button>
-        <p class="msg" id="announcementMsg"></p>
-      </form>
-      <hr class="well-divider">
-      <div id="announcementAdminList"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-top:0;">이달의 일정 추가</h3>
-      <form id="eventForm">
-        <div class="form-row">
-          <label for="eventDate">날짜</label>
-          <input type="date" id="eventDate">
-        </div>
-        <div class="form-row">
-          <label for="eventTitle">제목</label>
-          <input type="text" id="eventTitle" placeholder="일정 제목">
-        </div>
-        <div class="form-row">
-          <label for="eventDescription">설명 (선택)</label>
-          <textarea id="eventDescription" placeholder="일정 설명"></textarea>
-        </div>
-        <button type="submit" class="btn block">일정 등록</button>
-        <p class="msg" id="eventMsg"></p>
-      </form>
-      <hr class="well-divider">
-      <div id="eventAdminList"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-top:0;">수요 성경퀴즈 등록</h3>
-      <p class="msg" style="margin-top:0;">가장 최근에 등록한 퀴즈가 학생들에게 "이번 주 퀴즈"로 보여요.</p>
-      <form id="quizForm">
-        <div class="form-row">
-          <label for="quizQuestion">문제</label>
-          <textarea id="quizQuestion" placeholder="예: 이번 주 설교에서 '카탈라쏘'는 어떤 의미인가요?"></textarea>
-        </div>
-        <div class="form-row">
-          <label for="quizOption1">보기 1</label>
-          <input type="text" id="quizOption1" placeholder="보기 1">
-        </div>
-        <div class="form-row">
-          <label for="quizOption2">보기 2</label>
-          <input type="text" id="quizOption2" placeholder="보기 2">
-        </div>
-        <div class="form-row">
-          <label for="quizOption3">보기 3</label>
-          <input type="text" id="quizOption3" placeholder="보기 3">
-        </div>
-        <div class="form-row">
-          <label for="quizOption4">보기 4</label>
-          <input type="text" id="quizOption4" placeholder="보기 4">
-        </div>
-        <div class="form-row">
-          <label>정답</label>
-          <div class="pill-toggle" id="quizCorrectPicker">
-            <button type="button" data-option="1" class="active">1번</button>
-            <button type="button" data-option="2">2번</button>
-            <button type="button" data-option="3">3번</button>
-            <button type="button" data-option="4">4번</button>
+      <h3 class="accordion-toggle" style="margin-top:0;">🎉 홈페이지 상단 이벤트 배너 <span class="accordion-chevron">▸</span></h3>
+      <div class="accordion-body" style="display:none;">
+        <p class="msg" style="margin-top:0;">여기 등록하면 홈 화면 맨 위에 바로 보이고, 삭제하면 바로 사라져요.</p>
+        <form id="bannerForm">
+          <div class="form-row">
+            <label for="bannerTitle">제목</label>
+            <input type="text" id="bannerTitle" placeholder="예: 말씀우물 오픈 기념 이벤트">
           </div>
-        </div>
-        <button type="submit" class="btn block">퀴즈 등록</button>
-        <p class="msg" id="quizMsg"></p>
-      </form>
-      <hr class="well-divider">
-      <div id="quizAdminList"></div>
+          <div class="form-row">
+            <label for="bannerDescription">설명 (선택)</label>
+            <textarea id="bannerDescription" placeholder="이벤트 내용을 간단히 적어주세요"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="bannerLink">연결 링크 (선택)</label>
+            <input type="text" id="bannerLink" placeholder="예: well.html (누르면 이동할 페이지)">
+          </div>
+          <button type="submit" class="btn block">배너 등록</button>
+          <p class="msg" id="bannerMsg"></p>
+        </form>
+        <hr class="well-divider">
+        <div id="bannerAdminList"></div>
+      </div>
     </div>
 
     <div class="card">
-      <h3 style="margin-top:0;">회원 관리</h3>
-      <p class="msg" id="memberCount"></p>
-      <div id="memberList"></div>
+      <h3 class="accordion-toggle" style="margin-top:0;">공지사항 작성 <span class="accordion-chevron">▸</span></h3>
+      <div class="accordion-body" style="display:none;">
+        <form id="announcementForm">
+          <div class="form-row">
+            <label for="announcementTitle">제목</label>
+            <input type="text" id="announcementTitle" placeholder="공지 제목">
+          </div>
+          <div class="form-row">
+            <label for="announcementContent">내용</label>
+            <textarea id="announcementContent" placeholder="공지 내용"></textarea>
+          </div>
+          <button type="submit" class="btn block">공지 등록</button>
+          <p class="msg" id="announcementMsg"></p>
+        </form>
+        <hr class="well-divider">
+        <div id="announcementAdminList"></div>
+      </div>
     </div>
 
     <div class="card">
-      <h3 style="margin-top:0;">학생 기록 관리</h3>
-      <p class="msg" style="margin-top:0;">감사노트·기도제목·하루인사 전체 기록이에요. 부적절한 내용은 삭제할 수 있어요.</p>
-      <div id="allNotesList"></div>
+      <h3 class="accordion-toggle" style="margin-top:0;">이달의 일정 추가 <span class="accordion-chevron">▸</span></h3>
+      <div class="accordion-body" style="display:none;">
+        <form id="eventForm">
+          <div class="form-row">
+            <label for="eventDate">날짜</label>
+            <input type="date" id="eventDate">
+          </div>
+          <div class="form-row">
+            <label for="eventTitle">제목</label>
+            <input type="text" id="eventTitle" placeholder="일정 제목">
+          </div>
+          <div class="form-row">
+            <label for="eventDescription">설명 (선택)</label>
+            <textarea id="eventDescription" placeholder="일정 설명"></textarea>
+          </div>
+          <button type="submit" class="btn block">일정 등록</button>
+          <p class="msg" id="eventMsg"></p>
+        </form>
+        <hr class="well-divider">
+        <div id="eventAdminList"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="accordion-toggle" style="margin-top:0;">수요 성경퀴즈 등록 <span class="accordion-chevron">▸</span></h3>
+      <div class="accordion-body" style="display:none;">
+        <p class="msg" style="margin-top:0;">가장 최근에 등록한 퀴즈가 학생들에게 "이번 주 퀴즈"로 보여요.</p>
+        <form id="quizForm">
+          <div class="form-row">
+            <label for="quizQuestion">문제</label>
+            <textarea id="quizQuestion" placeholder="예: 이번 주 설교에서 '카탈라쏘'는 어떤 의미인가요?"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="quizOption1">보기 1</label>
+            <input type="text" id="quizOption1" placeholder="보기 1">
+          </div>
+          <div class="form-row">
+            <label for="quizOption2">보기 2</label>
+            <input type="text" id="quizOption2" placeholder="보기 2">
+          </div>
+          <div class="form-row">
+            <label for="quizOption3">보기 3</label>
+            <input type="text" id="quizOption3" placeholder="보기 3">
+          </div>
+          <div class="form-row">
+            <label for="quizOption4">보기 4</label>
+            <input type="text" id="quizOption4" placeholder="보기 4">
+          </div>
+          <div class="form-row">
+            <label>정답</label>
+            <div class="pill-toggle" id="quizCorrectPicker">
+              <button type="button" data-option="1" class="active">1번</button>
+              <button type="button" data-option="2">2번</button>
+              <button type="button" data-option="3">3번</button>
+              <button type="button" data-option="4">4번</button>
+            </div>
+          </div>
+          <button type="submit" class="btn block">퀴즈 등록</button>
+          <p class="msg" id="quizMsg"></p>
+        </form>
+        <hr class="well-divider">
+        <div id="quizAdminList"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="accordion-toggle" style="margin-top:0;">회원 관리 <span class="accordion-chevron">▸</span></h3>
+      <div class="accordion-body" style="display:none;">
+        <p class="msg" id="memberCount"></p>
+        <div id="memberList"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="accordion-toggle" style="margin-top:0;">학생 기록 관리 <span class="accordion-chevron">▸</span></h3>
+      <div class="accordion-body" style="display:none;">
+        <p class="msg" style="margin-top:0;">감사노트·기도제목·하루인사 전체 기록이에요. 부적절한 내용은 삭제할 수 있어요.</p>
+        <div id="allNotesList"></div>
+      </div>
     </div>
 
     <div class="side-by-side">
       <div class="card">
-        <h3 style="margin-top:0;">오이코스 관리</h3>
-        <p class="msg" style="margin-top:0;">학생들이 만든 것까지 포함해 전체 오이코스를 확인하고 해체할 수 있어요.</p>
-        <div id="allGroupsList"></div>
+        <h3 class="accordion-toggle" style="margin-top:0;">오이코스 관리 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">학생들이 만든 것까지 포함해 전체 오이코스를 확인하고 해체할 수 있어요.</p>
+          <div id="allGroupsList"></div>
+        </div>
       </div>
 
       <div class="card">
-        <h3 style="margin-top:0;">🏆 오이코스 달란트 순위</h3>
-        <p class="msg" style="margin-top:0;">오이코스별 누적 달란트 순위예요.</p>
-        <div id="groupRankingsList"><p class="msg">불러오는 중...</p></div>
+        <h3 class="accordion-toggle" style="margin-top:0;">🏆 오이코스 달란트 순위 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">오이코스별 누적 달란트 순위예요.</p>
+          <div id="groupRankingsList"><p class="msg">불러오는 중...</p></div>
+        </div>
       </div>
     </div>
   </div>

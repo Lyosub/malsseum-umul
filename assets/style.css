@@ -230,6 +230,25 @@ header.site nav a:hover {
   margin-bottom: 16px;
 }
 
+/* 관리자 페이지처럼 카드가 여러 개 쌓이는 화면에서, 처음엔 제목만 보이고 눌러야 펼쳐지게
+   하는 아코디언. 제목(h3)을 눌러서 열고 닫는다 — 스크롤이 한없이 길어지는 것을 막아준다. */
+.accordion-toggle {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  user-select: none;
+}
+.accordion-toggle .accordion-chevron {
+  flex: none;
+  color: var(--text-soft);
+  font-size: 13px;
+  transition: transform 0.15s ease;
+}
+.accordion-toggle.open .accordion-chevron { transform: rotate(90deg); }
+.accordion-body { margin-top: 16px; }
+
 /* 넓은 화면(컴퓨터)에서는 두 카드를 나란히, 좁은 화면(모바일)에서는 그대로 위아래로 쌓는다 */
 .side-by-side { display: flex; flex-direction: column; gap: 16px; }
 .side-by-side > .card { margin-bottom: 0; }

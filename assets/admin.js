@@ -8,6 +8,20 @@
 var CURRENT_IS_ADMIN = false;
 var CURRENT_IS_STAFF = false;
 
+// 관리자 페이지의 각 카드를 아코디언으로 만든다 — 처음엔 제목(.accordion-toggle)만 보이고,
+// 눌러야 그 아래 .accordion-body(폼+목록)가 펼쳐진다. 스크롤이 한없이 길어지는 걸 막기 위함.
+function initAccordions() {
+  document.querySelectorAll(".accordion-toggle").forEach(function (toggle) {
+    var body = toggle.nextElementSibling;
+    if (!body || !body.classList.contains("accordion-body")) return;
+    toggle.addEventListener("click", function () {
+      var isOpen = body.style.display === "block";
+      body.style.display = isOpen ? "none" : "block";
+      toggle.classList.toggle("open", !isOpen);
+    });
+  });
+}
+
 function checkIsAdmin(userId) {
   var client = getClient();
   if (!client) return Promise.resolve(false);
@@ -44,6 +58,7 @@ function initAdminPage() {
       }
       gate.style.display = "none";
       content.style.display = "block";
+      initAccordions();
       initBannerForm(session.user.id);
       initAnnouncementForm(session.user.id);
       initEventForm(session.user.id);
@@ -188,22 +203,25 @@ function loadMemberList() {
     var teachers = members.filter(function (m) { return m.is_teacher && !m.is_admin && !m.is_department_head; });
     var students = members.filter(function (m) { return !m.is_teacher && !m.is_admin && !m.is_department_head; });
 
-    function renderColumn(label, list) {
+    function renderSection(label, list) {
       if (!list.length) return "";
       return (
-        '<div class="scroll-column">' +
-          '<div class="scroll-column-title">' + label + ' (' + list.length + '명)</div>' +
-          list.map(renderMember).join("") +
-        '</div>'
+        '<div class="scroll-column-title">' + label + ' (' + list.length + '명)</div>' +
+        list.map(renderMember).join("")
       );
     }
+    function wrapColumn(html) {
+      return html ? '<div class="scroll-column">' + html + '</div>' : "";
+    }
+
+    // 부장은 별도 컬럼으로 옆에 두지 않고, 교역자 컬럼 안에 그 아래로 이어서 보여준다.
+    var staffHtml = renderSection("🌟 교역자", admins) + renderSection("🗂️ 부장", deptHeads);
 
     listEl.innerHTML =
       '<div class="scroll-columns">' +
-        renderColumn("🌟 교역자", admins) +
-        renderColumn("🗂️ 부장", deptHeads) +
-        renderColumn("📘 교사", teachers) +
-        renderColumn("🙋 학생", students) +
+        wrapColumn(staffHtml) +
+        wrapColumn(renderSection("📘 교사", teachers)) +
+        wrapColumn(renderSection("🙋 학생", students)) +
       '</div>';
 
     listEl.querySelectorAll('[data-action="toggle-detail"]').forEach(function (el) {
