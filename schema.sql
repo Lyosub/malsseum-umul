@@ -1049,3 +1049,37 @@ as $$
   )
   order by p.created_at desc;
 $$;
+
+-- points_ledger.awarded_by는 단순 기록용 메타데이터라서, 나중에 그 교역자 계정이 탈퇴되더라도
+-- 과거에 부여했던 점수 내역까지 함께 막히거나 사라지지 않도록 SET NULL로 바꿔둔다.
+alter table points_ledger drop constraint if exists points_ledger_awarded_by_fkey;
+alter table points_ledger add constraint points_ledger_awarded_by_fkey
+  foreign key (awarded_by) references auth.users(id) on delete set null;
+
+-- 교역자 전용: 회원 탈퇴(계정 완전 삭제).
+-- profiles/attendance/notes/points_ledger/group_members는 모두 auth.users를 on delete cascade로 참조하고 있어서
+-- auth.users에서 지우면 그 사람의 모든 기록이 함께 정리된다.
+-- 주의: 이 사람이 만든 오이코스(groups.created_by)가 있다면 그 오이코스 자체도 cascade로 함께 삭제된다
+-- (관리자 화면에서 탈퇴 버튼을 누르기 전에 이 점을 안내한다).
+-- 본인 계정과 다른 교역자 계정은 실수 방지를 위해 이 함수로 탈퇴시킬 수 없게 막아둔다.
+create or replace function admin_delete_user(p_user_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from profiles p where p.user_id = auth.uid() and p.is_admin = true) then
+    raise exception '교역자만 회원을 탈퇴시킬 수 있습니다.';
+  end if;
+  if p_user_id = auth.uid() then
+    raise exception '본인 계정은 여기서 탈퇴시킬 수 없습니다.';
+  end if;
+  if exists (select 1 from profiles p where p.user_id = p_user_id and p.is_admin = true) then
+    raise exception '다른 교역자 계정은 탈퇴시킬 수 없습니다.';
+  end if;
+
+  delete from auth.users where id = p_user_id;
+  return true;
+end;
+$$;

@@ -91,6 +91,9 @@ function loadMemberList() {
             (m.is_teacher ? "교사 해제" : "교사로 지정") +
           '</button>' +
           '<button type="button" class="btn ghost" data-action="award-points" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">포인트 부여</button>' +
+          (m.is_admin ? '' :
+            '<button type="button" class="btn ghost" data-action="delete-user" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:#b3432c;border-color:#b3432c;">탈퇴시키기</button>'
+          ) +
         '</div>'
       );
     }).join("");
@@ -121,6 +124,26 @@ function loadMemberList() {
         client.rpc("admin_award_points", { p_user_id: targetUserId, p_points: amount, p_note: note }).then(function (res) {
           if (res.error) {
             alert("포인트 부여에 실패했어요.");
+            return;
+          }
+          loadMemberList();
+        });
+      });
+    });
+
+    listEl.querySelectorAll('button[data-action="delete-user"]').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var itemEl = btn.closest(".note-item");
+        var targetUserId = itemEl.getAttribute("data-user-id");
+        var nickname = itemEl.querySelector("strong").textContent;
+        if (!confirm(
+          '"' + nickname + '" 님을 정말 탈퇴시킬까요?\n\n' +
+          '출석·감사노트·기도제목·포인트 등 모든 기록이 함께 삭제되고 되돌릴 수 없어요.\n' +
+          '이 사람이 만든 오이코스가 있다면 그 오이코스 자체도 (다른 멤버 것까지) 함께 사라져요.'
+        )) return;
+        client.rpc("admin_delete_user", { p_user_id: targetUserId }).then(function (res) {
+          if (res.error) {
+            alert("탈퇴 처리에 실패했어요: " + res.error.message);
             return;
           }
           loadMemberList();
