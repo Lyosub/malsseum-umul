@@ -157,9 +157,13 @@ begin
     raise exception '초대 코드를 찾을 수 없습니다.';
   end if;
 
+  -- on conflict의 대상 컬럼 목록은 (표현식 인덱스도 지정할 수 있게) 일반 표현식으로 파싱되는데,
+  -- 이 함수의 출력 컬럼 이름이 마찬가지로 group_id라서 "group_id"가 그 출력 변수를 말하는 건지
+  -- group_members.group_id를 말하는 건지 모호하다며 항상 에러가 났다(42702, join_group_by_code가
+  -- 만들어진 이후 초대코드 참여가 계속 실패하고 있었음). 컬럼명 대신 기본키 제약 이름으로 지정해서 해결.
   insert into group_members (group_id, user_id)
   values (v_group.id, auth.uid())
-  on conflict (group_id, user_id) do nothing;
+  on conflict on constraint group_members_pkey do nothing;
 
   return query select v_group.id, v_group.name;
 end;
