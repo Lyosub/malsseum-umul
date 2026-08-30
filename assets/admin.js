@@ -87,7 +87,8 @@ var ADMIN_ACTION_LABELS = {
   quiz: "성경퀴즈 정답",
   group_attendance_bonus: "오이코스 출석 챌린지",
   group_notes_bonus: "오이코스 기록 챌린지",
-  admin_award: "교역자가 부여"
+  admin_award: "교역자가 부여",
+  greeting_draw: "하루인사 달란트 뽑기"
 };
 
 // 회원 상세보기: 닉네임/본명 부분을 눌렀을 때, 그 사람의 출석·작성 기록·달란트 내역 전체를

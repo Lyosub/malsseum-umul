@@ -1753,3 +1753,103 @@ as $$
     and exists (select 1 from profiles ap where ap.user_id = auth.uid() and (ap.is_admin = true or ap.is_department_head = true))
   order by pl.created_at desc;
 $$;
+
+-- ===== 하루 인사 달란트 뽑기 =====
+-- 하루 인사를 남기면 그날 딱 한 번, 0~2점 중 무작위로 달란트를 뽑을 수 있다.
+-- 하루 인사를 지우면 뽑았던 점수도 함께 회수되지만(revoke_greeting_draw_on_delete),
+-- 뽑기 결과가 0점(꽝)이었던 경우에는 회수할 점수가 없으므로 그 0점 기록을 그대로 남겨두고,
+-- draw_greeting_talent()가 그 기록을 보고 재추첨 없이 계속 0을 돌려주게 만든다.
+-- (0점을 피하려고 하루 인사를 지웠다가 다시 써서 재추첨을 노리는 것을 막기 위함)
+alter table points_ledger drop constraint if exists points_ledger_action_type_check;
+alter table points_ledger add constraint points_ledger_action_type_check
+  check (action_type in ('attendance', 'streak_bonus', 'note', 'quiz', 'group_attendance_bonus', 'group_notes_bonus', 'admin_award', 'greeting_draw'));
+
+create or replace function draw_greeting_talent()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_today date := (now() at time zone 'Asia/Seoul')::date;
+  v_existing integer;
+  v_points integer;
+  v_inserted integer;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  if not exists (
+    select 1 from notes n
+    where n.user_id = auth.uid() and n.type = 'greeting'
+      and (n.created_at at time zone 'Asia/Seoul')::date = v_today
+  ) then
+    raise exception '오늘 하루 인사를 먼저 남겨주세요.';
+  end if;
+
+  select points into v_existing
+  from points_ledger
+  where user_id = auth.uid() and action_type = 'greeting_draw' and ref_date = v_today;
+
+  if found then
+    return v_existing;
+  end if;
+
+  v_points := floor(random() * 3)::integer; -- 0, 1, 2 중 하나를 균등하게 무작위 선택
+
+  insert into points_ledger (user_id, action_type, points, ref_date)
+  values (auth.uid(), 'greeting_draw', v_points, v_today)
+  on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award' do nothing
+  returning points into v_inserted;
+
+  if v_inserted is null then
+    -- 거의 동시에 두 번 요청이 들어와 경합이 생긴 경우: 먼저 들어간 결과를 그대로 반환한다.
+    select points into v_inserted
+    from points_ledger
+    where user_id = auth.uid() and action_type = 'greeting_draw' and ref_date = v_today;
+  end if;
+
+  return v_inserted;
+end;
+$$;
+
+create or replace function revoke_greeting_draw_on_delete()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_ref_date date;
+  v_remaining_count int;
+  v_points int;
+begin
+  if old.type = 'greeting' then
+    v_ref_date := (old.created_at at time zone 'Asia/Seoul')::date;
+
+    select count(*) into v_remaining_count
+    from notes
+    where user_id = old.user_id
+      and type = 'greeting'
+      and (created_at at time zone 'Asia/Seoul')::date = v_ref_date;
+
+    if v_remaining_count = 0 then
+      select points into v_points
+      from points_ledger
+      where user_id = old.user_id and action_type = 'greeting_draw' and ref_date = v_ref_date;
+
+      if v_points is not null and v_points > 0 then
+        delete from points_ledger
+        where user_id = old.user_id and action_type = 'greeting_draw' and ref_date = v_ref_date;
+      end if;
+    end if;
+  end if;
+  return old;
+end;
+$$;
+
+drop trigger if exists trg_notes_revoke_greeting_draw on notes;
+create trigger trg_notes_revoke_greeting_draw
+  after delete on notes
+  for each row execute function revoke_greeting_draw_on_delete();

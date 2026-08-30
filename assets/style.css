@@ -730,3 +730,78 @@ footer.site a { text-decoration: underline; }
 .cal-cell.today .cal-dot {
   background: #fff;
 }
+
+/* 하루 인사 달란트 뽑기 */
+.talent-well-card {
+  background: rgba(20, 112, 122, 0.07);
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.talent-well {
+  position: relative;
+  width: 100px;
+  height: 116px;
+  margin: 0 auto 12px;
+}
+
+.talent-well-hole {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 84px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, var(--well-deep) 0%, var(--well) 70%, transparent 100%);
+  opacity: 0.85;
+}
+
+.talent-well-rope {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 58px;
+  background: rgba(20, 112, 122, 0.35);
+}
+
+.talent-well-bucket {
+  position: absolute;
+  left: 50%;
+  bottom: 76px;
+  font-size: 30px;
+  opacity: 0;
+  transform: translateX(-50%);
+  animation: talentWellLower 0.9s ease-in forwards;
+}
+
+.talent-well-bucket.rising {
+  opacity: 1;
+  animation: talentWellRise 2s cubic-bezier(0.34, 1.4, 0.5, 1) forwards;
+}
+
+@keyframes talentWellLower {
+  0% { bottom: 76px; opacity: 0; }
+  100% { bottom: 6px; opacity: 1; }
+}
+
+@keyframes talentWellRise {
+  0% { bottom: 6px; opacity: 1; }
+  65% { bottom: 92px; opacity: 1; }
+  100% { bottom: 76px; opacity: 1; }
+}
+
+.talent-well-status {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.talent-well-done .talent-well-result-num {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--well);
+}

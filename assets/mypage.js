@@ -457,6 +457,106 @@ function escapeHtml(str) {
 var NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목" };
 var NOTE_LIST_IDS = { greeting: "noteListGreeting", gratitude: "noteListGratitude", prayer: "noteListPrayer" };
 
+var GREETING_DRAW_MESSAGES = {
+  0: "앗, 이번엔 꽝이에요 😅 그래도 하루 인사 남겨줘서 고마워요!",
+  1: "🎉 오늘의 달란트 1점을 뽑았어요!",
+  2: "🎊 대박! 오늘의 달란트 2점을 뽑았어요!"
+};
+
+function renderGreetingDrawResult(container, points) {
+  container.innerHTML =
+    '<div class="talent-well-card talent-well-done">' +
+      '<div class="talent-well-result-num">' + points + '점</div>' +
+      '<p style="margin:8px 0 0;font-size:13.5px;color:var(--text-soft);">' +
+        (GREETING_DRAW_MESSAGES[points] || "") +
+      '</p>' +
+    '</div>';
+}
+
+function playGreetingDrawAnimation(container, userId) {
+  var client = getClient();
+  container.innerHTML =
+    '<div class="talent-well-card">' +
+      '<div class="talent-well">' +
+        '<div class="talent-well-hole"></div>' +
+        '<div class="talent-well-rope"></div>' +
+        '<div class="talent-well-bucket">🪣</div>' +
+      '</div>' +
+      '<p class="talent-well-status">두레박을 우물 속으로 내리는 중...</p>' +
+    '</div>';
+  var statusEl = container.querySelector(".talent-well-status");
+  var bucketEl = container.querySelector(".talent-well-bucket");
+
+  setTimeout(function () {
+    if (statusEl) statusEl.textContent = "도르래를 돌려 끌어올리는 중...";
+    if (bucketEl) bucketEl.classList.add("rising");
+  }, 900);
+
+  var rpcPromise = client.rpc("draw_greeting_talent");
+  var delayPromise = new Promise(function (resolve) { setTimeout(resolve, 2000); });
+
+  Promise.all([rpcPromise, delayPromise]).then(function (results) {
+    var res = results[0];
+    if (res.error) {
+      container.innerHTML = '<p class="msg">달란트 뽑기에 실패했어요. 새로고침 후 다시 시도해주세요.</p>';
+      return;
+    }
+    renderGreetingDrawResult(container, res.data);
+    loadTotalPoints(userId);
+  });
+}
+
+function renderGreetingDrawButton(container, userId) {
+  container.innerHTML =
+    '<div class="talent-well-card">' +
+      '<p style="margin:0 0 10px;font-size:13px;color:var(--text-soft);">하루 인사를 남겼어요! 오늘의 달란트를 뽑아보세요.</p>' +
+      '<button type="button" class="btn block" id="greetingDrawBtn">🪣 달란트 뽑기</button>' +
+    '</div>';
+  var btn = document.getElementById("greetingDrawBtn");
+  if (btn) {
+    btn.addEventListener("click", function () {
+      btn.disabled = true;
+      playGreetingDrawAnimation(container, userId);
+    });
+  }
+}
+
+function updateGreetingDrawSection(userId, greetingNotes) {
+  var client = getClient();
+  var section = document.getElementById("greetingDrawSection");
+  if (!client || !section) return;
+
+  var today = todayStr();
+  var wroteToday = (greetingNotes || []).some(function (item) {
+    var d = new Date(item.created_at);
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return (y + "-" + m + "-" + day) === today;
+  });
+
+  if (!wroteToday) {
+    section.style.display = "none";
+    section.innerHTML = "";
+    return;
+  }
+
+  section.style.display = "block";
+  client.from("points_ledger")
+    .select("points")
+    .eq("user_id", userId)
+    .eq("action_type", "greeting_draw")
+    .eq("ref_date", today)
+    .then(function (res) {
+      var rows = res.data || [];
+      if (rows.length) {
+        renderGreetingDrawResult(section, rows[0].points);
+      } else {
+        renderGreetingDrawButton(section, userId);
+      }
+    });
+}
+
 function initNotes(userId) {
   var client = getClient();
   var forms = document.querySelectorAll(".note-form");
@@ -551,6 +651,7 @@ function initNotes(userId) {
             ? rows.map(renderNoteItem).join("")
             : '<p class="msg">아직 기록이 없어요.</p>';
         });
+        updateGreetingDrawSection(userId, grouped.greeting);
       });
   }
 
