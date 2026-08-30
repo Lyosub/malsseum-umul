@@ -148,4 +148,55 @@ function initInstallBanner() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", initInstallBanner);
+// 상단 배너는 한 번 닫거나 설치를 시도하면(localStorage) 다시 안 뜨는데, 그것과 별개로
+// 페이지 하단에는 "앱처럼 설치하기" 버튼을 항상 볼 수 있게 둔다(이미 설치되어 실행 중일
+// 때만 숨김). 눌렀을 때 바로 설치 가능하면(beforeinstallprompt) 그걸로 설치하고, 아니면
+// 기기별 수동 설치 방법을 그 자리에 펼쳐서 보여준다.
+function persistentInstallDetailHtml() {
+  var inAppKind = detectInAppBrowser();
+  if (inAppKind === "kakaotalk") {
+    var escapeUrl = "kakaotalk://web/openExternal?url=" + encodeURIComponent(window.location.href);
+    return '지금 카카오톡 브라우저에서는 설치가 안 돼요. <a href="' + escapeUrl + '" style="color:var(--well);font-weight:700;">여기를 눌러 다른 브라우저로 열기</a>를 먼저 해주세요.';
+  }
+  if (inAppKind) {
+    return '지금 앱 내장 브라우저에서는 설치가 안 돼요. 화면의 "⋯" 또는 공유 메뉴에서 "다른 브라우저로 열기"를 먼저 눌러주세요.';
+  }
+  if (isIosDevice()) {
+    return 'Safari 하단 공유 버튼(⬆️)을 누르고 "홈 화면에 추가"를 선택해보세요.';
+  }
+  return '브라우저 메뉴(⋮)에서 "홈 화면에 추가" 또는 "앱 설치"를 선택해보세요.';
+}
+
+function initPersistentInstallLink() {
+  var card = document.getElementById("installBannerPersistent");
+  var btn = document.getElementById("installPersistentBtn");
+  var detail = document.getElementById("installPersistentDetail");
+  if (!card || !btn || !detail) return;
+  if (isStandaloneApp()) return; // 이미 앱으로 실행 중이면 보여줄 필요 없음
+
+  card.style.display = "block";
+
+  btn.addEventListener("click", function () {
+    if (DEFERRED_INSTALL_PROMPT) {
+      btn.disabled = true;
+      DEFERRED_INSTALL_PROMPT.prompt();
+      DEFERRED_INSTALL_PROMPT.userChoice.then(function () {
+        DEFERRED_INSTALL_PROMPT = null;
+        btn.disabled = false;
+      });
+      return;
+    }
+    var isOpen = detail.style.display === "block";
+    if (isOpen) {
+      detail.style.display = "none";
+    } else {
+      detail.innerHTML = persistentInstallDetailHtml();
+      detail.style.display = "block";
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  initInstallBanner();
+  initPersistentInstallLink();
+});
