@@ -236,13 +236,29 @@ function initGroup(userId) {
     });
   }
 
-  function showGroup(group) {
+  function showGroup(group, justJoined) {
     noGroupEl.style.display = "none";
     hasGroupEl.style.display = "block";
     document.getElementById("groupName").textContent = group.name;
     document.getElementById("groupCode").textContent = group.invite_code;
     renderChallengeBanner(group.id);
     renderGroupMembers(group.id);
+
+    var flashEl = document.getElementById("groupJoinedFlash");
+    if (flashEl) {
+      if (justJoined) {
+        flashEl.textContent = "🎉 \"" + group.name + "\" 오이코스에 참여했어요!";
+        flashEl.style.display = "block";
+        // 애니메이션을 다시 재생하려면 엘리먼트를 강제로 리플로우해서 재시작해야 한다
+        flashEl.style.animation = "none";
+        void flashEl.offsetWidth;
+        flashEl.style.animation = "";
+        hasGroupEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        setTimeout(function () { flashEl.style.display = "none"; }, 3200);
+      } else {
+        flashEl.style.display = "none";
+      }
+    }
     // 지난주(월~일) 오이코스 챌린지 조건을 확인해서 아직 정산 안 됐으면 오이코스 전원에게 보너스 포인트를 지급한다
     // (교사가 만든 오이코스가 아니면 evaluate_group_weekly_bonus 내부에서 조용히 아무것도 하지 않는다)
     client.rpc("evaluate_group_weekly_bonus", { p_group_id: group.id }).catch(function () {}).then(function () {
@@ -331,7 +347,7 @@ function initGroup(userId) {
           return;
         }
         msg.textContent = "";
-        showGroup({ id: res.data[0].group_id, name: res.data[0].group_name, invite_code: code });
+        showGroup({ id: res.data[0].group_id, name: res.data[0].group_name, invite_code: code }, true);
       });
     });
   }

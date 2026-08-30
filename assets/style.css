@@ -113,6 +113,29 @@ header.site nav a:hover {
   font-size: 16px;
 }
 
+/* 초대 코드로 오이코스에 막 참여했을 때 잠깐 보여주는 성공 효과 */
+.joined-flash {
+  background: linear-gradient(90deg, var(--well) 0%, var(--well-light) 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  animation: joined-flash-in 0.4s ease-out, joined-flash-out 0.5s ease-in 2.6s forwards;
+}
+
+@keyframes joined-flash-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes joined-flash-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 .hero {
   text-align: center;
   padding: 28px 0 24px;
@@ -425,6 +448,38 @@ textarea { min-height: 90px; resize: vertical; }
   border-radius: 26px;
   box-shadow: 0 16px 34px rgba(124, 60, 28, 0.22);
 }
+
+/* 관리자 페이지의 회원/기록/오이코스 목록을 세로로 쭉 이어붙이는 대신, 항목별로 옆으로
+   나란히 넘겨볼 수 있게 하는 가로 컬럼 레이아웃 (모바일에서는 좌우로 스와이프) */
+.admin-columns {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  margin: 14px -20px 0;
+  padding: 0 20px 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-column {
+  flex: 0 0 78%;
+  max-width: 320px;
+  background: rgba(20, 112, 122, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 14px 10px;
+}
+
+.admin-column .admin-column-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--well-deep);
+  padding: 10px 0 8px;
+  position: sticky;
+  top: 0;
+  background: inherit;
+}
+
+.admin-column .note-item:first-of-type { padding-top: 4px; }
 
 .note-item {
   border-bottom: 1px solid var(--border);

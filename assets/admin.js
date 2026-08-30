@@ -103,18 +103,22 @@ function loadMemberList() {
     var teachers = members.filter(function (m) { return m.is_teacher && !m.is_admin; });
     var students = members.filter(function (m) { return !m.is_teacher && !m.is_admin; });
 
-    function renderSection(label, list) {
+    function renderColumn(label, list) {
       if (!list.length) return "";
       return (
-        '<div class="well-label" style="margin-top:18px;">' + label + ' (' + list.length + '명)</div>' +
-        list.map(renderMember).join("")
+        '<div class="admin-column">' +
+          '<div class="admin-column-title">' + label + ' (' + list.length + '명)</div>' +
+          list.map(renderMember).join("") +
+        '</div>'
       );
     }
 
     listEl.innerHTML =
-      renderSection("🌟 교역자", admins) +
-      renderSection("📘 교사", teachers) +
-      renderSection("🙋 학생", students);
+      '<div class="admin-columns">' +
+        renderColumn("🌟 교역자", admins) +
+        renderColumn("📘 교사", teachers) +
+        renderColumn("🙋 학생", students) +
+      '</div>';
 
     listEl.querySelectorAll('button[data-action="toggle-teacher"]').forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -202,19 +206,23 @@ function loadAllNotes() {
         if (byType[item.type]) byType[item.type].push(item);
       });
 
-      function renderSection(typeKey, icon) {
+      function renderColumn(typeKey, icon) {
         var list = byType[typeKey];
         if (!list.length) return "";
         return (
-          '<div class="well-label" style="margin-top:18px;">' + icon + ' ' + ADMIN_NOTE_LABELS[typeKey] + ' (' + list.length + '건)</div>' +
-          list.map(renderNote).join("")
+          '<div class="admin-column">' +
+            '<div class="admin-column-title">' + icon + ' ' + ADMIN_NOTE_LABELS[typeKey] + ' (' + list.length + '건)</div>' +
+            list.map(renderNote).join("") +
+          '</div>'
         );
       }
 
       listEl.innerHTML =
-        renderSection("gratitude", "🙏") +
-        renderSection("prayer", "🕊️") +
-        renderSection("greeting", "🙋");
+        '<div class="admin-columns">' +
+          renderColumn("gratitude", "🙏") +
+          renderColumn("prayer", "🕊️") +
+          renderColumn("greeting", "🙋") +
+        '</div>';
 
       listEl.querySelectorAll("button[data-note-id]").forEach(function (btn) {
         btn.addEventListener("click", function () {
@@ -267,17 +275,21 @@ function loadGroupsAdmin() {
       var teacherGroups = items.filter(function (item) { return item.host_is_teacher; });
       var studentGroups = items.filter(function (item) { return !item.host_is_teacher; });
 
-      function renderSection(label, list) {
+      function renderColumn(label, list) {
         if (!list.length) return "";
         return (
-          '<div class="well-label" style="margin-top:18px;">' + label + ' (' + list.length + '개)</div>' +
-          list.map(renderGroup).join("")
+          '<div class="admin-column">' +
+            '<div class="admin-column-title">' + label + ' (' + list.length + '개)</div>' +
+            list.map(renderGroup).join("") +
+          '</div>'
         );
       }
 
       listEl.innerHTML =
-        renderSection("📘 교사 오이코스", teacherGroups) +
-        renderSection("🙋 학생 오이코스", studentGroups);
+        '<div class="admin-columns">' +
+          renderColumn("📘 교사 오이코스", teacherGroups) +
+          renderColumn("🙋 학생 오이코스", studentGroups) +
+        '</div>';
 
       listEl.querySelectorAll('button[data-action="disband"]').forEach(function (btn) {
         btn.addEventListener("click", function () {
