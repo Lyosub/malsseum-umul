@@ -43,6 +43,13 @@
     <a href="admin.html" id="adminPageLink" class="btn block" style="display:none;margin-top:16px;">관리자 페이지로 들어가기</a>
   </div>
 
+  <div class="card">
+    <h3 style="margin-top:0;">🔔 알림</h3>
+    <p class="msg" style="margin-top:0;">새 공지사항이 올라오거나 교역자가 알림을 보낼 때 받아볼 수 있어요. 앱처럼 설치한 상태에서 더 잘 동작해요.</p>
+    <button type="button" id="pushSubscribeBtn" class="btn ghost block" data-subscribed="0">🔔 알림 받기</button>
+    <p class="msg" id="pushSubscribeMsg"></p>
+  </div>
+
   <div class="card streak">
     <div style="display:flex;justify-content:center;gap:40px;">
       <div>
@@ -220,6 +227,7 @@
 <script src="assets/auth.js"></script>
 <script src="assets/mypage.js"></script>
 <script src="assets/group-rankings.js"></script>
+<script src="assets/push.js"></script>
 <script>
   initLogoutButton();
   getSession().then(function (session) {
@@ -234,6 +242,7 @@
       initNotes(session.user.id);
       initGroup(session.user.id);
       initProfileSettings(session);
+      initPushSubscribe(session.user.id);
     });
   });
 </script>

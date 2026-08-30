@@ -59,6 +59,7 @@ function initAdminPage() {
       gate.style.display = "none";
       content.style.display = "block";
       initAccordions();
+      initPushBroadcastForm();
       initBannerForm(session.user.id);
       initAnnouncementForm(session.user.id);
       initEventForm(session.user.id);
@@ -670,6 +671,53 @@ function loadGroupsAdmin() {
   }
 
   load();
+}
+
+// 교역자·부장 전용: "알림 받기"를 켠 전체 학생에게 즉시 푸시 알림을 보낸다.
+// 실제 발송은 Supabase Edge Function(send-push)이 하고, 여기서는 로그인 세션의 JWT를
+// Authorization 헤더에 실어 그 함수를 직접 호출한다(함수 쪽에서 교역자·부장인지 다시 확인함).
+function initPushBroadcastForm() {
+  var form = document.getElementById("pushBroadcastForm");
+  var msg = document.getElementById("pushBroadcastMsg");
+  if (!form) return;
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var title = document.getElementById("pushTitleInput").value.trim();
+    var body = document.getElementById("pushBodyInput").value.trim();
+    if (!title || !body) {
+      msg.textContent = "제목과 내용을 모두 입력해주세요.";
+      return;
+    }
+    if (!confirm("알림을 받도록 설정한 학생 전체에게 지금 바로 발송할까요?")) return;
+
+    msg.textContent = "발송 중...";
+    getSession().then(function (session) {
+      if (!session) {
+        msg.textContent = "로그인이 필요합니다.";
+        return;
+      }
+      fetch(SUPABASE_URL + "/functions/v1/send-push", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + session.access_token
+        },
+        body: JSON.stringify({ title: title, body: body, url: "./" })
+      }).then(function (res) {
+        return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+      }).then(function (result) {
+        if (!result.ok) {
+          msg.textContent = "발송 실패: " + (result.data && result.data.error ? result.data.error : "알 수 없는 오류");
+          return;
+        }
+        msg.textContent = "발송 완료! " + result.data.sent + "명에게 보냈어요 (구독자 " + result.data.total + "명 중).";
+        form.reset();
+      }).catch(function () {
+        msg.textContent = "네트워크 오류로 발송하지 못했어요.";
+      });
+    });
+  });
 }
 
 function initBannerForm(userId) {

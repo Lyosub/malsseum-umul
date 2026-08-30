@@ -1,7 +1,7 @@
 // 말씀우물 PWA 서비스 워커: 앱 셸을 미리 캐시해두되, 온라인일 때는 항상 최신 버전을
 // 먼저 시도하는 네트워크 우선(network-first) 방식으로 처리하고, 오프라인일 때만 캐시로 대체한다.
 // (예전에는 캐시 우선 방식이라 배포 후에도 옛 버전이 계속 보이는 문제가 있었음)
-var CACHE_VERSION = "msu-v49";
+var CACHE_VERSION = "msu-v50";
 var PRECACHE = [
   "./",
   "index.html",
@@ -48,6 +48,7 @@ var PRECACHE = [
   "assets/board.js",
   "assets/pwa.js",
   "assets/install-prompt.js",
+  "assets/push.js",
   "assets/hero-bg.jpg",
   "assets/menu-icons/weekly.png",
   "assets/menu-icons/notice.png",
@@ -110,5 +111,35 @@ self.addEventListener("fetch", function (event) {
         return res;
       })
       .catch(function () { return caches.match(req); })
+  );
+});
+
+// 푸시 알림: 서버(send-push Edge Function)가 보낸 payload를 실제 알림으로 띄운다.
+self.addEventListener("push", function (event) {
+  var data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (e) {}
+  var title = data.title || "💧 말씀우물";
+  var options = {
+    body: data.body || "",
+    icon: "assets/icons/icon-512.png",
+    badge: "assets/icons/icon-512.png",
+    data: { url: data.url || "./" }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// 알림을 탭하면 해당 페이지로 이동(이미 열려있는 탭이 있으면 그걸 포커스)한다.
+self.addEventListener("notificationclick", function (event) {
+  event.notification.close();
+  var targetUrl = (event.notification.data && event.notification.data.url) || "./";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then(function (clientList) {
+      for (var i = 0; i < clientList.length; i++) {
+        if (clientList[i].url.indexOf(targetUrl) !== -1 && "focus" in clientList[i]) {
+          return clientList[i].focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+    })
   );
 });

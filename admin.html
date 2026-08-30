@@ -29,6 +29,25 @@
 
   <div id="adminContent" style="display:none;">
     <div class="card">
+      <h3 class="accordion-toggle" style="margin-top:0;">🔔 알림 방송 <span class="accordion-chevron">▸</span></h3>
+      <div class="accordion-body" style="display:none;">
+        <p class="msg" style="margin-top:0;">"알림 받기"를 켠 학생 전체에게 즉시 푸시 알림이 발송돼요. 공지사항은 등록하면 자동으로도 발송되니, 여기는 급한 안내가 있을 때만 써주세요.</p>
+        <form id="pushBroadcastForm">
+          <div class="form-row">
+            <label for="pushTitleInput">알림 제목</label>
+            <input type="text" id="pushTitleInput" placeholder="예: 오늘 예배 시간 변경 안내">
+          </div>
+          <div class="form-row">
+            <label for="pushBodyInput">알림 내용</label>
+            <textarea id="pushBodyInput" placeholder="알림에 보여줄 내용을 짧게 적어주세요"></textarea>
+          </div>
+          <button type="submit" class="btn block">지금 바로 발송</button>
+          <p class="msg" id="pushBroadcastMsg"></p>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
       <h3 class="accordion-toggle" style="margin-top:0;">🎉 홈페이지 상단 이벤트 배너 <span class="accordion-chevron">▸</span></h3>
       <div class="accordion-body" style="display:none;">
         <p class="msg" style="margin-top:0;">여기 등록하면 홈 화면 맨 위에 바로 보이고, 삭제하면 바로 사라져요.</p>

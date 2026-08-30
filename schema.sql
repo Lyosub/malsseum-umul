@@ -2103,3 +2103,67 @@ begin
   return v_inserted;
 end;
 $$;
+
+-- ===== 푸시 알림 =====
+-- 학생이 "알림 받기"를 누르면 브라우저가 발급한 구독 정보(endpoint + 암호화 키)를
+-- 이 테이블에 저장해두고, 실제 발송은 Supabase Edge Function(send-push)이 담당한다.
+-- (발송 자체는 서버에서 VAPID 개인키로 서명해야 해서 클라이언트에서는 할 수 없다)
+create table if not exists push_subscriptions (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  endpoint text not null,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now(),
+  unique (endpoint)
+);
+alter table push_subscriptions enable row level security;
+
+create policy "본인 구독만 조회" on push_subscriptions
+  for select using (auth.uid() = user_id);
+
+create policy "본인 구독만 등록" on push_subscriptions
+  for insert with check (auth.uid() = user_id);
+
+-- endpoint가 유니크라서, 같은 기기가 다른 계정으로 다시 구독하면 upsert(on conflict endpoint
+-- do update)로 처리된다 -> update 정책도 있어야 그 경우가 막히지 않는다.
+create policy "본인 구독만 수정" on push_subscriptions
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "본인 구독만 삭제" on push_subscriptions
+  for delete using (auth.uid() = user_id);
+
+-- 공지사항이 새로 등록되면 pg_net으로 send-push Edge Function을 호출해 전체 구독자에게
+-- 자동으로 푸시 알림을 보낸다. x-webhook-secret 헤더로 "이건 우리 DB가 보낸 요청"임을
+-- 증명한다(이 값은 Edge Function 쪽 환경변수 WEBHOOK_SECRET과 반드시 동일해야 함).
+-- pg_net은 "extensions" 스키마에 확장 자체를 등록해도, 실제 함수(net.http_post)는
+-- 항상 자체 "net" 스키마에 만들어진다.
+create extension if not exists pg_net with schema extensions;
+
+create or replace function notify_new_announcement()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform net.http_post(
+    url := 'https://qaxwxbaqduxqzjqoahcb.supabase.co/functions/v1/send-push',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-webhook-secret', 'ba1d01a34184b73fe8323143120a1b96a720307cc08e4c46'
+    ),
+    body := jsonb_build_object(
+      'title', '📢 새 공지사항',
+      'body', new.title,
+      'url', '/notice.html'
+    )
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notify_new_announcement on announcements;
+create trigger trg_notify_new_announcement
+  after insert on announcements
+  for each row execute function notify_new_announcement();
