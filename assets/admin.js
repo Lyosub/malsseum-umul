@@ -144,8 +144,11 @@ function loadMemberDetail(userId, container) {
   });
 }
 
-// 검색어를 다시 불러올 때(달란트 부여 등 후 새로고침)도 유지되도록 모듈 전역에 둔다.
+// 검색어와 각 역할 컬럼의 현재 페이지를 다시 불러올 때(달란트 부여 등 후 새로고침)도
+// 유지되도록 모듈 전역에 둔다.
 var MEMBER_SEARCH_QUERY = "";
+var MEMBER_PAGE_SIZE = 10;
+var MEMBER_PAGE = { admins: 0, deptHeads: 0, teachers: 0, students: 0 };
 
 function loadMemberList() {
   var client = getClient();
@@ -215,11 +218,25 @@ function loadMemberList() {
     var teachers = list.filter(function (m) { return m.is_teacher && !m.is_admin && !m.is_department_head; });
     var students = list.filter(function (m) { return !m.is_teacher && !m.is_admin && !m.is_department_head; });
 
-    function renderSection(label, list) {
+    // 한 역할군에 사람이 많아지면(특히 학생) 그 컬럼만 10명씩 끊어서 보여주고,
+    // 이전/다음으로 넘겨보게 한다 — pageKey별로 현재 몇 페이지인지 기억해둔다.
+    function renderSection(label, list, pageKey) {
       if (!list.length) return "";
+      var totalPages = Math.ceil(list.length / MEMBER_PAGE_SIZE);
+      var page = Math.min(MEMBER_PAGE[pageKey] || 0, totalPages - 1);
+      MEMBER_PAGE[pageKey] = page;
+      var pageItems = list.slice(page * MEMBER_PAGE_SIZE, page * MEMBER_PAGE_SIZE + MEMBER_PAGE_SIZE);
+      var pagerHtml = totalPages > 1
+        ? '<div class="member-pager">' +
+            '<button type="button" class="btn ghost" data-page-action="prev" data-page-key="' + pageKey + '"' + (page === 0 ? ' disabled' : '') + '>‹ 이전</button>' +
+            '<span>' + (page + 1) + ' / ' + totalPages + '</span>' +
+            '<button type="button" class="btn ghost" data-page-action="next" data-page-key="' + pageKey + '"' + (page === totalPages - 1 ? ' disabled' : '') + '>다음 ›</button>' +
+          '</div>'
+        : '';
       return (
         '<div class="scroll-column-title">' + label + ' (' + list.length + '명)</div>' +
-        list.map(renderMember).join("")
+        pageItems.map(renderMember).join("") +
+        pagerHtml
       );
     }
     function wrapColumn(html) {
@@ -227,14 +244,23 @@ function loadMemberList() {
     }
 
     // 부장은 별도 컬럼으로 옆에 두지 않고, 교역자 컬럼 안에 그 아래로 이어서 보여준다.
-    var staffHtml = renderSection("🌟 교역자", admins) + renderSection("🗂️ 부장", deptHeads);
+    var staffHtml = renderSection("🌟 교역자", admins, "admins") + renderSection("🗂️ 부장", deptHeads, "deptHeads");
 
     listEl.innerHTML =
       '<div class="scroll-columns">' +
         wrapColumn(staffHtml) +
-        wrapColumn(renderSection("📘 교사", teachers)) +
-        wrapColumn(renderSection("🙋 학생", students)) +
+        wrapColumn(renderSection("📘 교사", teachers, "teachers")) +
+        wrapColumn(renderSection("🙋 학생", students, "students")) +
       '</div>';
+
+    listEl.querySelectorAll('button[data-page-action]').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var key = btn.getAttribute("data-page-key");
+        var delta = btn.getAttribute("data-page-action") === "next" ? 1 : -1;
+        MEMBER_PAGE[key] = (MEMBER_PAGE[key] || 0) + delta;
+        applyFilter();
+      });
+    });
 
     listEl.querySelectorAll('[data-action="toggle-detail"]').forEach(function (el) {
       el.addEventListener("click", function () {
@@ -357,6 +383,8 @@ function loadMemberList() {
       searchInput.value = MEMBER_SEARCH_QUERY;
       searchInput.oninput = function () {
         MEMBER_SEARCH_QUERY = searchInput.value;
+        // 새로 검색하면 결과가 완전히 달라지니 각 컬럼을 1페이지부터 다시 보여준다
+        MEMBER_PAGE = { admins: 0, deptHeads: 0, teachers: 0, students: 0 };
         applyFilter();
       };
     }
