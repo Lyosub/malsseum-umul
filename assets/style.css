@@ -260,7 +260,14 @@ header.site nav a:hover {
 }
 
 .verse-card {
-  background: linear-gradient(180deg, var(--well-light) 0%, var(--well) 45%, var(--well-deep) 100%);
+  --verse-bg-image: none;
+  background-color: var(--well);
+  background-image:
+    linear-gradient(180deg, rgba(6, 20, 23, 0.55) 0%, rgba(6, 20, 23, 0.22) 30%, rgba(6, 20, 23, 0.28) 70%, rgba(6, 20, 23, 0.6) 100%),
+    var(--verse-bg-image),
+    linear-gradient(180deg, var(--well-light) 0%, var(--well) 45%, var(--well-deep) 100%);
+  background-size: cover;
+  background-position: center;
   color: #fff;
   border-radius: 20px;
   padding: 34px 26px;
@@ -317,6 +324,23 @@ header.site nav a:hover {
   opacity: 0.95;
   word-break: keep-all;
   overflow-wrap: break-word;
+}
+
+.verse-card-toggle {
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: #fff;
+  border-radius: 999px;
+  padding: 7px 18px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.verse-card-more[hidden] {
+  display: none;
 }
 
 .well-card {

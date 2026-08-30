@@ -1,18 +1,40 @@
 function renderVerseInto(elId, verse) {
   var el = document.getElementById(elId);
   if (!el || !verse) return;
-  el.innerHTML =
-    '<div class="ref">' + verse.ref + '</div>' +
-    '<div class="text">' + verse.text + '</div>' +
+  var extraHtml =
     (verse.interpretation ? '<div class="qt-section"><span class="qt-label">📖 말씀 설명</span><div class="qt-body">' + verse.interpretation + '</div></div>' : '') +
     (verse.note ? '<div class="qt-section"><span class="qt-label">🎯 오늘의 적용</span><div class="qt-body">' + verse.note + '</div></div>' : '') +
     (verse.prayer ? '<div class="qt-section"><span class="qt-label">🙏 오늘의 기도</span><div class="qt-body">' + verse.prayer + '</div></div>' : '');
+
+  el.innerHTML =
+    '<div class="ref">' + verse.ref + '</div>' +
+    '<div class="text">' + verse.text + '</div>' +
+    (extraHtml
+      ? '<button type="button" class="verse-card-toggle">말씀 설명·적용·기도 더 보기 ▾</button>' +
+        '<div class="verse-card-more" hidden>' + extraHtml + '</div>'
+      : '');
+
+  var toggle = el.querySelector(".verse-card-toggle");
+  var more = el.querySelector(".verse-card-more");
+  if (toggle && more) {
+    toggle.addEventListener("click", function () {
+      var isHidden = more.hasAttribute("hidden");
+      more.toggleAttribute("hidden", !isHidden);
+      toggle.textContent = isHidden ? "접기 ▴" : "말씀 설명·적용·기도 더 보기 ▾";
+    });
+  }
 }
 
+// 홈 화면 말씀 카드는 밋밋한 단색 그라데이션 대신, 말씀카드 다운로드용으로 준비해둔 52장의
+// 사진 배경(주간 자동 로테이션)을 그대로 재사용해서 더 고급스럽게 보이도록 한다.
 function initHomeCard() {
   var el = document.getElementById("homeVerseCard");
   if (!el) return;
   renderVerseInto("homeVerseCard", getVerseFor("daily"));
+  // CSS 커스텀 프로퍼티 안의 url()은 (JS가 아니라) 그 프로퍼티를 참조하는 스타일시트인
+  // assets/style.css 기준 상대경로로 풀리므로, "assets/"를 다시 붙이면 경로가 두 번 겹친다.
+  var num = String(getVerseCardBgIndex()).padStart(2, "0");
+  el.style.setProperty("--verse-bg-image", "url(verse-card-bg/verse-card-bg-" + num + ".jpg)");
 }
 
 function handleCharImgError(imgEl) {
