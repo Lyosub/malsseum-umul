@@ -181,10 +181,12 @@ function loadMemberList() {
       );
     }
 
-    // 교역자 / 교사 / 학생으로 구분해서 보여준다 (한눈에 누가 어떤 역할인지 알아볼 수 있게)
+    // 교역자 / 부장 / 교사 / 학생으로 구분해서 보여준다 (한눈에 누가 어떤 역할인지 알아볼 수 있게).
+    // 여러 역할을 겸하는 사람은 교역자 > 부장 > 교사 순으로 한 곳에만 속한다(뱃지는 겸직 전부 표시됨).
     var admins = members.filter(function (m) { return m.is_admin; });
-    var teachers = members.filter(function (m) { return m.is_teacher && !m.is_admin; });
-    var students = members.filter(function (m) { return !m.is_teacher && !m.is_admin; });
+    var deptHeads = members.filter(function (m) { return m.is_department_head && !m.is_admin; });
+    var teachers = members.filter(function (m) { return m.is_teacher && !m.is_admin && !m.is_department_head; });
+    var students = members.filter(function (m) { return !m.is_teacher && !m.is_admin && !m.is_department_head; });
 
     function renderColumn(label, list) {
       if (!list.length) return "";
@@ -199,6 +201,7 @@ function loadMemberList() {
     listEl.innerHTML =
       '<div class="scroll-columns">' +
         renderColumn("🌟 교역자", admins) +
+        renderColumn("🗂️ 부장", deptHeads) +
         renderColumn("📘 교사", teachers) +
         renderColumn("🙋 학생", students) +
       '</div>';
