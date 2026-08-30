@@ -267,11 +267,16 @@ header.site nav a:hover {
     var(--verse-bg-image),
     linear-gradient(180deg, var(--well-light) 0%, var(--well) 45%, var(--well-deep) 100%);
   background-size: cover;
-  background-position: center;
+  background-position: top center;
   color: #fff;
   border-radius: 20px;
   padding: 34px 26px;
-  margin: 18px 0;
+  margin: 18px auto;
+  /* 배경 사진들이 세로로 긴 폰 배경화면용(1080x2340)이라, 카드가 데스크탑처럼 가로로
+     넓고 낮아지면 cover 처리 시 이미지 중 극히 일부(주로 밋밋한 구간)만 확대돼 보여서
+     거의 새까맣게 보이는 문제가 있었다. 카드 자체 너비를 제한해 세로 긴 이미지와
+     비율 차이를 줄이고, 읽기에도 더 편한 줄 길이가 되게 한다. */
+  max-width: 560px;
   text-align: center;
   box-shadow: 0 14px 30px rgba(14, 61, 68, 0.2);
 }
