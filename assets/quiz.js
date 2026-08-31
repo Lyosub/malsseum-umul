@@ -52,7 +52,7 @@ function renderResultView(section, quiz, selected, correctOption, isCorrect) {
         '</div>'
       );
     }).join("") +
-    '<p class="msg" style="margin-top:10px;">' + (isCorrect ? "🎉 정답이에요! +1달란트 획득" : "아쉬워요, 정답은 위에 표시된 답이에요.") + '</p>';
+    '<p class="msg" style="margin-top:10px;">' + (isCorrect ? "🎉 정답이에요! +3달란트 획득" : "아쉬워요, 정답은 위에 표시된 답이에요.") + '</p>';
 }
 
 function renderQuiz(section, client, quiz) {
@@ -82,7 +82,8 @@ function renderQuiz(section, client, quiz) {
       var selected = parseInt(btn.getAttribute("data-option"), 10);
       client.rpc("submit_quiz_answer", { p_quiz_id: quiz.id, p_selected_option: selected }).then(function (res) {
         if (res.error || !res.data || !res.data.length) {
-          document.getElementById("quizAnswerMsg").textContent = "제출에 실패했어요. 새로고침 후 다시 시도해주세요.";
+          document.getElementById("quizAnswerMsg").textContent =
+            (res.error && res.error.message) || "제출에 실패했어요. 새로고침 후 다시 시도해주세요.";
           optionsEl.querySelectorAll("button").forEach(function (b) { b.disabled = false; });
           return;
         }

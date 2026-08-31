@@ -1051,19 +1051,25 @@ function initQuizForm(userId) {
   }
 
   function quizRevealBadge(item) {
-    // week_start(월요일) + 2일 = 학생에게 공개되는 수요일. 이미 지났으면 "공개중", 아니면 날짜를 보여준다.
+    // week_start(월요일) + 2일 = 공개되는 수요일, + 3일 = 마지막 참여 가능일인 목요일.
+    // 그 이후(금요일부터)는 "종료"로 표시한다.
     // (toISOString()은 UTC 기준으로 바뀌어서 한국 시간 자정 근처엔 하루 밀려 보일 수 있어 로컬 날짜 성분만 비교한다)
     var revealDate = new Date(item.week_start + "T00:00:00");
     revealDate.setDate(revealDate.getDate() + 2);
+    var closeDate = new Date(item.week_start + "T00:00:00");
+    closeDate.setDate(closeDate.getDate() + 3);
     var localDateStr = function (d) {
       return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     };
     var todayStr = localDateStr(new Date());
     var revealStr = revealDate.getFullYear() + "." + String(revealDate.getMonth() + 1).padStart(2, "0") + "." + String(revealDate.getDate()).padStart(2, "0");
-    var isLive = localDateStr(revealDate) <= todayStr;
-    return isLive
-      ? '<span style="color:var(--well);font-weight:700;">공개중</span>'
-      : '<span style="color:var(--text-soft);">' + revealStr + '(수) 공개 예정</span>';
+    if (todayStr < localDateStr(revealDate)) {
+      return '<span style="color:var(--text-soft);">' + revealStr + '(수) 공개 예정</span>';
+    }
+    if (todayStr > localDateStr(closeDate)) {
+      return '<span style="color:var(--text-soft);">종료 (' + revealStr + ' 주)</span>';
+    }
+    return '<span style="color:var(--well);font-weight:700;">공개중</span>';
   }
 
   function renderView(item) {

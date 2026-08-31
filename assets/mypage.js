@@ -19,6 +19,60 @@ function loadTotalPoints(userId) {
   });
 }
 
+// 본인 달란트가 어디서 얼마나 쌓였는지 마이페이지에서 직접 확인할 수 있게 하는 내역 리스트.
+// admin.js의 ADMIN_ACTION_LABELS와 같은 action_type을 쓰지만, 여기는 학생 본인 화면이라 문구를
+// 조금 더 부드럽게(예: "교역자·부장이 부여") 다듬어서 별도로 둔다.
+var POINTS_ACTION_LABELS = {
+  attendance: "출석",
+  streak_bonus: "7일 연속출석 보너스",
+  note: "감사노트/기도제목 작성",
+  quiz: "성경퀴즈 정답",
+  group_attendance_bonus: "오이코스 출석 챌린지",
+  group_notes_bonus: "오이코스 기록 챌린지",
+  admin_award: "교역자·부장이 부여",
+  greeting_draw: "하루인사 달란트 뽑기"
+};
+
+function formatPointsRefDate(dateStr) {
+  if (!dateStr) return "";
+  var parts = dateStr.split("-");
+  return parts.length === 3 ? parts[0] + "." + parts[1] + "." + parts[2] : dateStr;
+}
+
+function initPointsHistory(userId) {
+  var client = getClient();
+  var section = document.getElementById("pointsHistorySection");
+  if (!client || !section) return;
+
+  client.rpc("get_my_points").then(function (res) {
+    var rows = res.data || [];
+    if (res.error) {
+      section.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
+      return;
+    }
+    if (!rows.length) {
+      section.innerHTML = '<p class="msg">아직 달란트 내역이 없어요.</p>';
+      return;
+    }
+    section.innerHTML = rows.map(function (r) {
+      var label = POINTS_ACTION_LABELS[r.action_type] || r.action_type;
+      var sign = r.points > 0 ? "+" : "";
+      var color = r.points > 0 ? "var(--well)" : "#b3432c";
+      return (
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
+          '<div>' +
+            '<div>' + escapeHtml(label) + (r.note ? ' <span style="color:var(--text-soft);">· ' + escapeHtml(r.note) + '</span>' : '') + '</div>' +
+            '<div style="color:var(--text-soft);font-size:11.5px;margin-top:2px;">' + formatPointsRefDate(r.ref_date) + '</div>' +
+          '</div>' +
+          '<div style="font-weight:700;color:' + color + ';white-space:nowrap;">' + sign + r.points + '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }).catch(function () {
+    section.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
+  });
+}
+
 function initAttendance(userId) {
   var client = getClient();
   var checkBtn = document.getElementById("checkinBtn");

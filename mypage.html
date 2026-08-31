@@ -65,12 +65,17 @@
     <p class="msg" id="streakMsg"></p>
   </div>
 
+  <div class="card">
+    <div class="well-label" style="margin-top:0;">📋 내 달란트 내역</div>
+    <div id="pointsHistorySection"><p class="msg">불러오는 중...</p></div>
+  </div>
+
   <div class="card" style="font-size:12.5px;color:var(--text-soft);line-height:1.85;">
     <div class="well-label" style="margin-top:0;">💠 개인 달란트 얻는 법</div>
     출석 체크 <strong style="color:var(--well);">+1달란트</strong> · 7일 연속 출석 보너스 <strong style="color:var(--well);">+1달란트</strong><br>
-    하루 인사 작성 후 달란트 뽑기 <strong style="color:var(--well);">0~2달란트 랜덤</strong> (하루 1번)<br>
+    하루 인사 작성 후 달란트 뽑기 <strong style="color:var(--well);">1~2달란트 랜덤</strong> (하루 1번)<br>
     감사노트/기도제목 작성 <strong style="color:var(--well);">+2달란트</strong> (하루 1건만 인정)<br>
-    수요 성경퀴즈 정답 <strong style="color:var(--well);">+1달란트</strong> (<a href="weekly.html" style="color:var(--well);">이번 주 말씀</a>에서 풀 수 있어요)
+    수요 성경퀴즈 정답 <strong style="color:var(--well);">+3달란트</strong> — <strong style="color:var(--gold);">매주 수요일 공개, 목요일 자정까지 딱 이틀만 참여 가능</strong> (<a href="weekly.html" style="color:var(--well);">이번 주 말씀</a>에서 풀 수 있어요)
 
     <hr class="well-divider">
 
@@ -243,6 +248,7 @@
       initGroup(session.user.id);
       initProfileSettings(session);
       initPushSubscribe(session.user.id);
+      initPointsHistory(session.user.id);
     });
   });
 </script>

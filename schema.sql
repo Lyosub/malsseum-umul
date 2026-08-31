@@ -2167,3 +2167,165 @@ drop trigger if exists trg_notify_new_announcement on announcements;
 create trigger trg_notify_new_announcement
   after insert on announcements
   for each row execute function notify_new_announcement();
+
+-- ===== 게임화 밸런스 조정 (하루인사 1~2점, 성경퀴즈 3점 + 수~목 2일 한정 공개) =====
+
+-- 하루인사 뽑기: 0점이 나올 수 있던 기존 방식(0~2점 균등)을 없애고, 항상 1점 또는 2점만
+-- 나오도록 바꾼다. 이미 그날 뽑은 기록이 있으면(0점 포함) 예전처럼 그 값을 그대로 반환하므로
+-- 과거에 이미 0점을 뽑은 기록은 소급 변경되지 않는다 — 오늘 이후 새로 뽑는 경우부터 적용된다.
+create or replace function draw_greeting_talent()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_today date := (now() at time zone 'Asia/Seoul')::date;
+  v_existing integer;
+  v_points integer;
+  v_inserted integer;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  if not exists (
+    select 1 from notes n
+    where n.user_id = auth.uid() and n.type = 'greeting'
+      and (n.created_at at time zone 'Asia/Seoul')::date = v_today
+  ) then
+    raise exception '오늘 하루 인사를 먼저 남겨주세요.';
+  end if;
+
+  select points into v_existing
+  from points_ledger
+  where user_id = auth.uid() and action_type = 'greeting_draw' and ref_date = v_today;
+
+  if found then
+    return v_existing;
+  end if;
+
+  v_points := floor(random() * 2)::integer + 1; -- 1, 2 중 하나를 균등하게 무작위 선택
+
+  insert into points_ledger (user_id, action_type, points, ref_date)
+  values (auth.uid(), 'greeting_draw', v_points, v_today)
+  on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award' do nothing
+  returning points into v_inserted;
+
+  if v_inserted is null then
+    select points into v_inserted
+    from points_ledger
+    where user_id = auth.uid() and action_type = 'greeting_draw' and ref_date = v_today;
+  end if;
+
+  return v_inserted;
+end;
+$$;
+
+-- 성경퀴즈 공개 기간을 "수요일부터 계속 공개"에서 "수요일~목요일, 딱 이틀만 공개"로 좁힌다.
+-- week_start는 그 주의 월요일이므로 수요일 = week_start+2, 목요일 = week_start+3.
+create or replace function get_current_quiz()
+returns table(
+  id bigint,
+  question text,
+  option1 text,
+  option2 text,
+  option3 text,
+  option4 text,
+  week_start date,
+  already_answered boolean,
+  my_selected_option smallint,
+  my_is_correct boolean
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_quiz record;
+  v_today date := (now() at time zone 'Asia/Seoul')::date;
+begin
+  select qq.* into v_quiz
+  from quiz_questions qq
+  where (qq.week_start + 2) <= v_today and v_today <= (qq.week_start + 3)
+  order by qq.week_start desc, qq.created_at desc
+  limit 1;
+  if v_quiz.id is null then
+    return;
+  end if;
+
+  return query
+    select
+      v_quiz.id, v_quiz.question, v_quiz.option1, v_quiz.option2, v_quiz.option3, v_quiz.option4, v_quiz.week_start,
+      exists(select 1 from quiz_answers qa where qa.quiz_id = v_quiz.id and qa.user_id = auth.uid()) as already_answered,
+      (select qa.selected_option from quiz_answers qa where qa.quiz_id = v_quiz.id and qa.user_id = auth.uid()) as my_selected_option,
+      (select qa.is_correct from quiz_answers qa where qa.quiz_id = v_quiz.id and qa.user_id = auth.uid()) as my_is_correct;
+end;
+$$;
+
+-- 제출도 같은 수~목 창 안에서만 허용하고(자정 넘겨 늦게 제출하는 것 방지), 정답 시 달란트를
+-- 기존 1점에서 3점으로 올린다.
+create or replace function submit_quiz_answer(p_quiz_id bigint, p_selected_option smallint)
+returns table(correct boolean, correct_option smallint)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_correct_option smallint;
+  v_week_start date;
+  v_is_correct boolean;
+  v_today date := (now() at time zone 'Asia/Seoul')::date;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  if exists (select 1 from quiz_answers where quiz_id = p_quiz_id and user_id = auth.uid()) then
+    raise exception '이미 참여한 퀴즈예요.';
+  end if;
+
+  select qq.correct_option, qq.week_start into v_correct_option, v_week_start
+  from quiz_questions qq
+  where qq.id = p_quiz_id
+    and (qq.week_start + 2) <= v_today and v_today <= (qq.week_start + 3);
+
+  if v_correct_option is null then
+    raise exception '지금은 참여할 수 없는 퀴즈예요 (공개 기간이 아니에요).';
+  end if;
+
+  v_is_correct := (p_selected_option = v_correct_option);
+
+  insert into quiz_answers (quiz_id, user_id, selected_option, is_correct)
+  values (p_quiz_id, auth.uid(), p_selected_option, v_is_correct);
+
+  if v_is_correct then
+    insert into points_ledger (user_id, action_type, points, ref_date)
+    values (auth.uid(), 'quiz', 3, v_week_start)
+    on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award' do nothing;
+  end if;
+
+  return query select v_is_correct, v_correct_option;
+end;
+$$;
+
+-- ===== 마이페이지: 본인 달란트 적립 내역 =====
+-- 관리자용 get_member_points_admin()과 같은 모양이지만, auth.uid() 본인 것만 볼 수 있다.
+create or replace function get_my_points()
+returns table(id bigint, action_type text, points integer, note text, ref_date date, created_at timestamptz)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  return query
+    select pl.id, pl.action_type, pl.points, pl.note, pl.ref_date, pl.created_at
+    from points_ledger pl
+    where pl.user_id = auth.uid()
+    order by pl.created_at desc;
+end;
+$$;
