@@ -46,6 +46,25 @@
     </div>
     <p class="msg" id="pushSubscribeMsg"></p>
 
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+      <p class="msg" style="margin:0;">🔒 비밀번호를 바꾸고 싶으신가요?</p>
+      <button type="button" id="changePasswordToggleBtn" class="btn ghost" style="white-space:nowrap;padding:8px 14px;font-size:12.5px;">비밀번호 변경</button>
+    </div>
+    <div id="changePasswordSection" style="display:none;margin-top:14px;">
+      <form id="changePasswordForm">
+        <div class="form-row">
+          <label for="newPasswordInput">새 비밀번호</label>
+          <input type="password" id="newPasswordInput" placeholder="6자 이상">
+        </div>
+        <div class="form-row">
+          <label for="newPasswordConfirmInput">새 비밀번호 확인</label>
+          <input type="password" id="newPasswordConfirmInput" placeholder="한 번 더 입력">
+        </div>
+        <button type="submit" class="btn ghost block">비밀번호 변경하기</button>
+        <p class="msg" id="changePasswordMsg"></p>
+      </form>
+    </div>
+
     <a href="admin.html" id="adminPageLink" class="btn block" style="display:none;margin-top:16px;">관리자 페이지로 들어가기</a>
   </div>
 
@@ -253,6 +272,7 @@
       initPushSubscribe(session.user.id);
       initPointsHistory(session.user.id);
       initPointsRulesToggle();
+      initChangePasswordForm();
     });
   });
 </script>

@@ -300,6 +300,53 @@ function initResetPasswordForm() {
   });
 }
 
+// 마이페이지: 로그인된 본인이 직접 비밀번호를 바꾼다. 이미 로그인된 세션이 곧 본인 확인이라
+// Supabase의 auth.updateUser({ password })는 현재 비밀번호를 다시 묻지 않고도 바로 바꿔준다.
+function initChangePasswordForm() {
+  var toggleBtn = document.getElementById("changePasswordToggleBtn");
+  var section = document.getElementById("changePasswordSection");
+  var form = document.getElementById("changePasswordForm");
+  if (!toggleBtn || !section || !form) return;
+
+  toggleBtn.addEventListener("click", function () {
+    section.style.display = section.style.display === "none" ? "block" : "none";
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var client = getClient();
+    var msg = document.getElementById("changePasswordMsg");
+    var pw = document.getElementById("newPasswordInput").value;
+    var pwConfirm = document.getElementById("newPasswordConfirmInput").value;
+
+    if (!client) {
+      msg.textContent = "아직 준비 중이에요.";
+      return;
+    }
+    if (pw.length < 6) {
+      msg.textContent = "비밀번호는 6자 이상이어야 해요.";
+      return;
+    }
+    if (pw !== pwConfirm) {
+      msg.textContent = "두 비밀번호가 서로 달라요.";
+      return;
+    }
+
+    msg.textContent = "변경 중...";
+
+    client.auth.updateUser({ password: pw }).then(function (res) {
+      if (res.error) {
+        msg.textContent = "변경 실패: " + res.error.message;
+        return;
+      }
+      msg.textContent = "비밀번호가 변경됐어요!";
+      form.reset();
+    }).catch(function () {
+      msg.textContent = "네트워크 오류가 발생했어요.";
+    });
+  });
+}
+
 function initLogoutButton() {
   var btn = document.getElementById("logoutBtn");
   if (!btn) return;
