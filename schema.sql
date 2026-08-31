@@ -2151,7 +2151,7 @@ begin
     url := 'https://qaxwxbaqduxqzjqoahcb.supabase.co/functions/v1/send-push',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-webhook-secret', 'ba1d01a34184b73fe8323143120a1b96a720307cc08e4c46'
+      'x-webhook-secret', '0e871e2f00c9f9b50dbc5e5f2764bb0f1e4273298d00fc54'
     ),
     body := jsonb_build_object(
       'title', '📢 새 공지사항',
