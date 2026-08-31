@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "kr.logoswell.twa",
+    "sha256_cert_fingerprints": ["3D:78:2C:EF:62:69:A0:33:D4:B3:59:40:2C:BF:B7:D5:8A:60:F0:58:72:6A:94:F9:35:37:79:6B:AC:EC:04:67"]
+  }
+}]
