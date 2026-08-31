@@ -42,7 +42,16 @@ function formatPointsRefDate(dateStr) {
 function initPointsHistory(userId) {
   var client = getClient();
   var section = document.getElementById("pointsHistorySection");
+  var toggleBtn = document.getElementById("pointsHistoryToggleBtn");
   if (!client || !section) return;
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function () {
+      var isOpen = section.style.display !== "none";
+      section.style.display = isOpen ? "none" : "block";
+      toggleBtn.textContent = isOpen ? "📋 달란트 내역 보기" : "📋 달란트 내역 닫기";
+    });
+  }
 
   client.rpc("get_my_points").then(function (res) {
     var rows = res.data || [];
