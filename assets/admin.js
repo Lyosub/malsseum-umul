@@ -198,6 +198,7 @@ function loadMemberList() {
               (m.is_department_head ? "부장 해제" : "부장으로 지정") +
             '</button>' +
             '<button type="button" class="btn ghost" data-action="edit-real-name" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">본명 수정</button>' +
+            '<button type="button" class="btn ghost" data-action="reset-password" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">비밀번호 초기화</button>' +
             (m.is_admin ? '' :
               '<button type="button" class="btn ghost" data-action="delete-user" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:#b3432c;border-color:#b3432c;">탈퇴시키기</button>'
             )
@@ -344,6 +345,48 @@ function loadMemberList() {
             return;
           }
           loadMemberList();
+        });
+      });
+    });
+
+    // 비밀번호 초기화는 auth.users를 직접 건드려야 해서(SQL 함수로는 막혀있음),
+    // Supabase 공식 관리자 API를 서버 쪽에서 대신 호출해주는 Edge Function을 통해서만 처리한다.
+    listEl.querySelectorAll('button[data-action="reset-password"]').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var itemEl = btn.closest(".note-item");
+        var targetUserId = itemEl.getAttribute("data-user-id");
+        var nickname = itemEl.querySelector("strong").textContent;
+        var newPw = prompt('"' + nickname + '" 님의 새 비밀번호를 입력해주세요 (6자 이상). 학생에게 이 비밀번호를 직접 알려주세요.');
+        if (newPw === null) return;
+        if (newPw.length < 6) {
+          alert("비밀번호는 6자 이상이어야 해요.");
+          return;
+        }
+        if (!confirm('"' + nickname + '" 님의 비밀번호를 "' + newPw + '"(으)로 바꿀까요?')) return;
+
+        getSession().then(function (session) {
+          if (!session) {
+            alert("로그인이 필요합니다.");
+            return;
+          }
+          fetch(SUPABASE_URL + "/functions/v1/admin-reset-password", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + session.access_token
+            },
+            body: JSON.stringify({ p_user_id: targetUserId, p_new_password: newPw })
+          }).then(function (res) {
+            return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+          }).then(function (result) {
+            if (!result.ok) {
+              alert("초기화 실패: " + (result.data && result.data.error ? result.data.error : "알 수 없는 오류"));
+              return;
+            }
+            alert('비밀번호가 "' + newPw + '"(으)로 바뀌었어요. 학생에게 알려주세요.');
+          }).catch(function () {
+            alert("네트워크 오류로 초기화하지 못했어요.");
+          });
         });
       });
     });
