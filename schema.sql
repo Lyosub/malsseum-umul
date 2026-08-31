@@ -2329,3 +2329,46 @@ begin
     order by pl.created_at desc;
 end;
 $$;
+
+-- ===== 로그인 화면: 아이디(이메일) 찾기 =====
+-- 로그인 전(비로그인) 상태에서 호출되므로 auth.uid() 체크를 걸 수 없다. 대신 닉네임 하나만으로는
+-- 남의 이메일을 알아낼 수 없도록, 다른 곳에 공개되지 않는 real_name까지 정확히 일치해야만
+-- 마스킹된 이메일(예: ab***@g***.com)을 돌려주고, 하나라도 안 맞으면 null을 반환한다
+-- (어느 쪽이 틀렸는지 알려주지 않아 무차별 대입으로 실명을 추측하기 어렵게 한다).
+create or replace function find_masked_email(p_nickname text, p_real_name text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid;
+  v_email text;
+  v_at_pos int;
+  v_local text;
+  v_domain text;
+begin
+  select p.user_id into v_user_id
+  from profiles p
+  where p.nickname = trim(p_nickname) and p.real_name = trim(p_real_name)
+  limit 1;
+
+  if v_user_id is null then
+    return null;
+  end if;
+
+  select email into v_email from auth.users where id = v_user_id;
+  if v_email is null or position('@' in v_email) = 0 then
+    return null;
+  end if;
+
+  v_at_pos := position('@' in v_email);
+  v_local := substr(v_email, 1, v_at_pos - 1);
+  v_domain := substr(v_email, v_at_pos + 1);
+
+  return
+    substr(v_local, 1, least(2, length(v_local))) || repeat('*', greatest(length(v_local) - 2, 1)) ||
+    '@' ||
+    substr(v_domain, 1, 1) || repeat('*', greatest(length(v_domain) - 1, 1));
+end;
+$$;

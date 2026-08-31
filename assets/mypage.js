@@ -39,6 +39,18 @@ function formatPointsRefDate(dateStr) {
   return parts.length === 3 ? parts[0] + "." + parts[1] + "." + parts[2] : dateStr;
 }
 
+function initPointsRulesToggle() {
+  var toggle = document.getElementById("pointsRulesToggle");
+  var detail = document.getElementById("pointsRulesDetail");
+  var arrow = document.getElementById("pointsRulesArrow");
+  if (!toggle || !detail) return;
+  toggle.addEventListener("click", function () {
+    var isOpen = detail.style.display !== "none";
+    detail.style.display = isOpen ? "none" : "block";
+    if (arrow) arrow.textContent = isOpen ? "자세히 ▾" : "접기 ▴";
+  });
+}
+
 function initPointsHistory(userId) {
   var client = getClient();
   var section = document.getElementById("pointsHistorySection");

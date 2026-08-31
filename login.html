@@ -32,12 +32,23 @@
       <label for="passwordInput">비밀번호</label>
       <input type="password" id="passwordInput" placeholder="••••••">
     </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin:-4px 0 14px;font-size:13px;color:var(--text-soft);">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="rememberEmailCheck" style="width:auto;"> 이메일 저장
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="keepLoggedInCheck" checked style="width:auto;"> 로그인 상태 유지
+      </label>
+      <p class="msg" style="margin:0 0 0 22px;">해제하면 브라우저를 닫을 때 자동으로 로그아웃돼요.</p>
+    </div>
     <button type="submit" class="btn block">로그인</button>
     <p class="msg" id="formMsg"></p>
   </form>
 
   <p style="text-align:center;font-size:13px;margin-top:10px;">
     <a href="#" id="forgotPasswordLink" style="color:var(--text-soft);text-decoration:underline;">비밀번호를 잊으셨나요?</a>
+    &nbsp;·&nbsp;
+    <a href="#" id="findEmailLink" style="color:var(--text-soft);text-decoration:underline;">이메일을 잊으셨나요?</a>
   </p>
 
   <div id="forgotPasswordSection" class="card" style="display:none;">
@@ -48,6 +59,22 @@
       </div>
       <button type="submit" class="btn ghost block">재설정 링크 보내기</button>
       <p class="msg" id="forgotPasswordMsg"></p>
+    </form>
+  </div>
+
+  <div id="findEmailSection" class="card" style="display:none;">
+    <form id="findEmailForm">
+      <p class="msg" style="margin-top:0;">가입할 때 등록한 닉네임과 이름(본명)을 입력하면, 가입하신 이메일 일부를 확인해드려요.</p>
+      <div class="form-row">
+        <label for="findEmailNickname">닉네임 (활동명)</label>
+        <input type="text" id="findEmailNickname" placeholder="말씀우물에서 쓰는 이름">
+      </div>
+      <div class="form-row">
+        <label for="findEmailRealName">이름 (본명)</label>
+        <input type="text" id="findEmailRealName" placeholder="가입할 때 입력한 실명">
+      </div>
+      <button type="submit" class="btn ghost block">이메일 확인하기</button>
+      <p class="msg" id="findEmailMsg"></p>
     </form>
   </div>
 
@@ -64,6 +91,7 @@
 <script>
   initLoginForm();
   initForgotPasswordForm();
+  initFindEmailForm();
 </script>
 </body>
 </html>

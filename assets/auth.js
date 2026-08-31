@@ -10,7 +10,15 @@ function isConfigured() {
 function getClient() {
   if (!isConfigured()) return null;
   if (!sbClient && window.supabase) {
-    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // 로그인 화면의 "로그인 상태 유지" 체크를 해제했으면 세션을 localStorage(기본값,
+    // 브라우저를 닫아도 유지됨) 대신 sessionStorage(탭을 닫으면 사라짐)에 저장한다.
+    // 이 값은 로그인 시점에 한 번 정해지고, 이후 이 브라우저의 모든 페이지가
+    // 클라이언트를 처음 만들 때 같은 값을 참조하므로 일관되게 적용된다.
+    var opts = {};
+    if (window.localStorage && localStorage.getItem("msu_keep_logged_in") === "0") {
+      opts.auth = { storage: window.sessionStorage };
+    }
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, opts);
   }
   return sbClient;
 }
@@ -100,9 +108,27 @@ function initLoginForm() {
   var form = document.getElementById("loginForm");
   if (!form) return;
 
+  var emailInput = document.getElementById("emailInput");
+  var rememberCheck = document.getElementById("rememberEmailCheck");
+  var keepLoggedInCheck = document.getElementById("keepLoggedInCheck");
+
+  // 이전에 "이메일 저장"을 체크하고 로그인했었다면 이메일을 미리 채워준다.
+  var savedEmail = window.localStorage && localStorage.getItem("msu_saved_email");
+  if (savedEmail && emailInput) {
+    emailInput.value = savedEmail;
+    if (rememberCheck) rememberCheck.checked = true;
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var msg = document.getElementById("formMsg");
+
+    // getClient()가 이 값을 보고 storage(localStorage vs sessionStorage)를 정하므로,
+    // 클라이언트를 처음 만들기(=로그인 시도) 전에 반드시 먼저 저장해둬야 한다.
+    if (keepLoggedInCheck && window.localStorage) {
+      localStorage.setItem("msu_keep_logged_in", keepLoggedInCheck.checked ? "1" : "0");
+    }
+
     var client = getClient();
 
     if (!client) {
@@ -110,7 +136,7 @@ function initLoginForm() {
       return;
     }
 
-    var email = document.getElementById("emailInput").value.trim();
+    var email = emailInput.value.trim();
     var password = document.getElementById("passwordInput").value;
 
     if (!email || !password) {
@@ -125,9 +151,64 @@ function initLoginForm() {
         msg.textContent = "로그인 실패: " + res.error.message;
         return;
       }
+      if (window.localStorage) {
+        if (rememberCheck && rememberCheck.checked) {
+          localStorage.setItem("msu_saved_email", email);
+        } else {
+          localStorage.removeItem("msu_saved_email");
+        }
+      }
       window.location.href = "mypage.html";
     }).catch(function () {
       msg.textContent = "네트워크 오류로 로그인하지 못했어요.";
+    });
+  });
+}
+
+// 아이디(이메일) 찾기: 닉네임 + 실명이 둘 다 일치해야 마스킹된 이메일을 보여준다.
+// 실명은 다른 곳에 공개되지 않는 값이라, 닉네임만 알아도 함부로 남의 이메일을
+// 알아낼 수 없도록 하는 최소한의 보호장치 역할을 한다.
+function initFindEmailForm() {
+  var toggleLink = document.getElementById("findEmailLink");
+  var section = document.getElementById("findEmailSection");
+  var form = document.getElementById("findEmailForm");
+  if (!toggleLink || !section || !form) return;
+
+  toggleLink.addEventListener("click", function (e) {
+    e.preventDefault();
+    section.style.display = section.style.display === "none" ? "block" : "none";
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var client = getClient();
+    var msg = document.getElementById("findEmailMsg");
+    var nickname = document.getElementById("findEmailNickname").value.trim();
+    var realName = document.getElementById("findEmailRealName").value.trim();
+
+    if (!client) {
+      msg.textContent = "아직 준비 중이에요.";
+      return;
+    }
+    if (!nickname || !realName) {
+      msg.textContent = "닉네임과 이름(본명)을 모두 입력해주세요.";
+      return;
+    }
+
+    msg.textContent = "확인 중...";
+
+    client.rpc("find_masked_email", { p_nickname: nickname, p_real_name: realName }).then(function (res) {
+      if (res.error) {
+        msg.textContent = "확인 중 오류가 발생했어요.";
+        return;
+      }
+      if (!res.data) {
+        msg.textContent = "일치하는 계정을 찾을 수 없어요. 닉네임과 이름을 다시 확인해주세요.";
+        return;
+      }
+      msg.textContent = "가입하신 이메일: " + res.data;
+    }).catch(function () {
+      msg.textContent = "네트워크 오류가 발생했어요.";
     });
   });
 }
