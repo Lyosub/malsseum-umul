@@ -186,7 +186,10 @@ function initProfileSettings(session) {
 
   var currentNickname = "";
   // 이름(본명)/전화번호는 이제 본인이 직접 못 고치고 교역자만 회원 관리에서 수정할 수 있어서, 여기서는 조회만 한다.
-  client.from("profiles").select("nickname, real_name, phone_number, is_admin, is_department_head").eq("user_id", userId).single().then(function (res) {
+  // select("*")를 쓰는 이유: 특정 컬럼명을 콕 집어 select하면 그 컬럼이 아직 DB에 없을 때(마이그레이션
+  // 반영 전 등) 조회 전체가 통째로 에러나서 닉네임/관리자 링크까지 같이 안 뜨는 사고가 났었다(2026-09-01).
+  // *를 쓰면 없는 컬럼은 그냥 결과에 없을 뿐, 있는 컬럼은 정상적으로 다 받아온다.
+  client.from("profiles").select("*").eq("user_id", userId).single().then(function (res) {
     var p = res.data;
     if (!p) return;
     currentNickname = p.nickname;
