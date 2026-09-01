@@ -162,8 +162,10 @@ function ensureProfile(session) {
   var meta = session.user.user_metadata || {};
   var nickname = meta.nickname || "익명";
   var payload = { user_id: session.user.id, nickname: nickname };
-  // real_name은 회원가입 때 한 번만 채우고, 기존 값을 빈 값으로 덮어쓰지 않도록 메타데이터에 있을 때만 포함한다.
+  // real_name/phone_number는 회원가입 때 한 번만 채우고, 기존 값을 빈 값으로 덮어쓰지 않도록
+  // 메타데이터에 있을 때만 포함한다.
   if (meta.real_name) payload.real_name = meta.real_name;
+  if (meta.phone_number) payload.phone_number = meta.phone_number;
   return client.from("profiles").upsert(payload).then(function () {});
 }
 
@@ -177,18 +179,20 @@ function initProfileSettings(session) {
   var saveNicknameBtn = document.getElementById("saveNicknameBtn");
   var nicknameMsg = document.getElementById("nicknameMsg");
   var realNameEl = document.getElementById("profileRealName");
+  var phoneEl = document.getElementById("profilePhone");
   if (!client || !nicknameInput) return;
 
   if (emailEl) emailEl.textContent = session.user.email;
 
   var currentNickname = "";
-  // 이름(본명)은 이제 본인이 직접 못 고치고 교역자만 회원 관리에서 수정할 수 있어서, 여기서는 조회만 한다.
-  client.from("profiles").select("nickname, real_name, is_admin, is_department_head").eq("user_id", userId).single().then(function (res) {
+  // 이름(본명)/전화번호는 이제 본인이 직접 못 고치고 교역자만 회원 관리에서 수정할 수 있어서, 여기서는 조회만 한다.
+  client.from("profiles").select("nickname, real_name, phone_number, is_admin, is_department_head").eq("user_id", userId).single().then(function (res) {
     var p = res.data;
     if (!p) return;
     currentNickname = p.nickname;
     if (nicknameInput) nicknameInput.value = p.nickname;
     if (realNameEl) realNameEl.textContent = p.real_name || "아직 등록되지 않았어요";
+    if (phoneEl) phoneEl.textContent = p.phone_number || "아직 등록되지 않았어요";
     var adminLink = document.getElementById("adminPageLink");
     if (adminLink && (p.is_admin || p.is_department_head)) adminLink.style.display = "block";
   });

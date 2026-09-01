@@ -183,7 +183,8 @@ function loadMemberList() {
             (m.is_teacher && !m.is_admin ? ' <span style="color:var(--well);font-size:12px;">교사</span>' : '') +
             ' <span style="color:var(--well);font-size:12px;font-weight:700;">' + m.total_points + '달란트</span>' +
             ' <span style="color:var(--text-soft);font-size:11px;">(눌러서 상세보기)</span>' +
-            '<br>' + (m.real_name ? '본명: ' + escapeHtmlAdmin(m.real_name) + ' · ' : '') + escapeHtmlAdmin(m.email) +
+            '<br>' + (m.real_name ? '본명: ' + escapeHtmlAdmin(m.real_name) + ' · ' : '') +
+            (m.phone_number ? '☎ ' + escapeHtmlAdmin(m.phone_number) + ' · ' : '') + escapeHtmlAdmin(m.email) +
           '</div>' +
           '<div class="meta">가입: ' + formatDateTime(m.joined_at) +
             ' · 최근 접속: ' + (lastSeen || "기록 없음") +
@@ -198,6 +199,7 @@ function loadMemberList() {
               (m.is_department_head ? "부장 해제" : "부장으로 지정") +
             '</button>' +
             '<button type="button" class="btn ghost" data-action="edit-real-name" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">본명 수정</button>' +
+            '<button type="button" class="btn ghost" data-action="edit-phone" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">전화번호 수정</button>' +
             '<button type="button" class="btn ghost" data-action="reset-password" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">비밀번호 초기화</button>' +
             (m.is_admin ? '' :
               '<button type="button" class="btn ghost" data-action="delete-user" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;color:#b3432c;border-color:#b3432c;">탈퇴시키기</button>'
@@ -349,6 +351,28 @@ function loadMemberList() {
       });
     });
 
+    listEl.querySelectorAll('button[data-action="edit-phone"]').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var itemEl = btn.closest(".note-item");
+        var targetUserId = itemEl.getAttribute("data-user-id");
+        var nickname = itemEl.querySelector("strong").textContent;
+        var newPhone = prompt('"' + nickname + '" 님의 전화번호를 입력해주세요. (예: 010-1234-5678)');
+        if (newPhone === null) return;
+        newPhone = newPhone.trim();
+        if (!newPhone) {
+          alert("전화번호를 입력해주세요.");
+          return;
+        }
+        client.rpc("admin_set_phone_number", { p_user_id: targetUserId, p_phone_number: newPhone }).then(function (res) {
+          if (res.error) {
+            alert("수정에 실패했어요.");
+            return;
+          }
+          loadMemberList();
+        });
+      });
+    });
+
     // 비밀번호 초기화는 auth.users를 직접 건드려야 해서(SQL 함수로는 막혀있음),
     // Supabase 공식 관리자 API를 서버 쪽에서 대신 호출해주는 Edge Function을 통해서만 처리한다.
     listEl.querySelectorAll('button[data-action="reset-password"]').forEach(function (btn) {
@@ -421,6 +445,7 @@ function loadMemberList() {
       renderList(members.filter(function (m) {
         return (m.nickname && m.nickname.toLowerCase().indexOf(q) !== -1) ||
           (m.real_name && m.real_name.toLowerCase().indexOf(q) !== -1) ||
+          (m.phone_number && m.phone_number.replace(/[^0-9]/g, "").indexOf(q.replace(/[^0-9]/g, "")) !== -1 && q.replace(/[^0-9]/g, "")) ||
           (m.email && m.email.toLowerCase().indexOf(q) !== -1);
       }));
     }

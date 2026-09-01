@@ -60,13 +60,20 @@ function initSignupForm() {
     var nickname = document.getElementById("nicknameInput").value.trim();
     var realNameInput = document.getElementById("realNameInput");
     var realName = realNameInput ? realNameInput.value.trim() : "";
+    var phoneInput = document.getElementById("phoneInput");
+    var phone = phoneInput ? phoneInput.value.trim() : "";
+    var phoneDigits = phone.replace(/[^0-9]/g, "");
 
-    if (!email || !password || !nickname || (realNameInput && !realName)) {
+    if (!email || !password || !nickname || (realNameInput && !realName) || (phoneInput && !phone)) {
       msg.textContent = "모든 항목을 입력해주세요.";
       return;
     }
     if (password.length < 6) {
       msg.textContent = "비밀번호는 6자 이상이어야 해요.";
+      return;
+    }
+    if (phoneInput && phoneDigits.length < 9) {
+      msg.textContent = "전화번호를 정확히 입력해주세요.";
       return;
     }
 
@@ -76,7 +83,7 @@ function initSignupForm() {
       client.auth.signUp({
         email: email,
         password: password,
-        options: { data: { nickname: nickname, real_name: realName } }
+        options: { data: { nickname: nickname, real_name: realName, phone_number: phone } }
       }).then(function (res) {
         if (res.error) {
           msg.textContent = "가입 실패: " + res.error.message;

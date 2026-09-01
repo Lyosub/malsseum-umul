@@ -2372,3 +2372,115 @@ begin
     substr(v_domain, 1, 1) || repeat('*', greatest(length(v_domain) - 1, 1));
 end;
 $$;
+
+-- ===== 회원가입 때 전화번호도 받기 (아이디/비번 찾기 + 교역자 연락용) =====
+-- 가짜 이메일로 가입하는 경우가 실제로 있었고(예: 13.com), 그러면 본인이 이메일을 통한
+-- 어떤 자기 확인도 못 받게 되어버린다. 전화번호는 학생들이 가장 확실히 기억하는 정보라
+-- 아이디 찾기의 대체 식별자로 쓰고, 교역자가 회원 관리에서 보고 직접 연락할 수 있게 한다.
+-- (실제 SMS 인증은 하지 않는다 — 단순 조회/연락용 저장 필드다.)
+alter table profiles add column if not exists phone_number text;
+
+-- get_member_list에 전화번호를 추가한다. real_name과 마찬가지로 민감정보라 교역자(is_admin)에게만
+-- 보여주고, 부장에게는 이전처럼 null로 가린다.
+drop function if exists get_member_list();
+create or replace function get_member_list()
+returns table(
+  user_id uuid,
+  nickname text,
+  real_name text,
+  phone_number text,
+  email text,
+  is_admin boolean,
+  is_teacher boolean,
+  is_department_head boolean,
+  joined_at timestamptz,
+  last_sign_in_at timestamptz,
+  last_note_type text,
+  last_note_at timestamptz,
+  total_points bigint
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    p.user_id, p.nickname,
+    case when exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true) then p.real_name else null end,
+    case when exists (select 1 from profiles ap where ap.user_id = auth.uid() and ap.is_admin = true) then p.phone_number else null end,
+    u.email, p.is_admin, p.is_teacher, p.is_department_head, p.created_at, u.last_sign_in_at,
+    (select n.type from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_type,
+    (select n.created_at from notes n where n.user_id = p.user_id order by n.created_at desc limit 1) as last_note_at,
+    (select coalesce(sum(pl.points), 0) from points_ledger pl where pl.user_id = p.user_id)::bigint as total_points
+  from profiles p
+  join auth.users u on u.id = p.user_id
+  where exists (
+    select 1 from profiles admin_p where admin_p.user_id = auth.uid() and (admin_p.is_admin = true or admin_p.is_department_head = true)
+  )
+  order by p.created_at desc;
+$$;
+
+-- 교역자 전용: 회원 전화번호를 고친다(오타 정정용). admin_set_real_name과 같은 방식.
+create or replace function admin_set_phone_number(p_user_id uuid, p_phone_number text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from profiles where user_id = auth.uid() and is_admin = true
+  ) then
+    raise exception '교역자만 전화번호를 수정할 수 있습니다.';
+  end if;
+
+  update profiles set phone_number = p_phone_number where user_id = p_user_id;
+  return true;
+end;
+$$;
+
+-- 아이디 찾기: 실명을 몰라도(또는 헷갈려도) 전화번호로도 본인 확인이 되게 확장한다.
+-- 숫자만 남겨서 비교하므로 "010-1234-5678"과 "01012345678" 둘 다 같은 값으로 취급한다.
+create or replace function find_masked_email(p_nickname text, p_real_name text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid;
+  v_email text;
+  v_at_pos int;
+  v_local text;
+  v_domain text;
+  v_input_digits text;
+begin
+  v_input_digits := regexp_replace(p_real_name, '[^0-9]', '', 'g');
+
+  select p.user_id into v_user_id
+  from profiles p
+  where p.nickname = trim(p_nickname)
+    and (
+      p.real_name = trim(p_real_name)
+      or (v_input_digits <> '' and p.phone_number is not null and regexp_replace(p.phone_number, '[^0-9]', '', 'g') = v_input_digits)
+    )
+  limit 1;
+
+  if v_user_id is null then
+    return null;
+  end if;
+
+  select email into v_email from auth.users where id = v_user_id;
+  if v_email is null or position('@' in v_email) = 0 then
+    return null;
+  end if;
+
+  v_at_pos := position('@' in v_email);
+  v_local := substr(v_email, 1, v_at_pos - 1);
+  v_domain := substr(v_email, v_at_pos + 1);
+
+  return
+    substr(v_local, 1, least(2, length(v_local))) || repeat('*', greatest(length(v_local) - 2, 1)) ||
+    '@' ||
+    substr(v_domain, 1, 1) || repeat('*', greatest(length(v_domain) - 1, 1));
+end;
+$$;
