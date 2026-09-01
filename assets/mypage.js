@@ -184,13 +184,16 @@ function initProfileSettings(session) {
   var saveNicknameBtn = document.getElementById("saveNicknameBtn");
   var nicknameMsg = document.getElementById("nicknameMsg");
   var realNameEl = document.getElementById("profileRealName");
-  var phoneEl = document.getElementById("profilePhone");
+  var phoneInput = document.getElementById("phoneEditInput");
+  var savePhoneBtn = document.getElementById("savePhoneBtn");
+  var phoneMsg = document.getElementById("phoneMsg");
   if (!client || !nicknameInput) return;
 
   if (emailEl) emailEl.textContent = session.user.email;
 
   var currentNickname = "";
-  // 이름(본명)/전화번호는 이제 본인이 직접 못 고치고 교역자만 회원 관리에서 수정할 수 있어서, 여기서는 조회만 한다.
+  // 이름(본명)은 이제 본인이 직접 못 고치고 교역자만 회원 관리에서 수정할 수 있어서, 여기서는 조회만 한다.
+  // 전화번호는 신분증명 급으로 민감한 정보가 아니라서(닉네임처럼) 본인이 직접 고칠 수 있게 한다.
   // select("*")를 쓰는 이유: 특정 컬럼명을 콕 집어 select하면 그 컬럼이 아직 DB에 없을 때(마이그레이션
   // 반영 전 등) 조회 전체가 통째로 에러나서 닉네임/관리자 링크까지 같이 안 뜨는 사고가 났었다(2026-09-01).
   // *를 쓰면 없는 컬럼은 그냥 결과에 없을 뿐, 있는 컬럼은 정상적으로 다 받아온다.
@@ -200,10 +203,34 @@ function initProfileSettings(session) {
     currentNickname = p.nickname;
     if (nicknameInput) nicknameInput.value = p.nickname;
     if (realNameEl) realNameEl.textContent = p.real_name || "아직 등록되지 않았어요";
-    if (phoneEl) phoneEl.textContent = p.phone_number || "아직 등록되지 않았어요";
+    if (phoneInput) phoneInput.value = p.phone_number || "";
     var adminLink = document.getElementById("adminPageLink");
     if (adminLink && (p.is_admin || p.is_department_head)) adminLink.style.display = "block";
   });
+
+  if (savePhoneBtn) {
+    savePhoneBtn.addEventListener("click", function () {
+      var value = phoneInput.value.trim();
+      var digits = value.replace(/[^0-9]/g, "");
+      if (!value) {
+        phoneMsg.textContent = "전화번호를 입력해주세요.";
+        return;
+      }
+      if (digits.length < 9) {
+        phoneMsg.textContent = "전화번호를 정확히 입력해주세요.";
+        return;
+      }
+      savePhoneBtn.disabled = true;
+      client.from("profiles").update({ phone_number: value }).eq("user_id", userId).then(function (res) {
+        savePhoneBtn.disabled = false;
+        if (res.error) {
+          phoneMsg.textContent = "저장에 실패했어요.";
+          return;
+        }
+        phoneMsg.textContent = "전화번호가 저장되었습니다.";
+      });
+    });
+  }
 
   if (saveNicknameBtn) {
     saveNicknameBtn.addEventListener("click", function () {
