@@ -592,6 +592,42 @@ textarea { min-height: 90px; resize: vertical; }
   background: inherit;
 }
 
+/* 항목이 많거나 글이 길어서 컬럼 하나가 늘어나면 flexbox 특성상 옆 컬럼들까지
+   같이 늘어나 카드 전체가 세로로 너무 길어지는 문제가 있었다(2026-09-02).
+   내용 목록에만 최대 높이를 주고 그 안에서만 스크롤되게 해서 카드 전체 길이를 고정한다. */
+.feed-preview-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* 자유게시판 미리보기: 홈 화면 상단에서 가로로 2~3개가 한 번에 보이도록 하는
+   좁은 카드 버전 (실시간 나눔의 78%짜리 넓은 컬럼과 달리 한 화면에 여러 개가 보여야 해서
+   너비를 훨씬 좁게 잡는다). */
+.mini-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin: 0 -20px;
+  padding: 0 20px 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mini-scroll .note-item {
+  flex: 0 0 44%;
+  max-width: 210px;
+  background: rgba(20, 112, 122, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.mini-scroll .note-item .content {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .scroll-column .note-item:first-of-type { padding-top: 4px; }
 
 .member-pager {
