@@ -159,14 +159,19 @@ function initAttendance(userId) {
 function ensureProfile(session) {
   var client = getClient();
   if (!client) return Promise.resolve();
-  var meta = session.user.user_metadata || {};
-  var nickname = meta.nickname || "익명";
-  var payload = { user_id: session.user.id, nickname: nickname };
-  // real_name/phone_number는 회원가입 때 한 번만 채우고, 기존 값을 빈 값으로 덮어쓰지 않도록
-  // 메타데이터에 있을 때만 포함한다.
-  if (meta.real_name) payload.real_name = meta.real_name;
-  if (meta.phone_number) payload.phone_number = meta.phone_number;
-  return client.from("profiles").upsert(payload).then(function () {});
+  var userId = session.user.id;
+  // 프로필 행이 이미 있으면 아무것도 건드리지 않는다. 예전에는 매번 upsert로 회원가입 때의
+  // user_metadata.nickname을 다시 써넣었는데, 그러면 마이페이지에서 닉네임을 바꾼 뒤 페이지를
+  // 나갔다 들어올 때마다 이 함수가 또 실행되면서 방금 바꾼 닉네임을 가입 당시 이름으로 도로
+  // 덮어써버리는 버그가 있었다(2026-09-01 발견). 프로필이 아직 없는 최초 1회에만 만든다.
+  return client.from("profiles").select("user_id").eq("user_id", userId).maybeSingle().then(function (res) {
+    if (res.data) return;
+    var meta = session.user.user_metadata || {};
+    var payload = { user_id: userId, nickname: meta.nickname || "익명" };
+    if (meta.real_name) payload.real_name = meta.real_name;
+    if (meta.phone_number) payload.phone_number = meta.phone_number;
+    return client.from("profiles").insert(payload).then(function () {});
+  });
 }
 
 // 이름(본명) 확인/수정 — real_name 기능이 나오기 전에 가입한 사람은 값이 비어있을 수 있어서
