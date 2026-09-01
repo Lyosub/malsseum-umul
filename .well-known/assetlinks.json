@@ -3,6 +3,9 @@
   "target": {
     "namespace": "android_app",
     "package_name": "kr.logoswell.twa",
-    "sha256_cert_fingerprints": ["3D:78:2C:EF:62:69:A0:33:D4:B3:59:40:2C:BF:B7:D5:8A:60:F0:58:72:6A:94:F9:35:37:79:6B:AC:EC:04:67"]
+    "sha256_cert_fingerprints": [
+      "3D:78:2C:EF:62:69:A0:33:D4:B3:59:40:2C:BF:B7:D5:8A:60:F0:58:72:6A:94:F9:35:37:79:6B:AC:EC:04:67",
+      "40:50:C8:EC:AE:8E:FB:10:C6:80:E0:9A:E9:3C:02:20:91:A8:F0:54:AF:81:E7:F7:C4:78:9D:46:61:37:A9:B4"
+    ]
   }
 }]
