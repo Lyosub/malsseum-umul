@@ -996,3 +996,34 @@ footer.site a { text-decoration: underline; }
   padding: 2px;
   line-height: 1;
 }
+
+/* 성경책 순서 맞추기 게임: 66권을 눌러야 하는 알약(칩) 버튼들 */
+.book-chip {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform .1s ease, background .15s ease, color .15s ease, border-color .15s ease;
+}
+.book-chip.correct {
+  background: var(--well);
+  border-color: var(--well);
+  color: #fff;
+  opacity: .45;
+  cursor: default;
+}
+.book-chip.wrong {
+  animation: bookChipShake .3s ease;
+  border-color: #b3432c;
+  color: #b3432c;
+}
+@keyframes bookChipShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}

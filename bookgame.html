@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>성경책 순서 맞추기 | 말씀우물</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14707a">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script defer src="assets/pwa.js"></script>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav><a href="index.html">홈</a></nav>
+</header>
+<div class="wrap">
+  <section class="hero">
+    <h1>📚 성경책 순서 맞추기</h1>
+    <p>섞여있는 66권을 창세기부터 요한계시록까지, 순서대로 빠르게 눌러보세요!</p>
+  </section>
+
+  <div class="card" style="text-align:center;">
+    <div id="bgTimer" style="font-size:32px;font-weight:800;color:var(--well-deep);font-variant-numeric:tabular-nums;">00:00.0</div>
+    <p class="msg" id="bgProgress" style="margin:4px 0 0;">다음 책: 창세기</p>
+    <button type="button" id="bgResetBtn" class="btn ghost" style="margin-top:10px;padding:8px 16px;font-size:12.5px;">다시 섞기</button>
+  </div>
+
+  <div class="card" id="bgResultCard" style="display:none;text-align:center;">
+    <h3 style="margin-top:0;">🎉 완료!</h3>
+    <p style="font-size:28px;font-weight:800;color:var(--well-deep);margin:6px 0;" id="bgResultTime"></p>
+    <p class="msg" id="bgResultMsg"></p>
+  </div>
+
+  <div class="card">
+    <div id="bgGrid" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">🏆 최고 기록 TOP 10</h3>
+    <p class="msg" id="bgMyBest" style="margin-top:0;"></p>
+    <div id="bgLeaderboard"><p class="msg">로그인하면 볼 수 있어요.</p></div>
+  </div>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  💧 말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a>
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/bookgame.js"></script>
+<script>
+  initBookGame();
+</script>
+</body>
+</html>

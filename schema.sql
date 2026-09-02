@@ -2484,3 +2484,103 @@ begin
     substr(v_domain, 1, 1) || repeat('*', greatest(length(v_domain) - 1, 1));
 end;
 $$;
+
+-- ===== 성경책 순서 맞추기 게임 =====
+-- 섞여있는 66권 책 이름을 순서대로 눌러서 맞히는 게임. 최고 기록(ms)만 계정당 하나 보관하고,
+-- 하루에 한 번만(몇 번을 다시 플레이하든) 참여 보상을 준다 — 계속 재도전해서 기록은 얼마든지
+-- 갱신할 수 있지만, 달란트 파밍은 못 하게 막는다.
+create table if not exists book_game_scores (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  best_time_ms integer not null,
+  updated_at timestamptz not null default now()
+);
+alter table book_game_scores enable row level security;
+
+create policy "본인 기록만 조회" on book_game_scores
+  for select using (auth.uid() = user_id);
+
+create policy "본인 기록만 삽입" on book_game_scores
+  for insert with check (auth.uid() = user_id);
+
+create policy "본인 기록만 수정" on book_game_scores
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create or replace function submit_book_game_score(p_time_ms integer)
+returns table(is_new_best boolean, points_awarded integer)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_existing integer;
+  v_is_new_best boolean := false;
+  v_points integer := 0;
+  v_today date := (now() at time zone 'Asia/Seoul')::date;
+  v_already_played_today boolean;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  select best_time_ms into v_existing from book_game_scores where user_id = auth.uid();
+
+  if v_existing is null or p_time_ms < v_existing then
+    insert into book_game_scores (user_id, best_time_ms, updated_at)
+    values (auth.uid(), p_time_ms, now())
+    on conflict (user_id) do update set best_time_ms = excluded.best_time_ms, updated_at = now();
+    v_is_new_best := true;
+  end if;
+
+  select exists(
+    select 1 from points_ledger
+    where user_id = auth.uid() and action_type = 'book_game' and ref_date = v_today
+  ) into v_already_played_today;
+
+  if not v_already_played_today then
+    insert into points_ledger (user_id, action_type, points, ref_date)
+    values (auth.uid(), 'book_game', 2, v_today);
+    v_points := 2;
+  end if;
+
+  return query select v_is_new_best, v_points;
+end;
+$$;
+
+-- 랭킹은 닉네임 + 최고기록만 공개한다(로그인한 사람만 조회 가능, 실명/이메일 노출 없음).
+create or replace function get_book_game_leaderboard()
+returns table(nickname text, best_time_ms integer)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  return query
+    select p.nickname, b.best_time_ms
+    from book_game_scores b
+    join profiles p on p.user_id = b.user_id
+    order by b.best_time_ms asc
+    limit 10;
+end;
+$$;
+
+-- 내 최고 기록 조회 (없으면 null)
+create or replace function get_my_book_game_score()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_time integer;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  select best_time_ms into v_time from book_game_scores where user_id = auth.uid();
+  return v_time;
+end;
+$$;
