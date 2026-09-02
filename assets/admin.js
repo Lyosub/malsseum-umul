@@ -187,7 +187,7 @@ function loadMemberList() {
             (m.phone_number ? '☎ ' + escapeHtmlAdmin(m.phone_number) + ' · ' : '') + escapeHtmlAdmin(m.email) +
           '</div>' +
           '<div class="meta">가입: ' + formatDateTime(m.joined_at) +
-            ' · 최근 접속: ' + (lastSeen || "기록 없음") +
+            ' · 최근 로그인: ' + (lastSeen || "기록 없음") +
             '<br>최근 기록: ' + lastNote + '</div>' +
           '<div class="member-detail" data-detail-for="' + m.user_id + '" style="display:none;"></div>' +
           '<button type="button" class="btn ghost" data-action="award-points" style="margin-top:8px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">달란트 부여</button>' +
