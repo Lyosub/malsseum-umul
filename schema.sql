@@ -2584,3 +2584,104 @@ begin
   return v_time;
 end;
 $$;
+
+-- 66권을 한 번에 하기엔 너무 많다는 피드백을 받아, 구약(39권)/신약(27권)을 나눠서
+-- 따로 도전하고 따로 기록을 매기도록 바꾼다. 기존 1인자 함수들은 새 2인자 버전으로 대체한다.
+drop function if exists submit_book_game_score(integer);
+drop function if exists get_book_game_leaderboard();
+drop function if exists get_my_book_game_score();
+
+alter table book_game_scores drop constraint if exists book_game_scores_pkey;
+alter table book_game_scores add column if not exists mode text not null default 'ot' check (mode in ('ot', 'nt'));
+alter table book_game_scores add primary key (user_id, mode);
+
+create or replace function submit_book_game_score(p_time_ms integer, p_mode text)
+returns table(is_new_best boolean, points_awarded integer)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_existing integer;
+  v_is_new_best boolean := false;
+  v_points integer := 0;
+  v_today date := (now() at time zone 'Asia/Seoul')::date;
+  v_action text;
+  v_already_played_today boolean;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  if p_mode not in ('ot', 'nt') then
+    raise exception '잘못된 모드입니다.';
+  end if;
+
+  select best_time_ms into v_existing from book_game_scores where user_id = auth.uid() and mode = p_mode;
+
+  if v_existing is null or p_time_ms < v_existing then
+    insert into book_game_scores (user_id, mode, best_time_ms, updated_at)
+    values (auth.uid(), p_mode, p_time_ms, now())
+    on conflict (user_id, mode) do update set best_time_ms = excluded.best_time_ms, updated_at = now();
+    v_is_new_best := true;
+  end if;
+
+  v_action := 'book_game_' || p_mode;
+
+  select exists(
+    select 1 from points_ledger
+    where user_id = auth.uid() and action_type = v_action and ref_date = v_today
+  ) into v_already_played_today;
+
+  if not v_already_played_today then
+    insert into points_ledger (user_id, action_type, points, ref_date)
+    values (auth.uid(), v_action, 2, v_today);
+    v_points := 2;
+  end if;
+
+  return query select v_is_new_best, v_points;
+end;
+$$;
+
+create or replace function get_book_game_leaderboard(p_mode text)
+returns table(nickname text, best_time_ms integer)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  if p_mode not in ('ot', 'nt') then
+    raise exception '잘못된 모드입니다.';
+  end if;
+
+  return query
+    select p.nickname, b.best_time_ms
+    from book_game_scores b
+    join profiles p on p.user_id = b.user_id
+    where b.mode = p_mode
+    order by b.best_time_ms asc
+    limit 10;
+end;
+$$;
+
+create or replace function get_my_book_game_score(p_mode text)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_time integer;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  if p_mode not in ('ot', 'nt') then
+    raise exception '잘못된 모드입니다.';
+  end if;
+  select best_time_ms into v_time from book_game_scores where user_id = auth.uid() and mode = p_mode;
+  return v_time;
+end;
+$$;

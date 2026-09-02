@@ -1,7 +1,8 @@
-// 성경책 순서 맞추기 게임: 섞여있는 66권을 창세기부터 요한계시록까지 순서대로 눌러야 한다.
+// 성경책 순서 맞추기 게임: 섞여있는 책들을 순서대로 눌러야 한다. 구약(39권)/신약(27권)을
+// 나눠서 따로 도전하고 따로 기록을 매긴다(66권을 한 번에 하기엔 너무 많다는 피드백 반영).
 // auth.js의 getClient(), getSession()에 의존함
 
-var BG_BOOKS = [
+var BG_OT_BOOKS = [
   "창세기", "출애굽기", "레위기", "민수기", "신명기",
   "여호수아", "사사기", "룻기", "사무엘상", "사무엘하",
   "열왕기상", "열왕기하", "역대상", "역대하", "에스라",
@@ -9,7 +10,10 @@ var BG_BOOKS = [
   "전도서", "아가", "이사야", "예레미야", "예레미야애가",
   "에스겔", "다니엘", "호세아", "요엘", "아모스",
   "오바댜", "요나", "미가", "나훔", "하박국",
-  "스바냐", "학개", "스가랴", "말라기",
+  "스바냐", "학개", "스가랴", "말라기"
+];
+
+var BG_NT_BOOKS = [
   "마태복음", "마가복음", "누가복음", "요한복음", "사도행전",
   "로마서", "고린도전서", "고린도후서", "갈라디아서", "에베소서",
   "빌립보서", "골로새서", "데살로니가전서", "데살로니가후서", "디모데전서",
@@ -18,10 +22,15 @@ var BG_BOOKS = [
   "유다서", "요한계시록"
 ];
 
+var bgMode = "ot";
 var bgNextIndex = 0;
 var bgStartTime = null;
 var bgTimerInterval = null;
 var bgFinished = false;
+
+function bgCurrentBooks() {
+  return bgMode === "nt" ? BG_NT_BOOKS : BG_OT_BOOKS;
+}
 
 function bgShuffle(arr) {
   var a = arr.slice();
@@ -48,7 +57,8 @@ function bgUpdateTimerDisplay() {
 function bgRenderGrid() {
   var grid = document.getElementById("bgGrid");
   if (!grid) return;
-  var order = BG_BOOKS.map(function (name, i) { return { name: name, correctIndex: i }; });
+  var books = bgCurrentBooks();
+  var order = books.map(function (name, i) { return { name: name, correctIndex: i }; });
   var shuffled = bgShuffle(order);
   grid.innerHTML = shuffled.map(function (item) {
     return '<button type="button" class="book-chip" data-correct-index="' + item.correctIndex + '">' + item.name + '</button>';
@@ -63,7 +73,7 @@ function bgRenderGrid() {
         if (bgNextIndex === 0) bgStartGame();
         bgNextIndex++;
         bgUpdateProgress();
-        if (bgNextIndex === BG_BOOKS.length) bgFinishGame();
+        if (bgNextIndex === bgCurrentBooks().length) bgFinishGame();
       } else {
         chip.classList.remove("wrong");
         void chip.offsetWidth;
@@ -77,10 +87,11 @@ function bgRenderGrid() {
 function bgUpdateProgress() {
   var el = document.getElementById("bgProgress");
   if (!el) return;
-  if (bgNextIndex >= BG_BOOKS.length) {
+  var books = bgCurrentBooks();
+  if (bgNextIndex >= books.length) {
     el.textContent = "완료!";
   } else {
-    el.textContent = "다음 책: " + BG_BOOKS[bgNextIndex];
+    el.textContent = "다음 책: " + books[bgNextIndex];
   }
 }
 
@@ -120,7 +131,7 @@ function bgFinishGame() {
       msgEl.textContent = "로그인하면 기록 저장하고 +2달란트 받을 수 있어요.";
       return;
     }
-    client.rpc("submit_book_game_score", { p_time_ms: Math.round(elapsed) }).then(function (res) {
+    client.rpc("submit_book_game_score", { p_time_ms: Math.round(elapsed), p_mode: bgMode }).then(function (res) {
       if (res.error) {
         msgEl.textContent = "기록 저장에 실패했어요.";
         return;
@@ -142,7 +153,7 @@ function bgLoadMyBest() {
   if (!client || !el) return;
   getSession().then(function (session) {
     if (!session) { el.textContent = ""; return; }
-    client.rpc("get_my_book_game_score").then(function (res) {
+    client.rpc("get_my_book_game_score", { p_mode: bgMode }).then(function (res) {
       if (res.error || res.data == null) { el.textContent = "아직 기록이 없어요. 한 번 도전해보세요!"; return; }
       el.textContent = "내 최고기록: " + bgFormatTime(res.data);
     });
@@ -155,7 +166,7 @@ function bgLoadLeaderboard() {
   if (!client || !el) return;
   getSession().then(function (session) {
     if (!session) { el.innerHTML = '<p class="msg">로그인하면 볼 수 있어요.</p>'; return; }
-    client.rpc("get_book_game_leaderboard").then(function (res) {
+    client.rpc("get_book_game_leaderboard", { p_mode: bgMode }).then(function (res) {
       if (res.error || !res.data || !res.data.length) {
         el.innerHTML = '<p class="msg">아직 기록이 없어요.</p>';
         return;
@@ -179,6 +190,19 @@ function escapeHtmlBookGame(str) {
     .replace(/>/g, "&gt;");
 }
 
+function bgSetMode(mode) {
+  bgMode = mode;
+  var otBtn = document.getElementById("bgModeOt");
+  var ntBtn = document.getElementById("bgModeNt");
+  if (otBtn && ntBtn) {
+    otBtn.className = mode === "ot" ? "btn block" : "btn ghost block";
+    ntBtn.className = mode === "nt" ? "btn block" : "btn ghost block";
+  }
+  bgResetGame();
+  bgLoadMyBest();
+  bgLoadLeaderboard();
+}
+
 function initBookGame() {
   bgRenderGrid();
   bgUpdateProgress();
@@ -187,4 +211,9 @@ function initBookGame() {
 
   var resetBtn = document.getElementById("bgResetBtn");
   if (resetBtn) resetBtn.addEventListener("click", bgResetGame);
+
+  var otBtn = document.getElementById("bgModeOt");
+  var ntBtn = document.getElementById("bgModeNt");
+  if (otBtn) otBtn.addEventListener("click", function () { bgSetMode("ot"); });
+  if (ntBtn) ntBtn.addEventListener("click", function () { bgSetMode("nt"); });
 }
