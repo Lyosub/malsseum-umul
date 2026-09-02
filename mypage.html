@@ -171,23 +171,31 @@
   <div class="card">
     <h3 style="margin-top:0;">지난 기록</h3>
 
-    <div class="well-label" style="margin-top:0;">🙋 하루 인사</div>
-    <div id="noteListGreeting" class="feed-preview-list"></div>
+    <h3 class="accordion-toggle" style="margin-top:0;">🙋 하루 인사 <span class="accordion-chevron">▸</span></h3>
+    <div class="accordion-body" style="display:none;">
+      <div id="noteListGreeting" class="feed-preview-list"></div>
+    </div>
 
     <hr class="well-divider">
 
-    <div class="well-label">🙏 감사노트</div>
-    <div id="noteListGratitude" class="feed-preview-list"></div>
+    <h3 class="accordion-toggle">🙏 감사노트 <span class="accordion-chevron">▸</span></h3>
+    <div class="accordion-body" style="display:none;">
+      <div id="noteListGratitude" class="feed-preview-list"></div>
+    </div>
 
     <hr class="well-divider">
 
-    <div class="well-label">🕊️ 기도제목</div>
-    <div id="noteListPrayer" class="feed-preview-list"></div>
+    <h3 class="accordion-toggle">🕊️ 기도제목 <span class="accordion-chevron">▸</span></h3>
+    <div class="accordion-body" style="display:none;">
+      <div id="noteListPrayer" class="feed-preview-list"></div>
+    </div>
 
     <hr class="well-divider">
 
-    <div class="well-label">📮 건의사항 (나에게만 보여요)</div>
-    <div id="noteListSuggestion" class="feed-preview-list"></div>
+    <h3 class="accordion-toggle">📮 건의사항 (나에게만 보여요) <span class="accordion-chevron">▸</span></h3>
+    <div class="accordion-body" style="display:none;">
+      <div id="noteListSuggestion" class="feed-preview-list"></div>
+    </div>
   </div>
 
   <div class="card" id="groupSection">
@@ -281,6 +289,7 @@
       initPointsHistory(session.user.id);
       initPointsRulesToggle();
       initChangePasswordForm();
+      initAccordions();
     });
   });
 </script>

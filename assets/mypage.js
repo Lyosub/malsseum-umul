@@ -1,6 +1,21 @@
 // 마이페이지: 출석 체크 + 감사노트/기도제목/하루인사 기록
 // auth.js의 getClient(), requireLogin()에 의존함
 
+// "지난 기록"의 각 항목(하루인사/감사노트/기도제목/건의사항)을 아코디언으로 접어둔다.
+// admin.js의 initAccordions()와 같은 방식(.accordion-toggle/.accordion-body)인데,
+// admin.js는 마이페이지에서 로드하지 않으므로 여기 따로 둔다.
+function initAccordions() {
+  document.querySelectorAll(".accordion-toggle").forEach(function (toggle) {
+    var body = toggle.nextElementSibling;
+    if (!body || !body.classList.contains("accordion-body")) return;
+    toggle.addEventListener("click", function () {
+      var isOpen = body.style.display === "block";
+      body.style.display = isOpen ? "none" : "block";
+      toggle.classList.toggle("open", !isOpen);
+    });
+  });
+}
+
 function todayStr() {
   var d = new Date();
   var m = String(d.getMonth() + 1).padStart(2, "0");
