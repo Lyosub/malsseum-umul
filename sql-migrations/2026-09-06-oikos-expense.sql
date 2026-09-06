@@ -7,7 +7,9 @@
 -- Supabase 대시보드 → SQL Editor에 붙여넣고 Run. 마지막 status 줄이 뜨면 성공.
 -- (이 게임/기능의 이전 버전 SQL을 이미 돌렸어도 이 파일이 덮어써서 바로잡는다.)
 
--- 1) points_ledger: oikos_expense 허용 + 자동중복방지 인덱스에서 제외 -----------
+-- 1) points_ledger: oikos_expense 허용 (인덱스는 건드리지 않는다 — 기존 on conflict 절과
+--    predicate가 안 맞으면 출석/퀴즈/기록 포인트 적립이 전부 터진다. 같은 날 여러 번의
+--    oikos_expense 차감/환급은 아래 decide_oikos_expense가 on conflict do update로 한 줄에 합산한다.)
 alter table points_ledger drop constraint if exists points_ledger_action_type_check;
 alter table points_ledger add constraint points_ledger_action_type_check
   check (action_type in (
@@ -18,10 +20,11 @@ alter table points_ledger add constraint points_ledger_action_type_check
     'oikos_expense'
   ));
 
+-- 혹시 잘못 바뀐 인덱스를 원상복구
 drop index if exists points_ledger_auto_uniq;
 create unique index points_ledger_auto_uniq
   on points_ledger (user_id, action_type, ref_date)
-  where action_type not in ('admin_award', 'oikos_expense');
+  where action_type <> 'admin_award';
 
 -- 2) 테이블 -------------------------------------------------------------------
 create table if not exists oikos_expense_requests (
@@ -237,7 +240,9 @@ begin
       if v_ded[v_i] > 0 then
         insert into points_ledger (user_id, action_type, points, ref_date, note, awarded_by)
         values (v_members[v_i], 'oikos_expense', -v_ded[v_i], v_today,
-                '오이코스 회식비: ' || v_row.purpose, auth.uid());
+                '오이코스 회식비', auth.uid())
+        on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award'
+        do update set points = points_ledger.points + excluded.points;
         insert into oikos_expense_deductions (expense_id, user_id, amount)
         values (p_id, v_members[v_i], v_ded[v_i]);
       end if;
@@ -252,7 +257,9 @@ begin
     if v_row.status = 'approved' then
       for rec in select user_id, amount from oikos_expense_deductions where expense_id = p_id loop
         insert into points_ledger (user_id, action_type, points, ref_date, note, awarded_by)
-        values (rec.user_id, 'oikos_expense', rec.amount, v_today, '오이코스 회식비 취소 환급', auth.uid());
+        values (rec.user_id, 'oikos_expense', rec.amount, v_today, '오이코스 회식비 취소 환급', auth.uid())
+        on conflict (user_id, action_type, ref_date) where action_type <> 'admin_award'
+        do update set points = points_ledger.points + excluded.points;
       end loop;
       delete from oikos_expense_deductions where expense_id = p_id;
     end if;
