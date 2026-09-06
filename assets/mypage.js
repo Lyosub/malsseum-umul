@@ -489,7 +489,7 @@ function initGroup(userId) {
       function loadInfo() {
         client.rpc("get_oikos_talent", { p_group_id: groupId }).then(function (r) {
           var d = (r.data && r.data[0]) || {};
-          if (infoEl) infoEl.textContent = "오이코스 달란트 " + (d.earned || 0) + " · 사용 " + (d.spent || 0) + " · 사용 가능 " + (d.available || 0);
+          if (infoEl) infoEl.textContent = "오이코스 달란트 " + (d.earned || 0) + " · 신청 대기 " + (d.pending || 0) + " · 사용 가능 " + (d.available || 0);
         });
       }
       function loadList() {
