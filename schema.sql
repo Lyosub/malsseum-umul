@@ -2734,7 +2734,12 @@ create policy "post-images 본인 파일 삭제" on storage.objects
   );
 
 drop function if exists get_public_notes(integer);
-create or replace function get_public_notes(p_limit integer default 60)
+drop function if exists get_public_notes(integer, integer, text);
+create or replace function get_public_notes(
+  p_limit integer default 60,
+  p_offset integer default 0,
+  p_type text default null
+)
 returns table(id bigint, type text, content text, image_urls text[], created_at timestamptz, nickname text)
 language sql
 security definer
@@ -2750,8 +2755,10 @@ as $$
   from notes n
   join profiles p on p.user_id = n.user_id
   where n.type in ('greeting', 'gratitude', 'prayer')
+    and (p_type is null or n.type = p_type)
   order by n.created_at desc
-  limit p_limit;
+  limit greatest(p_limit, 0)
+  offset greatest(p_offset, 0);
 $$;
 
 drop function if exists get_all_notes_admin(integer);
