@@ -1072,3 +1072,21 @@ footer.site a { text-decoration: underline; }
 }
 .match-card.matched .mc-back { display: none; }
 .match-card.matched .mc-front { display: block; }
+
+/* ===== 기도제목 "함께 기도했어요" 버튼 ===== */
+.pray-btn {
+  margin-top: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--text-soft);
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.pray-btn:hover { border-color: var(--well-light); }
+.pray-btn.on { background: var(--well); border-color: var(--well); color: #fff; }
+.pray-btn .pray-count { font-weight: 800; }
+.pray-btn:disabled { opacity: .6; cursor: default; }

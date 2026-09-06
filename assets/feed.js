@@ -38,6 +38,17 @@ function timeAgoKoFeedPage(iso) {
   return Math.floor(diffHr / 24) + "일 전";
 }
 
+function feedPrayBtnHtml(r) {
+  if (r.type !== "prayer") return "";
+  var n = r.pray_count || 0;
+  var on = r.i_prayed ? " on" : "";
+  return (
+    '<button type="button" class="pray-btn' + on + '" data-note-id="' + r.id + '">' +
+      '🙏 함께 기도했어요 <span class="pray-count">' + n + '</span>' +
+    '</button>'
+  );
+}
+
 function feedItemHtml(r) {
   var who = r.nickname ? pmEscapeHtml(r.nickname) : "익명";
   return (
@@ -45,6 +56,7 @@ function feedItemHtml(r) {
       '<div class="meta">' + who + ' · ' + timeAgoKoFeedPage(r.created_at) + '</div>' +
       '<div class="content">' + linkifyHtml(r.content) + '</div>' +
       renderImageGallery(r.image_urls) +
+      feedPrayBtnHtml(r) +
     '</div>'
   );
 }
@@ -63,6 +75,25 @@ function feedEnsureShell(type) {
       moreBtn.textContent = "불러오는 중...";
       feedLoadSection(type, true);
     });
+
+    // 기도제목 섹션: "함께 기도했어요" 버튼 클릭 위임
+    if (type === "prayer") {
+      listEl.addEventListener("click", function (e) {
+        var btn = e.target.closest(".pray-btn");
+        if (!btn) return;
+        var client = getClient();
+        if (!client) return;
+        btn.disabled = true;
+        client.rpc("toggle_prayer_reaction", { p_note_id: Number(btn.getAttribute("data-note-id")) }).then(function (res) {
+          btn.disabled = false;
+          if (res.error || !res.data || !res.data[0]) return;
+          var row = res.data[0];
+          var countEl = btn.querySelector(".pray-count");
+          if (countEl) countEl.textContent = row.pray_count;
+          btn.classList.toggle("on", !!row.i_prayed);
+        }).catch(function () { btn.disabled = false; });
+      });
+    }
   }
   return listEl;
 }

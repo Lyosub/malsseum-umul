@@ -2733,6 +2733,50 @@ create policy "post-images 본인 파일 삭제" on storage.objects
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
+-- ===== 기도제목 "🙏 함께 기도했어요" 반응 (2026-09-06) =====
+create table if not exists prayer_reactions (
+  note_id bigint not null references notes(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (note_id, user_id)
+);
+alter table prayer_reactions enable row level security;
+
+drop policy if exists "본인 기도반응 추가" on prayer_reactions;
+create policy "본인 기도반응 추가" on prayer_reactions
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "본인 기도반응 삭제" on prayer_reactions;
+create policy "본인 기도반응 삭제" on prayer_reactions
+  for delete using (auth.uid() = user_id);
+
+create or replace function toggle_prayer_reaction(p_note_id bigint)
+returns table(pray_count integer, i_prayed boolean)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_exists boolean;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  if not exists (select 1 from notes where id = p_note_id and type = 'prayer') then
+    raise exception '기도제목을 찾을 수 없습니다.';
+  end if;
+  select exists(select 1 from prayer_reactions where note_id = p_note_id and user_id = auth.uid()) into v_exists;
+  if v_exists then
+    delete from prayer_reactions where note_id = p_note_id and user_id = auth.uid();
+  else
+    insert into prayer_reactions (note_id, user_id) values (p_note_id, auth.uid()) on conflict do nothing;
+  end if;
+  return query
+    select coalesce(count(*), 0)::integer, (not v_exists)
+    from prayer_reactions where note_id = p_note_id;
+end;
+$$;
+
 drop function if exists get_public_notes(integer);
 drop function if exists get_public_notes(integer, integer, text);
 create or replace function get_public_notes(
@@ -2740,7 +2784,11 @@ create or replace function get_public_notes(
   p_offset integer default 0,
   p_type text default null
 )
-returns table(id bigint, type text, content text, image_urls text[], created_at timestamptz, nickname text)
+returns table(
+  id bigint, type text, content text, image_urls text[],
+  created_at timestamptz, nickname text,
+  pray_count integer, i_prayed boolean
+)
 language sql
 security definer
 set search_path = public
@@ -2751,7 +2799,13 @@ as $$
       when n.type = 'prayer' then null
       when auth.uid() is not null then p.nickname
       else null
-    end as nickname
+    end as nickname,
+    case when n.type = 'prayer'
+      then (select count(*)::integer from prayer_reactions pr where pr.note_id = n.id)
+      else 0 end as pray_count,
+    case when n.type = 'prayer' and auth.uid() is not null
+      then exists(select 1 from prayer_reactions pr where pr.note_id = n.id and pr.user_id = auth.uid())
+      else false end as i_prayed
   from notes n
   join profiles p on p.user_id = n.user_id
   where n.type in ('greeting', 'gratitude', 'prayer')
