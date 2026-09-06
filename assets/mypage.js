@@ -27,10 +27,18 @@ function loadTotalPoints(userId) {
   var client = getClient();
   var pointsNum = document.getElementById("pointsNum");
   if (!client || !pointsNum) return;
-  client.from("points_ledger").select("points").eq("user_id", userId).then(function (res) {
-    var rows = res.data || [];
-    var total = rows.reduce(function (sum, r) { return sum + r.points; }, 0);
-    pointsNum.textContent = total;
+  // 쓸 수 있는 달란트 잔액(적립합계 - 상점 교환분). 상점 마이그레이션 전이면 적립합계로 폴백.
+  client.rpc("get_talent_balance").then(function (res) {
+    if (!res.error && res.data != null) { pointsNum.textContent = res.data; return; }
+    client.from("points_ledger").select("points").eq("user_id", userId).then(function (r2) {
+      var rows = r2.data || [];
+      pointsNum.textContent = rows.reduce(function (s, x) { return s + x.points; }, 0);
+    });
+  }).catch(function () {
+    client.from("points_ledger").select("points").eq("user_id", userId).then(function (r2) {
+      var rows = r2.data || [];
+      pointsNum.textContent = rows.reduce(function (s, x) { return s + x.points; }, 0);
+    });
   });
 }
 

@@ -64,6 +64,7 @@ function initAdminPage() {
       initAnnouncementForm(session.user.id);
       initEventForm(session.user.id);
       initQuizForm(session.user.id);
+      initShopAdmin(session.user.id);
       loadMemberList();
       loadAllNotes();
       loadGroupsAdmin();
@@ -1294,4 +1295,133 @@ function initQuizForm(userId) {
   });
 
   load();
+}
+
+// ===== 달란트 상점 관리 =====
+function initShopAdmin(userId) {
+  var client = getClient();
+  var form = document.getElementById("shopItemForm");
+  var itemListEl = document.getElementById("shopItemList");
+  var orderListEl = document.getElementById("shopOrderList");
+  if (!client || !form || !itemListEl || !orderListEl) return;
+
+  var msg = document.getElementById("shopItemMsg");
+  var nameEl = document.getElementById("shopItemName");
+  var descEl = document.getElementById("shopItemDesc");
+  var costEl = document.getElementById("shopItemCost");
+  var stockEl = document.getElementById("shopItemStock");
+
+  var SHOP_ADMIN_STATUS = {
+    pending: "확인 중", approved: "승인됨", delivered: "전달 완료", rejected: "거절됨"
+  };
+
+  function loadItems() {
+    client.rpc("get_shop_items", { p_all: true }).then(function (res) {
+      if (res.error) { itemListEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
+      var rows = res.data || [];
+      if (!rows.length) { itemListEl.innerHTML = '<p class="msg">등록된 상품이 없어요.</p>'; return; }
+      itemListEl.innerHTML = rows.map(function (it) {
+        return (
+          '<div class="note-item" data-item-id="' + it.id + '">' +
+            '<div class="content"><strong>' + escapeHtmlAdmin(it.name) + '</strong> · ' + it.cost + '달란트' +
+              (it.stock == null ? ' · 무제한' : ' · 수량 ' + it.stock) +
+              (it.is_active ? '' : ' · <span style="color:#b3432c;">비활성</span>') + '</div>' +
+            (it.description ? '<div class="meta" style="margin-top:2px;">' + escapeHtmlAdmin(it.description) + '</div>' : '') +
+            '<div style="display:flex;gap:8px;margin-top:8px;">' +
+              '<button type="button" class="btn ghost" data-act="toggle" style="padding:6px 12px;font-size:12px;">' + (it.is_active ? '비활성화' : '활성화') + '</button>' +
+              '<button type="button" class="btn ghost" data-act="delete" style="padding:6px 12px;font-size:12px;">삭제</button>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join("");
+
+      itemListEl.querySelectorAll("[data-act]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var wrap = btn.closest(".note-item");
+          var id = wrap.getAttribute("data-item-id");
+          var act = btn.getAttribute("data-act");
+          if (act === "delete") {
+            if (!confirm("이 상품을 삭제할까요? (이미 신청된 교환 내역은 남아요)")) return;
+            client.from("shop_items").delete().eq("id", id).then(loadItems);
+          } else {
+            var makeActive = btn.textContent === "활성화";
+            client.from("shop_items").update({ is_active: makeActive }).eq("id", id).then(loadItems);
+          }
+        });
+      });
+    });
+  }
+
+  function loadOrders() {
+    client.rpc("get_shop_orders_admin").then(function (res) {
+      if (res.error) { orderListEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
+      var rows = res.data || [];
+      if (!rows.length) { orderListEl.innerHTML = '<p class="msg">교환 요청이 없어요.</p>'; return; }
+      orderListEl.innerHTML = rows.map(function (o) {
+        var who = escapeHtmlAdmin(o.nickname || "?") + (o.real_name ? "(" + escapeHtmlAdmin(o.real_name) + ")" : "");
+        var actions = "";
+        if (o.status === "pending") {
+          actions =
+            '<button type="button" class="btn" data-act="approve" style="padding:6px 12px;font-size:12px;">승인</button>' +
+            '<button type="button" class="btn ghost" data-act="reject" style="padding:6px 12px;font-size:12px;">거절</button>';
+        } else if (o.status === "approved") {
+          actions =
+            '<button type="button" class="btn" data-act="deliver" style="padding:6px 12px;font-size:12px;">전달 완료</button>' +
+            '<button type="button" class="btn ghost" data-act="reject" style="padding:6px 12px;font-size:12px;">거절(환불)</button>';
+        }
+        return (
+          '<div class="note-item" data-order-id="' + o.id + '">' +
+            '<div class="meta">' + formatDateTime(o.created_at) + ' · ' + who + ' · ' +
+              '<strong>' + (SHOP_ADMIN_STATUS[o.status] || o.status) + '</strong></div>' +
+            '<div class="content"><strong>' + escapeHtmlAdmin(o.item_name) + '</strong> · ' + o.cost_snapshot + '달란트</div>' +
+            (o.student_note ? '<div class="meta" style="margin-top:2px;">학생: ' + escapeHtmlAdmin(o.student_note) + '</div>' : '') +
+            (o.admin_note ? '<div class="meta" style="margin-top:2px;">메모: ' + escapeHtmlAdmin(o.admin_note) + '</div>' : '') +
+            (actions ? '<div style="display:flex;gap:8px;margin-top:8px;">' + actions + '</div>' : '') +
+          '</div>'
+        );
+      }).join("");
+
+      orderListEl.querySelectorAll("[data-act]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var id = btn.closest(".note-item").getAttribute("data-order-id");
+          var act = btn.getAttribute("data-act");
+          var note = null;
+          if (act === "reject") {
+            if (!confirm("이 교환 요청을 거절할까요? 달란트는 학생에게 돌아가요.")) return;
+            note = prompt("거절 사유 (선택)") || null;
+          }
+          btn.disabled = true;
+          client.rpc("decide_shop_order", { p_order_id: Number(id), p_action: act, p_note: note }).then(function (res) {
+            btn.disabled = false;
+            if (res.error) { alert(res.error.message || "처리에 실패했어요."); return; }
+            loadOrders(); loadItems();
+          }).catch(function () { btn.disabled = false; alert("처리에 실패했어요."); });
+        });
+      });
+    });
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = (nameEl.value || "").trim();
+    var cost = parseInt(costEl.value, 10);
+    if (!name || !cost || cost < 1) { msg.textContent = "이름과 필요 달란트(1 이상)를 입력해주세요."; return; }
+    var stockRaw = (stockEl.value || "").trim();
+    var stock = stockRaw === "" ? null : parseInt(stockRaw, 10);
+    msg.textContent = "등록 중...";
+    client.from("shop_items").insert({
+      name: name,
+      description: (descEl.value || "").trim() || null,
+      cost: cost,
+      stock: stock
+    }).then(function (res) {
+      if (res.error) { msg.textContent = "등록에 실패했어요."; return; }
+      msg.textContent = "등록되었습니다.";
+      form.reset();
+      loadItems();
+    });
+  });
+
+  loadItems();
+  loadOrders();
 }

@@ -159,6 +159,28 @@
     </div>
 
     <div class="card">
+      <h3 class="accordion-toggle" style="margin-top:0;">🎁 달란트 상점 <span class="accordion-chevron">▸</span></h3>
+      <div class="accordion-body" style="display:none;">
+        <p class="msg" style="margin-top:0;">학생이 달란트로 교환 신청하면 아래 "교환 요청"에 떠요. 승인하면 학생 화면에 "승인됨"으로 표시되고, 전달한 뒤 "전달 완료"로 바꾸면 돼요. 거절하면 달란트는 자동으로 돌아가요.<br>가격 기준: <strong>1달란트 ≈ 50원</strong> (예: 문화상품권 1만원 = 200달란트).</p>
+        <div class="well-label">상품 등록</div>
+        <form id="shopItemForm">
+          <div class="form-row"><label for="shopItemName">이름</label><input type="text" id="shopItemName" placeholder="예: 문화상품권 5천원"></div>
+          <div class="form-row"><label for="shopItemDesc">설명 (선택)</label><input type="text" id="shopItemDesc" placeholder="예: 다음 주일에 전달해 줄게요"></div>
+          <div class="form-row"><label for="shopItemCost">필요 달란트</label><input type="number" id="shopItemCost" min="1" placeholder="예: 30"></div>
+          <div class="form-row"><label for="shopItemStock">수량 (비우면 무제한)</label><input type="number" id="shopItemStock" min="0" placeholder="무제한"></div>
+          <button type="submit" class="btn block">상품 등록</button>
+          <p class="msg" id="shopItemMsg"></p>
+        </form>
+        <hr class="well-divider">
+        <div class="well-label">등록된 상품</div>
+        <div id="shopItemList"></div>
+        <hr class="well-divider">
+        <div class="well-label">교환 요청</div>
+        <div id="shopOrderList"></div>
+      </div>
+    </div>
+
+    <div class="card">
       <h3 class="accordion-toggle" style="margin-top:0;">회원 관리 <span class="accordion-chevron">▸</span></h3>
       <div class="accordion-body" style="display:none;">
         <p class="msg" id="memberCount"></p>
