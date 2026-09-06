@@ -65,6 +65,7 @@ function initAdminPage() {
       initEventForm(session.user.id);
       initQuizForm(session.user.id);
       initShopAdmin(session.user.id);
+      loadOikosExpensesAdmin();
       loadMemberList();
       loadAllNotes();
       loadGroupsAdmin();
@@ -1467,4 +1468,60 @@ function initShopAdmin(userId) {
   loadItems();
   loadOrders();
   loadSuggestions();
+}
+
+// ===== 오이코스 회식비 지원 승인 =====
+function loadOikosExpensesAdmin() {
+  var client = getClient();
+  var el = document.getElementById("oikosExpenseAdminList");
+  if (!client || !el) return;
+
+  var LABELS = { pending: "확인 중", approved: "승인됨", paid: "지급 완료", rejected: "거절됨" };
+
+  client.rpc("get_oikos_expenses_admin").then(function (res) {
+    if (res.error) { el.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
+    var rows = res.data || [];
+    if (!rows.length) { el.innerHTML = '<p class="msg">회식비 지원 신청이 없어요.</p>'; return; }
+    el.innerHTML = rows.map(function (r) {
+      var actions = "";
+      if (r.status === "pending") {
+        actions =
+          '<button type="button" class="btn" data-ox="approve" style="padding:6px 12px;font-size:12px;">승인</button>' +
+          '<button type="button" class="btn ghost" data-ox="reject" style="padding:6px 12px;font-size:12px;">거절</button>';
+      } else if (r.status === "approved") {
+        actions =
+          '<button type="button" class="btn" data-ox="pay" style="padding:6px 12px;font-size:12px;">지급 완료</button>' +
+          '<button type="button" class="btn ghost" data-ox="reject" style="padding:6px 12px;font-size:12px;">거절</button>';
+      }
+      return (
+        '<div class="note-item" data-ox-id="' + r.id + '">' +
+          '<div class="meta">' + formatDateTime(r.created_at) + ' · ' + escapeHtmlAdmin(r.group_name || "") +
+            ' · ' + escapeHtmlAdmin(r.requester_nickname || "") + ' · <strong>' + (LABELS[r.status] || r.status) + '</strong></div>' +
+          '<div class="content"><strong>' + r.amount + '달란트</strong> · ' + escapeHtmlAdmin(r.purpose) + '</div>' +
+          (r.admin_note ? '<div class="meta" style="margin-top:2px;">메모: ' + escapeHtmlAdmin(r.admin_note) + '</div>' : '') +
+          (actions ? '<div style="display:flex;gap:8px;margin-top:8px;">' + actions + '</div>' : '') +
+        '</div>'
+      );
+    }).join("");
+
+    el.querySelectorAll("[data-ox]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.closest(".note-item").getAttribute("data-ox-id");
+        var act = btn.getAttribute("data-ox");
+        var note = null;
+        if (act === "reject") {
+          if (!confirm("이 회식비 지원 신청을 거절할까요?")) return;
+          note = prompt("거절 사유 (선택)") || null;
+        } else if (act === "approve") {
+          note = prompt("메모 (선택, 신청 교사에게 보여요)") || null;
+        }
+        btn.disabled = true;
+        client.rpc("decide_oikos_expense", { p_id: Number(id), p_action: act, p_note: note }).then(function (res) {
+          btn.disabled = false;
+          if (res.error) { alert(res.error.message || "처리에 실패했어요."); return; }
+          loadOikosExpensesAdmin();
+        }).catch(function () { btn.disabled = false; alert("처리에 실패했어요."); });
+      });
+    });
+  });
 }
