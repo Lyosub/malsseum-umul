@@ -173,9 +173,9 @@ function bgLoadLeaderboard() {
       }
       el.innerHTML = res.data.map(function (row, i) {
         return (
-          '<div class="note-item"><div class="content" style="display:flex;justify-content:space-between;">' +
-            '<span>' + (i + 1) + '위 · ' + escapeHtmlBookGame(row.nickname) + '</span>' +
-            '<span style="font-weight:800;color:var(--well-deep);">' + bgFormatTime(row.best_time_ms) + '</span>' +
+          '<div class="note-item"><div class="content" style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;">' +
+            '<span style="min-width:0;overflow-wrap:anywhere;">' + (i + 1) + '위 · ' + escapeHtmlBookGame(row.nickname) + '</span>' +
+            '<span style="flex-shrink:0;font-weight:800;color:var(--well-deep);">' + bgFormatTime(row.best_time_ms) + '</span>' +
           '</div></div>'
         );
       }).join("");
