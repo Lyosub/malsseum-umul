@@ -3145,14 +3145,21 @@ begin
 end;
 $$;
 
--- 달란트 상점 시작용 상품 (기준: 1달란트 ≈ 50원). 상품이 하나도 없을 때만.
-insert into shop_items (name, description, cost, stock, sort_order)
-select v.name, v.description, v.cost, v.stock, v.sort_order
+-- 달란트 상점 시작 상품. 주문 안 걸린 시드 상품 정리 후 아래 목록으로 맞춘다.
+delete from shop_items si
+where not exists (select 1 from shop_orders so where so.item_id = si.id)
+  and si.name in (
+    '문화상품권 5,000원', '문화상품권 10,000원', '간식 교환권', '음료 교환권', '예배 앞자리 지정권',
+    '문화상품권', '올리브영 상품권', '메가커피', '공차', '스타벅스', '투썸'
+  );
+insert into shop_items (name, cost, sort_order)
+select v.name, v.cost, v.sort_order
 from (values
-  ('문화상품권 5,000원', '5천원권 문화상품권 (다음 주일에 전달)', 100, null::integer, 10),
-  ('문화상품권 10,000원', '1만원권 문화상품권 (다음 주일에 전달)', 200, null::integer, 20),
-  ('간식 교환권', '중등부 간식 하나 골라 먹기', 15, null::integer, 30),
-  ('음료 교환권', '편의점 음료 1개', 30, null::integer, 40),
-  ('예배 앞자리 지정권', '다음 주일 예배 때 앉고 싶은 앞자리 지정', 20, null::integer, 50)
-) as v(name, description, cost, stock, sort_order)
-where not exists (select 1 from shop_items);
+  ('문화상품권', 200, 10),
+  ('올리브영 상품권', 200, 20),
+  ('메가커피', 100, 30),
+  ('공차', 100, 40),
+  ('스타벅스', 100, 50),
+  ('투썸', 100, 60)
+) as v(name, cost, sort_order)
+where not exists (select 1 from shop_items s where s.name = v.name);
