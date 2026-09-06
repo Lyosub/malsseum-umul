@@ -13,6 +13,13 @@ var SHOP_STATUS = {
   rejected: { label: "거절됨",    color: "#b3432c" }
 };
 
+var SUGGEST_STATUS = {
+  open:      { label: "접수됨",   color: "var(--text-soft)" },
+  reviewing: { label: "검토 중",  color: "var(--gold)" },
+  added:     { label: "상점에 추가됨", color: "var(--well)" },
+  declined:  { label: "이번엔 어려워요", color: "#b3432c" }
+};
+
 function shopFmtDate(iso) {
   var d = new Date(iso);
   return (d.getMonth() + 1) + "." + d.getDate();
@@ -27,18 +34,60 @@ function initShopPage() {
   var itemsEl = document.getElementById("shopItems");
   var ordersEl = document.getElementById("shopOrders");
 
+  var suggestForm = document.getElementById("shopSuggestForm");
+  var suggestInput = document.getElementById("shopSuggestInput");
+  var suggestMsg = document.getElementById("shopSuggestMsg");
+  var mySuggestEl = document.getElementById("shopMySuggestions");
+  var suggestCard = document.getElementById("shopSuggestCard");
+
   getSession().then(function (session) {
     if (!session) {
       if (gateEl) gateEl.innerHTML = '<div class="card"><p class="msg" style="margin:0;">로그인하면 달란트로 상품을 교환할 수 있어요.</p><a href="login.html" class="btn block" style="margin-top:10px;">로그인하러 가기</a></div>';
       if (itemsEl) itemsEl.innerHTML = '<p class="msg">로그인이 필요해요.</p>';
       if (ordersEl) ordersEl.innerHTML = '<p class="msg">로그인이 필요해요.</p>';
+      if (suggestCard) suggestCard.style.display = "none";
       loadItems(true);
       return;
     }
     loadBalance();
     loadItems(false);
     loadOrders();
+    loadMySuggestions();
   });
+
+  if (suggestForm) {
+    suggestForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var text = (suggestInput.value || "").trim();
+      if (!text) { suggestMsg.textContent = "내용을 입력해주세요."; return; }
+      suggestMsg.textContent = "보내는 중...";
+      client.rpc("submit_shop_suggestion", { p_content: text }).then(function (res) {
+        if (res.error) { suggestMsg.textContent = res.error.message || "보내지 못했어요."; return; }
+        suggestMsg.textContent = "추천을 보냈어요. 고마워요!";
+        suggestInput.value = "";
+        loadMySuggestions();
+      }).catch(function () { suggestMsg.textContent = "보내지 못했어요."; });
+    });
+  }
+
+  function loadMySuggestions() {
+    if (!mySuggestEl) return;
+    client.rpc("get_my_shop_suggestions").then(function (res) {
+      if (res.error) { mySuggestEl.innerHTML = ""; return; }
+      var rows = res.data || [];
+      if (!rows.length) { mySuggestEl.innerHTML = '<p class="msg" style="margin:0;">아직 보낸 추천이 없어요.</p>'; return; }
+      mySuggestEl.innerHTML = '<div class="msg" style="margin:0 0 6px;">내가 보낸 추천</div>' + rows.map(function (s) {
+        var st = SUGGEST_STATUS[s.status] || { label: s.status, color: "var(--text-soft)" };
+        return (
+          '<div class="note-item">' +
+            '<div class="meta">' + shopFmtDate(s.created_at) + ' · <span style="color:' + st.color + ';font-weight:700;">' + st.label + '</span></div>' +
+            '<div class="content">' + shopEsc(s.content) + '</div>' +
+            (s.admin_note ? '<div class="meta" style="margin-top:4px;">선생님: ' + shopEsc(s.admin_note) + '</div>' : '') +
+          '</div>'
+        );
+      }).join("");
+    });
+  }
 
   function loadBalance() {
     client.rpc("get_talent_balance").then(function (res) {

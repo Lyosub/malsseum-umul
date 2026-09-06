@@ -1303,6 +1303,7 @@ function initShopAdmin(userId) {
   var form = document.getElementById("shopItemForm");
   var itemListEl = document.getElementById("shopItemList");
   var orderListEl = document.getElementById("shopOrderList");
+  var suggestListEl = document.getElementById("shopSuggestList");
   if (!client || !form || !itemListEl || !orderListEl) return;
 
   var msg = document.getElementById("shopItemMsg");
@@ -1422,6 +1423,48 @@ function initShopAdmin(userId) {
     });
   });
 
+  var SUGGEST_LABELS = { open: "접수됨", reviewing: "검토 중", added: "추가함", declined: "반려" };
+
+  function loadSuggestions() {
+    if (!suggestListEl) return;
+    client.rpc("get_shop_suggestions_admin").then(function (res) {
+      if (res.error) { suggestListEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
+      var rows = res.data || [];
+      if (!rows.length) { suggestListEl.innerHTML = '<p class="msg">받은 추천이 없어요.</p>'; return; }
+      suggestListEl.innerHTML = rows.map(function (s) {
+        var who = escapeHtmlAdmin(s.nickname || "?");
+        return (
+          '<div class="note-item" data-suggest-id="' + s.id + '">' +
+            '<div class="meta">' + formatDateTime(s.created_at) + ' · ' + who + ' · <strong>' + (SUGGEST_LABELS[s.status] || s.status) + '</strong></div>' +
+            '<div class="content">' + escapeHtmlAdmin(s.content) + '</div>' +
+            (s.admin_note ? '<div class="meta" style="margin-top:2px;">메모: ' + escapeHtmlAdmin(s.admin_note) + '</div>' : '') +
+            '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">' +
+              '<button type="button" class="btn ghost" data-sg="reviewing" style="padding:6px 12px;font-size:12px;">검토 중</button>' +
+              '<button type="button" class="btn" data-sg="added" style="padding:6px 12px;font-size:12px;">추가함</button>' +
+              '<button type="button" class="btn ghost" data-sg="declined" style="padding:6px 12px;font-size:12px;">반려</button>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join("");
+
+      suggestListEl.querySelectorAll("[data-sg]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var id = btn.closest(".note-item").getAttribute("data-suggest-id");
+          var st = btn.getAttribute("data-sg");
+          var note = null;
+          if (st === "declined" || st === "added") note = prompt("학생에게 보여줄 메모 (선택)") || null;
+          btn.disabled = true;
+          client.rpc("update_shop_suggestion", { p_id: Number(id), p_status: st, p_note: note }).then(function (res) {
+            btn.disabled = false;
+            if (res.error) { alert(res.error.message || "처리에 실패했어요."); return; }
+            loadSuggestions();
+          }).catch(function () { btn.disabled = false; alert("처리에 실패했어요."); });
+        });
+      });
+    });
+  }
+
   loadItems();
   loadOrders();
+  loadSuggestions();
 }

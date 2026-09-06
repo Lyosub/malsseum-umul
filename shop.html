@@ -43,6 +43,19 @@
     <div class="well-label" style="margin-top:0;">내 교환 내역</div>
     <div id="shopOrders"><p class="msg">불러오는 중...</p></div>
   </div>
+
+  <div class="card" id="shopSuggestCard">
+    <div class="well-label" style="margin-top:0;">🛒 상품 추천함</div>
+    <p class="msg" style="margin:0 0 12px;">"이런 상품 있으면 좋겠어요!"를 적어서 보내주세요. 선생님이 확인해요.</p>
+    <form id="shopSuggestForm">
+      <div class="form-row">
+        <textarea id="shopSuggestInput" placeholder="예: 스타벅스 기프티콘, 떡볶이 교환권 …" rows="2"></textarea>
+      </div>
+      <button type="submit" class="btn block">추천 보내기</button>
+      <p class="msg" id="shopSuggestMsg"></p>
+    </form>
+    <div id="shopMySuggestions" style="margin-top:12px;"></div>
+  </div>
 </div>
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
