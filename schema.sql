@@ -3305,6 +3305,7 @@ begin
   end if;
   if v_purpose is null then raise exception '사용 목적을 적어주세요.'; end if;
   if p_amount is null or p_amount <= 0 then raise exception '달란트를 올바르게 입력해주세요.'; end if;
+  if p_amount < 500 then raise exception '회식비는 최소 500달란트부터 신청할 수 있어요.'; end if;
 
   select available into v_avail from get_oikos_talent(p_group_id);
   if p_amount > v_avail then

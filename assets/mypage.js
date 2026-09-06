@@ -518,7 +518,7 @@ function initGroup(userId) {
           e.preventDefault();
           var amount = parseInt(amountEl.value, 10);
           var purpose = (purposeEl.value || "").trim();
-          if (!amount || amount < 1) { msgEl.textContent = "달란트를 입력해주세요."; return; }
+          if (!amount || amount < 500) { msgEl.textContent = "회식비는 최소 500달란트부터 신청할 수 있어요."; return; }
           if (!purpose) { msgEl.textContent = "사용 목적을 적어주세요."; return; }
           msgEl.textContent = "신청 중...";
           client.rpc("request_oikos_expense", { p_group_id: groupId, p_amount: amount, p_purpose: purpose }).then(function (r) {
