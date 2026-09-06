@@ -38,6 +38,10 @@
       <div class="form-row">
         <textarea id="boardPostInput" placeholder="하고 싶은 이야기를 자유롭게 적어보세요"></textarea>
       </div>
+      <div class="img-picker">
+        <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
+        <span class="img-picker-count"></span>
+      </div>
       <button type="submit" class="btn block">게시하기</button>
       <p class="msg" id="boardPostMsg"></p>
     </form>
@@ -62,6 +66,7 @@
 <script src="assets/supabase-config.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>
+<script src="assets/post-media.js"></script>
 <script src="assets/new-badge.js"></script>
 <script src="assets/board.js"></script>
 <script>

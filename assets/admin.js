@@ -119,7 +119,8 @@ function loadMemberDetail(userId, container) {
           return (
             '<div class="note-item">' +
               '<div class="meta">' + ADMIN_NOTE_LABELS[n.type] + ' · ' + formatDateTime(n.created_at) + '</div>' +
-              '<div class="content">' + escapeHtmlAdmin(n.content) + '</div>' +
+              '<div class="content">' + linkifyHtml(n.content) + '</div>' +
+              renderImageGallery(n.image_urls) +
             '</div>'
           );
         }).join("")
@@ -486,7 +487,8 @@ function loadAllNotes() {
         return (
           '<div class="note-item">' +
             '<div class="meta">' + writer + ' · ' + ADMIN_NOTE_LABELS[item.type] + ' · ' + formatDateTime(item.created_at) + '</div>' +
-            '<div class="content">' + escapeHtmlAdmin(item.content) + '</div>' +
+            '<div class="content">' + linkifyHtml(item.content) + '</div>' +
+            renderImageGallery(item.image_urls) +
             '<button class="btn ghost" data-note-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
           '</div>'
         );

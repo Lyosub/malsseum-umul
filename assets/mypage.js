@@ -701,7 +701,8 @@ function initNotes(userId) {
       '<div class="note-item" data-note-id="' + item.id + '">' +
         '<div class="meta">' + dateStr + '</div>' +
         '<div data-role="body">' +
-          '<div class="content">' + escapeHtml(item.content) + '</div>' +
+          '<div class="content">' + linkifyHtml(item.content) + '</div>' +
+          renderImageGallery(item.image_urls) +
           '<div style="margin-top:8px;display:flex;gap:8px;">' +
             '<button type="button" class="btn ghost" data-action="edit" style="padding:6px 14px;font-size:12.5px;">수정</button>' +
             '<button type="button" class="btn ghost" data-action="delete" style="padding:6px 14px;font-size:12.5px;">삭제</button>' +
@@ -788,27 +789,42 @@ function initNotes(userId) {
     var type = form.getAttribute("data-type");
     var textarea = form.querySelector("textarea");
     var msg = form.querySelector(".msg");
+    var submitBtn = form.querySelector('button[type="submit"]');
+    var picker = bindImagePicker(form);
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var content = textarea.value.trim();
-      if (!content) {
-        msg.textContent = "내용을 입력해주세요.";
+      var files = picker.getFiles();
+      if (!content && (!files || !files.length)) {
+        msg.textContent = "내용을 입력하거나 사진을 첨부해주세요.";
         return;
       }
-      msg.textContent = "저장 중...";
-      client.from("notes").insert({
-        user_id: userId,
-        type: type,
-        content: content
+      if (submitBtn) submitBtn.disabled = true;
+      msg.textContent = (files && files.length) ? "사진 올리는 중..." : "저장 중...";
+
+      uploadPostImages(userId, files).then(function (urls) {
+        msg.textContent = "저장 중...";
+        return client.from("notes").insert({
+          user_id: userId,
+          type: type,
+          content: content,
+          image_urls: urls
+        });
       }).then(function (res) {
-        if (res.error) {
+        if (submitBtn) submitBtn.disabled = false;
+        if (res && res.error) {
           msg.textContent = "저장에 실패했어요.";
           return;
         }
         msg.textContent = "기록되었습니다.";
         textarea.value = "";
+        picker.reset();
         loadNotes();
         loadTotalPoints(userId);
+      }).catch(function () {
+        if (submitBtn) submitBtn.disabled = false;
+        msg.textContent = "사진 업로드에 실패했어요. 다시 시도해주세요.";
       });
     });
   });

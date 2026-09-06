@@ -128,6 +128,10 @@
       <div class="form-row">
         <textarea placeholder="오늘 하루 인사를 자유롭게 적어보세요"></textarea>
       </div>
+      <div class="img-picker">
+        <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
+        <span class="img-picker-count"></span>
+      </div>
       <button type="submit" class="btn block">기록하기</button>
       <p class="msg"></p>
     </form>
@@ -140,6 +144,10 @@
       <div class="form-row">
         <textarea placeholder="오늘 감사한 일을 자유롭게 적어보세요"></textarea>
       </div>
+      <div class="img-picker">
+        <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
+        <span class="img-picker-count"></span>
+      </div>
       <button type="submit" class="btn block">기록하기</button>
       <p class="msg"></p>
     </form>
@@ -150,6 +158,10 @@
     <form class="note-form" data-type="prayer">
       <div class="form-row">
         <textarea placeholder="기도하고 싶은 제목을 자유롭게 적어보세요"></textarea>
+      </div>
+      <div class="img-picker">
+        <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
+        <span class="img-picker-count"></span>
       </div>
       <button type="submit" class="btn block">기록하기</button>
       <p class="msg"></p>
@@ -162,6 +174,10 @@
     <form class="note-form" data-type="suggestion">
       <div class="form-row">
         <textarea placeholder="하고 싶은 이야기, 바라는 점을 자유롭게 적어보세요"></textarea>
+      </div>
+      <div class="img-picker">
+        <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
+        <span class="img-picker-count"></span>
       </div>
       <button type="submit" class="btn block">건의하기</button>
       <p class="msg"></p>
@@ -268,6 +284,7 @@
 <script src="assets/supabase-config.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="assets/auth.js"></script>
+<script src="assets/post-media.js"></script>
 <script src="assets/mypage.js"></script>
 <script src="assets/group-rankings.js"></script>
 <script src="assets/push.js"></script>

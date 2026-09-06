@@ -50,7 +50,8 @@ function renderFeedPageSection(elId, rows) {
     return (
       '<div class="note-item">' +
         '<div class="meta">' + who + ' · ' + timeAgoKoFeedPage(r.created_at) + '</div>' +
-        '<div class="content">' + escapeHtmlFeedPage(r.content) + '</div>' +
+        '<div class="content">' + linkifyHtml(r.content) + '</div>' +
+        renderImageGallery(r.image_urls) +
       '</div>'
     );
   }).join("");

@@ -49,7 +49,8 @@ function initBoardPage(userId) {
     return (
       '<div class="board-comment" data-comment-id="' + c.id + '">' +
         '<div class="meta">' + escapeHtmlBoard(c.nickname || "익명") + ' · ' + timeAgoKoBoard(c.created_at) + '</div>' +
-        '<div class="content">' + escapeHtmlBoard(c.content) + '</div>' +
+        '<div class="content">' + linkifyHtml(c.content) + '</div>' +
+        renderImageGallery(c.image_urls) +
         (canDelete
           ? '<button type="button" class="btn ghost board-comment-delete" data-comment-id="' + c.id + '" data-own="' + (c.user_id === userId) + '">삭제</button>'
           : "") +
@@ -65,6 +66,11 @@ function initBoardPage(userId) {
         (rows.length ? rows.map(renderComment).join("") : '<p class="msg">아직 댓글이 없어요.</p>') +
         '<form class="board-comment-form">' +
           '<div class="form-row"><textarea placeholder="댓글을 입력해보세요" rows="2"></textarea></div>' +
+          '<div class="img-picker">' +
+            '<label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>' +
+            '<span class="img-picker-count"></span>' +
+          '</div>' +
+          '<p class="msg board-comment-msg"></p>' +
           '<button type="submit" class="btn ghost" style="padding:8px 16px;font-size:13px;">댓글 달기</button>' +
         '</form>';
 
@@ -84,16 +90,29 @@ function initBoardPage(userId) {
       });
 
       var cform = container.querySelector(".board-comment-form");
+      var cPicker = bindImagePicker(cform);
+      var cMsg = cform.querySelector(".board-comment-msg");
+      var cBtn = cform.querySelector('button[type="submit"]');
       cform.addEventListener("submit", function (e) {
         e.preventDefault();
         var ta = cform.querySelector("textarea");
         var content = ta.value.trim();
-        if (!content) return;
-        client.from("board_comments").insert({ post_id: postId, user_id: userId, content: content }).then(function (res) {
-          if (res.error) return;
+        var files = cPicker.getFiles();
+        if (!content && (!files || !files.length)) return;
+        if (cBtn) cBtn.disabled = true;
+        if (cMsg) cMsg.textContent = (files && files.length) ? "사진 올리는 중..." : "";
+        uploadPostImages(userId, files).then(function (urls) {
+          return client.from("board_comments").insert({ post_id: postId, user_id: userId, content: content, image_urls: urls });
+        }).then(function (res) {
+          if (cBtn) cBtn.disabled = false;
+          if (res && res.error) { if (cMsg) cMsg.textContent = "댓글 저장에 실패했어요."; return; }
           ta.value = "";
+          cPicker.reset();
           loadComments(postId, container);
           refreshCommentCount(postId);
+        }).catch(function () {
+          if (cBtn) cBtn.disabled = false;
+          if (cMsg) cMsg.textContent = "사진 업로드에 실패했어요.";
         });
       });
     });
@@ -102,7 +121,8 @@ function initBoardPage(userId) {
   function renderPostBody(p) {
     return (
       '<div class="meta">' + escapeHtmlBoard(p.nickname || "익명") + ' · ' + timeAgoKoBoard(p.created_at) + '</div>' +
-      '<div class="content">' + escapeHtmlBoard(p.content) + '</div>' +
+      '<div class="content">' + linkifyHtml(p.content) + '</div>' +
+      renderImageGallery(p.image_urls) +
       '<div style="display:flex;gap:8px;margin-top:8px;align-items:center;">' +
         '<button type="button" class="btn ghost board-comment-toggle" data-post-id="' + p.id + '" style="padding:6px 14px;font-size:12.5px;">' +
           '💬 댓글 <span class="board-comment-count">' + p.comment_count + '</span>개' +
@@ -203,22 +223,35 @@ function initBoardPage(userId) {
     });
   }
 
+  var postPicker = bindImagePicker(form);
+  var postBtn = form.querySelector('button[type="submit"]');
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var content = input.value.trim();
-    if (!content) {
-      postMsg.textContent = "내용을 입력해주세요.";
+    var files = postPicker.getFiles();
+    if (!content && (!files || !files.length)) {
+      postMsg.textContent = "내용을 입력하거나 사진을 첨부해주세요.";
       return;
     }
-    postMsg.textContent = "게시 중...";
-    client.from("board_posts").insert({ user_id: userId, content: content }).then(function (res) {
-      if (res.error) {
+    if (postBtn) postBtn.disabled = true;
+    postMsg.textContent = (files && files.length) ? "사진 올리는 중..." : "게시 중...";
+    uploadPostImages(userId, files).then(function (urls) {
+      postMsg.textContent = "게시 중...";
+      return client.from("board_posts").insert({ user_id: userId, content: content, image_urls: urls });
+    }).then(function (res) {
+      if (postBtn) postBtn.disabled = false;
+      if (res && res.error) {
         postMsg.textContent = "게시에 실패했어요.";
         return;
       }
       postMsg.textContent = "게시되었습니다.";
       input.value = "";
+      postPicker.reset();
       loadPosts();
+    }).catch(function () {
+      if (postBtn) postBtn.disabled = false;
+      postMsg.textContent = "사진 업로드에 실패했어요. 다시 시도해주세요.";
     });
   });
 

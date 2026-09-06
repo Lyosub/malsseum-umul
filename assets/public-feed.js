@@ -42,7 +42,8 @@ function renderFeedPreview(elId, rows) {
     return (
       '<div class="note-item">' +
         '<div class="meta">' + who + ' · ' + timeAgoKo(r.created_at) + '</div>' +
-        '<div class="content">' + escapeHtmlFeed(r.content) + '</div>' +
+        '<div class="content">' + linkifyHtml(r.content) + '</div>' +
+        renderImageGallery(r.image_urls) +
       '</div>'
     );
   }).join("");
@@ -61,7 +62,8 @@ function renderBoardPreview(rows) {
     return (
       '<div class="note-item">' +
         '<div class="meta">' + who + ' · ' + timeAgoKo(r.created_at) + (r.comment_count ? ' · 댓글 ' + r.comment_count + '개' : '') + '</div>' +
-        '<div class="content">' + escapeHtmlFeed(r.content) + '</div>' +
+        '<div class="content">' + linkifyHtml(r.content) + '</div>' +
+        renderImageGallery(r.image_urls) +
       '</div>'
     );
   }).join("");
