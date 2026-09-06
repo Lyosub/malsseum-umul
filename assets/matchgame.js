@@ -1,8 +1,18 @@
-// 같은 성경 찾기 (카드 뒤집기 짝 맞추기)
-// 인물 카드와 그 인물의 사건/상징 카드를 짝지어 모두 맞추면 완료. 완료 시간으로 기록을 매긴다.
-// 쉬움(8쌍/16장) / 도전(16쌍/32장) 두 모드를 따로 도전하고 따로 랭킹을 매긴다.
+// 같은 성경 찾기 (카드 뒤집기 짝 맞추기) — 두 가지 버전
+//  · books   : 같은 성경책 이름끼리 (창세기 ↔ 창세기)
+//  · figures : 인물 ↔ 그 인물의 사건/상징 (모세 ↔ 홍해가 갈라짐)
+// 각 버전 16쌍(32장), 버전별로 따로 최고기록·TOP10. 완료 시간으로 기록.
 // auth.js의 getClient(), getSession()에 의존함. bookgame.js와 같은 기록/달란트 구조.
 
+var MG_PAIR_COUNT = 16;
+
+// 버전 1: 성경책 이름 (구약·신약에서 잘 알려진 16권)
+var MG_BOOKS = [
+  "창세기", "출애굽기", "여호수아", "사무엘상", "시편", "잠언", "이사야", "다니엘",
+  "요나", "마태복음", "요한복음", "사도행전", "로마서", "고린도전서", "히브리서", "요한계시록"
+];
+
+// 버전 2: 인물 ↔ 사건/상징 (A안)
 var MG_PAIRS = [
   { person: "노아",   match: "방주" },
   { person: "모세",   match: "홍해가 갈라짐" },
@@ -12,7 +22,6 @@ var MG_PAIRS = [
   { person: "삼손",   match: "긴 머리카락" },
   { person: "아브라함", match: "이삭을 바침" },
   { person: "여호수아", match: "여리고 성" },
-  // --- 도전 모드에서만 추가되는 8쌍 ---
   { person: "엘리야", match: "갈멜산의 불" },
   { person: "베드로", match: "물 위를 걸음" },
   { person: "바울",   match: "다메섹 회심" },
@@ -23,16 +32,14 @@ var MG_PAIRS = [
   { person: "세례 요한", match: "광야의 외치는 소리" }
 ];
 
-var mgMode = "easy";        // easy(8쌍) | hard(16쌍)
+var mgMode = "books";       // books | figures
 var mgDeck = [];
-var mgFlipped = [];         // 현재 뒤집혀 있고 아직 판정 안 된 카드 엘리먼트들
+var mgFlipped = [];
 var mgMatchedCount = 0;
-var mgLock = false;         // 애니메이션 중 클릭 방지
+var mgLock = false;
 var mgStartTime = null;
 var mgTimerInterval = null;
 var mgFinished = false;
-
-function mgPairCount() { return mgMode === "hard" ? 16 : 8; }
 
 function mgShuffle(arr) {
   var a = arr.slice();
@@ -59,9 +66,9 @@ function mgUpdateTimerDisplay() {
 function mgUpdateProgress() {
   var el = document.getElementById("mgProgress");
   if (!el) return;
-  el.textContent = mgMatchedCount >= mgPairCount()
+  el.textContent = mgMatchedCount >= MG_PAIR_COUNT
     ? "완료!"
-    : "맞춘 짝: " + mgMatchedCount + " / " + mgPairCount();
+    : "맞춘 짝: " + mgMatchedCount + " / " + MG_PAIR_COUNT;
 }
 
 function mgStartGame() {
@@ -70,21 +77,31 @@ function mgStartGame() {
   mgTimerInterval = setInterval(mgUpdateTimerDisplay, 87);
 }
 
+function mgBuildCards() {
+  var cards = [];
+  if (mgMode === "figures") {
+    MG_PAIRS.slice(0, MG_PAIR_COUNT).forEach(function (p, i) {
+      cards.push({ pairId: i, label: p.person });
+      cards.push({ pairId: i, label: p.match });
+    });
+  } else {
+    MG_BOOKS.slice(0, MG_PAIR_COUNT).forEach(function (name, i) {
+      cards.push({ pairId: i, label: name });
+      cards.push({ pairId: i, label: name });
+    });
+  }
+  return cards;
+}
+
 function mgRenderBoard() {
   var grid = document.getElementById("mgGrid");
   if (!grid) return;
-  var pairs = MG_PAIRS.slice(0, mgPairCount());
-  var cards = [];
-  pairs.forEach(function (p, i) {
-    cards.push({ pairId: i, label: p.person });
-    cards.push({ pairId: i, label: p.match });
-  });
-  mgDeck = mgShuffle(cards);
+  mgDeck = mgShuffle(mgBuildCards());
   grid.innerHTML = mgDeck.map(function (c) {
     return (
       '<button type="button" class="match-card" data-pair-id="' + c.pairId + '">' +
         '<span class="mc-back">📖</span>' +
-        '<span class="mc-front">' + c.label + '</span>' +
+        '<span class="mc-front">' + escapeHtmlMatchGame(c.label) + '</span>' +
       '</button>'
     );
   }).join("");
@@ -112,7 +129,7 @@ function mgOnCardClick(card) {
     mgFlipped = [];
     mgMatchedCount++;
     mgUpdateProgress();
-    if (mgMatchedCount >= mgPairCount()) mgFinishGame();
+    if (mgMatchedCount >= MG_PAIR_COUNT) mgFinishGame();
   } else {
     mgLock = true;
     setTimeout(function () {
@@ -207,7 +224,7 @@ function mgLoadLeaderboard() {
 }
 
 function escapeHtmlMatchGame(str) {
-  return String(str)
+  return String(str == null ? "" : str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
@@ -215,14 +232,18 @@ function escapeHtmlMatchGame(str) {
 
 function mgSetMode(mode) {
   mgMode = mode;
-  var easyBtn = document.getElementById("mgModeEasy");
-  var hardBtn = document.getElementById("mgModeHard");
-  if (easyBtn && hardBtn) {
-    easyBtn.className = mode === "easy" ? "btn block" : "btn ghost block";
-    hardBtn.className = mode === "hard" ? "btn block" : "btn ghost block";
+  var booksBtn = document.getElementById("mgModeBooks");
+  var figuresBtn = document.getElementById("mgModeFigures");
+  if (booksBtn && figuresBtn) {
+    booksBtn.className = mode === "books" ? "btn block" : "btn ghost block";
+    figuresBtn.className = mode === "figures" ? "btn block" : "btn ghost block";
   }
-  var grid = document.getElementById("mgGrid");
-  if (grid) grid.classList.toggle("hard", mode === "hard");
+  var hint = document.getElementById("mgHint");
+  if (hint) {
+    hint.textContent = mode === "figures"
+      ? "인물과 그 인물의 사건·상징을 짝지어 보세요."
+      : "같은 성경책 이름 두 장을 짝지어 보세요.";
+  }
   mgResetGame();
   mgLoadMyBest();
   mgLoadLeaderboard();
@@ -237,8 +258,8 @@ function initMatchGame() {
   var resetBtn = document.getElementById("mgResetBtn");
   if (resetBtn) resetBtn.addEventListener("click", mgResetGame);
 
-  var easyBtn = document.getElementById("mgModeEasy");
-  var hardBtn = document.getElementById("mgModeHard");
-  if (easyBtn) easyBtn.addEventListener("click", function () { mgSetMode("easy"); });
-  if (hardBtn) hardBtn.addEventListener("click", function () { mgSetMode("hard"); });
+  var booksBtn = document.getElementById("mgModeBooks");
+  var figuresBtn = document.getElementById("mgModeFigures");
+  if (booksBtn) booksBtn.addEventListener("click", function () { mgSetMode("books"); });
+  if (figuresBtn) figuresBtn.addEventListener("click", function () { mgSetMode("figures"); });
 }

@@ -20,19 +20,20 @@
 <div class="wrap">
   <section class="hero">
     <h1>🃏 같은 성경 찾기</h1>
-    <p>인물과 그 인물의 사건·상징을 짝지어 모두 맞혀보세요!</p>
+    <p>카드를 두 장씩 뒤집어 짝을 모두 맞혀보세요!</p>
   </section>
 
   <div class="card" style="text-align:center;">
     <div style="display:flex;gap:8px;justify-content:center;">
-      <button type="button" id="mgModeEasy" class="btn block">쉬움 (8쌍)</button>
-      <button type="button" id="mgModeHard" class="btn ghost block">도전 (16쌍)</button>
+      <button type="button" id="mgModeBooks" class="btn block">📖 성경책</button>
+      <button type="button" id="mgModeFigures" class="btn ghost block">👤 인물 &amp; 사건</button>
     </div>
+    <p class="msg" id="mgHint" style="margin:10px 0 0;">같은 성경책 이름 두 장을 짝지어 보세요.</p>
   </div>
 
   <div class="card" style="text-align:center;">
     <div id="mgTimer" style="font-size:32px;font-weight:800;color:var(--well-deep);font-variant-numeric:tabular-nums;">00:00.0</div>
-    <p class="msg" id="mgProgress" style="margin:4px 0 0;">맞춘 짝: 0 / 8</p>
+    <p class="msg" id="mgProgress" style="margin:4px 0 0;">맞춘 짝: 0 / 16</p>
     <button type="button" id="mgResetBtn" class="btn ghost" style="margin-top:10px;padding:8px 16px;font-size:12.5px;">다시 섞기</button>
   </div>
 

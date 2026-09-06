@@ -2828,7 +2828,7 @@ $$;
 -- book_game 과 동일 구조. 모드: easy(8쌍)/hard(16쌍). 실행용: sql-migrations/2026-09-06-match-game.sql
 create table if not exists match_game_scores (
   user_id uuid not null references auth.users(id) on delete cascade,
-  mode text not null check (mode in ('easy', 'hard')),
+  mode text not null check (mode in ('books', 'figures')),
   best_time_ms integer not null,
   updated_at timestamptz not null default now(),
   primary key (user_id, mode)
@@ -2853,7 +2853,7 @@ alter table points_ledger add constraint points_ledger_action_type_check
     'attendance', 'streak_bonus', 'note', 'quiz',
     'group_attendance_bonus', 'group_notes_bonus', 'admin_award', 'greeting_draw',
     'book_game', 'book_game_ot', 'book_game_nt',
-    'match_game_easy', 'match_game_hard'
+    'match_game_books', 'match_game_figures'
   ));
 
 create or replace function submit_match_game_score(p_time_ms integer, p_mode text)
@@ -2873,7 +2873,7 @@ begin
   if auth.uid() is null then
     raise exception '로그인이 필요합니다.';
   end if;
-  if p_mode not in ('easy', 'hard') then
+  if p_mode not in ('books', 'figures') then
     raise exception '잘못된 모드입니다.';
   end if;
 
@@ -2913,7 +2913,7 @@ begin
   if auth.uid() is null then
     raise exception '로그인이 필요합니다.';
   end if;
-  if p_mode not in ('easy', 'hard') then
+  if p_mode not in ('books', 'figures') then
     raise exception '잘못된 모드입니다.';
   end if;
 
@@ -2939,7 +2939,7 @@ begin
   if auth.uid() is null then
     raise exception '로그인이 필요합니다.';
   end if;
-  if p_mode not in ('easy', 'hard') then
+  if p_mode not in ('books', 'figures') then
     raise exception '잘못된 모드입니다.';
   end if;
   select best_time_ms into v_time from match_game_scores where user_id = auth.uid() and mode = p_mode;
