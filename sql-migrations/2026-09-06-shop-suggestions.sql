@@ -35,7 +35,7 @@ returns bigint
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $func$
 declare
   v_text text := nullif(trim(p_content), '');
   v_today_count integer;
@@ -54,7 +54,7 @@ begin
   insert into shop_suggestions (user_id, content) values (auth.uid(), v_text) returning id into v_id;
   return v_id;
 end;
-$$;
+$func$;
 
 -- 학생: 내가 보낸 추천
 create or replace function get_my_shop_suggestions()
@@ -62,12 +62,12 @@ returns table(id bigint, content text, status text, admin_note text, created_at 
 language sql
 security definer
 set search_path = public
-as $$
+as $func$
   select s.id, s.content, s.status, s.admin_note, s.created_at
   from shop_suggestions s
   where s.user_id = auth.uid()
   order by s.created_at desc;
-$$;
+$func$;
 
 -- 관리자·부장: 전체 추천 목록 (미처리 먼저)
 create or replace function get_shop_suggestions_admin(p_status text default null)
@@ -75,7 +75,7 @@ returns table(id bigint, user_id uuid, nickname text, content text, status text,
 language sql
 security definer
 set search_path = public
-as $$
+as $func$
   select s.id, s.user_id, pr.nickname, s.content, s.status, s.admin_note, s.created_at
   from shop_suggestions s
   join profiles pr on pr.user_id = s.user_id
@@ -83,7 +83,7 @@ as $$
     and (p_status is null or s.status = p_status)
   order by (s.status = 'open') desc, s.created_at desc
   limit 200;
-$$;
+$func$;
 
 -- 관리자·부장: 추천 상태 변경
 create or replace function update_shop_suggestion(p_id bigint, p_status text, p_note text default null)
@@ -91,7 +91,7 @@ returns boolean
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $func$
 begin
   if not exists (select 1 from profiles p where p.user_id = auth.uid() and (p.is_admin or p.is_department_head)) then
     raise exception '권한이 없어요.';
@@ -104,6 +104,6 @@ begin
   where id = p_id;
   return true;
 end;
-$$;
+$func$;
 
 select 'shop_suggestions 테이블 + 함수 4개 생성 완료' as status;
