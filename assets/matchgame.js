@@ -1,15 +1,15 @@
-// 같은 성경 찾기 (카드 뒤집기 짝 맞추기) — 두 가지 버전, 매주 내용이 바뀜
+// 같은 성경 찾기 (카드 뒤집기 짝 맞추기) — 4×4, 시작 버튼 → 3초 미리보기 → 3라운드
 //  · books   : 같은 성경책 이름끼리 (창세기 ↔ 창세기)
 //  · figures : 인물 ↔ 그 인물의 사건/상징 (모세 ↔ 홍해가 갈라짐)
-// 각 버전 한 판 16쌍(32장). 전체 풀에서 매주(월요일 기준) 16개씩 회전 선택해서
-// 그 주에는 모두 같은 세트를 본다. 버전별로 따로 최고기록·TOP10.
+// 한 라운드 8쌍(16장, 4×4). 3라운드 합산 시간으로 기록. 매주 월요일 내용이 바뀐다.
 // auth.js의 getClient(), getSession()에 의존함. bookgame.js와 같은 기록/달란트 구조.
 
-var MG_PAIR_COUNT = 16;
-// 주(週) 계산 기준: 2026-01-05(월) 00:00 UTC 부터 7일 단위
-var MG_WEEK_ANCHOR = Date.UTC(2026, 0, 5);
+var MG_ROUNDS = 3;
+var MG_ROUND_PAIRS = 8;                       // 한 라운드 짝 수 (4×4)
+var MG_WEEK_PAIRS = MG_ROUNDS * MG_ROUND_PAIRS; // 한 주에 쓰는 총 짝 수 (24)
+var MG_PREVIEW_MS = 3000;
+var MG_WEEK_ANCHOR = Date.UTC(2026, 0, 5);    // 2026-01-05(월) 기준
 
-// ---- 버전 1 풀: 성경책 66권 (개역개정 순서) ----
 var MG_BOOK_POOL = [
   "창세기", "출애굽기", "레위기", "민수기", "신명기",
   "여호수아", "사사기", "룻기", "사무엘상", "사무엘하",
@@ -27,7 +27,6 @@ var MG_BOOK_POOL = [
   "유다서", "요한계시록"
 ];
 
-// ---- 버전 2 풀: 인물 ↔ 사건/상징 ----
 var MG_PAIR_POOL = [
   { person: "아담",   match: "선악과" },
   { person: "가인",   match: "아벨을 죽임" },
@@ -75,23 +74,25 @@ var MG_PAIR_POOL = [
   { person: "요한",   match: "밧모섬의 계시" }
 ];
 
-var mgMode = "books";       // books | figures
+var mgMode = "books";           // books | figures
+var mgPhase = "idle";           // idle | preview | playing | roundDone | done
+var mgRound = 0;                // 0..MG_ROUNDS-1
+var mgRoundMs = [];             // 라운드별 소요 시간
+var mgWeekItems = [];           // 이번 주에 쓸 24개
 var mgDeck = [];
 var mgFlipped = [];
 var mgMatchedCount = 0;
 var mgLock = false;
-var mgStartTime = null;
+var mgRoundStart = null;
 var mgTimerInterval = null;
-var mgFinished = false;
+var mgPreviewTimer = null;
 
-// 이번 주 인덱스 (월요일 기준, 0부터)
 function mgWeekIndex() {
   return Math.floor((Date.now() - MG_WEEK_ANCHOR) / (7 * 86400000));
 }
 
-// 풀에서 이번 주에 쓸 16개를 회전 윈도우로 뽑는다(래핑). 그 주 전원이 같은 세트를 본다.
 function mgWeeklySlice(pool) {
-  var n = MG_PAIR_COUNT;
+  var n = MG_WEEK_PAIRS;
   var start = (mgWeekIndex() * n % pool.length + pool.length) % pool.length;
   var out = [];
   for (var i = 0; i < n; i++) out.push(pool[(start + i) % pool.length]);
@@ -114,69 +115,84 @@ function mgFormatTime(ms) {
   return String(m).padStart(2, "0") + ":" + (Number(s) < 10 ? "0" : "") + s;
 }
 
+function mgTotalMs() {
+  var sum = 0;
+  for (var i = 0; i < mgRoundMs.length; i++) sum += mgRoundMs[i];
+  if (mgPhase === "playing" && mgRoundStart != null) sum += Date.now() - mgRoundStart;
+  return sum;
+}
+
 function mgUpdateTimerDisplay() {
   var el = document.getElementById("mgTimer");
-  if (!el || mgStartTime === null) return;
-  el.textContent = mgFormatTime(Date.now() - mgStartTime);
+  if (el) el.textContent = mgFormatTime(mgTotalMs());
 }
 
-function mgUpdateProgress() {
+function mgSetProgress(text) {
   var el = document.getElementById("mgProgress");
-  if (!el) return;
-  el.textContent = mgMatchedCount >= MG_PAIR_COUNT
-    ? "완료!"
-    : "맞춘 짝: " + mgMatchedCount + " / " + MG_PAIR_COUNT;
+  if (el) el.textContent = text;
 }
 
-function mgStartGame() {
-  mgStartTime = Date.now();
-  mgFinished = false;
-  mgTimerInterval = setInterval(mgUpdateTimerDisplay, 87);
+function mgRoundItems(roundIdx) {
+  return mgWeekItems.slice(roundIdx * MG_ROUND_PAIRS, roundIdx * MG_ROUND_PAIRS + MG_ROUND_PAIRS);
 }
 
-function mgBuildCards() {
+function mgBuildCards(roundIdx) {
   var cards = [];
-  if (mgMode === "figures") {
-    mgWeeklySlice(MG_PAIR_POOL).forEach(function (p, i) {
-      cards.push({ pairId: i, label: p.person });
-      cards.push({ pairId: i, label: p.match });
-    });
-  } else {
-    mgWeeklySlice(MG_BOOK_POOL).forEach(function (name, i) {
-      cards.push({ pairId: i, label: name });
-      cards.push({ pairId: i, label: name });
-    });
-  }
-  return cards;
+  mgRoundItems(roundIdx).forEach(function (it, i) {
+    if (mgMode === "figures") {
+      cards.push({ pairId: i, label: it.person });
+      cards.push({ pairId: i, label: it.match });
+    } else {
+      cards.push({ pairId: i, label: it });
+      cards.push({ pairId: i, label: it });
+    }
+  });
+  return mgShuffle(cards);
 }
 
-function mgRenderBoard() {
+function mgRenderBoard(faceUp) {
   var grid = document.getElementById("mgGrid");
   if (!grid) return;
-  mgDeck = mgShuffle(mgBuildCards());
   grid.innerHTML = mgDeck.map(function (c) {
     return (
-      '<button type="button" class="match-card" data-pair-id="' + c.pairId + '">' +
+      '<button type="button" class="match-card' + (faceUp ? " flipped" : "") + '" data-pair-id="' + c.pairId + '">' +
         '<span class="mc-back">📖</span>' +
         '<span class="mc-front">' + escapeHtmlMatchGame(c.label) + '</span>' +
       '</button>'
     );
   }).join("");
-
   grid.querySelectorAll(".match-card").forEach(function (card) {
     card.addEventListener("click", function () { mgOnCardClick(card); });
   });
 }
 
-function mgOnCardClick(card) {
-  if (mgLock || mgFinished) return;
-  if (card.classList.contains("flipped") || card.classList.contains("matched")) return;
+function mgStartRound(roundIdx) {
+  clearTimeout(mgPreviewTimer);
+  mgRound = roundIdx;
+  mgMatchedCount = 0;
+  mgFlipped = [];
+  mgLock = false;
+  mgRoundStart = null;
+  mgPhase = "preview";
+  mgDeck = mgBuildCards(roundIdx);
+  mgRenderBoard(true); // 전부 앞면
+  mgSetProgress((roundIdx + 1) + "라운드 · 카드를 외워보세요! (3초)");
 
-  if (mgStartTime === null) mgStartGame();
+  mgPreviewTimer = setTimeout(function () {
+    document.querySelectorAll("#mgGrid .match-card").forEach(function (c) { c.classList.remove("flipped"); });
+    mgPhase = "playing";
+    mgRoundStart = Date.now();
+    if (!mgTimerInterval) mgTimerInterval = setInterval(mgUpdateTimerDisplay, 87);
+    mgSetProgress((roundIdx + 1) + "라운드 · 맞춘 짝 0 / " + MG_ROUND_PAIRS);
+  }, MG_PREVIEW_MS);
+}
+
+function mgOnCardClick(card) {
+  if (mgPhase !== "playing" || mgLock) return;
+  if (card.classList.contains("flipped") || card.classList.contains("matched")) return;
 
   card.classList.add("flipped");
   mgFlipped.push(card);
-
   if (mgFlipped.length < 2) return;
 
   var a = mgFlipped[0], b = mgFlipped[1];
@@ -185,8 +201,8 @@ function mgOnCardClick(card) {
     b.classList.add("matched");
     mgFlipped = [];
     mgMatchedCount++;
-    mgUpdateProgress();
-    if (mgMatchedCount >= MG_PAIR_COUNT) mgFinishGame();
+    mgSetProgress((mgRound + 1) + "라운드 · 맞춘 짝 " + mgMatchedCount + " / " + MG_ROUND_PAIRS);
+    if (mgMatchedCount >= MG_ROUND_PAIRS) mgFinishRound();
   } else {
     mgLock = true;
     setTimeout(function () {
@@ -194,33 +210,35 @@ function mgOnCardClick(card) {
       b.classList.remove("flipped");
       mgFlipped = [];
       mgLock = false;
-    }, 750);
+    }, 700);
   }
 }
 
-function mgResetGame() {
-  clearInterval(mgTimerInterval);
-  mgFlipped = [];
-  mgMatchedCount = 0;
-  mgLock = false;
-  mgStartTime = null;
-  mgFinished = false;
-  var timerEl = document.getElementById("mgTimer");
-  if (timerEl) timerEl.textContent = "00:00.0";
-  var resultCard = document.getElementById("mgResultCard");
-  if (resultCard) resultCard.style.display = "none";
-  mgUpdateProgress();
-  mgRenderBoard();
+function mgFinishRound() {
+  mgRoundMs.push(Date.now() - mgRoundStart);
+  mgRoundStart = null;
+  mgPhase = "roundDone";
+
+  if (mgRound + 1 < MG_ROUNDS) {
+    mgSetProgress((mgRound + 1) + "라운드 완료! 잠시 후 다음 라운드가 시작돼요.");
+    setTimeout(function () { mgStartRound(mgRound + 1); }, 1400);
+  } else {
+    mgFinishGame();
+  }
 }
 
 function mgFinishGame() {
-  mgFinished = true;
   clearInterval(mgTimerInterval);
-  var elapsed = Date.now() - mgStartTime;
+  mgTimerInterval = null;
+  mgPhase = "done";
+  var total = mgTotalMs();
+  mgUpdateTimerDisplay();
+  mgSetProgress("완료!");
+
   var resultCard = document.getElementById("mgResultCard");
   if (resultCard) resultCard.style.display = "block";
   var timeEl = document.getElementById("mgResultTime");
-  if (timeEl) timeEl.textContent = mgFormatTime(elapsed);
+  if (timeEl) timeEl.textContent = mgFormatTime(total);
 
   var msgEl = document.getElementById("mgResultMsg");
   var client = getClient();
@@ -231,7 +249,7 @@ function mgFinishGame() {
       msgEl.textContent = "로그인하면 기록 저장하고 +2달란트 받을 수 있어요.";
       return;
     }
-    client.rpc("submit_match_game_score", { p_time_ms: Math.round(elapsed), p_mode: mgMode }).then(function (res) {
+    client.rpc("submit_match_game_score", { p_time_ms: Math.round(total), p_mode: mgMode }).then(function (res) {
       if (res.error) { msgEl.textContent = "기록 저장에 실패했어요."; return; }
       var row = (res.data && res.data[0]) || {};
       var parts = [];
@@ -242,6 +260,41 @@ function mgFinishGame() {
       mgLoadMyBest();
     });
   });
+}
+
+function mgResetGame() {
+  clearInterval(mgTimerInterval);
+  clearTimeout(mgPreviewTimer);
+  mgTimerInterval = null;
+  mgPhase = "idle";
+  mgRound = 0;
+  mgRoundMs = [];
+  mgFlipped = [];
+  mgMatchedCount = 0;
+  mgLock = false;
+  mgRoundStart = null;
+  mgWeekItems = mgMode === "figures" ? mgWeeklySlice(MG_PAIR_POOL) : mgWeeklySlice(MG_BOOK_POOL);
+  mgDeck = [];
+
+  var timerEl = document.getElementById("mgTimer");
+  if (timerEl) timerEl.textContent = "00:00.0";
+  var resultCard = document.getElementById("mgResultCard");
+  if (resultCard) resultCard.style.display = "none";
+
+  var grid = document.getElementById("mgGrid");
+  if (grid) grid.innerHTML = '<p class="msg" style="grid-column:1/-1;text-align:center;padding:30px 0;">▶ 시작을 누르면 게임이 시작돼요<br>(4×4 · 8쌍씩 3라운드)</p>';
+  mgSetProgress("시작을 누르면 3초 동안 카드를 보여줘요 · 총 " + MG_ROUNDS + "라운드");
+
+  var startBtn = document.getElementById("mgStartBtn");
+  if (startBtn) { startBtn.style.display = "block"; startBtn.disabled = false; }
+}
+
+function mgStart() {
+  if (mgPhase !== "idle") return;
+  var startBtn = document.getElementById("mgStartBtn");
+  if (startBtn) startBtn.style.display = "none";
+  mgRoundMs = [];
+  mgStartRound(0);
 }
 
 function mgLoadMyBest() {
@@ -288,6 +341,9 @@ function escapeHtmlMatchGame(str) {
 }
 
 function mgSetMode(mode) {
+  if (mgPhase !== "idle" && mgPhase !== "done") {
+    if (!confirm("게임을 그만두고 버전을 바꿀까요?")) return;
+  }
   mgMode = mode;
   var booksBtn = document.getElementById("mgModeBooks");
   var figuresBtn = document.getElementById("mgModeFigures");
@@ -310,14 +366,14 @@ function initMatchGame() {
   var tag = document.getElementById("mgWeekTag");
   if (tag) tag.textContent = "이번 주 세트 · 매주 월요일 새 문제로 바뀜";
 
-  mgRenderBoard();
-  mgUpdateProgress();
+  mgResetGame();
   mgLoadMyBest();
   mgLoadLeaderboard();
 
+  var startBtn = document.getElementById("mgStartBtn");
+  if (startBtn) startBtn.addEventListener("click", mgStart);
   var resetBtn = document.getElementById("mgResetBtn");
   if (resetBtn) resetBtn.addEventListener("click", mgResetGame);
-
   var booksBtn = document.getElementById("mgModeBooks");
   var figuresBtn = document.getElementById("mgModeFigures");
   if (booksBtn) booksBtn.addEventListener("click", function () { mgSetMode("books"); });

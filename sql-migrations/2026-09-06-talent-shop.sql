@@ -190,16 +190,20 @@ where not exists (select 1 from shop_orders so where so.item_id = si.id)
     '문화상품권', '올리브영 상품권', '메가커피', '공차', '스타벅스', '투썸'
   );
 
-insert into shop_items (name, cost, sort_order)
-select v.name, v.cost, v.sort_order
+insert into shop_items (name, description, cost, sort_order)
+select v.name, v.description, v.cost, v.sort_order
 from (values
-  ('문화상품권', 200, 10),
-  ('올리브영 상품권', 200, 20),
-  ('메가커피', 100, 30),
-  ('공차', 100, 40),
-  ('스타벅스', 100, 50),
-  ('투썸', 100, 60)
-) as v(name, cost, sort_order)
+  ('문화상품권', '1만원권', 200, 10),
+  ('올리브영 상품권', '1만원권', 200, 20),
+  ('메가커피', '5천원권', 100, 30),
+  ('공차', '5천원권', 100, 40),
+  ('스타벅스', '5천원권', 100, 50),
+  ('투썸', '5천원권', 100, 60)
+) as v(name, description, cost, sort_order)
 where not exists (select 1 from shop_items s where s.name = v.name);
 
-select 'shop_items / shop_orders + 함수 6개 + 시작 상품 6개 생성 완료' as status;
+-- 이미 만들어져 있던 시드 상품에 금액 설명 채우기
+update shop_items set description = '1만원권' where name in ('문화상품권', '올리브영 상품권') and (description is null or description = '');
+update shop_items set description = '5천원권' where name in ('메가커피', '공차', '스타벅스', '투썸') and (description is null or description = '');
+
+select 'shop_items / shop_orders + 함수 6개 + 시작 상품 6개(+금액) 생성 완료' as status;
