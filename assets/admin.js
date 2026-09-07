@@ -65,6 +65,7 @@ function initAdminPage() {
       initEventForm(session.user.id);
       initQuizForm(session.user.id);
       initShopAdmin(session.user.id);
+      loadChodaeInvitesAdmin();
       loadOikosExpensesAdmin();
       loadMemberList();
       loadAllNotes();
@@ -1471,6 +1472,75 @@ function initShopAdmin(userId) {
 }
 
 // ===== 오이코스 회식비 지원 승인 =====
+// 친구초청잔치(9/13) 초청 명단: 누가 누굴 적었는지 초청자별로 묶어서 보여주고,
+// 잔치날 실제로 온 친구는 "왔어요"로 체크할 수 있다.
+function loadChodaeInvitesAdmin() {
+  var client = getClient();
+  var el = document.getElementById("chodaeInvitesAdminList");
+  if (!client || !el) return;
+
+  client.rpc("get_friend_invites_admin").then(function (res) {
+    if (res.error) { el.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
+    var rows = res.data || [];
+    if (!rows.length) { el.innerHTML = '<p class="msg">아직 등록된 초청 명단이 없어요.</p>'; return; }
+
+    var total = rows.length;
+    var cameCount = rows.filter(function (r) { return r.came; }).length;
+
+    // 초청자별로 그룹핑 (nickname 기준, 순서 유지)
+    var groups = [];
+    var byKey = {};
+    rows.forEach(function (r) {
+      var key = (r.inviter_nickname || "(알 수 없음)") + "|" + (r.inviter_real_name || "");
+      if (!byKey[key]) {
+        byKey[key] = { nickname: r.inviter_nickname || "(알 수 없음)", real_name: r.inviter_real_name || "", items: [] };
+        groups.push(byKey[key]);
+      }
+      byKey[key].items.push(r);
+    });
+
+    var header =
+      '<p class="msg" style="margin-top:0;">초청자 ' + groups.length + '명 · 초청 작정 ' + total + '명 · 잔치에 온 친구 <strong style="color:var(--well);">' + cameCount + '명</strong></p>';
+
+    var body = groups.map(function (g) {
+      var who = escapeHtmlAdmin(g.nickname) + (g.real_name ? ' <span style="color:var(--text-soft);font-size:12px;">(' + escapeHtmlAdmin(g.real_name) + ')</span>' : '');
+      var friends = g.items.map(function (r) {
+        return (
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;">' +
+            '<span style="overflow-wrap:anywhere;">' + (r.came ? '🎉 ' : '· ') + escapeHtmlAdmin(r.friend_name) + '</span>' +
+            '<button type="button" class="btn ' + (r.came ? '' : 'ghost') + '" data-came-id="' + r.id + '" data-came="' + (r.came ? '1' : '0') + '" style="padding:5px 12px;font-size:12px;white-space:nowrap;">' +
+              (r.came ? '왔어요 ✓' : '왔어요 체크') +
+            '</button>' +
+          '</div>'
+        );
+      }).join("");
+      return (
+        '<div class="note-item">' +
+          '<div class="content"><strong>' + who + '</strong> <span style="color:var(--text-soft);font-size:12px;">· ' + g.items.length + '명</span></div>' +
+          '<div style="margin-top:4px;">' + friends + '</div>' +
+        '</div>'
+      );
+    }).join("");
+
+    el.innerHTML = header + body;
+
+    el.querySelectorAll("[data-came-id]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = Number(btn.getAttribute("data-came-id"));
+        var next = btn.getAttribute("data-came") === "1" ? false : true;
+        btn.disabled = true;
+        client.rpc("set_friend_invite_came", { p_id: id, p_came: next }).then(function (res) {
+          btn.disabled = false;
+          if (res.error) { alert(res.error.message || "처리에 실패했어요."); return; }
+          loadChodaeInvitesAdmin();
+        }).catch(function () { btn.disabled = false; alert("처리에 실패했어요."); });
+      });
+    });
+  }).catch(function () {
+    el.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
+  });
+}
+
 function loadOikosExpensesAdmin() {
   var client = getClient();
   var el = document.getElementById("oikosExpenseAdminList");
