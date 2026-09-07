@@ -65,6 +65,7 @@ function initAdminPage() {
       initEventForm(session.user.id);
       initQuizForm(session.user.id);
       initShopAdmin(session.user.id);
+      initDevotionAdmin();
       loadChodaeInvitesAdmin();
       loadOikosExpensesAdmin();
       loadMemberList();
@@ -1473,6 +1474,58 @@ function initShopAdmin(userId) {
 }
 
 // ===== 오이코스 회식비 지원 승인 =====
+// 이번 주 묵상(QT) 등록/수정 + 최근 묵상별 체크인 인원.
+function initDevotionAdmin() {
+  var client = getClient();
+  var form = document.getElementById("devotionForm");
+  var list = document.getElementById("devotionAdminList");
+  if (!client || !form) return;
+
+  // 주 시작일 기본값 = 이번 주 월요일
+  var wk = document.getElementById("devWeekStart");
+  if (wk && !wk.value) {
+    var d = new Date();
+    var day = (d.getDay() + 6) % 7; // 월=0
+    d.setDate(d.getDate() - day);
+    wk.value = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function loadList() {
+    if (!list) return;
+    client.rpc("get_devotions_admin").then(function (res) {
+      if (res.error) { list.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
+      var rows = res.data || [];
+      if (!rows.length) { list.innerHTML = '<p class="msg">아직 등록된 묵상이 없어요.</p>'; return; }
+      list.innerHTML = rows.map(function (r) {
+        return '<div class="note-item"><div class="content"><strong>' + escapeHtmlAdmin(r.week_start) + '</strong> · ' +
+          escapeHtmlAdmin(r.scripture_ref) + '</div><div class="meta">묵상 체크 ' + (r.checkin_people || 0) + '명</div></div>';
+      }).join("");
+    });
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var msg = document.getElementById("devotionMsg");
+    var ws = document.getElementById("devWeekStart").value;
+    var ref = document.getElementById("devRef").value.trim();
+    var text = document.getElementById("devText").value.trim();
+    var promptsRaw = document.getElementById("devPrompts").value;
+    var prompts = promptsRaw.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+    if (msg) msg.textContent = "";
+    if (!ws || !ref || !text) { if (msg) msg.textContent = "주 시작일·구절·본문을 모두 입력해주세요."; return; }
+    var btn = form.querySelector("button[type=submit]");
+    if (btn) btn.disabled = true;
+    client.rpc("upsert_devotion", { p_week_start: ws, p_ref: ref, p_text: text, p_prompts: prompts }).then(function (res) {
+      if (btn) btn.disabled = false;
+      if (res.error) { if (msg) msg.textContent = res.error.message || "저장에 실패했어요."; return; }
+      if (msg) msg.textContent = "저장됐어요.";
+      loadList();
+    }).catch(function () { if (btn) btn.disabled = false; if (msg) msg.textContent = "네트워크 오류로 저장하지 못했어요."; });
+  });
+
+  loadList();
+}
+
 // 친구초청잔치(9/13) 초청 명단: 누가 누굴 적었는지 초청자별로 묶어서 보여주고,
 // 잔치날 실제로 온 친구는 "왔어요"로 체크할 수 있다.
 function loadChodaeInvitesAdmin() {

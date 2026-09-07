@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>이번 주 묵상 | 말씀우물</title>
+<meta name="description" content="이번 주 본문을 읽고, 짧은 묵상 질문에 마음을 나눠보세요. 오늘 묵상 체크하면 달란트를 받아요.">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14707a">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script defer src="assets/pwa.js"></script>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap">
+  <section class="hero">
+    <div class="badge">이번 주 묵상</div>
+    <h1>말씀 앞에<br>잠깐 멈춰 서기</h1>
+    <p>본문을 천천히 읽고, 아래 질문을 마음에 품어보세요.</p>
+  </section>
+
+  <div class="card streak" id="qtStreakCard" style="display:none;">
+    <div class="num" id="qtStreakNum">0</div>
+    <div class="label">일 연속 묵상</div>
+    <button id="qtCheckBtn" class="btn block" style="margin-top:14px;">오늘 묵상 체크하기</button>
+    <p class="msg" id="qtMsg"></p>
+  </div>
+
+  <div class="card" id="qtContent">
+    <p class="msg" style="margin-top:0;">불러오는 중...</p>
+  </div>
+
+  <div class="card" id="qtLoginHint" style="display:none;text-align:center;">
+    <p style="color:var(--text-soft);font-size:13.5px;">로그인하면 오늘 묵상을 체크하고 달란트를 받을 수 있어요.</p>
+    <a href="login.html" class="btn block">로그인하러 가기</a>
+  </div>
+
+  <div class="card" style="text-align:center;">
+    <p style="color:var(--text-soft);font-size:13px;margin:0 0 12px;">이번 주 예배 말씀도 함께 보세요.</p>
+    <a href="weekly.html" class="btn ghost block">이번 주 말씀 보기</a>
+  </div>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  💧 말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a>
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/qt.js"></script>
+<script>
+  initHeaderAuthState();
+  initQtPage();
+</script>
+</body>
+</html>

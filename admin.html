@@ -159,6 +159,35 @@
     </div>
 
     <div class="card">
+      <h3 class="accordion-toggle" style="margin-top:0;">📖 이번 주 묵상 <span class="accordion-chevron">▸</span></h3>
+      <div class="accordion-body" style="display:none;">
+        <p class="msg" style="margin-top:0;">여기 등록하면 홈 화면 "이번 주 묵상"과 <code>qt.html</code>에 바로 보여요. 학생이 오늘 묵상 체크하면 +1달란트. 같은 주에 다시 등록하면 덮어쓰기 돼요.</p>
+        <form id="devotionForm">
+          <div class="form-row">
+            <label for="devWeekStart">주 시작일(월요일)</label>
+            <input type="date" id="devWeekStart">
+          </div>
+          <div class="form-row">
+            <label for="devRef">본문 구절 표기</label>
+            <input type="text" id="devRef" placeholder="예: 요한복음 15:5">
+          </div>
+          <div class="form-row">
+            <label for="devText">본문 내용</label>
+            <textarea id="devText" rows="4" placeholder="본문 전문을 붙여넣어 주세요"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="devPrompts">묵상 질문 (한 줄에 하나씩)</label>
+            <textarea id="devPrompts" rows="3" placeholder="오늘 내가 붙어 있어야 할 가지는?&#10;이번 주에 맺고 싶은 열매는?"></textarea>
+          </div>
+          <button type="submit" class="btn block">묵상 등록 / 수정</button>
+          <p class="msg" id="devotionMsg"></p>
+        </form>
+        <hr class="well-divider">
+        <div id="devotionAdminList"></div>
+      </div>
+    </div>
+
+    <div class="card">
       <h3 class="accordion-toggle" style="margin-top:0;">🎁 달란트 상점 <span class="accordion-chevron">▸</span></h3>
       <div class="accordion-body" style="display:none;">
         <p class="msg" style="margin-top:0;">학생이 달란트로 교환 신청하면 아래 "교환 요청"에 떠요. 승인하면 학생 화면에 "승인됨"으로 표시되고, 전달한 뒤 "전달 완료"로 바꾸면 돼요. 거절하면 달란트는 자동으로 돌아가요.</p>
