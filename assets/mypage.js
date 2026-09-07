@@ -117,6 +117,67 @@ function initPointsHistory(userId) {
   });
 }
 
+// 연속 출석 "다음 목표까지 며칠" 안내. 7 → 14 → 30 → 그 다음은 30일 단위.
+function renderStreakMilestone(streak) {
+  var el = document.getElementById("streakMilestone");
+  if (!el) return;
+  if (!streak || streak < 1) {
+    el.textContent = "오늘 출석하면 연속 출석이 시작돼요!";
+    return;
+  }
+  var milestones = [7, 14, 30];
+  var next = null;
+  for (var i = 0; i < milestones.length; i++) {
+    if (streak < milestones[i]) { next = milestones[i]; break; }
+  }
+  if (next === null) next = Math.ceil((streak + 1) / 30) * 30;
+
+  if (streak === 7 || streak === 14 || streak === 30 || (streak > 30 && streak % 30 === 0)) {
+    el.textContent = "🎉 " + streak + "일 연속 출석 달성! 대단해요";
+  } else if (streak % 7 === 0) {
+    el.textContent = "🔥 " + streak + "일 연속! (7일마다 +1달란트)";
+  } else {
+    el.textContent = "🔥 " + streak + "일째 · 다음 목표 " + next + "일까지 " + (next - streak) + "일 남았어요";
+  }
+}
+
+var BADGE_TIER_COLORS = { 1: "#c9932f", 2: "#8b9199", 3: "#e0b23a" };
+
+function initBadges(userId) {
+  var client = getClient();
+  var card = document.getElementById("badgesCard");
+  var grid = document.getElementById("badgesGrid");
+  if (!client || !card || !grid) return;
+
+  client.rpc("get_my_badges").then(function (res) {
+    if (res.error || !res.data || !res.data.length) {
+      card.style.display = "none";
+      return;
+    }
+    card.style.display = "block";
+    var rows = res.data.slice().sort(function (a, b) { return (b.tier - a.tier); });
+    var earned = rows.filter(function (r) { return r.tier > 0; }).length;
+
+    var sub = document.getElementById("badgesSub");
+    if (sub) sub.textContent = earned > 0 ? (rows.length + "개 중 " + earned + "개 획득") : "아직 획득한 뱃지가 없어요 — 조금만 더!";
+
+    grid.innerHTML = rows.map(function (r) {
+      var got = r.tier > 0;
+      var tierLabel = got ? (r.tier_label + " · " + r.current_value) : (r.current_value + " / " + r.next_target);
+      var ring = got ? BADGE_TIER_COLORS[r.tier] : "var(--border)";
+      return (
+        '<div class="badge-item' + (got ? " got" : "") + '" style="border-color:' + ring + ';">' +
+          '<div class="badge-emoji">' + r.emoji + '</div>' +
+          '<div class="badge-name">' + escapeHtml(r.label) + '</div>' +
+          '<div class="badge-tier">' + escapeHtml(tierLabel) + '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }).catch(function () {
+    card.style.display = "none";
+  });
+}
+
 function initAttendance(userId) {
   var client = getClient();
   var checkBtn = document.getElementById("checkinBtn");
@@ -149,6 +210,7 @@ function initAttendance(userId) {
           }
         }
         if (streakNum) streakNum.textContent = streak;
+        renderStreakMilestone(streak);
         var checkedToday = dates.indexOf(todayStr()) !== -1;
         if (checkedToday) {
           checkBtn.textContent = "오늘 출석 완료 ✅";

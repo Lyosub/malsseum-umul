@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>친구초청잔치 | 말씀우물</title>
+<meta name="description" content="9월 13일 중등부 친구초청잔치 · JESUS+ Brand New Day (고린도후서 5:17). 내가 초청한 친구를 기록하고 중등부 전체 진행률을 함께 확인해요.">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14707a">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script defer src="assets/pwa.js"></script>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap">
+
+  <div class="chodae-hero">
+    <img class="chodae-poster" src="assets/chodae-poster.jpg" alt="JESUS+ Brand New Day — 중등부 친구초청잔치 9월 13일 대개봉">
+    <div class="chodae-hero-body">
+      <div class="chodae-kicker">중등부 친구초청잔치</div>
+      <div class="chodae-title">JESUS<span>+</span> BRAND NEW DAY</div>
+      <div class="chodae-verse">“이제 새것이 되었도다” · 고린도후서 5:17</div>
+      <div class="chodae-dday" id="chodaeDday">D-day</div>
+      <div class="chodae-date" id="chodaeDate">9월 13일 (토) 대개봉</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;color:var(--well-deep);">🎯 중등부 전체 진행률</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;margin:-4px 0 14px;">친구 이름은 아무에게도 공개되지 않아요. 여기엔 숫자만 모여요.</p>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="chodaeProgressFill" style="width:0%;"></div></div>
+      <div class="progress-caption" id="chodaeProgressCaption">불러오는 중...</div>
+    </div>
+    <div class="chodae-stat-row" id="chodaeStatRow" style="display:none;">
+      <div class="chodae-stat"><div class="n" id="chodaeStatPledged">0</div><div class="l">초청 작정</div></div>
+      <div class="chodae-stat"><div class="n" id="chodaeStatCame">0</div><div class="l">잔치에 온 새친구</div></div>
+      <div class="chodae-stat"><div class="n" id="chodaeStatInviters">0</div><div class="l">함께하는 친구</div></div>
+    </div>
+  </div>
+
+  <div class="card" id="chodaeWelcome" style="display:none;background:linear-gradient(135deg,#0e3d44,#14707a);color:#fff;">
+    <h3 style="margin-top:0;color:#fff;">🎉 새친구, 환영해요!</h3>
+    <p style="margin:0;font-size:13.5px;color:rgba(255,255,255,.92);line-height:1.7;">
+      말씀우물에 온 걸 정말 환영해요. 여기서 오늘의 말씀도 보고, 출석 체크하면서 달란트도 모을 수 있어요.
+      궁금한 건 언제든 선생님께 물어봐요. Brand New Day! 🙌
+    </p>
+  </div>
+
+  <div class="card" id="chodaeMineCard">
+    <h3 style="margin-top:0;color:var(--well-deep);">🎟️ 내가 초청한 친구</h3>
+
+    <div id="chodaeLoginNeeded" style="display:none;">
+      <p style="color:var(--text-soft);font-size:13.5px;">로그인하면 내가 초청한 친구를 기록하고, 잔치 날 함께 챙길 수 있어요.</p>
+      <a href="login.html" class="btn block">로그인하러 가기</a>
+    </div>
+
+    <div id="chodaeMine" style="display:none;">
+      <form id="chodaeInviteForm" style="display:flex;gap:8px;margin-bottom:12px;">
+        <input type="text" id="chodaeInviteName" placeholder="초청할 친구 이름" maxlength="20" style="flex:1;">
+        <button type="submit" class="btn" style="white-space:nowrap;padding:10px 16px;">추가</button>
+      </form>
+      <p class="msg" id="chodaeInviteMsg"></p>
+      <div id="chodaeInviteList"></div>
+      <p style="color:var(--text-soft);font-size:12px;margin-top:10px;">
+        💡 이 명단으로 <a href="mypage.html" style="color:var(--well);">마이페이지</a>에서 <strong>‘친초 동역자’ 뱃지</strong>를 받을 수 있어요. 잔치 날 친구가 오면 선생님이 체크해 줘요.
+      </p>
+    </div>
+  </div>
+
+  <div class="card" style="text-align:center;">
+    <p style="color:var(--text-soft);font-size:13px;margin:0 0 12px;">이번 주는 친구를 위해 기도하는 한 주예요.</p>
+    <a href="mypage.html" class="btn ghost block">마이페이지에서 기도제목 남기기</a>
+  </div>
+
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  💧 말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a>
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/chodae.js"></script>
+<script>
+  initHeaderAuthState();
+  initChodaePage();
+</script>
+</body>
+</html>

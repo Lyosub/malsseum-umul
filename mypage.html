@@ -87,6 +87,7 @@
         <div class="label">쓸 수 있는 달란트</div>
       </div>
     </div>
+    <p class="msg" id="streakMilestone" style="margin:8px 0 0;font-weight:600;color:var(--well);"></p>
     <div style="display:flex;gap:8px;margin-top:14px;">
       <button id="checkinBtn" class="btn" style="flex:1;padding:10px 14px;font-size:13px;">오늘 출석 체크하기</button>
       <button type="button" id="pointsHistoryToggleBtn" class="btn ghost" style="white-space:nowrap;padding:10px 12px;font-size:12px;">📋 달란트 내역</button>
@@ -94,6 +95,13 @@
     <a href="shop.html" class="btn ghost block" style="margin-top:8px;">🎁 달란트 상점 가기</a>
     <p class="msg" id="streakMsg"></p>
     <div id="pointsHistorySection" style="display:none;margin-top:14px;text-align:left;"><p class="msg">불러오는 중...</p></div>
+  </div>
+
+  <div class="card" id="badgesCard" style="display:none;">
+    <h3 style="margin-top:0;color:var(--well-deep);">🏅 나의 뱃지</h3>
+    <p class="msg" id="badgesSub" style="margin:-4px 0 12px;"></p>
+    <div class="badge-grid" id="badgesGrid"></div>
+    <p style="color:var(--text-soft);font-size:11.5px;margin-top:10px;">동 → 은 → 금 3단계예요. 출석·기록·퀴즈·게임·기도·친구초청으로 모아보세요.</p>
   </div>
 
   <div class="card">
@@ -313,6 +321,7 @@
     document.getElementById("pageContent").style.display = "block";
     ensureProfile(session).then(function () {
       initAttendance(session.user.id);
+      initBadges(session.user.id);
       initNotes(session.user.id);
       initGroup(session.user.id);
       initProfileSettings(session);
