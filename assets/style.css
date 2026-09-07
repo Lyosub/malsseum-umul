@@ -1213,3 +1213,34 @@ footer.site a { text-decoration: underline; }
 .badge-item:not(.got) .badge-emoji { filter: grayscale(1); }
 .badge-name { font-size: 12.5px; font-weight: 700; margin-top: 6px; }
 .badge-tier { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+
+/* "오늘의 QT" 카드의 묵상 체크인 바 */
+.qt-checkin {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.qt-checkin button {
+  border: none;
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  background: #fff;
+  color: var(--well-deep);
+  cursor: pointer;
+}
+.qt-checkin button:disabled {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  cursor: default;
+}
+.qt-checkin span {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}

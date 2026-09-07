@@ -38,6 +38,53 @@ function initHomeCard() {
   el.style.setProperty("--verse-bg-image", "url(verse-card-bg/verse-card-bg-" + num + ".jpg)");
 }
 
+// "오늘의 QT" 카드 아래에 "오늘 묵상했어요" 체크인 바를 붙인다. 로그인한 사람에게만 보이고,
+// 누르면 하루 1번 +1달란트 + 연속 일수를 센다. (checkin_devotion / get_my_devotion_status RPC)
+function initQtCheckin() {
+  var card = document.getElementById("homeVerseCard");
+  if (!card || typeof getClient !== "function") return;
+  var client = getClient();
+  if (!client) return;
+
+  getSession().then(function (session) {
+    if (!session) return;
+
+    var bar = document.createElement("div");
+    bar.className = "qt-checkin";
+    bar.innerHTML = '<button type="button" id="qtCheckinBtn">🌿 오늘 묵상했어요</button><span id="qtCheckinInfo"></span>';
+    card.appendChild(bar);
+
+    var btn = bar.querySelector("#qtCheckinBtn");
+    var info = bar.querySelector("#qtCheckinInfo");
+
+    function refresh() {
+      client.rpc("get_my_devotion_status").then(function (res) {
+        if (res.error || !res.data || !res.data.length) return;
+        var s = res.data[0];
+        if (s.checked_today) {
+          btn.textContent = "오늘 묵상 완료 ✅";
+          btn.disabled = true;
+        } else {
+          btn.textContent = "🌿 오늘 묵상했어요";
+          btn.disabled = false;
+        }
+        info.textContent = s.streak > 0 ? (s.streak + "일 연속") : "";
+      });
+    }
+
+    btn.addEventListener("click", function () {
+      btn.disabled = true;
+      client.rpc("checkin_devotion").then(function (res) {
+        if (res.error) { btn.disabled = false; return; }
+        if (res.data === true && info) info.textContent = "+1달란트 🎉";
+        refresh();
+      }).catch(function () { btn.disabled = false; });
+    });
+
+    refresh();
+  });
+}
+
 function handleCharImgError(imgEl) {
   var placeholder = document.createElement("div");
   placeholder.style.cssText = "width:140px;height:140px;margin:0 auto 12px;border-radius:50%;background:var(--well-light);display:flex;align-items:center;justify-content:center;font-size:44px;color:#fff;";
