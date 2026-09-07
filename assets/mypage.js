@@ -53,7 +53,8 @@ var POINTS_ACTION_LABELS = {
   group_attendance_bonus: "오이코스 출석 챌린지",
   group_notes_bonus: "오이코스 기록 챌린지",
   admin_award: "교역자·부장이 부여",
-  greeting_draw: "하루인사 달란트 뽑기"
+  greeting_draw: "하루인사 달란트 뽑기",
+  badge_award: "뱃지 등급 달성 보상"
 };
 
 function formatPointsRefDate(dateStr) {
@@ -141,7 +142,8 @@ function renderStreakMilestone(streak) {
   }
 }
 
-var BADGE_TIER_COLORS = { 1: "#c9932f", 2: "#8b9199", 3: "#e0b23a" };
+// 동 / 은 / 금 / 다이아 / 십자가
+var BADGE_TIER_COLORS = { 1: "#c9932f", 2: "#9aa4ad", 3: "#e0b23a", 4: "#3fbecf", 5: "#8b5cf6" };
 
 function initBadges(userId) {
   var client = getClient();
@@ -149,7 +151,19 @@ function initBadges(userId) {
   var grid = document.getElementById("badgesGrid");
   if (!client || !card || !grid) return;
 
-  client.rpc("get_my_badges").then(function (res) {
+  // 새로 달성한 등급의 달란트 보상부터 정산(멱등 — 이미 준 건 다시 안 줌). 실패해도 뱃지 표시는 계속.
+  var claimP = client.rpc("claim_badge_rewards").then(function (cr) {
+    return (!cr.error && cr.data) ? cr.data : 0;
+  }).catch(function () { return 0; });
+
+  claimP.then(function (gained) {
+    if (gained > 0) {
+      var rw = document.getElementById("badgesReward");
+      if (rw) { rw.textContent = "🎁 새 뱃지 보상 +" + gained + "달란트!"; rw.style.display = "block"; }
+      loadTotalPoints(userId);
+    }
+    return client.rpc("get_my_badges");
+  }).then(function (res) {
     if (res.error || !res.data || !res.data.length) {
       card.style.display = "none";
       return;
