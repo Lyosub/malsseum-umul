@@ -139,7 +139,7 @@ function initLoginForm() {
     var client = getClient();
 
     if (!client) {
-      msg.textContent = "아직 로그인 기능 준비 중이에요.";
+      msg.textContent = "로그인 준비가 아직 안 됐어요. 잠깐 기다렸다가 새로고침 후 다시 시도해주세요.";
       return;
     }
 

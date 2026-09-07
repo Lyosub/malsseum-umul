@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Pretendard','Malgun Gothic',sans-serif; }
+  .story {
+    width:1080px; height:1920px; position:relative; overflow:hidden;
+    color:#fff; padding:280px 96px 300px;
+    display:flex; flex-direction:column;
+  }
+  .story.teal { background:linear-gradient(165deg,#0e3d44 0%,#14707a 55%,#2a8f97 100%); }
+  .story.dark { background:linear-gradient(160deg,#0b2f36 0%,#123f47 55%,#17555d 100%); }
+  .story::after {
+    content:""; position:absolute; right:-220px; bottom:-160px;
+    width:640px; height:640px; border-radius:50%; background:rgba(255,255,255,.06);
+  }
+  .kicker {
+    align-self:flex-start; font-size:29px; font-weight:700; letter-spacing:3px;
+    background:rgba(255,255,255,.16); padding:14px 30px; border-radius:999px;
+  }
+  h1 { font-size:96px; font-weight:800; line-height:1.13; letter-spacing:-3px; margin:34px 0 18px; }
+  h1.sm { font-size:80px; }
+  .sub { font-size:35px; font-weight:500; color:rgba(255,255,255,.84); margin-bottom:56px; line-height:1.4; }
+
+  .list { display:flex; flex-direction:column; gap:26px; position:relative; z-index:1; }
+  .item {
+    display:flex; gap:26px; align-items:flex-start;
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.15);
+    border-radius:26px; padding:30px 34px;
+  }
+  .item .e { font-size:52px; line-height:1; flex:0 0 auto; }
+  .item .t { font-size:39px; font-weight:800; letter-spacing:-1px; }
+  .item .d { font-size:28px; font-weight:400; color:rgba(255,255,255,.82); margin-top:8px; line-height:1.45; }
+
+  .dday {
+    align-self:flex-start; margin:30px 0 6px;
+    background:#ff5a5a; color:#fff; font-weight:800; font-size:40px;
+    padding:12px 34px; border-radius:999px;
+  }
+  .poster {
+    position:absolute; right:64px; top:300px; width:300px;
+    border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,.5);
+    transform:rotate(4deg);
+  }
+  .verse2 { display:block; font-size:27px; font-weight:400; opacity:.72; margin-top:8px; }
+
+  .badges { display:flex; flex-wrap:wrap; justify-content:center; gap:22px; position:relative; z-index:1; margin-bottom:20px; }
+  .badge {
+    width:calc(33.33% - 15px); text-align:center;
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.15);
+    border-radius:22px; padding:26px 10px 20px;
+  }
+  .badge .be { font-size:56px; line-height:1; }
+  .badge .bn { font-size:27px; font-weight:700; margin-top:10px; }
+
+  .cta {
+    margin-top:auto; position:relative; z-index:1;
+    font-size:38px; font-weight:800; text-align:center;
+    background:#fff; color:#0e3d44; border-radius:22px; padding:32px;
+  }
+  .cta span { display:block; font-size:25px; font-weight:600; color:#14707a; margin-top:6px; }
+</style>
+</head>
+<body>
+<div id="mount"></div>
+<script>
+var POSTER = "file:///E:/%EC%84%9C%EB%B8%8C%20%EB%B8%8C%EB%A0%88%EC%9D%B8/Projects/malsseum-umul/assets/chodae-poster.jpg";
+
+var CARDS = [
+  // 0. 표지
+  '<div class="story teal">' +
+    '<span class="kicker">💧 말씀우물 새 소식</span>' +
+    '<h1>이번엔<br>이 두 가지</h1>' +
+    '<div class="sub">중등부 친구들, 확인해보세요!</div>' +
+    '<div class="list">' +
+      '<div class="item"><div class="e">🎟️</div><div><div class="t">친구초청잔치 페이지</div>' +
+        '<div class="d">D-day · 내가 초청한 친구 기록 · 중등부 전체 진행률</div></div></div>' +
+      '<div class="item"><div class="e">🏅</div><div><div class="t">나의 뱃지 · 연속 출석</div>' +
+        '<div class="d">출석·기록·퀴즈·게임·기도·친구초청으로 모으는 뱃지 7종</div></div></div>' +
+    '</div>' +
+    '<div class="cta">logoswell.kr<span>넘겨서 확인하세요 →</span></div>' +
+  '</div>',
+
+  // 1. 친구초청잔치
+  '<div class="story dark">' +
+    '<img class="poster" src="' + POSTER + '" alt="">' +
+    '<span class="kicker">🎟️ 친구초청잔치</span>' +
+    '<div class="dday" id="ddayPill">D-?</div>' +
+    '<h1 class="sm">Brand<br>New Day</h1>' +
+    '<div class="sub">9월 13일 (주일) 대개봉<span class="verse2">“이제 새것이 되었도다” · 고후 5:17</span></div>' +
+    '<div class="list">' +
+      '<div class="item"><div class="e">📝</div><div><div class="t">내가 초청한 친구 기록</div>' +
+        '<div class="d">초청할 친구 이름을 적어두면, 잔치 날 함께 챙길 수 있어요 (이름은 비공개)</div></div></div>' +
+      '<div class="item"><div class="e">🎯</div><div><div class="t">중등부 전체 진행률</div>' +
+        '<div class="d">우리 부서가 목표 40명까지 얼마나 왔는지 한눈에</div></div></div>' +
+    '</div>' +
+    '<div class="cta">logoswell.kr → 친구초청잔치<span>이번 주는 친구를 위해 기도하는 한 주!</span></div>' +
+  '</div>',
+
+  // 2. 나의 뱃지
+  '<div class="story teal">' +
+    '<span class="kicker">🏅 나의 뱃지</span>' +
+    '<h1 class="sm">모을수록<br>빛나요</h1>' +
+    '<div class="sub">마이페이지에 뱃지 7종이 생겼어요.<br>동 · 은 · 금 · 다이아 · 십자가 5단계!</div>' +
+    '<div class="badges">' +
+      '<div class="badge"><div class="be">🔥</div><div class="bn">개근왕</div></div>' +
+      '<div class="badge"><div class="be">📅</div><div class="bn">출석지기</div></div>' +
+      '<div class="badge"><div class="be">✍️</div><div class="bn">기록왕</div></div>' +
+      '<div class="badge"><div class="be">🧠</div><div class="bn">퀴즈왕</div></div>' +
+      '<div class="badge"><div class="be">🎮</div><div class="bn">게임왕</div></div>' +
+      '<div class="badge"><div class="be">🙏</div><div class="bn">기도친구</div></div>' +
+      '<div class="badge"><div class="be">🎟️</div><div class="bn">친초 동역자</div></div>' +
+    '</div>' +
+    '<div class="sub" style="margin:0 0 10px;">등급을 올릴 때마다 달란트 보상! 🔥 연속 출석 안내도 추가.</div>' +
+    '<div class="cta">logoswell.kr → 마이페이지<span>오늘 출석부터 시작해요!</span></div>' +
+  '</div>'
+];
+
+var i = parseInt((new URLSearchParams(location.search)).get("i") || "0", 10);
+document.getElementById("mount").innerHTML = CARDS[i] || CARDS[0];
+
+// D-day 자동 계산 (표시 시점 기준)
+var pill = document.getElementById("ddayPill");
+if (pill) {
+  var ev = new Date("2026-09-13T00:00:00+09:00").getTime();
+  var days = Math.ceil((ev - Date.now()) / 86400000);
+  pill.textContent = days > 0 ? ("D-" + days) : "D-DAY";
+}
+</script>
+</body></html>

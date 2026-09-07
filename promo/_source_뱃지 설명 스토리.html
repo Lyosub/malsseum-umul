@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Pretendard','Malgun Gothic',sans-serif; }
+  .story {
+    width:1080px; height:1920px; position:relative; overflow:hidden;
+    background:linear-gradient(165deg,#0e3d44 0%,#14707a 55%,#2a8f97 100%);
+    color:#fff; padding:200px 90px 200px;
+    display:flex; flex-direction:column;
+  }
+  .story::after {
+    content:""; position:absolute; right:-220px; bottom:-160px;
+    width:620px; height:620px; border-radius:50%; background:rgba(255,255,255,.06);
+  }
+  .kicker {
+    align-self:flex-start; font-size:28px; font-weight:700; letter-spacing:3px;
+    background:rgba(255,255,255,.16); padding:13px 28px; border-radius:999px;
+  }
+  h1 { font-size:78px; font-weight:800; line-height:1.14; letter-spacing:-2px; margin:30px 0 14px; }
+  .sub { font-size:31px; font-weight:500; color:rgba(255,255,255,.82); margin-bottom:44px; line-height:1.45; }
+
+  /* 등급 사다리 */
+  .tiers { display:flex; flex-direction:column; gap:18px; position:relative; z-index:1; }
+  .tier {
+    display:flex; align-items:center; gap:24px;
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.15);
+    border-radius:22px; padding:26px 32px;
+  }
+  .tier .ico { font-size:50px; flex:0 0 72px; text-align:center; }
+  .tier .nm { font-size:40px; font-weight:800; flex:1; }
+  .tier .rw { font-size:36px; font-weight:800; color:#a7f0f0; }
+  .note {
+    margin-top:36px; font-size:28px; font-weight:500;
+    color:rgba(255,255,255,.8); line-height:1.5;
+  }
+
+  /* 뱃지 7종 리스트 */
+  .blist { display:flex; flex-direction:column; gap:15px; position:relative; z-index:1; }
+  .brow {
+    display:flex; gap:22px; align-items:flex-start;
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.15);
+    border-radius:20px; padding:20px 28px;
+  }
+  .brow .be { font-size:44px; line-height:1; flex:0 0 auto; }
+  .brow .bt { font-size:35px; font-weight:800; letter-spacing:-1px; }
+  .brow .bd { font-size:26px; font-weight:400; color:rgba(255,255,255,.82); margin-top:5px; line-height:1.38; }
+
+  .cta {
+    margin-top:auto; position:relative; z-index:1;
+    font-size:36px; font-weight:800; text-align:center;
+    background:#fff; color:#0e3d44; border-radius:22px; padding:30px;
+  }
+  .cta span { display:block; font-size:24px; font-weight:600; color:#14707a; margin-top:6px; }
+</style>
+</head>
+<body>
+<div id="mount"></div>
+<script>
+var CARDS = [
+  // 0. 등급 & 보상
+  '<div class="story">' +
+    '<span class="kicker">🏅 나의 뱃지</span>' +
+    '<h1>등급을 올리면<br>달란트를 받아요</h1>' +
+    '<div class="sub">뱃지마다 5단계 · 한 등급 올릴 때마다 <b>딱 한 번</b> 달란트가 들어와요.</div>' +
+    '<div class="tiers">' +
+      '<div class="tier"><div class="ico">🥉</div><div class="nm">동</div><div class="rw">+5달란트</div></div>' +
+      '<div class="tier"><div class="ico">🥈</div><div class="nm">은</div><div class="rw">+10달란트</div></div>' +
+      '<div class="tier"><div class="ico">🥇</div><div class="nm">금</div><div class="rw">+15달란트</div></div>' +
+      '<div class="tier"><div class="ico">💎</div><div class="nm">다이아</div><div class="rw">+20달란트</div></div>' +
+      '<div class="tier"><div class="ico">✝️</div><div class="nm">십자가</div><div class="rw">+25달란트</div></div>' +
+    '</div>' +
+    '<div class="note">한 뱃지를 십자가까지 모으면 총 75달란트!<br>마이페이지 → “🏅 나의 뱃지”에서 지금 등급을 볼 수 있어요.</div>' +
+    '<div class="cta">logoswell.kr → 마이페이지<span>다음 등급까지 얼마 남았는지도 보여줘요</span></div>' +
+  '</div>',
+
+  // 1. 뱃지 7종 어떻게 모으나
+  '<div class="story">' +
+    '<span class="kicker">🏅 뱃지 7종</span>' +
+    '<h1 style="margin-bottom:30px;">이렇게 모아요</h1>' +
+    '<div class="blist">' +
+      '<div class="brow"><div class="be">🔥</div><div><div class="bt">개근왕</div><div class="bd">빠지지 않고 이어서 출석 (연속 출석일)</div></div></div>' +
+      '<div class="brow"><div class="be">📅</div><div><div class="bt">출석지기</div><div class="bd">출석 체크를 한 날이 쌓일수록</div></div></div>' +
+      '<div class="brow"><div class="be">✍️</div><div><div class="bt">기록왕</div><div class="bd">하루 인사 · 감사노트 · 기도제목을 많이 쓸수록</div></div></div>' +
+      '<div class="brow"><div class="be">🧠</div><div><div class="bt">퀴즈왕</div><div class="bd">수요 성경퀴즈를 맞힐수록</div></div></div>' +
+      '<div class="brow"><div class="be">🎮</div><div><div class="bt">게임왕</div><div class="bd">성경책 순서 · 같은 성경 찾기 게임에 참여할수록</div></div></div>' +
+      '<div class="brow"><div class="be">🙏</div><div><div class="bt">기도친구</div><div class="bd">친구 기도제목에 “함께 기도했어요”를 누를수록</div></div></div>' +
+      '<div class="brow"><div class="be">🎟️</div><div><div class="bt">친초 동역자</div><div class="bd">내가 초청한 친구가 잔치에 오면</div></div></div>' +
+    '</div>' +
+    '<div class="cta">logoswell.kr<span>오늘 출석부터 시작해요!</span></div>' +
+  '</div>'
+];
+var i = parseInt((new URLSearchParams(location.search)).get("i") || "0", 10);
+document.getElementById("mount").innerHTML = CARDS[i] || CARDS[0];
+</script>
+</body></html>

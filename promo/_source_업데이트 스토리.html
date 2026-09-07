@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Pretendard','Malgun Gothic',sans-serif; }
+  .story {
+    width:1080px; height:1920px; position:relative; overflow:hidden;
+    background:linear-gradient(165deg,#0e3d44 0%,#14707a 55%,#2a8f97 100%);
+    color:#fff;
+    /* 스토리 안전영역: 위/아래 UI 안 겹치게 여백 크게 */
+    padding:300px 96px 320px;
+    display:flex; flex-direction:column;
+  }
+  .story::after {
+    content:""; position:absolute; right:-220px; bottom:-160px;
+    width:640px; height:640px; border-radius:50%; background:rgba(255,255,255,.06);
+  }
+  .kicker {
+    align-self:flex-start; font-size:30px; font-weight:700; letter-spacing:3px;
+    background:rgba(255,255,255,.16); padding:14px 30px; border-radius:999px;
+  }
+  h1 { font-size:104px; font-weight:800; line-height:1.12; letter-spacing:-3px; margin:34px 0 16px; }
+  .sub { font-size:36px; font-weight:500; color:rgba(255,255,255,.82); margin-bottom:64px; }
+  .list { display:flex; flex-direction:column; gap:30px; position:relative; z-index:1; }
+  .item {
+    display:flex; gap:28px; align-items:flex-start;
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.15);
+    border-radius:28px; padding:32px 36px;
+  }
+  .item .e { font-size:56px; line-height:1; flex:0 0 auto; }
+  .item .t { font-size:42px; font-weight:800; letter-spacing:-1px; }
+  .item .d { font-size:29px; font-weight:400; color:rgba(255,255,255,.82); margin-top:8px; line-height:1.4; }
+  .cta {
+    margin-top:auto; position:relative; z-index:1;
+    font-size:40px; font-weight:800; text-align:center;
+    background:#fff; color:#0e3d44; border-radius:22px; padding:34px;
+  }
+  .cta span { display:block; font-size:26px; font-weight:600; color:#14707a; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="story">
+  <span class="kicker">💧 말씀우물 새 소식</span>
+  <h1>이런 게<br>새로 생겼어요</h1>
+  <div class="sub">중등부 친구들, 확인해보세요!</div>
+
+  <div class="list">
+    <div class="item"><div class="e">🎁</div><div><div class="t">달란트 상점</div>
+      <div class="d">출석·퀴즈·게임으로 모은 달란트로 문화상품권·카페 기프티콘 교환 신청</div></div></div>
+    <div class="item"><div class="e">🛒</div><div><div class="t">상품 추천함</div>
+      <div class="d">"이런 상품 있으면 좋겠어요!" 직접 신청할 수 있어요</div></div></div>
+    <div class="item"><div class="e">🃏</div><div><div class="t">같은 성경 찾기 업그레이드</div>
+      <div class="d">4×4 카드 · 3초 미리보기 · 총 3라운드로 새 단장</div></div></div>
+    <div class="item"><div class="e">🙏</div><div><div class="t">"함께 기도했어요"</div>
+      <div class="d">실시간 나눔의 기도제목에 함께 기도 표시 · 📷 사진 첨부 · 🔗 링크도!</div></div></div>
+  </div>
+
+  <div class="cta">지금 바로 logoswell.kr<span>홈 화면에 앱으로 설치하면 더 편해요</span></div>
+</div>
+</body></html>
