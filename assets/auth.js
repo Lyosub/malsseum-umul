@@ -381,3 +381,36 @@ function initHeaderAuthState() {
     }
   });
 }
+
+// ===== 클라이언트 오류 로거 =====
+// 학생 브라우저에서 JS 오류가 나면 즉시 Supabase(client_errors)에 남긴다. 예약 헬스체크·세션 점검이 이걸 읽는다.
+// 깨진 페이지가 폭주하지 않도록: 페이지 로드당 최대 6건, 같은 메시지는 1번만. 서버에서도 (page,message) 5분 중복 억제.
+(function () {
+  var sent = 0, seen = {};
+  function reportClientError(msg, stack) {
+    if (sent >= 6) return;
+    var page = location.pathname + location.search;
+    var key = page + "|" + (msg || "");
+    if (seen[key]) return;
+    seen[key] = 1; sent++;
+    try {
+      var c = getClient();
+      if (!c || !c.rpc) return;
+      c.rpc("log_client_error", {
+        p_page: page,
+        p_message: String(msg || "").slice(0, 1000),
+        p_stack: String(stack || "").slice(0, 4000),
+        p_ua: navigator.userAgent
+      }).then(function () {}, function () {});
+    } catch (e) {}
+  }
+  window.addEventListener("error", function (e) {
+    var stack = (e.error && e.error.stack) || ((e.filename || "") + ":" + (e.lineno || "") + ":" + (e.colno || ""));
+    reportClientError(e.message || "script error", stack);
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    var r = e.reason;
+    var msg = "unhandledrejection: " + (r && r.message ? r.message : (typeof r === "string" ? r : JSON.stringify(r)));
+    reportClientError(msg, (r && r.stack) || "");
+  });
+})();
