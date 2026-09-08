@@ -635,10 +635,12 @@ function initGroup(userId) {
     }
     // 지난주(월~일) 오이코스 챌린지 조건을 확인해서 아직 정산 안 됐으면 오이코스 전원에게 보너스 포인트를 지급한다
     // (교사가 만든 오이코스가 아니면 evaluate_group_weekly_bonus 내부에서 조용히 아무것도 하지 않는다)
-    client.rpc("evaluate_group_weekly_bonus", { p_group_id: group.id }).catch(function () {}).then(function () {
+    // client.rpc(...)는 PostgREST 빌더라 .catch가 없다 → .then(성공, 실패) 둘 다 같은 후속 처리로 이어간다.
+    var afterWeeklyBonus = function () {
       renderLeaderboard(group.id);
       renderTodayStatus(group.id);
-    });
+    };
+    client.rpc("evaluate_group_weekly_bonus", { p_group_id: group.id }).then(afterWeeklyBonus, afterWeeklyBonus);
 
     // 버튼은 누구에게나 보여주고, 실제 "만든 사람 본인이거나 교역자인지"는 서버(delete_group)가 확인한다.
     // (클라이언트에서 미리 판단해서 숨기는 방식은 세션/타이밍에 따라 오작동할 수 있어 서버 확인으로 통일)
