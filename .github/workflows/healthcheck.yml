@@ -1,0 +1,137 @@
+name: 말씀우물 헬스체크
+
+# 하루 2회(10:23 / 22:23 KST) logoswell.kr 과 Supabase 상태를 점검한다.
+# 이상이 있으면 .github/health/ALERT.md 를 커밋하고 워크플로를 실패시킨다(→ GitHub 이 저장소 소유자에게 메일).
+# 다음 정상 실행에서 ALERT.md 가 남아 있으면 지운다(회복 기록).
+# 예전 Claude 클라우드 예약 루틴(trig_01JhfrpU961KvmeEyTBfRHxE)을 대체한다 —
+# 그 루틴은 실행 환경의 egress 차단으로 사이트에 도달하지 못했다.
+
+on:
+  schedule:
+    - cron: "23 1,13 * * *"   # UTC → 10:23 / 22:23 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: healthcheck
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 점검 실행
+        id: probe
+        run: |
+          set -u
+          SITE="https://logoswell.kr"
+          SB="https://qaxwxbaqduxqzjqoahcb.supabase.co"
+          # 이 키는 정적 사이트에 그대로 배포되는 publishable(anon) 키 — 비밀이 아님
+          ANON="sb_publishable_Q5HhLUzyLoFlNK0MCai_eQ_SOFeu_ks"
+
+          FAIL=""
+          WARN=""
+
+          check_200 () {
+            local url="$1" label="$2" code
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$url" || echo "000")
+            echo "  $label ($url) -> $code"
+            if [ "$code" != "200" ]; then FAIL="${FAIL}- ${label}: HTTP ${code} (${url})\n"; fi
+          }
+
+          echo "[페이지]"
+          for p in "/" "/index.html" "/mypage.html" "/chodae.html" "/login.html" "/admin.html" "/feed.html" "/matchgame.html"; do
+            check_200 "${SITE}${p}" "page ${p}"
+          done
+
+          echo "[Supabase auth health]"
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "${SB}/auth/v1/health" -H "apikey: ${ANON}" || echo "000")
+          echo "  auth/v1/health -> $code"
+          [ "$code" = "200" ] || FAIL="${FAIL}- Supabase auth health: HTTP ${code}\n"
+
+          echo "[Supabase REST reachable]"
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "${SB}/rest/v1/" -H "apikey: ${ANON}" || echo "000")
+          echo "  rest/v1/ -> $code"
+          case "$code" in
+            200|404) : ;;                       # 도달 가능
+            *) FAIL="${FAIL}- Supabase REST unreachable: HTTP ${code}\n" ;;
+          esac
+
+          echo "[공개 RPC get_recent_error_count]"
+          BODY=$(curl -s --max-time 20 -X POST "${SB}/rest/v1/rpc/get_recent_error_count" \
+            -H "apikey: ${ANON}" -H "Content-Type: application/json" -d '{}' || echo "")
+          echo "  응답: $BODY"
+          if echo "$BODY" | grep -q "distinct_24h"; then
+            DISTINCT=$(echo "$BODY" | grep -o '"distinct_24h":[0-9]*' | grep -o '[0-9]*' | head -1)
+            LAST24=$(echo "$BODY" | grep -o '"last_24h":[0-9]*' | grep -o '[0-9]*' | head -1)
+            TOPPAGE=$(echo "$BODY" | grep -o '"top_page":"[^"]*"' | sed 's/.*://; s/"//g')
+            echo "  distinct_24h=$DISTINCT last_24h=$LAST24 top_page=$TOPPAGE"
+            if [ "${DISTINCT:-0}" -ge 3 ]; then
+              WARN="${WARN}- 학생들이 반복 오류를 겪는 중: 고유 오류 ${DISTINCT}종 / 24시간 ${LAST24}건 / 최다 ${TOPPAGE} — get_client_errors_admin 로 상세 확인 필요\n"
+            fi
+          else
+            FAIL="${FAIL}- 공개 RPC get_recent_error_count 응답 이상: ${BODY}\n"
+          fi
+
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          KST=$(TZ=Asia/Seoul date +"%Y-%m-%d %H:%M KST")
+          {
+            echo "now=$NOW"
+            echo "kst=$KST"
+            echo "fail<<EOF"; printf "%b" "$FAIL"; echo "EOF"
+            echo "warn<<EOF"; printf "%b" "$WARN"; echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 이상 시 ALERT.md 기록 / 정상 시 정리
+        env:
+          NOW: ${{ steps.probe.outputs.now }}
+          KST: ${{ steps.probe.outputs.kst }}
+          FAIL: ${{ steps.probe.outputs.fail }}
+          WARN: ${{ steps.probe.outputs.warn }}
+        run: |
+          set -e
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "$FAIL" ] || [ -n "$WARN" ]; then
+            mkdir -p .github/health
+            {
+              echo "# 말씀우물 헬스체크 이상 감지 ($KST)"
+              echo ""
+              if [ -n "$FAIL" ]; then
+                echo "## 🔴 실패 (사이트/Supabase 도달 불가 또는 오류)"
+                echo ""
+                printf "%b" "$FAIL"
+                echo ""
+              fi
+              if [ -n "$WARN" ]; then
+                echo "## 🟡 경고 (학생 반복 오류)"
+                echo ""
+                printf "%b" "$WARN"
+                echo ""
+              fi
+              echo "---"
+              echo ""
+              echo "- 점검 시각(UTC): $NOW"
+              echo "- 이 파일은 GitHub Actions 워크플로 \`말씀우물 헬스체크\`가 자동 생성했다."
+              echo "- 다음 정상 점검 때 자동으로 삭제된다."
+              echo "- 상세 오류는 \`get_client_errors_admin(p_since_hours)\` (교역자/부장 계정) 로 확인."
+            } > .github/health/ALERT.md
+
+            git add .github/health/ALERT.md
+            git commit -m "헬스체크 이상 감지 $KST" || true
+            git push || true
+            echo "::error::말씀우물 헬스체크 이상 — .github/health/ALERT.md 참고"
+            exit 1
+          else
+            if [ -f .github/health/ALERT.md ]; then
+              git rm .github/health/ALERT.md
+              git commit -m "헬스체크 회복 $KST — ALERT 해제"
+              git push || true
+            fi
+            echo "정상."
+          fi
