@@ -282,14 +282,36 @@
       <div id="oikosExpenseSection" style="display:none;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
         <h4 style="margin:0 0 4px;color:var(--well-deep);">🍚 회식비 지원 신청 <span style="color:var(--text-soft);font-weight:400;font-size:12px;">(교사 전용)</span></h4>
         <p class="msg" id="oikosTalentInfo" style="margin:0 0 4px;">오이코스 곳간을 불러오는 중...</p>
-        <p class="msg" style="margin:0 0 8px;color:var(--gold);">※ 회식비는 최소 500달란트부터 신청할 수 있어요.</p>
+        <p class="msg" style="margin:0 0 8px;color:var(--gold);">※ 회식비는 최소 300달란트부터 신청할 수 있어요.</p>
         <form id="oikosExpenseForm">
-          <div class="form-row"><input type="number" id="oikosExpenseAmount" min="500" step="100" placeholder="사용할 달란트 (최소 500)"></div>
+          <div class="form-row"><input type="number" id="oikosExpenseAmount" min="300" step="100" placeholder="사용할 달란트 (최소 300)"></div>
           <div class="form-row"><input type="text" id="oikosExpensePurpose" placeholder="사용 목적 (예: 9월 오이코스 회식)"></div>
           <button type="submit" class="btn block">지원 신청</button>
           <p class="msg" id="oikosExpenseMsg"></p>
         </form>
         <div id="oikosExpenseList" style="margin-top:10px;"></div>
+
+        <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);">
+          <h4 style="margin:0 0 4px;color:var(--well-deep);">🎁 오이코스 상품 교환</h4>
+          <p class="msg" style="margin:0 0 8px;">곳간 달란트로 오이코스가 함께 받는 상품이에요. 신청하면 교역자·부장 확인 후 전달돼요.</p>
+          <div id="oikosShopList"><p class="msg" style="margin:0;">불러오는 중...</p></div>
+          <p class="msg" id="oikosShopMsg" style="margin:6px 0 0;"></p>
+        </div>
+
+        <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);">
+          <h4 style="margin:0 0 4px;color:var(--well-deep);">💝 곳간 → 개인 나눠주기</h4>
+          <p class="msg" style="margin:0 0 8px;">곳간 달란트를 오이코스원 개인 달란트로 나눠줄 수 있어요.</p>
+          <form id="oikosDistributeForm">
+            <div class="form-row"><input type="number" id="oikosDistributeAmount" min="1" step="1" placeholder="한 명당 몇 달란트"></div>
+            <div class="form-row">
+              <select id="oikosDistributeTarget" style="width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:12px;font-size:14.5px;font-family:inherit;background:var(--card-bg);color:var(--text);">
+                <option value="">전원에게</option>
+              </select>
+            </div>
+            <button type="submit" class="btn block">나눠주기</button>
+            <p class="msg" id="oikosDistributeMsg"></p>
+          </form>
+        </div>
       </div>
 
       <h4 style="margin:18px 0 4px;color:var(--well-deep);">오늘의 참여 현황</h4>

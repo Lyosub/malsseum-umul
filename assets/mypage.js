@@ -680,7 +680,7 @@ function initGroup(userId) {
           e.preventDefault();
           var amount = parseInt(amountEl.value, 10);
           var purpose = (purposeEl.value || "").trim();
-          if (!amount || amount < 500) { msgEl.textContent = "회식비는 최소 500달란트부터 신청할 수 있어요."; return; }
+          if (!amount || amount < 300) { msgEl.textContent = "회식비는 최소 300달란트부터 신청할 수 있어요."; return; }
           if (!purpose) { msgEl.textContent = "사용 목적을 적어주세요."; return; }
           msgEl.textContent = "신청 중...";
           client.rpc("request_oikos_expense", { p_group_id: groupId, p_amount: amount, p_purpose: purpose }).then(function (r) {
@@ -689,6 +689,82 @@ function initGroup(userId) {
             amountEl.value = ""; purposeEl.value = "";
             loadInfo(); loadList();
           }).catch(function () { msgEl.textContent = "신청에 실패했어요."; });
+        };
+      }
+
+      // --- 오이코스 상품 교환 ---
+      var shopListEl = document.getElementById("oikosShopList");
+      var shopMsgEl = document.getElementById("oikosShopMsg");
+      function loadShop() {
+        if (!shopListEl) return;
+        client.rpc("get_oikos_shop_items").then(function (r) {
+          var items = r.data || [];
+          if (!items.length) { shopListEl.innerHTML = '<p class="msg" style="margin:0;">아직 등록된 오이코스 상품이 없어요.</p>'; return; }
+          shopListEl.innerHTML = items.map(function (it) {
+            return (
+              '<div class="note-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
+                '<div style="min-width:0;">' +
+                  '<div class="content" style="font-weight:700;">' + escapeHtml(it.name) + ' · ' + it.cost + '달란트</div>' +
+                  (it.description ? '<div class="meta" style="margin:2px 0 0;">' + escapeHtml(it.description) + '</div>' : '') +
+                '</div>' +
+                '<button type="button" class="btn ghost" data-oikos-item="' + it.id + '" style="flex:none;padding:6px 12px;font-size:12.5px;">신청</button>' +
+              '</div>'
+            );
+          }).join("");
+          shopListEl.querySelectorAll("[data-oikos-item]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var itemId = Number(btn.getAttribute("data-oikos-item"));
+              if (!confirm("이 상품을 곳간 달란트로 신청할까요?")) return;
+              btn.disabled = true;
+              if (shopMsgEl) { shopMsgEl.style.color = ""; shopMsgEl.textContent = "신청 중..."; }
+              client.rpc("request_oikos_shop_order", { p_group_id: groupId, p_item_id: itemId }).then(function (r) {
+                btn.disabled = false;
+                if (r.error) { if (shopMsgEl) shopMsgEl.textContent = r.error.message || "신청에 실패했어요."; return; }
+                if (shopMsgEl) { shopMsgEl.style.color = "var(--well)"; shopMsgEl.textContent = "신청했어요. 교역자 확인을 기다려 주세요."; }
+                loadInfo(); loadList();
+              }).catch(function () { btn.disabled = false; if (shopMsgEl) shopMsgEl.textContent = "신청에 실패했어요."; });
+            });
+          });
+        });
+      }
+      loadShop();
+
+      // --- 곳간 → 개인 나눠주기 ---
+      var distForm = document.getElementById("oikosDistributeForm");
+      var distAmountEl = document.getElementById("oikosDistributeAmount");
+      var distTargetEl = document.getElementById("oikosDistributeTarget");
+      var distMsgEl = document.getElementById("oikosDistributeMsg");
+      if (distTargetEl) {
+        client.rpc("get_group_members", { p_group_id: groupId }).then(function (r) {
+          (r.data || []).forEach(function (m) {
+            var opt = document.createElement("option");
+            opt.value = m.user_id;
+            opt.textContent = (m.real_name || m.nickname || "이름 없음");
+            distTargetEl.appendChild(opt);
+          });
+        });
+      }
+      if (distForm) {
+        distForm.onsubmit = function (e) {
+          e.preventDefault();
+          var amt = parseInt(distAmountEl && distAmountEl.value, 10);
+          if (distMsgEl) { distMsgEl.style.color = ""; distMsgEl.textContent = ""; }
+          if (!amt || amt <= 0) { if (distMsgEl) distMsgEl.textContent = "1 이상 숫자를 입력해주세요."; return; }
+          var targetId = distTargetEl && distTargetEl.value ? distTargetEl.value : null;
+          var who = targetId ? "선택한 학생에게" : "오이코스 전원에게";
+          if (!confirm(who + " 각 " + amt + "달란트씩 곳간에서 나눠줄까요?")) return;
+          var btn = distForm.querySelector("button[type=submit]");
+          if (btn) btn.disabled = true;
+          var params = { p_group_id: groupId, p_amount: amt };
+          if (targetId) params.p_user_id = targetId;
+          client.rpc("distribute_oikos_pool", params).then(function (r) {
+            if (btn) btn.disabled = false;
+            if (r.error) { if (distMsgEl) distMsgEl.textContent = r.error.message || "나눠주기에 실패했어요."; return; }
+            if (distMsgEl) { distMsgEl.style.color = "var(--well)"; distMsgEl.textContent = (r.data || 0) + "명에게 나눠줬어요."; }
+            if (distAmountEl) distAmountEl.value = "";
+            loadInfo();
+            if (typeof loadTotalPoints === "function") loadTotalPoints(userId);
+          }).catch(function () { if (btn) btn.disabled = false; if (distMsgEl) distMsgEl.textContent = "나눠주기에 실패했어요."; });
         };
       }
     });

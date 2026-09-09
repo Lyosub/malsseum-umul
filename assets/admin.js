@@ -1339,6 +1339,7 @@ function initShopAdmin(userId) {
   var descEl = document.getElementById("shopItemDesc");
   var costEl = document.getElementById("shopItemCost");
   var stockEl = document.getElementById("shopItemStock");
+  var isOikosEl = document.getElementById("shopItemIsOikos");
 
   var SHOP_ADMIN_STATUS = {
     pending: "확인 중", approved: "승인됨", delivered: "전달 완료", rejected: "거절됨"
@@ -1354,6 +1355,7 @@ function initShopAdmin(userId) {
           '<div class="note-item" data-item-id="' + it.id + '">' +
             '<div class="content"><strong>' + escapeHtmlAdmin(it.name) + '</strong> · ' + it.cost + '달란트' +
               (it.stock == null ? ' · 무제한' : ' · 수량 ' + it.stock) +
+              (it.is_oikos ? ' · <span style="color:var(--well);">오이코스 곳간용</span>' : '') +
               (it.is_active ? '' : ' · <span style="color:#b3432c;">비활성</span>') + '</div>' +
             (it.description ? '<div class="meta" style="margin-top:2px;">' + escapeHtmlAdmin(it.description) + '</div>' : '') +
             '<div style="display:flex;gap:8px;margin-top:8px;">' +
@@ -1442,7 +1444,8 @@ function initShopAdmin(userId) {
       name: name,
       description: (descEl.value || "").trim() || null,
       cost: cost,
-      stock: stock
+      stock: stock,
+      is_oikos: !!(isOikosEl && isOikosEl.checked)
     }).then(function (res) {
       if (res.error) { msg.textContent = "등록에 실패했어요."; return; }
       msg.textContent = "등록되었습니다.";
