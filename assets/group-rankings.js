@@ -36,7 +36,7 @@ function initGroupRankings() {
               ? ' <span style="color:var(--well);font-size:11.5px;">교사 오이코스</span>'
               : ' <span style="color:var(--text-soft);font-size:11.5px;">학생 오이코스</span>') +
           '</div>' +
-          '<div class="meta">인원 ' + r.member_count + '명 · <strong style="color:var(--gold);">곳간 ' + (r.pool || 0) + ' · 활동 ' + r.total_talents + '달란트</strong></div>' +
+          '<div class="meta">인원 ' + r.member_count + '명 · <strong style="color:var(--gold);">오이코스 곳간 ' + (r.pool || 0) + ' · 개인 달란트 ' + r.total_talents + '</strong></div>' +
         '</div>'
       );
     }).join("");

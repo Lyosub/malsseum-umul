@@ -464,7 +464,7 @@ function initGroup(userId) {
     client.rpc("get_group_bonus_eligible", { p_group_id: groupId }).then(function (res) {
       var eligible = !!(res.data);
       el.innerHTML = eligible
-        ? "🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 <strong>오이코스 달란트 +인원수</strong>, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 <strong>오이코스 달란트 +인원수×2</strong> (다음 주에 자동 정산돼요. 개인 달란트가 아니라 오이코스 공동 달란트로 쌓여요)"
+        ? "🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 <strong>오이코스 곳간 +인원수</strong>, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 <strong>오이코스 곳간 +인원수×2</strong> (다음 주에 자동 정산돼요. 개인 달란트가 아니라 오이코스 공동 곳간에 쌓여요)"
         : "이 오이코스는 학생들끼리 만든 오이코스라 챌린지 보너스가 적용되지 않아요. 교사가 만든 오이코스만 보너스 대상이에요.";
     });
   }
@@ -568,7 +568,7 @@ function initGroup(userId) {
         var pool = (d.pool != null ? d.pool : d.earned) || 0;
         if (infoEl) {
           infoEl.innerHTML =
-            "우리 오이코스 달란트 <strong>" + pool + "</strong>" +
+            "우리 오이코스 곳간 <strong>" + pool + "</strong>" +
             " <span style=\"color:var(--text-soft);\">(기부 " + (d.from_donation || 0) +
             " · 챌린지 " + (d.from_challenge || 0) + " · 사용 가능 " + (d.available || 0) + ")</span>";
         }
@@ -615,7 +615,7 @@ function initGroup(userId) {
               var dd = (rr.data && rr.data[0]) || {};
               var pp = (dd.pool != null ? dd.pool : dd.earned) || 0;
               teacherInfo.innerHTML =
-                "오이코스 달란트 <strong>" + pp + "</strong><br>· 기부 " + (dd.from_donation || 0) +
+                "오이코스 곳간 <strong>" + pp + "</strong><br>· 기부 " + (dd.from_donation || 0) +
                 " · 챌린지 " + (dd.from_challenge || 0) + "<br>신청 대기 " + (dd.pending || 0) +
                 " · 사용 가능 " + (dd.available || 0);
             });
@@ -649,7 +649,7 @@ function initGroup(userId) {
           if (!infoEl) return;
           var pool = (d.pool != null ? d.pool : d.earned) || 0;
           infoEl.innerHTML =
-            "오이코스 달란트 <strong>" + pool + "</strong>" +
+            "오이코스 곳간 <strong>" + pool + "</strong>" +
             "<br>· 기부 " + (d.from_donation || 0) + " · 챌린지 " + (d.from_challenge || 0) +
             "<br>신청 대기 " + (d.pending || 0) + " · 사용 가능 " + (d.available || 0);
         });

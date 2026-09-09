@@ -672,7 +672,7 @@ function loadGroupsAdmin() {
             '<div class="meta">만든 사람: ' + escapeHtmlAdmin(creatorName) +
               ' · 초대코드: ' + escapeHtmlAdmin(item.invite_code) +
               ' · 인원: ' + item.member_count + '명' +
-              ' · <strong style="color:var(--gold);">곳간 ' + (item.pool || 0) + ' · 활동 ' + item.total_talents + '달란트</strong>' +
+              ' · <strong style="color:var(--gold);">오이코스 곳간 ' + (item.pool || 0) + ' · 개인 달란트 ' + item.total_talents + '</strong>' +
               '<br>생성일: ' + formatDateTime(item.created_at) +
               '<br><span data-members-for="' + item.id + '">멤버 불러오는 중...</span></div>' +
             '<button class="btn ghost" data-action="award-group-points" style="margin-top:8px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">달란트 부여</button>' +

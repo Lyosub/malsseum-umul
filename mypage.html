@@ -120,10 +120,11 @@
 
       <hr style="margin:12px 0;border:none;border-top:1px solid var(--border);">
 
-      <strong style="color:var(--well-deep);">👥 오이코스 달란트 얻는 법</strong> (개인 달란트와 별개로 오이코스 전체에 지급)<br>
-      오이코스 멤버 80% 이상이 한 주(월~일) 동안 출석하면 전원 <strong style="color:var(--well);">+1달란트</strong><br>
-      오이코스 멤버 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 <strong style="color:var(--well);">+2달란트</strong><br>
-      <span style="color:var(--gold);">※ 교사가 만든 오이코스만 해당돼요. 학생끼리만 만든 오이코스는 적용되지 않아요.</span>
+      <strong style="color:var(--well-deep);">👥 오이코스 곳간 채우는 법</strong> (개인 달란트가 아니라 오이코스 공동 곳간에 쌓여요 — 회식비로 함께 씀)<br>
+      오이코스 멤버 80% 이상이 한 주(월~일) 동안 출석하면 곳간에 <strong style="color:var(--well);">+인원수 달란트</strong><br>
+      오이코스 멤버 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 곳간에 <strong style="color:var(--well);">+인원수×2 달란트</strong><br>
+      내 개인 달란트를 곳간에 <strong style="color:var(--well);">기부</strong>할 수도 있어요 (되돌리기 불가)<br>
+      <span style="color:var(--gold);">※ 챌린지 보너스는 교사가 만든 오이코스만 해당돼요. 학생끼리만 만든 오이코스는 적용되지 않아요.</span>
 
       <hr style="margin:12px 0;border:none;border-top:1px solid var(--border);">
 
@@ -267,20 +268,20 @@
       </div>
 
       <div id="oikosTalentSection" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
-        <h4 style="margin:0 0 4px;color:var(--well-deep);">💰 오이코스 달란트</h4>
+        <h4 style="margin:0 0 4px;color:var(--well-deep);">💰 오이코스 곳간</h4>
         <p class="msg" id="oikosPoolInfo" style="margin:0 0 8px;">불러오는 중...</p>
         <form id="oikosDonateForm" style="display:flex;gap:8px;align-items:flex-start;">
-          <input type="number" id="oikosDonateAmount" min="10" step="10" placeholder="기부할 내 달란트 (최소 10)" style="flex:1;">
+          <input type="number" id="oikosDonateAmount" min="10" step="10" placeholder="곳간에 넣을 내 달란트 (최소 10)" style="flex:1;">
           <button type="submit" class="btn" style="flex:none;">기부하기</button>
         </form>
         <p class="msg" id="oikosDonateMsg" style="margin:6px 0 0;"></p>
-        <p style="color:var(--text-soft);font-size:11.5px;margin:4px 0 0;">내 달란트를 오이코스에 보태요. 한번 기부하면 되돌릴 수 없고, 회식비로만 쓰여요.</p>
+        <p style="color:var(--text-soft);font-size:11.5px;margin:4px 0 0;">내 달란트를 오이코스 곳간에 보태요. 한번 기부하면 되돌릴 수 없고, 곳간 달란트는 오이코스 회식비로 쓰여요.</p>
         <div id="oikosTalentLog" style="margin-top:10px;"></div>
       </div>
 
       <div id="oikosExpenseSection" style="display:none;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
         <h4 style="margin:0 0 4px;color:var(--well-deep);">🍚 회식비 지원 신청 <span style="color:var(--text-soft);font-weight:400;font-size:12px;">(교사 전용)</span></h4>
-        <p class="msg" id="oikosTalentInfo" style="margin:0 0 4px;">오이코스 달란트를 불러오는 중...</p>
+        <p class="msg" id="oikosTalentInfo" style="margin:0 0 4px;">오이코스 곳간을 불러오는 중...</p>
         <p class="msg" style="margin:0 0 8px;color:var(--gold);">※ 회식비는 최소 500달란트부터 신청할 수 있어요.</p>
         <form id="oikosExpenseForm">
           <div class="form-row"><input type="number" id="oikosExpenseAmount" min="500" step="100" placeholder="사용할 달란트 (최소 500)"></div>
@@ -299,7 +300,7 @@
       <div id="leaderboardList"></div>
 
       <h4 style="margin:18px 0 4px;color:var(--well-deep);">🏆 오이코스 전체 순위</h4>
-      <p style="color:var(--text-soft);font-size:12px;margin:0 0 10px;">우리 오이코스를 포함한 순위예요. <strong>곳간</strong> = 회식비로 쓸 수 있는 공동 달란트(기부+챌린지), <strong>활동</strong> = 오이코스원들이 모은 개인 달란트 합계. 순위는 활동 기준.</p>
+      <p style="color:var(--text-soft);font-size:12px;margin:0 0 10px;">우리 오이코스를 포함한 순위예요. <strong>오이코스 곳간</strong> = 회식비로 쓸 수 있는 공동 달란트(기부+챌린지), <strong>개인 달란트</strong> = 오이코스원들이 각자 모은 달란트 합계. 순위는 개인 달란트 기준.</p>
       <div id="groupRankingsList"></div>
 
       <button type="button" id="disbandGroupBtn" class="btn ghost" style="display:none;margin-top:18px;padding:8px 16px;font-size:13px;color:#b3432c;border-color:#b3432c;">오이코스 해체하기</button>
