@@ -1,0 +1,42 @@
+-- 2026-09-09  오이코스 순위: 곳간/개인 달란트 수치는 "내가 속한 오이코스"만 보이게.
+--   교역자·부장도 이 순위(마이페이지/관리자 순위 카드)에서는 남의 오이코스 수치를 못 봄.
+--   교역자·부장의 전체 수치는 admin.html "오이코스 관리"(get_all_groups_admin)에서 본다.
+-- 재실행 안전: create or replace.
+
+create or replace function get_group_talent_rankings()
+returns table(
+  id bigint, name text, host_is_teacher boolean, member_count bigint,
+  total_talents bigint, pool bigint
+)
+language sql
+security definer
+set search_path = public
+as $func$
+  select
+    g.id, g.name, coalesce(p.is_teacher, false),
+    (select count(*) from group_members gm where gm.group_id = g.id)::bigint,
+    case when exists (select 1 from group_members gm3 where gm3.group_id = g.id and gm3.user_id = auth.uid())
+      then (select coalesce(sum(pl.points), 0)
+              from group_members gm2
+              join points_ledger pl on pl.user_id = gm2.user_id
+              where gm2.group_id = g.id)::bigint
+      else null end as total_talents,
+    case when exists (select 1 from group_members gm4 where gm4.group_id = g.id and gm4.user_id = auth.uid())
+      then (select coalesce(sum(otl.points), 0)
+              from oikos_talent_ledger otl
+              where otl.group_id = g.id)::bigint
+      else null end as pool
+  from groups g
+  join profiles p on p.user_id = g.created_by
+  where not coalesce(g.is_hidden, false)
+    and (
+      exists (select 1 from group_members me where me.user_id = auth.uid())
+      or exists (select 1 from profiles ap0 where ap0.user_id = auth.uid() and (ap0.is_admin = true or ap0.is_department_head = true))
+    )
+  order by (select coalesce(sum(pl.points), 0)
+             from group_members gm2
+             join points_ledger pl on pl.user_id = gm2.user_id
+             where gm2.group_id = g.id) desc,
+           g.created_at asc
+  limit 15;
+$func$;

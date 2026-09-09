@@ -395,25 +395,43 @@ function initGroup(userId) {
     });
   }
 
+  // 오이코스 멤버 명단 + 각자 오늘의 참여 현황을 한 곳에 합쳐서 보여준다.
   function renderGroupMembers(groupId) {
-    client.rpc("get_group_members", { p_group_id: groupId }).then(function (res) {
-      var el = document.getElementById("groupMembersList");
-      var countEl = document.getElementById("groupMemberCount");
-      if (!el) return;
-      var rows = res.data || [];
-      if (res.error || !rows.length) {
+    var el = document.getElementById("groupMembersList");
+    var countEl = document.getElementById("groupMemberCount");
+    if (!el) return;
+    Promise.all([
+      client.rpc("get_group_members", { p_group_id: groupId }),
+      client.rpc("get_group_today_status", { p_group_id: groupId })
+    ]).then(function (res) {
+      var members = (res[0] && res[0].data) || [];
+      if ((res[0] && res[0].error) || !members.length) {
         el.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
         return;
       }
-      if (countEl) countEl.textContent = "(" + rows.length + "명)";
-      el.innerHTML = rows.map(function (r) {
+      var status = {};
+      ((res[1] && res[1].data) || []).forEach(function (s) { status[s.user_id] = s; });
+      if (countEl) countEl.textContent = "(" + members.length + "명)";
+
+      function badge(done, label) {
+        return '<span style="display:inline-block;margin:2px 8px 2px 0;font-size:11.5px;color:' +
+          (done ? "var(--well)" : "var(--text-soft)") + ';">' + (done ? "✅" : "⬜") + " " + label + '</span>';
+      }
+      el.innerHTML = members.map(function (r) {
+        var s = status[r.user_id] || {};
         var mine = r.user_id === userId ? " (나)" : "";
         return (
           '<div class="note-item">' +
             '<div class="content">' + escapeHtml(r.nickname) + mine +
               (r.is_host ? ' <span style="color:var(--gold);font-size:12px;">만든 사람</span>' : '') +
+              ' <span style="color:var(--text-soft);font-size:11.5px;font-weight:400;">' + formatJoinDate(r.joined_at) + ' 참여</span>' +
             '</div>' +
-            '<div class="meta">' + formatJoinDate(r.joined_at) + ' 참여</div>' +
+            '<div class="meta" style="margin-top:4px;">' +
+              badge(s.attended, "출석") +
+              badge(s.wrote_greeting, "하루인사") +
+              badge(s.wrote_gratitude, "감사노트") +
+              badge(s.wrote_prayer, "기도제목") +
+            '</div>' +
           '</div>'
         );
       }).join("");
@@ -530,7 +548,6 @@ function initGroup(userId) {
                 btn.textContent = "✅ 초대됨";
                 renderGroupMembers(groupId);
                 renderLeaderboard(groupId);
-                renderTodayStatus(groupId);
               });
             });
           });
@@ -808,7 +825,7 @@ function initGroup(userId) {
     // client.rpc(...)는 PostgREST 빌더라 .catch가 없다 → .then(성공, 실패) 둘 다 같은 후속 처리로 이어간다.
     var afterWeeklyBonus = function () {
       renderLeaderboard(group.id);
-      renderTodayStatus(group.id);
+      renderGroupMembers(group.id);
     };
     client.rpc("evaluate_group_weekly_bonus", { p_group_id: group.id }).then(afterWeeklyBonus, afterWeeklyBonus);
 
