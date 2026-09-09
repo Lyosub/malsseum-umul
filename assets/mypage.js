@@ -700,11 +700,18 @@ function initGroup(userId) {
         client.rpc("get_oikos_shop_items").then(function (r) {
           var items = r.data || [];
           if (!items.length) { shopListEl.innerHTML = '<p class="msg" style="margin:0;">아직 등록된 오이코스 상품이 없어요.</p>'; return; }
+          function wonLabel(w) {
+            var n = Number(w);
+            if (!n) return "";
+            if (n >= 10000 && n % 10000 === 0) return (n / 10000) + "만원";
+            return n.toLocaleString() + "원";
+          }
           shopListEl.innerHTML = items.map(function (it) {
             return (
               '<div class="note-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
                 '<div style="min-width:0;">' +
-                  '<div class="content" style="font-weight:700;">' + escapeHtml(it.name) + ' · ' + it.cost + '달란트</div>' +
+                  '<div class="content" style="font-weight:700;">' + escapeHtml(it.name) + ' · ' + it.cost + '달란트' +
+                    (it.price_won ? ' <span style="color:var(--text-soft);font-weight:400;">(' + wonLabel(it.price_won) + ' 상당)</span>' : '') + '</div>' +
                   (it.description ? '<div class="meta" style="margin:2px 0 0;">' + escapeHtml(it.description) + '</div>' : '') +
                 '</div>' +
                 '<button type="button" class="btn ghost" data-oikos-item="' + it.id + '" style="flex:none;padding:6px 12px;font-size:12.5px;">신청</button>' +

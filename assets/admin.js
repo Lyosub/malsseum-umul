@@ -1338,8 +1338,17 @@ function initShopAdmin(userId) {
   var nameEl = document.getElementById("shopItemName");
   var descEl = document.getElementById("shopItemDesc");
   var costEl = document.getElementById("shopItemCost");
+  var priceWonEl = document.getElementById("shopItemPriceWon");
   var stockEl = document.getElementById("shopItemStock");
   var isOikosEl = document.getElementById("shopItemIsOikos");
+
+  function wonLabel(w) {
+    if (w == null || w === "") return "";
+    var n = Number(w);
+    if (!n) return "";
+    if (n >= 10000 && n % 10000 === 0) return (n / 10000) + "만원";
+    return n.toLocaleString() + "원";
+  }
 
   var SHOP_ADMIN_STATUS = {
     pending: "확인 중", approved: "승인됨", delivered: "전달 완료", rejected: "거절됨"
@@ -1354,6 +1363,7 @@ function initShopAdmin(userId) {
         return (
           '<div class="note-item" data-item-id="' + it.id + '">' +
             '<div class="content"><strong>' + escapeHtmlAdmin(it.name) + '</strong> · ' + it.cost + '달란트' +
+              (it.price_won ? ' · ' + wonLabel(it.price_won) + ' 상당' : '') +
               (it.stock == null ? ' · 무제한' : ' · 수량 ' + it.stock) +
               (it.is_oikos ? ' · <span style="color:var(--well);">오이코스 곳간용</span>' : '') +
               (it.is_active ? '' : ' · <span style="color:#b3432c;">비활성</span>') + '</div>' +
@@ -1440,10 +1450,12 @@ function initShopAdmin(userId) {
     var stockRaw = (stockEl.value || "").trim();
     var stock = stockRaw === "" ? null : parseInt(stockRaw, 10);
     msg.textContent = "등록 중...";
+    var priceWonRaw = (priceWonEl && priceWonEl.value || "").trim();
     client.from("shop_items").insert({
       name: name,
       description: (descEl.value || "").trim() || null,
       cost: cost,
+      price_won: priceWonRaw === "" ? null : parseInt(priceWonRaw, 10),
       stock: stock,
       is_oikos: !!(isOikosEl && isOikosEl.checked)
     }).then(function (res) {
