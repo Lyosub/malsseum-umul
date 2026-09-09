@@ -565,7 +565,18 @@ function initGroup(userId) {
       function loadInfo() {
         client.rpc("get_oikos_talent", { p_group_id: groupId }).then(function (r) {
           var d = (r.data && r.data[0]) || {};
-          if (infoEl) infoEl.textContent = "오이코스 달란트 " + (d.earned || 0) + " · 신청 대기 " + (d.pending || 0) + " · 사용 가능 " + (d.available || 0);
+          if (!infoEl) return;
+          var earned = d.earned || 0;
+          // from_personal/from_group 은 새 버전 함수에서만 온다. 없으면 예전처럼 한 줄로.
+          if (d.from_personal != null && d.from_group != null) {
+            infoEl.innerHTML =
+              "오이코스 달란트 <strong>" + earned + "</strong>" +
+              "<br>· 개인 활동으로 모은 몫 " + d.from_personal +
+              "<br>· 오이코스 챌린지로 함께 받은 몫 " + d.from_group +
+              "<br>신청 대기 " + (d.pending || 0) + " · 사용 가능 " + (d.available || 0);
+          } else {
+            infoEl.textContent = "오이코스 달란트 " + earned + " · 신청 대기 " + (d.pending || 0) + " · 사용 가능 " + (d.available || 0);
+          }
         });
       }
       function loadList() {
