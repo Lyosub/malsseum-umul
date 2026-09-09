@@ -1369,3 +1369,30 @@ footer.site { padding: 34px 20px 40px; line-height: 1.9; }
 /* 실시간 나눔 가로 컬럼: 배경을 살짝 더 또렷하게 */
 .scroll-column { background: rgba(20, 112, 122, .055); border-color: rgba(226, 235, 233, .8); }
 .scroll-column .scroll-column-title { font-size: 14px; }
+
+/* 마이페이지 "우리 오이코스" 접이식 섹션 — 카드가 너무 길어지지 않게 */
+details.mp-fold {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  margin: 12px 0;
+  padding: 0 14px;
+}
+details.mp-fold > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 0;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--well-deep);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+details.mp-fold > summary::-webkit-details-marker { display: none; }
+details.mp-fold > summary::after { content: "\25be"; color: var(--text-soft); font-size: 12px; flex: none; }
+details.mp-fold[open] > summary::after { content: "\25b4"; }
+details.mp-fold[open] { padding-bottom: 14px; }
+details.mp-fold > *:not(summary):first-of-type { margin-top: 0; }
+details.mp-fold h4 { margin-top: 4px; }
