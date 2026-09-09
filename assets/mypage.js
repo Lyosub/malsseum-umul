@@ -464,7 +464,7 @@ function initGroup(userId) {
     client.rpc("get_group_bonus_eligible", { p_group_id: groupId }).then(function (res) {
       var eligible = !!(res.data);
       el.innerHTML = eligible
-        ? "🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 전원 +1달란트, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 전원 +2달란트 (다음 주에 자동 정산돼요)"
+        ? "🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 <strong>오이코스 달란트 +인원수</strong>, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 <strong>오이코스 달란트 +인원수×2</strong> (다음 주에 자동 정산돼요. 개인 달란트가 아니라 오이코스 공동 달란트로 쌓여요)"
         : "이 오이코스는 학생들끼리 만든 오이코스라 챌린지 보너스가 적용되지 않아요. 교사가 만든 오이코스만 보너스 대상이에요.";
     });
   }
@@ -546,6 +546,87 @@ function initGroup(userId) {
     rejected: "거절됨"
   };
 
+  var OIKOS_LOG_LABEL = {
+    donation: "기부", challenge_attendance: "출석 챌린지", challenge_notes: "기록 챌린지",
+    expense: "회식비", expense_refund: "회식비 환급", admin_adjust: "조정"
+  };
+
+  // 오이코스 공동 달란트(풀) 카드 — 모든 오이코스원에게 보인다. 개인 달란트를 풀에 기부하고,
+  // 풀 잔액 + 최근 내역(기부/챌린지/회식비)을 보여준다.
+  function initOikosTalent(groupId) {
+    var section = document.getElementById("oikosTalentSection");
+    if (!section) return;
+    var infoEl = document.getElementById("oikosPoolInfo");
+    var logEl = document.getElementById("oikosTalentLog");
+    var form = document.getElementById("oikosDonateForm");
+    var amountEl = document.getElementById("oikosDonateAmount");
+    var msgEl = document.getElementById("oikosDonateMsg");
+
+    function load() {
+      client.rpc("get_oikos_talent", { p_group_id: groupId }).then(function (r) {
+        var d = (r.data && r.data[0]) || {};
+        var pool = (d.pool != null ? d.pool : d.earned) || 0;
+        if (infoEl) {
+          infoEl.innerHTML =
+            "우리 오이코스 달란트 <strong>" + pool + "</strong>" +
+            " <span style=\"color:var(--text-soft);\">(기부 " + (d.from_donation || 0) +
+            " · 챌린지 " + (d.from_challenge || 0) + " · 사용 가능 " + (d.available || 0) + ")</span>";
+        }
+      });
+      client.rpc("get_oikos_talent_log", { p_group_id: groupId, p_limit: 20 }).then(function (r) {
+        var rows = r.data || [];
+        if (!logEl) return;
+        if (!rows.length) { logEl.innerHTML = '<p class="msg" style="margin:0;">아직 내역이 없어요.</p>'; return; }
+        logEl.innerHTML = rows.map(function (x) {
+          var dt = new Date(x.created_at);
+          var when = (dt.getMonth() + 1) + "/" + dt.getDate();
+          var who = x.kind === "donation" ? (escapeHtml(x.member_nickname || "누군가") + " · ") : "";
+          var sign = x.points > 0 ? "+" : "";
+          var color = x.points > 0 ? "var(--well)" : "var(--gold)";
+          return (
+            '<div class="note-item" style="padding:8px 0;">' +
+              '<div class="meta" style="margin:0;">' + when + ' · ' + who + (OIKOS_LOG_LABEL[x.kind] || x.kind) + '</div>' +
+              '<div class="content" style="font-size:13.5px;color:' + color + ';font-weight:700;">' + sign + x.points + '달란트</div>' +
+            '</div>'
+          );
+        }).join("");
+      });
+    }
+
+    if (form) {
+      form.onsubmit = function (e) {
+        e.preventDefault();
+        var amount = parseInt(amountEl && amountEl.value, 10);
+        if (msgEl) { msgEl.style.color = ""; msgEl.textContent = ""; }
+        if (!amount || amount < 10) { if (msgEl) msgEl.textContent = "최소 10달란트부터 기부할 수 있어요."; return; }
+        if (!confirm(amount + "달란트를 우리 오이코스에 기부할까요? 되돌릴 수 없어요.")) return;
+        var btn = form.querySelector("button[type=submit]");
+        if (btn) btn.disabled = true;
+        client.rpc("donate_to_oikos", { p_group_id: groupId, p_amount: amount }).then(function (r) {
+          if (btn) btn.disabled = false;
+          if (r.error) { if (msgEl) msgEl.textContent = r.error.message || "기부에 실패했어요."; return; }
+          if (amountEl) amountEl.value = "";
+          if (msgEl) { msgEl.style.color = "var(--well)"; msgEl.textContent = "기부 완료! 고마워요 🙏"; }
+          load();
+          loadTotalPoints(userId); // 헤더의 내 달란트 잔액 갱신
+          var teacherInfo = document.getElementById("oikosTalentInfo");
+          if (teacherInfo) { // 교사 회식비 칸도 함께 갱신
+            client.rpc("get_oikos_talent", { p_group_id: groupId }).then(function (rr) {
+              var dd = (rr.data && rr.data[0]) || {};
+              var pp = (dd.pool != null ? dd.pool : dd.earned) || 0;
+              teacherInfo.innerHTML =
+                "오이코스 달란트 <strong>" + pp + "</strong><br>· 기부 " + (dd.from_donation || 0) +
+                " · 챌린지 " + (dd.from_challenge || 0) + "<br>신청 대기 " + (dd.pending || 0) +
+                " · 사용 가능 " + (dd.available || 0);
+            });
+          }
+        });
+      };
+    }
+
+    load();
+  }
+
   function initOikosExpense(groupId) {
     var section = document.getElementById("oikosExpenseSection");
     if (!section) return;
@@ -566,17 +647,11 @@ function initGroup(userId) {
         client.rpc("get_oikos_talent", { p_group_id: groupId }).then(function (r) {
           var d = (r.data && r.data[0]) || {};
           if (!infoEl) return;
-          var earned = d.earned || 0;
-          // from_personal/from_group 은 새 버전 함수에서만 온다. 없으면 예전처럼 한 줄로.
-          if (d.from_personal != null && d.from_group != null) {
-            infoEl.innerHTML =
-              "오이코스 달란트 <strong>" + earned + "</strong>" +
-              "<br>· 개인 활동으로 모은 몫 " + d.from_personal +
-              "<br>· 오이코스 챌린지로 함께 받은 몫 " + d.from_group +
-              "<br>신청 대기 " + (d.pending || 0) + " · 사용 가능 " + (d.available || 0);
-          } else {
-            infoEl.textContent = "오이코스 달란트 " + earned + " · 신청 대기 " + (d.pending || 0) + " · 사용 가능 " + (d.available || 0);
-          }
+          var pool = (d.pool != null ? d.pool : d.earned) || 0;
+          infoEl.innerHTML =
+            "오이코스 달란트 <strong>" + pool + "</strong>" +
+            "<br>· 기부 " + (d.from_donation || 0) + " · 챌린지 " + (d.from_challenge || 0) +
+            "<br>신청 대기 " + (d.pending || 0) + " · 사용 가능 " + (d.available || 0);
         });
       }
       function loadList() {
@@ -627,6 +702,7 @@ function initGroup(userId) {
     renderChallengeBanner(group.id);
     renderGroupMembers(group.id);
     initGroupInvite(group.id, group.created_by === userId);
+    initOikosTalent(group.id);
     initOikosExpense(group.id);
 
     var flashEl = document.getElementById("groupJoinedFlash");

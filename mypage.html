@@ -266,6 +266,18 @@
         <div id="inviteSearchResults"></div>
       </div>
 
+      <div id="oikosTalentSection" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
+        <h4 style="margin:0 0 4px;color:var(--well-deep);">💰 오이코스 달란트</h4>
+        <p class="msg" id="oikosPoolInfo" style="margin:0 0 8px;">불러오는 중...</p>
+        <form id="oikosDonateForm" style="display:flex;gap:8px;align-items:flex-start;">
+          <input type="number" id="oikosDonateAmount" min="10" step="10" placeholder="기부할 내 달란트 (최소 10)" style="flex:1;">
+          <button type="submit" class="btn" style="flex:none;">기부하기</button>
+        </form>
+        <p class="msg" id="oikosDonateMsg" style="margin:6px 0 0;"></p>
+        <p style="color:var(--text-soft);font-size:11.5px;margin:4px 0 0;">내 달란트를 오이코스에 보태요. 한번 기부하면 되돌릴 수 없고, 회식비로만 쓰여요.</p>
+        <div id="oikosTalentLog" style="margin-top:10px;"></div>
+      </div>
+
       <div id="oikosExpenseSection" style="display:none;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
         <h4 style="margin:0 0 4px;color:var(--well-deep);">🍚 회식비 지원 신청 <span style="color:var(--text-soft);font-weight:400;font-size:12px;">(교사 전용)</span></h4>
         <p class="msg" id="oikosTalentInfo" style="margin:0 0 4px;">오이코스 달란트를 불러오는 중...</p>
