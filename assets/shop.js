@@ -100,13 +100,20 @@ function initShopPage() {
       if (res.error) { itemsEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
       var rows = res.data || [];
       if (!rows.length) { itemsEl.innerHTML = '<p class="msg">아직 등록된 상품이 없어요.</p>'; return; }
+      function wonLabel(w) {
+        var n = Number(w);
+        if (!n) return "";
+        if (n >= 10000 && n % 10000 === 0) return (n / 10000) + "만원";
+        return n.toLocaleString() + "원";
+      }
       itemsEl.innerHTML = rows.map(function (it) {
         var soldOut = (it.stock != null && it.stock <= 0);
         var stockTxt = it.stock == null ? "" : ' · 남은 수량 ' + it.stock + '개';
+        var wonTxt = it.price_won ? ' <span style="color:var(--text-soft);font-size:12px;font-weight:400;">(' + wonLabel(it.price_won) + ' 상당)</span>' : "";
         return (
           '<div class="note-item">' +
             '<div class="content"><strong>' + shopEsc(it.name) + '</strong> ' +
-              '<span style="color:var(--well);font-weight:800;">' + it.cost + '달란트</span>' +
+              '<span style="color:var(--well);font-weight:800;">' + it.cost + '달란트</span>' + wonTxt +
               '<span style="color:var(--text-soft);font-size:12px;">' + stockTxt + '</span></div>' +
             (it.description ? '<div class="meta" style="margin-top:4px;">' + shopEsc(it.description) + '</div>' : '') +
             (readOnly ? '' :
