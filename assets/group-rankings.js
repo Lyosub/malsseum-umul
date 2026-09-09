@@ -18,7 +18,9 @@ function initGroupRankings() {
   var client = getClient();
   if (!client) return;
 
-  client.rpc("get_group_talent_rankings").then(function (res) {
+  // 관리자 페이지에서는 전체 오이코스 수치를 그대로 본다(교역자·부장만 서버에서 허용).
+  var isAdminPage = /\/admin\.html$/.test(location.pathname);
+  client.rpc("get_group_talent_rankings", { p_full: isAdminPage }).then(function (res) {
     if (res.error) {
       listEl.innerHTML = '<p class="msg">순위를 불러오지 못했어요.</p>';
       return;
