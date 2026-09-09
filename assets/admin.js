@@ -668,6 +668,7 @@ function loadGroupsAdmin() {
           '<div class="note-item" data-group-id="' + item.id + '">' +
             '<div class="content"><strong>' + escapeHtmlAdmin(item.name) + '</strong>' +
               (item.host_is_teacher ? ' <span style="color:var(--well);font-size:12px;">교사 오이코스</span>' : ' <span style="color:var(--text-soft);font-size:12px;">학생 오이코스</span>') +
+              (item.is_hidden ? ' <span style="color:var(--gold);font-size:12px;">🔒 숨김(순위 제외)</span>' : '') +
             '</div>' +
             '<div class="meta">만든 사람: ' + escapeHtmlAdmin(creatorName) +
               ' · 초대코드: ' + escapeHtmlAdmin(item.invite_code) +
