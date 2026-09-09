@@ -477,9 +477,15 @@ function loadAllNotes() {
   if (!listEl) return;
 
   function load() {
-    client.rpc("get_all_notes_admin", { p_limit: 200 }).then(function (res) {
-      var items = res.data || [];
-      if (!items.length) {
+    // 건의사항은 하루인사·감사노트·기도제목이 많이 쌓이면 get_all_notes_admin 의
+    // 최신 200개 창 밖으로 밀려 컬럼이 통째로 사라진다. 건의사항만 따로 넉넉히 받아온다.
+    Promise.all([
+      client.rpc("get_all_notes_admin", { p_limit: 200 }),
+      client.rpc("get_suggestions_admin", { p_limit: 300 })
+    ]).then(function (resList) {
+      var items = (resList[0] && resList[0].data) || [];
+      var suggestionItems = (resList[1] && resList[1].data) || [];
+      if (!items.length && !suggestionItems.length) {
         listEl.innerHTML = '<p class="msg">아직 기록이 없어요.</p>';
         return;
       }
@@ -501,23 +507,33 @@ function loadAllNotes() {
       // 감사노트 / 기도제목 / 하루인사 / 건의사항으로 구분해서 보여준다
       var byType = { gratitude: [], prayer: [], greeting: [], suggestion: [] };
       items.forEach(function (item) {
+        if (item.type === "suggestion") return; // 건의사항은 아래 전용 조회분으로 채운다
         if (byType[item.type]) byType[item.type].push(item);
       });
+      var seenSuggestion = {};
+      suggestionItems.forEach(function (item) {
+        if (seenSuggestion[item.id]) return;
+        seenSuggestion[item.id] = true;
+        byType.suggestion.push(item);
+      });
 
-      function renderColumn(typeKey, icon) {
+      function renderColumn(typeKey, icon, alwaysShow) {
         var list = byType[typeKey];
-        if (!list.length) return "";
+        if (!list.length && !alwaysShow) return "";
+        var body = list.length
+          ? list.map(renderNote).join("")
+          : '<p class="msg" style="margin-top:0;">아직 없어요.</p>';
         return (
           '<div class="scroll-column">' +
             '<div class="scroll-column-title">' + icon + ' ' + ADMIN_NOTE_LABELS[typeKey] + ' (' + list.length + '건)</div>' +
-            list.map(renderNote).join("") +
+            body +
           '</div>'
         );
       }
 
       listEl.innerHTML =
         '<div class="scroll-columns">' +
-          renderColumn("suggestion", "📮") +
+          renderColumn("suggestion", "📮", true) +
           renderColumn("gratitude", "🙏") +
           renderColumn("prayer", "🕊️") +
           renderColumn("greeting", "🙋") +
