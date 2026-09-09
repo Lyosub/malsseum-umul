@@ -145,6 +145,18 @@ function renderStreakMilestone(streak) {
 // 동 / 은 / 금 / 다이아 / 십자가
 var BADGE_TIER_COLORS = { 1: "#c9932f", 2: "#9aa4ad", 3: "#e0b23a", 4: "#3fbecf", 5: "#8b5cf6" };
 
+// 뱃지별 획득 방법 + 5단계 기준 (get_my_badges 의 defs 와 동일). unit = 세는 단위.
+var BADGE_INFO = {
+  streak: { how: "연속으로 출석한 날 수예요. 하루라도 빠지면 다시 1일부터 세요. (역대 최장 기록 기준)", unit: "일", tiers: [3, 7, 14, 21, 30] },
+  attend: { how: "지금까지 출석 체크한 총 횟수예요.", unit: "번", tiers: [5, 15, 30, 50, 80] },
+  note:   { how: "하루 인사 · 감사노트 · 기도제목을 쓴 글의 총 개수예요.", unit: "개", tiers: [5, 15, 35, 60, 100] },
+  quiz:   { how: "수요 성경퀴즈에서 정답을 맞힌 횟수예요.", unit: "번", tiers: [1, 3, 6, 10, 15] },
+  game:   { how: "성경책 순서 맞추기 · 같은 성경 찾기 게임을 플레이한 횟수예요.", unit: "판", tiers: [3, 8, 18, 30, 50] },
+  pray:   { how: "다른 사람의 기도제목에 '함께 기도했어요'를 누른 횟수예요.", unit: "번", tiers: [3, 10, 25, 45, 70] },
+  invite: { how: "내가 초청한 친구가 친구초청잔치에 실제로 온 수예요.", unit: "명", tiers: [1, 2, 3, 4, 5] }
+};
+var BADGE_TIER_NAMES = ["동", "은", "금", "다이아", "십자가"];
+
 function initBadges(userId) {
   var client = getClient();
   var card = document.getElementById("badgesCard");
@@ -180,13 +192,47 @@ function initBadges(userId) {
       var tierLabel = got ? (r.tier_label + " · " + r.current_value) : (r.current_value + " / " + r.next_target);
       var ring = got ? BADGE_TIER_COLORS[r.tier] : "var(--border)";
       return (
-        '<div class="badge-item' + (got ? " got" : "") + '" style="border-color:' + ring + ';">' +
+        '<div class="badge-item' + (got ? " got" : "") + '" data-badge="' + r.code + '" style="border-color:' + ring + ';cursor:pointer;">' +
           '<div class="badge-emoji">' + r.emoji + '</div>' +
           '<div class="badge-name">' + escapeHtml(r.label) + '</div>' +
           '<div class="badge-tier">' + escapeHtml(tierLabel) + '</div>' +
         '</div>'
       );
     }).join("");
+
+    var detailEl = document.getElementById("badgeDetail");
+    var byCode = {};
+    rows.forEach(function (r) { byCode[r.code] = r; });
+    var openCode = null;
+
+    function renderDetail(code) {
+      var r = byCode[code];
+      var info = BADGE_INFO[code];
+      if (!r || !info || !detailEl) return;
+      var tiers = info.tiers.map(function (t, i) {
+        var reached = r.current_value >= t;
+        return '<span class="bd-tier' + (reached ? " on" : "") + '">' + BADGE_TIER_NAMES[i] + " " + t + info.unit + "</span>";
+      }).join("");
+      var nowLine = r.tier > 0
+        ? "지금 " + r.current_value + info.unit + " · <strong>" + r.tier_label + " 등급</strong>" +
+          (r.tier < 5 ? " · 다음 " + r.tier_label + "→" + BADGE_TIER_NAMES[r.tier] + "까지 " + (r.next_target - r.current_value) + info.unit + " 남음" : " · 최고 등급 달성!")
+        : "지금 " + r.current_value + info.unit + " · 동 등급까지 " + (r.next_target - r.current_value) + info.unit + " 남음";
+      detailEl.innerHTML =
+        '<div class="bd-head">' + r.emoji + " " + escapeHtml(r.label) + "</div>" +
+        '<p class="bd-how">' + escapeHtml(info.how) + "</p>" +
+        '<div class="bd-tiers">' + tiers + "</div>" +
+        '<p class="bd-now">' + nowLine + "</p>";
+      detailEl.style.display = "block";
+    }
+
+    grid.querySelectorAll(".badge-item").forEach(function (el) {
+      el.addEventListener("click", function () {
+        var code = el.getAttribute("data-badge");
+        if (openCode === code) { openCode = null; if (detailEl) detailEl.style.display = "none"; return; }
+        openCode = code;
+        renderDetail(code);
+      });
+    });
   }).catch(function () {
     card.style.display = "none";
   });
@@ -482,7 +528,9 @@ function initGroup(userId) {
     client.rpc("get_group_bonus_eligible", { p_group_id: groupId }).then(function (res) {
       var eligible = !!(res.data);
       el.innerHTML = eligible
-        ? "🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 <strong>오이코스 곳간 +인원수</strong>, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 <strong>오이코스 곳간 +인원수×2</strong> (다음 주에 자동 정산돼요. 개인 달란트가 아니라 오이코스 공동 곳간에 쌓여요)"
+        ? "🎯 <strong>오이코스 챌린지</strong> — 매주(월~일) 자동 정산, 개인 달란트가 아니라 <strong>오이코스 공동 곳간</strong>에 쌓여요.<br><br>" +
+          "· 멤버 80% 이상 출석 → 곳간 <strong>+인원수</strong><br>" +
+          "· 멤버 전원이 감사노트/기도제목 1개+ 쓰고 오이코스 합계 10개 이상 → 곳간 <strong>+인원수×2</strong>"
         : "이 오이코스는 학생들끼리 만든 오이코스라 챌린지 보너스가 적용되지 않아요. 교사가 만든 오이코스만 보너스 대상이에요.";
     });
   }

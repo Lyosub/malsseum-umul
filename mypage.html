@@ -102,7 +102,8 @@
     <p class="msg" id="badgesSub" style="margin:-4px 0 6px;"></p>
     <p class="msg" id="badgesReward" style="display:none;color:var(--well);font-weight:700;margin:0 0 10px;"></p>
     <div class="badge-grid" id="badgesGrid"></div>
-    <p style="color:var(--text-soft);font-size:11.5px;margin-top:10px;">동·은·금·다이아·십자가 5단계예요. 등급을 올릴 때마다 <strong style="color:var(--well);">+5·10·15·20·25달란트</strong> (등급당 1번). 출석·기록·퀴즈·게임·기도·친구초청으로 모아보세요.</p>
+    <div class="badge-detail" id="badgeDetail" style="display:none;"></div>
+    <p style="color:var(--text-soft);font-size:11.5px;margin-top:10px;">뱃지를 눌러 얻는 방법을 볼 수 있어요. 동·은·금·다이아·십자가 5단계이고, 등급을 올릴 때마다 <strong style="color:var(--well);">+5·10·15·20·25달란트</strong> (등급당 1번)를 받아요.</p>
   </div>
 
   <div class="card">
@@ -110,28 +111,34 @@
       <span>💠 달란트 얻는 법</span>
       <span id="pointsRulesArrow" style="color:var(--text-soft);font-size:12px;font-weight:400;">자세히 ▾</span>
     </button>
-    <div id="pointsRulesDetail" style="display:none;margin-top:12px;font-size:12.5px;color:var(--text-soft);line-height:1.85;">
-      출석 체크 <strong style="color:var(--well);">+1달란트</strong> · 7일 연속 출석 보너스 <strong style="color:var(--well);">+1달란트</strong><br>
-      하루 인사 작성 후 달란트 뽑기 <strong style="color:var(--well);">1~2달란트 랜덤</strong> (하루 1번)<br>
-      감사노트/기도제목 작성 <strong style="color:var(--well);">+2달란트</strong> (하루 1건만 인정)<br>
-      수요 성경퀴즈 정답 <strong style="color:var(--well);">+3달란트</strong> — <strong style="color:var(--gold);">매주 수요일 공개, 목요일 자정까지 딱 이틀만 참여 가능</strong> (<a href="weekly.html" style="color:var(--well);">이번 주 말씀</a>에서 풀 수 있어요)<br>
-      🌿 오늘의 QT 묵상 체크 <strong style="color:var(--well);">+1달란트</strong> (하루 1번, <a href="index.html" style="color:var(--well);">홈</a>의 오늘의 QT에서)<br>
-      🏅 뱃지 등급 달성 <strong style="color:var(--well);">+5·10·15·20·25달란트</strong> (동·은·금·다이아·십자가, 등급마다 1번)
+    <div id="pointsRulesDetail" style="display:none;margin-top:12px;font-size:12.5px;color:var(--text-soft);">
+      <div class="rule-group">
+        <h5>💠 개인 달란트</h5>
+        <div class="rule-row"><span class="r-what">출석 체크</span><span class="r-gain">+1</span></div>
+        <div class="rule-row"><span class="r-what">7일 연속 출석 보너스</span><span class="r-gain">+1</span></div>
+        <div class="rule-row"><span class="r-what">하루 인사 쓰고 달란트 뽑기<span class="r-when">하루 1번</span></span><span class="r-gain">1~2 랜덤</span></div>
+        <div class="rule-row"><span class="r-what">감사노트 / 기도제목 작성<span class="r-when">하루 1건만 인정</span></span><span class="r-gain">+2</span></div>
+        <div class="rule-row"><span class="r-what">수요 성경퀴즈 정답<span class="r-when">수요일 공개 ~ 목요일 자정까지 이틀만 · <a href="weekly.html" style="color:var(--well);">이번 주 말씀</a>에서</span></span><span class="r-gain">+3</span></div>
+        <div class="rule-row"><span class="r-what">🌿 오늘의 QT 묵상 체크<span class="r-when">하루 1번 · <a href="index.html" style="color:var(--well);">홈</a>의 오늘의 QT에서</span></span><span class="r-gain">+1</span></div>
+        <div class="rule-row"><span class="r-what">🏅 뱃지 등급 달성<span class="r-when">동·은·금·다이아·십자가, 등급마다 1번</span></span><span class="r-gain">+5·10·15·20·25</span></div>
+      </div>
 
-      <hr style="margin:12px 0;border:none;border-top:1px solid var(--border);">
+      <div class="rule-group">
+        <h5>👥 오이코스 곳간</h5>
+        <p class="rule-group-note">개인 달란트가 아니라 오이코스 공동 곳간에 쌓여요 (회식비·상품으로 함께 씀).</p>
+        <div class="rule-row"><span class="r-what">한 주 멤버 80% 이상 출석<span class="r-when">다음 주에 자동 정산</span></span><span class="r-gain">곳간 +인원수</span></div>
+        <div class="rule-row"><span class="r-what">멤버 전원이 감사노트/기도제목 1개+, 오이코스 합계 10개 이상</span><span class="r-gain">곳간 +인원수×2</span></div>
+        <div class="rule-row"><span class="r-what">📖 말씀 빈칸 채우기 게임<span class="r-when">하루 1판 5문제</span></span><span class="r-gain">맞은 개수×2</span></div>
+        <div class="rule-row"><span class="r-what">내 개인 달란트를 곳간에 기부<span class="r-when">되돌리기 불가</span></span><span class="r-gain">낸 만큼</span></div>
+        <p class="rule-note">※ 챌린지 보너스는 교사가 만든 오이코스만 해당돼요. 학생끼리만 만든 오이코스는 적용되지 않아요.</p>
+      </div>
 
-      <strong style="color:var(--well-deep);">👥 오이코스 곳간 채우는 법</strong> (개인 달란트가 아니라 오이코스 공동 곳간에 쌓여요 — 회식비로 함께 씀)<br>
-      오이코스 멤버 80% 이상이 한 주(월~일) 동안 출석하면 곳간에 <strong style="color:var(--well);">+인원수 달란트</strong><br>
-      오이코스 멤버 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 곳간에 <strong style="color:var(--well);">+인원수×2 달란트</strong><br>
-      내 개인 달란트를 곳간에 <strong style="color:var(--well);">기부</strong>할 수도 있어요 (되돌리기 불가)<br>
-      <span style="color:var(--gold);">※ 챌린지 보너스는 교사가 만든 오이코스만 해당돼요. 학생끼리만 만든 오이코스는 적용되지 않아요.</span>
-
-      <hr style="margin:12px 0;border:none;border-top:1px solid var(--border);">
-
-      <strong style="color:var(--well-deep);">⚠️ 주의사항</strong><br>
-      감사노트/기도제목을 성의 없이 작성하면 우물지기가 확인 후 삭제할 수 있어요. <strong>삭제되면 그 글로 받은 달란트도 함께 회수돼요.</strong><br>
-      같은 날 여러 번 써도 달란트는 하루 1번만 인정돼요.<br>
-      하루 인사 달란트 뽑기는 <strong>한 번 뽑으면 그날은 몇 점이 나왔든 그대로 고정</strong>돼요. 하루 인사를 지웠다 다시 써도 점수는 바뀌지 않아요.
+      <div class="rule-group">
+        <h5>⚠️ 주의사항</h5>
+        <div class="rule-row"><span class="r-what">감사노트/기도제목을 성의 없이 쓰면 우물지기가 삭제할 수 있고, <strong style="color:var(--text);">그 글로 받은 달란트도 함께 회수</strong>돼요.</span></div>
+        <div class="rule-row"><span class="r-what">같은 날 여러 번 써도 달란트는 하루 1번만 인정돼요.</span></div>
+        <div class="rule-row"><span class="r-what">하루 인사 달란트 뽑기는 한 번 뽑으면 그날 점수가 고정돼요. 지웠다 다시 써도 안 바뀌어요.</span></div>
+      </div>
     </div>
   </div>
 
