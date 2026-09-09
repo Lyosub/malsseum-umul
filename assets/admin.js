@@ -672,7 +672,7 @@ function loadGroupsAdmin() {
             '<div class="meta">만든 사람: ' + escapeHtmlAdmin(creatorName) +
               ' · 초대코드: ' + escapeHtmlAdmin(item.invite_code) +
               ' · 인원: ' + item.member_count + '명' +
-              ' · <strong style="color:var(--gold);">총 ' + item.total_talents + '달란트</strong>' +
+              ' · <strong style="color:var(--gold);">곳간 ' + (item.pool || 0) + ' · 활동 ' + item.total_talents + '달란트</strong>' +
               '<br>생성일: ' + formatDateTime(item.created_at) +
               '<br><span data-members-for="' + item.id + '">멤버 불러오는 중...</span></div>' +
             '<button class="btn ghost" data-action="award-group-points" style="margin-top:8px;padding:6px 14px;font-size:12.5px;color:var(--gold);border-color:var(--gold);">달란트 부여</button>' +
@@ -738,7 +738,13 @@ function loadGroupsAdmin() {
           var itemEl = btn.closest(".note-item");
           var groupId = itemEl.getAttribute("data-group-id");
           var groupName = itemEl.querySelector("strong").textContent;
-          var amountStr = prompt('"' + groupName + '" 오이코스 전원에게 몇 달란트씩 부여할까요? (음수도 가능해요)');
+          var targetStr = prompt('"' + groupName + '"에 달란트를 어디로 줄까요?\n\n1 = 오이코스원 개인들에게 (각자 같은 양)\n2 = 공동 곳간(풀)에 한 번에', "1");
+          if (targetStr === null) return;
+          var toPool = (targetStr.trim() === "2");
+          var promptMsg = toPool
+            ? '"' + groupName + '" 공동 곳간에 몇 달란트 넣을까요? (음수면 차감)'
+            : '"' + groupName + '" 오이코스 전원에게 몇 달란트씩 부여할까요? (음수도 가능해요)';
+          var amountStr = prompt(promptMsg);
           if (amountStr === null) return;
           var amount = parseInt(amountStr, 10);
           if (!amount) {
@@ -746,12 +752,15 @@ function loadGroupsAdmin() {
             return;
           }
           var note = prompt("사유를 남겨주세요 (선택, 안 남겨도 돼요)") || null;
-          client.rpc("admin_award_group_points", { p_group_id: groupId, p_points: amount, p_note: note }).then(function (res) {
+          client.rpc("admin_award_group_points", { p_group_id: groupId, p_points: amount, p_note: note, p_to_pool: toPool }).then(function (res) {
             if (res.error) {
               alert("달란트 부여에 실패했어요.");
               return;
             }
-            alert((res.data || 0) + "명에게 " + amount + "달란트씩 부여했어요.");
+            alert(toPool
+              ? "공동 곳간에 " + amount + "달란트를 넣었어요."
+              : (res.data || 0) + "명에게 " + amount + "달란트씩 부여했어요.");
+            load();
           });
         });
       });
