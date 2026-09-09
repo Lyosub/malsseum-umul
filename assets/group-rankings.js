@@ -51,4 +51,32 @@ function initGroupRankings() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", initGroupRankings);
+// 관리자 페이지 전용: 학생 개인 달란트 순위
+function initStudentTalentRankings() {
+  var listEl = document.getElementById("studentTalentRankings");
+  if (!listEl) return;
+  var client = getClient();
+  if (!client) return;
+
+  client.rpc("get_student_talent_rankings", { p_limit: 40 }).then(function (res) {
+    if (res.error) { listEl.innerHTML = '<p class="msg">순위를 불러오지 못했어요.</p>'; return; }
+    var rows = res.data || [];
+    if (!rows.length) { listEl.innerHTML = '<p class="msg">표시할 학생이 없어요.</p>'; return; }
+    listEl.innerHTML = rows.map(function (r) {
+      var who = escapeHtmlRankings(r.nickname || "?") + (r.real_name ? " (" + escapeHtmlRankings(r.real_name) + ")" : "");
+      return (
+        '<div class="note-item">' +
+          '<div class="content">' + r.rank + '위 · ' + who + '</div>' +
+          '<div class="meta"><strong style="color:var(--gold);">' + r.balance + '달란트</strong></div>' +
+        '</div>'
+      );
+    }).join("");
+  }).catch(function () {
+    listEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  initGroupRankings();
+  initStudentTalentRankings();
+});
