@@ -6,6 +6,9 @@
 <meta name="color-scheme" content="light">
 <title>관리자 | 말씀우물</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2540d8">
@@ -16,220 +19,192 @@
 <header class="site">
   <a class="logo" href="index.html">💧 말씀우물</a>
   <nav>
-    <a href="mypage.html">마이페이지</a>
+    <a href="profile.html">나의 프로필</a>
+    <a href="mypage.html">나의 기록</a>
   </nav>
 </header>
 <div class="wrap">
-  <section class="hero">
+  <div class="page-hd">
     <h1>관리자</h1>
-    <p>공지사항과 이달의 일정을 관리하세요</p>
-  </section>
+    <p>회원 · 콘텐츠 · 오이코스 · 통계 · 승인함</p>
+  </div>
 
   <div class="auth-gate" id="adminGate"></div>
 
   <div id="adminContent" style="display:none;">
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">🔔 알림 방송 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <p class="msg" style="margin-top:0;">"알림 받기"를 켠 학생 전체에게 즉시 푸시 알림이 발송돼요. 공지사항은 등록하면 자동으로도 발송되니, 여기는 급한 안내가 있을 때만 써주세요.</p>
-        <form id="pushBroadcastForm">
-          <div class="form-row">
-            <label for="pushTitleInput">알림 제목</label>
-            <input type="text" id="pushTitleInput" placeholder="예: 오늘 예배 시간 변경 안내">
-          </div>
-          <div class="form-row">
-            <label for="pushBodyInput">알림 내용</label>
-            <textarea id="pushBodyInput" placeholder="알림에 보여줄 내용을 짧게 적어주세요"></textarea>
-          </div>
-          <button type="submit" class="btn block">지금 바로 발송</button>
-          <p class="msg" id="pushBroadcastMsg"></p>
-        </form>
-      </div>
+    <div class="admin-tabs" id="adminTabs">
+      <button type="button" data-panel="members" class="on">👥 회원</button>
+      <button type="button" data-panel="content">📝 콘텐츠</button>
+      <button type="button" data-panel="oikos">🤝 오이코스</button>
+      <button type="button" data-panel="stats">📊 통계</button>
+      <button type="button" data-panel="inbox">📥 승인함</button>
     </div>
 
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">🎉 홈페이지 상단 이벤트 배너 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <p class="msg" style="margin-top:0;">여기 등록하면 홈 화면 맨 위에 바로 보이고, 삭제하면 바로 사라져요.</p>
-        <form id="bannerForm">
+    <!-- ===== 회원 ===== -->
+    <section class="admin-panel" data-panel="members">
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">회원 관리 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" id="memberCount"></p>
           <div class="form-row">
-            <label for="bannerTitle">제목</label>
-            <input type="text" id="bannerTitle" placeholder="예: 말씀우물 오픈 기념 이벤트">
+            <input type="text" id="memberSearchInput" placeholder="닉네임, 이름, 이메일로 검색">
           </div>
-          <div class="form-row">
-            <label for="bannerDescription">설명 (선택)</label>
-            <textarea id="bannerDescription" placeholder="이벤트 내용을 간단히 적어주세요"></textarea>
-          </div>
-          <div class="form-row">
-            <label for="bannerLink">연결 링크 (선택)</label>
-            <input type="text" id="bannerLink" placeholder="예: well.html (누르면 이동할 페이지)">
-          </div>
-          <button type="submit" class="btn block">배너 등록</button>
-          <p class="msg" id="bannerMsg"></p>
-        </form>
-        <hr class="well-divider">
-        <div id="bannerAdminList"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">공지사항 작성 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <form id="announcementForm">
-          <div class="form-row">
-            <label for="announcementTitle">제목</label>
-            <input type="text" id="announcementTitle" placeholder="공지 제목">
-          </div>
-          <div class="form-row">
-            <label for="announcementContent">내용</label>
-            <textarea id="announcementContent" placeholder="공지 내용"></textarea>
-          </div>
-          <button type="submit" class="btn block">공지 등록</button>
-          <p class="msg" id="announcementMsg"></p>
-        </form>
-        <hr class="well-divider">
-        <div id="announcementAdminList"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">이달의 일정 추가 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <form id="eventForm">
-          <div class="form-row">
-            <label for="eventDate">날짜</label>
-            <input type="date" id="eventDate">
-          </div>
-          <div class="form-row">
-            <label for="eventTitle">제목</label>
-            <input type="text" id="eventTitle" placeholder="일정 제목">
-          </div>
-          <div class="form-row">
-            <label for="eventDescription">설명 (선택)</label>
-            <textarea id="eventDescription" placeholder="일정 설명"></textarea>
-          </div>
-          <button type="submit" class="btn block">일정 등록</button>
-          <p class="msg" id="eventMsg"></p>
-        </form>
-        <hr class="well-divider">
-        <div id="eventAdminList"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">수요 성경퀴즈 등록 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <p class="msg" style="margin-top:0;">가장 최근에 등록한 퀴즈가 학생들에게 "이번 주 퀴즈"로 보여요.</p>
-        <form id="quizForm">
-          <div class="form-row">
-            <label for="quizQuestion">문제</label>
-            <textarea id="quizQuestion" placeholder="예: 이번 주 설교에서 '카탈라쏘'는 어떤 의미인가요?"></textarea>
-          </div>
-          <div class="form-row">
-            <label for="quizOption1">보기 1</label>
-            <input type="text" id="quizOption1" placeholder="보기 1">
-          </div>
-          <div class="form-row">
-            <label for="quizOption2">보기 2</label>
-            <input type="text" id="quizOption2" placeholder="보기 2">
-          </div>
-          <div class="form-row">
-            <label for="quizOption3">보기 3</label>
-            <input type="text" id="quizOption3" placeholder="보기 3">
-          </div>
-          <div class="form-row">
-            <label for="quizOption4">보기 4</label>
-            <input type="text" id="quizOption4" placeholder="보기 4">
-          </div>
-          <div class="form-row">
-            <label>정답</label>
-            <div class="pill-toggle" id="quizCorrectPicker">
-              <button type="button" data-option="1" class="active">1번</button>
-              <button type="button" data-option="2">2번</button>
-              <button type="button" data-option="3">3번</button>
-              <button type="button" data-option="4">4번</button>
-            </div>
-          </div>
-          <button type="submit" class="btn block">퀴즈 등록</button>
-          <p class="msg" id="quizMsg"></p>
-        </form>
-        <hr class="well-divider">
-        <div id="quizAdminList"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">🎁 달란트 상점 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <p class="msg" style="margin-top:0;">학생이 달란트로 교환 신청하면 아래 "교환 요청"에 떠요. 승인하면 학생 화면에 "승인됨"으로 표시되고, 전달한 뒤 "전달 완료"로 바꾸면 돼요. 거절하면 달란트는 자동으로 돌아가요.</p>
-        <div class="well-label">상품 등록</div>
-        <form id="shopItemForm">
-          <div class="form-row"><label for="shopItemName">이름</label><input type="text" id="shopItemName" placeholder="예: 문화상품권 5천원"></div>
-          <div class="form-row"><label for="shopItemDesc">설명 (선택)</label><input type="text" id="shopItemDesc" placeholder="예: 다음 주일에 전달해 줄게요"></div>
-          <div class="form-row"><label for="shopItemCost">필요 달란트</label><input type="number" id="shopItemCost" min="1" placeholder="예: 30"></div>
-          <div class="form-row"><label for="shopItemPriceWon">실물 금액 (원, 선택)</label><input type="number" id="shopItemPriceWon" min="0" step="1000" placeholder="예: 10000"></div>
-          <div class="form-row"><label for="shopItemStock">수량 (비우면 무제한)</label><input type="number" id="shopItemStock" min="0" placeholder="무제한"></div>
-          <div class="form-row"><label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox" id="shopItemIsOikos" style="width:auto;"> 오이코스 곳간 전용 상품 (개인 상점엔 안 보임)</label></div>
-          <button type="submit" class="btn block">상품 등록</button>
-          <p class="msg" id="shopItemMsg"></p>
-        </form>
-        <hr class="well-divider">
-        <div class="well-label">등록된 상품</div>
-        <div id="shopItemList"></div>
-        <hr class="well-divider">
-        <div class="well-label">교환 요청</div>
-        <div id="shopOrderList"></div>
-        <hr class="well-divider">
-        <div class="well-label">🛒 상품 추천함</div>
-        <p class="msg" style="margin-top:0;">학생이 보낸 상품 추천이에요. 상태를 "검토 중 / 추가함 / 반려"로 바꾸면 학생 화면에도 보여요.</p>
-        <div id="shopSuggestList"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">회원 관리 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <p class="msg" id="memberCount"></p>
-        <div class="form-row">
-          <input type="text" id="memberSearchInput" placeholder="닉네임, 이름, 이메일로 검색">
+          <div id="memberList"></div>
         </div>
-        <div id="memberList"></div>
       </div>
-    </div>
 
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">학생 기록 관리 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <p class="msg" style="margin-top:0;">감사노트·기도제목·하루인사·건의사항 전체 기록이에요. 건의사항은 누가 썼는지 익명 처리돼요. 부적절한 내용은 삭제할 수 있어요.</p>
-        <div id="allNotesList"></div>
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">학생 기록 관리 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">감사노트·기도제목·하루인사·건의사항 전체 기록이에요. 건의사항은 누가 썼는지 익명 처리돼요. 부적절한 내용은 삭제할 수 있어요.</p>
+          <div id="allNotesList"></div>
+        </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">💬 자유게시판 관리 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <p class="msg" style="margin-top:0;">학생들이 올린 글과 댓글이에요. 부적절한 내용은 삭제할 수 있어요.</p>
-        <div id="boardAdminList"></div>
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">💬 자유게시판 관리 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">학생들이 올린 글과 댓글이에요. 부적절한 내용은 삭제할 수 있어요.</p>
+          <div id="boardAdminList"></div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">🎟️ 친구초청잔치 초청 명단 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <p class="msg" style="margin-top:0;">학생이 마이페이지·친구초청잔치 페이지에서 적은 "내가 초청한 친구" 명단이에요. 초청자별로 묶여 있고, 잔치날 실제로 온 친구는 "왔어요 체크"를 눌러주세요. (학생에게는 초청자 이름이 공개되지 않아요.)</p>
-        <div id="chodaeInvitesAdminList"><p class="msg">불러오는 중...</p></div>
+    <!-- ===== 콘텐츠 ===== -->
+    <section class="admin-panel" data-panel="content" hidden>
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">🔔 알림 방송 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">"알림 받기"를 켠 학생 전체에게 즉시 푸시 알림이 발송돼요. 공지사항은 등록하면 자동으로도 발송되니, 여기는 급한 안내가 있을 때만 써주세요.</p>
+          <form id="pushBroadcastForm">
+            <div class="form-row">
+              <label for="pushTitleInput">알림 제목</label>
+              <input type="text" id="pushTitleInput" placeholder="예: 오늘 예배 시간 변경 안내">
+            </div>
+            <div class="form-row">
+              <label for="pushBodyInput">알림 내용</label>
+              <textarea id="pushBodyInput" placeholder="알림에 보여줄 내용을 짧게 적어주세요"></textarea>
+            </div>
+            <button type="submit" class="btn block">지금 바로 발송</button>
+            <p class="msg" id="pushBroadcastMsg"></p>
+          </form>
+        </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h3 class="accordion-toggle" style="margin-top:0;">🍚 오이코스 회식비 지원 <span class="accordion-chevron">▸</span></h3>
-      <div class="accordion-body" style="display:none;">
-        <p class="msg" style="margin-top:0;">교사가 오이코스 달란트로 회식비 지원을 신청하면 여기 떠요. 승인하면 신청 교사 화면에 "승인됨"으로 표시되고, 실제로 지원한 뒤 "지급 완료"로 바꾸면 돼요.</p>
-        <div id="oikosExpenseAdminList"></div>
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">🎉 홈페이지 상단 이벤트 배너 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">여기 등록하면 홈 화면 맨 위에 바로 보이고, 삭제하면 바로 사라져요.</p>
+          <form id="bannerForm">
+            <div class="form-row">
+              <label for="bannerTitle">제목</label>
+              <input type="text" id="bannerTitle" placeholder="예: 말씀우물 오픈 기념 이벤트">
+            </div>
+            <div class="form-row">
+              <label for="bannerDescription">설명 (선택)</label>
+              <textarea id="bannerDescription" placeholder="이벤트 내용을 간단히 적어주세요"></textarea>
+            </div>
+            <div class="form-row">
+              <label for="bannerLink">연결 링크 (선택)</label>
+              <input type="text" id="bannerLink" placeholder="예: well.html (누르면 이동할 페이지)">
+            </div>
+            <button type="submit" class="btn block">배너 등록</button>
+            <p class="msg" id="bannerMsg"></p>
+          </form>
+          <hr class="well-divider">
+          <div id="bannerAdminList"></div>
+        </div>
       </div>
-    </div>
 
-    <div class="side-by-side">
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">공지사항 작성 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <form id="announcementForm">
+            <div class="form-row">
+              <label for="announcementTitle">제목</label>
+              <input type="text" id="announcementTitle" placeholder="공지 제목">
+            </div>
+            <div class="form-row">
+              <label for="announcementContent">내용</label>
+              <textarea id="announcementContent" placeholder="공지 내용"></textarea>
+            </div>
+            <button type="submit" class="btn block">공지 등록</button>
+            <p class="msg" id="announcementMsg"></p>
+          </form>
+          <hr class="well-divider">
+          <div id="announcementAdminList"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">이달의 일정 추가 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <form id="eventForm">
+            <div class="form-row">
+              <label for="eventDate">날짜</label>
+              <input type="date" id="eventDate">
+            </div>
+            <div class="form-row">
+              <label for="eventTitle">제목</label>
+              <input type="text" id="eventTitle" placeholder="일정 제목">
+            </div>
+            <div class="form-row">
+              <label for="eventDescription">설명 (선택)</label>
+              <textarea id="eventDescription" placeholder="일정 설명"></textarea>
+            </div>
+            <button type="submit" class="btn block">일정 등록</button>
+            <p class="msg" id="eventMsg"></p>
+          </form>
+          <hr class="well-divider">
+          <div id="eventAdminList"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">수요 성경퀴즈 등록 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">가장 최근에 등록한 퀴즈가 학생들에게 "이번 주 퀴즈"로 보여요.</p>
+          <form id="quizForm">
+            <div class="form-row">
+              <label for="quizQuestion">문제</label>
+              <textarea id="quizQuestion" placeholder="예: 이번 주 설교에서 '카탈라쏘'는 어떤 의미인가요?"></textarea>
+            </div>
+            <div class="form-row">
+              <label for="quizOption1">보기 1</label>
+              <input type="text" id="quizOption1" placeholder="보기 1">
+            </div>
+            <div class="form-row">
+              <label for="quizOption2">보기 2</label>
+              <input type="text" id="quizOption2" placeholder="보기 2">
+            </div>
+            <div class="form-row">
+              <label for="quizOption3">보기 3</label>
+              <input type="text" id="quizOption3" placeholder="보기 3">
+            </div>
+            <div class="form-row">
+              <label for="quizOption4">보기 4</label>
+              <input type="text" id="quizOption4" placeholder="보기 4">
+            </div>
+            <div class="form-row">
+              <label>정답</label>
+              <div class="pill-toggle" id="quizCorrectPicker">
+                <button type="button" data-option="1" class="active">1번</button>
+                <button type="button" data-option="2">2번</button>
+                <button type="button" data-option="3">3번</button>
+                <button type="button" data-option="4">4번</button>
+              </div>
+            </div>
+            <button type="submit" class="btn block">퀴즈 등록</button>
+            <p class="msg" id="quizMsg"></p>
+          </form>
+          <hr class="well-divider">
+          <div id="quizAdminList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 오이코스 ===== -->
+    <section class="admin-panel" data-panel="oikos" hidden>
       <div class="card">
         <h3 class="accordion-toggle" style="margin-top:0;">오이코스 관리 <span class="accordion-chevron">▸</span></h3>
         <div class="accordion-body" style="display:none;">
@@ -238,6 +213,17 @@
         </div>
       </div>
 
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">🎟️ 친구초청잔치 초청 명단 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">학생이 마이페이지·친구초청잔치 페이지에서 적은 "내가 초청한 친구" 명단이에요. 초청자별로 묶여 있고, 잔치날 실제로 온 친구는 "왔어요 체크"를 눌러주세요. (학생에게는 초청자 이름이 공개되지 않아요.)</p>
+          <div id="chodaeInvitesAdminList"><p class="msg">불러오는 중...</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 통계 ===== -->
+    <section class="admin-panel" data-panel="stats" hidden>
       <div class="card">
         <h3 class="accordion-toggle" style="margin-top:0;">🏆 오이코스 달란트 순위 <span class="accordion-chevron">▸</span></h3>
         <div class="accordion-body" style="display:none;">
@@ -253,7 +239,46 @@
           <div id="studentTalentRankings"><p class="msg">불러오는 중...</p></div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- ===== 승인함 ===== -->
+    <section class="admin-panel" data-panel="inbox" hidden>
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">🎁 달란트 상점 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">학생이 달란트로 교환 신청하면 아래 "교환 요청"에 떠요. 승인하면 학생 화면에 "승인됨"으로 표시되고, 전달한 뒤 "전달 완료"로 바꾸면 돼요. 거절하면 달란트는 자동으로 돌아가요.</p>
+          <div class="well-label">상품 등록</div>
+          <form id="shopItemForm">
+            <div class="form-row"><label for="shopItemName">이름</label><input type="text" id="shopItemName" placeholder="예: 문화상품권 5천원"></div>
+            <div class="form-row"><label for="shopItemDesc">설명 (선택)</label><input type="text" id="shopItemDesc" placeholder="예: 다음 주일에 전달해 줄게요"></div>
+            <div class="form-row"><label for="shopItemCost">필요 달란트</label><input type="number" id="shopItemCost" min="1" placeholder="예: 30"></div>
+            <div class="form-row"><label for="shopItemPriceWon">실물 금액 (원, 선택)</label><input type="number" id="shopItemPriceWon" min="0" step="1000" placeholder="예: 10000"></div>
+            <div class="form-row"><label for="shopItemStock">수량 (비우면 무제한)</label><input type="number" id="shopItemStock" min="0" placeholder="무제한"></div>
+            <div class="form-row"><label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox" id="shopItemIsOikos" style="width:auto;"> 오이코스 곳간 전용 상품 (개인 상점엔 안 보임)</label></div>
+            <button type="submit" class="btn block">상품 등록</button>
+            <p class="msg" id="shopItemMsg"></p>
+          </form>
+          <hr class="well-divider">
+          <div class="well-label">등록된 상품</div>
+          <div id="shopItemList"></div>
+          <hr class="well-divider">
+          <div class="well-label">교환 요청</div>
+          <div id="shopOrderList"></div>
+          <hr class="well-divider">
+          <div class="well-label">🛒 상품 추천함</div>
+          <p class="msg" style="margin-top:0;">학생이 보낸 상품 추천이에요. 상태를 "검토 중 / 추가함 / 반려"로 바꾸면 학생 화면에도 보여요.</p>
+          <div id="shopSuggestList"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">🍚 오이코스 회식비 지원 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">교사가 오이코스 달란트로 회식비 지원을 신청하면 여기 떠요. 승인하면 신청 교사 화면에 "승인됨"으로 표시되고, 실제로 지원한 뒤 "지급 완료"로 바꾸면 돼요.</p>
+          <div id="oikosExpenseAdminList"></div>
+        </div>
+      </div>
+    </section>
   </div>
 </div>
 <footer class="site">💧 말씀우물</footer>
@@ -265,6 +290,26 @@
 <script src="assets/group-rankings.js"></script>
 <script>
   initAdminPage();
+  // 관리자 셸: 상단 탭으로 패널 전환 (마지막 선택 탭 기억)
+  (function () {
+    var tabs = document.getElementById("adminTabs");
+    if (!tabs) return;
+    var panels = document.querySelectorAll(".admin-panel");
+    function show(name) {
+      panels.forEach(function (p) { p.hidden = (p.getAttribute("data-panel") !== name); });
+      tabs.querySelectorAll("button").forEach(function (b) {
+        b.classList.toggle("on", b.getAttribute("data-panel") === name);
+      });
+      try { localStorage.setItem("msu-admin-tab", name); } catch (e) {}
+    }
+    tabs.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-panel]");
+      if (b) show(b.getAttribute("data-panel"));
+    });
+    var saved;
+    try { saved = localStorage.getItem("msu-admin-tab"); } catch (e) {}
+    if (saved && document.querySelector('.admin-panel[data-panel="' + saved + '"]')) show(saved);
+  })();
 </script>
 </body>
 </html>

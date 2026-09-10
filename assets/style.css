@@ -2018,6 +2018,38 @@ details.mp-fold h4 { margin-top: 4px; }
     linear-gradient(180deg, var(--well) 0%, var(--well-deep) 100%);
 }
 
+/* ===== 관리자 셸: 상단 탭 (admin.html) ===== */
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 2px 12px;
+  margin: 4px -2px 8px;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
+.admin-tabs button {
+  flex: none;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.admin-tabs button.on {
+  background: var(--well);
+  border-color: var(--well);
+  color: #fff;
+}
+.admin-panel[hidden] { display: none; }
+.admin-panel > .card:first-child { margin-top: 0; }
+
 /* ===== 공용 앱셸: 하단 탭바 (assets/appshell.js) ===== */
 body.has-tabbar { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
 
