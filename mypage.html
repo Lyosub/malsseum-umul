@@ -44,115 +44,112 @@
     <p class="msg" id="streakMsg"></p>
   </div>
 
-  <div class="card">
-    <div class="well-label" style="margin-top:0;">🙋 하루 인사</div>
-    <form class="note-form" data-type="greeting">
-      <div class="form-row">
-        <textarea placeholder="오늘 하루 인사를 자유롭게 적어보세요"></textarea>
-      </div>
-      <div class="img-picker">
-        <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
-        <span class="img-picker-count"></span>
-      </div>
-      <button type="submit" class="btn block">기록하기</button>
-      <p class="msg"></p>
-    </form>
-    <div id="greetingDrawSection" style="display:none;margin-top:14px;"></div>
-  </div>
-
-  <div class="card">
-    <div class="well-label" style="margin-top:0;">🙏 감사노트</div>
-    <form class="note-form" data-type="gratitude">
-      <div class="form-row">
-        <textarea placeholder="오늘 감사한 일을 자유롭게 적어보세요"></textarea>
-      </div>
-      <div class="img-picker">
-        <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
-        <span class="img-picker-count"></span>
-      </div>
-      <button type="submit" class="btn block">기록하기</button>
-      <p class="msg"></p>
-    </form>
-  </div>
-
-  <div class="card">
-    <div class="well-label" style="margin-top:0;">🕊️ 기도제목</div>
-    <form class="note-form" data-type="prayer">
-      <div class="form-row">
-        <textarea placeholder="기도하고 싶은 제목을 자유롭게 적어보세요"></textarea>
-      </div>
-      <div class="form-row">
-        <label for="prayerVisibility" style="display:block;font-size:12.5px;color:var(--text-soft);margin-bottom:4px;">누구에게 보일까요?</label>
-        <select id="prayerVisibility" name="visibility" style="width:100%;padding:9px 10px;border:1px solid var(--line,#d9d9d9);border-radius:8px;font-size:13.5px;background:#fff;">
-          <option value="community" selected>로그인한 지체들에게 (기본)</option>
-          <option value="public">전체 공개 · 로그인 안 해도 보여요</option>
-          <option value="staff">교역자·교사에게만</option>
-          <option value="private">나만 보기</option>
-        </select>
-        <p style="font-size:11.5px;color:var(--text-soft);margin:6px 0 0;line-height:1.5;">이름·학교 등 다른 사람이 드러나는 내용은 '전체 공개'로 올리지 않는 게 좋아요.</p>
-      </div>
-      <div class="img-picker">
-        <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
-        <span class="img-picker-count"></span>
-      </div>
-      <button type="submit" class="btn block">기록하기</button>
-      <p class="msg"></p>
-    </form>
-  </div>
-
-  <div class="card" id="suggestionCard">
-    <div class="well-label" style="margin-top:0;">📮 건의사항</div>
-    <p style="color:var(--text-soft);font-size:12.5px;margin:0 0 12px;">교역자·부장에게만 전달돼요. 다른 친구들에게는 절대 공개되지 않고, 누가 썼는지도 익명으로 처리돼요.</p>
-    <form class="note-form" data-type="suggestion">
-      <div class="form-row">
-        <textarea placeholder="하고 싶은 이야기, 바라는 점을 자유롭게 적어보세요"></textarea>
-      </div>
-      <div class="img-picker">
-        <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
-        <span class="img-picker-count"></span>
-      </div>
-      <button type="submit" class="btn block">건의하기</button>
-      <p class="msg"></p>
-    </form>
-  </div>
-
-  <div class="card">
-    <h3 style="margin-top:0;">지난 기록</h3>
-
-    <h3 class="accordion-toggle" style="margin-top:0;">🙋 하루 인사 <span class="accordion-chevron">▸</span></h3>
-    <div class="accordion-body" style="display:none;">
-      <div id="noteListGreeting" class="feed-preview-list"></div>
+  <div class="card feed-compact">
+    <div class="note-card-head">
+      <h3 style="margin:0;color:var(--well-deep);">🙋 하루 인사</h3>
+      <button type="button" class="btn ghost note-write-toggle" style="padding:6px 14px;font-size:12.5px;">✏️ 쓰기</button>
     </div>
-
-    <hr class="well-divider">
-
-    <h3 class="accordion-toggle">🙏 감사노트 <span class="accordion-chevron">▸</span></h3>
-    <div class="accordion-body" style="display:none;">
-      <div id="noteListGratitude" class="feed-preview-list"></div>
+    <p style="color:var(--text-soft);font-size:11.5px;margin:0 0 8px;">오늘 하루 인사를 남겨보세요</p>
+    <div class="note-write">
+      <form class="note-form" data-type="greeting">
+        <div class="form-row">
+          <textarea placeholder="오늘 하루 인사를 자유롭게 적어보세요"></textarea>
+        </div>
+        <div class="img-picker">
+          <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
+          <span class="img-picker-count"></span>
+        </div>
+        <button type="submit" class="btn block">기록하기</button>
+        <p class="msg"></p>
+      </form>
+      <div id="greetingDrawSection" style="display:none;margin-top:14px;"></div>
     </div>
-
-    <hr class="well-divider">
-
-    <h3 class="accordion-toggle">🕊️ 기도제목 <span class="accordion-chevron">▸</span></h3>
-    <div class="accordion-body" style="display:none;">
-      <div id="noteListPrayer" class="feed-preview-list"></div>
-    </div>
-
-    <hr class="well-divider">
-
-    <h3 class="accordion-toggle">📮 건의사항 (나에게만 보여요) <span class="accordion-chevron">▸</span></h3>
-    <div class="accordion-body" style="display:none;">
-      <div id="noteListSuggestion" class="feed-preview-list"></div>
-    </div>
+    <div class="feed-preview-list" id="noteListGreeting" style="margin-top:10px;"></div>
   </div>
 
   <div class="card feed-compact">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div class="note-card-head">
+      <h3 style="margin:0;color:var(--well-deep);">🙏 감사노트</h3>
+      <button type="button" class="btn ghost note-write-toggle" style="padding:6px 14px;font-size:12.5px;">✏️ 쓰기</button>
+    </div>
+    <p style="color:var(--text-soft);font-size:11.5px;margin:0 0 8px;">오늘 감사한 일을 남겨보세요</p>
+    <div class="note-write">
+      <form class="note-form" data-type="gratitude">
+        <div class="form-row">
+          <textarea placeholder="오늘 감사한 일을 자유롭게 적어보세요"></textarea>
+        </div>
+        <div class="img-picker">
+          <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
+          <span class="img-picker-count"></span>
+        </div>
+        <button type="submit" class="btn block">기록하기</button>
+        <p class="msg"></p>
+      </form>
+    </div>
+    <div class="feed-preview-list" id="noteListGratitude" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card feed-compact">
+    <div class="note-card-head">
+      <h3 style="margin:0;color:var(--well-deep);">🕊️ 기도제목</h3>
+      <button type="button" class="btn ghost note-write-toggle" style="padding:6px 14px;font-size:12.5px;">✏️ 쓰기</button>
+    </div>
+    <p style="color:var(--text-soft);font-size:11.5px;margin:0 0 8px;">기도하고 싶은 제목을 남겨보세요</p>
+    <div class="note-write">
+      <form class="note-form" data-type="prayer">
+        <div class="form-row">
+          <textarea placeholder="기도하고 싶은 제목을 자유롭게 적어보세요"></textarea>
+        </div>
+        <div class="form-row">
+          <label for="prayerVisibility" style="display:block;font-size:12.5px;color:var(--text-soft);margin-bottom:4px;">누구에게 보일까요?</label>
+          <select id="prayerVisibility" name="visibility" style="width:100%;padding:9px 10px;border:1px solid var(--line,#d9d9d9);border-radius:8px;font-size:13.5px;background:#fff;">
+            <option value="community" selected>로그인한 지체들에게 (기본)</option>
+            <option value="public">전체 공개 · 로그인 안 해도 보여요</option>
+            <option value="staff">교역자·교사에게만</option>
+            <option value="private">나만 보기</option>
+          </select>
+          <p style="font-size:11.5px;color:var(--text-soft);margin:6px 0 0;line-height:1.5;">이름·학교 등 다른 사람이 드러나는 내용은 '전체 공개'로 올리지 않는 게 좋아요.</p>
+        </div>
+        <div class="img-picker">
+          <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
+          <span class="img-picker-count"></span>
+        </div>
+        <button type="submit" class="btn block">기록하기</button>
+        <p class="msg"></p>
+      </form>
+    </div>
+    <div class="feed-preview-list" id="noteListPrayer" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card feed-compact">
+    <div class="note-card-head">
       <h3 style="margin:0;color:var(--well-deep);">💬 자유게시판</h3>
-      <a href="board.html" class="btn ghost" style="padding:6px 14px;font-size:12.5px;">글쓰기</a>
+      <a href="board.html" class="btn ghost" style="padding:6px 14px;font-size:12.5px;">✏️ 글쓰기</a>
     </div>
     <p style="color:var(--text-soft);font-size:11.5px;margin:0 0 8px;">함께 나누는 이야기, 더 깊어지는 우리</p>
     <div class="mini-scroll" id="publicFeedBoard"><p class="msg">불러오는 중...</p></div>
+  </div>
+
+  <div class="card feed-compact" id="suggestionCard">
+    <div class="note-card-head">
+      <h3 style="margin:0;color:var(--well-deep);">📮 건의사항</h3>
+      <button type="button" class="btn ghost note-write-toggle" style="padding:6px 14px;font-size:12.5px;">✏️ 건의하기</button>
+    </div>
+    <p style="color:var(--text-soft);font-size:11.5px;margin:0 0 8px;">교역자·부장에게만 전달되고, 누가 썼는지도 익명이에요.</p>
+    <div class="note-write">
+      <form class="note-form" data-type="suggestion">
+        <div class="form-row">
+          <textarea placeholder="하고 싶은 이야기, 바라는 점을 자유롭게 적어보세요"></textarea>
+        </div>
+        <div class="img-picker">
+          <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
+          <span class="img-picker-count"></span>
+        </div>
+        <button type="submit" class="btn block">건의하기</button>
+        <p class="msg"></p>
+      </form>
+    </div>
+    <div class="feed-preview-list" id="noteListSuggestion" style="margin-top:10px;"></div>
   </div>
 
 </div>
@@ -175,6 +172,13 @@
 <script src="assets/public-feed.js"></script>
 <script>
   initLogoutButton();
+  // 하루인사·감사노트·기도제목·건의 카드: "쓰기" 누르면 작성 폼이 펼쳐진다
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest(".note-write-toggle");
+    if (!b) return;
+    var w = b.closest(".card") && b.closest(".card").querySelector(".note-write");
+    if (w) w.classList.toggle("open");
+  });
   getSession().then(function (session) {
     if (!session) {
       document.getElementById("loginGate").style.display = "block";

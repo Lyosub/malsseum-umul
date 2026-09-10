@@ -1643,3 +1643,9 @@ body.has-tabbar { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
 .dir-row .di img { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; }
 .dir-row .dg { flex: 1 1 auto; min-width: 0; }
 .dir-row .dc { flex: none; color: var(--text-soft); font-size: 13px; }
+
+/* 나의 기록: 하루인사·감사노트·기도제목·건의 카드 (자유게시판 카드와 같은 톤) */
+.feed-compact .note-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+.feed-compact .note-card-head h3 { font-size: 14px; }
+.note-write { display: none; }
+.note-write.open { display: block; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
