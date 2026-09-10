@@ -1,4 +1,5 @@
-// 성경 인물 초성 퀴즈 — 초성 + 힌트를 보고 4지선다. 10문제.
+// 성경 인물 초성 퀴즈 — 초성 + 짧은 힌트를 보고 이름을 "직접 입력"한다.
+// 보기(4지선다)를 없애서 "정답을 알려주는" 느낌을 뺐다. 막히면 "넘기기"로 정답을 보고 넘어갈 수 있다.
 // 10문제를 다 풀면 submit_chosung_quiz(맞은개수) 로 하루 첫 1회 +2달란트.
 
 function initChosungGame() {
@@ -32,13 +33,12 @@ function initChosungGame() {
     return a;
   }
 
+  function norm(s) {
+    return String(s || "").replace(/\s+/g, "").trim();
+  }
+
   function buildQuiz() {
-    var picks = shuffle(POOL).slice(0, Math.min(QUESTIONS, POOL.length));
-    quiz = picks.map(function (item) {
-      var others = shuffle(POOL.filter(function (p) { return p.name !== item.name; }))
-        .slice(0, 3).map(function (p) { return p.name; });
-      return { item: item, choices: shuffle([item.name].concat(others)) };
-    });
+    quiz = shuffle(POOL).slice(0, Math.min(QUESTIONS, POOL.length));
   }
 
   function renderQuestion() {
@@ -46,35 +46,43 @@ function initChosungGame() {
     feedbackEl.textContent = "";
     var q = quiz[qi];
     progressEl.textContent = (qi + 1) + " / " + quiz.length + "  ·  현재 " + correct + "개 정답";
-    chosungEl.textContent = q.item.chosung;
-    hintEl.textContent = q.item.hint;
-    choicesEl.innerHTML = "";
-    q.choices.forEach(function (name) {
-      var b = document.createElement("button");
-      b.type = "button";
-      b.className = "cho-choice";
-      b.textContent = name;
-      b.addEventListener("click", function () { pick(b, name, q.item.name); });
-      choicesEl.appendChild(b);
-    });
+    chosungEl.textContent = q.chosung;
+    hintEl.textContent = q.hint;
+    choicesEl.innerHTML =
+      '<div class="cho-answer-row">' +
+        '<input type="text" id="choInput" class="cho-input" autocomplete="off" autocorrect="off" ' +
+          'autocapitalize="off" spellcheck="false" placeholder="인물 이름을 적어요">' +
+        '<button type="button" id="choSubmitBtn" class="pill-blue">확인</button>' +
+      '</div>' +
+      '<button type="button" id="choSkipBtn" class="btn ghost block" style="margin-top:10px;font-size:12.5px;">모르겠어요 · 넘기기</button>';
+
+    var input = document.getElementById("choInput");
+    var submitBtn = document.getElementById("choSubmitBtn");
+    var skipBtn = document.getElementById("choSkipBtn");
+    input.focus();
+    submitBtn.addEventListener("click", function () { check(input.value); });
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") check(input.value); });
+    skipBtn.addEventListener("click", function () { reveal(false); });
   }
 
-  function pick(btn, chosen, answer) {
+  function check(value) {
     if (locked) return;
-    locked = true;
-    var buttons = choicesEl.querySelectorAll(".cho-choice");
-    buttons.forEach(function (b) {
-      b.disabled = true;
-      if (b.textContent === answer) b.classList.add("correct");
-    });
-    if (chosen === answer) {
+    var q = quiz[qi];
+    if (norm(value) === norm(q.name)) {
+      locked = true;
       correct++;
       feedbackEl.textContent = "정답! 👏";
+      setTimeout(next, 900);
     } else {
-      btn.classList.add("wrong");
-      feedbackEl.textContent = "아쉬워요 — 정답은 " + answer;
+      feedbackEl.textContent = "아직 아니에요. 다시 생각해볼까요? (모르겠으면 넘기기)";
     }
-    setTimeout(next, 1100);
+  }
+
+  function reveal(gotIt) {
+    if (locked) return;
+    locked = true;
+    feedbackEl.textContent = (gotIt ? "정답! 👏  " : "정답은 ") + quiz[qi].name;
+    setTimeout(next, 1200);
   }
 
   function next() {

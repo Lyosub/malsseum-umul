@@ -1764,21 +1764,21 @@ details.mp-fold h4 { margin-top: 4px; }
   text-align: center;
   margin: 6px 0 2px;
 }
-.cho-quiz-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-.cho-choice {
+.cho-answer-row { display: flex; gap: 8px; margin-top: 14px; }
+.cho-input {
+  flex: 1 1 auto;
+  min-width: 0;
   border: 1px solid var(--border);
-  background: var(--card-bg);
+  background: var(--bg);
   color: var(--text);
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  padding: 14px 10px;
+  text-align: center;
+  padding: 13px 12px;
   border-radius: 14px;
-  cursor: pointer;
 }
-.cho-choice.correct { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
-.cho-choice.wrong { background: #fbe9e8; border-color: #d9534f; color: #a33; }
-.cho-choice:disabled { cursor: default; }
+.cho-answer-row .pill-blue { flex: none; }
 
 /* 홈 상단 공지 한 줄 캐러셀 (assets/home-notice.js) */
 .notice-bar {
