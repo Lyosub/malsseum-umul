@@ -86,7 +86,8 @@ function feedEnsureShell(type) {
         btn.disabled = true;
         client.rpc("toggle_prayer_reaction", { p_note_id: Number(btn.getAttribute("data-note-id")) }).then(function (res) {
           btn.disabled = false;
-          if (res.error || !res.data || !res.data[0]) return;
+          if (res.error) { alert(res.error.message || "잠시 후 다시 눌러주세요."); return; }
+          if (!res.data || !res.data[0]) return;
           var row = res.data[0];
           var countEl = btn.querySelector(".pray-count");
           if (countEl) countEl.textContent = row.pray_count;
