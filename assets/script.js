@@ -472,6 +472,15 @@ function initWellForm() {
       runMatch();
     });
   }
+
+  // 홈에서 "내 마음에 맞는 말씀" 한 줄을 적고 넘어온 경우(well.html?q=...): 바로 매칭해서 보여준다
+  try {
+    var pq = new URLSearchParams(location.search).get("q");
+    if (pq) {
+      var ci = document.getElementById("concernInput");
+      if (ci) { ci.value = pq; runMatch(); }
+    }
+  } catch (e) {}
 }
 
 function initMbtiGrid() {

@@ -13,9 +13,12 @@
 <meta property="og:url" content="https://logoswell.kr/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#14707a">
+<meta name="theme-color" content="#2540d8">
 <link rel="apple-touch-icon" href="assets/icons/icon-512.png">
 <script defer src="assets/pwa.js"></script>
 </head>
@@ -27,46 +30,70 @@
     <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
   </nav>
 </header>
-<div class="wrap">
-  <!-- 1. 오늘의 말씀 (QT) — 첫 화면에서 가장 먼저 만난다 -->
+<div class="wrap home-wrap">
+  <!-- 공지·이벤트 스트립 (등록된 게 있을 때만 렌더됨) -->
+  <div class="home-notice-strip" id="chodaeBanner"></div>
+  <div class="home-notice-strip" id="homeBanner"></div>
+
+  <!-- 오늘의 말씀 (QT) — 큰 파란 카드 + 라임 CTA -->
   <div id="homeVerseCard" class="verse-card"></div>
+  <a class="home-verse-cta" href="verses.html">오늘의 말씀 읽기 <span aria-hidden="true">›</span></a>
+  <p class="home-hand">변하지 않는 우리의 소망</p>
 
-  <!-- 2. 공지·이벤트 (등록된 게 있을 때만 렌더됨) -->
-  <div id="chodaeBanner"></div>
-  <div id="homeBanner"></div>
+  <!-- 말씀 빠른 이동 4타일 -->
+  <div class="quick-tiles">
+    <a class="quick-tile" href="read.html"><img class="qt-ico" src="assets/menu-icons/read.png" alt=""><span>성경 읽기</span></a>
+    <a class="quick-tile" href="weekly.html"><img class="qt-ico" src="assets/menu-icons/weekly.png" alt=""><span>이번 주 말씀</span></a>
+    <a class="quick-tile" href="verses.html"><img class="qt-ico" src="assets/menu-icons/verse-card.png" alt=""><span>말씀 카드</span></a>
+    <a class="quick-tile" href="calendar.html"><img class="qt-ico" src="assets/menu-icons/calendar.png" alt=""><span>일정</span></a>
+  </div>
 
-  <!-- 3. 메뉴 — 학생이 뭘 하고 싶은지에 따라 4묶음 -->
-  <div class="nav-group-title">📖 말씀 만나기</div>
-  <div class="nav-cards">
-    <a class="nav-card feature" href="weekly.html" style="grid-column: 1 / -1;">
-      <div class="icon"><img src="assets/menu-icons/weekly.png" alt=""></div>
-      <div class="title">이번 주 말씀</div>
-      <div class="desc">이번 주 예배 말씀 요약 + 카드</div>
+  <!-- 내 마음에 맞는 말씀 -->
+  <div class="mind-box">
+    <h3>내 마음에 맞는 말씀</h3>
+    <p class="sub">지금 마음을 한 줄 적으면, 어울리는 말씀을 길어 올려드려요.</p>
+    <form id="homeMindForm">
+      <input type="text" id="homeMindInput" placeholder="예: 친구 관계 때문에 힘들어" autocomplete="off">
+      <button type="submit">말씀 길어 올리기 ›</button>
+    </form>
+  </div>
+  <p class="home-hand" style="margin:10px 0 4px;">오늘도 우물가로 오세요</p>
+
+  <!-- 오늘의 참여 -->
+  <div class="today-parti">
+    <p class="tp-head">오늘의 참여</p>
+    <div class="parti-pills">
+      <a class="parti-pill" href="mypage.html"><span class="pp-ico">🙋</span><span>하루 인사</span></a>
+      <a class="parti-pill" href="mypage.html"><span class="pp-ico">🙏</span><span>감사노트</span></a>
+      <a class="parti-pill" href="mypage.html"><span class="pp-ico">🕊️</span><span>기도제목</span></a>
+    </div>
+  </div>
+
+  <!-- 큰 이동 카드 -->
+  <div class="home-rows">
+    <a class="home-row" href="oikos.html">
+      <span class="hr-ico">👥</span>
+      <span class="hr-body"><span class="hr-title">우리 오이코스</span><span class="hr-hand">함께 채우는 우물</span></span>
+      <span class="hr-arrow" aria-hidden="true">›</span>
     </a>
-    <a class="nav-card" href="verses.html">
-      <div class="icon"><img src="assets/menu-icons/verse-card.png" alt=""></div>
-      <div class="title">말씀 카드</div>
-      <div class="desc">하루·주간·월간 말씀</div>
+    <a class="home-row" href="mypage.html">
+      <span class="hr-ico">✍️</span>
+      <span class="hr-body"><span class="hr-title">나의 기록</span><span class="hr-hand">오늘의 믿음이 모여 내일의 나로</span></span>
+      <span class="hr-arrow" aria-hidden="true">›</span>
     </a>
-    <a class="nav-card" href="read.html">
-      <div class="icon"><img src="assets/menu-icons/read.png" alt=""></div>
-      <div class="title">성경 읽기</div>
-      <div class="desc">책·장 골라서 바로 읽기</div>
+    <a class="home-row" href="play.html">
+      <span class="hr-ico">🎮</span>
+      <span class="hr-body"><span class="hr-title">말씀놀이터</span><span class="hr-hand">놀면서 자라는 믿음</span></span>
+      <span class="hr-arrow" aria-hidden="true">›</span>
     </a>
   </div>
 
-  <div class="nav-group-title">💗 마음 나누기</div>
-  <div class="nav-cards">
-    <a class="nav-card feature" href="well.html" style="grid-column: 1 / -1;">
-      <div class="icon"><img src="assets/menu-icons/well.png" alt=""></div>
-      <div class="title">내 마음에 맞는 말씀</div>
-      <div class="desc">말씀우물 · 고민을 적으면 말씀을 길어 올려드려요</div>
-    </a>
-  </div>
-
+  <!-- 우리 나눔 미리보기 -->
   <div class="card feed-compact">
-    <h3 style="margin-top:0;color:var(--well-deep);">💬 자유게시판</h3>
-    <a href="board.html" style="display:block;font-size:12px;color:var(--well);text-decoration:none;margin:-6px 0 10px;">전체보기 →</a>
+    <div class="note-card-head">
+      <h3 style="margin:0;color:var(--well-deep);">💬 자유게시판</h3>
+      <a href="board.html" style="font-size:12px;color:var(--well);text-decoration:none;">전체보기 →</a>
+    </div>
     <div class="mini-scroll" id="publicFeedBoard"><p class="msg">불러오는 중...</p></div>
   </div>
 
@@ -93,65 +120,12 @@
     </div>
   </div>
 
-  <div class="nav-group-title">🤝 함께하기</div>
-  <div class="nav-cards">
-    <a class="nav-card" href="chodae.html">
-      <div class="icon">🎟️</div>
-      <div class="title">친구초청잔치</div>
-      <div class="desc">내가 초청한 친구 기록 + 전체 진행률</div>
-    </a>
-    <a class="nav-card" href="notice.html">
-      <div class="icon"><img src="assets/menu-icons/notice.png" alt=""></div>
-      <div class="title">공지사항</div>
-      <div class="desc">새로운 소식 확인</div>
-    </a>
-    <a class="nav-card" href="calendar.html">
-      <div class="icon"><img src="assets/menu-icons/calendar.png" alt=""></div>
-      <div class="title">이달의 일정</div>
-      <div class="desc">캘린더로 보는 일정</div>
-    </a>
-  </div>
-
-  <div class="nav-group-title">🎮 즐기기</div>
-  <div class="nav-cards">
-    <a class="nav-card" href="bookgame.html">
-      <div class="icon">📚</div>
-      <div class="title">성경책 순서 맞추기</div>
-      <div class="desc">구약·신약 순서대로 빠르게! (게임)</div>
-    </a>
-    <a class="nav-card" href="matchgame.html">
-      <div class="icon">🃏</div>
-      <div class="title">같은 성경 찾기</div>
-      <div class="desc">인물과 사건을 짝지어 맞혀요! (게임)</div>
-    </a>
-    <a class="nav-card" href="oikosgame.html">
-      <div class="icon">📖</div>
-      <div class="title">말씀 빈칸 채우기</div>
-      <div class="desc">맞힌 만큼 우리 오이코스 곳간에! (게임)</div>
-    </a>
-    <a class="nav-card" href="shop.html">
-      <div class="icon">🎁</div>
-      <div class="title">달란트 상점</div>
-      <div class="desc">모은 달란트로 상품 교환하기</div>
-    </a>
-    <a class="nav-card" href="wallpaper.html">
-      <div class="icon"><img src="assets/menu-icons/wallpaper.png" alt=""></div>
-      <div class="title">이달의 배경화면</div>
-      <div class="desc">말씀+달력 배경화면 다운로드</div>
-    </a>
-    <a class="nav-card" href="mbti.html">
-      <div class="icon"><img src="assets/menu-icons/mbti.png" alt=""></div>
-      <div class="title">MBTI 성경인물</div>
-      <div class="desc">나와 닮은 성경 속 인물</div>
-    </a>
-  </div>
-
   <div class="card" style="text-align:center;">
     <p style="color:var(--text-soft);font-size:14px;margin:0 0 12px;">'말씀우물'이 어떤 사이트인지 궁금하다면?</p>
     <a href="about.html" class="btn ghost block">사이트 소개 보기</a>
   </div>
 
-  <!-- 5. 설치 안내 — 첫 사용 뒤 보이도록 페이지 맨 아래로 -->
+  <!-- 설치 안내 — 첫 사용 뒤 보이도록 페이지 맨 아래로 -->
   <div id="installBanner"></div>
 
   <div class="card" style="text-align:center;display:none;" id="installBannerPersistent">
@@ -183,6 +157,16 @@
   initQtCheckin();
   initHeaderAuthState();
   initPublicFeed();
+  // 홈의 "내 마음에 맞는 말씀" 한 줄 입력 → well.html 로 넘기며 바로 매칭
+  (function () {
+    var f = document.getElementById("homeMindForm");
+    if (!f) return;
+    f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var q = (document.getElementById("homeMindInput").value || "").trim();
+      location.href = q ? "well.html?q=" + encodeURIComponent(q) : "well.html";
+    });
+  })();
 </script>
 <script src="assets/appshell.js"></script>
 </body>

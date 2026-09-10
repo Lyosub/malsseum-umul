@@ -1,18 +1,23 @@
 :root {
   color-scheme: light;
-  --bg: #f3f7f6;
+  /* 2026-09: 청록(teal) → 코발트 블루 + 라임 리브랜드. 토큰 이름은 그대로 두어
+     모든 페이지가 한 번에 새 색으로 바뀌게 한다(--well = 브랜드 메인색). */
+  --bg: #f6f4ec;
   --card-bg: #ffffff;
-  --text: #1e2b2c;
-  --text-soft: #6f7f7e;
-  --border: #e2ebe9;
-  --well: #14707a;
-  --well-deep: #0e3d44;
-  --well-light: #6bc6c9;
+  --text: #1c2430;
+  --text-soft: #6b7686;
+  --border: #e6e8f0;
+  --well: #2540d8;
+  --well-deep: #17287e;
+  --well-light: #9fb1f2;
+  --lime: #c3e02f;
+  --lime-ink: #33420a;
   --gold: #c9932f;
   --radius: 18px;
   --max: 720px;
   --font-hand: "Pretendard", -apple-system, sans-serif;
   --font-trendy: "Pretendard", -apple-system, sans-serif;
+  --font-accent: "Nanum Pen Script", "Pretendard", -apple-system, cursive;
 }
 
 /* 컴퓨터처럼 화면이 넓을 때는 가운데 좁은 폭만 쓰지 않고 좌우로 조금 더 넓게 써서
@@ -33,9 +38,9 @@ html, body {
   padding: 0;
   background-color: var(--bg);
   background-image:
-    radial-gradient(640px circle at 6% -8%, rgba(107, 198, 201, 0.16), transparent 60%),
+    radial-gradient(640px circle at 6% -8%, rgba(159, 177, 242, 0.16), transparent 60%),
     radial-gradient(720px circle at 96% 6%, rgba(201, 147, 47, 0.11), transparent 55%),
-    radial-gradient(820px circle at 50% 100%, rgba(20, 112, 122, 0.09), transparent 60%),
+    radial-gradient(820px circle at 50% 100%, rgba(37, 64, 216, 0.09), transparent 60%),
     url("bg-pattern.png");
   background-repeat: no-repeat, no-repeat, no-repeat, repeat;
   background-size: auto, auto, auto, 800px 800px;
@@ -161,7 +166,7 @@ header.site nav a:hover {
   display: inline-block;
   font-size: 12px;
   color: var(--well);
-  background: rgba(42, 111, 119, 0.09);
+  background: rgba(37, 64, 216, 0.09);
   padding: 5px 12px;
   border-radius: 999px;
   margin-bottom: 12px;
@@ -206,7 +211,7 @@ header.site nav a:hover {
 .concern-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
 .concern-chip {
   border: 1px solid var(--well-light);
-  background: rgba(107, 198, 201, .10);
+  background: rgba(37, 64, 216, .08);
   color: var(--well-deep);
   font-size: 13px;
   font-weight: 600;
@@ -216,7 +221,7 @@ header.site nav a:hover {
   cursor: pointer;
   transition: background .15s ease;
 }
-.concern-chip:hover { background: rgba(107, 198, 201, .22); }
+.concern-chip:hover { background: rgba(37, 64, 216, .18); }
 
 /* 🌊 오이코스 주간 참여 우물 (mypage) */
 .oikos-well {
@@ -224,7 +229,7 @@ header.site nav a:hover {
   height: 112px;
   border-radius: 16px;
   border: 2px solid var(--well-light);
-  background: rgba(107, 198, 201, .08);
+  background: rgba(159, 177, 242, .08);
   overflow: hidden;
 }
 .oikos-well-water {
@@ -232,7 +237,7 @@ header.site nav a:hover {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(180deg, rgba(107, 198, 201, .55), rgba(20, 112, 122, .78));
+  background: linear-gradient(180deg, rgba(159, 177, 242, .55), rgba(37, 64, 216, .78));
   transition: height .6s ease;
 }
 .oikos-well-label {
@@ -510,7 +515,7 @@ header.site nav a:hover {
 }
 
 .well-card .well-prayer-box {
-  background: rgba(20, 112, 122, 0.08);
+  background: rgba(37, 64, 216, 0.08);
   border-radius: 16px;
   padding: 20px 18px;
 }
@@ -672,7 +677,7 @@ textarea { min-height: 90px; resize: vertical; }
 .scroll-column {
   flex: 0 0 78%;
   max-width: 320px;
-  background: rgba(20, 112, 122, 0.04);
+  background: rgba(37, 64, 216, 0.04);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 4px 14px 10px;
@@ -711,7 +716,7 @@ textarea { min-height: 90px; resize: vertical; }
 .mini-scroll .note-item {
   flex: 0 0 44%;
   max-width: 210px;
-  background: rgba(20, 112, 122, 0.04);
+  background: rgba(37, 64, 216, 0.04);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px 14px;
@@ -784,7 +789,7 @@ textarea { min-height: 90px; resize: vertical; }
 .member-detail {
   margin-top: 10px;
   padding: 4px 12px 6px;
-  background: rgba(20, 112, 122, 0.05);
+  background: rgba(37, 64, 216, 0.05);
   border-radius: 12px;
 }
 
@@ -958,7 +963,7 @@ footer.site a { text-decoration: underline; }
 
 /* 하루 인사 달란트 뽑기 */
 .talent-well-card {
-  background: rgba(20, 112, 122, 0.07);
+  background: rgba(37, 64, 216, 0.07);
   border-radius: 14px;
   padding: 20px 16px;
   text-align: center;
@@ -990,7 +995,7 @@ footer.site a { text-decoration: underline; }
   transform: translateX(-50%);
   width: 2px;
   height: 58px;
-  background: rgba(20, 112, 122, 0.35);
+  background: rgba(37, 64, 216, 0.35);
 }
 
 .talent-well-bucket {
@@ -1054,13 +1059,13 @@ footer.site a { text-decoration: underline; }
 
 .board-comments {
   padding: 10px 12px;
-  background: rgba(20, 112, 122, 0.05);
+  background: rgba(37, 64, 216, 0.05);
   border-radius: 12px;
 }
 
 .board-comment {
   padding: 8px 0;
-  border-bottom: 1px solid rgba(20, 112, 122, 0.1);
+  border-bottom: 1px solid rgba(37, 64, 216, 0.1);
 }
 
 .board-comment:last-of-type { border-bottom: none; }
@@ -1213,14 +1218,14 @@ footer.site a { text-decoration: underline; }
   overflow-wrap: anywhere; word-break: break-word;
 }
 .match-card.flipped {
-  background: #14707a;                 /* 앞면: 밝은 청록 + 흰 글씨 (라이트/강제다크 모두 OK) */
-  box-shadow: inset 0 0 0 2px #7fdada;
+  background: #2540d8;                 /* 앞면: 코발트 블루 + 흰 글씨 (라이트/강제다크 모두 OK) */
+  box-shadow: inset 0 0 0 2px #9fb1f2;
 }
 .match-card.flipped .mc-back { display: none; }
 .match-card.flipped .mc-front { display: block; }
 .match-card.matched {
-  background: #0e3d44;
-  box-shadow: inset 0 0 0 2px #14707a;
+  background: #17287e;
+  box-shadow: inset 0 0 0 2px #2540d8;
   opacity: .5;
   cursor: default;
 }
@@ -1262,7 +1267,7 @@ footer.site a { text-decoration: underline; }
 .chodae-hero-body { min-width: 0; }
 .chodae-kicker {
   font-size: 12px; font-weight: 700; letter-spacing: 1px;
-  color: #7fdada; text-transform: uppercase;
+  color: #c3e02f; text-transform: uppercase;
 }
 .chodae-title {
   font-size: 21px; font-weight: 800; letter-spacing: -0.5px;
@@ -1301,7 +1306,7 @@ footer.site a { text-decoration: underline; }
 .chodae-stat-row { display: flex; gap: 10px; margin-top: 16px; }
 .chodae-stat {
   flex: 1; text-align: center;
-  background: rgba(20, 112, 122, 0.06);
+  background: rgba(37, 64, 216, 0.06);
   border-radius: 12px; padding: 12px 6px;
 }
 .chodae-stat .n { font-size: 22px; font-weight: 800; color: var(--well); }
@@ -1464,7 +1469,7 @@ footer.site { padding: 34px 20px 40px; line-height: 1.9; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(150deg, rgba(107, 198, 201, .20), rgba(20, 112, 122, .12));
+  background: linear-gradient(150deg, rgba(159, 177, 242, .20), rgba(37, 64, 216, .12));
   font-size: 22px;
   line-height: 1;
 }
@@ -1499,15 +1504,15 @@ footer.site { padding: 34px 20px 40px; line-height: 1.9; }
 
 /* 버튼: 살짝 떠 있게 + 눌리는 느낌 (ghost 는 그림자 없음) */
 .btn {
-  box-shadow: 0 3px 12px rgba(20, 112, 122, .24);
+  box-shadow: 0 3px 12px rgba(37, 64, 216, .24);
   transition: transform .12s ease, box-shadow .12s ease, background .15s ease;
 }
-.btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(20, 112, 122, .30); }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(37, 64, 216, .30); }
 .btn.ghost { box-shadow: none; }
-.btn.ghost:hover { box-shadow: none; background: rgba(20, 112, 122, .06); }
+.btn.ghost:hover { box-shadow: none; background: rgba(37, 64, 216, .06); }
 
 /* 실시간 나눔 가로 컬럼: 배경을 살짝 더 또렷하게 */
-.scroll-column { background: rgba(20, 112, 122, .055); border-color: rgba(226, 235, 233, .8); }
+.scroll-column { background: rgba(37, 64, 216, .055); border-color: rgba(226, 235, 233, .8); }
 .scroll-column .scroll-column-title { font-size: 14px; }
 
 /* 마이페이지 "우리 오이코스" 접이식 섹션 — 카드가 너무 길어지지 않게 */
@@ -1554,7 +1559,7 @@ details.mp-fold h4 { margin-top: 4px; }
   padding: 14px;
   border: 1px solid var(--well-light);
   border-radius: 12px;
-  background: rgba(20, 112, 122, 0.05);
+  background: rgba(37, 64, 216, 0.05);
 }
 .badge-detail .bd-head { display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--well-deep); font-size: 14px; }
 .badge-detail .bd-how { font-size: 12.5px; color: var(--text); margin: 8px 0; line-height: 1.6; }
@@ -1565,6 +1570,161 @@ details.mp-fold h4 { margin-top: 4px; }
 }
 .badge-detail .bd-tier.on { background: var(--well); border-color: var(--well); color: #fff; font-weight: 700; }
 .badge-detail .bd-now { font-size: 12px; color: var(--text-soft); margin-top: 6px; }
+
+/* ===== 홈(index.html) 앱형 레이아웃 — Codex 시안 배치 ===== */
+.home-wrap { padding-top: 4px; }
+
+/* 상단 공지 스트립: 내용이 없으면 자리를 차지하지 않게 */
+.home-notice-strip:empty { display: none; }
+
+/* 오늘의 말씀 큰 카드 바로 아래 라임 CTA 버튼 + 손글씨 문구 */
+.home-verse-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 560px;
+  margin: -4px auto 0;
+  background: var(--lime);
+  color: var(--lime-ink);
+  font-weight: 800;
+  font-size: 14px;
+  border: 0;
+  border-radius: 999px;
+  padding: 13px 18px;
+  text-decoration: none;
+  box-shadow: 0 10px 22px rgba(120, 150, 20, 0.30);
+}
+.home-hand {
+  font-family: var(--font-accent);
+  font-size: 20px;
+  line-height: 1.3;
+  color: var(--well-deep);
+  text-align: center;
+  margin: 10px 0 24px;
+}
+
+/* 말씀 빠른 이동 4타일 */
+.quick-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+  margin: 4px 0 22px;
+}
+.quick-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 5px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--well-deep);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+}
+.quick-tile .qt-ico { font-size: 22px; line-height: 1; }
+.quick-tile img.qt-ico { width: 26px; height: 26px; object-fit: contain; }
+
+/* 내 마음에 맞는 말씀 인풋 박스 */
+.mind-box {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  margin: 0;
+}
+.mind-box h3 { margin: 0 0 4px; font-size: 15px; color: var(--well-deep); }
+.mind-box p.sub { margin: 0 0 12px; font-size: 12px; color: var(--text-soft); line-height: 1.5; }
+.mind-box form { display: flex; gap: 8px; }
+.mind-box input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+}
+.mind-box button {
+  flex: none;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 15px;
+  background: var(--well);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* 오늘의 참여 3버튼 (하루 인사 · 감사노트 · 기도제목) */
+.today-parti { margin: 22px 0; }
+.today-parti .tp-head {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--well-deep);
+  margin: 0 2px 10px;
+}
+.parti-pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.parti-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 15px 6px;
+  border-radius: 16px;
+  text-decoration: none;
+  background: rgba(37, 64, 216, 0.06);
+  border: 1px solid var(--well-light);
+  color: var(--well-deep);
+  font-size: 12px;
+  font-weight: 700;
+}
+.parti-pill .pp-ico { font-size: 20px; }
+
+/* 큰 이동 카드 (우리 오이코스 / 나의 기록 / 말씀놀이터) */
+.home-rows { display: flex; flex-direction: column; gap: 12px; margin: 8px 0 24px; }
+.home-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+}
+.home-row .hr-ico {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: rgba(37, 64, 216, 0.08);
+}
+.home-row .hr-body { flex: 1 1 auto; min-width: 0; }
+.home-row .hr-title { display: block; font-weight: 800; color: var(--well-deep); font-size: 15px; }
+.home-row .hr-hand {
+  display: block;
+  font-family: var(--font-accent);
+  font-size: 16px;
+  color: var(--well);
+  margin-top: 1px;
+}
+.home-row .hr-arrow { flex: none; color: var(--text-soft); font-size: 15px; }
 
 /* ===== 공용 앱셸: 하단 탭바 (assets/appshell.js) ===== */
 body.has-tabbar { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
