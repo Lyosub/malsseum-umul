@@ -83,8 +83,27 @@ function initBibleReader() {
         verses.map(function (v) {
           return '<p style="margin:0 0 10px;"><strong style="color:var(--well);">' + v.verse + '</strong> ' + v.text + '</p>';
         }).join("");
+      saveReadingProgress(bookId, bookName, chapter);
     }).catch(function () {
       resultEl.innerHTML = '<p class="msg">불러오는 데 실패했어요. 잠시 후 다시 시도해주세요.</p>';
     });
   });
+}
+
+// 한 장을 실제로 열었을 때 "마지막으로 읽은 곳"을 저장한다(로그인 상태일 때만, 실패는 조용히 무시).
+// 말씀 탭(word.html)에서 "이어 읽기"로 다시 이 장을 연다.
+function saveReadingProgress(bookId, bookName, chapter) {
+  try {
+    if (typeof getClient !== "function") return;
+    var client = getClient();
+    if (!client) return;
+    getSession().then(function (session) {
+      if (!session) return;
+      client.rpc("set_reading_progress", {
+        p_book_id: parseInt(bookId, 10) || 0,
+        p_book_name: String(bookName || ""),
+        p_chapter: parseInt(chapter, 10) || 1
+      }).then(function () {}, function () {});
+    });
+  } catch (e) {}
 }

@@ -35,17 +35,17 @@
   <div id="homeVerseCard" class="verse-card brand-bg"></div>
   <a class="home-verse-cta" href="verses.html">오늘의 말씀 읽기 <span aria-hidden="true">›</span></a>
 
-  <!-- 성경 이어 읽기 (진도 저장은 준비 중) -->
-  <div class="sect-hd"><h2>성경 이어 읽기</h2></div>
-  <div class="card tint-blue">
+  <!-- 성경 이어 읽기 -->
+  <div class="sect-hd"><h2>성경 이어 읽기</h2><a href="read.html">말씀의 여정 ›</a></div>
+  <div class="card tint-blue" id="readingProgressCard">
     <div style="display:flex;align-items:center;gap:12px;">
       <span class="ico-circle">📖</span>
       <div style="flex:1 1 auto;min-width:0;">
-        <div style="font-weight:800;color:var(--well-deep);">지금, 하나님의 말씀을 계속 읽어보세요</div>
-        <div style="font-size:12px;color:var(--text-soft);">책·장을 골라 바로 읽을 수 있어요. (읽은 곳 저장 기능은 준비 중)</div>
+        <div id="rpTitle" style="font-weight:800;color:var(--well-deep);">지금, 하나님의 말씀을 계속 읽어보세요</div>
+        <div id="rpSub" style="font-size:12px;color:var(--text-soft);">책·장을 골라 바로 읽을 수 있어요.</div>
       </div>
     </div>
-    <a href="read.html" class="pill-blue block" style="margin-top:14px;">성경 읽기 열기 ›</a>
+    <a href="read.html" id="rpBtn" class="pill-blue block" style="margin-top:14px;">성경 읽기 열기 ›</a>
   </div>
 
   <!-- 이번 주 말씀 -->
@@ -104,6 +104,33 @@
   (function () {
     var el = document.getElementById("homeVerseCard");
     if (el) el.style.setProperty("--verse-bg-image", "url(brand/banner-word.jpg)");
+  })();
+  // 성경 이어 읽기: 마지막으로 읽은 곳을 불러와 "이어 읽기" 버튼에 반영
+  (function () {
+    if (typeof getClient !== "function") return;
+    var client = getClient();
+    if (!client) return;
+    getSession().then(function (session) {
+      if (!session) return;
+      client.rpc("get_reading_progress").then(function (res) {
+        var row = res && res.data && res.data[0];
+        if (!row) return;
+        var t = document.getElementById("rpTitle");
+        var s = document.getElementById("rpSub");
+        var b = document.getElementById("rpBtn");
+        var label = row.book_name + " " + row.chapter + "장";
+        if (t) t.textContent = "이어서 · " + label;
+        if (s && row.updated_at) {
+          var d = new Date(row.updated_at);
+          s.textContent = "마지막으로 읽은 날 " + d.getFullYear() + "." +
+            ("0" + (d.getMonth() + 1)).slice(-2) + "." + ("0" + d.getDate()).slice(-2);
+        }
+        if (b) {
+          b.textContent = label + " 이어 읽기 ›";
+          b.href = "read.html?book=" + encodeURIComponent(row.book_name) + "&chapter=" + row.chapter;
+        }
+      }, function () {});
+    });
   })();
   (function () {
     var f = document.getElementById("wordMindForm");

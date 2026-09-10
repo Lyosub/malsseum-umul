@@ -56,6 +56,13 @@
     </a>
   </div>
 
+  <!-- 나의 도전 기록 -->
+  <div class="sect-hd" style="margin-top:22px;"><h2>나의 도전 기록</h2></div>
+  <div class="card" id="playRecords">
+    <p class="msg" id="prMsg" style="margin:0;">로그인하면 나의 최고 기록이 보여요.</p>
+    <div id="prList" style="display:none;"></div>
+  </div>
+
   <!-- 달란트 상점 -->
   <div class="card tint-lime" style="margin-top:16px;display:flex;align-items:center;gap:12px;">
     <span class="ico-circle lime">🎁</span>
@@ -79,6 +86,61 @@
 <script src="assets/appshell.js"></script>
 <script>
   initHeaderAuthState();
+  // 나의 도전 기록: 기존 게임 점수 RPC들을 모아서 보여준다 (새 테이블 없음)
+  (function () {
+    if (typeof getClient !== "function") return;
+    var client = getClient();
+    if (!client) return;
+    var msg = document.getElementById("prMsg");
+    var list = document.getElementById("prList");
+    if (!list) return;
+
+    function fmt(ms) {
+      if (ms == null) return "-";
+      var s = ms / 1000;
+      if (s < 60) return (Math.round(s * 10) / 10) + "초";
+      return Math.floor(s / 60) + "분 " + Math.round(s % 60) + "초";
+    }
+    function row(label, value) {
+      return '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 2px;border-top:1px solid var(--border);">' +
+        '<span style="color:var(--text);font-size:13.5px;">' + label + '</span>' +
+        '<span style="font-weight:800;color:var(--well);white-space:nowrap;">' + value + '</span></div>';
+    }
+
+    getSession().then(function (session) {
+      if (!session) return;
+      Promise.all([
+        client.rpc("get_my_book_game_score", { p_mode: "ot" }),
+        client.rpc("get_my_book_game_score", { p_mode: "nt" }),
+        client.rpc("get_my_match_game_score", { p_mode: "books" }),
+        client.rpc("get_my_match_game_score", { p_mode: "figures" }),
+        client.rpc("get_oikos_verse_game_status")
+      ]).then(function (r) {
+        function val(x) { return x && !x.error ? x.data : null; }
+        var ot = val(r[0]), nt = val(r[1]), mb = val(r[2]), mf = val(r[3]);
+        var vg = r[4] && !r[4].error && r[4].data && r[4].data[0];
+
+        var html =
+          '<div style="font-weight:800;color:var(--well-deep);font-size:12.5px;margin:2px 0 2px;">📚 성경책 순서 맞추기 · 최고 기록</div>' +
+          row("구약", fmt(ot)) + row("신약", fmt(nt)) +
+          '<div style="font-weight:800;color:var(--well-deep);font-size:12.5px;margin:12px 0 2px;">🃏 같은 성경 찾기 · 최고 기록</div>' +
+          row("성경책", fmt(mb)) + row("인물 · 사건", fmt(mf));
+
+        if (vg && vg.in_oikos) {
+          html +=
+            '<div style="font-weight:800;color:var(--well-deep);font-size:12.5px;margin:12px 0 2px;">📖 말씀 빈칸 채우기 · 곳간</div>' +
+            row("오늘", vg.played_today ? ("맞힌 만큼 +" + vg.today_points + " 곳간") : "아직 안 함") +
+            row("이번 주 우리 오이코스 곳간", "+" + (vg.week_points || 0));
+        }
+
+        list.innerHTML = html;
+        list.style.display = "block";
+        if (msg) msg.style.display = "none";
+      }, function () {
+        if (msg) msg.textContent = "기록을 불러오지 못했어요.";
+      });
+    });
+  })();
 </script>
 </body>
 </html>
