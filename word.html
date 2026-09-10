@@ -31,8 +31,8 @@
     <div class="hand-note">오늘도<br>말씀으로 더 깊이</div>
   </div>
 
-  <!-- 오늘의 말씀 (QT) -->
-  <div id="homeVerseCard" class="verse-card brand-bg"></div>
+  <!-- 오늘의 말씀 (QT) — 매일 바뀌는 말씀 카드 배경 (홈과 동일) -->
+  <div id="homeVerseCard" class="verse-card"></div>
   <a class="home-verse-cta" id="homeVerseCta" href="read.html">오늘의 말씀 읽기 <span aria-hidden="true">›</span></a>
 
   <!-- 성경 이어 읽기 -->
@@ -99,11 +99,6 @@
   initHomeCard();
   initQtCheckin();
   initHeaderAuthState();
-  // 말씀 탭의 오늘의 말씀 카드는 브랜드 블루 배너를 배경으로 (홈의 회전 사진 대신)
-  (function () {
-    var el = document.getElementById("homeVerseCard");
-    if (el) el.style.setProperty("--verse-bg-image", "url(brand/banner-word.jpg)");
-  })();
   // "오늘의 말씀 읽기" → 오늘 말씀 본문(그 책·장)으로. 말씀 카드(뽑기)와 구분한다.
   (function () {
     var cta = document.getElementById("homeVerseCta");

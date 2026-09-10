@@ -277,10 +277,12 @@ function loadVerseCardFonts() {
 var VERSE_CARD_BG_COUNT = 52;
 
 function getVerseCardBgIndex() {
+  // 오늘의 말씀 카드 배경 사진은 매일 바뀐다(52장 순환). 홈·말씀 탭 모두 같은 로직을 써서
+  // 두 화면의 카드 배경이 같은 날엔 동일하게 보인다.
   var now = new Date();
   var start = new Date(now.getFullYear(), 0, 1);
   var diffDays = Math.floor((now - start) / 86400000);
-  return (Math.floor(diffDays / 7) % VERSE_CARD_BG_COUNT) + 1;
+  return (diffDays % VERSE_CARD_BG_COUNT) + 1;
 }
 
 // 배경 이미지를 미리 불러와둔다. 실패하면(오프라인 등) null로 넘겨서 기존 그라데이션으로 대체된다.
