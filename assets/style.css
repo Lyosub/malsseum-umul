@@ -1746,7 +1746,19 @@ details.mp-fold h4 { margin-top: 4px; }
   gap: 8px;
 }
 .page-hd h1 img { width: 38px; height: 38px; object-fit: contain; flex: none; }
-.page-hd p { margin: 0; color: var(--text-soft); font-size: 13.5px; line-height: 1.5; max-width: 62%; }
+.page-hd p { margin: 0; color: var(--text-soft); font-size: 13.5px; line-height: 1.5; max-width: 100%; }
+/* 손글씨 메모가 우상단에 떠 있는 탭 페이지에서만 부제 폭을 줄여 겹침을 피한다 */
+.page-hd:has(.hand-note) p { max-width: 60%; }
+.page-hd .badge {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--well-deep);
+  background: rgba(37, 64, 216, 0.09);
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
 .page-hd .hand-note {
   position: absolute;
   top: 14px;
@@ -1942,6 +1954,16 @@ details.mp-fold h4 { margin-top: 4px; }
   font-family: inherit;
   color: var(--text);
 }
+
+/* NEW 배지가 새 레이아웃 요소에도 붙을 수 있게 (new-badge.js) */
+.quick-tile, .home-row, .dir-row { position: relative; }
+.dir-row .new-badge {
+  position: static;
+  align-self: center;
+  margin-left: auto;
+  flex: none;
+}
+.quick-tile .new-badge { top: 6px; right: 6px; }
 
 /* 손글씨 맺음말 (페이지 하단 라임 밑줄 문구) */
 .hand-outro {

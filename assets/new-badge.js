@@ -16,10 +16,11 @@ var STATIC_UPDATED_AT = {
   wallpaper: "2026-08-28"
 };
 
+// 홈(빠른 타일)과 전체 메뉴(디렉터리 행) 양쪽에서 잡히도록 셀렉터를 나열한다.
 var STATIC_NAV_SELECTOR = {
-  verses: 'a[href="verses.html"]',
-  mbti: 'a[href="mbti.html"]',
-  wallpaper: 'a[href="wallpaper.html"]'
+  verses: '.quick-tile[href="verses.html"], .dir-row[href="verses.html"]',
+  mbti: '.dir-row[href="mbti.html"]',
+  wallpaper: '.dir-row[href="wallpaper.html"]'
 };
 
 function getSeenMarker(key) {
@@ -65,7 +66,10 @@ function attachNewBadge(selector) {
   var badge = document.createElement("span");
   badge.className = "new-badge";
   badge.textContent = "NEW";
-  card.appendChild(badge);
+  // 디렉터리 행(.dir-row)이면 화살표(.dc) 앞에 인라인으로, 그 외(카드/타일)는 끝에 붙여 절대배치
+  var chevron = card.querySelector(".dc");
+  if (chevron) card.insertBefore(badge, chevron);
+  else card.appendChild(badge);
 }
 
 function checkDbLatest(table, selector, key) {
@@ -84,7 +88,8 @@ function checkDbLatest(table, selector, key) {
 }
 
 function initNewBadges() {
-  if (!document.querySelector(".nav-cards")) return; // 홈페이지가 아니면 아무것도 하지 않는다
+  // 홈(빠른 타일)·전체 메뉴(디렉터리)에서만 동작. 그 외 페이지에서는 아무것도 하지 않는다.
+  if (!document.querySelector(".nav-cards, .dir-grid, .quick-tiles")) return;
 
   Object.keys(STATIC_UPDATED_AT).forEach(function (key) {
     var dateStr = STATIC_UPDATED_AT[key];
@@ -94,9 +99,9 @@ function initNewBadges() {
     if (!alreadySeen && isWithinNewBadgeWindow(ts)) attachNewBadge(STATIC_NAV_SELECTOR[key]);
   });
 
-  checkDbLatest("announcements", 'a[href="notice.html"]', "notice");
-  checkDbLatest("calendar_events", 'a[href="calendar.html"]', "calendar");
-  checkDbLatest("board_posts", 'a[href="board.html"]', "board");
+  checkDbLatest("announcements", '.quick-tile[href="notice.html"], .dir-row[href="notice.html"]', "notice");
+  checkDbLatest("calendar_events", '.quick-tile[href="calendar.html"], .dir-row[href="calendar.html"]', "calendar");
+  checkDbLatest("board_posts", '.dir-row[href="board.html"]', "board");
 }
 
 document.addEventListener("DOMContentLoaded", initNewBadges);
