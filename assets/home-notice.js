@@ -79,9 +79,10 @@
 
     client.from("home_banner").select("*").order("created_at", { ascending: false }).then(function (res) {
       (res && res.data ? res.data : []).forEach(function (b) {
+        // 한 줄 캐러셀이라 제목만 보여준다(설명은 줄바꿈·장문이 많음). 자세한 내용은 링크로.
         items.push({
           tag: "공지",
-          text: b.title + (b.description ? " — " + b.description : ""),
+          text: String(b.title || "").replace(/\s+/g, " ").trim(),
           href: b.link_url || "notice.html"
         });
       });
