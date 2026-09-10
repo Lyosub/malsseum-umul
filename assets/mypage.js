@@ -575,6 +575,32 @@ function initGroup(userId) {
     });
   }
 
+  // 🌊 이번 주 우리 오이코스가 함께 채운 우물 — 점수 경쟁이 아니라 "함께 참여했다"는 경험.
+  function renderOikosWell(groupId) {
+    var el = document.getElementById("oikosWellCard");
+    if (!el) return;
+    client.rpc("get_group_week_wellfill", { p_group_id: groupId }).then(function (res) {
+      var r = res.data && res.data[0];
+      if (res.error || !r || !r.member_count) { el.style.display = "none"; return; }
+      var pct = Math.round((r.participated_count / r.member_count) * 100);
+      var allIn = r.participated_count === r.member_count;
+      var line = allIn
+        ? "이번 주 오이코스 친구 모두가 함께 우물을 채웠어요 🎉"
+        : (r.i_participated
+            ? "이번 주 " + r.participated_count + "명이 함께했어요. 아직 안 온 친구를 불러볼까요?"
+            : "아직 이번 주엔 참여 안 했어요. 출석 체크나 한 줄 기록으로 물 한 방울 더해요.");
+      el.style.display = "block";
+      el.innerHTML =
+        '<h4 style="margin:0 0 8px;color:var(--well-deep);">🌊 이번 주 우리 오이코스 우물</h4>' +
+        '<div class="oikos-well">' +
+          '<div class="oikos-well-water" style="height:' + pct + '%;"></div>' +
+          '<div class="oikos-well-label">' + r.participated_count + ' / ' + r.member_count + '명</div>' +
+        '</div>' +
+        '<p style="font-size:12.5px;color:var(--text-soft);margin:8px 0 0;text-align:center;">' + line + '</p>' +
+        '<p style="font-size:11px;color:var(--text-soft);margin:4px 0 0;text-align:center;">함께한 발자국 ' + r.footprints + '개 · 월요일에 새로 시작해요</p>';
+    });
+  }
+
   function renderChallengeBanner(groupId) {
     var el = document.getElementById("groupChallengeBanner");
     if (!el) return;
@@ -900,6 +926,7 @@ function initGroup(userId) {
     hasGroupEl.style.display = "block";
     document.getElementById("groupName").textContent = group.name;
     document.getElementById("groupCode").textContent = group.invite_code;
+    renderOikosWell(group.id);
     renderChallengeBanner(group.id);
     renderGroupMembers(group.id);
     initGroupInvite(group.id, group.created_by === userId);

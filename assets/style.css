@@ -218,6 +218,35 @@ header.site nav a:hover {
 }
 .concern-chip:hover { background: rgba(107, 198, 201, .22); }
 
+/* 🌊 오이코스 주간 참여 우물 (mypage) */
+.oikos-well {
+  position: relative;
+  height: 112px;
+  border-radius: 16px;
+  border: 2px solid var(--well-light);
+  background: rgba(107, 198, 201, .08);
+  overflow: hidden;
+}
+.oikos-well-water {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(107, 198, 201, .55), rgba(20, 112, 122, .78));
+  transition: height .6s ease;
+}
+.oikos-well-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--well-deep);
+  text-shadow: 0 1px 3px rgba(255, 255, 255, .7);
+}
+
 .nav-card {
   position: relative;
   background: var(--card-bg);
