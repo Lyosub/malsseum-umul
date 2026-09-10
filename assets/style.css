@@ -190,6 +190,34 @@ header.site nav a:hover {
   margin: 22px 0;
 }
 
+.nav-group-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--well-deep);
+  letter-spacing: -0.01em;
+  margin: 26px 2px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-group-title:first-of-type { margin-top: 14px; }
+.nav-group-title + .nav-cards { margin-top: 0; }
+
+.concern-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.concern-chip {
+  border: 1px solid var(--well-light);
+  background: rgba(107, 198, 201, .10);
+  color: var(--well-deep);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 7px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.concern-chip:hover { background: rgba(107, 198, 201, .22); }
+
 .nav-card {
   position: relative;
   background: var(--card-bg);
@@ -364,6 +392,45 @@ header.site nav a:hover {
 
 .verse-card-more[hidden] {
   display: none;
+}
+
+.verse-card .qt-reflect-input {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+}
+.verse-card .qt-reflect-input::placeholder { color: rgba(255, 255, 255, 0.6); }
+.verse-card .qt-reflect-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.verse-card .qt-reflect-save {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+.verse-card .qt-reflect-msg { font-size: 12px; opacity: 0.9; }
+.verse-card .qt-reflect-note {
+  margin: 8px 0 0;
+  font-size: 11px;
+  opacity: 0.7;
 }
 
 .well-card {

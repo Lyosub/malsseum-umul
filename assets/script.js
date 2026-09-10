@@ -1,10 +1,54 @@
+function escapeHtmlBasic(str) {
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// 오늘의 QT 마지막에 붙는 "작은 실천" 질문 + 한 줄 기록.
+// 달란트를 주지 않는다(참여 남용 방지). 기록은 이 기기(localStorage)에만 저장된다.
+function qtReflectHtml(verse) {
+  var q = verse.reflect || "오늘 이 말씀을 삶에서 어떻게 살아볼 수 있을까요? 딱 한 가지만 적어보세요.";
+  var key = "msu_qt_reflect_" + new Date().toISOString().slice(0, 10);
+  var saved = "";
+  try { saved = localStorage.getItem(key) || ""; } catch (e) {}
+  return (
+    '<div class="qt-section qt-reflect" data-key="' + key + '">' +
+      '<span class="qt-label">🌱 오늘의 실천</span>' +
+      '<div class="qt-body">' + q + '</div>' +
+      '<textarea class="qt-reflect-input" rows="2" placeholder="한 줄로 적어보세요">' + escapeHtmlBasic(saved) + '</textarea>' +
+      '<div class="qt-reflect-row">' +
+        '<button type="button" class="btn ghost qt-reflect-save">저장</button>' +
+        '<span class="qt-reflect-msg"></span>' +
+      '</div>' +
+      '<p class="qt-reflect-note">이 기록은 지금 보고 있는 기기에만 저장돼요.</p>' +
+    '</div>'
+  );
+}
+
+function bindQtReflect(el) {
+  var box = el.querySelector(".qt-reflect");
+  if (!box) return;
+  var save = box.querySelector(".qt-reflect-save");
+  var input = box.querySelector(".qt-reflect-input");
+  var msg = box.querySelector(".qt-reflect-msg");
+  if (!save || !input) return;
+  save.addEventListener("click", function () {
+    try { localStorage.setItem(box.getAttribute("data-key"), input.value.trim()); } catch (e) {}
+    if (msg) {
+      msg.textContent = "저장했어요 ✓";
+      setTimeout(function () { msg.textContent = ""; }, 2000);
+    }
+  });
+}
+
 function renderVerseInto(elId, verse) {
   var el = document.getElementById(elId);
   if (!el || !verse) return;
   var extraHtml =
     (verse.interpretation ? '<div class="qt-section"><span class="qt-label">📖 말씀 설명</span><div class="qt-body">' + verse.interpretation + '</div></div>' : '') +
     (verse.note ? '<div class="qt-section"><span class="qt-label">🎯 오늘의 적용</span><div class="qt-body">' + verse.note + '</div></div>' : '') +
-    (verse.prayer ? '<div class="qt-section"><span class="qt-label">🙏 오늘의 기도</span><div class="qt-body">' + verse.prayer + '</div></div>' : '');
+    (verse.prayer ? '<div class="qt-section"><span class="qt-label">🙏 오늘의 기도</span><div class="qt-body">' + verse.prayer + '</div></div>' : '') +
+    qtReflectHtml(verse);
 
   el.innerHTML =
     '<div class="verse-card-kicker">💧 오늘의 QT</div>' +
@@ -24,6 +68,7 @@ function renderVerseInto(elId, verse) {
       toggle.textContent = isHidden ? "접기 ▴" : "🌿 오늘 3분 QT 시작 ▾";
     });
   }
+  bindQtReflect(el);
 }
 
 // 홈 화면 말씀 카드는 밋밋한 단색 그라데이션 대신, 말씀카드 다운로드용으로 준비해둔 52장의
@@ -363,9 +408,17 @@ function saveVerseCard() {
   });
 }
 
+// "빌립보서 4:6-7" → read.html?book=빌립보서&chapter=4  (앞뒤 맥락을 성경 읽기에서 바로 보게)
+function refToReadLink(ref) {
+  var m = /^(.+?)\s+(\d+)\s*:/.exec(ref || "");
+  if (!m) return "";
+  return "read.html?book=" + encodeURIComponent(m[1].trim()) + "&chapter=" + m[2];
+}
+
 function renderWellVerseInto(elId, verse) {
   var el = document.getElementById(elId);
   if (!el || !verse) return;
+  var readLink = refToReadLink(verse.ref);
   el.innerHTML =
     '<div class="well-ref">' + verse.ref + '</div>' +
     '<div class="well-verse-text">"' + verse.text + '"</div>' +
@@ -375,15 +428,15 @@ function renderWellVerseInto(elId, verse) {
     '<div class="well-prayer-box">' +
       '<div class="well-label">오늘의 기도</div>' +
       '<p class="well-prayer-text">' + (verse.prayer || "") + '</p>' +
-    '</div>';
+    '</div>' +
+    (readLink ? '<a href="' + readLink + '" class="btn ghost block" style="margin-top:14px;">📖 이 말씀의 앞뒤 내용 읽기</a>' : '');
 }
 
 function initWellForm() {
   var form = document.getElementById("wellForm");
   if (!form) return;
 
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
+  function runMatch() {
     var wellMsg = document.getElementById("wellMsg");
     try {
       var input = document.getElementById("concernInput").value.trim();
@@ -401,7 +454,22 @@ function initWellForm() {
     } catch (err) {
       if (wellMsg) wellMsg.textContent = "일시적인 오류가 발생했어요. 새로고침 후 다시 시도해주세요.";
     }
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    runMatch();
   });
+
+  var chips = document.getElementById("concernChips");
+  if (chips) {
+    chips.addEventListener("click", function (e) {
+      var chip = e.target.closest(".concern-chip");
+      if (!chip) return;
+      document.getElementById("concernInput").value = chip.getAttribute("data-q") || chip.textContent;
+      runMatch();
+    });
+  }
 }
 
 function initMbtiGrid() {
