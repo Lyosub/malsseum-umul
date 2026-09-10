@@ -85,6 +85,14 @@ function formatDateTime(iso) {
 
 var ADMIN_NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목", suggestion: "건의사항" };
 
+// 기도제목 공개 범위 표시 (community=기본값이라 굳이 표시 안 함)
+var ADMIN_VIS_LABELS = { public: "🌐 전체공개", staff: "🔒 교역자·교사만", private: "🙈 나만 보기" };
+function adminVisBadge(item) {
+  if (!item || item.type !== "prayer") return "";
+  var t = ADMIN_VIS_LABELS[item.visibility];
+  return t ? ' · <span style="color:var(--gold);">' + t + '</span>' : "";
+}
+
 var ADMIN_ACTION_LABELS = {
   attendance: "출석",
   streak_bonus: "7일 연속출석 보너스",
@@ -122,7 +130,7 @@ function loadMemberDetail(userId, container) {
       ? notes.map(function (n) {
           return (
             '<div class="note-item">' +
-              '<div class="meta">' + ADMIN_NOTE_LABELS[n.type] + ' · ' + formatDateTime(n.created_at) + '</div>' +
+              '<div class="meta">' + ADMIN_NOTE_LABELS[n.type] + ' · ' + formatDateTime(n.created_at) + adminVisBadge(n) + '</div>' +
               '<div class="content">' + linkifyHtml(n.content) + '</div>' +
               renderImageGallery(n.image_urls) +
             '</div>'
@@ -496,7 +504,7 @@ function loadAllNotes() {
           : escapeHtmlAdmin(item.nickname || "익명");
         return (
           '<div class="note-item">' +
-            '<div class="meta">' + writer + ' · ' + ADMIN_NOTE_LABELS[item.type] + ' · ' + formatDateTime(item.created_at) + '</div>' +
+            '<div class="meta">' + writer + ' · ' + ADMIN_NOTE_LABELS[item.type] + ' · ' + formatDateTime(item.created_at) + adminVisBadge(item) + '</div>' +
             '<div class="content">' + linkifyHtml(item.content) + '</div>' +
             renderImageGallery(item.image_urls) +
             '<button class="btn ghost" data-note-id="' + item.id + '" style="margin-top:8px;padding:6px 14px;font-size:12.5px;">삭제</button>' +
