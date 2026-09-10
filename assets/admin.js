@@ -93,6 +93,12 @@ function adminVisBadge(item) {
   return t ? ' · <span style="color:var(--gold);">' + t + '</span>' : "";
 }
 
+var ADMIN_BADGE_LABELS = {
+  streak: "개근왕", attend: "출석지기", note: "기록왕", quiz: "퀴즈왕",
+  game: "게임왕", pray: "기도친구", invite: "친초 동역자"
+};
+var ADMIN_TIER_NAMES = ["동", "은", "금", "다이아", "십자가"];
+
 var ADMIN_ACTION_LABELS = {
   attendance: "출석",
   streak_bonus: "7일 연속출석 보너스",
@@ -114,11 +120,30 @@ function loadMemberDetail(userId, container) {
   Promise.all([
     client.rpc("get_member_notes_admin", { p_user_id: userId }),
     client.rpc("get_member_attendance_admin", { p_user_id: userId }),
-    client.rpc("get_member_points_admin", { p_user_id: userId })
+    client.rpc("get_member_points_admin", { p_user_id: userId }),
+    client.rpc("get_member_badge_awards_admin", { p_user_id: userId })
   ]).then(function (results) {
     var notes = results[0].data || [];
     var attendance = results[1].data || [];
     var points = results[2].data || [];
+    var badgeAwards = (results[3] && results[3].data) || [];
+
+    // 뱃지 보상 상세: 날짜(KST)별로 어떤 뱃지 어떤 등급에서 받았는지 묶는다.
+    var badgeByDate = {};
+    badgeAwards.forEach(function (b) {
+      var d = new Date(b.awarded_at);
+      var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      (badgeByDate[key] = badgeByDate[key] || []).push(b);
+    });
+    function badgeDetailFor(refDate) {
+      var list = badgeByDate[refDate];
+      if (!list || !list.length) return "";
+      var parts = list.slice().sort(function (a, b) { return a.tier - b.tier; }).map(function (b) {
+        return (ADMIN_BADGE_LABELS[b.badge_code] || b.badge_code) + " " +
+          (ADMIN_TIER_NAMES[b.tier - 1] || (b.tier + "단계")) + "(+" + b.points_awarded + ")";
+      });
+      return '<div style="color:var(--text-soft);font-size:11px;margin-top:3px;line-height:1.5;">' + escapeHtmlAdmin(parts.join(" · ")) + '</div>';
+    }
 
     var MAX_ROWS = 60;
 
@@ -144,10 +169,12 @@ function loadMemberDetail(userId, container) {
       ? points.slice(0, MAX_ROWS).map(function (p) {
           var label = ADMIN_ACTION_LABELS[p.action_type] || p.action_type;
           var isPlus = p.points >= 0;
+          var detail = p.action_type === "badge_award" ? badgeDetailFor(p.ref_date) : "";
           return (
             '<div class="note-item">' +
               '<div class="meta">' + formatDateTime(p.created_at) + ' · ' + label + (p.note ? ' (' + escapeHtmlAdmin(p.note) + ')' : '') + '</div>' +
               '<div class="content" style="font-weight:700;color:' + (isPlus ? "var(--well)" : "#b3432c") + ';">' + (isPlus ? "+" : "") + p.points + '달란트</div>' +
+              detail +
             '</div>'
           );
         }).join("") + (points.length > MAX_ROWS ? '<p class="msg" style="margin:8px 0 0;">…최근 ' + MAX_ROWS + '건만 표시</p>' : '')
