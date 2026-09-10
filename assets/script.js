@@ -8,7 +8,9 @@ function escapeHtmlBasic(str) {
 // 달란트를 주지 않는다(참여 남용 방지). 기록은 이 기기(localStorage)에만 저장된다.
 function qtReflectHtml(verse) {
   var q = verse.reflect || "오늘 이 말씀을 삶에서 어떻게 살아볼 수 있을까요? 딱 한 가지만 적어보세요.";
-  var key = "msu_qt_reflect_" + new Date().toISOString().slice(0, 10);
+  // KST 기준 날짜로 키를 잡아 자정에 새 기록칸이 열리도록 한다.
+  var kstNow = new Date(Date.now() + 9 * 3600 * 1000);
+  var key = "msu_qt_reflect_" + kstNow.toISOString().slice(0, 10);
   var saved = "";
   try { saved = localStorage.getItem(key) || ""; } catch (e) {}
   return (
