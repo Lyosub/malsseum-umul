@@ -17,36 +17,145 @@
 <header class="site">
   <a class="logo" href="index.html">💧 말씀우물</a>
   <nav>
-    <a href="login.html" id="navLogin">로그인</a>
-    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+    <a href="#" id="logoutBtn">로그아웃</a>
   </nav>
 </header>
-<div class="wrap">
+<div class="wrap" id="pageContent" style="display:none;">
   <section class="hero">
     <h1>우리 오이코스</h1>
     <p>혼자가 아닌, 함께하는 믿음</p>
   </section>
 
-  <div class="nav-cards">
-    <a class="nav-card feature" href="mypage.html" style="grid-column: 1 / -1;">
-      <div class="icon">👥</div>
-      <div class="title">우리 오이코스</div>
-      <div class="desc">멤버 · 공동 곳간 · 이번 주 함께할 활동 (마이페이지에서)</div>
-    </a>
+  <div class="card" id="groupSection">
+    <h3 style="margin-top:0;">우리 오이코스</h3>
+    <p class="msg" id="groupMsg"></p>
+
+    <div id="groupNone" style="display:none;">
+      <p style="color:var(--text-soft);font-size:13.5px;">친구들과 오이코스를 만들거나, 초대받은 코드로 참여해서 함께 출석해보세요.</p>
+      <form id="createGroupForm" style="margin-bottom:16px;">
+        <div class="form-row">
+          <label for="groupNameInput">새 오이코스 만들기</label>
+          <input type="text" id="groupNameInput" placeholder="예: 중등부 3반">
+        </div>
+        <button type="submit" class="btn block">오이코스 만들기</button>
+      </form>
+      <form id="joinGroupForm">
+        <div class="form-row">
+          <label for="joinCodeInput">초대 코드로 참여하기</label>
+          <input type="text" id="joinCodeInput" placeholder="6자리 코드 입력">
+        </div>
+        <button type="submit" class="btn ghost block">참여하기</button>
+      </form>
+    </div>
+
+    <div id="groupHas" style="display:none;">
+      <div id="groupJoinedFlash" class="joined-flash" style="display:none;"></div>
+      <p style="margin:0 0 4px;font-weight:700;" id="groupName"></p>
+      <p style="color:var(--text-soft);font-size:13px;margin-top:0;">초대 코드: <strong id="groupCode" style="color:var(--well);"></strong> (친구에게 공유해보세요)</p>
+
+      <!-- 🌊 이번 주 우리 오이코스가 함께 채운 우물 -->
+      <div id="oikosWellCard" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:none;"></div>
+
+      <!-- 💰 오이코스 곳간 — 항상 펼쳐서 보여준다 (이 카드의 핵심) -->
+      <div id="oikosTalentSection" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <h4 style="margin:0 0 4px;color:var(--well-deep);">💰 오이코스 곳간</h4>
+        <p class="msg" id="oikosPoolInfo" style="margin:0 0 8px;">불러오는 중...</p>
+        <form id="oikosDonateForm" style="display:flex;gap:8px;align-items:flex-start;">
+          <input type="number" id="oikosDonateAmount" min="10" step="10" placeholder="곳간에 넣을 내 달란트 (최소 10)" style="flex:1;">
+          <button type="submit" class="btn" style="flex:none;">기부하기</button>
+        </form>
+        <p class="msg" id="oikosDonateMsg" style="margin:6px 0 0;"></p>
+        <p style="color:var(--text-soft);font-size:11.5px;margin:4px 0 0;">내 달란트를 오이코스 곳간에 보태요. 한번 기부하면 되돌릴 수 없고, 곳간 달란트는 오이코스 회식비로 쓰여요.</p>
+        <details class="mp-fold" style="margin-top:10px;"><summary>최근 곳간 내역</summary>
+          <div id="oikosTalentLog" style="margin-top:4px;"></div>
+        </details>
+      </div>
+
+      <details class="mp-fold"><summary>🎯 오이코스 챌린지 안내</summary>
+        <p id="groupChallengeBanner" style="color:var(--text-soft);font-size:12px;margin:0;">🎯 오이코스 챌린지: 한 주(월~일) 동안 오이코스 멤버의 80% 이상 출석하면 오이코스 곳간 +인원수, 전원이 감사노트/기도제목을 1개 이상씩 쓰고 오이코스 합계가 10개 이상이면 오이코스 곳간 +인원수×2 (다음 주에 자동 정산돼요. 개인 달란트가 아니라 오이코스 공동 곳간에 쌓여요)</p>
+      </details>
+
+      <details class="mp-fold"><summary>오이코스 멤버 · 오늘 참여 <span id="groupMemberCount" style="color:var(--text-soft);font-weight:400;font-size:12px;"></span></summary>
+        <p style="color:var(--text-soft);font-size:11.5px;margin:4px 0 8px;">이름 옆은 오늘 한 활동이에요. 내용은 안 보이고 여부만 확인돼요.</p>
+        <div id="groupMembersList" style="margin-top:4px;"></div>
+      </details>
+
+      <details class="mp-fold" id="groupInviteSection" style="display:none;"><summary>학생 초대하기</summary>
+        <p style="color:var(--text-soft);font-size:12px;margin:4px 0 8px;">닉네임이나 이름(본명)으로 검색해서 바로 오이코스에 추가할 수 있어요. 별도 수락 절차 없이 바로 추가돼요.</p>
+        <div class="form-row">
+          <input type="text" id="inviteSearchInput" placeholder="닉네임 또는 이름 검색">
+        </div>
+        <div id="inviteSearchResults"></div>
+      </details>
+
+      <details class="mp-fold" id="oikosExpenseSection" style="display:none;"><summary>🍚 회식비 · 상품 교환 · 곳간 나눠주기 <span style="color:var(--text-soft);font-weight:400;font-size:12px;">(교사 전용)</span></summary>
+        <p class="msg" id="oikosTalentInfo" style="margin:4px 0 4px;">오이코스 곳간을 불러오는 중...</p>
+        <h4 style="margin:12px 0 4px;color:var(--well-deep);">🍚 회식비 지원 신청</h4>
+        <p class="msg" style="margin:0 0 8px;color:var(--gold);">※ 회식비는 최소 300달란트부터 신청할 수 있어요.</p>
+        <form id="oikosExpenseForm">
+          <div class="form-row"><input type="number" id="oikosExpenseAmount" min="300" step="100" placeholder="사용할 달란트 (최소 300)"></div>
+          <div class="form-row"><input type="text" id="oikosExpensePurpose" placeholder="사용 목적 (예: 9월 오이코스 회식)"></div>
+          <button type="submit" class="btn block">지원 신청</button>
+          <p class="msg" id="oikosExpenseMsg"></p>
+        </form>
+        <div id="oikosExpenseList" style="margin-top:10px;"></div>
+
+        <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);">
+          <h4 style="margin:0 0 4px;color:var(--well-deep);">🎁 오이코스 상품 교환</h4>
+          <p class="msg" style="margin:0 0 8px;">곳간 달란트로 오이코스가 함께 받는 상품이에요. 신청하면 교역자·부장 확인 후 전달돼요.</p>
+          <div id="oikosShopList"><p class="msg" style="margin:0;">불러오는 중...</p></div>
+          <p class="msg" id="oikosShopMsg" style="margin:6px 0 0;"></p>
+        </div>
+
+        <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);">
+          <h4 style="margin:0 0 4px;color:var(--well-deep);">💝 곳간 → 개인 나눠주기</h4>
+          <p class="msg" style="margin:0 0 8px;">곳간 달란트를 오이코스원 개인 달란트로 나눠줄 수 있어요.</p>
+          <form id="oikosDistributeForm">
+            <div class="form-row"><input type="number" id="oikosDistributeAmount" min="1" step="1" placeholder="한 명당 몇 달란트"></div>
+            <div class="form-row">
+              <select id="oikosDistributeTarget" style="width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:12px;font-size:14.5px;font-family:inherit;background:var(--card-bg);color:var(--text);">
+                <option value="">전원에게</option>
+              </select>
+            </div>
+            <button type="submit" class="btn block">나눠주기</button>
+            <p class="msg" id="oikosDistributeMsg"></p>
+          </form>
+        </div>
+      </details>
+
+      <details class="mp-fold"><summary>우리 오이코스 순위</summary>
+        <div id="leaderboardList" style="margin-top:4px;"></div>
+      </details>
+
+      <details class="mp-fold"><summary>🏆 오이코스 전체 순위</summary>
+        <p style="color:var(--text-soft);font-size:12px;margin:4px 0 10px;">우리 오이코스를 포함한 순위예요. 곳간·개인 달란트 수치는 <strong>우리 오이코스만</strong> 보여요. 순위는 개인 달란트 기준.</p>
+        <div id="groupRankingsList"></div>
+      </details>
+
+      <button type="button" id="disbandGroupBtn" class="btn ghost" style="display:none;margin-top:18px;padding:8px 16px;font-size:13px;color:#b3432c;border-color:#b3432c;">오이코스 해체하기</button>
+      <p class="msg" id="disbandGroupMsg" style="margin-top:6px;"></p>
+    </div>
+  </div>
+
+  <div class="nav-cards" style="margin-top:18px;">
     <a class="nav-card" href="board.html">
       <div class="icon"><img src="assets/menu-icons/board.png" alt=""></div>
       <div class="title">자유게시판</div>
       <div class="desc">함께 나누는 이야기</div>
     </a>
-    <a class="nav-card" href="chodae.html">
+    <a class="nav-card" id="oikosChodaeCard" href="chodae.html">
       <div class="icon">🎟️</div>
       <div class="title">친구초청잔치</div>
       <div class="desc">내가 초청한 친구 기록 + 전체 진행률</div>
     </a>
   </div>
-
-  <p class="msg" style="text-align:center;">오이코스 전용 페이지는 준비 중이에요. 지금은 마이페이지 안 오이코스 카드에서 확인할 수 있어요.</p>
 </div>
+
+<div class="wrap auth-gate" id="loginGate" style="display:none;">
+  <p>로그인이 필요한 페이지예요.</p>
+  <a href="login.html" class="btn">로그인하러 가기</a>
+</div>
+
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
   <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
@@ -55,9 +164,27 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/auth.js"></script>
+<script src="assets/post-media.js"></script>
+<script src="assets/mypage.js"></script>
+<script src="assets/group-rankings.js"></script>
 <script src="assets/appshell.js"></script>
 <script>
-  initHeaderAuthState();
+  initLogoutButton();
+  // 친구초청잔치: 행사 기간에만 노출
+  (function () {
+    var c = document.getElementById("oikosChodaeCard");
+    if (c && Date.now() >= new Date("2026-09-15T00:00:00+09:00").getTime()) c.style.display = "none";
+  })();
+  getSession().then(function (session) {
+    if (!session) {
+      document.getElementById("loginGate").style.display = "block";
+      return;
+    }
+    document.getElementById("pageContent").style.display = "block";
+    ensureProfile(session).then(function () {
+      initGroup(session.user.id);
+    });
+  });
 </script>
 </body>
 </html>
