@@ -37,6 +37,7 @@
   <!-- 오늘의 말씀 (QT) — 매일 바뀌는 말씀 카드 배경 (말씀 탭과 동일) -->
   <div id="homeVerseCard" class="verse-card"></div>
   <a class="home-verse-cta" id="homeVerseCta" href="read.html">성경 본문 읽기 <span aria-hidden="true">›</span></a>
+  <a class="qt-next-link" href="memorize.html">🧠 읽었으면 외워볼까요? · 오늘의 말씀 외우기 <span aria-hidden="true">›</span></a>
   <p class="home-hand">변하지 않는 우리의 소망</p>
 
   <!-- 말씀 빠른 이동 4타일 -->
@@ -61,9 +62,9 @@
   <div class="today-parti">
     <p class="tp-head">오늘의 참여</p>
     <div class="parti-pills">
-      <a class="parti-pill" href="mypage.html"><span class="pp-ico">🙋</span><span>하루 인사</span></a>
-      <a class="parti-pill" href="mypage.html"><span class="pp-ico">🙏</span><span>감사노트</span></a>
-      <a class="parti-pill" href="mypage.html"><span class="pp-ico">🕊️</span><span>기도제목</span></a>
+      <a class="parti-pill" href="mypage.html?open=greeting"><span class="pp-ico">🙋</span><span>하루 인사</span></a>
+      <a class="parti-pill" href="mypage.html?open=gratitude"><span class="pp-ico">🙏</span><span>감사노트</span></a>
+      <a class="parti-pill" href="mypage.html?open=prayer"><span class="pp-ico">🕊️</span><span>기도제목</span></a>
     </div>
   </div>
 
@@ -123,20 +124,18 @@
     <a href="about.html" class="btn ghost block">사이트 소개 보기</a>
   </div>
 
-  <!-- 설치 안내 — 첫 사용 뒤 보이도록 페이지 맨 아래로 -->
-  <div id="installBanner"></div>
-
+  <!-- 앱 설치 안내 (한 곳으로 통합, 기기별 방법은 눌러서 확인) -->
   <div class="card" style="text-align:center;display:none;" id="installBannerPersistent">
     <p style="color:var(--text-soft);font-size:14px;margin:0 0 12px;">앱처럼 설치하면 매번 검색 안 하고 바로 열 수 있어요</p>
-    <button type="button" class="btn ghost block" id="installPersistentBtn">📱 앱처럼 설치하기</button>
+    <button type="button" class="btn ghost block" id="installPersistentBtn">📱 앱으로 설치하기</button>
     <div id="installPersistentDetail" style="display:none;margin-top:12px;font-size:13px;color:var(--text-soft);text-align:left;line-height:1.6;"></div>
+    <p style="font-size:12px;color:var(--text-soft);margin:10px 0 0;">자세한 안내: <a href="app-android.html" style="color:var(--well);">안드로이드</a> · <a href="app-ios.html" style="color:var(--well);">아이폰</a></p>
   </div>
 </div>
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
   <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
   💧 말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a><br>
-  📱 <a href="app-android.html">안드로이드 앱으로 설치하기 (베타)</a> · 🍎 <a href="app-ios.html">아이폰 앱 설치하기 (베타/홈화면)</a><br>
   성경 인용: 개역개정판, ⓒ 대한성서공회
 </footer>
 <script src="assets/verses-data.js"></script>

@@ -202,6 +202,20 @@
       initNotes(session.user.id);
       initAccordions();
       if (typeof loadBoardPreview === "function") loadBoardPreview();
+      // 홈에서 하루 인사/감사노트/기도제목을 누르고 왔으면(?open=type) 그 입력란을 바로 펼치고 이동
+      (function () {
+        var want = new URLSearchParams(location.search).get("open");
+        if (!want) return;
+        var form = document.querySelector('.note-form[data-type="' + want + '"]');
+        var card = form && form.closest(".card");
+        var wr = card && card.querySelector(".note-write");
+        if (wr) wr.classList.add("open");
+        if (card) {
+          card.scrollIntoView({ behavior: "smooth", block: "start" });
+          var ta = wr && wr.querySelector("textarea");
+          if (ta) setTimeout(function () { ta.focus(); }, 400);
+        }
+      })();
       // 뱃지 등급 보상은 프로필 화면에서 정산하지만, 여기서도 한 번 훑어 미청구분이 남지 않게 한다(멱등).
       var c = getClient();
       if (c) c.rpc("claim_badge_rewards").then(function () {}, function () {});

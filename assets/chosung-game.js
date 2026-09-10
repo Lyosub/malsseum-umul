@@ -37,6 +37,25 @@ function initChosungGame() {
     return String(s || "").replace(/\s+/g, "").trim();
   }
 
+  // 힌트 버튼용: 정답과 초성이 비슷한(같은 첫 초성 우선, 없으면 같은 시대) 다른 인물 2명
+  function similarNames(answer, n) {
+    var first = answer.chosung.charAt(0);
+    var rest = POOL.filter(function (p) { return p.name !== answer.name; });
+    var buckets = [
+      rest.filter(function (p) { return p.chosung.charAt(0) === first && p.era === answer.era; }),
+      rest.filter(function (p) { return p.chosung.charAt(0) === first; }),
+      rest.filter(function (p) { return p.era === answer.era; }),
+      rest
+    ];
+    var out = [];
+    buckets.forEach(function (list) {
+      shuffle(list).forEach(function (p) {
+        if (out.length < n && out.indexOf(p.name) === -1) out.push(p.name);
+      });
+    });
+    return out.slice(0, n);
+  }
+
   function buildQuiz() {
     quiz = shuffle(POOL).slice(0, Math.min(QUESTIONS, POOL.length));
   }
@@ -54,15 +73,28 @@ function initChosungGame() {
           'autocapitalize="off" spellcheck="false" placeholder="인물 이름을 적어요">' +
         '<button type="button" id="choSubmitBtn" class="pill-blue">확인</button>' +
       '</div>' +
-      '<button type="button" id="choSkipBtn" class="btn ghost block" style="margin-top:10px;font-size:12.5px;">모르겠어요 · 넘기기</button>';
+      '<div class="cho-hint-box" id="choHintBox" hidden></div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px;">' +
+        '<button type="button" id="choHintBtn" class="btn ghost block" style="font-size:12.5px;">💡 힌트 보기</button>' +
+        '<button type="button" id="choSkipBtn" class="btn ghost block" style="font-size:12.5px;">모르겠어요 · 넘기기</button>' +
+      '</div>';
 
     var input = document.getElementById("choInput");
     var submitBtn = document.getElementById("choSubmitBtn");
     var skipBtn = document.getElementById("choSkipBtn");
+    var hintBtn = document.getElementById("choHintBtn");
+    var hintBox = document.getElementById("choHintBox");
     input.focus();
     submitBtn.addEventListener("click", function () { check(input.value); });
     input.addEventListener("keydown", function (e) { if (e.key === "Enter") check(input.value); });
     skipBtn.addEventListener("click", function () { reveal(false); });
+    hintBtn.addEventListener("click", function () {
+      hintBtn.disabled = true;
+      hintBtn.textContent = "💡 힌트 봤어요";
+      var names = shuffle([q.name].concat(similarNames(q, 2)));
+      hintBox.hidden = false;
+      hintBox.innerHTML = '이 셋 중 하나예요 — <b>' + names.join('</b>  ·  <b>') + '</b>';
+    });
   }
 
   function check(value) {
