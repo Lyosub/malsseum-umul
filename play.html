@@ -4,14 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<title>성경 읽기 | 말씀우물</title>
-<meta name="description" content="책과 장을 골라 성경 본문을 바로 읽어보세요.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="성경 읽기 | 말씀우물">
-<meta property="og:description" content="책과 장을 골라 성경 본문을 바로 읽어보세요.">
-<meta property="og:image" content="https://logoswell.kr/assets/og-image.jpg">
-<meta property="og:url" content="https://logoswell.kr/read.html">
-<meta name="twitter:card" content="summary_large_image">
+<title>말씀놀이터 | 말씀우물</title>
+<meta name="description" content="게임으로 만나는 하나님의 말씀, 즐겁게 배우고 더 가까워져요.">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 <link rel="stylesheet" href="assets/style.css">
 <link rel="manifest" href="manifest.json">
@@ -29,25 +23,32 @@
 </header>
 <div class="wrap">
   <section class="hero">
-    <h1>성경 읽기</h1>
-    <p>책과 장을 골라 본문을 바로 읽어보세요</p>
+    <h1>말씀놀이터</h1>
+    <p>놀면서 자라는 믿음의 하루</p>
   </section>
 
-  <div class="card">
-    <div class="form-row">
-      <label for="bookSelect">책</label>
-      <select id="bookSelect" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);"></select>
-    </div>
-    <div class="form-row">
-      <label for="chapterSelect">장</label>
-      <select id="chapterSelect" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);"></select>
-    </div>
-    <button id="readBtn" class="btn block">본문 읽기</button>
+  <div class="nav-cards">
+    <a class="nav-card" href="bookgame.html">
+      <div class="icon">📚</div>
+      <div class="title">성경책 순서 맞추기</div>
+      <div class="desc">구약·신약 순서대로 빠르게!</div>
+    </a>
+    <a class="nav-card" href="matchgame.html">
+      <div class="icon">🃏</div>
+      <div class="title">같은 성경 찾기</div>
+      <div class="desc">인물과 사건을 짝지어 맞혀요!</div>
+    </a>
+    <a class="nav-card" href="oikosgame.html">
+      <div class="icon">📖</div>
+      <div class="title">말씀 빈칸 채우기</div>
+      <div class="desc">맞힌 만큼 우리 오이코스 곳간에!</div>
+    </a>
+    <a class="nav-card" href="shop.html">
+      <div class="icon">🎁</div>
+      <div class="title">달란트 상점</div>
+      <div class="desc">모은 달란트로 상품 교환하기</div>
+    </a>
   </div>
-
-  <div id="chapterResult" class="card"></div>
-
-  <p class="msg" style="text-align:center;">성경 본문 제공: <a href="https://bolls.life" target="_blank" rel="noopener">Bolls Bible API</a> · 개역한글판(공개영역)</p>
 </div>
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
@@ -57,11 +58,9 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/auth.js"></script>
-<script src="assets/bible-api.js"></script>
+<script src="assets/appshell.js"></script>
 <script>
-  initBibleReader();
   initHeaderAuthState();
 </script>
-<script src="assets/appshell.js"></script>
 </body>
 </html>

@@ -4,14 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<title>성경 읽기 | 말씀우물</title>
-<meta name="description" content="책과 장을 골라 성경 본문을 바로 읽어보세요.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="성경 읽기 | 말씀우물">
-<meta property="og:description" content="책과 장을 골라 성경 본문을 바로 읽어보세요.">
-<meta property="og:image" content="https://logoswell.kr/assets/og-image.jpg">
-<meta property="og:url" content="https://logoswell.kr/read.html">
-<meta name="twitter:card" content="summary_large_image">
+<title>우리 오이코스 | 말씀우물</title>
+<meta name="description" content="함께 믿고 함께 자라는 우리의 작은 공동체.">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 <link rel="stylesheet" href="assets/style.css">
 <link rel="manifest" href="manifest.json">
@@ -29,25 +23,29 @@
 </header>
 <div class="wrap">
   <section class="hero">
-    <h1>성경 읽기</h1>
-    <p>책과 장을 골라 본문을 바로 읽어보세요</p>
+    <h1>우리 오이코스</h1>
+    <p>혼자가 아닌, 함께하는 믿음</p>
   </section>
 
-  <div class="card">
-    <div class="form-row">
-      <label for="bookSelect">책</label>
-      <select id="bookSelect" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);"></select>
-    </div>
-    <div class="form-row">
-      <label for="chapterSelect">장</label>
-      <select id="chapterSelect" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);"></select>
-    </div>
-    <button id="readBtn" class="btn block">본문 읽기</button>
+  <div class="nav-cards">
+    <a class="nav-card feature" href="mypage.html" style="grid-column: 1 / -1;">
+      <div class="icon">👥</div>
+      <div class="title">우리 오이코스</div>
+      <div class="desc">멤버 · 공동 곳간 · 이번 주 함께할 활동 (마이페이지에서)</div>
+    </a>
+    <a class="nav-card" href="board.html">
+      <div class="icon"><img src="assets/menu-icons/board.png" alt=""></div>
+      <div class="title">자유게시판</div>
+      <div class="desc">함께 나누는 이야기</div>
+    </a>
+    <a class="nav-card" href="chodae.html">
+      <div class="icon">🎟️</div>
+      <div class="title">친구초청잔치</div>
+      <div class="desc">내가 초청한 친구 기록 + 전체 진행률</div>
+    </a>
   </div>
 
-  <div id="chapterResult" class="card"></div>
-
-  <p class="msg" style="text-align:center;">성경 본문 제공: <a href="https://bolls.life" target="_blank" rel="noopener">Bolls Bible API</a> · 개역한글판(공개영역)</p>
+  <p class="msg" style="text-align:center;">오이코스 전용 페이지는 준비 중이에요. 지금은 마이페이지 안 오이코스 카드에서 확인할 수 있어요.</p>
 </div>
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
@@ -57,11 +55,9 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/auth.js"></script>
-<script src="assets/bible-api.js"></script>
+<script src="assets/appshell.js"></script>
 <script>
-  initBibleReader();
   initHeaderAuthState();
 </script>
-<script src="assets/appshell.js"></script>
 </body>
 </html>
