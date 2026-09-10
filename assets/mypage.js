@@ -46,15 +46,23 @@ function loadTotalPoints(userId) {
 // admin.js의 ADMIN_ACTION_LABELS와 같은 action_type을 쓰지만, 여기는 학생 본인 화면이라 문구를
 // 조금 더 부드럽게(예: "교역자·부장이 부여") 다듬어서 별도로 둔다.
 var POINTS_ACTION_LABELS = {
-  attendance: "출석",
+  attendance: "출석 체크",
   streak_bonus: "7일 연속출석 보너스",
   note: "감사노트/기도제목 작성",
-  quiz: "성경퀴즈 정답",
+  quiz: "수요 성경퀴즈 정답",
+  devotion: "오늘의 QT 묵상 체크",
   group_attendance_bonus: "오이코스 출석 챌린지",
   group_notes_bonus: "오이코스 기록 챌린지",
   admin_award: "교역자·부장이 부여",
   greeting_draw: "하루인사 달란트 뽑기",
-  badge_award: "뱃지 등급 달성 보상"
+  badge_award: "뱃지 등급 달성 보상",
+  book_game: "성경책 순서 맞추기",
+  book_game_ot: "성경책 순서 맞추기 (구약)",
+  book_game_nt: "성경책 순서 맞추기 (신약)",
+  match_game_books: "같은 성경 찾기 (성경책)",
+  match_game_figures: "같은 성경 찾기 (인물·사건)",
+  oikos_donation: "오이코스 곳간에 기부",
+  oikos_distribute: "오이코스 곳간에서 받음"
 };
 
 function formatPointsRefDate(dateStr) {
@@ -89,30 +97,75 @@ function initPointsHistory(userId) {
     });
   }
 
-  client.rpc("get_my_points").then(function (res) {
-    var rows = res.data || [];
-    if (res.error) {
-      section.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
-      return;
-    }
-    if (!rows.length) {
-      section.innerHTML = '<p class="msg">아직 달란트 내역이 없어요.</p>';
-      return;
-    }
-    section.innerHTML = rows.map(function (r) {
+  var BADGE_LABELS = {
+    streak: "개근왕", attend: "출석지기", note: "기록왕", quiz: "퀴즈왕",
+    game: "게임왕", pray: "기도친구", invite: "친초 동역자"
+  };
+  var TIER_NAMES = ["동", "은", "금", "다이아", "십자가"];
+  var PH_INITIAL = 8; // 처음엔 최근 8건만, 나머지는 "더 보기"
+
+  Promise.all([
+    client.rpc("get_my_points"),
+    client.from("badge_awards").select("badge_code, tier, points_awarded, awarded_at").eq("user_id", userId)
+  ]).then(function (resList) {
+    var res = resList[0];
+    var rows = (res && res.data) || [];
+    if (res && res.error) { section.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
+    if (!rows.length) { section.innerHTML = '<p class="msg">아직 달란트 내역이 없어요.</p>'; return; }
+
+    // 뱃지 보상 상세: 날짜(KST)별로 어떤 뱃지 어떤 등급에서 받았는지 묶는다.
+    var badgeByDate = {};
+    ((resList[1] && resList[1].data) || []).forEach(function (b) {
+      var d = new Date(b.awarded_at);
+      var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      (badgeByDate[key] = badgeByDate[key] || []).push(b);
+    });
+
+    function rowHtml(r) {
       var label = POINTS_ACTION_LABELS[r.action_type] || r.action_type;
       var sign = r.points > 0 ? "+" : "";
       var color = r.points > 0 ? "var(--well)" : "#b3432c";
+      var detail = "";
+      if (r.action_type === "badge_award" && badgeByDate[r.ref_date] && badgeByDate[r.ref_date].length) {
+        var parts = badgeByDate[r.ref_date]
+          .slice()
+          .sort(function (a, b) { return a.tier - b.tier; })
+          .map(function (b) {
+            return (BADGE_LABELS[b.badge_code] || b.badge_code) + " " + (TIER_NAMES[b.tier - 1] || (b.tier + "단계")) + "(+" + b.points_awarded + ")";
+          });
+        detail = '<div style="color:var(--text-soft);font-size:11px;margin-top:3px;line-height:1.5;">' + escapeHtml(parts.join(" · ")) + '</div>';
+      }
+      var noteTxt = (r.note && r.note !== "뱃지 보상") ? ' <span style="color:var(--text-soft);">· ' + escapeHtml(r.note) + '</span>' : '';
       return (
-        '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
-          '<div>' +
-            '<div>' + escapeHtml(label) + (r.note ? ' <span style="color:var(--text-soft);">· ' + escapeHtml(r.note) + '</span>' : '') + '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
+          '<div style="min-width:0;">' +
+            '<div>' + escapeHtml(label) + noteTxt + '</div>' +
             '<div style="color:var(--text-soft);font-size:11.5px;margin-top:2px;">' + formatPointsRefDate(r.ref_date) + '</div>' +
+            detail +
           '</div>' +
           '<div style="font-weight:700;color:' + color + ';white-space:nowrap;">' + sign + r.points + '</div>' +
         '</div>'
       );
-    }).join("");
+    }
+
+    var head = rows.slice(0, PH_INITIAL).map(rowHtml).join("");
+    var restRows = rows.slice(PH_INITIAL);
+    var html = '<div id="phHead">' + head + '</div>';
+    if (restRows.length) {
+      html += '<div id="phRest" style="display:none;">' + restRows.map(rowHtml).join("") + '</div>' +
+        '<button type="button" id="phMoreBtn" class="btn ghost block" style="margin-top:10px;padding:8px 14px;font-size:12.5px;">전체 ' + rows.length + '건 보기 ▾</button>';
+    }
+    section.innerHTML = html;
+
+    var moreBtn = document.getElementById("phMoreBtn");
+    if (moreBtn) {
+      moreBtn.addEventListener("click", function () {
+        var rest = document.getElementById("phRest");
+        var open = rest.style.display !== "none";
+        rest.style.display = open ? "none" : "block";
+        moreBtn.textContent = open ? ("전체 " + rows.length + "건 보기 ▾") : "접기 ▴";
+      });
+    }
   }).catch(function () {
     section.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
   });
@@ -147,13 +200,13 @@ var BADGE_TIER_COLORS = { 1: "#c9932f", 2: "#9aa4ad", 3: "#e0b23a", 4: "#3fbecf"
 
 // 뱃지별 획득 방법 + 5단계 기준 (get_my_badges 의 defs 와 동일). unit = 세는 단위.
 var BADGE_INFO = {
-  streak: { how: "연속으로 출석한 날 수예요. 하루라도 빠지면 다시 1일부터 세요. (역대 최장 기록 기준)", unit: "일", tiers: [5, 10, 20, 30, 40] },
-  attend: { how: "지금까지 출석 체크한 총 횟수예요.", unit: "번", tiers: [5, 15, 30, 50, 80] },
-  note:   { how: "하루 인사 · 감사노트 · 기도제목을 쓴 글의 총 개수예요.", unit: "개", tiers: [10, 25, 50, 90, 140] },
-  quiz:   { how: "수요 성경퀴즈에서 정답을 맞힌 횟수예요.", unit: "번", tiers: [1, 3, 6, 10, 15] },
-  game:   { how: "성경책 순서 맞추기 · 같은 성경 찾기 게임을 플레이한 횟수예요.", unit: "판", tiers: [3, 8, 18, 30, 50] },
-  pray:   { how: "다른 사람의 기도제목에 '함께 기도했어요'를 누른 횟수예요.", unit: "번", tiers: [5, 15, 35, 60, 90] },
-  invite: { how: "내가 초청한 친구가 친구초청잔치에 실제로 온 수예요.", unit: "명", tiers: [1, 2, 3, 4, 5] }
+  streak: { how: "연속으로 출석한 날 수예요. 하루라도 빠지면 다시 1일부터 세요. (역대 최장 기록 기준)", unit: "일", tiers: [7, 14, 30, 50, 70] },
+  attend: { how: "지금까지 출석 체크한 총 횟수예요.", unit: "번", tiers: [10, 25, 55, 95, 150] },
+  note:   { how: "하루 인사 · 감사노트 · 기도제목을 쓴 글의 총 개수예요.", unit: "개", tiers: [15, 40, 85, 150, 230] },
+  quiz:   { how: "수요 성경퀴즈에서 정답을 맞힌 횟수예요.", unit: "번", tiers: [2, 5, 10, 18, 30] },
+  game:   { how: "성경책 순서 맞추기 · 같은 성경 찾기 게임을 완주한 횟수예요.", unit: "판", tiers: [5, 15, 35, 70, 120] },
+  pray:   { how: "다른 사람의 기도제목에 '함께 기도했어요'를 누른 횟수예요. (하루 3번까지)", unit: "번", tiers: [10, 30, 60, 100, 150] },
+  invite: { how: "내가 초청한 친구가 친구초청잔치에 실제로 온 수예요.", unit: "명", tiers: [1, 2, 3, 5, 7] }
 };
 var BADGE_TIER_NAMES = ["동", "은", "금", "다이아", "십자가"];
 

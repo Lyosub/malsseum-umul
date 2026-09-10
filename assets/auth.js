@@ -147,17 +147,51 @@ function initLoginForm() {
     var password = document.getElementById("passwordInput").value;
 
     if (!email || !password) {
-      msg.textContent = "이메일과 비밀번호를 입력해주세요.";
+      msg.textContent = "이메일과 비밀번호를 모두 입력해주세요.";
+      return;
+    }
+    if (email.indexOf("@") < 1 || email.indexOf(".", email.indexOf("@")) < 0) {
+      msg.textContent = "이메일 형식이 올바르지 않아요. (예: name@gmail.com)";
       return;
     }
 
     msg.textContent = "로그인 중...";
 
-    client.auth.signInWithPassword({ email: email, password: password }).then(function (res) {
-      if (res.error) {
-        msg.textContent = "로그인 실패: " + res.error.message;
+    // 로그인 실패 시 원인을 최대한 구체적으로 안내한다.
+    function explainAuthError(err) {
+      var m = (err && err.message ? String(err.message) : "").toLowerCase();
+      if (m.indexOf("email not confirmed") >= 0) {
+        msg.textContent = "이메일 인증이 안 된 계정이에요. 담당 교역자에게 말씀해주세요.";
         return;
       }
+      if (m.indexOf("rate limit") >= 0 || (err && err.status === 429)) {
+        msg.textContent = "짧은 시간에 너무 여러 번 시도했어요. 1분쯤 뒤에 다시 해주세요.";
+        return;
+      }
+      if (m.indexOf("invalid login credentials") >= 0) {
+        // Supabase 는 "이메일 없음"과 "비번 틀림"을 똑같이 반환한다 → 어느 쪽인지 따로 확인.
+        msg.textContent = "확인 중...";
+        client.rpc("check_email_registered", { p_email: email }).then(function (r) {
+          var row = (r.data && r.data[0]) || {};
+          if (r.error || row.registered === undefined) {
+            msg.textContent = "이메일 또는 비밀번호가 맞지 않아요.";
+          } else if (!row.registered) {
+            msg.textContent = "이 이메일로 가입된 계정이 없어요. 이메일을 다시 확인하거나 아래 '이메일을 잊으셨나요?'를 눌러보세요.";
+          } else if (!row.confirmed) {
+            msg.textContent = "이메일 인증이 안 된 계정이에요. 담당 교역자에게 말씀해주세요.";
+          } else {
+            msg.textContent = "비밀번호가 맞지 않아요. 아래 '비밀번호를 잊으셨나요?'로 새로 설정할 수 있어요.";
+          }
+        }).catch(function () {
+          msg.textContent = "이메일 또는 비밀번호가 맞지 않아요.";
+        });
+        return;
+      }
+      msg.textContent = "로그인 실패: " + (err && err.message ? err.message : "알 수 없는 오류");
+    }
+
+    client.auth.signInWithPassword({ email: email, password: password }).then(function (res) {
+      if (res.error) { explainAuthError(res.error); return; }
       if (window.localStorage) {
         if (rememberCheck && rememberCheck.checked) {
           localStorage.setItem("msu_saved_email", email);
@@ -166,8 +200,14 @@ function initLoginForm() {
         }
       }
       window.location.href = "mypage.html";
-    }).catch(function () {
-      msg.textContent = "네트워크 오류로 로그인하지 못했어요.";
+    }).catch(function (err) {
+      // fetch 자체가 실패(Load failed / Failed to fetch / 타임아웃) — 계정 문제가 아니라 네트워크/서버 문제.
+      var m = (err && err.message ? String(err.message) : "").toLowerCase();
+      if (m.indexOf("load failed") >= 0 || m.indexOf("failed to fetch") >= 0 || m.indexOf("network") >= 0 || m.indexOf("fetch") >= 0) {
+        msg.textContent = "서버에 연결하지 못했어요. 계정 문제가 아니라 인터넷·네트워크 문제예요. 잠시 후 다시 시도하거나 다른 인터넷·기기에서 해보세요. (아이폰이면 설정 > [이름] > iCloud > 개인정보 보호 릴레이 끄기, 날짜·시간 자동 설정 확인)";
+      } else {
+        msg.textContent = "로그인 중 오류가 났어요: " + (err && err.message ? err.message : "알 수 없음");
+      }
     });
   });
 }
