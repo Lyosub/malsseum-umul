@@ -33,10 +33,10 @@
 
   <!-- 오늘의 말씀 (QT) -->
   <div id="homeVerseCard" class="verse-card brand-bg"></div>
-  <a class="home-verse-cta" href="verses.html">오늘의 말씀 읽기 <span aria-hidden="true">›</span></a>
+  <a class="home-verse-cta" id="homeVerseCta" href="read.html">오늘의 말씀 읽기 <span aria-hidden="true">›</span></a>
 
   <!-- 성경 이어 읽기 -->
-  <div class="sect-hd"><h2>성경 이어 읽기</h2><a href="read.html">말씀의 여정 ›</a></div>
+  <div class="sect-hd"><h2>성경 이어 읽기</h2><a href="read.html">더보기 ›</a></div>
   <div class="card tint-blue" id="readingProgressCard">
     <div style="display:flex;align-items:center;gap:12px;">
       <span class="ico-circle">📖</span>
@@ -62,7 +62,7 @@
   </div>
 
   <!-- 내 마음에 맞는 말씀 -->
-  <div class="sect-hd"><h2>내 마음에 맞는 말씀</h2><a href="well.html">마음을 말씀에 담아 ›</a></div>
+  <div class="sect-hd"><h2>내 마음에 맞는 말씀</h2><a href="well.html">바로가기 ›</a></div>
   <div class="mind-box">
     <p class="sub">지금 어떤 마음인가요? 우물이와 함께 찾아보세요.</p>
     <form id="wordMindForm">
@@ -72,7 +72,7 @@
   </div>
 
   <!-- 말씀 카드 모아보기 -->
-  <div class="sect-hd"><h2>말씀 카드 모아보기</h2><a href="verses.html">더 많은 말씀을 ›</a></div>
+  <div class="sect-hd"><h2>말씀 카드 모아보기</h2><a href="verses.html">더보기 ›</a></div>
   <a href="verses.html" class="card" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
     <span class="ico-circle">🃏</span>
     <div style="flex:1 1 auto;min-width:0;">
@@ -82,7 +82,6 @@
     <span style="color:var(--text-soft);">›</span>
   </a>
 
-  <p class="hand-outro">오늘도 말씀으로 더 깊이</p>
 </div>
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
@@ -104,6 +103,15 @@
   (function () {
     var el = document.getElementById("homeVerseCard");
     if (el) el.style.setProperty("--verse-bg-image", "url(brand/banner-word.jpg)");
+  })();
+  // "오늘의 말씀 읽기" → 오늘 말씀 본문(그 책·장)으로. 말씀 카드(뽑기)와 구분한다.
+  (function () {
+    var cta = document.getElementById("homeVerseCta");
+    if (!cta || typeof getVerseFor !== "function" || typeof refToReadLink !== "function") return;
+    try {
+      var link = refToReadLink(getVerseFor("daily").ref);
+      if (link) cta.href = link;
+    } catch (e) {}
   })();
   // 성경 이어 읽기: 마지막으로 읽은 곳을 불러와 "이어 읽기" 버튼에 반영
   (function () {

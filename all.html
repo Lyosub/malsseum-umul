@@ -52,10 +52,9 @@
     <div class="dir-group h-blue">
       <h3>📖 말씀</h3>
       <div class="dir-list">
-        <a class="dir-row" href="verses.html"><span class="di"><img src="assets/menu-icons/calendar.png" alt=""></span><span class="dg">오늘의 QT</span><span class="dc">›</span></a>
-        <a class="dir-row" href="read.html"><span class="di"><img src="assets/menu-icons/read.png" alt=""></span><span class="dg">성경 읽기</span><span class="dc">›</span></a>
+        <a class="dir-row" href="read.html"><span class="di"><img src="assets/menu-icons/read.png" alt=""></span><span class="dg">오늘의 QT · 성경 읽기</span><span class="dc">›</span></a>
         <a class="dir-row" href="weekly.html"><span class="di"><img src="assets/menu-icons/weekly.png" alt=""></span><span class="dg">이번 주 말씀</span><span class="dc">›</span></a>
-        <a class="dir-row" href="verses.html"><span class="di"><img src="assets/menu-icons/verse-card.png" alt=""></span><span class="dg">말씀 카드</span><span class="dc">›</span></a>
+        <a class="dir-row" href="verses.html"><span class="di"><img src="assets/menu-icons/verse-card.png" alt=""></span><span class="dg">말씀 카드 (하루·주간·월간 뽑기)</span><span class="dc">›</span></a>
         <a class="dir-row" href="well.html"><span class="di"><img src="assets/menu-icons/well.png" alt=""></span><span class="dg">내 마음에 맞는 말씀</span><span class="dc">›</span></a>
       </div>
     </div>
@@ -111,7 +110,7 @@
       <h3>ℹ️ 이용 안내</h3>
       <div class="dir-list" style="display:grid;grid-template-columns:1fr 1fr;column-gap:16px;">
         <a class="dir-row" href="about.html"><span class="di">🏠</span><span class="dg">사이트 소개</span><span class="dc">›</span></a>
-        <a class="dir-row" href="app-android.html"><span class="di">⬇️</span><span class="dg">앱 설치</span><span class="dc">›</span></a>
+        <a class="dir-row" id="allAppInstall" href="app-android.html"><span class="di">⬇️</span><span class="dg">앱 설치</span><span class="dc">›</span></a>
         <a class="dir-row" href="profile.html"><span class="di">🔔</span><span class="dg">알림 설정</span><span class="dc">›</span></a>
         <a class="dir-row" href="privacy.html"><span class="di">🛡️</span><span class="dg">개인정보처리방침</span><span class="dc">›</span></a>
       </div>
@@ -130,6 +129,11 @@
 <script src="assets/appshell.js"></script>
 <script>
   initHeaderAuthState();
+  // 앱 설치: 기기에 맞는 안내로 (아이폰이면 iOS 안내)
+  (function () {
+    var ai = document.getElementById("allAppInstall");
+    if (ai && /iP(hone|ad|od)/i.test(navigator.userAgent)) ai.href = "app-ios.html";
+  })();
   // 친구초청잔치: 행사 기간(9/13, 이후 자동 숨김)일 때만 노출
   (function () {
     var row = document.getElementById("allChodaeRow");

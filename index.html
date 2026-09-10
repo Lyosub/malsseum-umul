@@ -31,13 +31,12 @@
   </nav>
 </header>
 <div class="wrap home-wrap">
-  <!-- 공지·이벤트 스트립 (등록된 게 있을 때만 렌더됨) -->
-  <div class="home-notice-strip" id="chodaeBanner"></div>
-  <div class="home-notice-strip" id="homeBanner"></div>
+  <!-- 공지 한 줄 캐러셀 (등록된 게 있을 때만 렌더됨) -->
+  <div class="notice-bar" id="homeNotice" hidden></div>
 
   <!-- 오늘의 말씀 (QT) — 큰 파란 카드 + 라임 CTA -->
   <div id="homeVerseCard" class="verse-card"></div>
-  <a class="home-verse-cta" href="verses.html">오늘의 말씀 읽기 <span aria-hidden="true">›</span></a>
+  <a class="home-verse-cta" id="homeVerseCta" href="read.html">오늘의 말씀 읽기 <span aria-hidden="true">›</span></a>
   <p class="home-hand">변하지 않는 우리의 소망</p>
 
   <!-- 말씀 빠른 이동 4타일 -->
@@ -57,7 +56,6 @@
       <button type="submit">말씀 길어 올리기 ›</button>
     </form>
   </div>
-  <p class="home-hand" style="margin:10px 0 4px;">오늘도 우물가로 오세요</p>
 
   <!-- 오늘의 참여 -->
   <div class="today-parti">
@@ -149,14 +147,22 @@
 <script src="assets/script.js"></script>
 <script src="assets/public-feed.js"></script>
 <script src="assets/new-badge.js"></script>
-<script src="assets/home-banner.js"></script>
-<script src="assets/chodae-home.js"></script>
+<script src="assets/home-notice.js"></script>
 <script src="assets/install-prompt.js"></script>
 <script>
   initHomeCard();
   initQtCheckin();
   initHeaderAuthState();
   initPublicFeed();
+  // "오늘의 말씀 읽기" → 오늘 말씀 본문(그 책·장)으로. 말씀 카드(뽑기)와 구분한다.
+  (function () {
+    var cta = document.getElementById("homeVerseCta");
+    if (!cta || typeof getVerseFor !== "function" || typeof refToReadLink !== "function") return;
+    try {
+      var link = refToReadLink(getVerseFor("daily").ref);
+      if (link) cta.href = link;
+    } catch (e) {}
+  })();
   // 홈의 "내 마음에 맞는 말씀" 한 줄 입력 → well.html 로 넘기며 바로 매칭
   (function () {
     var f = document.getElementById("homeMindForm");

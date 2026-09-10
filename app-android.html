@@ -33,6 +33,22 @@
     <p>말씀우물을 폰에 앱처럼 설치해보세요</p>
   </div>
 
+  <a href="app-ios.html" id="deviceSwitch" class="card" style="display:flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:16px;">
+    <span style="font-size:20px;flex:none;">🍎</span>
+    <span style="flex:1 1 auto;font-size:13.5px;color:var(--well-deep);font-weight:700;">아이폰(iPhone)이신가요? 아이폰 설치 안내 보기</span>
+    <span style="color:var(--text-soft);flex:none;">›</span>
+  </a>
+  <script>
+    (function () {
+      var s = document.getElementById("deviceSwitch");
+      if (s && /iP(hone|ad|od)/i.test(navigator.userAgent)) {
+        s.className = "pill-blue block";
+        s.setAttribute("style", "margin-bottom:16px;");
+        s.textContent = "🍎 이 기기는 아이폰이에요 — 아이폰 설치 안내로 가기 ›";
+      }
+    })();
+  </script>
+
   <div class="card" style="border:1px solid var(--gold);background:rgba(200,150,60,0.06);">
     <h3 style="margin-top:0;color:var(--gold);">⚠️ 아직 정식 출시 전이에요 (베타)</h3>
     <p style="color:var(--text-soft);font-size:14px;">

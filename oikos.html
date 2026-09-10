@@ -20,6 +20,7 @@
 <header class="site">
   <a class="logo" href="index.html">💧 말씀우물</a>
   <nav>
+    <a href="login.html" id="navLoginGated" style="display:none;">로그인</a>
     <a href="#" id="logoutBtn">로그아웃</a>
   </nav>
 </header>
@@ -182,6 +183,7 @@
   })();
   getSession().then(function (session) {
     if (!session) {
+      var _lg=document.getElementById("navLoginGated"); if(_lg)_lg.style.display="inline"; var _lo=document.getElementById("logoutBtn"); if(_lo)_lo.style.display="none";
       document.getElementById("loginGate").style.display = "block";
       return;
     }
