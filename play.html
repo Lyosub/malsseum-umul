@@ -40,8 +40,23 @@
     <a href="oikosgame.html" class="pill-lime">도전하기 ›</a>
   </div>
 
-  <!-- 두 게임 -->
+  <!-- 게임들 -->
   <div class="pair-cards" style="margin-top:16px;">
+    <a class="pc" href="memorize.html">
+      <span class="pc-emoji">🧠</span>
+      <span class="pc-title">오늘의 말씀 외우기</span>
+      <span class="pc-desc">오늘의 말씀을 단어 순서대로 완성해요!</span>
+      <span class="pill-blue" style="margin-top:4px;padding:9px 16px;font-size:12px;">시작하기 ›</span>
+    </a>
+    <a class="pc" href="chosung.html">
+      <span class="pc-emoji">🔤</span>
+      <span class="pc-title">성경 인물 초성 퀴즈</span>
+      <span class="pc-desc">초성과 힌트로 성경 인물 맞히기!</span>
+      <span class="pill-blue" style="margin-top:4px;padding:9px 16px;font-size:12px;">시작하기 ›</span>
+    </a>
+  </div>
+
+  <div class="pair-cards" style="margin-top:12px;">
     <a class="pc" href="bookgame.html">
       <span class="pc-emoji">📚</span>
       <span class="pc-title">성경책 순서 맞추기</span>
@@ -113,14 +128,19 @@
         client.rpc("get_my_book_game_score", { p_mode: "nt" }),
         client.rpc("get_my_match_game_score", { p_mode: "books" }),
         client.rpc("get_my_match_game_score", { p_mode: "figures" }),
-        client.rpc("get_oikos_verse_game_status")
+        client.rpc("get_oikos_verse_game_status"),
+        client.rpc("get_daily_game_status")
       ]).then(function (r) {
         function val(x) { return x && !x.error ? x.data : null; }
         var ot = val(r[0]), nt = val(r[1]), mb = val(r[2]), mf = val(r[3]);
         var vg = r[4] && !r[4].error && r[4].data && r[4].data[0];
+        var dg = r[5] && !r[5].error && r[5].data && r[5].data[0];
 
         var html =
-          '<div style="font-weight:800;color:var(--well-deep);font-size:12.5px;margin:2px 0 2px;">📚 성경책 순서 맞추기 · 최고 기록</div>' +
+          '<div style="font-weight:800;color:var(--well-deep);font-size:12.5px;margin:2px 0 2px;">오늘의 달란트 게임</div>' +
+          row("🧠 오늘의 말씀 외우기", (dg && dg.verse_memory_done) ? "오늘 완료 ✅" : "아직 · +2") +
+          row("🔤 성경 인물 초성 퀴즈", (dg && dg.chosung_done) ? "오늘 완료 ✅" : "아직 · +2") +
+          '<div style="font-weight:800;color:var(--well-deep);font-size:12.5px;margin:12px 0 2px;">📚 성경책 순서 맞추기 · 최고 기록</div>' +
           row("구약", fmt(ot)) + row("신약", fmt(nt)) +
           '<div style="font-weight:800;color:var(--well-deep);font-size:12.5px;margin:12px 0 2px;">🃏 같은 성경 찾기 · 최고 기록</div>' +
           row("성경책", fmt(mb)) + row("인물 · 사건", fmt(mf));

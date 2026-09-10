@@ -61,6 +61,13 @@ var POINTS_ACTION_LABELS = {
   book_game_nt: "성경책 순서 맞추기 (신약)",
   match_game_books: "같은 성경 찾기 (성경책)",
   match_game_figures: "같은 성경 찾기 (인물·사건)",
+  verse_memory: "오늘의 말씀 외우기",
+  chosung_quiz: "성경 인물 초성 퀴즈",
+  qt_reflection: "오늘의 QT 실천 기록",
+  devotion_streak: "QT 7일 연속 보너스",
+  verse_card_daily: "말씀 카드 뽑기 (하루)",
+  verse_card_weekly: "말씀 카드 뽑기 (이번 주)",
+  verse_card_monthly: "말씀 카드 뽑기 (이번 달)",
   oikos_donation: "오이코스 곳간에 기부",
   oikos_distribute: "오이코스 곳간에서 받음"
 };

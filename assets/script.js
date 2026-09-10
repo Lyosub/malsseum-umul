@@ -4,11 +4,11 @@ function escapeHtmlBasic(str) {
     .replace(/"/g, "&quot;");
 }
 
-// 오늘의 QT 마지막에 붙는 "작은 실천" 질문 + 한 줄 기록.
-// 달란트를 주지 않는다(참여 남용 방지). 기록은 이 기기(localStorage)에만 저장된다.
+// 오늘의 QT 마지막에 붙는 "오늘의 실천" 질문 + 한 줄 기록.
+// 로그인 상태면 계정(DB)에 저장하고 성의 있게 쓰면 하루 1번 +1달란트(save_qt_reflection).
+// 비로그인이면 이 기기(localStorage)에만 저장한다.
 function qtReflectHtml(verse) {
   var q = verse.reflect || "오늘 이 말씀을 삶에서 어떻게 살아볼 수 있을까요? 딱 한 가지만 적어보세요.";
-  // KST 기준 날짜로 키를 잡아 자정에 새 기록칸이 열리도록 한다.
   var kstNow = new Date(Date.now() + 9 * 3600 * 1000);
   var key = "msu_qt_reflect_" + kstNow.toISOString().slice(0, 10);
   var saved = "";
@@ -22,7 +22,7 @@ function qtReflectHtml(verse) {
         '<button type="button" class="btn ghost qt-reflect-save">저장</button>' +
         '<span class="qt-reflect-msg"></span>' +
       '</div>' +
-      '<p class="qt-reflect-note">이 기록은 지금 보고 있는 기기에만 저장돼요.</p>' +
+      '<p class="qt-reflect-note">로그인하면 계정에 저장되고, 성의껏 쓰면 하루 1번 +1달란트예요.</p>' +
     '</div>'
   );
 }
@@ -33,13 +33,54 @@ function bindQtReflect(el) {
   var save = box.querySelector(".qt-reflect-save");
   var input = box.querySelector(".qt-reflect-input");
   var msg = box.querySelector(".qt-reflect-msg");
+  var note = box.querySelector(".qt-reflect-note");
   if (!save || !input) return;
+
+  var client = (typeof getClient === "function") ? getClient() : null;
+
+  // 로그인 상태면 서버에 저장된 오늘 기록을 불러와 미리 채운다
+  if (client && typeof getSession === "function") {
+    getSession().then(function (session) {
+      if (!session) { if (note) note.textContent = "이 기록은 지금 보고 있는 기기에만 저장돼요."; return; }
+      client.rpc("get_qt_reflection").then(function (res) {
+        var body = (res && !res.error) ? res.data : null;
+        if (body && !input.value.trim()) input.value = body;
+      }, function () {});
+    });
+  } else if (note) {
+    note.textContent = "이 기록은 지금 보고 있는 기기에만 저장돼요.";
+  }
+
   save.addEventListener("click", function () {
-    try { localStorage.setItem(box.getAttribute("data-key"), input.value.trim()); } catch (e) {}
-    if (msg) {
-      msg.textContent = "저장했어요 ✓";
-      setTimeout(function () { msg.textContent = ""; }, 2000);
+    var text = input.value.trim();
+    try { localStorage.setItem(box.getAttribute("data-key"), text); } catch (e) {}
+
+    if (!client || typeof getSession !== "function") {
+      if (msg) { msg.textContent = "저장했어요 ✓"; setTimeout(function () { msg.textContent = ""; }, 2000); }
+      return;
     }
+    getSession().then(function (session) {
+      if (!session) {
+        if (msg) { msg.textContent = "저장했어요 ✓ (로그인하면 달란트도 받아요)"; setTimeout(function () { msg.textContent = ""; }, 3000); }
+        return;
+      }
+      if (text.length < 4) {
+        if (msg) { msg.textContent = "한 줄이라도 적어주세요"; setTimeout(function () { msg.textContent = ""; }, 2500); }
+        return;
+      }
+      save.disabled = true;
+      client.rpc("save_qt_reflection", { p_text: text }).then(function (res) {
+        save.disabled = false;
+        var pts = (res && !res.error) ? res.data : 0;
+        if (msg) {
+          msg.textContent = pts > 0 ? "저장 +1달란트 🎉" : "저장했어요 ✓";
+          setTimeout(function () { msg.textContent = ""; }, 3000);
+        }
+      }, function () {
+        save.disabled = false;
+        if (msg) { msg.textContent = "저장했어요 ✓"; setTimeout(function () { msg.textContent = ""; }, 2000); }
+      });
+    });
   });
 }
 
@@ -57,7 +98,7 @@ function renderVerseInto(elId, verse) {
     '<div class="ref">' + verse.ref + '</div>' +
     '<div class="text">' + verse.text + '</div>' +
     (extraHtml
-      ? '<button type="button" class="verse-card-toggle">🌿 오늘 3분 QT 시작 ▾</button>' +
+      ? '<button type="button" class="verse-card-toggle">묵상 펼치기 ▾</button>' +
         '<div class="verse-card-more" hidden>' + extraHtml + '</div>'
       : '');
 
@@ -67,7 +108,7 @@ function renderVerseInto(elId, verse) {
     toggle.addEventListener("click", function () {
       var isHidden = more.hasAttribute("hidden");
       more.toggleAttribute("hidden", !isHidden);
-      toggle.textContent = isHidden ? "접기 ▴" : "🌿 오늘 3분 QT 시작 ▾";
+      toggle.textContent = isHidden ? "접기 ▴" : "묵상 펼치기 ▾";
     });
   }
   bindQtReflect(el);
@@ -185,6 +226,24 @@ function renderDrawnVerseInto(elId, verse, kind) {
 var _currentDrawnVerse = null;
 var _currentDrawnKind = "daily";
 
+// 말씀 카드를 뽑으면 각 기간(하루/이번 주/이번 달)에 처음 1번 +1달란트.
+// 서버가 기간 상한을 관리(ref_date=기간 시작일)하므로 여러 번 눌러도 중복 지급 없음.
+function claimVerseCardTalent(kind, msgEl) {
+  if (typeof getClient !== "function" || (kind !== "daily" && kind !== "weekly" && kind !== "monthly")) return;
+  var client = getClient();
+  if (!client || typeof getSession !== "function") return;
+  var base = msgEl ? msgEl.textContent : "";
+  getSession().then(function (session) {
+    if (!session) return;
+    client.rpc("claim_verse_card", { p_kind: kind }).then(function (res) {
+      var pts = (res && !res.error) ? res.data : 0;
+      if (pts > 0 && msgEl && msgEl.textContent === base) {
+        msgEl.textContent = base + "  · +" + pts + "달란트 🎉";
+      }
+    }, function () {});
+  });
+}
+
 function initVerseTabs() {
   var tabs = document.querySelectorAll(".tabs button");
   var drawBtn = document.getElementById("drawBtn");
@@ -200,6 +259,7 @@ function initVerseTabs() {
     drawBtn.style.display = "none";
     if (saveArea) saveArea.style.display = "block";
     drawMsg.textContent = DRAW_LABELS[_currentDrawnKind].already;
+    claimVerseCardTalent(_currentDrawnKind, drawMsg);
   }
 
   function showUndrawn() {

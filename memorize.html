@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>오늘의 말씀 외우기 | 말씀우물</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2540d8">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script defer src="assets/pwa.js"></script>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav><a href="play.html">말씀놀이터</a></nav>
+</header>
+<div class="wrap">
+  <div class="page-hd">
+    <h1>🧠 오늘의 말씀 외우기</h1>
+    <p>오늘의 말씀을 잠깐 본 뒤, 단어를 순서대로 눌러 완성해요.</p>
+  </div>
+
+  <div class="card tint-blue">
+    <p class="msg" style="margin:0;">💠 <strong>달란트 얻는 법</strong> — 처음 완성하면 <strong style="color:var(--well);">+2달란트</strong> (하루 1번). 로그인해야 저장돼요. 여러 번 연습하는 건 언제든 OK.</p>
+  </div>
+
+  <div class="card" id="vmVerseRef" style="text-align:center;font-size:13px;color:var(--gold);"></div>
+
+  <!-- 1단계: 말씀 보기 -->
+  <div class="card" id="vmShowCard" style="text-align:center;">
+    <div class="verse-card" style="background:none;background-image:linear-gradient(180deg,var(--well) 0%,var(--well-deep) 100%);box-shadow:none;margin:0;">
+      <div class="verse-card-kicker">👀 이 말씀을 외워보세요</div>
+      <p class="text" id="vmShowText"></p>
+      <div id="vmCountdown" style="font-size:14px;opacity:.85;margin-top:6px;"></div>
+    </div>
+    <button type="button" id="vmStartBtn" class="btn block" style="margin-top:14px;">준비됐어요, 시작!</button>
+  </div>
+
+  <!-- 2단계: 순서대로 맞추기 -->
+  <div class="card" id="vmPlayCard" style="display:none;">
+    <div id="vmAnswer" style="min-height:52px;display:flex;flex-wrap:wrap;gap:6px;padding:12px;border:1px dashed var(--border);border-radius:12px;background:var(--bg);margin-bottom:14px;"></div>
+    <div id="vmPool" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>
+    <p class="msg" id="vmPlayMsg" style="text-align:center;margin-top:12px;"></p>
+    <div style="display:flex;gap:8px;margin-top:6px;">
+      <button type="button" id="vmPeekBtn" class="btn ghost block" style="font-size:12.5px;">👀 한 번 더 보기</button>
+      <button type="button" id="vmRestartBtn" class="btn ghost block" style="font-size:12.5px;">처음부터</button>
+    </div>
+  </div>
+
+  <!-- 완료 -->
+  <div class="card" id="vmDoneCard" style="display:none;text-align:center;">
+    <h3 style="margin-top:0;">🎉 다 외웠어요!</h3>
+    <p class="text" id="vmDoneVerse" style="font-family:var(--font-hand);font-weight:700;line-height:1.8;color:var(--well-deep);"></p>
+    <p class="msg" id="vmDoneMsg" style="font-weight:700;color:var(--well);"></p>
+    <button type="button" id="vmAgainBtn" class="btn ghost" style="margin-top:8px;padding:8px 18px;font-size:12.5px;">다시 해보기</button>
+    <a href="play.html" class="btn block" style="margin-top:10px;">말씀놀이터로</a>
+  </div>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  💧 말씀우물 · 성경 인용: 개역개정판, ⓒ 대한성서공회
+</footer>
+<script src="assets/verses-data.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/script.js"></script>
+<script src="assets/memorize-game.js"></script>
+<script src="assets/appshell.js"></script>
+<script>initMemorizeGame();</script>
+</body>
+</html>

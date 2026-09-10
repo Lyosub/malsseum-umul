@@ -16,7 +16,7 @@
     ["word",  "말씀",         "word.html",   ["word.html", "verses.html", "weekly.html", "read.html", "well.html"]],
     ["oikos", "오이코스",      "oikos.html",  ["oikos.html", "chodae.html"]],
     ["me",    "나의 기록",     "mypage.html", ["mypage.html", "profile.html", "feed.html", "board.html"]],
-    ["play",  "놀이터",        "play.html",   ["play.html", "bookgame.html", "matchgame.html", "oikosgame.html", "shop.html"]],
+    ["play",  "놀이터",        "play.html",   ["play.html", "bookgame.html", "matchgame.html", "oikosgame.html", "memorize.html", "chosung.html", "shop.html"]],
     ["all",   "전체",         "all.html",    ["all.html", "notice.html", "calendar.html", "mbti.html", "wallpaper.html", "about.html", "privacy.html", "app-android.html", "app-ios.html"]]
   ];
 

@@ -102,7 +102,21 @@ var ADMIN_ACTION_LABELS = {
   group_notes_bonus: "오이코스 기록 챌린지",
   admin_award: "교역자가 부여",
   greeting_draw: "하루인사 달란트 뽑기",
-  badge_award: "뱃지 등급 달성 보상"
+  badge_award: "뱃지 등급 달성 보상",
+  devotion: "오늘의 QT 묵상 체크",
+  devotion_streak: "QT 7일 연속 보너스",
+  qt_reflection: "오늘의 QT 실천 기록",
+  verse_memory: "오늘의 말씀 외우기",
+  chosung_quiz: "성경 인물 초성 퀴즈",
+  verse_card_daily: "말씀 카드 뽑기 (하루)",
+  verse_card_weekly: "말씀 카드 뽑기 (이번 주)",
+  verse_card_monthly: "말씀 카드 뽑기 (이번 달)",
+  book_game_ot: "성경책 순서 맞추기 (구약)",
+  book_game_nt: "성경책 순서 맞추기 (신약)",
+  match_game_books: "같은 성경 찾기 (성경책)",
+  match_game_figures: "같은 성경 찾기 (인물·사건)",
+  oikos_donation: "오이코스 곳간에 기부",
+  oikos_distribute: "오이코스 곳간에서 받음"
 };
 
 // 회원 상세보기: 닉네임/본명 부분을 눌렀을 때, 그 사람의 출석·작성 기록·달란트 내역 전체를

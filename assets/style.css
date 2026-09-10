@@ -1728,6 +1728,58 @@ details.mp-fold h4 { margin-top: 4px; }
 }
 .home-row .hr-arrow { flex: none; color: var(--text-soft); font-size: 15px; }
 
+/* 오늘의 말씀 외우기 — 단어 칩 */
+.mem-chip {
+  border: 1px solid var(--well-light);
+  background: var(--card-bg);
+  color: var(--well-deep);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 9px 13px;
+  border-radius: 12px;
+  cursor: pointer;
+  line-height: 1.3;
+}
+.mem-chip.placed {
+  background: var(--well);
+  border-color: var(--well);
+  color: #fff;
+  cursor: default;
+}
+.mem-chip.used { opacity: 0.28; pointer-events: none; }
+.mem-chip.wrong { animation: mem-shake 0.32s ease; border-color: #d9534f; }
+@keyframes mem-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* 성경 인물 초성 퀴즈 */
+.cho-quiz-chosung {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--well);
+  text-align: center;
+  margin: 6px 0 2px;
+}
+.cho-quiz-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.cho-choice {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+}
+.cho-choice.correct { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
+.cho-choice.wrong { background: #fbe9e8; border-color: #d9534f; color: #a33; }
+.cho-choice:disabled { cursor: default; }
+
 /* 홈 상단 공지 한 줄 캐러셀 (assets/home-notice.js) */
 .notice-bar {
   display: flex;
