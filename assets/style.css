@@ -1,5 +1,7 @@
 :root {
-  color-scheme: light;
+  /* only light: 브라우저(삼성 인터넷·크롬)의 "강제 다크 모드"가 라임/흰 배경을
+     칙칙한 올리브·회색으로 재색칠하지 못하게 막는다. */
+  color-scheme: only light;
   /* 2026-09: 청록(teal) → 코발트 블루 + 라임 리브랜드. 토큰 이름은 그대로 두어
      모든 페이지가 한 번에 새 색으로 바뀌게 한다(--well = 브랜드 메인색). */
   --bg: #f6f4ec;
@@ -10,8 +12,8 @@
   --well: #2540d8;
   --well-deep: #17287e;
   --well-light: #9fb1f2;
-  --lime: #c3e02f;
-  --lime-ink: #33420a;
+  --lime: #cdec37;
+  --lime-ink: #29380a;
   --gold: #c9932f;
   --radius: 18px;
   --max: 720px;
