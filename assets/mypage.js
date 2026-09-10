@@ -126,16 +126,26 @@ function initPointsHistory(userId) {
       var sign = r.points > 0 ? "+" : "";
       var color = r.points > 0 ? "var(--well)" : "#b3432c";
       var detail = "";
-      if (r.action_type === "badge_award" && badgeByDate[r.ref_date] && badgeByDate[r.ref_date].length) {
-        var parts = badgeByDate[r.ref_date]
-          .slice()
-          .sort(function (a, b) { return a.tier - b.tier; })
-          .map(function (b) {
-            return (BADGE_LABELS[b.badge_code] || b.badge_code) + " " + (TIER_NAMES[b.tier - 1] || (b.tier + "단계")) + "(+" + b.points_awarded + ")";
-          });
-        detail = '<div style="color:var(--text-soft);font-size:11px;margin-top:3px;line-height:1.5;">' + escapeHtml(parts.join(" · ")) + '</div>';
+      var noteTxt = "";
+      if (r.action_type === "badge_award") {
+        // 뱃지 보상(+): 어떤 뱃지 몇 등급인지 — badge_awards 조인이 있으면 등급별 +점수까지,
+        // 없으면(회수로 지워진 경우 등) 지급 시점에 원장 note 에 적어둔 내역을 쓴다.
+        var desc = "";
+        if (r.points > 0 && badgeByDate[r.ref_date] && badgeByDate[r.ref_date].length) {
+          desc = badgeByDate[r.ref_date]
+            .slice()
+            .sort(function (a, b) { return a.tier - b.tier; })
+            .map(function (b) {
+              return (BADGE_LABELS[b.badge_code] || b.badge_code) + " " + (TIER_NAMES[b.tier - 1] || (b.tier + "단계")) + "(+" + b.points_awarded + ")";
+            })
+            .join(" · ");
+        }
+        if (!desc && r.points > 0 && r.note && r.note !== "뱃지 보상") desc = r.note;
+        if (desc) detail = '<div style="color:var(--text-soft);font-size:11px;margin-top:3px;line-height:1.5;">🏅 ' + escapeHtml(desc) + '</div>';
+        if (r.points < 0 && r.note) noteTxt = ' <span style="color:var(--text-soft);">· ' + escapeHtml(r.note) + '</span>';
+      } else {
+        noteTxt = (r.note && r.note !== "뱃지 보상") ? ' <span style="color:var(--text-soft);">· ' + escapeHtml(r.note) + '</span>' : '';
       }
-      var noteTxt = (r.note && r.note !== "뱃지 보상") ? ' <span style="color:var(--text-soft);">· ' + escapeHtml(r.note) + '</span>' : '';
       return (
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
           '<div style="min-width:0;">' +
