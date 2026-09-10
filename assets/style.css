@@ -790,6 +790,33 @@ textarea { min-height: 90px; resize: vertical; }
 
 .member-detail .note-item { padding: 10px 0; }
 
+/* 회원 상세: 출석/작성기록/달란트내역을 접어서 스크롤이 길어지지 않게 */
+.member-detail .member-fold {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  margin: 8px 0;
+  padding: 0 12px;
+}
+.member-detail .member-fold > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 0;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--well-deep);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.member-detail .member-fold > summary::-webkit-details-marker { display: none; }
+.member-detail .member-fold > summary::after { content: "\25be"; color: var(--text-soft); font-size: 11px; }
+.member-detail .member-fold[open] > summary::after { content: "\25b4"; }
+.member-detail .member-fold[open] { padding-bottom: 10px; }
+.member-detail .member-fold .note-item { padding: 8px 0; }
+.member-detail .member-fold .note-item:first-of-type { padding-top: 2px; }
+
 .streak {
   text-align: center;
   padding: 20px;

@@ -404,6 +404,9 @@ function initProfileSettings(session) {
     if (phoneInput) phoneInput.value = p.phone_number || "";
     var adminLink = document.getElementById("adminPageLink");
     if (adminLink && (p.is_admin || p.is_department_head)) adminLink.style.display = "block";
+    // 닉네임이 아직 없으면(가입 직후) "내 정보"를 펼쳐서 바로 설정하게 안내한다.
+    var profileFold = document.getElementById("profileSection");
+    if (profileFold && !p.nickname) profileFold.open = true;
   });
 
   if (savePhoneBtn) {

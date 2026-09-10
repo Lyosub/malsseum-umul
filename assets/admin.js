@@ -120,14 +120,16 @@ function loadMemberDetail(userId, container) {
     var attendance = results[1].data || [];
     var points = results[2].data || [];
 
+    var MAX_ROWS = 60;
+
     var attendanceHtml = attendance.length
-      ? '<p class="msg" style="margin:0 0 10px;">총 ' + attendance.length + '일 · ' +
+      ? '<p class="msg" style="margin:8px 0 0;">총 ' + attendance.length + '일 · ' +
           attendance.slice(0, 20).map(function (a) { return a.attend_date; }).join(", ") +
           (attendance.length > 20 ? " 외 " + (attendance.length - 20) + "일" : "") + '</p>'
-      : '<p class="msg" style="margin:0 0 10px;">출석 기록이 없어요.</p>';
+      : '<p class="msg" style="margin:8px 0 0;">출석 기록이 없어요.</p>';
 
     var notesHtml = notes.length
-      ? notes.map(function (n) {
+      ? notes.slice(0, MAX_ROWS).map(function (n) {
           return (
             '<div class="note-item">' +
               '<div class="meta">' + ADMIN_NOTE_LABELS[n.type] + ' · ' + formatDateTime(n.created_at) + adminVisBadge(n) + '</div>' +
@@ -135,11 +137,11 @@ function loadMemberDetail(userId, container) {
               renderImageGallery(n.image_urls) +
             '</div>'
           );
-        }).join("")
-      : '<p class="msg">작성한 기록이 없어요.</p>';
+        }).join("") + (notes.length > MAX_ROWS ? '<p class="msg" style="margin:8px 0 0;">…최근 ' + MAX_ROWS + '건만 표시</p>' : '')
+      : '<p class="msg" style="margin:8px 0 0;">작성한 기록이 없어요.</p>';
 
     var pointsHtml = points.length
-      ? points.map(function (p) {
+      ? points.slice(0, MAX_ROWS).map(function (p) {
           var label = ADMIN_ACTION_LABELS[p.action_type] || p.action_type;
           var isPlus = p.points >= 0;
           return (
@@ -148,13 +150,13 @@ function loadMemberDetail(userId, container) {
               '<div class="content" style="font-weight:700;color:' + (isPlus ? "var(--well)" : "#b3432c") + ';">' + (isPlus ? "+" : "") + p.points + '달란트</div>' +
             '</div>'
           );
-        }).join("")
-      : '<p class="msg">달란트 내역이 없어요.</p>';
+        }).join("") + (points.length > MAX_ROWS ? '<p class="msg" style="margin:8px 0 0;">…최근 ' + MAX_ROWS + '건만 표시</p>' : '')
+      : '<p class="msg" style="margin:8px 0 0;">달란트 내역이 없어요.</p>';
 
     container.innerHTML =
-      '<div class="well-label" style="margin-top:14px;">📅 출석</div>' + attendanceHtml +
-      '<div class="well-label">✍️ 작성한 기록 (' + notes.length + '건)</div>' + notesHtml +
-      '<div class="well-label" style="margin-top:14px;">💠 달란트 내역 (' + points.length + '건)</div>' + pointsHtml;
+      '<details class="member-fold" open><summary>📅 출석 (' + attendance.length + '일)</summary>' + attendanceHtml + '</details>' +
+      '<details class="member-fold"><summary>✍️ 작성한 기록 (' + notes.length + '건)</summary>' + notesHtml + '</details>' +
+      '<details class="member-fold"><summary>💠 달란트 내역 (' + points.length + '건)</summary>' + pointsHtml + '</details>';
   }).catch(function () {
     container.innerHTML = '<p class="msg">불러오지 못했어요.</p>';
   });
