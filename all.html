@@ -7,6 +7,9 @@
 <title>전체 메뉴 | 말씀우물</title>
 <meta name="description" content="말씀우물의 모든 메뉴를 한곳에서.">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2540d8">
@@ -22,13 +25,20 @@
   </nav>
 </header>
 <div class="wrap">
-  <section class="hero">
-    <h1>전체 메뉴</h1>
+  <div class="page-hd">
+    <h1>전체</h1>
     <p>함께하는 더 넓은 이야기</p>
-  </section>
+    <div class="hand-note">함께하는<br>더 넓은 이야기</div>
+  </div>
+
+  <div class="menu-search">
+    <span aria-hidden="true">🔍</span>
+    <input type="text" id="menuSearch" placeholder="메뉴를 검색해 보세요!" autocomplete="off">
+  </div>
+  <p class="msg" id="menuSearchEmpty" style="display:none;text-align:center;">찾는 메뉴가 없어요.</p>
 
   <a class="card" href="profile.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;">
-    <div style="width:52px;height:52px;flex:none;border-radius:50%;background:var(--well-light);display:flex;align-items:center;justify-content:center;font-size:24px;">🙂</div>
+    <div class="ico-circle" style="width:52px;height:52px;font-size:24px;">🙂</div>
     <div style="flex:1 1 auto;min-width:0;">
       <div style="font-weight:800;color:var(--well-deep);">나의 프로필</div>
       <div style="font-size:12.5px;color:var(--text-soft);">하나님과 함께하는 특별한 여정</div>
@@ -36,80 +46,75 @@
     <span style="color:var(--text-soft);">계정 설정 ›</span>
   </a>
 
-  <a href="admin.html" id="allAdminLink" class="btn block" style="display:none;margin:-4px 0 16px;">🛠️ 관리자 페이지로 들어가기</a>
+  <a href="admin.html" id="allAdminLink" class="pill-blue block" style="display:none;margin:-4px 0 16px;">🛠️ 관리자 페이지로 들어가기</a>
 
-  <div class="card dir-group">
-    <h3>📖 말씀</h3>
-    <div class="dir-sub">오늘도 말씀으로 더 깊이</div>
-    <div class="dir-list">
-      <a class="dir-row" href="verses.html"><span class="di"><img src="assets/menu-icons/calendar.png" alt=""></span><span class="dg">오늘의 QT</span><span class="dc">›</span></a>
-      <a class="dir-row" href="read.html"><span class="di"><img src="assets/menu-icons/read.png" alt=""></span><span class="dg">성경 읽기</span><span class="dc">›</span></a>
-      <a class="dir-row" href="weekly.html"><span class="di"><img src="assets/menu-icons/weekly.png" alt=""></span><span class="dg">이번 주 말씀</span><span class="dc">›</span></a>
-      <a class="dir-row" href="verses.html"><span class="di"><img src="assets/menu-icons/verse-card.png" alt=""></span><span class="dg">말씀 카드</span><span class="dc">›</span></a>
-      <a class="dir-row" href="well.html"><span class="di"><img src="assets/menu-icons/well.png" alt=""></span><span class="dg">내 마음에 맞는 말씀</span><span class="dc">›</span></a>
+  <div class="dir-grid" id="dirGrid">
+    <div class="dir-group h-blue">
+      <h3>📖 말씀</h3>
+      <div class="dir-list">
+        <a class="dir-row" href="verses.html"><span class="di"><img src="assets/menu-icons/calendar.png" alt=""></span><span class="dg">오늘의 QT</span><span class="dc">›</span></a>
+        <a class="dir-row" href="read.html"><span class="di"><img src="assets/menu-icons/read.png" alt=""></span><span class="dg">성경 읽기</span><span class="dc">›</span></a>
+        <a class="dir-row" href="weekly.html"><span class="di"><img src="assets/menu-icons/weekly.png" alt=""></span><span class="dg">이번 주 말씀</span><span class="dc">›</span></a>
+        <a class="dir-row" href="verses.html"><span class="di"><img src="assets/menu-icons/verse-card.png" alt=""></span><span class="dg">말씀 카드</span><span class="dc">›</span></a>
+        <a class="dir-row" href="well.html"><span class="di"><img src="assets/menu-icons/well.png" alt=""></span><span class="dg">내 마음에 맞는 말씀</span><span class="dc">›</span></a>
+      </div>
     </div>
-  </div>
 
-  <div class="card dir-group">
-    <h3>🤝 함께하는 공동체</h3>
-    <div class="dir-sub">혼자가 아닌 함께하는 믿음</div>
-    <div class="dir-list">
-      <a class="dir-row" href="oikos.html"><span class="di">👥</span><span class="dg">우리 오이코스</span><span class="dc">›</span></a>
-      <a class="dir-row" href="board.html"><span class="di"><img src="assets/menu-icons/board.png" alt=""></span><span class="dg">자유게시판</span><span class="dc">›</span></a>
-      <a class="dir-row" id="allChodaeRow" href="chodae.html"><span class="di">🎟️</span><span class="dg">친구초청잔치</span><span class="dc">›</span></a>
+    <div class="dir-group h-lime">
+      <h3>🤝 함께하는 공동체</h3>
+      <div class="dir-list">
+        <a class="dir-row" href="oikos.html"><span class="di">👥</span><span class="dg">우리 오이코스</span><span class="dc">›</span></a>
+        <a class="dir-row" href="board.html"><span class="di"><img src="assets/menu-icons/board.png" alt=""></span><span class="dg">자유게시판</span><span class="dc">›</span></a>
+        <a class="dir-row" id="allChodaeRow" href="chodae.html"><span class="di">🎟️</span><span class="dg">친구초청잔치</span><span class="dc">›</span></a>
+      </div>
     </div>
-  </div>
 
-  <div class="card dir-group">
-    <h3>✍️ 나의 기록</h3>
-    <div class="dir-sub">오늘의 믿음이 모여 내일의 나로</div>
-    <div class="dir-list">
-      <a class="dir-row" href="mypage.html"><span class="di"><img src="assets/menu-icons/mypage.png" alt=""></span><span class="dg">출석</span><span class="dc">›</span></a>
-      <a class="dir-row" href="mypage.html"><span class="di">💙</span><span class="dg">감사노트</span><span class="dc">›</span></a>
-      <a class="dir-row" href="mypage.html"><span class="di">🙏</span><span class="dg">기도제목</span><span class="dc">›</span></a>
-      <a class="dir-row" href="profile.html"><span class="di">🏅</span><span class="dg">나의 뱃지</span><span class="dc">›</span></a>
+    <div class="dir-group h-lime">
+      <h3>✍️ 나의 기록</h3>
+      <div class="dir-list">
+        <a class="dir-row" href="mypage.html"><span class="di"><img src="assets/menu-icons/mypage.png" alt=""></span><span class="dg">출석</span><span class="dc">›</span></a>
+        <a class="dir-row" href="mypage.html"><span class="di">💙</span><span class="dg">감사노트</span><span class="dc">›</span></a>
+        <a class="dir-row" href="mypage.html"><span class="di">🙏</span><span class="dg">기도제목</span><span class="dc">›</span></a>
+        <a class="dir-row" href="profile.html"><span class="di">🏅</span><span class="dg">나의 뱃지</span><span class="dc">›</span></a>
+      </div>
     </div>
-  </div>
 
-  <div class="card dir-group">
-    <h3>🎮 말씀놀이터</h3>
-    <div class="dir-sub">놀면서 자라는 믿음</div>
-    <div class="dir-list">
-      <a class="dir-row" href="bookgame.html"><span class="di">📚</span><span class="dg">성경책 순서 맞추기</span><span class="dc">›</span></a>
-      <a class="dir-row" href="matchgame.html"><span class="di">🃏</span><span class="dg">같은 성경 찾기</span><span class="dc">›</span></a>
-      <a class="dir-row" href="oikosgame.html"><span class="di">📖</span><span class="dg">말씀 빈칸 채우기</span><span class="dc">›</span></a>
+    <div class="dir-group h-blue">
+      <h3>🎮 말씀놀이터</h3>
+      <div class="dir-list">
+        <a class="dir-row" href="bookgame.html"><span class="di">📚</span><span class="dg">성경책 순서 맞추기</span><span class="dc">›</span></a>
+        <a class="dir-row" href="matchgame.html"><span class="di">🃏</span><span class="dg">같은 성경 찾기</span><span class="dc">›</span></a>
+        <a class="dir-row" href="oikosgame.html"><span class="di">📖</span><span class="dg">말씀 빈칸 채우기</span><span class="dc">›</span></a>
+      </div>
     </div>
-  </div>
 
-  <div class="card dir-group">
-    <h3>🎁 달란트</h3>
-    <div class="dir-sub">하나님이 주신 특별한 선물</div>
-    <div class="dir-list">
-      <a class="dir-row" href="profile.html"><span class="di">💠</span><span class="dg">나의 달란트</span><span class="dc">›</span></a>
-      <a class="dir-row" href="shop.html"><span class="di">🛒</span><span class="dg">달란트 상점</span><span class="dc">›</span></a>
-      <a class="dir-row" href="oikos.html"><span class="di">👥</span><span class="dg">공동 곳간</span><span class="dc">›</span></a>
+    <div class="dir-group h-blue">
+      <h3>🎁 달란트</h3>
+      <div class="dir-list">
+        <a class="dir-row" href="profile.html"><span class="di">💠</span><span class="dg">나의 달란트</span><span class="dc">›</span></a>
+        <a class="dir-row" href="shop.html"><span class="di">🛒</span><span class="dg">달란트 상점</span><span class="dc">›</span></a>
+        <a class="dir-row" href="oikos.html"><span class="di">👥</span><span class="dg">공동 곳간</span><span class="dc">›</span></a>
+      </div>
     </div>
-  </div>
 
-  <div class="card dir-group">
-    <h3>📢 소식과 콘텐츠</h3>
-    <div class="dir-sub">더 가까이, 더 풍성하게</div>
-    <div class="dir-list">
-      <a class="dir-row" href="notice.html"><span class="di"><img src="assets/menu-icons/notice.png" alt=""></span><span class="dg">공지사항</span><span class="dc">›</span></a>
-      <a class="dir-row" href="calendar.html"><span class="di"><img src="assets/menu-icons/calendar.png" alt=""></span><span class="dg">이달의 일정</span><span class="dc">›</span></a>
-      <a class="dir-row" href="mbti.html"><span class="di"><img src="assets/menu-icons/mbti.png" alt=""></span><span class="dg">MBTI 성경인물</span><span class="dc">›</span></a>
-      <a class="dir-row" href="wallpaper.html"><span class="di"><img src="assets/menu-icons/wallpaper.png" alt=""></span><span class="dg">이달의 배경화면</span><span class="dc">›</span></a>
+    <div class="dir-group h-lime">
+      <h3>📢 소식과 콘텐츠</h3>
+      <div class="dir-list">
+        <a class="dir-row" href="notice.html"><span class="di"><img src="assets/menu-icons/notice.png" alt=""></span><span class="dg">공지사항</span><span class="dc">›</span></a>
+        <a class="dir-row" href="calendar.html"><span class="di"><img src="assets/menu-icons/calendar.png" alt=""></span><span class="dg">이달의 일정</span><span class="dc">›</span></a>
+        <a class="dir-row" href="mbti.html"><span class="di"><img src="assets/menu-icons/mbti.png" alt=""></span><span class="dg">MBTI 성경인물</span><span class="dc">›</span></a>
+        <a class="dir-row" href="wallpaper.html"><span class="di"><img src="assets/menu-icons/wallpaper.png" alt=""></span><span class="dg">이달의 배경화면</span><span class="dc">›</span></a>
+      </div>
     </div>
-  </div>
 
-  <div class="card dir-group">
-    <h3>ℹ️ 이용 안내</h3>
-    <div class="dir-sub">말씀우물과 함께하는 방법</div>
-    <div class="dir-list">
-      <a class="dir-row" href="about.html"><span class="di">🏠</span><span class="dg">사이트 소개</span><span class="dc">›</span></a>
-      <a class="dir-row" href="app-android.html"><span class="di">⬇️</span><span class="dg">앱 설치</span><span class="dc">›</span></a>
-      <a class="dir-row" href="profile.html"><span class="di">🔔</span><span class="dg">알림 설정</span><span class="dc">›</span></a>
-      <a class="dir-row" href="privacy.html"><span class="di">🛡️</span><span class="dg">개인정보처리방침</span><span class="dc">›</span></a>
+    <div class="dir-group h-blue" style="grid-column:1 / -1;">
+      <h3>ℹ️ 이용 안내</h3>
+      <div class="dir-list" style="display:grid;grid-template-columns:1fr 1fr;column-gap:16px;">
+        <a class="dir-row" href="about.html"><span class="di">🏠</span><span class="dg">사이트 소개</span><span class="dc">›</span></a>
+        <a class="dir-row" href="app-android.html"><span class="di">⬇️</span><span class="dg">앱 설치</span><span class="dc">›</span></a>
+        <a class="dir-row" href="profile.html"><span class="di">🔔</span><span class="dg">알림 설정</span><span class="dc">›</span></a>
+        <a class="dir-row" href="privacy.html"><span class="di">🛡️</span><span class="dg">개인정보처리방침</span><span class="dc">›</span></a>
+      </div>
     </div>
   </div>
 </div>
@@ -130,6 +135,28 @@
     if (!row) return;
     var HIDE_AFTER = new Date("2026-09-15T00:00:00+09:00").getTime();
     if (Date.now() >= HIDE_AFTER) row.style.display = "none";
+  })();
+  // 메뉴 검색: dir-row 텍스트로 즉시 필터
+  (function () {
+    var input = document.getElementById("menuSearch");
+    var grid = document.getElementById("dirGrid");
+    var empty = document.getElementById("menuSearchEmpty");
+    if (!input || !grid) return;
+    input.addEventListener("input", function () {
+      var q = input.value.trim().toLowerCase();
+      var anyShown = false;
+      grid.querySelectorAll(".dir-group").forEach(function (g) {
+        var groupHit = false;
+        g.querySelectorAll(".dir-row").forEach(function (r) {
+          var hit = !q || r.textContent.toLowerCase().indexOf(q) !== -1;
+          r.style.display = hit ? "" : "none";
+          if (hit) groupHit = true;
+        });
+        g.style.display = groupHit ? "" : "none";
+        if (groupHit) anyShown = true;
+      });
+      if (empty) empty.style.display = anyShown ? "none" : "block";
+    });
   })();
   // 관리자 링크: 교역자·부장 계정에게만
   (function () {

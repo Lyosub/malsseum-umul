@@ -1726,6 +1726,232 @@ details.mp-fold h4 { margin-top: 4px; }
 }
 .home-row .hr-arrow { flex: none; color: var(--text-soft); font-size: 15px; }
 
+/* ===== 탭 페이지 공용 앱형 레이아웃 (Codex 블루·라임 시안) ===== */
+
+/* 페이지 헤더: 왼쪽 큰 제목 + 마스코트, 아래 회색 부제, 우상단 손글씨 메모 */
+.page-hd {
+  position: relative;
+  padding: 18px 2px 16px;
+  margin-bottom: 4px;
+}
+.page-hd h1 {
+  font-family: var(--font-hand);
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--well-deep);
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.page-hd h1 img { width: 38px; height: 38px; object-fit: contain; flex: none; }
+.page-hd p { margin: 0; color: var(--text-soft); font-size: 13.5px; line-height: 1.5; max-width: 62%; }
+.page-hd .hand-note {
+  position: absolute;
+  top: 14px;
+  right: 4px;
+  font-family: var(--font-accent);
+  font-size: 19px;
+  line-height: 1.15;
+  color: var(--well);
+  text-align: right;
+  max-width: 44%;
+}
+
+/* 섹션 제목 + 더보기 */
+.sect-hd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 24px 2px 12px;
+}
+.sect-hd h2 {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--well-deep);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.sect-hd a {
+  font-family: var(--font-accent);
+  font-size: 15px;
+  color: var(--well);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* 큰 파란 피처 카드 (오늘의 말씀 / 공동 곳간 / 말씀 빈칸 채우기 등) */
+.feature-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--well);
+  background-image: linear-gradient(150deg, var(--well) 0%, var(--well-deep) 100%);
+  color: #fff;
+  border-radius: 20px;
+  padding: 24px 22px;
+  margin: 4px 0 8px;
+  box-shadow: 0 14px 30px rgba(37, 64, 216, 0.22);
+}
+.feature-card .fc-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  opacity: 0.8;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+}
+.feature-card h2,
+.feature-card h3 { margin: 0 0 8px; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+.feature-card p { margin: 0 0 16px; font-size: 14px; line-height: 1.6; opacity: 0.92; }
+.feature-card .fc-art {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 148px;
+  max-width: 46%;
+  opacity: 0.95;
+  pointer-events: none;
+}
+.feature-card .fc-inner {
+  position: relative;
+  background: #fff;
+  color: var(--text);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-top: 4px;
+}
+
+/* 알약 버튼 */
+.pill-lime, .pill-blue {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 20px;
+  font-weight: 800;
+  font-size: 13.5px;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pill-lime { background: var(--lime); color: var(--lime-ink); box-shadow: 0 8px 18px rgba(120, 150, 20, 0.30); }
+.pill-blue { background: var(--well); color: #fff; box-shadow: 0 8px 18px rgba(37, 64, 216, 0.28); }
+.pill-blue.block, .pill-lime.block { display: flex; width: 100%; justify-content: center; }
+
+/* 아이콘 원형 배지 */
+.ico-circle {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(37, 64, 216, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.ico-circle.lime { background: rgba(195, 224, 47, 0.30); }
+
+/* 카드 톤 (섹션 컨테이너용 옅은 배경) */
+.tint-blue { background: rgba(37, 64, 216, 0.05); border-color: rgba(37, 64, 216, 0.12); }
+.tint-lime { background: rgba(195, 224, 47, 0.16); border-color: rgba(195, 224, 47, 0.40); }
+
+/* 아이콘 + 제목 + 화살표 한 줄짜리 이동 행 (카드 안에 여러 개) */
+.row-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 4px;
+  text-decoration: none;
+  color: var(--text);
+  border-top: 1px solid var(--border);
+}
+.row-link:first-of-type { border-top: 0; }
+.row-link .rl-body { flex: 1 1 auto; min-width: 0; }
+.row-link .rl-title { display: block; font-weight: 700; color: var(--well-deep); font-size: 14px; }
+.row-link .rl-desc { display: block; font-size: 12px; color: var(--text-soft); margin-top: 1px; }
+.row-link .rl-arrow { flex: none; color: var(--text-soft); }
+
+/* 두 장 나란히 놓는 게임/기능 카드 */
+.pair-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pair-cards .pc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 20px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  text-decoration: none;
+  color: var(--text);
+}
+.pair-cards .pc .pc-emoji { font-size: 34px; line-height: 1; }
+.pair-cards .pc .pc-title { font-weight: 800; color: var(--well-deep); font-size: 14px; }
+.pair-cards .pc .pc-desc { font-size: 11.5px; color: var(--text-soft); line-height: 1.4; }
+
+/* 마음 입력 미니박스 재사용(mind-box)은 홈 CSS 그대로 사용 */
+
+/* 전체 메뉴(all.html) 2열 그리드 + 톤 헤더 */
+.dir-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.dir-grid .dir-group {
+  margin: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 14px 8px;
+  overflow: hidden;
+}
+.dir-grid .dir-group > h3 {
+  margin: 0 -14px 6px;
+  padding: 14px 14px 12px;
+  font-size: 14px;
+}
+.dir-grid .dir-group.h-blue > h3 { background: rgba(37, 64, 216, 0.08); }
+.dir-grid .dir-group.h-lime > h3 { background: rgba(195, 224, 47, 0.22); }
+.dir-grid .dir-group > .dir-sub { display: none; }
+.dir-grid .dir-row { padding: 10px 2px; font-size: 13px; font-weight: 600; }
+.dir-grid .dir-row .di { width: 20px; font-size: 15px; }
+.dir-grid .dir-row .di img { width: 18px; height: 18px; }
+@media (max-width: 520px) {
+  .dir-grid { grid-template-columns: 1fr; }
+}
+
+/* 메뉴 검색 박스 */
+.menu-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 12px 18px;
+  margin: 8px 0 16px;
+}
+.menu-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+}
+
+/* 손글씨 맺음말 (페이지 하단 라임 밑줄 문구) */
+.hand-outro {
+  font-family: var(--font-accent);
+  font-size: 19px;
+  color: var(--well);
+  text-align: center;
+  margin: 20px 0 8px;
+}
+
 /* ===== 공용 앱셸: 하단 탭바 (assets/appshell.js) ===== */
 body.has-tabbar { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
 

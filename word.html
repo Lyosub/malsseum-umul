@@ -7,6 +7,9 @@
 <title>말씀 | 말씀우물</title>
 <meta name="description" content="오늘의 말씀, 성경 읽기, 이번 주 말씀, 말씀 카드를 한곳에서.">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2540d8">
@@ -22,37 +25,64 @@
   </nav>
 </header>
 <div class="wrap">
-  <section class="hero">
-    <h1>말씀</h1>
+  <div class="page-hd">
+    <h1><img src="assets/brand/mascot-cheer.png" alt="">말씀</h1>
     <p>오늘도 말씀으로 더 깊이</p>
-  </section>
-
-  <div id="homeVerseCard" class="verse-card"></div>
-
-  <div class="nav-cards">
-    <a class="nav-card feature" href="weekly.html" style="grid-column: 1 / -1;">
-      <div class="icon"><img src="assets/menu-icons/weekly.png" alt=""></div>
-      <div class="title">이번 주 말씀</div>
-      <div class="desc">이번 주 예배 말씀 요약 + 카드</div>
-    </a>
-    <a class="nav-card" href="verses.html">
-      <div class="icon"><img src="assets/menu-icons/verse-card.png" alt=""></div>
-      <div class="title">말씀 카드</div>
-      <div class="desc">하루·주간·월간 말씀</div>
-    </a>
-    <a class="nav-card" href="read.html">
-      <div class="icon"><img src="assets/menu-icons/read.png" alt=""></div>
-      <div class="title">성경 읽기</div>
-      <div class="desc">책·장 골라서 바로 읽기</div>
-    </a>
-    <a class="nav-card" href="well.html" style="grid-column: 1 / -1;">
-      <div class="icon"><img src="assets/menu-icons/well.png" alt=""></div>
-      <div class="title">내 마음에 맞는 말씀</div>
-      <div class="desc">말씀우물 · 고민을 적으면 말씀을 길어 올려드려요</div>
-    </a>
+    <div class="hand-note">오늘도<br>말씀으로 더 깊이</div>
   </div>
 
-  <p class="msg" style="text-align:center;">📖 성경 이어 읽기(진도 저장) 기능은 준비 중이에요.</p>
+  <!-- 오늘의 말씀 (QT) -->
+  <div id="homeVerseCard" class="verse-card"></div>
+  <a class="home-verse-cta" href="verses.html">오늘의 말씀 읽기 <span aria-hidden="true">›</span></a>
+
+  <!-- 성경 이어 읽기 (진도 저장은 준비 중) -->
+  <div class="sect-hd"><h2>성경 이어 읽기</h2></div>
+  <div class="card tint-blue">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="ico-circle">📖</span>
+      <div style="flex:1 1 auto;min-width:0;">
+        <div style="font-weight:800;color:var(--well-deep);">지금, 하나님의 말씀을 계속 읽어보세요</div>
+        <div style="font-size:12px;color:var(--text-soft);">책·장을 골라 바로 읽을 수 있어요. (읽은 곳 저장 기능은 준비 중)</div>
+      </div>
+    </div>
+    <a href="read.html" class="pill-blue block" style="margin-top:14px;">성경 읽기 열기 ›</a>
+  </div>
+
+  <!-- 이번 주 말씀 -->
+  <div class="sect-hd"><h2>이번 주 말씀</h2><a href="weekly.html">설교 요약 보기 ›</a></div>
+  <div class="card tint-lime">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="ico-circle lime">🗓️</span>
+      <div style="flex:1 1 auto;min-width:0;">
+        <div style="font-weight:800;color:var(--well-deep);">이번 주 예배 말씀 요약 + 말씀 카드</div>
+        <div style="font-size:12px;color:var(--text-soft);">수요 성경퀴즈도 여기에서 풀 수 있어요.</div>
+      </div>
+    </div>
+    <a href="weekly.html" class="pill-blue block" style="margin-top:14px;">이번 주 말씀 보기 ›</a>
+  </div>
+
+  <!-- 내 마음에 맞는 말씀 -->
+  <div class="sect-hd"><h2>내 마음에 맞는 말씀</h2><a href="well.html">마음을 말씀에 담아 ›</a></div>
+  <div class="mind-box">
+    <p class="sub">지금 어떤 마음인가요? 우물이와 함께 찾아보세요.</p>
+    <form id="wordMindForm">
+      <input type="text" id="wordMindInput" placeholder="오늘 어떤 마음인가요?" autocomplete="off">
+      <button type="submit">말씀 길어 올리기 ›</button>
+    </form>
+  </div>
+
+  <!-- 말씀 카드 모아보기 -->
+  <div class="sect-hd"><h2>말씀 카드 모아보기</h2><a href="verses.html">더 많은 말씀을 ›</a></div>
+  <a href="verses.html" class="card" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
+    <span class="ico-circle">🃏</span>
+    <div style="flex:1 1 auto;min-width:0;">
+      <div style="font-weight:800;color:var(--well-deep);">하루 · 주간 · 월간 말씀 카드</div>
+      <div style="font-size:12px;color:var(--text-soft);">짧은 말씀 한 줄이 오늘을 바꿀 수 있어요.</div>
+    </div>
+    <span style="color:var(--text-soft);">›</span>
+  </a>
+
+  <p class="hand-outro">오늘도 말씀으로 더 깊이</p>
 </div>
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
@@ -70,6 +100,15 @@
   initHomeCard();
   initQtCheckin();
   initHeaderAuthState();
+  (function () {
+    var f = document.getElementById("wordMindForm");
+    if (!f) return;
+    f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var q = (document.getElementById("wordMindInput").value || "").trim();
+      location.href = q ? "well.html?q=" + encodeURIComponent(q) : "well.html";
+    });
+  })();
 </script>
 </body>
 </html>

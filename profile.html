@@ -6,6 +6,9 @@
 <meta name="color-scheme" content="light">
 <title>나의 프로필 | 말씀우물</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2540d8">
@@ -20,10 +23,11 @@
   </nav>
 </header>
 <div class="wrap" id="pageContent" style="display:none;">
-  <section class="hero">
-    <h1>나의 프로필</h1>
-    <p>하나님과 함께하는 특별한 여정</p>
-  </section>
+  <div class="page-hd">
+    <h1><img src="assets/brand/mascot-idle.png" alt="">나의 프로필</h1>
+    <p>하나님 안에서 자라는 중이에요!</p>
+    <div class="hand-note">하나님과 함께하는<br>특별한 여정</div>
+  </div>
 
   <details class="mp-fold" id="profileSection" open>
     <summary>내 정보</summary>
@@ -76,16 +80,19 @@
     <a href="admin.html" id="adminPageLink" class="btn block" style="display:none;margin-top:16px;">관리자 페이지로 들어가기</a>
   </details>
 
-  <div class="card streak">
-    <div style="text-align:center;">
-      <div class="num" id="pointsNum">0</div>
-      <div class="label">쓸 수 있는 달란트</div>
+  <div class="feature-card" id="pointsCard">
+    <p class="fc-kicker" style="margin-bottom:2px;">MY TALENT</p>
+    <div style="display:flex;align-items:baseline;gap:10px;">
+      <span style="font-size:15px;font-weight:800;">나의 달란트</span>
+      <span style="font-size:34px;font-weight:800;line-height:1;" id="pointsNum">0</span>
+      <span style="font-size:14px;font-weight:700;opacity:.85;">달란트</span>
     </div>
+    <p style="margin:4px 0 0;font-size:11.5px;opacity:.8;">쓸 수 있는(적립 − 상점 교환) 달란트예요.</p>
     <div style="display:flex;gap:8px;margin-top:14px;">
-      <button type="button" id="pointsHistoryToggleBtn" class="btn ghost" style="flex:1;padding:10px 12px;font-size:12.5px;">📋 적립·사용 내역</button>
-      <a href="shop.html" class="btn" style="flex:1;padding:10px 12px;font-size:12.5px;text-align:center;text-decoration:none;">🎁 달란트 상점</a>
+      <button type="button" id="pointsHistoryToggleBtn" style="flex:1;border:0;border-radius:12px;padding:11px 12px;font-size:12.5px;font-weight:800;font-family:inherit;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;">📋 적립·사용 내역</button>
+      <a href="shop.html" class="pill-lime" style="flex:1;justify-content:center;padding:11px 12px;font-size:12.5px;">🎁 달란트 상점</a>
     </div>
-    <div id="pointsHistorySection" style="display:none;margin-top:14px;text-align:left;"><p class="msg">불러오는 중...</p></div>
+    <div id="pointsHistorySection" style="display:none;margin-top:14px;text-align:left;background:#fff;color:var(--text);border-radius:12px;padding:12px 14px;"><p class="msg">불러오는 중...</p></div>
   </div>
 
   <details class="mp-fold" id="badgesCard" style="display:none;margin-bottom:16px;">
