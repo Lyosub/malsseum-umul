@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1080px; height:1920px; }
+  body { font-family:'Pretendard','Malgun Gothic',sans-serif; }
+  .card {
+    width:1080px; height:1920px; position:relative; overflow:hidden;
+    color:#fff; padding:88px 84px 72px;
+    background:linear-gradient(163deg,#141f6b 0%,#2540d8 58%,#3f5bec 100%);
+    display:flex; flex-direction:column;
+  }
+  .card::after {
+    content:""; position:absolute; right:-240px; bottom:-220px;
+    width:700px; height:700px; border-radius:50%; background:rgba(255,255,255,.06);
+  }
+  .card::before {
+    content:""; position:absolute; left:-170px; top:-150px;
+    width:480px; height:480px; border-radius:50%; background:rgba(205,236,55,.10);
+  }
+  .kicker {
+    align-self:flex-start; font-size:28px; font-weight:700; letter-spacing:2px;
+    background:rgba(255,255,255,.16); padding:13px 30px; border-radius:999px;
+  }
+  h1 { font-size:84px; font-weight:800; line-height:1.12; letter-spacing:-3px; margin:30px 0 14px; position:relative; z-index:1; }
+  .lead { font-size:33px; font-weight:500; color:rgba(255,255,255,.82); margin-bottom:48px; line-height:1.4; }
+
+  .sec { position:relative; z-index:1; margin-bottom:36px; }
+  .sec-h { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+  .sec-h .e { font-size:44px; line-height:1; }
+  .sec-h .h { font-size:39px; font-weight:800; letter-spacing:-1px; }
+  .sec.lime .sec-h .h { color:#dbff4a; }
+
+  .box {
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.16);
+    border-radius:24px; padding:26px 30px;
+  }
+  .sec.lime .box { background:rgba(205,236,55,.14); border-color:rgba(205,236,55,.34); }
+  .row { display:flex; gap:14px; align-items:flex-start; }
+  .row + .row { margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,.14); }
+  .row .b { font-size:29px; font-weight:800; letter-spacing:-1px; flex:0 0 auto; }
+  .row .x { font-size:29px; font-weight:400; color:rgba(255,255,255,.86); line-height:1.42; }
+  .row .x b { font-weight:800; color:#fff; }
+  .tag {
+    display:inline-block; background:#cdec37; color:#26350a; font-weight:800;
+    font-size:22px; padding:3px 13px; border-radius:999px; margin-left:6px; vertical-align:middle;
+  }
+
+  .foot {
+    margin-top:auto; position:relative; z-index:1; text-align:center;
+    background:#cdec37; color:#1b2a05; border-radius:20px; padding:26px 20px;
+    font-size:35px; font-weight:800; letter-spacing:-1px;
+  }
+  .foot span { display:block; font-size:25px; font-weight:600; color:#33420a; margin-top:7px; }
+</style></head>
+<body>
+<div class="card">
+  <div class="kicker">말씀우물 업데이트 · 2026. 9</div>
+  <h1>이렇게 바뀌었어요 ✨</h1>
+  <div class="lead">디자인부터 새 게임까지, 한 번에 정리했어요.</div>
+
+  <div class="sec">
+    <div class="sec-h"><span class="e">🎨</span><span class="h">새 옷을 입었어요</span></div>
+    <div class="box">
+      <div class="row"><span class="b">색</span><span class="x">청록 → <b>코발트 블루 + 라임</b>으로. 전 화면이 통일됐어요.</span></div>
+      <div class="row"><span class="b">이동</span><span class="x">화면 아래 <b>탭 6개</b>(홈·말씀·오이코스·나의 기록·놀이터·전체)로 어디든 한 번에.</span></div>
+      <div class="row"><span class="b">홈</span><span class="x">공지는 한 줄로, 오늘의 말씀 카드 + 빠른 이동 + <b>오늘의 참여</b> 버튼이 첫 화면에.</span></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><span class="e">🎮</span><span class="h">새 게임 2개</span></div>
+    <div class="box">
+      <div class="row"><span class="b">🧠</span><span class="x"><b>오늘의 말씀 외우기</b> — 오늘 말씀을 잠깐 본 뒤 단어를 순서대로! <span class="tag">+2</span></span></div>
+      <div class="row"><span class="b">🔤</span><span class="x"><b>성경 인물 초성 퀴즈</b> — 초성과 힌트로 인물 맞히기, 10문제 <span class="tag">+2</span></span></div>
+    </div>
+  </div>
+
+  <div class="sec lime">
+    <div class="sec-h"><span class="e">💠</span><span class="h">달란트 받는 법이 늘었어요</span></div>
+    <div class="box">
+      <div class="row"><span class="b">🌱</span><span class="x">오늘의 QT <b>'오늘의 실천'</b> 한 줄 기록 (하루 1번) <span class="tag">+1</span></span></div>
+      <div class="row"><span class="b">🔥</span><span class="x">QT <b>7일 연속</b> 묵상 보너스 <span class="tag">+1</span></span></div>
+      <div class="row"><span class="b">🃏</span><span class="x"><b>말씀 카드</b>를 하루·이번 주·이번 달 처음 뽑을 때 <span class="tag">각 +1</span></span></div>
+      <div class="row"><span class="b">🧠🔤</span><span class="x">새 게임 두 개도 하루 첫 도전에 <span class="tag">각 +2</span></span></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><span class="e">📖</span><span class="h">그 밖에</span></div>
+    <div class="box">
+      <div class="row"><span class="b">이어 읽기</span><span class="x"><b>성경 읽기</b>가 마지막 읽은 곳을 기억해요. '말씀' 탭에서 이어서.</span></div>
+      <div class="row"><span class="b">QT 버튼</span><span class="x"><b>묵상 펼치기 / 성경 본문 읽기</b>로 눌러야 할 곳이 분명해졌어요.</span></div>
+    </div>
+  </div>
+
+  <div class="foot">지금 열어서 확인해보세요<span>logoswell.kr · 말씀우물</span></div>
+</div>
+</body>
+</html>
