@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>나의 프로필 | 말씀우물</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14707a">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script defer src="assets/pwa.js"></script>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav>
+    <a href="#" id="logoutBtn">로그아웃</a>
+  </nav>
+</header>
+<div class="wrap" id="pageContent" style="display:none;">
+  <section class="hero">
+    <h1>나의 프로필</h1>
+    <p>하나님과 함께하는 특별한 여정</p>
+  </section>
+
+  <details class="mp-fold" id="profileSection" open>
+    <summary>내 정보</summary>
+    <p class="msg" style="margin-top:0;">이메일: <strong id="profileEmail" style="color:var(--text);"></strong></p>
+
+    <div class="form-row">
+      <label for="nicknameEditInput">닉네임 (활동명)</label>
+      <input type="text" id="nicknameEditInput" placeholder="말씀우물에서 쓸 이름">
+      <p class="msg" style="margin-top:6px;">오이코스에서 서로 알아볼 수 있게 실명·별명으로 정해주세요. 겹치면 안 돼요.</p>
+    </div>
+    <button type="button" id="saveNicknameBtn" class="btn ghost block">닉네임 저장</button>
+    <p class="msg" id="nicknameMsg"></p>
+
+    <p class="msg" style="margin-top:16px;">이름(본명): <strong id="profileRealName" style="color:var(--text);"></strong></p>
+    <p class="msg" style="margin-top:2px;">닉네임으로 활동하며, 이름은 공개되지 않아요. 이름이 잘못 등록됐다면 담당 교역자에게 말씀해주세요.</p>
+
+    <div class="form-row" style="margin-top:16px;">
+      <label for="phoneEditInput">전화번호</label>
+      <input type="tel" id="phoneEditInput" placeholder="010-1234-5678">
+      <p class="msg" style="margin-top:6px;">아이디·비밀번호를 잊었을 때 본인 확인용으로만 쓰이고, 다른 학생에게는 공개되지 않아요.</p>
+    </div>
+    <button type="button" id="savePhoneBtn" class="btn ghost block">전화번호 저장</button>
+    <p class="msg" id="phoneMsg"></p>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+      <p class="msg" style="margin:0;">🔔 새 소식이 올라오면 알림을 받아보세요</p>
+      <button type="button" id="pushSubscribeBtn" class="btn ghost" data-subscribed="0" style="white-space:nowrap;padding:8px 14px;font-size:12.5px;">알림 받기</button>
+    </div>
+    <p class="msg" id="pushSubscribeMsg"></p>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+      <p class="msg" style="margin:0;">🔒 비밀번호를 바꾸고 싶으신가요?</p>
+      <button type="button" id="changePasswordToggleBtn" class="btn ghost" style="white-space:nowrap;padding:8px 14px;font-size:12.5px;">비밀번호 변경</button>
+    </div>
+    <div id="changePasswordSection" style="display:none;margin-top:14px;">
+      <form id="changePasswordForm">
+        <div class="form-row">
+          <label for="newPasswordInput">새 비밀번호</label>
+          <input type="password" id="newPasswordInput" placeholder="6자 이상">
+        </div>
+        <div class="form-row">
+          <label for="newPasswordConfirmInput">새 비밀번호 확인</label>
+          <input type="password" id="newPasswordConfirmInput" placeholder="한 번 더 입력">
+        </div>
+        <button type="submit" class="btn ghost block">비밀번호 변경하기</button>
+        <p class="msg" id="changePasswordMsg"></p>
+      </form>
+    </div>
+
+    <a href="admin.html" id="adminPageLink" class="btn block" style="display:none;margin-top:16px;">관리자 페이지로 들어가기</a>
+  </details>
+
+  <div class="card streak">
+    <div style="text-align:center;">
+      <div class="num" id="pointsNum">0</div>
+      <div class="label">쓸 수 있는 달란트</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button type="button" id="pointsHistoryToggleBtn" class="btn ghost" style="flex:1;padding:10px 12px;font-size:12.5px;">📋 적립·사용 내역</button>
+      <a href="shop.html" class="btn" style="flex:1;padding:10px 12px;font-size:12.5px;text-align:center;text-decoration:none;">🎁 달란트 상점</a>
+    </div>
+    <div id="pointsHistorySection" style="display:none;margin-top:14px;text-align:left;"><p class="msg">불러오는 중...</p></div>
+  </div>
+
+  <details class="mp-fold" id="badgesCard" style="display:none;margin-bottom:16px;">
+    <summary><span>🏅 나의 뱃지 <span id="badgesSub" style="color:var(--text-soft);font-weight:400;font-size:12px;"></span></span></summary>
+    <p class="msg" id="badgesReward" style="display:none;color:var(--well);font-weight:700;margin:4px 0 10px;"></p>
+    <div class="badge-grid" id="badgesGrid" style="margin-top:4px;"></div>
+    <div class="badge-detail" id="badgeDetail" style="display:none;"></div>
+    <p style="color:var(--text-soft);font-size:11.5px;margin-top:10px;">뱃지를 눌러 얻는 방법을 볼 수 있어요. 동·은·금·다이아·십자가 5단계이고, 등급을 올릴 때마다 <strong style="color:var(--well);">+5·10·15·20·25달란트</strong> (등급당 1번)를 받아요.</p>
+  </details>
+
+  <div class="card">
+    <button type="button" id="pointsRulesToggle" style="all:unset;display:flex;justify-content:space-between;align-items:center;width:100%;cursor:pointer;font-weight:700;color:var(--well-deep);font-size:14px;">
+      <span>💠 달란트 얻는 법</span>
+      <span id="pointsRulesArrow" style="color:var(--text-soft);font-size:12px;font-weight:400;">자세히 ▾</span>
+    </button>
+    <div id="pointsRulesDetail" style="display:none;margin-top:12px;font-size:12.5px;color:var(--text-soft);">
+      <div class="rule-group">
+        <h5>💠 개인 달란트</h5>
+        <div class="rule-row"><span class="r-what">출석 체크</span><span class="r-gain">+1</span></div>
+        <div class="rule-row"><span class="r-what">7일 연속 출석 보너스</span><span class="r-gain">+1</span></div>
+        <div class="rule-row"><span class="r-what">하루 인사 쓰고 달란트 뽑기<span class="r-when">하루 1번</span></span><span class="r-gain">1~2 랜덤</span></div>
+        <div class="rule-row"><span class="r-what">감사노트 / 기도제목 작성<span class="r-when">하루 1건만 인정</span></span><span class="r-gain">+2</span></div>
+        <div class="rule-row"><span class="r-what">수요 성경퀴즈 정답<span class="r-when">수요일 공개 ~ 목요일 자정까지 이틀만 · <a href="weekly.html" style="color:var(--well);">이번 주 말씀</a>에서</span></span><span class="r-gain">+3</span></div>
+        <div class="rule-row"><span class="r-what">🌿 오늘의 QT 묵상 체크<span class="r-when">하루 1번 · <a href="index.html" style="color:var(--well);">홈</a>의 오늘의 QT에서</span></span><span class="r-gain">+1</span></div>
+        <div class="rule-row"><span class="r-what">📚 성경책 순서 맞추기 완주<span class="r-when">구약·신약 각각 하루 첫 판</span></span><span class="r-gain">+2</span></div>
+        <div class="rule-row"><span class="r-what">🃏 같은 성경 찾기 완주<span class="r-when">성경책·인물&amp;사건 각각 하루 첫 판</span></span><span class="r-gain">+2</span></div>
+        <div class="rule-row"><span class="r-what">🏅 뱃지 등급 달성<span class="r-when">동·은·금·다이아·십자가, 등급마다 1번</span></span><span class="r-gain">+5·10·15·20·25</span></div>
+      </div>
+
+      <div class="rule-group">
+        <h5>👥 오이코스 곳간</h5>
+        <p class="rule-group-note">개인 달란트가 아니라 오이코스 공동 곳간에 쌓여요 (회식비·상품으로 함께 씀).</p>
+        <div class="rule-row"><span class="r-what">한 주 멤버 80% 이상 출석<span class="r-when">다음 주에 자동 정산</span></span><span class="r-gain">곳간 +인원수</span></div>
+        <div class="rule-row"><span class="r-what">멤버 전원이 감사노트/기도제목 1개+, 오이코스 합계 10개 이상</span><span class="r-gain">곳간 +인원수×2</span></div>
+        <div class="rule-row"><span class="r-what">📖 말씀 빈칸 채우기 게임<span class="r-when">하루 1판 5문제</span></span><span class="r-gain">맞은 개수×2</span></div>
+        <div class="rule-row"><span class="r-what">내 개인 달란트를 곳간에 기부<span class="r-when">되돌리기 불가</span></span><span class="r-gain">낸 만큼</span></div>
+        <p class="rule-note">※ 챌린지 보너스는 교사가 만든 오이코스만 해당돼요. 학생끼리만 만든 오이코스는 적용되지 않아요.</p>
+      </div>
+
+      <div class="rule-group">
+        <h5>⚠️ 주의사항</h5>
+        <div class="rule-row"><span class="r-what">감사노트/기도제목을 성의 없이 쓰면 우물지기가 삭제할 수 있고, <strong style="color:var(--text);">그 글로 받은 달란트도 함께 회수</strong>돼요.</span></div>
+        <div class="rule-row"><span class="r-what">같은 날 여러 번 써도 달란트는 하루 1번만 인정돼요.</span></div>
+        <div class="rule-row"><span class="r-what">하루 인사 달란트 뽑기는 한 번 뽑으면 그날 점수가 고정돼요. 지웠다 다시 써도 안 바뀌어요.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap auth-gate" id="loginGate">
+  <p>로그인이 필요한 페이지예요.</p>
+  <a href="login.html" class="btn">로그인하러 가기</a>
+</div>
+
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  💧 말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a>
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/post-media.js"></script>
+<script src="assets/mypage.js"></script>
+<script src="assets/push.js"></script>
+<script>
+  initLogoutButton();
+  getSession().then(function (session) {
+    if (!session) {
+      document.getElementById("loginGate").style.display = "block";
+      return;
+    }
+    document.getElementById("loginGate").style.display = "none";
+    document.getElementById("pageContent").style.display = "block";
+    ensureProfile(session).then(function () {
+      initProfileSettings(session);
+      initPushSubscribe(session.user.id);
+      initChangePasswordForm();
+      initBadges(session.user.id);
+      initPointsHistory(session.user.id);
+      initPointsRulesToggle();
+      initAccordions();
+      loadTotalPoints(session.user.id);
+    });
+  });
+</script>
+<script src="assets/appshell.js"></script>
+</body>
+</html>
