@@ -5,7 +5,7 @@
 // auth.js의 getClient()에 의존함
 
 var PUBLIC_FEED_INTERVAL_MS = 20000;
-var PUBLIC_FEED_PREVIEW_COUNT = 6;
+var PUBLIC_FEED_PREVIEW_COUNT = 4;
 var PUBLIC_FEED_SECTIONS = {
   greeting: "publicFeedGreeting",
   gratitude: "publicFeedGratitude",
