@@ -11,7 +11,7 @@ function renderVerseInto(elId, verse) {
     '<div class="ref">' + verse.ref + '</div>' +
     '<div class="text">' + verse.text + '</div>' +
     (extraHtml
-      ? '<button type="button" class="verse-card-toggle">말씀 설명·적용·기도 더 보기 ▾</button>' +
+      ? '<button type="button" class="verse-card-toggle">🌿 오늘 3분 QT 시작 ▾</button>' +
         '<div class="verse-card-more" hidden>' + extraHtml + '</div>'
       : '');
 
@@ -21,7 +21,7 @@ function renderVerseInto(elId, verse) {
     toggle.addEventListener("click", function () {
       var isHidden = more.hasAttribute("hidden");
       more.toggleAttribute("hidden", !isHidden);
-      toggle.textContent = isHidden ? "접기 ▴" : "말씀 설명·적용·기도 더 보기 ▾";
+      toggle.textContent = isHidden ? "접기 ▴" : "🌿 오늘 3분 QT 시작 ▾";
     });
   }
 }

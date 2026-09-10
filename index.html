@@ -28,28 +28,19 @@
   </nav>
 </header>
 <div class="wrap">
-  <div id="chodaeBanner"></div>
-  <div id="homeBanner"></div>
-  <div id="installBanner"></div>
-
-  <section class="hero">
-    <div class="badge">매일 새로운 말씀</div>
-    <h1>오늘, 말씀 한 구절을<br>길어 올려보세요</h1>
-    <p>하루의 말씀부터 나의 고민에 맞는 말씀까지,<br>우물가에서 잠시 쉬어가는 시간</p>
-  </section>
-
+  <!-- 1. 오늘의 말씀 (QT) — 첫 화면에서 가장 먼저 만난다 -->
   <div id="homeVerseCard" class="verse-card"></div>
 
+  <!-- 2. 공지·이벤트 (등록된 게 있을 때만 렌더됨) -->
+  <div id="chodaeBanner"></div>
+  <div id="homeBanner"></div>
+
+  <!-- 3. 자주 쓰는 메뉴 -->
   <div class="nav-cards">
     <a class="nav-card feature" href="weekly.html" style="grid-column: 1 / -1;">
       <div class="icon"><img src="assets/menu-icons/weekly.png" alt=""></div>
       <div class="title">이번 주 말씀</div>
       <div class="desc">이번 주 예배 말씀 요약 + 카드</div>
-    </a>
-    <a class="nav-card feature" href="chodae.html" style="grid-column: 1 / -1;">
-      <div class="icon">🎟️</div>
-      <div class="title">친구초청잔치 (9/13)</div>
-      <div class="desc">Brand New Day · 내가 초청한 친구 기록 + 전체 진행률</div>
     </a>
     <a class="nav-card" href="notice.html">
       <div class="icon"><img src="assets/menu-icons/notice.png" alt=""></div>
@@ -121,7 +112,7 @@
 
   <div class="card">
     <h3 style="margin-top:0;color:var(--well-deep);">💬 실시간 나눔</h3>
-    <p style="color:var(--text-soft);font-size:12.5px;margin:0 0 16px;">기도제목은 항상 익명으로 보여요. 하루 인사·감사노트는 로그인한 사람에게만 닉네임이 보여요.</p>
+    <p style="color:var(--text-soft);font-size:12.5px;margin:0 0 16px;">기도제목은 항상 익명이고, 작성자가 정한 공개 범위에 따라 로그인해야 보이는 것도 있어요. 하루 인사·감사노트는 로그인한 사람에게만 닉네임이 보여요.</p>
 
     <div class="scroll-columns">
       <div class="scroll-column">
@@ -146,6 +137,9 @@
     <p style="color:var(--text-soft);font-size:14px;margin:0 0 12px;">'말씀우물'이 어떤 사이트인지 궁금하다면?</p>
     <a href="about.html" class="btn ghost block">사이트 소개 보기</a>
   </div>
+
+  <!-- 5. 설치 안내 — 첫 사용 뒤 보이도록 페이지 맨 아래로 -->
+  <div id="installBanner"></div>
 
   <div class="card" style="text-align:center;display:none;" id="installBannerPersistent">
     <p style="color:var(--text-soft);font-size:14px;margin:0 0 12px;">앱처럼 설치하면 매번 검색 안 하고 바로 열 수 있어요</p>
