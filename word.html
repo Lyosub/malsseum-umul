@@ -32,7 +32,7 @@
   </div>
 
   <!-- 오늘의 말씀 (QT) -->
-  <div id="homeVerseCard" class="verse-card"></div>
+  <div id="homeVerseCard" class="verse-card brand-bg"></div>
   <a class="home-verse-cta" href="verses.html">오늘의 말씀 읽기 <span aria-hidden="true">›</span></a>
 
   <!-- 성경 이어 읽기 (진도 저장은 준비 중) -->
@@ -100,6 +100,11 @@
   initHomeCard();
   initQtCheckin();
   initHeaderAuthState();
+  // 말씀 탭의 오늘의 말씀 카드는 브랜드 블루 배너를 배경으로 (홈의 회전 사진 대신)
+  (function () {
+    var el = document.getElementById("homeVerseCard");
+    if (el) el.style.setProperty("--verse-bg-image", "url(brand/banner-word.jpg)");
+  })();
   (function () {
     var f = document.getElementById("wordMindForm");
     if (!f) return;

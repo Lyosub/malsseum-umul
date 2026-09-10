@@ -1305,6 +1305,12 @@ function initNotes(userId) {
             ? rows.map(renderNoteItem).join("")
             : '<p class="msg">아직 기록이 없어요.</p>';
         });
+        // 하루인사·감사·기도가 하나도 없으면 큰 빈 상태 일러스트를 보여준다(나의 기록 탭)
+        var emptyState = document.getElementById("recordsEmptyState");
+        if (emptyState) {
+          var hasAny = grouped.greeting.length || grouped.gratitude.length || grouped.prayer.length;
+          emptyState.style.display = hasAny ? "none" : "block";
+        }
         updateGreetingDrawSection(userId, grouped.greeting);
       });
   }

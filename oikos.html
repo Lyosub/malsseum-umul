@@ -35,7 +35,10 @@
     <p class="msg" id="groupMsg"></p>
 
     <div id="groupNone" style="display:none;">
-      <p style="color:var(--text-soft);font-size:13.5px;">친구들과 오이코스를 만들거나, 초대받은 코드로 참여해서 함께 출석해보세요.</p>
+      <div class="empty-illus">
+        <img src="assets/brand/empty-participation.png" alt="">
+        <p>아직 속한 오이코스가 없어요.<br>친구들과 만들거나, 초대 코드로 참여해서 함께 출석해보세요.</p>
+      </div>
       <form id="createGroupForm" style="margin-bottom:16px;">
         <div class="form-row">
           <label for="groupNameInput">새 오이코스 만들기</label>
@@ -61,15 +64,17 @@
       <div id="oikosWellCard" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:none;"></div>
 
       <!-- 💰 오이코스 곳간 — 항상 펼쳐서 보여준다 (이 카드의 핵심) -->
-      <div id="oikosTalentSection" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-        <h4 style="margin:0 0 4px;color:var(--well-deep);">💰 오이코스 곳간</h4>
+      <div id="oikosTalentSection" class="oikos-treasury">
+        <img class="fc-art" src="assets/brand/banner-treasury.png" alt="">
+        <p class="fc-kicker">Oikos Treasure</p>
+        <h4>공동 곳간</h4>
         <p class="msg" id="oikosPoolInfo" style="margin:0 0 8px;">불러오는 중...</p>
         <form id="oikosDonateForm" style="display:flex;gap:8px;align-items:flex-start;">
           <input type="number" id="oikosDonateAmount" min="10" step="10" placeholder="곳간에 넣을 내 달란트 (최소 10)" style="flex:1;">
           <button type="submit" class="btn" style="flex:none;">기부하기</button>
         </form>
         <p class="msg" id="oikosDonateMsg" style="margin:6px 0 0;"></p>
-        <p style="color:var(--text-soft);font-size:11.5px;margin:4px 0 0;">내 달란트를 오이코스 곳간에 보태요. 한번 기부하면 되돌릴 수 없고, 곳간 달란트는 오이코스 회식비로 쓰여요.</p>
+        <p class="treasury-note" style="font-size:11.5px;margin:4px 0 0;">함께 모은 달란트로 좋은 일을 해요. 한번 기부하면 되돌릴 수 없고, 곳간 달란트는 오이코스 회식비·상품으로 함께 써요.</p>
         <details class="mp-fold" style="margin-top:10px;"><summary>최근 곳간 내역</summary>
           <div id="oikosTalentLog" style="margin-top:4px;"></div>
         </details>
