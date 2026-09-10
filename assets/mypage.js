@@ -1030,6 +1030,15 @@ function escapeHtml(str) {
 var NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목", suggestion: "건의사항" };
 var NOTE_LIST_IDS = { greeting: "noteListGreeting", gratitude: "noteListGratitude", prayer: "noteListPrayer", suggestion: "noteListSuggestion" };
 
+// 기도제목 공개 범위 (notes.visibility). 순서 = 셀렉트에 보일 순서.
+var VIS_OPTIONS = [
+  { v: "community", t: "로그인한 지체들에게" },
+  { v: "public", t: "전체 공개" },
+  { v: "staff", t: "교역자·교사에게만" },
+  { v: "private", t: "나만 보기" }
+];
+var VIS_LABELS = { community: "로그인한 지체들에게", public: "전체 공개", staff: "교역자·교사에게만", private: "나만 보기" };
+
 var GREETING_DRAW_MESSAGES = {
   0: "앗, 이번엔 꽝이에요 😅 그래도 하루 인사 남겨줘서 고마워요!",
   1: "🎉 오늘의 달란트 1점을 뽑았어요!",
@@ -1141,12 +1150,25 @@ function initNotes(userId) {
     noteItemsById[item.id] = item;
     var d = new Date(item.created_at);
     var dateStr = (d.getMonth() + 1) + "." + d.getDate();
+    var visRow = "";
+    if (item.type === "prayer") {
+      visRow =
+        '<div class="vis-row" style="margin-top:8px;font-size:12px;color:var(--text-soft);display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
+          '<span>공개 범위</span>' +
+          '<select data-role="vis" style="font-size:12px;padding:3px 6px;border:1px solid var(--line,#d9d9d9);border-radius:6px;background:#fff;">' +
+            VIS_OPTIONS.map(function (o) {
+              return '<option value="' + o.v + '"' + ((item.visibility || "community") === o.v ? " selected" : "") + '>' + o.t + '</option>';
+            }).join("") +
+          '</select>' +
+        '</div>';
+    }
     return (
       '<div class="note-item" data-note-id="' + item.id + '">' +
         '<div class="meta">' + dateStr + '</div>' +
         '<div data-role="body">' +
           '<div class="content">' + linkifyHtml(item.content) + '</div>' +
           renderImageGallery(item.image_urls) +
+          visRow +
           '<div style="margin-top:8px;display:flex;gap:8px;">' +
             '<button type="button" class="btn ghost" data-action="edit" style="padding:6px 14px;font-size:12.5px;">수정</button>' +
             '<button type="button" class="btn ghost" data-action="delete" style="padding:6px 14px;font-size:12.5px;">삭제</button>' +
@@ -1195,9 +1217,27 @@ function initNotes(userId) {
     }
   }
 
+  function handleListChange(e) {
+    var sel = e.target.closest('select[data-role="vis"]');
+    if (!sel) return;
+    var itemEl = sel.closest(".note-item");
+    if (!itemEl) return;
+    var noteId = itemEl.getAttribute("data-note-id");
+    var newVis = sel.value;
+    sel.disabled = true;
+    client.from("notes").update({ visibility: newVis }).eq("id", noteId).then(function (res) {
+      sel.disabled = false;
+      if (res && res.error) { alert("공개 범위를 바꾸지 못했어요."); return; }
+      if (noteItemsById[noteId]) noteItemsById[noteId].visibility = newVis;
+    });
+  }
+
   Object.keys(NOTE_LIST_IDS).forEach(function (type) {
     var el = document.getElementById(NOTE_LIST_IDS[type]);
-    if (el) el.addEventListener("click", handleListClick);
+    if (el) {
+      el.addEventListener("click", handleListClick);
+      el.addEventListener("change", handleListChange);
+    }
   });
 
   function loadNotes() {
@@ -1247,14 +1287,17 @@ function initNotes(userId) {
       if (submitBtn) submitBtn.disabled = true;
       msg.textContent = (files && files.length) ? "사진 올리는 중..." : "저장 중...";
 
+      var visSel = form.querySelector("[name=visibility]");
       uploadPostImages(userId, files).then(function (urls) {
         msg.textContent = "저장 중...";
-        return client.from("notes").insert({
+        var payload = {
           user_id: userId,
           type: type,
           content: content,
           image_urls: urls
-        });
+        };
+        if (type === "prayer" && visSel) payload.visibility = visSel.value;
+        return client.from("notes").insert(payload);
       }).then(function (res) {
         if (submitBtn) submitBtn.disabled = false;
         if (res && res.error) {

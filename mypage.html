@@ -180,6 +180,16 @@
       <div class="form-row">
         <textarea placeholder="기도하고 싶은 제목을 자유롭게 적어보세요"></textarea>
       </div>
+      <div class="form-row">
+        <label for="prayerVisibility" style="display:block;font-size:12.5px;color:var(--text-soft);margin-bottom:4px;">누구에게 보일까요?</label>
+        <select id="prayerVisibility" name="visibility" style="width:100%;padding:9px 10px;border:1px solid var(--line,#d9d9d9);border-radius:8px;font-size:13.5px;background:#fff;">
+          <option value="community" selected>로그인한 지체들에게 (기본)</option>
+          <option value="public">전체 공개 · 로그인 안 해도 보여요</option>
+          <option value="staff">교역자·교사에게만</option>
+          <option value="private">나만 보기</option>
+        </select>
+        <p style="font-size:11.5px;color:var(--text-soft);margin:6px 0 0;line-height:1.5;">이름·학교 등 다른 사람이 드러나는 내용은 '전체 공개'로 올리지 않는 게 좋아요.</p>
+      </div>
       <div class="img-picker">
         <label class="img-picker-btn">📷 사진 첨부<input type="file" class="post-image-input" accept="image/*" multiple hidden></label>
         <span class="img-picker-count"></span>

@@ -29,12 +29,12 @@ function timeAgoKo(iso) {
   return Math.floor(diffHr / 24) + "일 전";
 }
 
-function renderFeedPreview(elId, rows) {
+function renderFeedPreview(elId, rows, emptyMsg) {
   var listEl = document.getElementById(elId);
   if (!listEl) return;
   var shown = rows.slice(0, PUBLIC_FEED_PREVIEW_COUNT);
   if (!shown.length) {
-    listEl.innerHTML = '<p class="msg">아직 나눈 이야기가 없어요.</p>';
+    listEl.innerHTML = '<p class="msg">' + (emptyMsg || "아직 나눈 이야기가 없어요.") + '</p>';
     return;
   }
   listEl.innerHTML = shown.map(function (r) {
@@ -107,8 +107,13 @@ function initPublicFeed() {
       (res.data || []).forEach(function (r) {
         if (grouped[r.type]) grouped[r.type].push(r);
       });
-      Object.keys(PUBLIC_FEED_SECTIONS).forEach(function (type) {
-        renderFeedPreview(PUBLIC_FEED_SECTIONS[type], grouped[type]);
+      getSession().then(function (session) {
+        var prayerEmpty = session
+          ? "아직 나눈 이야기가 없어요."
+          : "로그인하면 지체들의 기도제목을 볼 수 있어요.";
+        Object.keys(PUBLIC_FEED_SECTIONS).forEach(function (type) {
+          renderFeedPreview(PUBLIC_FEED_SECTIONS[type], grouped[type], type === "prayer" ? prayerEmpty : null);
+        });
       });
     }).catch(function () {
       Object.keys(PUBLIC_FEED_SECTIONS).forEach(function (type) {
