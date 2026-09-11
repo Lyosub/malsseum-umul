@@ -1620,6 +1620,7 @@ function loadOikosExpensesAdmin() {
   if (!client || !el) return;
 
   var LABELS = { pending: "확인 중", approved: "승인됨", paid: "지급 완료", rejected: "거절됨" };
+  var EXPENSE_WON = { 400: "4만원", 800: "8만원", 1200: "12만원" };
 
   client.rpc("get_oikos_expenses_admin").then(function (res) {
     if (res.error) { el.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
@@ -1636,11 +1637,12 @@ function loadOikosExpensesAdmin() {
           '<button type="button" class="btn" data-ox="pay" style="padding:6px 12px;font-size:12px;">지급 완료</button>' +
           '<button type="button" class="btn ghost" data-ox="reject" style="padding:6px 12px;font-size:12px;">거절</button>';
       }
+      var wonTxt = EXPENSE_WON[r.amount] ? ' <span style="color:var(--text-soft);font-weight:400;">(' + EXPENSE_WON[r.amount] + ' 상당)</span>' : '';
       return (
         '<div class="note-item" data-ox-id="' + r.id + '">' +
           '<div class="meta">' + formatDateTime(r.created_at) + ' · ' + escapeHtmlAdmin(r.group_name || "") +
             ' · ' + escapeHtmlAdmin(r.requester_nickname || "") + ' · <strong>' + (LABELS[r.status] || r.status) + '</strong></div>' +
-          '<div class="content"><strong>' + r.amount + '달란트</strong> · ' + escapeHtmlAdmin(r.purpose) + '</div>' +
+          '<div class="content"><strong>' + r.amount + '달란트</strong>' + wonTxt + ' · ' + escapeHtmlAdmin(r.purpose) + '</div>' +
           (r.admin_note ? '<div class="meta" style="margin-top:2px;">메모: ' + escapeHtmlAdmin(r.admin_note) + '</div>' : '') +
           (actions ? '<div style="display:flex;gap:8px;margin-top:8px;">' + actions + '</div>' : '') +
         '</div>'

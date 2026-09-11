@@ -818,6 +818,7 @@ function initGroup(userId) {
             "<br>신청 대기 " + (d.pending || 0) + " · 사용 가능 " + (d.available || 0);
         });
       }
+      var EXPENSE_WON = { 400: "4만원", 800: "8만원", 1200: "12만원" };
       function loadList() {
         client.rpc("get_oikos_expenses", { p_group_id: groupId }).then(function (r) {
           var rows = r.data || [];
@@ -825,11 +826,12 @@ function initGroup(userId) {
           if (!rows.length) { listEl.innerHTML = '<p class="msg" style="margin:0;">아직 신청 내역이 없어요.</p>'; return; }
           listEl.innerHTML = rows.map(function (x) {
             var d = new Date(x.created_at);
+            var wonTxt = EXPENSE_WON[x.amount] ? '(' + EXPENSE_WON[x.amount] + ' 상당) ' : '';
             return (
               '<div class="note-item">' +
                 '<div class="meta">' + (d.getMonth() + 1) + '.' + d.getDate() + ' · ' + escapeHtml(x.requester_nickname || "") +
                   ' · <strong>' + (OIKOS_EXP_STATUS[x.status] || x.status) + '</strong></div>' +
-                '<div class="content">' + x.amount + '달란트 · ' + escapeHtml(x.purpose) + '</div>' +
+                '<div class="content">' + x.amount + '달란트 ' + wonTxt + '· ' + escapeHtml(x.purpose) + '</div>' +
                 (x.admin_note ? '<div class="meta" style="margin-top:2px;">교역자: ' + escapeHtml(x.admin_note) + '</div>' : '') +
               '</div>'
             );
@@ -844,7 +846,7 @@ function initGroup(userId) {
           e.preventDefault();
           var amount = parseInt(amountEl.value, 10);
           var purpose = (purposeEl.value || "").trim();
-          if (!amount || amount < 300) { msgEl.textContent = "회식비는 최소 300달란트부터 신청할 수 있어요."; return; }
+          if (!amount || [400, 800, 1200].indexOf(amount) === -1) { msgEl.textContent = "회식비는 400 / 800 / 1200달란트 중에서 선택해주세요."; return; }
           if (!purpose) { msgEl.textContent = "사용 목적을 적어주세요."; return; }
           msgEl.textContent = "신청 중...";
           client.rpc("request_oikos_expense", { p_group_id: groupId, p_amount: amount, p_purpose: purpose }).then(function (r) {

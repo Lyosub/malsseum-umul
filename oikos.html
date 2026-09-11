@@ -101,9 +101,16 @@
       <details class="mp-fold" id="oikosExpenseSection" style="display:none;"><summary>🍚 회식비 · 상품 교환 · 곳간 나눠주기 <span style="color:var(--text-soft);font-weight:400;font-size:12px;">(교사 전용)</span></summary>
         <p class="msg" id="oikosTalentInfo" style="margin:4px 0 4px;">오이코스 곳간을 불러오는 중...</p>
         <h4 style="margin:12px 0 4px;color:var(--well-deep);">🍚 회식비 지원 신청</h4>
-        <p class="msg" style="margin:0 0 8px;color:var(--gold);">※ 회식비는 최소 300달란트부터 신청할 수 있어요.</p>
+        <p class="msg" style="margin:0 0 8px;color:var(--gold);">※ 회식비는 아래 3단계 중에서만 신청할 수 있어요.</p>
         <form id="oikosExpenseForm">
-          <div class="form-row"><input type="number" id="oikosExpenseAmount" min="300" step="100" placeholder="사용할 달란트 (최소 300)"></div>
+          <div class="form-row">
+            <select id="oikosExpenseAmount" style="width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:12px;font-size:14.5px;font-family:inherit;background:var(--card-bg);color:var(--text);">
+              <option value="">지원 금액 선택</option>
+              <option value="400">400달란트 (4만원 상당)</option>
+              <option value="800">800달란트 (8만원 상당)</option>
+              <option value="1200">1200달란트 (12만원 상당)</option>
+            </select>
+          </div>
           <div class="form-row"><input type="text" id="oikosExpensePurpose" placeholder="사용 목적 (예: 9월 오이코스 회식)"></div>
           <button type="submit" class="btn block">지원 신청</button>
           <p class="msg" id="oikosExpenseMsg"></p>
