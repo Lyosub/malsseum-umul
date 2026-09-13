@@ -234,8 +234,8 @@ function loadMemberList() {
             '<button type="button" class="btn ghost" data-action="toggle-dept-head" data-is-dept-head="' + m.is_department_head + '" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">' +
               (m.is_department_head ? "부장 해제" : "부장으로 지정") +
             '</button>' +
-            '<button type="button" class="btn ghost" data-action="toggle-photos-approved" data-photos-approved="' + m.photos_approved + '" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;' + (m.photos_approved ? 'color:var(--well);border-color:var(--well);' : '') + '">' +
-              (m.photos_approved ? "📸 추억모음집 승인됨" : "📸 추억모음집 승인") +
+            '<button type="button" class="btn ghost" data-action="toggle-photos-approved" data-photos-approved="' + m.photos_approved + '" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;' + (m.photos_approved ? 'color:var(--well);border-color:var(--well);' : (m.photos_approval_requested_at ? 'color:#b3432c;border-color:#b3432c;' : '')) + '">' +
+              (m.photos_approved ? "📸 추억모음집 승인됨" : (m.photos_approval_requested_at ? "📸 승인 요청함 · 승인하기" : "📸 추억모음집 승인")) +
             '</button>' +
             '<button type="button" class="btn ghost" data-action="edit-real-name" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">본명 수정</button>' +
             '<button type="button" class="btn ghost" data-action="edit-phone" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">전화번호 수정</button>' +

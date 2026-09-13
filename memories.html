@@ -33,10 +33,11 @@
 </div>
 
 <div class="wrap card" id="approvalGate" style="display:none;text-align:center;">
-  <p style="color:var(--text-soft);font-size:13.5px;line-height:1.7;margin:0;">
-    학생·교인 얼굴이 나오는 사진이라, 선생님이 확인한 분만 볼 수 있게 해뒀어요.<br>
-    선생님께 "추억모음집 열람 승인" 부탁드리면 바로 볼 수 있어요.
+  <p style="color:var(--text-soft);font-size:13.5px;line-height:1.7;margin:0 0 14px;">
+    학생·교인 얼굴이 나오는 사진이라, 우물지기가 확인한 분만 볼 수 있게 해뒀어요.
   </p>
+  <button type="button" class="btn block" id="requestApprovalBtn">우물지기에게 승인 요청하기</button>
+  <p class="msg" id="requestApprovalMsg" style="margin-top:8px;"></p>
 </div>
 
 <div class="wrap auth-gate" id="loginGate" style="display:none;">
@@ -91,13 +92,33 @@
     }
     var client = getClient();
     if (!client) return;
-    client.from("profiles").select("photos_approved").eq("user_id", session.user.id).maybeSingle().then(function (res) {
-      if (res.data && res.data.photos_approved) {
+    client.from("profiles").select("photos_approved, photos_approval_requested_at").eq("user_id", session.user.id).maybeSingle().then(function (res) {
+      var p = res.data;
+      if (p && p.photos_approved) {
         document.getElementById("memoriesContent").style.display = "block";
         renderAlbums();
-      } else {
-        document.getElementById("approvalGate").style.display = "block";
+        return;
       }
+      document.getElementById("approvalGate").style.display = "block";
+      var btn = document.getElementById("requestApprovalBtn");
+      var msg = document.getElementById("requestApprovalMsg");
+      if (p && p.photos_approval_requested_at) {
+        btn.style.display = "none";
+        msg.textContent = "이미 요청했어요. 우물지기가 확인하면 바로 볼 수 있어요.";
+        return;
+      }
+      btn.addEventListener("click", function () {
+        btn.disabled = true;
+        client.from("profiles").update({ photos_approval_requested_at: new Date().toISOString() }).eq("user_id", session.user.id).then(function (r) {
+          if (r.error) {
+            msg.textContent = "요청 중 문제가 생겼어요. 다시 시도해주세요.";
+            btn.disabled = false;
+            return;
+          }
+          btn.style.display = "none";
+          msg.textContent = "요청했어요! 우물지기가 확인하면 바로 볼 수 있어요.";
+        });
+      });
     });
   });
 </script>
