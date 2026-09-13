@@ -234,6 +234,9 @@ function loadMemberList() {
             '<button type="button" class="btn ghost" data-action="toggle-dept-head" data-is-dept-head="' + m.is_department_head + '" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">' +
               (m.is_department_head ? "부장 해제" : "부장으로 지정") +
             '</button>' +
+            '<button type="button" class="btn ghost" data-action="toggle-photos-approved" data-photos-approved="' + m.photos_approved + '" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;' + (m.photos_approved ? 'color:var(--well);border-color:var(--well);' : '') + '">' +
+              (m.photos_approved ? "📸 추억모음집 승인됨" : "📸 추억모음집 승인") +
+            '</button>' +
             '<button type="button" class="btn ghost" data-action="edit-real-name" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">본명 수정</button>' +
             '<button type="button" class="btn ghost" data-action="edit-phone" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">전화번호 수정</button>' +
             '<button type="button" class="btn ghost" data-action="reset-password" style="margin-top:8px;margin-left:6px;padding:6px 14px;font-size:12.5px;">비밀번호 초기화</button>' +
@@ -338,6 +341,17 @@ function loadMemberList() {
         var targetUserId = itemEl.getAttribute("data-user-id");
         var nextIsDeptHead = btn.getAttribute("data-is-dept-head") !== "true";
         client.rpc("admin_set_department_head", { p_user_id: targetUserId, p_is_department_head: nextIsDeptHead }).then(function () {
+          loadMemberList();
+        });
+      });
+    });
+
+    listEl.querySelectorAll('button[data-action="toggle-photos-approved"]').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var itemEl = btn.closest(".note-item");
+        var targetUserId = itemEl.getAttribute("data-user-id");
+        var nextApproved = btn.getAttribute("data-photos-approved") !== "true";
+        client.rpc("admin_set_photos_approved", { p_user_id: targetUserId, p_approved: nextApproved }).then(function () {
           loadMemberList();
         });
       });

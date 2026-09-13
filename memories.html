@@ -26,9 +26,24 @@
     <h1>📸 추억모음집</h1>
     <p>함께한 순간을 다시 봐요</p>
   </div>
+</div>
 
+<div class="wrap" id="memoriesContent" style="display:none;">
   <div id="memoriesList"></div>
 </div>
+
+<div class="wrap card" id="approvalGate" style="display:none;text-align:center;">
+  <p style="color:var(--text-soft);font-size:13.5px;line-height:1.7;margin:0;">
+    학생·교인 얼굴이 나오는 사진이라, 선생님이 확인한 분만 볼 수 있게 해뒀어요.<br>
+    선생님께 "추억모음집 열람 승인" 부탁드리면 바로 볼 수 있어요.
+  </p>
+</div>
+
+<div class="wrap auth-gate" id="loginGate" style="display:none;">
+  <p>로그인이 필요한 페이지예요.</p>
+  <a href="login.html" class="btn">로그인하러 가기</a>
+</div>
+
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
   <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
@@ -51,20 +66,40 @@
     { title: "중등부 행사 사진 전체 모음",       date: "계속 업데이트", emoji: "📷", url: "https://photos.app.goo.gl/nZ7ApfGXNNMdtCyu7" }
   ];
 
-  var list = document.getElementById("memoriesList");
-  list.innerHTML = ALBUMS.map(function (a) {
-    return (
-      '<a class="card" href="' + a.url + '" target="_blank" rel="noopener" ' +
-        'style="display:flex;align-items:center;gap:14px;text-decoration:none;margin-bottom:12px;">' +
-        '<div style="font-size:26px;flex:none;">' + a.emoji + '</div>' +
-        '<div style="flex:1 1 auto;min-width:0;">' +
-          '<div style="font-weight:800;color:var(--well-deep);">' + a.title + '</div>' +
-          '<div style="font-size:12.5px;color:var(--text-soft);">' + a.date + ' · 구글 포토로 이동</div>' +
-        '</div>' +
-        '<span style="color:var(--text-soft);">›</span>' +
-      '</a>'
-    );
-  }).join("");
+  function renderAlbums() {
+    var list = document.getElementById("memoriesList");
+    list.innerHTML = ALBUMS.map(function (a) {
+      return (
+        '<a class="card" href="' + a.url + '" target="_blank" rel="noopener" ' +
+          'style="display:flex;align-items:center;gap:14px;text-decoration:none;margin-bottom:12px;">' +
+          '<div style="font-size:26px;flex:none;">' + a.emoji + '</div>' +
+          '<div style="flex:1 1 auto;min-width:0;">' +
+            '<div style="font-weight:800;color:var(--well-deep);">' + a.title + '</div>' +
+            '<div style="font-size:12.5px;color:var(--text-soft);">' + a.date + ' · 구글 포토로 이동</div>' +
+          '</div>' +
+          '<span style="color:var(--text-soft);">›</span>' +
+        '</a>'
+      );
+    }).join("");
+  }
+
+  getSession().then(function (session) {
+    if (!session) {
+      var _lg=document.getElementById("navLoginGated"); if(_lg)_lg.style.display="inline"; var _lo=document.getElementById("logoutBtn"); if(_lo)_lo.style.display="none";
+      document.getElementById("loginGate").style.display = "block";
+      return;
+    }
+    var client = getClient();
+    if (!client) return;
+    client.from("profiles").select("photos_approved").eq("user_id", session.user.id).maybeSingle().then(function (res) {
+      if (res.data && res.data.photos_approved) {
+        document.getElementById("memoriesContent").style.display = "block";
+        renderAlbums();
+      } else {
+        document.getElementById("approvalGate").style.display = "block";
+      }
+    });
+  });
 </script>
 <script src="assets/appshell.js"></script>
 </body>
