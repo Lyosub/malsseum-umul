@@ -184,10 +184,10 @@
 <script src="assets/appshell.js"></script>
 <script>
   initLogoutButton();
-  // 친구초청잔치: 행사 기간에만 노출
+  // 친구초청잔치 행사(9/13) 종료. 학생에게는 더 이상 안 보이고, 관리자/교사/부장만 계속 볼 수 있게 한다.
   (function () {
     var c = document.getElementById("oikosChodaeCard");
-    if (c && Date.now() >= new Date("2026-09-15T00:00:00+09:00").getTime()) c.style.display = "none";
+    if (c) c.style.display = "none";
   })();
   getSession().then(function (session) {
     if (!session) {
@@ -198,6 +198,14 @@
     document.getElementById("pageContent").style.display = "block";
     ensureProfile(session).then(function () {
       initGroup(session.user.id);
+      var client = getClient();
+      if (client) {
+        client.from("profiles").select("is_teacher, is_admin, is_department_head").eq("user_id", session.user.id).maybeSingle().then(function (res) {
+          var p = res.data;
+          var c = document.getElementById("oikosChodaeCard");
+          if (c && p && (p.is_teacher || p.is_admin || p.is_department_head)) c.style.display = "flex";
+        });
+      }
     });
   });
 </script>
