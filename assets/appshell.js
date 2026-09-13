@@ -17,6 +17,7 @@
     ["oikos", "오이코스",      "oikos.html",  ["oikos.html", "chodae.html"]],
     ["me",    "나의 기록",     "mypage.html", ["mypage.html", "profile.html", "feed.html", "board.html"]],
     ["play",  "놀이터",        "play.html",   ["play.html", "bookgame.html", "matchgame.html", "oikosgame.html", "memorize.html", "chosung.html", "shop.html"]],
+    ["memories", "추억",       "memories.html", ["memories.html"]],
     ["all",   "전체",         "all.html",    ["all.html", "notice.html", "calendar.html", "mbti.html", "wallpaper.html", "about.html", "privacy.html", "app-android.html", "app-ios.html"]]
   ];
 
@@ -26,6 +27,7 @@
     oikos: '<circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.5"/><path d="M15.5 15c2.6.2 5 2.2 5 5"/>',
     me:    '<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V6h6V3.5"/><path d="M8.5 11h7M8.5 15h5"/>',
     play:  '<rect x="3" y="7" width="18" height="11" rx="3"/><path d="M8 11v3M6.5 12.5h3"/><circle cx="16" cy="11.5" r="1"/><circle cx="18" cy="14" r="1"/>',
+    memories: '<rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m3.5 17 5.5-5.5 3 3 3.5-4 5 6.5"/>',
     all:   '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>'
   };
 

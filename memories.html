@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>추억모음집 | 말씀우물</title>
+<meta name="description" content="로고스교회 중등부 행사 사진·영상 모음. 함께한 순간을 다시 봐요.">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2540d8">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script defer src="assets/pwa.js"></script>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap">
+  <div class="page-hd">
+    <h1>📸 추억모음집</h1>
+    <p>함께한 순간을 다시 봐요</p>
+  </div>
+
+  <div id="memoriesList"></div>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  💧 말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a>
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
+<script>
+  initHeaderAuthState();
+
+  // 행사가 끝날 때마다 여기에 한 줄씩 추가하면 돼요. 최신 순으로 위에 추가.
+  var ALBUMS = [
+    {
+      title: "JESUS+ BRAND NEW DAY — 친구초청잔치",
+      date: "2026.09.13",
+      emoji: "🎉",
+      url: "https://photos.app.goo.gl/nZ7ApfGXNNMdtCyu7"
+    }
+  ];
+
+  var list = document.getElementById("memoriesList");
+  list.innerHTML = ALBUMS.map(function (a) {
+    return (
+      '<a class="card" href="' + a.url + '" target="_blank" rel="noopener" ' +
+        'style="display:flex;align-items:center;gap:14px;text-decoration:none;margin-bottom:12px;">' +
+        '<div style="font-size:26px;flex:none;">' + a.emoji + '</div>' +
+        '<div style="flex:1 1 auto;min-width:0;">' +
+          '<div style="font-weight:800;color:var(--well-deep);">' + a.title + '</div>' +
+          '<div style="font-size:12.5px;color:var(--text-soft);">' + a.date + ' · 구글 포토로 이동</div>' +
+        '</div>' +
+        '<span style="color:var(--text-soft);">›</span>' +
+      '</a>'
+    );
+  }).join("");
+</script>
+<script src="assets/appshell.js"></script>
+</body>
+</html>
