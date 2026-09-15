@@ -150,6 +150,7 @@
 <script src="assets/new-badge.js"></script>
 <script src="assets/home-notice.js"></script>
 <script src="assets/install-prompt.js"></script>
+<script src="assets/push.js"></script>
 <script>
   initHomeCard();
   initQtCheckin();
@@ -172,6 +173,13 @@
       e.preventDefault();
       var q = (document.getElementById("homeMindInput").value || "").trim();
       location.href = q ? "well.html?q=" + encodeURIComponent(q) : "well.html";
+    });
+  })();
+  // 로그인 상태면 알림 허용을 자동으로 물어본다(한 번 결정하면 다시 안 물어봄. autoRequestPush 참고)
+  (function () {
+    if (typeof getSession !== "function" || typeof autoRequestPush !== "function") return;
+    getSession().then(function (session) {
+      if (session) autoRequestPush(session.user.id);
     });
   })();
 </script>
