@@ -1,0 +1,64 @@
+name: 오늘의 말씀 푸시 알림
+
+# 매일 아침 8시(KST) 오늘의 QT와 같은 말씀을 구독자 전원에게 푸시로 보낸다.
+# 말씀 선택 로직은 assets/verses-data.js의 getVerseFor("daily")를 그대로 재사용해서
+# 클라이언트(홈 화면 "오늘의 QT")와 항상 같은 말씀이 나가도록 한다.
+# 발송은 기존 send-push Edge Function(공지사항 발송과 동일한 함수)을 그대로 호출한다.
+
+on:
+  schedule:
+    - cron: "0 23 * * *"   # UTC 23:00 -> 08:00 KST(다음날)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 오늘의 말씀 계산
+        id: verse
+        run: |
+          node --experimental-vm-modules -e '
+            const fs = require("fs");
+            const vm = require("vm");
+            const src = fs.readFileSync("assets/verses-data.js", "utf8");
+            const sandbox = {};
+            vm.createContext(sandbox);
+            vm.runInContext(src, sandbox);
+            const v = sandbox.getVerseFor("daily");
+            const out = JSON.stringify({ ref: v.ref, text: v.text });
+            fs.writeFileSync(process.env.GITHUB_OUTPUT, "verse=" + out + "\n", { flag: "a" });
+          '
+        env:
+          TZ: Asia/Seoul
+
+      - name: 발송
+        env:
+          VERSE_JSON: ${{ steps.verse.outputs.verse }}
+        run: |
+          set -eu
+          SB="https://qaxwxbaqduxqzjqoahcb.supabase.co"
+          # 정적 사이트에 그대로 배포되는 publishable(anon) 키 — 비밀이 아님
+          ANON="sb_publishable_Q5HhLUzyLoFlNK0MCai_eQ_SOFeu_ks"
+
+          REF=$(echo "$VERSE_JSON" | jq -r '.ref')
+          TEXT=$(echo "$VERSE_JSON" | jq -r '.text')
+          echo "오늘의 말씀: $REF — $TEXT"
+
+          PAYLOAD=$(jq -n --arg title "💧 오늘의 말씀 — $REF" --arg body "$TEXT" --arg url "https://logoswell.kr/word.html" \
+            '{title: $title, body: $body, url: $url}')
+
+          RESP=$(curl -s -w "\n%{http_code}" -X POST "${SB}/functions/v1/send-push" \
+            -H "apikey: ${ANON}" -H "Authorization: Bearer ${ANON}" -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+          CODE=$(echo "$RESP" | tail -1)
+          BODY=$(echo "$RESP" | sed '$d')
+          echo "응답($CODE): $BODY"
+          if [ "$CODE" != "200" ]; then
+            echo "::error::오늘의 말씀 푸시 발송 실패 (HTTP $CODE)"
+            exit 1
+          fi
