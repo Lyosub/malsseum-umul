@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { title, body: message, url } = await req.json();
+  const { title, body: message, url, only_user_id } = await req.json();
   if (!title || !message) {
     return new Response(JSON.stringify({ error: "title, body가 필요합니다." }), {
       status: 400,
@@ -44,9 +44,9 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const { data: subs, error: subsErr } = await supabaseAdmin
-    .from("push_subscriptions")
-    .select("endpoint, p256dh, auth");
+  let query = supabaseAdmin.from("push_subscriptions").select("user_id, endpoint, p256dh, auth");
+  if (only_user_id) query = query.eq("user_id", only_user_id);
+  const { data: subs, error: subsErr } = await query;
 
   if (subsErr) {
     return new Response(JSON.stringify({ error: subsErr.message }), {
@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
 
   const payload = JSON.stringify({ title, body: message, url: url || "./" });
   let sent = 0;
+  const results: { user_id: string; ok: boolean; statusCode?: number; error?: string }[] = [];
 
   await Promise.all(
     (subs || []).map((sub) =>
@@ -67,8 +68,10 @@ Deno.serve(async (req) => {
         )
         .then(() => {
           sent++;
+          results.push({ user_id: sub.user_id, ok: true });
         })
-        .catch(async (err: { statusCode?: number }) => {
+        .catch(async (err: { statusCode?: number; body?: string; message?: string }) => {
+          results.push({ user_id: sub.user_id, ok: false, statusCode: err.statusCode, error: err.body || err.message });
           if (err.statusCode === 404 || err.statusCode === 410) {
             await supabaseAdmin.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
           }
@@ -76,7 +79,7 @@ Deno.serve(async (req) => {
     )
   );
 
-  return new Response(JSON.stringify({ sent, total: subs?.length || 0 }), {
+  return new Response(JSON.stringify({ sent, total: subs?.length || 0, results }), {
     status: 200,
     headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
   });
