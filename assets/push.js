@@ -17,37 +17,6 @@ function isPushSupported() {
   return "serviceWorker" in navigator && "PushManager" in window && typeof Notification !== "undefined";
 }
 
-// 로그인 직후(index.html) 자동으로 알림 허용 팝업을 띄운다.
-// Notification.permission이 "default"(아직 한 번도 결정 안 함)일 때만 물어보고,
-// 이미 허용했거나("granted") 거부했으면("denied") 다시 묻지 않는다 — 브라우저가 그 상태를
-// 영구히 기억해주기 때문에 별도 DB 플래그 없이도 스팸성 재요청이 안 생긴다.
-function autoRequestPush(userId) {
-  if (!isPushSupported()) return;
-  if (Notification.permission !== "default") return;
-
-  navigator.serviceWorker.ready.then(function (reg) {
-    reg.pushManager.getSubscription().then(function (existing) {
-      if (existing) return; // 이미 구독돼 있으면 손대지 않는다
-
-      Notification.requestPermission().then(function (permission) {
-        if (permission !== "granted") return; // 거부해도 조용히 넘어간다(버튼으로 다시 시도 가능)
-        reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-        }).then(function (sub) {
-          var json = sub.toJSON();
-          getClient().from("push_subscriptions").upsert({
-            user_id: userId,
-            endpoint: json.endpoint,
-            p256dh: json.keys.p256dh,
-            auth: json.keys.auth
-          }, { onConflict: "endpoint" });
-        }).catch(function () {});
-      });
-    });
-  }).catch(function () {});
-}
-
 function initPushSubscribe(userId) {
   var btn = document.getElementById("pushSubscribeBtn");
   var msg = document.getElementById("pushSubscribeMsg");
