@@ -331,18 +331,24 @@ function loadVerseCardFonts() {
   return Promise.all(promises).then(function () { return document.fonts.ready; });
 }
 
-// 말씀카드 배경 70장(1080x2340) 중 이번 주(연중 몇 째 주)에 해당하는 걸 매주 자동으로 바꿔서 쓴다.
+// 말씀카드 배경 70장(1080x2340) 중 한 장을 매일 바꿔서 쓴다.
 // 이미지 폭이 모든 저장 사이즈(1080)와 같아서, 짧은 사이즈(게시물/스토리)는 그냥 위쪽만
 // 자연스럽게 잘려서 쓰이고(캔버스 밖은 자동으로 그려지지 않음) 별도 계산이 필요 없다.
 var VERSE_CARD_BG_COUNT = 70;
 
+// 순환의 기준점. 이 날짜에 이 번호가 나오고 하루에 한 칸씩 넘어간다.
+// 2026-09-17에 새로 추가한 배경의 첫 장(53번)부터 나오도록 맞춰두었다.
+var VERSE_CARD_BG_EPOCH = Date.UTC(2026, 8, 17);
+var VERSE_CARD_BG_EPOCH_INDEX = 53;
+
 function getVerseCardBgIndex() {
-  // 오늘의 말씀 카드 배경 사진은 매일 바뀐다(70장 순환). 홈·말씀 탭 모두 같은 로직을 써서
-  // 두 화면의 카드 배경이 같은 날엔 동일하게 보인다.
+  // 홈·말씀 탭 모두 같은 로직을 써서 두 화면의 카드 배경이 같은 날엔 동일하게 보인다.
   var now = new Date();
-  var start = new Date(now.getFullYear(), 0, 1);
-  var diffDays = Math.floor((now - start) / 86400000);
-  return (diffDays % VERSE_CARD_BG_COUNT) + 1;
+  var today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  var diffDays = Math.round((today - VERSE_CARD_BG_EPOCH) / 86400000);
+  // 기준일 이전 날짜에서도 음수가 나오지 않도록 나머지를 한 번 더 보정한다.
+  var slot = ((diffDays + VERSE_CARD_BG_EPOCH_INDEX - 1) % VERSE_CARD_BG_COUNT + VERSE_CARD_BG_COUNT) % VERSE_CARD_BG_COUNT;
+  return slot + 1;
 }
 
 // 배경 이미지를 미리 불러와둔다. 실패하면(오프라인 등) null로 넘겨서 기존 그라데이션으로 대체된다.
@@ -368,10 +374,10 @@ function drawVerseCardImage(canvas, verse, kind, W, H, bgImage) {
     // 사진마다 밝기가 제각각이라(하늘이 밝은 사진 등), 흰 글자가 항상 잘 보이도록
     // 위/아래는 좀 더 어둡게, 가운데는 약하게 어두운 막을 한 겹 씌운다.
     var scrim = ctx.createLinearGradient(0, 0, 0, H);
-    scrim.addColorStop(0, "rgba(0,0,0,0.45)");
-    scrim.addColorStop(0.25, "rgba(0,0,0,0.3)");
-    scrim.addColorStop(0.75, "rgba(0,0,0,0.3)");
-    scrim.addColorStop(1, "rgba(0,0,0,0.45)");
+    scrim.addColorStop(0, "rgba(0,0,0,0.55)");
+    scrim.addColorStop(0.25, "rgba(0,0,0,0.45)");
+    scrim.addColorStop(0.75, "rgba(0,0,0,0.45)");
+    scrim.addColorStop(1, "rgba(0,0,0,0.55)");
     ctx.fillStyle = scrim;
     ctx.fillRect(0, 0, W, H);
   } else {
