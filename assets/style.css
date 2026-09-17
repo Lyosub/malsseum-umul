@@ -337,7 +337,8 @@ header.site nav a:hover {
     var(--verse-bg-image),
     linear-gradient(180deg, var(--well-light) 0%, var(--well) 45%, var(--well-deep) 100%);
   background-size: cover;
-  background-position: top center;
+  /* 배경 사진은 세로로 긴 1080x2340이라 위쪽을 기준으로 자르면 피사체가 잘려 나간다. 가운데를 기준으로 자른다. */
+  background-position: center;
   color: #fff;
   border-radius: 20px;
   padding: 34px 26px;

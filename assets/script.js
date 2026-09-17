@@ -332,8 +332,7 @@ function loadVerseCardFonts() {
 }
 
 // 말씀카드 배경 70장(1080x2340) 중 한 장을 매일 바꿔서 쓴다.
-// 이미지 폭이 모든 저장 사이즈(1080)와 같아서, 짧은 사이즈(게시물/스토리)는 그냥 위쪽만
-// 자연스럽게 잘려서 쓰이고(캔버스 밖은 자동으로 그려지지 않음) 별도 계산이 필요 없다.
+// 배경은 저장 사이즈에 맞춰 비율을 유지한 채 가운데를 기준으로 잘라 넣는다(drawVerseCardBg 참고).
 var VERSE_CARD_BG_COUNT = 70;
 
 // 순환의 기준점. 이 날짜에 이 번호가 나오고 하루에 한 칸씩 넘어간다.
@@ -362,6 +361,16 @@ function loadVerseCardBackground() {
   });
 }
 
+// 배경 사진을 캔버스에 꽉 채우되, 비율을 유지하고 가운데를 기준으로 잘라 넣는다(CSS의 cover와 같다).
+// 예전에는 원본을 그대로 (0,0)에 얹어서, 세로가 짧은 저장 사이즈(게시물 1080x1350)에서는
+// 사진 아래쪽이 통째로 잘려 정작 피사체가 사라졌다.
+function drawVerseCardBg(ctx, img, W, H) {
+  var scale = Math.max(W / img.width, H / img.height);
+  var dw = img.width * scale;
+  var dh = img.height * scale;
+  ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+}
+
 function drawVerseCardImage(canvas, verse, kind, W, H, bgImage) {
   W = W || 1080;
   H = H || 1350;
@@ -370,7 +379,7 @@ function drawVerseCardImage(canvas, verse, kind, W, H, bgImage) {
   canvas.height = H;
 
   if (bgImage) {
-    ctx.drawImage(bgImage, 0, 0);
+    drawVerseCardBg(ctx, bgImage, W, H);
     // 사진마다 밝기가 제각각이라(하늘이 밝은 사진 등), 흰 글자가 항상 잘 보이도록
     // 위/아래는 좀 더 어둡게, 가운데는 약하게 어두운 막을 한 겹 씌운다.
     var scrim = ctx.createLinearGradient(0, 0, 0, H);
