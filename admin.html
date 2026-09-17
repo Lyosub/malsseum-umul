@@ -201,6 +201,42 @@
           <div id="quizAdminList"></div>
         </div>
       </div>
+
+      <!-- 오늘의 한 줄 -->
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">✍️ 오늘의 한 줄 <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;">학생들이 그 주일 말씀에서 남긴 한 줄이에요. 인스타에 실을 것을 <strong>"인스타에 실음"</strong>으로 표시하면 학생 화면에도 표시돼요.</p>
+          <div class="form-row">
+            <label for="lineAdminDate">주일 (비우면 이번 주일)</label>
+            <input type="date" id="lineAdminDate">
+          </div>
+          <button type="button" id="lineAdminLoadBtn" class="btn block">불러오기</button>
+          <hr class="well-divider">
+          <div id="lineAdminList"></div>
+        </div>
+      </div>
+
+      <!-- 물어봐도 돼 -->
+      <div class="card">
+        <h3 class="accordion-toggle" style="margin-top:0;">🙋 물어봐도 돼 (익명 질문) <span class="accordion-chevron">▸</span></h3>
+        <div class="accordion-body" style="display:none;">
+          <p class="msg" style="margin-top:0;"><strong>누가 썼는지는 저장되지 않아요.</strong> 질문 내용만 보여요. 답변을 저장하면 학생 화면의 "지난 질문과 답"에 올라가요. 답하지 않을 질문은 <strong>숨김</strong>으로 두면 돼요.</p>
+          <div class="form-row">
+            <label for="askAdminStatus">상태</label>
+            <select id="askAdminStatus">
+              <option value="new">새 질문</option>
+              <option value="picked">이번 주에 답할 질문</option>
+              <option value="answered">답변 완료</option>
+              <option value="hidden">숨김</option>
+              <option value="">전체</option>
+            </select>
+          </div>
+          <button type="button" id="askAdminLoadBtn" class="btn block">불러오기</button>
+          <hr class="well-divider">
+          <div id="askAdminList"></div>
+        </div>
+      </div>
     </section>
 
     <!-- ===== 오이코스 ===== -->

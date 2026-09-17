@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>물어봐도 돼 | 말씀우물</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2540d8">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script defer src="assets/pwa.js"></script>
+<style>
+  .ask-input { width: 100%; box-sizing: border-box; border: 1.5px solid var(--border); border-radius: 14px; padding: 14px; font-family: inherit; font-size: 15px; line-height: 1.6; resize: vertical; min-height: 130px; color: var(--well-deep); }
+  .ask-input:focus { outline: none; border-color: var(--well); }
+  .ask-count { text-align: right; font-size: 12px; color: var(--text-soft); margin: 6px 2px 0; }
+  .ask-safe { border: 1.5px dashed var(--well); border-radius: 16px; padding: 15px 16px; background: rgba(37, 64, 216, 0.045); }
+  .ask-safe h3 { margin: 0 0 9px; font-size: 14.5px; color: var(--well); }
+  .ask-safe ul { margin: 0; padding-left: 17px; }
+  .ask-safe li { font-size: 13px; line-height: 1.75; color: var(--well-deep); margin-bottom: 3px; }
+  .qa-item { border: 1.5px solid var(--border); border-radius: 16px; padding: 15px 16px; margin-bottom: 12px; background: #fff; }
+  .qa-q { font-size: 15px; font-weight: 800; color: var(--well-deep); line-height: 1.6; margin: 0 0 10px; word-break: keep-all; }
+  .qa-q::before { content: "Q. "; color: var(--well); }
+  .qa-a { font-size: 14.5px; line-height: 1.8; color: var(--text); margin: 0; white-space: pre-wrap; word-break: keep-all; padding-top: 10px; border-top: 1px solid var(--border); }
+  .qa-a::before { content: "A. "; color: var(--well); font-weight: 800; }
+</style>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav><a href="word.html">말씀</a></nav>
+</header>
+<div class="wrap">
+  <div class="page-hd">
+    <h1>🙋 물어봐도 돼</h1>
+    <p>신앙이든 고민이든, 묻고 싶은 걸 그냥 물어보세요.</p>
+  </div>
+
+  <div class="ask-safe">
+    <h3>🔒 누가 썼는지 아무도 몰라요</h3>
+    <ul>
+      <li>이름도, 닉네임도, 계정 정보도 <strong>저장되지 않아요.</strong></li>
+      <li>전도사님도 <strong>누가 썼는지 볼 수 없어요.</strong> 질문 내용만 보여요.</li>
+      <li>로그인하지 않아도 보낼 수 있어요.</li>
+      <li>바보 같은 질문은 없어요. 궁금한 게 있다는 게 더 중요해요.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="askWriteCard" style="margin-top:16px;">
+    <h3 style="margin-top:0;">무엇이든 물어보세요</h3>
+    <textarea id="askInput" class="ask-input" maxlength="500" placeholder="예) 기도했는데 응답이 없으면 어떻게 해요?"></textarea>
+    <div class="ask-count" id="askCount">0 / 500자</div>
+    <button type="button" id="askSubmitBtn" class="btn block" style="margin-top:10px;">보내기</button>
+    <p class="msg" id="askMsg" style="margin:10px 0 0;text-align:center;font-weight:700;color:var(--well);"></p>
+  </div>
+
+  <div class="card tint-blue" id="askDoneCard" style="display:none;text-align:center;">
+    <h3 style="margin-top:0;">📨 잘 보냈어요</h3>
+    <p class="msg" style="margin:0 0 12px;">전도사님이 읽어볼게요. 매주 하나씩 답을 올려요.</p>
+    <button type="button" id="askAgainBtn" class="btn ghost" style="padding:8px 18px;font-size:12.5px;">하나 더 물어보기</button>
+  </div>
+
+  <div style="margin-top:26px;">
+    <div class="sect-hd"><h2>지난 질문과 답</h2></div>
+    <div id="qaList"></div>
+    <p class="msg" id="qaEmpty" style="display:none;text-align:center;color:var(--text-soft);">아직 올라온 답변이 없어요. 첫 질문을 보내볼까요?</p>
+  </div>
+
+  <a href="word.html" class="btn ghost block" style="margin-top:22px;">말씀으로 돌아가기</a>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  💧 말씀우물
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/ask.js"></script>
+<script src="assets/appshell.js"></script>
+<script>initAsk();</script>
+</body>
+</html>

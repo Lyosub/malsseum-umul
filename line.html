@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>오늘의 한 줄 | 말씀우물</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2540d8">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script defer src="assets/pwa.js"></script>
+<style>
+  .line-input { width: 100%; box-sizing: border-box; border: 1.5px solid var(--border); border-radius: 14px; padding: 14px; font-family: inherit; font-size: 15px; line-height: 1.6; resize: vertical; min-height: 96px; color: var(--well-deep); }
+  .line-input:focus { outline: none; border-color: var(--well); }
+  .line-count { text-align: right; font-size: 12px; color: var(--text-soft); margin: 6px 2px 0; }
+  .line-count.over { color: #b3432c; font-weight: 700; }
+  .line-item { border: 1.5px solid var(--border); border-radius: 14px; padding: 13px 15px; margin-bottom: 10px; background: #fff; }
+  .line-item.mine { border-color: var(--well); background: rgba(37, 64, 216, 0.04); }
+  .line-item.picked { border-color: #d8a62a; background: rgba(216, 166, 42, 0.07); }
+  .line-text { font-size: 15px; line-height: 1.65; color: var(--well-deep); font-weight: 600; margin: 0 0 7px; word-break: keep-all; }
+  .line-meta { font-size: 12px; color: var(--text-soft); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .line-tag { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+  .line-tag.mine { background: rgba(37, 64, 216, 0.12); color: var(--well); }
+  .line-tag.picked { background: rgba(216, 166, 42, 0.18); color: #8a6a10; }
+</style>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav><a href="word.html">말씀</a></nav>
+</header>
+<div class="wrap">
+  <div class="page-hd">
+    <h1>✍️ 오늘의 한 줄</h1>
+    <p>오늘 말씀에서 마음에 남은 한 줄을 적어요.</p>
+  </div>
+
+  <div class="card tint-blue">
+    <p class="msg" style="margin:0;">💠 <strong>달란트 얻는 법</strong> — 한 줄을 남기면 <strong style="color:var(--well);">+2달란트</strong> (한 주에 한 번). 쓴 뒤에도 얼마든지 고칠 수 있어요.</p>
+  </div>
+
+  <!-- 로그인 안내 -->
+  <div class="card" id="lineLoginCard" style="display:none;text-align:center;">
+    <p class="msg" style="margin:0 0 12px;">로그인하면 한 줄을 남기고 친구들의 한 줄도 볼 수 있어요.</p>
+    <a href="login.html" class="btn block">로그인하기</a>
+  </div>
+
+  <!-- 작성 -->
+  <div class="card" id="lineWriteCard" style="display:none;">
+    <h3 style="margin-top:0;" id="lineWriteTitle">오늘 마음에 남은 한 줄</h3>
+    <textarea id="lineInput" class="line-input" maxlength="120" placeholder="예) 열 명 다 나았는데 한 명만 돌아왔다는 게 계속 마음에 남았다."></textarea>
+    <div class="line-count" id="lineCount">0 / 100자</div>
+    <button type="button" id="lineSubmitBtn" class="btn block" style="margin-top:10px;">남기기</button>
+    <p class="msg" id="lineMsg" style="margin:10px 0 0;text-align:center;font-weight:700;color:var(--well);"></p>
+  </div>
+
+  <!-- 친구들의 한 줄 -->
+  <div id="lineListWrap" style="display:none;margin-top:22px;">
+    <div class="sect-hd"><h2>친구들의 한 줄</h2></div>
+    <div id="lineList"></div>
+    <p class="msg" id="lineListEmpty" style="display:none;text-align:center;color:var(--text-soft);">아직 아무도 남기지 않았어요. 첫 번째가 되어볼까요?</p>
+  </div>
+
+  <a href="word.html" class="btn ghost block" style="margin-top:22px;">말씀으로 돌아가기</a>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  💧 말씀우물
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/sermon-line.js"></script>
+<script src="assets/appshell.js"></script>
+<script>initSermonLine();</script>
+</body>
+</html>

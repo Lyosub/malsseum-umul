@@ -71,6 +71,8 @@ function initAdminPage() {
       loadAllNotes();
       loadGroupsAdmin();
       loadBoardAdmin();
+      initSermonLineAdmin();
+      initAskAdmin();
     });
   });
 }
@@ -1683,4 +1685,146 @@ function loadOikosExpensesAdmin() {
       });
     });
   });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ✍️ 오늘의 한 줄 — 그 주일에 학생들이 남긴 한 줄을 보고, 인스타에 실을 것을 표시한다.
+// ─────────────────────────────────────────────────────────────
+function initSermonLineAdmin() {
+  var client = getClient();
+  var listEl = document.getElementById("lineAdminList");
+  var dateEl = document.getElementById("lineAdminDate");
+  var loadBtn = document.getElementById("lineAdminLoadBtn");
+  if (!client || !listEl || !loadBtn) return;
+
+  function render(rows) {
+    if (!rows.length) {
+      listEl.innerHTML = '<p class="msg">이 주일에는 아직 남긴 한 줄이 없어요.</p>';
+      return;
+    }
+    var pickedCount = rows.filter(function (r) { return r.is_picked; }).length;
+    var header = '<p class="msg" style="margin-top:0;">' + rows.length + '명이 남겼어요'
+      + (pickedCount ? ' · 인스타에 실음 <strong style="color:var(--well);">' + pickedCount + '건</strong>' : '') + '</p>';
+
+    listEl.innerHTML = header + rows.map(function (r) {
+      return (
+        '<div style="border:1.5px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:9px;'
+          + (r.is_picked ? 'background:rgba(216,166,42,.08);border-color:#d8a62a;' : '') + '">'
+        + '<div style="font-size:14.5px;line-height:1.65;color:var(--well-deep);font-weight:600;overflow-wrap:anywhere;">'
+        + escapeHtmlAdmin(r.content) + '</div>'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:9px;">'
+        + '<span style="font-size:12px;color:var(--text-soft);">' + escapeHtmlAdmin(r.nickname || "") + '</span>'
+        + '<button type="button" class="btn ' + (r.is_picked ? '' : 'ghost') + '" data-pick-id="' + r.id
+        + '" data-picked="' + (r.is_picked ? '1' : '0') + '" style="padding:5px 12px;font-size:12px;white-space:nowrap;">'
+        + (r.is_picked ? '인스타에 실음' : '인스타에 실기') + '</button>'
+        + '</div></div>'
+      );
+    }).join("");
+
+    listEl.querySelectorAll("[data-pick-id]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = Number(btn.getAttribute("data-pick-id"));
+        var next = btn.getAttribute("data-picked") !== "1";
+        btn.disabled = true;
+        client.rpc("admin_pick_sermon_line", { p_id: id, p_picked: next }).then(function (res) {
+          if (res.error) { btn.disabled = false; alert("바꾸지 못했어요."); return; }
+          load();
+        }, function () { btn.disabled = false; alert("바꾸지 못했어요."); });
+      });
+    });
+  }
+
+  function load() {
+    listEl.innerHTML = '<p class="msg">불러오는 중...</p>';
+    var d = dateEl && dateEl.value ? dateEl.value : null;
+    client.rpc("get_sermon_lines", { p_service_date: d, p_limit: 300 }).then(function (res) {
+      if (res.error) { listEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
+      render(res.data || []);
+    }, function () { listEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; });
+  }
+
+  loadBtn.addEventListener("click", load);
+  load();
+}
+
+// ─────────────────────────────────────────────────────────────
+// 🙋 물어봐도 돼 — 익명 질문 확인과 답변.
+// 작성자 정보는 애초에 저장되지 않으므로 여기서도 볼 수 없다(설계상 의도된 것).
+// ─────────────────────────────────────────────────────────────
+function initAskAdmin() {
+  var client = getClient();
+  var listEl = document.getElementById("askAdminList");
+  var statusEl = document.getElementById("askAdminStatus");
+  var loadBtn = document.getElementById("askAdminLoadBtn");
+  if (!client || !listEl || !loadBtn) return;
+
+  var STATUS_LABEL = { "new": "새 질문", picked: "답할 질문", answered: "답변 완료", hidden: "숨김" };
+
+  function render(rows) {
+    if (!rows.length) {
+      listEl.innerHTML = '<p class="msg">해당하는 질문이 없어요.</p>';
+      return;
+    }
+    listEl.innerHTML = rows.map(function (r) {
+      var when = formatDateTime(r.created_at) || "";
+      return (
+        '<div style="border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">'
+        + '<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;">'
+        + '<span style="font-size:11.5px;font-weight:800;color:var(--well);">' + (STATUS_LABEL[r.status] || r.status) + '</span>'
+        + '<span style="font-size:11.5px;color:var(--text-soft);">' + escapeHtmlAdmin(when) + '</span>'
+        + '</div>'
+        + '<div style="font-size:14.5px;line-height:1.65;color:var(--well-deep);font-weight:700;overflow-wrap:anywhere;">'
+        + escapeHtmlAdmin(r.content) + '</div>'
+        + '<textarea data-ans-for="' + r.id + '" placeholder="여기에 답을 쓰면 학생 화면에 올라가요." '
+        + 'style="width:100%;box-sizing:border-box;margin-top:10px;border:1.5px solid var(--border);border-radius:10px;'
+        + 'padding:10px;font-family:inherit;font-size:13.5px;line-height:1.7;min-height:84px;resize:vertical;">'
+        + escapeHtmlAdmin(r.answer || "") + '</textarea>'
+        + '<div style="display:flex;gap:8px;margin-top:8px;">'
+        + '<button type="button" class="btn" data-ans-save="' + r.id + '" style="flex:1 1 0;padding:7px 0;font-size:12.5px;">답변 올리기</button>'
+        + '<button type="button" class="btn ghost" data-ans-pick="' + r.id + '" style="flex:0 0 auto;padding:7px 12px;font-size:12.5px;">답할 질문으로</button>'
+        + '<button type="button" class="btn ghost" data-ans-hide="' + r.id + '" style="flex:0 0 auto;padding:7px 12px;font-size:12.5px;">숨김</button>'
+        + '</div></div>'
+      );
+    }).join("");
+
+    function act(id, answer, status, btn) {
+      btn.disabled = true;
+      client.rpc("admin_answer_question", { p_id: id, p_answer: answer, p_status: status }).then(function (res) {
+        if (res.error) { btn.disabled = false; alert(res.error.message || "처리하지 못했어요."); return; }
+        load();
+      }, function () { btn.disabled = false; alert("처리하지 못했어요."); });
+    }
+
+    listEl.querySelectorAll("[data-ans-save]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = Number(btn.getAttribute("data-ans-save"));
+        var ta = listEl.querySelector('[data-ans-for="' + id + '"]');
+        var text = ta ? ta.value.trim() : "";
+        if (!text) { alert("답변 내용을 입력해 주세요."); return; }
+        act(id, text, "answered", btn);
+      });
+    });
+    listEl.querySelectorAll("[data-ans-pick]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        act(Number(btn.getAttribute("data-ans-pick")), null, "picked", btn);
+      });
+    });
+    listEl.querySelectorAll("[data-ans-hide]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        act(Number(btn.getAttribute("data-ans-hide")), null, "hidden", btn);
+      });
+    });
+  }
+
+  function load() {
+    listEl.innerHTML = '<p class="msg">불러오는 중...</p>';
+    var st = statusEl && statusEl.value ? statusEl.value : null;
+    client.rpc("admin_list_questions", { p_status: st, p_limit: 200 }).then(function (res) {
+      if (res.error) { listEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
+      render(res.data || []);
+    }, function () { listEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; });
+  }
+
+  loadBtn.addEventListener("click", load);
+  load();
 }
