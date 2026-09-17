@@ -331,13 +331,13 @@ function loadVerseCardFonts() {
   return Promise.all(promises).then(function () { return document.fonts.ready; });
 }
 
-// 말씀카드 배경 52장(1080x2340) 중 이번 주(연중 몇 째 주)에 해당하는 걸 매주 자동으로 바꿔서 쓴다.
+// 말씀카드 배경 70장(1080x2340) 중 이번 주(연중 몇 째 주)에 해당하는 걸 매주 자동으로 바꿔서 쓴다.
 // 이미지 폭이 모든 저장 사이즈(1080)와 같아서, 짧은 사이즈(게시물/스토리)는 그냥 위쪽만
 // 자연스럽게 잘려서 쓰이고(캔버스 밖은 자동으로 그려지지 않음) 별도 계산이 필요 없다.
-var VERSE_CARD_BG_COUNT = 52;
+var VERSE_CARD_BG_COUNT = 70;
 
 function getVerseCardBgIndex() {
-  // 오늘의 말씀 카드 배경 사진은 매일 바뀐다(52장 순환). 홈·말씀 탭 모두 같은 로직을 써서
+  // 오늘의 말씀 카드 배경 사진은 매일 바뀐다(70장 순환). 홈·말씀 탭 모두 같은 로직을 써서
   // 두 화면의 카드 배경이 같은 날엔 동일하게 보인다.
   var now = new Date();
   var start = new Date(now.getFullYear(), 0, 1);
