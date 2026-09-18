@@ -24,6 +24,10 @@ on:
         description: "지금 바로 올릴 항목 id (예약 시각 무시). 비우면 예약 시각이 지난 것만 올림"
         required: false
         default: ""
+      probe_stories:
+        description: "스토리 게시가 이 계정에서 되는지만 확인(실제로 올리지 않음). true 입력"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -38,7 +42,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 스토리 게시 가능 여부 확인용. 컨테이너만 만들어보고 publish 는 하지 않으므로
+      # 실제로 스토리가 올라가지는 않는다. 계정 유형(크리에이터/비즈니스) 제약을 확인하는 목적.
+      - name: 스토리 가능 여부 확인 (게시하지 않음)
+        if: ${{ github.event.inputs.probe_stories == 'true' }}
+        env:
+          IG_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        run: |
+          set -uo pipefail
+          API="https://graph.instagram.com/v21.0"
+          IMG="https://logoswell.kr/instagram/2026-09-13-cartoon.jpg"
+
+          echo "계정 정보:"
+          curl -s "$API/me?fields=username,account_type&access_token=$IG_TOKEN"; echo
+
+          echo "STORIES 컨테이너 생성 시도 (publish 안 함):"
+          RESP=$(curl -s -X POST "$API/$IG_USER_ID/media" \
+            -d "media_type=STORIES" \
+            --data-urlencode "image_url=$IMG" \
+            -d "access_token=$IG_TOKEN")
+          echo "$RESP"
+
+          if echo "$RESP" | jq -e '.id' >/dev/null 2>&1; then
+            echo "::notice::스토리 게시 가능. (컨테이너만 만들었고 올리지는 않았음)"
+          else
+            echo "::notice::스토리 게시 불가 — 위 오류 메시지 확인"
+          fi
+          exit 0
+
       - name: 게시 실행
+        if: ${{ github.event.inputs.probe_stories != 'true' }}
         id: run
         env:
           IG_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
