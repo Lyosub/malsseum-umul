@@ -172,6 +172,54 @@ jobs:
             fi
 
             echo "  ✅ 게시 완료. media_id=$MEDIA_ID"
+
+            # ── 첫 댓글에 해시태그 달기 ──────────────────────────────
+            # 캡션은 읽기 좋게 두고 해시태그는 첫 댓글로 분리한다(인스타 관행).
+            TAGFILE=$(jq -r --arg id "$ID" '.posts[] | select(.id==$id) | .first_comment_file // empty' instagram/queue.json)
+            if [ -n "$TAGFILE" ] && [ -f "$TAGFILE" ]; then
+              TAGS=$(cat "$TAGFILE")
+              CRESP=$(curl -s -X POST "$API/$MEDIA_ID/comments" \
+                --data-urlencode "message=$TAGS" \
+                -d "access_token=$IG_TOKEN")
+              CID=$(echo "$CRESP" | jq -r '.id // empty' 2>/dev/null || true)
+              if [ -n "$CID" ]; then
+                echo "  💬 첫 댓글 완료. comment_id=$CID"
+              else
+                echo "::warning::첫 댓글 실패(게시 자체는 성공): $CRESP"
+              fi
+            fi
+
+            # ── 스토리로도 올리기 ────────────────────────────────────
+            # 주의: API 로는 "게시물 공유" 스티커를 만들 수 없다. 같은 내용을 9:16 이미지로
+            # 새로 만들어 올리는 것이며, 탭해서 원글로 넘어가는 링크는 붙지 않는다.
+            STORY=$(jq -r --arg id "$ID" '.posts[] | select(.id==$id) | .story_image // empty' instagram/queue.json)
+            if [ -n "$STORY" ]; then
+              SCODE=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/$STORY")
+              if [ "$SCODE" != "200" ]; then
+                echo "::warning::스토리 이미지에 접근할 수 없어 건너뜁니다: $BASE/$STORY"
+              else
+                SC=$(curl -s -X POST "$API/$IG_USER_ID/media" \
+                  -d "media_type=STORIES" \
+                  --data-urlencode "image_url=$BASE/$STORY" \
+                  -d "access_token=$IG_TOKEN" | jq -r '.id // empty')
+                if [ -n "$SC" ]; then
+                  for i in 1 2 3 4 5 6; do
+                    SST=$(curl -s "$API/$SC?fields=status_code&access_token=$IG_TOKEN" | jq -r '.status_code // empty')
+                    [ "$SST" = "FINISHED" ] && break
+                    sleep 5
+                  done
+                  SRES=$(curl -s -X POST "$API/$IG_USER_ID/media_publish" -d "creation_id=$SC" -d "access_token=$IG_TOKEN")
+                  SMID=$(echo "$SRES" | jq -r '.id // empty' 2>/dev/null || true)
+                  if [ -n "$SMID" ]; then
+                    echo "  📱 스토리 게시 완료. story_media_id=$SMID"
+                  else
+                    echo "::warning::스토리 게시 실패(피드 게시는 성공): $SRES"
+                  fi
+                else
+                  echo "::warning::스토리 컨테이너 생성 실패(피드 게시는 성공)"
+                fi
+              fi
+            fi
             jq --arg id "$ID" --arg mid "$MEDIA_ID" --arg at "$NOW_KST" \
               '(.posts[] | select(.id==$id)) |= (.status = "posted" | .media_id = $mid | .posted_at = $at)' \
               instagram/queue.json > tmp && mv tmp instagram/queue.json

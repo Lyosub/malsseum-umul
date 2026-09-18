@@ -3,6 +3,8 @@
   "_status값": "pending = 예정 / posted = 게시됨 / skip = 취소(올리지 않음) / failed = 실패",
   "_publish_at": "KST 기준. 이 시각이 지나면 다음 워크플로 실행 때 올라간다.",
   "_type": "image = 사진 1장 / carousel = 여러 장(최대 10장)",
+  "_first_comment_file": "첫 댓글로 달 내용(주로 해시태그). 캡션은 읽기 좋게 두고 태그는 여기로 뺀다. 없으면 생략.",
+  "_story_image": "게시 직후 스토리로도 올릴 9:16(1080x1920) 이미지. 없으면 생략. ⚠ 인스타 앱의 '스토리에 추가' 버튼처럼 탭해서 원글로 넘어가는 스티커는 API 로 만들 수 없다. 이건 같은 내용을 세로로 새로 만든 이미지이고 탭 링크가 없다. 링크가 꼭 필요하면 전도사님이 앱에서 직접 공유하는 편이 낫다.",
   "_token_issued": "2026-09-18",
   "_token_주의": "인스타 토큰은 발급 후 60일이면 만료된다(2026-11-17경). 만료되면 게시가 멈추므로, 워크플로가 14일 전부터 경고한다. 갱신했으면 이 날짜도 같이 고칠 것.",
   "posts": [
@@ -12,10 +14,12 @@
       "publish_at": "2026-09-18 12:00",
       "status": "posted",
       "caption_file": "instagram/captions/2026-09-13-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-09-13-cartoon.tags.txt",
       "images": [
         "instagram/2026-09-13-cartoon.jpg"
       ],
-      "note": "첫 테스트 게시. 9/13 설교 기준 카툰 #001 「채워도 또 허전해」",
+      "story_image": "instagram/2026-09-13-cartoon-story.jpg",
+      "note": "첫 테스트 게시. 9/13 설교 기준 카툰 #001 「채워도 또 허전해」. 이 건은 첫 댓글·스토리 기능이 붙기 전에 올라갔으므로 캡션에 해시태그가 그대로 들어가 있다.",
       "media_id": "17908644042509858",
       "posted_at": "2026-09-18 12:27"
     }
