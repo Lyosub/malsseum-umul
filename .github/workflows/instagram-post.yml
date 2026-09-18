@@ -23,7 +23,7 @@ name: 중등부 인스타 예약 게시 (말씀게시물·말씀카툰)
 
 on:
   schedule:
-    - cron: "0 1 * * 2,4"    # UTC 01:00 → 화·목 10:00 KST
+    - cron: "0 7 * * 2,4"    # UTC 07:00 → 화·목 16:00 KST (하교 후, 아이들이 실제로 인스타를 보는 시간)
   workflow_dispatch:
     inputs:
       force_id:
