@@ -10,12 +10,14 @@
       "id": "2026-09-13-cartoon",
       "type": "image",
       "publish_at": "2026-09-18 12:00",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-09-13-cartoon.txt",
       "images": [
         "instagram/2026-09-13-cartoon.jpg"
       ],
-      "note": "첫 테스트 게시. 9/13 설교 기준 카툰 #001 「채워도 또 허전해」"
+      "note": "첫 테스트 게시. 9/13 설교 기준 카툰 #001 「채워도 또 허전해」",
+      "media_id": "17908644042509858",
+      "posted_at": "2026-09-18 12:27"
     }
   ]
 }
