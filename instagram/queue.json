@@ -1,0 +1,21 @@
+{
+  "_설명": "중등부 인스타(@logos_jesusplus) 예약 게시 대기열. status 를 skip 으로 바꾸면 그 건은 올라가지 않는다.",
+  "_status값": "pending = 예정 / posted = 게시됨 / skip = 취소(올리지 않음) / failed = 실패",
+  "_publish_at": "KST 기준. 이 시각이 지나면 다음 워크플로 실행 때 올라간다.",
+  "_type": "image = 사진 1장 / carousel = 여러 장(최대 10장)",
+  "_token_issued": "2026-09-18",
+  "_token_주의": "인스타 토큰은 발급 후 60일이면 만료된다(2026-11-17경). 만료되면 게시가 멈추므로, 워크플로가 14일 전부터 경고한다. 갱신했으면 이 날짜도 같이 고칠 것.",
+  "posts": [
+    {
+      "id": "2026-09-13-cartoon",
+      "type": "image",
+      "publish_at": "2026-09-18 12:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-09-13-cartoon.txt",
+      "images": [
+        "instagram/2026-09-13-cartoon.jpg"
+      ],
+      "note": "첫 테스트 게시. 9/13 설교 기준 카툰 #001 「채워도 또 허전해」"
+    }
+  ]
+}
