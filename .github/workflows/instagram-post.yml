@@ -86,10 +86,12 @@ jobs:
             done
 
             if [ "$TYPE" = "image" ]; then
-              CREATION=$(curl -s -X POST "$API/$IG_USER_ID/media" \
+              RESP=$(curl -s -X POST "$API/$IG_USER_ID/media" \
                 --data-urlencode "image_url=$BASE/${IMGS[0]}" \
                 --data-urlencode "caption=$CAPTION" \
-                -d "access_token=$IG_TOKEN" | jq -r '.id // empty')
+                -d "access_token=$IG_TOKEN")
+              echo "  /media 응답: $RESP"
+              CREATION=$(echo "$RESP" | jq -r '.id // empty' 2>/dev/null || true)
             else
               CHILDREN=""
               for P in "${IMGS[@]}"; do
@@ -156,9 +158,13 @@ jobs:
           IG_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: |
           set -uo pipefail
-          # 토큰이 아직 살아있는지부터 확인
+          # 토큰에 눈에 안 보이는 문자(BOM·줄바꿈·공백)가 섞이면 URL 이 깨진다. 길이와 앞머리로 확인한다.
+          echo "토큰 길이: ${#IG_TOKEN}자 / 앞 4글자: ${IG_TOKEN:0:4}"
+          printf '%s' "$IG_TOKEN" | head -c 8 | xxd | head -1 || true
+
           ME=$(curl -s "https://graph.instagram.com/v21.0/me?fields=username&access_token=$IG_TOKEN")
-          USERNAME=$(echo "$ME" | jq -r '.username // empty')
+          echo "/me 응답: $ME"
+          USERNAME=$(echo "$ME" | jq -r '.username // empty' 2>/dev/null || true)
           if [ -z "$USERNAME" ]; then
             echo "::error::토큰이 만료되었거나 무효합니다. 새로 발급받아 IG_ACCESS_TOKEN 시크릿을 갱신해야 합니다."
             echo "응답: $ME"
