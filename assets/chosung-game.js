@@ -22,6 +22,7 @@ function initChosungGame() {
   var quiz = [];
   var qi = 0;
   var correct = 0;
+  var gameStartAt = 0;   // 열 문제 전체에 걸린 시간(랭킹 동점자 가르기용)
   var locked = false;
 
   function shuffle(arr) {
@@ -129,11 +130,14 @@ function initChosungGame() {
     scoreEl.textContent = quiz.length + "문제 중 " + correct + "개 정답";
     doneMsg.textContent = "";
 
+    // 랭킹용: 정답 수가 같으면 더 빨리 푼 사람이 위로 간다.
+    var totalMs = gameStartAt ? (Date.now() - gameStartAt) : null;
+
     var client = (typeof getClient === "function") ? getClient() : null;
     if (!client) { doneMsg.textContent = "로그인하면 달란트가 저장돼요."; return; }
     getSession().then(function (session) {
       if (!session) { doneMsg.textContent = "로그인하면 달란트가 저장돼요."; return; }
-      client.rpc("submit_chosung_quiz", { p_correct: correct }).then(function (res) {
+      client.rpc("submit_chosung_quiz", { p_correct: correct, p_time_ms: totalMs }).then(function (res) {
         var pts = (res && !res.error) ? res.data : 0;
         doneMsg.textContent = pts > 0 ? ("+" + pts + "달란트 🎉") : "잘했어요! (오늘 달란트는 이미 받았어요)";
       }, function () { doneMsg.textContent = "잘했어요!"; });
@@ -142,6 +146,7 @@ function initChosungGame() {
 
   function start() {
     correct = 0; qi = 0;
+    gameStartAt = Date.now();
     buildQuiz();
     if (!quiz.length) { startCard.innerHTML = '<p class="msg">문제를 불러오지 못했어요.</p>'; return; }
     startCard.style.display = "none";

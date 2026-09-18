@@ -55,6 +55,9 @@ function initMemorizeGame() {
   var nextIndex = 0;
   var awardedThisSession = false;
   var peekTimer = null;
+  // 랭킹용: 세 구절을 다 완성하는 데 걸린 시간 + 힌트 1회당 5초 페널티(서버에서 더한다)
+  var gameStartAt = 0;
+  var hintCount = 0;
 
   function verse() { return rounds[roundIndex]; }
   function peekSecondsFor(n) { return Math.min(14, Math.max(6, Math.round(n * 0.55))); }
@@ -122,12 +125,14 @@ function initMemorizeGame() {
     doneVerse.textContent = verse().text;
     doneMsg.textContent = "";
 
+    var totalMs = gameStartAt ? (Date.now() - gameStartAt) : null;
+
     var client = (typeof getClient === "function") ? getClient() : null;
     if (!client) { doneMsg.textContent = "로그인하면 달란트가 저장돼요."; return; }
     getSession().then(function (session) {
       if (!session) { doneMsg.textContent = "로그인하면 달란트가 저장돼요."; return; }
       if (awardedThisSession) { doneMsg.textContent = "잘했어요! (오늘 달란트는 이미 받았어요)"; return; }
-      client.rpc("submit_verse_memory_game").then(function (res) {
+      client.rpc("submit_verse_memory_game", { p_time_ms: totalMs, p_peeks: hintCount }).then(function (res) {
         var pts = (res && !res.error) ? res.data : 0;
         if (pts > 0) { doneMsg.textContent = "+" + pts + "달란트 🎉"; awardedThisSession = true; }
         else { doneMsg.textContent = "잘했어요! (오늘 달란트는 이미 받았어요)"; }
@@ -171,9 +176,17 @@ function initMemorizeGame() {
     showCard.style.display = "none";
     playCard.style.display = "block";
   });
-  peekBtn.addEventListener("click", function () { peek(4); });
+  peekBtn.addEventListener("click", function () { hintCount++; peek(4); });
   restartBtn.addEventListener("click", function () { loadRound(); });
-  againBtn.addEventListener("click", function () { roundIndex = 0; loadRound(); });
+  againBtn.addEventListener("click", function () { startGame(); });
 
-  loadRound();
+  // 한 판(세 구절)의 시작. 시계와 힌트 횟수를 여기서 초기화한다.
+  function startGame() {
+    roundIndex = 0;
+    hintCount = 0;
+    gameStartAt = Date.now();
+    loadRound();
+  }
+
+  startGame();
 }
