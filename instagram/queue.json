@@ -21,6 +21,39 @@
       "note": "첫 테스트 게시. 9/13 설교 기준 카툰 #001 「채워도 또 허전해」. 이 건은 첫 댓글 기능이 붙기 전에 올라갔으므로 캡션에 해시태그가 그대로 들어가 있다.",
       "media_id": "17908644042509858",
       "posted_at": "2026-09-18 12:27"
+    },
+    {
+      "id": "2026-09-20-verse",
+      "type": "carousel",
+      "publish_at": "2026-09-22 16:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-09-20-verse.txt",
+      "first_comment_file": "instagram/captions/2026-09-20-verse.tags.txt",
+      "images": [
+        "instagram/2026-09-20-verse-01.jpg",
+        "instagram/2026-09-20-verse-02.jpg",
+        "instagram/2026-09-20-verse-03.jpg",
+        "instagram/2026-09-20-verse-04.jpg",
+        "instagram/2026-09-20-verse-05.jpg",
+        "instagram/2026-09-20-verse-06.jpg",
+        "instagram/2026-09-20-verse-07.jpg",
+        "instagram/2026-09-20-verse-08.jpg",
+        "instagram/2026-09-20-verse-09.jpg",
+        "instagram/2026-09-20-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 9/20 설교 「뜻을 먼저 정하면」(다니엘 1:8, 12-17). 10장 캐러셀. 전도사님 컨펌 2026-09-20."
+    },
+    {
+      "id": "2026-09-20-cartoon",
+      "type": "image",
+      "publish_at": "2026-09-24 16:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-09-20-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-09-20-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-09-20-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #002 「점수는 못 정해도」 — 9/20 설교 기준. 전도사님 컨펌 2026-09-20."
     }
   ]
 }
