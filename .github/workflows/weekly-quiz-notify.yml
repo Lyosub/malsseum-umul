@@ -1,0 +1,69 @@
+name: 말씀우물 주간퀴즈 알림
+
+# 매주 수요일 00:00 KST(=화요일 15:00 UTC)에 이번 주 성경퀴즈가 등록돼 있으면
+# 전체 구독자에게 푸시 알림을 보낸다.
+# 예전 Claude 클라우드 예약 루틴을 대체한다 — 그 루틴은 실행 환경의 egress 차단으로
+# Supabase에 도달하지 못했다(healthcheck.yml과 동일한 문제).
+
+on:
+  schedule:
+    - cron: "0 15 * * 2"   # UTC 화 15:00 → KST 수 00:00
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 이번 주 퀴즈 확인 및 알림 발송
+        id: run
+        run: |
+          set -u
+          SB="https://qaxwxbaqduxqzjqoahcb.supabase.co"
+          ANON="sb_publishable_Q5HhLUzyLoFlNK0MCai_eQ_SOFeu_ks"
+
+          echo "[1단계] 이번 주 퀴즈 확인"
+          QUIZ_RESP=$(curl -s -w '\n%{http_code}' --max-time 20 -X POST "${SB}/rest/v1/rpc/get_current_quiz" \
+            -H "apikey: ${ANON}" -H "Content-Type: application/json" -d '{}')
+          QUIZ_CODE=$(echo "$QUIZ_RESP" | tail -n1)
+          QUIZ_BODY=$(echo "$QUIZ_RESP" | sed '$d')
+          echo "  HTTP $QUIZ_CODE"
+          echo "  응답: $QUIZ_BODY"
+
+          if [ "$QUIZ_CODE" != "200" ]; then
+            echo "::error::get_current_quiz 호출 실패 (HTTP $QUIZ_CODE)"
+            exit 1
+          fi
+
+          if [ "$QUIZ_BODY" = "[]" ]; then
+            echo "이번 주 퀴즈가 아직 등록되지 않아 알림을 보내지 않음."
+            exit 0
+          fi
+
+          echo "[2단계] 푸시 알림 발송"
+          PUSH_RESP=$(curl -s -w '\n%{http_code}' --max-time 20 -X POST "${SB}/functions/v1/send-push" \
+            -H "Content-Type: application/json" -H "x-webhook-secret: ${{ secrets.SEND_PUSH_WEBHOOK_SECRET }}" \
+            -d '{"title": "🧩 이번주 성경퀴즈가 열렸어요!", "body": "목요일 자정까지만 풀 수 있어요. 지금 참여하고 정답 맞히면 +3달란트!", "url": "/weekly.html"}')
+          PUSH_CODE=$(echo "$PUSH_RESP" | tail -n1)
+          PUSH_BODY=$(echo "$PUSH_RESP" | sed '$d')
+          echo "  HTTP $PUSH_CODE"
+          echo "  응답: $PUSH_BODY"
+
+          if [ "$PUSH_CODE" != "200" ]; then
+            echo "::error::send-push 호출 실패 (HTTP $PUSH_CODE): $PUSH_BODY"
+            exit 1
+          fi
+
+          echo "알림 발송 완료."
+
+      - name: 실패 시 카톡 알림
+        if: failure()
+        env:
+          TOK: ${{ secrets.NOTIFY_TRIGGER_PAT }}
+        run: |
+          set -uo pipefail
+          MSG="[말씀우물] 주간퀴즈 알림 발송 실패. 확인: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          printf '{"ref":"main","inputs":{"message":%s}}' "$(printf '%s' "$MSG" | jq -Rs .)" > /tmp/notify.json
+          curl -s -o /dev/null -w '카톡 알림 트리거 HTTP %{http_code}\n' -X POST \
+            "https://api.github.com/repos/Lyosub/NEW-BRAIN/actions/workflows/kakao-notify.yml/dispatches" \
+            -H "Authorization: Bearer $TOK" -H "Accept: application/vnd.github+json" \
+            --data-binary "@/tmp/notify.json"
