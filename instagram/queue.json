@@ -56,6 +56,27 @@
         "instagram/2026-09-20-cartoon.jpg"
       ],
       "note": "말씀카툰 #002 「점수는 못 정해도」 — 9/20 설교 기준. 전도사님 컨펌 2026-09-20."
+    },
+    {
+      "id": "2026-09-27-verse",
+      "type": "carousel",
+      "publish_at": "2026-09-29 16:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-09-27-verse.txt",
+      "first_comment_file": "instagram/captions/2026-09-27-verse.tags.txt",
+      "images": [
+        "instagram/2026-09-27-verse-01.jpg",
+        "instagram/2026-09-27-verse-02.jpg",
+        "instagram/2026-09-27-verse-03.jpg",
+        "instagram/2026-09-27-verse-04.jpg",
+        "instagram/2026-09-27-verse-05.jpg",
+        "instagram/2026-09-27-verse-06.jpg",
+        "instagram/2026-09-27-verse-07.jpg",
+        "instagram/2026-09-27-verse-08.jpg",
+        "instagram/2026-09-27-verse-09.jpg",
+        "instagram/2026-09-27-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 9/27 설교 「당연한 건 없다」(누가복음 17:11-19, 나병환자 열 명). 10장 캐러셀. 전도사님 컨펌 2026-09-22."
     }
   ]
 }
