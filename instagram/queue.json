@@ -26,7 +26,7 @@
       "id": "2026-09-20-verse",
       "type": "carousel",
       "publish_at": "2026-09-22 16:00",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-09-20-verse.txt",
       "first_comment_file": "instagram/captions/2026-09-20-verse.tags.txt",
       "images": [
@@ -41,7 +41,9 @@
         "instagram/2026-09-20-verse-09.jpg",
         "instagram/2026-09-20-verse-10.jpg"
       ],
-      "note": "말씀게시물 — 9/20 설교 「뜻을 먼저 정하면」(다니엘 1:8, 12-17). 10장 캐러셀. 전도사님 컨펌 2026-09-20."
+      "note": "말씀게시물 — 9/20 설교 「뜻을 먼저 정하면」(다니엘 1:8, 12-17). 10장 캐러셀. 전도사님 컨펌 2026-09-20.",
+      "media_id": "18191852287396901",
+      "posted_at": "2026-09-22 16:05"
     },
     {
       "id": "2026-09-20-cartoon",
