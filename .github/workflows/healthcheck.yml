@@ -87,6 +87,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: 이상 시 ALERT.md 기록 / 정상 시 정리
+        id: record
         env:
           NOW: ${{ steps.probe.outputs.now }}
           KST: ${{ steps.probe.outputs.kst }}
@@ -96,6 +97,9 @@ jobs:
           set -e
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          HAD_ALERT="false"
+          [ -f .github/health/ALERT.md ] && HAD_ALERT="true"
 
           if [ -n "$FAIL" ] || [ -n "$WARN" ]; then
             mkdir -p .github/health
@@ -128,10 +132,39 @@ jobs:
             echo "::error::말씀우물 헬스체크 이상 — .github/health/ALERT.md 참고"
             exit 1
           else
-            if [ -f .github/health/ALERT.md ]; then
+            if [ "$HAD_ALERT" = "true" ]; then
               git rm .github/health/ALERT.md
               git commit -m "헬스체크 회복 $KST — ALERT 해제"
               git push || true
+              echo "recovered=true" >> "$GITHUB_OUTPUT"
             fi
             echo "정상."
           fi
+
+      # 이상이 있을 때마다(재확인 실행 포함) 알린다. 이메일과 같은 빈도라 새로운 스팸이 아니다.
+      - name: 이상 시 카톡 알림
+        if: failure()
+        env:
+          TOK: ${{ secrets.NOTIFY_TRIGGER_PAT }}
+        run: |
+          set -uo pipefail
+          MSG="[말씀우물] 헬스체크 이상 감지. 확인: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          printf '{"ref":"main","inputs":{"message":%s}}' "$(printf '%s' "$MSG" | jq -Rs .)" > /tmp/notify.json
+          curl -s -o /dev/null -w '카톡 알림 트리거 HTTP %{http_code}\n' -X POST \
+            "https://api.github.com/repos/Lyosub/NEW-BRAIN/actions/workflows/kakao-notify.yml/dispatches" \
+            -H "Authorization: Bearer $TOK" -H "Accept: application/vnd.github+json" \
+            --data-binary "@/tmp/notify.json"
+
+      # 정상으로 돌아온 그 순간에만 한 번 보낸다(계속 정상인 매 실행마다 보내지 않음).
+      - name: 회복 시 카톡 알림
+        if: steps.record.outputs.recovered == 'true'
+        env:
+          TOK: ${{ secrets.NOTIFY_TRIGGER_PAT }}
+        run: |
+          set -uo pipefail
+          MSG="[말씀우물] 정상으로 회복됐습니다."
+          printf '{"ref":"main","inputs":{"message":%s}}' "$(printf '%s' "$MSG" | jq -Rs .)" > /tmp/notify.json
+          curl -s -o /dev/null -w '카톡 알림 트리거 HTTP %{http_code}\n' -X POST \
+            "https://api.github.com/repos/Lyosub/NEW-BRAIN/actions/workflows/kakao-notify.yml/dispatches" \
+            -H "Authorization: Bearer $TOK" -H "Accept: application/vnd.github+json" \
+            --data-binary "@/tmp/notify.json"
