@@ -1,12 +1,13 @@
-name: 중등부 인스타 예약 게시 (말씀게시물·말씀카툰)
+name: 중등부 인스타 예약 게시 (말씀게시물·말씀카툰·설교예고숏츠)
 
 # @logos_jesusplus 에 예약 게시한다.
 #
-# 주간 편성 (2026-09-18 전도사님 확정)
+# 주간 편성 (2026-09-18 전도사님 확정, 2026-09-23 토요일 설교예고숏츠 추가)
 #  - 화요일 오전 10시 → **말씀게시물**: 그 주일 설교 요약 10장 캐러셀
 #  - 목요일 오전 10시 → **말씀카툰**: 그 설교가 아이 일상에 부딪히는 지점을 그린 4컷
+#  - 토요일 오후 1시 → **설교예고숏츠**: 다음날 설교 본문의 시대적 배경을 담은 9:16 릴스(영상)
 #  - 해시태그는 본문에 넣지 않고 첫 댓글로 단다(first_comment_file).
-#  - 두 편 모두 그 주 주일까지 만들어 전도사님 컨펌을 받은 뒤 대기열에 넣는다.
+#  - 전부 그 주 주일까지 만들어 전도사님 컨펌을 받은 뒤 대기열에 넣는다.
 #
 # 동작 방식
 #  - instagram/queue.json 을 읽어 status=pending 이고 publish_at(KST)이 지난 건을 올린다.
@@ -15,15 +16,17 @@ name: 중등부 인스타 예약 게시 (말씀게시물·말씀카툰)
 #  - 취소하려면 게시 시각 전에 queue.json 의 해당 항목 status 를 skip 으로 바꾸면 된다.
 #
 # Instagram Graph API 제약(중요)
-#  - 파일 업로드가 안 된다. image_url 을 주면 메타가 직접 가져간다 → 이미지가 공개 URL 에 있어야 한다.
-#  - JPEG 만 받는다. PNG 는 실패한다.
-#  - 비율은 4:5(0.8) ~ 1.91:1 사이여야 한다.
+#  - 파일 업로드가 안 된다. image_url/video_url 을 주면 메타가 직접 가져간다 → 공개 URL 에 있어야 한다.
+#  - 이미지는 JPEG 만 받는다(PNG 실패). 영상(릴스)은 MP4(H.264/AAC) 권장.
+#  - 비율은 4:5(0.8) ~ 1.91:1 사이여야 한다(릴스는 9:16 권장).
 #  - 캐러셀은 2~10장.
+#  - 릴스는 컨테이너 처리(FINISHED)까지 이미지보다 오래 걸릴 수 있어 폴링 횟수를 늘렸다(2026-09-23, 아직 실전 검증 전 — 첫 실행 결과를 지켜볼 것).
 #  - 토큰은 60일마다 만료된다. 아래 refresh 스텝이 매 실행마다 갱신을 시도한다.
 
 on:
   schedule:
     - cron: "0 7 * * 2,4"    # UTC 07:00 → 화·목 16:00 KST (하교 후, 아이들이 실제로 인스타를 보는 시간)
+    - cron: "0 4 * * 6"      # UTC 04:00 → 토요일 13:00 KST (설교예고숏츠)
   workflow_dispatch:
     inputs:
       force_id:
@@ -173,45 +176,65 @@ jobs:
             echo "──────────── $ID ────────────"
             TYPE=$(jq -r --arg id "$ID" '.posts[] | select(.id==$id) | .type' instagram/queue.json)
             CAPFILE=$(jq -r --arg id "$ID" '.posts[] | select(.id==$id) | .caption_file' instagram/queue.json)
-            mapfile -t IMGS < <(jq -r --arg id "$ID" '.posts[] | select(.id==$id) | .images[]' instagram/queue.json)
 
             if [ ! -f "$CAPFILE" ]; then echo "::error::캡션 파일 없음: $CAPFILE"; exit 1; fi
             CAPTION=$(cat "$CAPFILE")
 
             BASE="https://logoswell.kr"
 
-            # 이미지가 실제로 공개 접근되는지 먼저 확인한다(메타가 못 가져오면 원인 파악이 어렵다)
-            for P in "${IMGS[@]}"; do
-              CODE=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/$P")
-              CT=$(curl -s -o /dev/null -w '%{content_type}' "$BASE/$P")
-              echo "  확인: $P → HTTP $CODE ($CT)"
-              if [ "$CODE" != "200" ]; then echo "::error::이미지에 접근할 수 없습니다: $BASE/$P"; exit 1; fi
-              case "$CT" in image/jpeg) ;; *) echo "::error::JPEG 이 아닙니다($CT): $P"; exit 1;; esac
-            done
+            if [ "$TYPE" = "reels" ]; then
+              VIDEO=$(jq -r --arg id "$ID" '.posts[] | select(.id==$id) | .video' instagram/queue.json)
 
-            if [ "$TYPE" = "image" ]; then
+              # 영상이 실제로 공개 접근되는지 먼저 확인한다
+              CODE=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/$VIDEO")
+              CT=$(curl -s -o /dev/null -w '%{content_type}' "$BASE/$VIDEO")
+              echo "  확인: $VIDEO → HTTP $CODE ($CT)"
+              if [ "$CODE" != "200" ]; then echo "::error::영상에 접근할 수 없습니다: $BASE/$VIDEO"; exit 1; fi
+              case "$CT" in video/mp4|video/*) ;; *) echo "::error::영상 MIME 타입이 예상과 다릅니다($CT): $VIDEO"; exit 1;; esac
+
               RESP=$(curl -s -X POST "$API/$IG_USER_ID/media" \
-                --data-urlencode "image_url=$BASE/${IMGS[0]}" \
+                -d "media_type=REELS" \
+                --data-urlencode "video_url=$BASE/$VIDEO" \
                 --data-urlencode "caption=$CAPTION" \
                 -d "access_token=$IG_TOKEN")
               echo "  /media 응답: $RESP"
               CREATION=$(echo "$RESP" | jq -r '.id // empty' 2>/dev/null || true)
             else
-              CHILDREN=""
+              mapfile -t IMGS < <(jq -r --arg id "$ID" '.posts[] | select(.id==$id) | .images[]' instagram/queue.json)
+
+              # 이미지가 실제로 공개 접근되는지 먼저 확인한다(메타가 못 가져오면 원인 파악이 어렵다)
               for P in "${IMGS[@]}"; do
-                CID=$(curl -s -X POST "$API/$IG_USER_ID/media" \
-                  --data-urlencode "image_url=$BASE/$P" \
-                  -d "is_carousel_item=true" \
-                  -d "access_token=$IG_TOKEN" | jq -r '.id // empty')
-                if [ -z "$CID" ]; then echo "::error::캐러셀 항목 생성 실패: $P"; exit 1; fi
-                echo "  캐러셀 항목: $CID"
-                CHILDREN="${CHILDREN:+$CHILDREN,}$CID"
+                CODE=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/$P")
+                CT=$(curl -s -o /dev/null -w '%{content_type}' "$BASE/$P")
+                echo "  확인: $P → HTTP $CODE ($CT)"
+                if [ "$CODE" != "200" ]; then echo "::error::이미지에 접근할 수 없습니다: $BASE/$P"; exit 1; fi
+                case "$CT" in image/jpeg) ;; *) echo "::error::JPEG 이 아닙니다($CT): $P"; exit 1;; esac
               done
-              CREATION=$(curl -s -X POST "$API/$IG_USER_ID/media" \
-                -d "media_type=CAROUSEL" \
-                -d "children=$CHILDREN" \
-                --data-urlencode "caption=$CAPTION" \
-                -d "access_token=$IG_TOKEN" | jq -r '.id // empty')
+
+              if [ "$TYPE" = "image" ]; then
+                RESP=$(curl -s -X POST "$API/$IG_USER_ID/media" \
+                  --data-urlencode "image_url=$BASE/${IMGS[0]}" \
+                  --data-urlencode "caption=$CAPTION" \
+                  -d "access_token=$IG_TOKEN")
+                echo "  /media 응답: $RESP"
+                CREATION=$(echo "$RESP" | jq -r '.id // empty' 2>/dev/null || true)
+              else
+                CHILDREN=""
+                for P in "${IMGS[@]}"; do
+                  CID=$(curl -s -X POST "$API/$IG_USER_ID/media" \
+                    --data-urlencode "image_url=$BASE/$P" \
+                    -d "is_carousel_item=true" \
+                    -d "access_token=$IG_TOKEN" | jq -r '.id // empty')
+                  if [ -z "$CID" ]; then echo "::error::캐러셀 항목 생성 실패: $P"; exit 1; fi
+                  echo "  캐러셀 항목: $CID"
+                  CHILDREN="${CHILDREN:+$CHILDREN,}$CID"
+                done
+                CREATION=$(curl -s -X POST "$API/$IG_USER_ID/media" \
+                  -d "media_type=CAROUSEL" \
+                  -d "children=$CHILDREN" \
+                  --data-urlencode "caption=$CAPTION" \
+                  -d "access_token=$IG_TOKEN" | jq -r '.id // empty')
+              fi
             fi
 
             if [ -z "$CREATION" ]; then
@@ -221,12 +244,14 @@ jobs:
             fi
             echo "  컨테이너: $CREATION"
 
-            # 메타가 이미지를 가져가 처리할 때까지 잠깐 기다린다
-            for i in 1 2 3 4 5 6 7 8 9 10; do
+            # 메타가 미디어를 가져가 처리할 때까지 기다린다. 영상(릴스)은 이미지보다
+            # 처리 시간이 오래 걸릴 수 있어 폴링 횟수를 늘린다(최대 약 4분).
+            if [ "$TYPE" = "reels" ]; then MAXTRY=48; else MAXTRY=10; fi
+            for i in $(seq 1 $MAXTRY); do
               ST=$(curl -s "$API/$CREATION?fields=status_code&access_token=$IG_TOKEN" | jq -r '.status_code // empty')
-              echo "  상태($i): ${ST:-?}"
+              echo "  상태($i/$MAXTRY): ${ST:-?}"
               [ "$ST" = "FINISHED" ] && break
-              [ "$ST" = "ERROR" ] && { echo "::error::메타가 이미지 처리에 실패했습니다"; exit 1; }
+              [ "$ST" = "ERROR" ] && { echo "::error::메타가 미디어 처리에 실패했습니다"; exit 1; }
               sleep 5
             done
 

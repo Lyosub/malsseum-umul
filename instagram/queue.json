@@ -2,7 +2,7 @@
   "_설명": "중등부 인스타(@logos_jesusplus) 예약 게시 대기열. status 를 skip 으로 바꾸면 그 건은 올라가지 않는다.",
   "_status값": "pending = 예정 / posted = 게시됨 / skip = 취소(올리지 않음) / failed = 실패",
   "_publish_at": "KST 기준. 이 시각이 지나면 다음 워크플로 실행 때 올라간다.",
-  "_type": "image = 사진 1장 / carousel = 여러 장(최대 10장)",
+  "_type": "image = 사진 1장 / carousel = 여러 장(최대 10장) / reels = 영상 1편(9:16, video_url 사용)",
   "_first_comment_file": "첫 댓글로 달 내용(주로 해시태그). 캡션은 읽기 좋게 두고 태그는 여기로 뺀다. 없으면 생략.",
   "_story_image": "⚠ 기본적으로 쓰지 않는다(2026-09-18 전도사님 결정). 스토리는 앱에서 직접 '스토리에 추가'로 공유한다 — 그래야 탭해서 원글로 넘어가는 스티커가 붙기 때문. 그 스티커는 API 로 만들 수 없다. 이 필드에 9:16(1080x1920) 이미지 경로를 넣으면 자동으로 스토리에 올라가지만 탭 링크가 없는 그냥 이미지가 된다. 기능은 남겨두되 평소엔 비워둔다.",
   "_token_issued": "2026-09-18",
@@ -68,6 +68,16 @@
         "instagram/2026-09-20-cartoon.jpg"
       ],
       "note": "말씀카툰 #002 「점수는 못 정해도」 — 9/20 설교 기준. 전도사님 컨펌 2026-09-20."
+    },
+    {
+      "id": "2026-09-26-preview",
+      "type": "reels",
+      "publish_at": "2026-09-26 13:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-09-26-preview.txt",
+      "first_comment_file": "instagram/captions/2026-09-26-preview.tags.txt",
+      "video": "instagram/2026-09-26-preview.mp4",
+      "note": "설교 예고 숏츠(신설, 토요일마다) 첫 회 — 9/27 설교 「당연한 건 없다」 배경(나병 격리 규정, 유대인·사마리아인 반목)을 다룬 11초 원테이크 영상. 제미나이(Veo) 생성 + Claude 자막·전환·BGM 합성. 전도사님 컨펌 2026-09-23. BGM은 예람워십 「나의 하나님」 발췌 — 저작권 확인 필요."
     },
     {
       "id": "2026-09-27-verse",
