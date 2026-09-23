@@ -194,6 +194,7 @@ jobs:
 
               RESP=$(curl -s -X POST "$API/$IG_USER_ID/media" \
                 -d "media_type=REELS" \
+                -d "share_to_feed=true" \
                 --data-urlencode "video_url=$BASE/$VIDEO" \
                 --data-urlencode "caption=$CAPTION" \
                 -d "access_token=$IG_TOKEN")
