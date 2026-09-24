@@ -63,13 +63,15 @@
       "id": "2026-09-20-cartoon",
       "type": "image",
       "publish_at": "2026-09-24 16:00",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-09-20-cartoon.txt",
       "first_comment_file": "instagram/captions/2026-09-20-cartoon.tags.txt",
       "images": [
         "instagram/2026-09-20-cartoon.jpg"
       ],
-      "note": "말씀카툰 #002 「점수는 못 정해도」 — 9/20 설교 기준. 전도사님 컨펌 2026-09-20."
+      "note": "말씀카툰 #002 「점수는 못 정해도」 — 9/20 설교 기준. 전도사님 컨펌 2026-09-20.",
+      "media_id": "17989286562054290",
+      "posted_at": "2026-09-24 17:59"
     },
     {
       "id": "2026-09-26-preview",
