@@ -66,6 +66,7 @@
    "buildings3d/palace-table-jars.glb",
    "buildings3d/palace-throne.glb",
    "npc3d/aaron.glb",
+   "npc3d/ca-israel-elder.glb",
    "npc3d/eg-boy-eg.glb",
    "npc3d/eg-farmer-f.glb",
    "npc3d/eg-farmer-m.glb",
@@ -96,6 +97,9 @@
    "props3d/jars.glb",
    "props3d/palm.glb",
    "props3d/rock-group.glb",
+   "story3d/hyssop-basin.glb",
+   "story3d/passover-table.glb",
+   "story3d/pilgrim-bundle.glb",
    "tex/palace-floor.jpg",
    "tex/palace-wall.jpg"
   ]

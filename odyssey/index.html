@@ -645,6 +645,9 @@
     'palace-banner':      { h: 4.2, occ: false, shape: 'none', src: 'buildings3d/palace-banner.glb' },
     'palace-fan-stand':   { h: 2.6, occ: false, shape: 'circle', k: 0.5, src: 'buildings3d/palace-fan-stand.glb' },
     'palace-table-jars':  { h: 1.3, occ: false, shape: 'box', src: 'buildings3d/palace-table-jars.glb' },
+    'passover-table':     { h: 0.8, occ: false, shape: 'box', src: 'story3d/passover-table.glb' },
+    'hyssop-basin':       { h: 0.55, occ: false, shape: 'none', src: 'story3d/hyssop-basin.glb' },
+    'pilgrim-bundle':     { h: 0.6, occ: false, shape: 'none', src: 'story3d/pilgrim-bundle.glb' },
     'obelisk':            { h: 8.5, occ: true, shape: 'circle', k: 0.7, src: 'buildings3d/egypt-obelisk.glb' },
     'market-stall':       { h: 2.5, occ: true, shape: 'posts', src: 'buildings3d/egypt-market-stall.glb' },
     'reed-hut':           { h: 2.4, occ: true, shape: 'box', src: 'buildings3d/egypt-reed-hut.glb' },
@@ -770,6 +773,7 @@
         ['palace', 41.1, -24.7, faceTo(41.1, -24.7, 0, 0)], ['palace-gate', 30, -18, faceTo(30, -18, 0, 0)], ['obelisk', 24, -26, 0], ['obelisk', 36, -12, 0],
         ['palm', -24, 12, 0.3], ['palm', -24, -18, 1.6], ['palm', 18, -6, 2.4], ['jars', -1, 6.5, 0.2], ['crates-sacks', 18, 12, 0.5],
         ['sheepfold', -12, 19, 0, 1.1],
+        ['passover-table', -9.6, 3.2, 1.2], ['hyssop-basin', -24.6, 5.9, 0.4], ['pilgrim-bundle', -8.2, 6.9, 0.6],
         ['palm', 31, 7, 0.8], ['palm', 24, 13, 2.1], ['jars', 25, -1, 0.4], ['crates-sacks', 30, 12.5, 1.2],
         // 알현실(THRONE_ROOM 안) — 남쪽 끝 계단 위 왕좌, 양쪽으로 기둥 두 줄, 벽에 장식 천
         ['palace-throne', 60, -51.4, 0], ['palace-fan-stand', 57.4, -51.6, 0.3], ['palace-fan-stand', 62.6, -51.6, -0.3],
@@ -805,6 +809,13 @@
           body: "\"하나님께서 반드시 우리 백성을 건져 내실 거란다. 그 약속을 붙들자.\"" },
         { id: 'aaron', x: 27.5, z: -10.2, type: 'npc', title: "아론", model: 'aaron', persona: 'aaron_palace',
           body: "\"나는 모세 곁에서 하나님의 말씀을 전하고 있단다. 너도 함께해 주어서 고맙구나.\"" },
+        // ── 3장 인물·장소 ──
+        { id: 'is_elder', x: -11, z: -1, type: 'villager', title: "이스라엘 장로", model: 'ca-israel-elder',
+          body: "\"하나님께서 우리의 신음 소리를 들으시고, 아브라함과 이삭과 야곱과 세우신 언약을 기억하신다네.\"\n\n(출애굽기 2:24)" },
+        { id: 'hyssop', x: -24.4, z: 4.6, type: 'lore', title: "우슬초", showCh: 2,
+          body: "담벼락 옆에 자라는 작은 풀이에요. 유월절 밤, 이 우슬초 묶음을 피에 적셔 문에 발랐어요 (출애굽기 12:22)." },
+        { id: 'bundle', x: -8.6, z: 5.8, type: 'lore', title: "반죽 그릇", showCh: 2,
+          body: "아직 부풀지 못한 반죽을 담은 그릇이에요 (출애굽기 12:34)." },
         // ── 고센의 히브리 사람들 ──
         { id: 'hb_father', x: -4, z: -3, type: 'villager', title: "히브리 아버지", lazy: 1, model: 'he-father',
           body: "\"우리 조상 요셉이 이 땅에 있을 때는 좋았다지. 그런데 요셉을 알지 못하는 새 왕이 일어난 뒤로 모든 게 달라졌단다.\"\n\n요셉을 알지 못하는 새 왕이 애굽을 다스리면서 이스라엘 자손의 고난이 시작되었습니다 (출애굽기 1:8)." },
@@ -1215,7 +1226,8 @@
         const light = new THREE.PointLight(0xffd27a, 1.4, 8);
         light.position.copy(glow.position);
         zoneRoot.add(light);
-        markers.push({ mesh: glow, data: p, tag });
+        markers.push({ mesh: glow, data: p, tag, light });
+        if (p.showCh !== undefined) applyShow(markers[markers.length - 1]);
       }
     });
   }
@@ -1380,6 +1392,7 @@
     pal_servant_f: { home: [66.2, -47.5], range: 0, social: 0.3, like: {} },
     pal_magician1: { home: [56.2, -46.8], range: 0, social: 0.5, like: {} },
     pal_magician2: { home: [63.8, -46.8], range: 0, social: 0.5, like: {} },
+    is_elder:      { home: [-11, -1],  range: 6,  social: 0.3,  like: { house: 3, market: 1 } },
   };
   const rnd = (a, b) => a + Math.random() * (b - a);
   const pickWeighted = (items, w) => { const tot = items.reduce((s, it) => s + w(it), 0); let r = Math.random() * tot; for (const it of items){ r -= w(it); if (r <= 0) return it; } return items[items.length - 1]; };
@@ -2491,9 +2504,159 @@
     true_heart: { ico: '💗', name: '진짜 마음' },
   });
 
+  // ══ 3장 「유월절 밤」 (출 11–13장) ══════════════════════════════════
+  // 흑암 뒤: 마지막 재앙 예고 → 장로에게 전함 → 흠 없는 어린 양 고르기 → 우슬초 → 고센 집 다섯 곳 문설주·인방에 피 →
+  // 해 질 녘 유월절 식사 → 밤중(집 안에서) → 바로가 떠나라 함 → 애굽 사람의 은금 패물 → 반죽 그릇 메기 → 출발, 요셉의 유골, 불 기둥
+  const ELDER_IS = { n: '이스라엘 장로' }, MOTHER = { n: '히브리 어머니' }, FATHER = { n: '히브리 아버지' }, NOBLE = { n: '애굽 귀족 부인' };
+  const GOSHEN3 = { moses: [-2, 1.5], aaron: [0.4, 3] };
+  const STORY3 = [
+    { id: 'c3s1',  zone: 'egypt', obj: '고센에서 모세의 말 듣기 — 마지막 재앙', where: '고센 한가운데(진흙벽돌 집들 사이)', npc: 'moses', dlg: 'c3_last', place: GOSHEN3 },
+    { id: 'c3s2',  zone: 'egypt', obj: '이스라엘 장로에게 가기', where: '고센 서쪽 집들 사이', npc: 'is_elder', dlg: 'c3_elders' },
+    { id: 'c3s3',  zone: 'egypt', obj: '양 우리에서 유월절 어린 양 고르기', where: '마을 남서쪽 양 우리의 일꾼', npc: 'worker2', dlg: 'c3_lamb', place: { worker2: [-15.8, 17.2] } },
+    { id: 'c3s4',  zone: 'egypt', obj: '우슬초 묶음과 그릇 챙기기', where: '마을 서쪽 갈대 오두막 담벼락 옆', point: 'hyssop', dlg: 'c3_hyssop' },
+    { id: 'c3s5',  zone: 'egypt', obj: '고센 집들의 문설주와 인방에 피 바르기', where: '고센의 집 문 앞 — 반짝이는 문(바르기 버튼)', warn: 5, mark: true, doneDlg: 'c3_marked', reward: { verse: 'ex12-13' } },
+    { id: 'c3s6',  zone: 'egypt', obj: '해 질 녘, 유월절 식사 함께하기', where: '고센 서쪽 집 앞 낮은 상', npc: 'hb_mother', dlg: 'c3_meal', place: { hb_mother: [-11.2, 2.4], hb_father: [-6.4, -5.2] }, reward: { verse: 'ex12-27' } },
+    { id: 'c3s7',  zone: 'egypt', obj: '아버지가 계신 집으로 들어가기 — 아침까지 문 밖에 나가지 않기', where: '피를 바른 집 문 앞(아버지 곁)', reach: { near: [-6.4, -5.2], r: 2.6 }, doneDlg: 'c3_midnight' },
+    { id: 'c3s8',  zone: 'egypt', obj: '밤, 모세에게 가기', where: '고센 한가운데', npc: 'moses', dlg: 'c3_go' },
+    { id: 'c3s9',  zone: 'egypt', obj: '이웃 애굽 사람에게 은금 패물 구하기', where: '고센 동쪽 끝의 애굽 귀족 부인', npc: 'eg_noble', dlg: 'c3_gifts', place: { eg_noble: [9.5, 1] } },
+    { id: 'c3s10', zone: 'egypt', obj: '반죽 그릇을 싸서 메기', where: '유월절 식사를 한 집 앞', point: 'bundle', dlg: 'c3_dough' },
+    { id: 'c3s11', zone: 'egypt', obj: '모세가 기다리는 동쪽 끝으로 — 출발!', where: '마을 동쪽 끝(처음 들어온 곳)', npc: 'moses', dlg: 'c3_depart', place: { moses: [43, -3.5], aaron: [44.5, -1.2] }, reward: { verse: ['ex12-42', 'ex13-21'], clear: true } },
+  ];
+  Object.assign(VERSES, {
+    'ex12-13': { ref: '출애굽기 12:13', text: '내가 애굽 땅을 칠 때에 그 피가 너희가 사는 집에 있어서 너희를 위하여 표적이 될지라 내가 피를 볼 때에 너희를 넘어가리니 재앙이 너희에게 내려 멸하지 아니하리라' },
+    'ex12-27': { ref: '출애굽기 12:27', text: '너희는 이르기를 이는 여호와의 유월절 제사라 여호와께서 애굽 사람에게 재앙을 내리실 때에 애굽에 있는 이스라엘 자손의 집을 넘으사 우리의 집을 구원하셨느니라 하라 하매 백성이 머리 숙여 경배하니라' },
+    'ex12-42': { ref: '출애굽기 12:42', text: '이 밤은 그들을 애굽 땅에서 인도하여 내심으로 말미암아 여호와 앞에 지킬 것이니 이는 여호와의 밤이라 이스라엘 자손이 다 대대로 지킬 것이니라' },
+    'ex13-21': { ref: '출애굽기 13:21', text: '여호와께서 그들 앞에서 가시며 낮에는 구름 기둥으로 그들의 길을 인도하시고 밤에는 불 기둥을 그들에게 비추사 낮이나 밤이나 진행하게 하시니' },
+  });
+  Object.assign(DLG, {
+    c3_last: [
+      [NAR, '사흘 동안의 흑암이 지나갔어요.'],
+      [MOSES, '하나님께서 말씀하셨단다.\n"내가 이제 한 가지 재앙을 바로와 애굽에 내린 후에야 그가 너희를 여기서 내보내리라"'],
+      [AARON, '마지막 재앙이야. 밤중에 여호와께서 애굽 가운데로 들어가시면, 애굽 땅에 있는 모든 처음 난 것이 죽게 된단다.', 'worried'],
+      [MOSES, '애굽 온 땅에 큰 부르짖음이 있을 거야. 그러나 이스라엘 자손에게는 개 한 마리도 그 혀를 움직이지 아니하리라 하셨어.'],
+      [MOSES, '여호와께서 애굽 사람과 이스라엘 사이를 구별하신다는 것을 우리가 알게 될 거란다.'],
+      [ME, '…무서워요. 우리는 어떻게 해야 하나요?', 'worried'],
+      { choice: [
+        { l: '🙏 하나님이 지켜 주실 거예요', say: [[AARON, '그래. 하나님께서 우리가 할 일도 알려 주셨단다.']] },
+        { l: '😢 애굽 사람들이 불쌍해요', say: [[MOSES, '그 마음을 잃지 마렴. 바로가 끝까지 마음을 완악하게 하여 여기까지 온 거란다.', 'worried']] },
+      ] },
+      [MOSES, '먼저 이스라엘의 장로들에게 전해야 해. 저기 계신 장로님께 가 보렴.'],
+    ],
+    c3_elders: [
+      [ELDER_IS, '모세가 우리 장로들을 불러서 이렇게 말했다네.'],
+      [ELDER_IS, '"너희는 나가서 너희의 가족대로 어린 양을 택하여 유월절 양으로 잡고"'],
+      [ELDER_IS, '우슬초 묶음을 가져다가 그릇에 담은 피에 적셔서, 그 피를 문 인방과 좌우 설주에 뿌리라고 하셨지. 그리고 아침까지 한 사람도 자기 집 문 밖에 나가지 말라고.'],
+      [ELDER_IS, '여호와께서 지나가실 때에 문 인방과 좌우 문설주의 피를 보시면 그 문을 넘으시고, 멸하는 자가 우리 집에 들어와 치지 못하게 하실 걸세.'],
+      [ELDER_IS, '자네도 좀 도와주게. 먼저 양 우리에 가서 흠 없는 어린 양을 고르는 일을 도와주게나.'],
+      [ME, '네! 양 우리로 가 볼게요.', 'happy'],
+    ],
+    c3_lamb: [
+      [WORKER, '유월절 어린 양을 고르러 왔구나! 모세님이 어떤 양이어야 한다고 하셨지?'],
+      { choice: [
+        { l: '흠 없고 일 년 된 수컷', quiz: 'c3_lamb_pick', ok: true, say: [[WORKER, '맞아! "너희 어린 양은 흠 없고 일 년 된 수컷으로 하되 양이나 염소 중에서 취하고"'], [NAR, '정답이에요! ⭐ 지혜 별을 하나 얻었어요.']] },
+        { l: '가장 크고 살찐 양', quiz: 'c3_lamb_pick', ok: false, abort: true, say: [[WORKER, '음… 크기가 중요한 게 아니었어. 장로님 말씀을 다시 떠올려 보고 와 줄래?']] },
+        { l: '아무 양이나 괜찮다', quiz: 'c3_lamb_pick', ok: false, abort: true, say: [[WORKER, '아니야, 아무 양이나가 아니었어. 장로님께 다시 여쭤 보고 오렴.']] },
+      ] },
+      [WORKER, '이 양이 좋겠다. 흠이 하나도 없어. 이 달 열나흗날까지 잘 간직했다가 해 질 때에 잡을 거란다.'],
+      [WORKER, '문에 피를 바를 우슬초도 필요하지? 마을 서쪽 갈대 오두막 담벼락 옆에 자라고 있단다.'],
+    ],
+    c3_hyssop: [
+      [NAR, '오두막 담벼락 옆에 작은 우슬초가 자라고 있어요.'],
+      [ME, '이걸 한 묶음 꺾고… 피를 담을 그릇도 챙기자.'],
+      [NAR, '해 질 때에 이스라엘 회중이 어린 양을 잡았어요. 이제 고센의 집들을 다니며 문에 피 바르는 일을 도와요.'],
+    ],
+    c3_marked: [
+      [NAR, '고센의 집들마다 좌우 문설주와 인방에 어린 양의 피가 발라졌어요.'],
+      [NAR, '여호와께서 말씀하셨어요.\n"내가 애굽 땅을 칠 때에 그 피가 너희가 사는 집에 있어서 너희를 위하여 표적이 될지라 내가 피를 볼 때에 너희를 넘어가리니 재앙이 너희에게 내려 멸하지 아니하리라"'],
+      [ME, '피가 표적이구나… 그 피를 보시면 넘어가신다고!', 'happy'],
+      { choice: [
+        { l: '🐑 그래서 "유월절"이구나', say: [[NAR, '맞아요. 유월(逾越)은 "넘어간다"는 뜻이에요. 여호와께서 피를 보시고 넘어가신 날이에요.']] },
+        { l: '🤔 왜 하필 어린 양의 피일까?', say: [[NAR, '흠 없는 어린 양이 대신 죽었기 때문에 그 집 사람들은 살 수 있었어요.'], [NAR, '신약 성경은 예수님을 "우리의 유월절 양"이라고 불러요 (고린도전서 5:7).']], reward: { badge: 'passover_lamb' } },
+      ] },
+    ],
+    c3_meal: [
+      { event: 'dusk' },
+      [NAR, '해가 졌어요. 집 앞 낮은 상 위에 불에 구운 어린 양 고기와 무교병과 쓴 나물이 놓였어요.'],
+      [MOTHER, '어서 와, 같이 먹자꾸나. 모세님이 이렇게 먹으라고 하셨어.'],
+      [MOTHER, '"허리에 띠를 띠고 발에 신을 신고 손에 지팡이를 잡고 급히 먹으라 이것이 여호와의 유월절이니라"'],
+      [ME, '꼭 곧 떠날 사람처럼 먹는 거네요!', 'surprised'],
+      { choice: [
+        { l: '🍞 무교병을 먹어 본다', say: [[ME, '누룩을 넣지 않은 빵이라 납작하고 딱딱해요. 그래도 고소해요!', 'happy']] },
+        { l: '🌿 쓴 나물을 먹어 본다', say: [[ME, '으, 써요!', 'surprised'], [MOTHER, '하나님께서 이렇게 무교병과 쓴 나물과 함께 먹으라고 하셨단다.']] },
+      ] },
+      [MOTHER, '나중에 우리 아이들이 "이 예식이 무슨 뜻이냐" 하고 물으면, 이렇게 말해 주라고 하셨어.'],
+      [MOTHER, '"이는 여호와의 유월절 제사라 여호와께서 애굽 사람에게 재앙을 내리실 때에 애굽에 있는 이스라엘 자손의 집을 넘으사 우리의 집을 구원하셨느니라"'],
+      [MOTHER, '이제 곧 밤이야. 아침까지 한 사람도 집 문 밖에 나가지 말라고 하셨으니, 아버지가 계신 집으로 들어가렴.'],
+    ],
+    c3_midnight: [
+      [NAR, '문을 닫고 온 가족이 함께 기다렸어요. 문 인방과 좌우 설주에는 어린 양의 피가 발라져 있어요.'],
+      { event: 'night' },
+      [NAR, '밤중에 여호와께서 애굽 땅에서 모든 처음 난 것을 치셨어요.'],
+      [NAR, '그 밤에 바로와 그 모든 신하와 모든 애굽 사람이 일어나고, 애굽에 큰 부르짖음이 있었어요.'],
+      [FATHER, '…피를 보시고 우리 집을 넘어가셨구나.'],
+      [ME, '하나님이 말씀하신 그대로예요…', 'worried'],
+      { choice: [
+        { l: '🙏 감사합니다, 하나님', say: [[FATHER, '그래. 이 밤을 절대 잊지 말자꾸나.']] },
+        { l: '😢 애굽 사람들을 위해 기도한다', say: [[ME, '하나님, 슬픔 가운데 있는 애굽 사람들을 불쌍히 여겨 주세요.', 'worried']] },
+      ] },
+      [FATHER, '밖이 소란스럽구나… 모세님께 가 보렴. 무슨 소식이 있을 거다.'],
+    ],
+    c3_go: [
+      [NAR, '밤에 바로가 모세와 아론을 불러서 말했어요.'],
+      [NAR, '"너희와 이스라엘 자손은 일어나 내 백성 가운데에서 떠나 너희의 말대로 가서 여호와를 섬기며 너희가 말한 대로 너희 양과 너희 소도 몰아가고 나를 위하여 축복하라"'],
+      [MOSES, '애굽 사람들도 우리를 재촉하여 그 땅에서 속히 내보내려 하는구나. 이제 떠날 때가 되었어!', 'happy'],
+      [AARON, '모세가 말한 대로, 이웃 애굽 사람에게 은금 패물과 의복을 구하렴.'],
+      [ME, '애굽 사람들한테요…?', 'surprised'],
+      [MOSES, '여호와께서 애굽 사람들이 우리에게 은혜를 베풀게 하실 거란다.'],
+    ],
+    c3_gifts: [
+      [NOBLE, '…너희가 떠난다고? 어서 가거라. 이러다가 우리가 다 죽은 자가 되겠구나.'],
+      [NOBLE, '이것도 가져가거라. 은과 금으로 만든 패물과 옷이란다.'],
+      [NAR, '여호와께서 애굽 사람들에게 이스라엘 백성에게 은혜를 입히게 하사, 그들이 구하는 대로 주게 하셨어요.'],
+      [ME, '하나님은 정말 말씀하신 대로 하시네요.', 'happy'],
+    ],
+    c3_dough: [
+      [NAR, '아직 부풀지 못한 반죽을 담은 그릇이 있어요.'],
+      [NAR, '백성은 발교되지 못한 반죽 담은 그릇을 옷에 싸서 어깨에 멨어요.'],
+      [ME, '나도 짐을 메자! 이제 출발이다!', 'happy'],
+      [NAR, '이스라엘 자손이 모세가 기다리는 동쪽 끝으로 모여들어요.'],
+    ],
+    c3_depart: [
+      [MOSES, '모두 모였구나. 이스라엘 자손이 애굽에 거주한 지 사백삼십 년이 되었단다.'],
+      [AARON, '유아 외에 걸어서 가는 장정만 육십만 가량이야. 수많은 잡족과 양과 소와 가축도 함께 가지.'],
+      [MOSES, '그리고 이것을 가지고 간다. 요셉의 유골이야.'],
+      [MOSES, '요셉은 이스라엘 자손에게 단단히 맹세하게 했단다.\n"하나님이 반드시 너희를 찾아오시리니 너희는 내 유골을 여기서 가지고 나가라"'],
+      [ME, '고센의 할아버지가 말씀하시던 요셉의 약속…! 하나님이 정말 지키셨어요!', 'happy'],
+      [NAR, '이스라엘 자손이 라암셋을 떠나 숙곳에 이르고, 숙곳을 떠나 광야 끝 에담에 장막을 쳤어요.'],
+      { event: 'pillar' },
+      [NAR, '"여호와께서 그들 앞에서 가시며 낮에는 구름 기둥으로 그들의 길을 인도하시고 밤에는 불 기둥을 그들에게 비추사 낮이나 밤이나 진행하게 하시니"'],
+      { choice: [
+        { l: '🔥 불 기둥을 따라간다!', say: [[MOSES, '그래, 하나님이 앞서 가시니 두려워할 것 없단다.', 'happy']] },
+        { l: '📖 이 밤을 기억할게요', say: [[AARON, '이 밤은 여호와의 밤이라. 이스라엘 자손이 대대로 지킬 밤이란다.']] },
+      ] },
+      [NAR, '이렇게 이스라엘 자손이 애굽 땅에서 나왔어요. 다음 이야기: 홍해를 건너다.'],
+    ],
+  });
+  Object.assign(KEYS, {
+    c3_marked:   { scene: '유월절 · 문설주의 피', t: '내가 피를 볼 때에 너희를 넘어가리니' },
+    c3_meal:     { scene: '유월절 식사', t: '허리에 띠를 띠고 발에 신을 신고 손에 지팡이를 잡고 급히 먹으라' },
+    c3_midnight: { scene: '마지막 재앙 · 밤중', t: '피를 보시고 우리 집을 넘어가셨구나' },
+    c3_depart:   { scene: '출애굽 · 불 기둥', t: '밤에는 불 기둥을 그들에게 비추사' },
+  });
+  Object.assign(QUIZ, {
+    c3_lamb_pick: { q: '유월절 어린 양은 어떤 양이어야 했나요? (양 우리에서)', a: '흠 없고 일 년 된 수컷', w: ['', ''] },
+    c3_marked:    { q: '어린 양의 피를 어디에 발랐나요?', a: '좌우 문설주와 인방', w: ['지붕 위', '집 안의 벽'] },
+    c3_meal:      { q: '유월절 양은 어떻게 먹으라고 하셨나요?', a: '허리에 띠를 띠고 급히', w: ['천천히 앉아서 편하게', '다음 날 아침에'] },
+    c3_midnight:  { q: '여호와께서 이스라엘 자손의 집을 넘어가신 까닭은?', a: '문에 바른 어린 양의 피를 보셨기 때문', w: ['집이 튼튼해서', '문을 단단히 잠가서'] },
+    c3_depart:    { q: '광야에서 밤에 백성을 비추어 인도한 것은?', a: '불 기둥', w: ['달빛', '횃불 행렬'] },
+  });
+  Object.assign(BADGES, {
+    passover_lamb: { ico: '🐑', name: '넘어가신 은혜' },
+  });
   const CHAPTERS = [
     { title: '📜 모세와 함께 1장 — 부르심', clearTitle: '🎉 모세와 함께 1장 「부르심」 완료!', steps: STORY1, next: '2장: 열 가지 재앙' },
-    { title: '📜 모세와 함께 2장 — 열 가지 재앙', clearTitle: '🎉 2장 「아홉 가지 재앙」 완료!', steps: STORY2, next: '3장: 마지막 재앙과 유월절 밤 (준비 중)' },
+    { title: '📜 모세와 함께 2장 — 열 가지 재앙', clearTitle: '🎉 2장 「아홉 가지 재앙」 완료!', steps: STORY2, next: '3장: 유월절 밤' },
+    { title: '📜 모세와 함께 3장 — 유월절 밤', clearTitle: '🎉 3장 「유월절 밤」 완료!', steps: STORY3, next: '4장: 홍해를 건너다 (준비 중)' },
   ];
 
   // 단서(소문): 미디안 마을 사람들에게 모세 소식을 물으면
@@ -2538,14 +2701,15 @@
     if (q && q.collect) obj += ` (${Math.min(ST.straw, q.collect)}/${q.collect})`;
     if (q && q.dig) obj += ` (💧 ${Math.min(ST.water, q.dig)}/${q.dig})`;
     if (q && q.frogs) obj += ` (🐸 ${Math.min(ST.frogs, q.frogs)}/${q.frogs})`;
-    if (q && q.warn) obj += ` (📣 ${ST.warned}/${q.warn} · ⏱ ${Math.max(0, Math.ceil(warnT))}초)`;
+    if (q && q.warn) obj += q.mark ? ` (🩸 ${ST.warned}/${q.warn})` : ` (📣 ${ST.warned}/${q.warn} · ⏱ ${Math.max(0, Math.ceil(warnT))}초)`;
     document.getElementById('quest-list').innerHTML = `<li><div class="obj">▶ ${obj}</div></li>${q && q.where ? `<li class="where">💡 ${q.where}</li>` : ''}<li class="prog">${q ? `${ST.step + 1}/${STORY.length}` : '✓ 완료'}${q && q.zone !== (Z && Z.id) ? `<span class="zn"> · ${ZONES[q.zone].name}에서</span>` : ''}<span class="more">${questPanel.classList.contains('compact') ? '▾' : '▴'}</span></li>`;
     if (questLastKey !== ST.ch + ':' + ST.step){ questLastKey = ST.ch + ':' + ST.step; questPeek(); }
   }
-  function refreshShow(){ markers.forEach(m => { if (m.data.showFrom) applyShow(m); }); }
+  function refreshShow(){ markers.forEach(m => { if (m.data.showFrom || m.data.showCh !== undefined) applyShow(m); }); }
   function applyShow(m){
-    const on = ST.cleared || ST.step >= stepIdx(m.data.showFrom);
-    m.mesh.visible = on; m.hidden = !on; if (m.col) m.col.r = on ? 0.55 : 0;
+    const d = m.data, chOk = d.showCh === undefined || ST.ch >= d.showCh;
+    const on = chOk && (!d.showFrom || ST.cleared || ST.ch > (d.showCh ?? ST.ch) || ST.step >= stepIdx(d.showFrom));
+    m.mesh.visible = on; m.hidden = !on; if (m.col) m.col.r = on ? 0.55 : 0; if (m.light) m.light.visible = on;
   }
   function advance(){
     const q = curStep(); if (!q) return;
@@ -2853,7 +3017,7 @@
     if (SHOP_MOCK || !MSU.client || !MSU.session) return 0;
     try { const { data, error } = await MSU.client.rpc('claim_odyssey_chapter', { p_ch: ch }); if (error) throw error; if (data > 0){ MSU.balance = (MSU.balance || 0) + data; toast(`💰 ${ch}장 완료 보상 ${data}달란트를 받았어요!`, 3000); } return data; } catch (e){ return 0; }
   }
-  async function claimClearedChapters(){ const n = ST.ch + (ST.cleared ? 1 : 0); for (let c = 1; c <= Math.min(n, 2); c++) await claimChapter(c); }
+  async function claimClearedChapters(){ const n = ST.ch + (ST.cleared ? 1 : 0); for (let c = 1; c <= Math.min(n, 3); c++) await claimChapter(c); }
 
   // 장착: 지팡이는 오른손에, 동물 친구는 뒤를 따라다님(마을을 옮겨도 함께)
   const equipObj = { staff: null, staffKey: null, pet: null, petKey: null, petT: 0 };
@@ -2876,7 +3040,7 @@
     if (equip.pet !== equipObj.petKey){
       if (equipObj.pet){ scene.remove(equipObj.pet); equipObj.pet = null; }
       equipObj.petKey = equip.pet;
-      if (equip.pet && owned.has(equip.pet)){ const o = await loadShopModel(equip.pet); if (equipObj.petKey === equip.pet){ equipObj.pet = o; o.position.copy(player.position); scene.add(o); } }
+      if (equip.pet && owned.has(equip.pet)){ const o = await loadShopModel(equip.pet); if (equipObj.petKey === equip.pet){ equipObj.pet = o; o.position.copy(player.position); scene.add(o); equipObj.petGait = SHOP[equip.pet].fly ? null : addGait(o, equip.pet === 'pet-donkey' ? 0.45 : 0.38); } }
     }
   }
   const _hand = new THREE.Vector3();
@@ -2889,9 +3053,11 @@
     const dx = tx - pet.position.x, dz = tz - pet.position.z, dist = Math.hypot(dx, dz);
     if (dist > 25){ pet.position.set(tx, 0, tz); }                                          // 마을 이동·순간이동 뒤엔 바로 옆으로
     const k = Math.min(1, dt * (dist > 3 ? 5 : 2.6)); pet.position.x += dx * k; pet.position.z += dz * k;
+    if (!it.fly && dist < 25) resolveCollisions(pet.position, heightAt(pet.position.x, pet.position.z));   // 담·건물을 뚫고 지나가지 않게
     const moving = dist > 0.25; equipObj.petT += dt * (moving ? 11 : 3);
+    const g = equipObj.petGait; if (g){ g.ph.value += dt * (moving ? 9 : 0); g.amp.value += ((moving ? 1 : 0) - g.amp.value) * Math.min(1, dt * 6); }
     const ground = heightAt(pet.position.x, pet.position.z);
-    pet.position.y = it.fly ? player.position.y + 1.9 + Math.sin(equipObj.petT * 0.5) * 0.18 : ground + (moving ? Math.abs(Math.sin(equipObj.petT)) * 0.14 : 0);
+    pet.position.y = it.fly ? player.position.y + 1.9 + Math.sin(equipObj.petT * 0.5) * 0.18 : ground + (moving ? Math.abs(Math.sin(equipObj.petT)) * 0.04 : 0);
     const want = moving ? Math.atan2(dx, dz) : Math.atan2(player.position.x - pet.position.x, player.position.z - pet.position.z);
     let df = want - pet.rotation.y; while (df > Math.PI) df -= Math.PI * 2; while (df < -Math.PI) df += Math.PI * 2; pet.rotation.y += df * Math.min(1, dt * 6);
   }
@@ -3030,7 +3196,7 @@
 
   // 짚단(출 5:12): 애굽에서 짚 모으기 단계일 때만 나타나고, 가까이 가면 줍는다
   const straws = [];
-  function spawnTasks(){ applyPlace(); applyWorld(); spawnStraw(); spawnDig(); spawnFrogs(); spawnHerd(); spawnWarn(); }
+  function spawnTasks(){ applyPlace(); applyWorld(); spawnStraw(); spawnDig(); spawnFrogs(); spawnHerd(); spawnWarn(); spawnMarksStatic(); spawnPillar(); }
   // 이 단계까지 지정된 자리(place)를 모두 합쳐서 인물을 세움
   function applyPlace(){
     if (!Z) return;
@@ -3054,6 +3220,8 @@
     hailOn = ST.ch === 1 && ST.step === stepIdx('c2s18');
     locustOn = ST.ch === 1 && ST.step === stepIdx('c2s20');
     darkOn = ST.ch === 1 && ST.step === stepIdx('c2s22');
+    duskOn = ST.ch === 2 && (ST.cleared || ST.step >= stepIdx('c3s6'));
+    nightOn = ST.ch === 2 && (ST.cleared || ST.step >= stepIdx('c3s8'));
   }
   let fliesOn = false;
   function runEvent(name){
@@ -3068,6 +3236,9 @@
     if (name === 'locustGone'){ locustOn = false; toast('🌬 서풍이 메뚜기를 홍해에 몰아넣었어요', 2200); }
     if (name === 'dark'){ darkOn = true; }
     if (name === 'darkEnd'){ darkOn = false; }
+    if (name === 'dusk'){ duskOn = true; }
+    if (name === 'night'){ nightOn = true; toast('🌙 밤중이 되었어요', 1800); }
+    if (name === 'pillar'){ pillarOn = true; spawnPillar(); toast('🔥 불 기둥이 백성 앞에 나타났어요', 2400); }
   }
   // 파리 떼는 c2s8~c2s10 동안 애굽 쪽(동쪽)에만 — 고센(서쪽 집들)에는 없음(출 8:22)
   const fliesActive = () => fliesOn || (ST.ch === 1 && ST.step >= stepIdx('c2s8') && ST.step <= stepIdx('c2s10') && !fliesGoneSeen);
@@ -3113,7 +3284,7 @@
   function updateReach(){
     const q = curStep(); if (!q || !q.reach || !Z || q.zone !== Z.id || dlgState || reachDone === q.id) return;
     const r = q.reach, x = player.position.x;
-    if ((r.minX !== undefined && x >= r.minX) || (r.maxX !== undefined && x <= r.maxX)){
+    if ((r.minX !== undefined && x >= r.minX) || (r.maxX !== undefined && x <= r.maxX) || (r.near && Math.hypot(x - r.near[0], player.position.z - r.near[1]) < r.r)){
       reachDone = q.id;
       if (q.id === 'c2s8') toast('🪰 윙윙… 애굽 쪽은 파리 떼로 가득해요!', 2200);
       completeTask(q);
@@ -3122,6 +3293,30 @@
   // 고센의 가축(출 9:4-7): 양 우리 안의 양과 밖의 낙타가 천천히 돌아다님. 숫자는 저장마다 정해짐
   const herd = [];
   const PEN_C = [-12, 19];
+  // legFrac: 몸 높이 중 다리 부분 비율. 모델 안쪽 좌표(머리 쪽 = +z 또는 -z 상관없이 앞뒤로 흔들림)
+  function addGait(obj, legFrac){
+    const gait = { ph: { value: 0 }, amp: { value: 0 } };
+    obj.traverse(m => {
+      if (!m.isMesh) return;
+      m.geometry.computeBoundingBox(); const b = m.geometry.boundingBox, H = b.max.y - b.min.y;
+      const u = { uMinY: { value: b.min.y }, uLegTop: { value: b.min.y + H * legFrac }, uCx: { value: (b.min.x + b.max.x) / 2 }, uCz: { value: (b.min.z + b.max.z) / 2 }, uLen: { value: H * legFrac } };
+      m.material = m.material.clone();
+      m.material.onBeforeCompile = sh => {
+        Object.assign(sh.uniforms, u, { uGaitPh: gait.ph, uGaitAmp: gait.amp });
+        sh.vertexShader = 'uniform float uMinY, uLegTop, uCx, uCz, uLen, uGaitPh, uGaitAmp;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+          if (transformed.y < uLegTop){
+            float f = clamp((uLegTop - transformed.y) / max(uLen, 1e-4), 0.0, 1.0);
+            float pair = (transformed.x > uCx) == (transformed.z > uCz) ? 0.0 : 3.14159;
+            float s = sin(uGaitPh + pair);
+            transformed.z += s * uGaitAmp * uLen * 0.42 * f;
+            transformed.y += max(0.0, cos(uGaitPh + pair)) * uGaitAmp * uLen * 0.12 * f;
+          }`);
+      };
+      m.material.customProgramCacheKey = () => 'gait';
+    });
+    return gait;
+  }
+  const PEN_WALL = 3.6;   // 양 우리 돌담 반지름(대략) — 양은 안쪽, 낙타는 바깥쪽에서만 움직임
   function spawnHerd(){
     herd.forEach(a => zoneRoot.remove(a.o)); herd.length = 0;
     if (!Z || Z.id !== 'egypt' || !propTemplates.lamb || !propTemplates.camel) return;
@@ -3130,23 +3325,34 @@
       const a = (i / n) * 6.28 + Math.random() * 0.6, r = rMin + Math.random() * (rMax - rMin);
       const x = PEN_C[0] + Math.cos(a) * r, z = PEN_C[1] + Math.sin(a) * r;
       const o = propTemplates[name].holder.clone(true); o.position.set(x, heightAt(x, z), z); o.rotation.y = Math.random() * 6.28; zoneRoot.add(o);
-      herd.push({ o, name, rMin, rMax, tx: x, tz: z, wait: Math.random() * 3, t: Math.random() * 5 });
+      const gait = addGait(o, name === 'camel' ? 0.46 : 0.36);
+      herd.push({ o, name, rMin, rMax, ang: a, r, ta: a, tr: r, wait: Math.random() * 3, t: Math.random() * 5, gait });
     } };
-    add('lamb', ST.herd.lamb, 0.4, 2.6);      // 우리 안
-    add('camel', ST.herd.camel, 6.2, 8.5);    // 우리 밖 둘레
+    add('lamb', ST.herd.lamb, 0.4, PEN_WALL - 1.5);      // 우리 안
+    add('camel', ST.herd.camel, PEN_WALL + 2.4, 8.5);    // 우리 밖 둘레
   }
   function updateHerd(dt){
     for (const a of herd){
       a.t += dt; const p = a.o.position;
-      const dx = a.tx - p.x, dz = a.tz - p.z, d = Math.hypot(dx, dz);
-      if (d < 0.1){ a.wait -= dt; if (a.wait <= 0){ const ang = Math.random() * 6.28, r = a.rMin + Math.random() * (a.rMax - a.rMin); a.tx = PEN_C[0] + Math.cos(ang) * r; a.tz = PEN_C[1] + Math.sin(ang) * r; a.wait = 2 + Math.random() * 4; } p.y = heightAt(p.x, p.z); continue; }
-      const sp = a.name === 'camel' ? 0.55 : 0.45, st = Math.min(d, sp * dt);
-      p.x += dx / d * st; p.z += dz / d * st; p.y = heightAt(p.x, p.z) + Math.abs(Math.sin(a.t * 6)) * 0.04;
-      let want = Math.atan2(dx, dz), df = want - a.o.rotation.y; while (df > Math.PI) df -= 6.28; while (df < -Math.PI) df += 6.28; a.o.rotation.y += df * Math.min(1, dt * 3);
+      // 목표까지: 각도·반지름을 따로 좁혀 감 → 둘레를 따라 호로 걸음(담을 가로지르지 않음)
+      let dA = a.ta - a.ang; while (dA > Math.PI) dA -= 6.28; while (dA < -Math.PI) dA += 6.28;
+      const dR = a.tr - a.r, arc = Math.abs(dA) * Math.max(a.r, 0.5), dist = Math.hypot(arc, dR);
+      const moving = dist > 0.08;
+      if (!moving){
+        a.wait -= dt; a.gait.amp.value += (0 - a.gait.amp.value) * Math.min(1, dt * 6);
+        if (a.wait <= 0){ a.ta = a.ang + (Math.random() - 0.5) * (a.name === 'camel' ? 2.2 : 3.5); a.tr = a.rMin + Math.random() * (a.rMax - a.rMin); a.wait = 2 + Math.random() * 4; }
+        p.y = heightAt(p.x, p.z); continue;
+      }
+      const sp = a.name === 'camel' ? 0.55 : 0.45, st = Math.min(dist, sp * dt), k = st / dist;
+      a.ang += dA * k; a.r += dR * k;
+      const nx = PEN_C[0] + Math.cos(a.ang) * a.r, nz = PEN_C[1] + Math.sin(a.ang) * a.r, mx = nx - p.x, mz = nz - p.z;
+      p.x = nx; p.z = nz; p.y = heightAt(p.x, p.z);
+      a.gait.ph.value += dt * (a.name === 'camel' ? 5.5 : 8.5); a.gait.amp.value += (1 - a.gait.amp.value) * Math.min(1, dt * 6);
+      if (Math.hypot(mx, mz) > 1e-5){ let want = Math.atan2(mx, mz), df = want - a.o.rotation.y; while (df > Math.PI) df -= 6.28; while (df < -Math.PI) df += 6.28; a.o.rotation.y += df * Math.min(1, dt * 4); }
     }
   }
   // ── 우박: 동쪽(애굽 들판)에만. 고센(서쪽, x<8)에는 없음(9:26) ──
-  let hailOn = false, locustOn = false, darkOn = false;
+  let hailOn = false, locustOn = false, darkOn = false, duskOn = false, nightOn = false, pillarOn = false;
   const HAIL_N = 2200, hailGeo = new THREE.BufferGeometry(); hailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(HAIL_N * 3), 3));
   const hail = new THREE.Points(hailGeo, new THREE.PointsMaterial({ color: 0xf2f8ff, size: 0.26, map: dotTex, transparent: true, opacity: 0.95, depthWrite: false }));
   hail.frustumCulled = false; hail.visible = false; scene.add(hail);
@@ -3192,34 +3398,52 @@
   const beacons = [];
   function updateDark(dt){
     const on = darkOn && Z && Z.id === 'egypt';
-    const target = on ? THREE.MathUtils.clamp((player.position.x - 3) / 7, 0, 1) : 0;
+    const eve = Z && Z.id === 'egypt' && !on ? (nightOn ? 0.95 : duskOn ? 0.42 : 0) : 0;   // 3장: 해 질 녘·밤(온 마을)
+    const target = on ? THREE.MathUtils.clamp((player.position.x - 3) / 7, 0, 1) : eve;
+    const tint = on ? _black : nightOn ? _night : _dusk;
     darkK += (target - darkK) * Math.min(1, dt * 2);
-    if (on && !beacons.length){
+    if ((on || eve) && !beacons.length){
       // 고센 집들의 따뜻한 불빛 — 안개에 가리지 않는 표지
       Z.layout.filter(([n]) => n.startsWith('hebrew-house') || n === 'reed-hut').forEach(([, x, z]) => {
         const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xffd98a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
         sp.scale.set(2.2, 3.4, 1); sp.position.set(x, heightAt(x, z) + 3.2, z); zoneRoot.add(sp); beacons.push(sp);
       });
     }
-    if (!on && beacons.length && darkK < 0.02){ beacons.forEach(b => zoneRoot.remove(b)); beacons.length = 0; }
+    if (!on && !eve && beacons.length && darkK < 0.02){ beacons.forEach(b => zoneRoot.remove(b)); beacons.length = 0; }
     beacons.forEach(b => b.material.opacity = 0.35 + 0.65 * darkK);
     if (!Z) return;
     const e = Z.env, k = darkK;
-    scene.fog.color.set(e.fog).lerp(_black, k); scene.background.copy(scene.fog.color);
-    scene.fog.density = e.fogD + k * 0.085;
-    darkLight.intensity = 2.2 * k; darkLight.position.set(player.position.x, player.position.y + 2.2, player.position.z);
+    scene.fog.color.set(e.fog).lerp(tint, k); scene.background.copy(scene.fog.color);
+    scene.fog.density = e.fogD + k * (on ? 0.085 : 0.012);   // 흑암은 더듬을 만큼 짙게, 밤은 멀리까지 보이게
+    darkLight.intensity = (on ? 2.2 : 1.5) * k; darkLight.color.set(on ? 0xbfc8ff : 0xffc98a); darkLight.position.set(player.position.x, player.position.y + 2.2, player.position.z);   // 밤에는 등잔불처럼 따뜻하게
     hemi.intensity = 0.9 * (1 - 0.85 * k); sun.intensity = 1.6 * (1 - 0.95 * k);
-    skyMat.uniforms.top.value.set(e.top).lerp(_black, k); skyMat.uniforms.bottom.value.set(e.bottom).lerp(_black, k);
+    skyMat.uniforms.top.value.set(e.top).lerp(tint, k); skyMat.uniforms.bottom.value.set(e.bottom).lerp(tint, k);
+    skyMat.uniforms.stars.value = Math.max(e.stars, nightOn && !on ? darkK * 1.5 : 0);
     farRing.visible = k < 0.3 && !!farMat.map;
   }
-  const _black = new THREE.Color(0x05050a);
+  const _black = new THREE.Color(0x05050a), _night = new THREE.Color(0x0b1233), _dusk = new THREE.Color(0x5a2a2e);
+  // 불 기둥(13:21): 동쪽 끝, 백성 앞에 높이 솟은 빛
+  let pillarObj = null;
+  function spawnPillar(){
+    if (pillarObj){ if (pillarObj.parent) pillarObj.parent.remove(pillarObj); pillarObj = null; }
+    const show = Z && Z.id === 'egypt' && ST.ch === 2 && (pillarOn || ST.cleared); if (!show) return;
+    const x = 49, z = -8, g = new THREE.Group(); g.position.set(x, heightAt(x, z), z);
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1.3, 22, 20, 1, true), new THREE.MeshBasicMaterial({ color: 0xff7a1a, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+    col.position.y = 11; g.add(col);
+    for (let i = 0; i < 18; i++){ const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: i % 3 ? 0xffb050 : 0xff7a2a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
+      const sc = 3.4 - i * 0.07; sp.scale.set(sc, sc * 1.5, 1); sp.position.set((Math.random() - 0.5) * 0.7, 1.0 + i * 1.2, (Math.random() - 0.5) * 0.7); sp.userData.ph = Math.random() * 6; g.add(sp); }
+    const L = new THREE.PointLight(0xffa040, 3.2, 40, 1.4); L.position.y = 6; g.add(L);
+    zoneRoot.add(g); pillarObj = g;
+  }
+  function updatePillar(now){ if (!pillarObj) return; const t = now * 0.004; pillarObj.children.forEach(o => { if (o.isSprite){ o.material.opacity = 0.75 + 0.25 * Math.sin(t + o.userData.ph); o.position.x = Math.sin(t * 0.7 + o.userData.ph) * 0.35; } }); }
   const darkLight = new THREE.PointLight(0xbfc8ff, 0, 7, 1.5); scene.add(darkLight);   // 흑암 속 발밑만 희미하게(길을 더듬을 정도)
   // ── 우박 경고 알리기(9:19-20): 제한 시간 안에 들판 4곳 ──
   let warnT = 0;
   function spawnWarn(){
     for (let i = markers.length - 1; i >= 0; i--) if (markers[i].isWarn){ zoneRoot.remove(markers[i].mesh); markers.splice(i, 1); }
     const q = curStep(); if (!q || !q.warn || !Z || Z.id !== 'egypt') return;
-    ST.warned = 0; warnT = q.time;
+    ST.warned = 0; warnT = q.time || 0;
+    if (q.mark){ spawnMarkTasks(q); renderQuestList(); return; }
     const pts = [[20, 5], [27, -4], [35, 3], [22, 15]].map(([x, z]) => nearestWalkable(x, z));
     const poleM = new THREE.MeshToonMaterial({ color: 0x7a5a3a, gradientMap: toonGradient }), clothM = new THREE.MeshToonMaterial({ color: 0xd24a36, gradientMap: toonGradient, side: THREE.DoubleSide });
     pts.forEach(([x, z], i) => {
@@ -3234,8 +3458,49 @@
     });
     renderQuestList();
   }
+  // 고센 집 문 자리(히브리 집 5채): 문 앞 서는 곳 + 문 위치·방향
+  function goshenDoors(){
+    return Z.layout.filter(([n, x]) => n.startsWith('hebrew-house') && x < 8).map(([n, x, z, rot, sc]) => {
+      const t = propTemplates[n], k = sc || 1, fx = Math.sin(rot), fz = Math.cos(rot), d = (t ? t.halfD : 2) * k * 0.9;
+      return { dx: x + fx * (d + 0.05), dz: z + fz * (d + 0.05), rot, sx: x + fx * (d + 1.3), sz: z + fz * (d + 1.3) };
+    });
+  }
+  const bloodMat = new THREE.MeshToonMaterial({ color: 0x8a1712, gradientMap: toonGradient });
+  function paintDoor(door){   // 좌우 문설주와 인방(12:7)
+    const g = new THREE.Group(); g.position.set(door.dx, heightAt(door.dx, door.dz), door.dz); g.rotation.y = door.rot;
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.16, 0.08), bloodMat); lintel.position.set(0, 2.55, 0.02); g.add(lintel);
+    for (const sx of [-0.72, 0.72]){ const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.5, 0.08), bloodMat); post.position.set(sx, 1.25, 0.02); g.add(post); }
+    zoneRoot.add(g); return g;
+  }
+  const markDeco = [];
+  function spawnMarkTasks(q){
+    goshenDoors().forEach((door, i) => {
+      const [x, z] = nearestWalkable(door.sx, door.sz);
+      const g = new THREE.Group(); g.position.set(x, heightAt(x, z), z);
+      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xffb0a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }));
+      glint.scale.set(0.9, 1.4, 1); glint.position.y = 0.6; g.add(glint);
+      const tag = makeTag('문설주와 인방'); tag.scale.set(0.16, 0.04, 1); tag.position.y = 2.2; g.add(tag);
+      zoneRoot.add(g);
+      markers.push({ mesh: g, data: { id: 'mark' + i, type: 'warn', title: '문설주와 인방', x, z }, isWarn: true, isMark: true, door, done: false, glint, tag });
+    });
+  }
+  // 3장: 피를 바른 뒤로는(새로고침해도) 고센의 문들이 붉게 표시됨
+  function spawnMarksStatic(){
+    markDeco.forEach(o => zoneRoot.remove(o)); markDeco.length = 0;
+    if (!Z || Z.id !== 'egypt' || ST.ch !== 2 || (!ST.cleared && ST.step <= stepIdx('c3s5'))) return;
+    goshenDoors().forEach(d => markDeco.push(paintDoor(d)));
+  }
   function doWarn(m){
     const q = curStep(); if (!q || !q.warn || m.done) return;
+    if (m.isMark){
+      m.done = true; m.glint.visible = false; m.tag.visible = false; markDeco.push(paintDoor(m.door));
+      interactBtn.classList.add('hidden'); nearPoint = null;
+      playOneShot('Wave', { lockMove: true });
+      ST.warned++; renderQuestList();
+      toast(`🩸 우슬초로 문설주와 인방에 피를 발랐어요 (${ST.warned}/${q.warn})`, 1600);
+      if (ST.warned >= q.warn) setTimeout(() => completeTask(q), 900);
+      return;
+    }
     m.done = true; m.glint.visible = false; m.tag.visible = false; m.cloth.material = m.cloth.material.clone(); m.cloth.material.color.set(0x6a9a4a);
     interactBtn.classList.add('hidden'); nearPoint = null;
     playOneShot('Wave', { lockMove: true });
@@ -3245,7 +3510,7 @@
   }
   let warnTick = 0;
   function updateWarn(dt){
-    const q = curStep(); if (!q || !q.warn || !Z || Z.id !== 'egypt' || dlgState || ST.warned >= q.warn) return;
+    const q = curStep(); if (!q || !q.warn || !q.time || !Z || Z.id !== 'egypt' || dlgState || ST.warned >= q.warn) return;
     warnT -= dt; warnTick += dt;
     if (warnTick > 1){ warnTick = 0; renderQuestList(); }
     if (warnT <= 0){ toast('⏱ 시간이 다 됐어요. 다시 한 번 서둘러 알려 봐요!', 2200); spawnWarn(); renderQuestList(); }
@@ -3391,6 +3656,7 @@
     }
     if (q.rumor){ const m = markers.filter(m => RUMORS[m.data.id] && !ST.rumor.includes(m.data.id)).sort((a, b) => a.mesh.position.distanceTo(player.position) - b.mesh.position.distanceTo(player.position))[0]; return m && m.mesh.position; }
     if (q.warn){ const m = markers.filter(x => x.isWarn && !x.done).sort((a, b) => a.mesh.position.distanceTo(player.position) - b.mesh.position.distanceTo(player.position))[0]; return m && m.mesh.position; }
+    if (q.reach && q.reach.near){ return new THREE.Vector3(q.reach.near[0], 0, q.reach.near[1]); }
     if (q.reach){ return q.reach.minX !== undefined ? new THREE.Vector3(24, 0, -12) : new THREE.Vector3(-4, 0, 0); }
     if (q.dig){ const m = markers.filter(x => x.isDig && !x.done).sort((a, b) => a.mesh.position.distanceTo(player.position) - b.mesh.position.distanceTo(player.position))[0]; return m && m.mesh.position; }
     if (q.frogs && frogs.length){ return frogs.map(f => new THREE.Vector3(f.x, 0, f.z)).sort((a, b) => a.distanceTo(player.position) - b.distanceTo(player.position))[0]; }
@@ -3692,11 +3958,11 @@
       const score = isTarget ? d - 100 : d;
       if (d < range && score < closestDist){ closestDist = score; closest = m; }
     });
-    updateRoomVis(); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
+    updateRoomVis(); updatePillar(now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
     if (closest !== nearPoint){
       nearPoint = closest;
       interactBtn.classList.toggle('hidden', !nearPoint);
-      if (nearPoint) interactBtn.textContent = nearPoint.isWarn ? '알리기' : nearPoint.isDig ? '파기' : nearPoint.data.model ? '대화하기' : (nearPoint.data.type === 'exit' ? '이동하기' : nearPoint.isDoor ? nearPoint.data.btn : '살펴보기');
+      if (nearPoint) interactBtn.textContent = nearPoint.isMark ? '바르기' : nearPoint.isWarn ? '알리기' : nearPoint.isDig ? '파기' : nearPoint.data.model ? '대화하기' : (nearPoint.data.type === 'exit' ? '이동하기' : nearPoint.isDoor ? nearPoint.data.btn : '살펴보기');
     }
 
     drawMinimap();
