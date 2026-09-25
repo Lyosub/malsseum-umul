@@ -301,6 +301,16 @@
   .vcard.locked { filter:grayscale(1) brightness(0.55); }
   .vcard .ref { font-weight:900; font-size:13px; margin-bottom:6px; color:#6b3f12; }
   .vcard .chk { margin-top:auto; font-size:9.5px; opacity:0.7; }
+  #rank-tabs { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px; }
+  #rank-tabs button { padding:5px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.06); color:inherit; font-size:12.5px; }
+  #rank-tabs button.on { border:2px solid #ffd27a; background:rgba(255,210,122,.22); }
+  .rkrow { display:flex; align-items:center; gap:8px; padding:6px 4px; border-bottom:1px solid rgba(255,255,255,.08); font-size:13.5px; }
+  .rkrow.mine { background:rgba(255,210,122,.14); border-radius:8px; }
+  .rkrow .no { width:28px; text-align:center; font-weight:800; }
+  .rkrow .nm { flex:1; } .rkrow .nm small { display:block; font-size:11px; opacity:.7; }
+  .rkrow .v { font-weight:800; }
+  .oik-bar { height:12px; border-radius:6px; background:rgba(255,255,255,.12); overflow:hidden; margin:4px 0 8px; }
+  .oik-bar i { display:block; height:100%; background:linear-gradient(90deg,#ffd27a,#9be58a); }
   .logline { font-size:13.5px; line-height:1.55; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.08); white-space:pre-line; }
   .logline b { color:#ffd27a; }
   #clear-modal .sheet { text-align:center; }
@@ -406,7 +416,7 @@
   <div id="dlg-name"></div><div id="dlg-text"></div></div></div>
   <div id="dlg-choices"></div><button id="dlg-next">다음 ▶</button></div>
 <div id="hud-btns"><button id="btn-menu" title="메뉴">☰</button>
-  <div id="hud-menu" class="hidden"><button id="btn-book" title="구절 수집첩">📖<span>수집첩</span></button><button id="btn-log" title="대화 기록">💬<span>대화 기록</span></button><button id="btn-shop" title="상점">🛍️<span>상점·꾸미기</span></button><button id="btn-set" title="설정">⚙️<span>설정</span></button></div></div>
+  <div id="hud-menu" class="hidden"><button id="btn-book" title="구절 수집첩">📖<span>수집첩</span></button><button id="btn-log" title="대화 기록">💬<span>대화 기록</span></button><button id="btn-rank" title="랭킹">🏆<span>랭킹·오이코스</span></button><button id="btn-shop" title="상점">🛍️<span>상점·꾸미기</span></button><button id="btn-set" title="설정">⚙️<span>설정</span></button></div></div>
 <div id="shop-modal" class="modal hidden"><div class="sheet" style="max-width:440px">
   <h3>🛍️ 두루마리 상점</h3>
   <div id="shop-bal"></div>
@@ -420,6 +430,7 @@
   <div class="set-row"><span class="set-lbl">🎵 배경음악</span><button id="bgm-toggle" class="set-tg"></button></div>
   <div class="set-btns"><button id="btn-save-exit">💾 저장하고 나가기</button><button class="close">닫기</button></div></div></div>
 <div id="book-modal" class="modal hidden"><div class="sheet"><h3>📖 구절 수집첩</h3><div class="cards" id="book-cards"></div><button class="close">닫기</button></div></div>
+<div id="rank-modal" class="modal hidden"><div class="sheet"><h3>🏆 In Odyssey 랭킹</h3><div id="rank-tabs"></div><div id="rank-list"></div><button class="close">닫기</button></div></div>
 <div id="log-modal" class="modal hidden"><div class="sheet"><h3>💬 대화 기록</h3><div id="log-list"></div><button class="close">닫기</button></div></div>
 <div id="card-modal" class="modal hidden"><div class="sheet" style="max-width:300px"><h3>📖 새 구절 카드!</h3><div id="card-one"></div><button class="close">수집첩에 넣기</button></div></div>
 <div id="clear-modal" class="modal hidden"><div class="sheet"><h3 id="clear-title"></h3><img id="clear-badge" alt=""><div id="clear-body" style="font-size:14px;line-height:1.7;white-space:pre-line"></div><button class="close">좋아요!</button></div></div>
@@ -3129,7 +3140,7 @@
   const ST = { v: 1, ch: 0, step: 0, rumor: [], straw: 0, water: 0, frogs: 0, herd: null, warned: 0, verses: [], badges: [], stars: 0, quiz: {}, keys: [], cleared: false, log: [] };
   try { Object.assign(ST, JSON.parse(localStorage.getItem(STORY_KEY) || '{}')); } catch (e){}
   if (/[?&]reset(&|$)/.test(location.search)) { Object.assign(ST, { ch: 0, step: 0, rumor: [], straw: 0, water: 0, frogs: 0, verses: [], badges: [], stars: 0, quiz: {}, keys: [], cleared: false, log: [] }); }
-  const saveST = () => { try { localStorage.setItem(STORY_KEY, JSON.stringify({ ...ST, log: ST.log.slice(-80) })); } catch (e){} };
+  const saveST = () => { try { localStorage.setItem(STORY_KEY, JSON.stringify({ ...ST, log: ST.log.slice(-80) })); } catch (e){} try { queueProgress(); } catch (e){} };
   if (ST.ch === 0 && ST.cleared){ ST.ch = 1; ST.step = 0; ST.cleared = false; }   // 예전 저장: 1장을 이미 끝냈으면 2장부터
   let STORY = CHAPTERS[ST.ch].steps;
   if (ST.cleared && ST.step < STORY.length) ST.cleared = false;
@@ -3904,6 +3915,55 @@
       + scrollBookHTML() + peopleBookHTML()
       + `<div style="grid-column:1/-1;margin-top:8px;font-size:13px">🏅 배지: ${Object.entries(BADGES).map(([k, b]) => `<span style="opacity:${ST.badges.includes(k) ? 1 : 0.35};margin-right:10px">${b.ico} ${b.name}</span>`).join('')}</div>`;
     openModal('book-modal');
+  };
+  // ══ C. 기록 랭킹 · 오이코스 함께 모으기(말씀우물 로그인 + 시험 참여자만) ══
+  const msuOn = () => !!(MSU.client && MSU.session);
+  function submitRecord(kind, v){ if (msuOn()) MSU.client.rpc('submit_odyssey_score', { p_kind: kind, p_value: Math.round(v) }).then(() => {}, () => {}); }
+  let progT = 0, lastProg = '';
+  function queueProgress(){
+    if (!msuOn()) return; clearTimeout(progT);
+    progT = setTimeout(() => {
+      const sc = Object.values(ST.scrolls || {}).reduce((a, x) => a + x.length, 0);
+      const args = { p_chapters: ST.ch + (ST.cleared ? 1 : 0), p_verses: ST.verses.length, p_scrolls: sc, p_title: typeof myTitle === 'function' ? myTitle() : null };
+      const key = JSON.stringify(args); if (key === lastProg) return; lastProg = key;
+      MSU.client.rpc('submit_odyssey_progress', args).then(() => {}, () => {});
+    }, 4000);
+  }
+  const RANK_TABS = [
+    { k: 'progress', l: '📜 모험 진행', fmt: r => `${r.value}장 · 구절 ${String(r.extra || '').split('/')[0]}장` },
+    { k: 'brick', l: '🧱 벽돌', fmt: r => r.value + '장' }, { k: 'frogs', l: '🐸 개구리', fmt: r => r.value + '마리' },
+    { k: 'hail', l: '🧊 우박', fmt: r => r.value + '초' }, { k: 'dark', l: '🕯 흑암', fmt: r => r.value + '초' },
+    { k: 'rhythm', l: '🥁 소고', fmt: r => r.value + '점' }, { k: 'oikos', l: '🤝 우리 오이코스' },
+  ];
+  let rankData = null, oikData = null, rankTab = 'progress';
+  const escH = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function renderRank(){
+    document.getElementById('rank-tabs').innerHTML = RANK_TABS.map(t => `<button data-rt="${t.k}" class="${t.k === rankTab ? 'on' : ''}">${t.l}</button>`).join('');
+    const el = document.getElementById('rank-list');
+    if (!msuOn()){ el.innerHTML = `<div class="logline">말씀우물에 로그인하면 친구들과 기록을 비교할 수 있어요. <a href="${MSU_BASE}login.html?next=/odyssey/">로그인하기</a></div>`; return; }
+    if (!rankData){ el.innerHTML = '<div class="logline">불러오는 중…</div>'; return; }
+    if (rankTab === 'oikos'){
+      if (!oikData || !oikData.length){ el.innerHTML = '<div class="logline">아직 오이코스에 들어가 있지 않거나, 함께 오디세이를 하는 친구가 없어요.</div>'; return; }
+      const groups = {}; oikData.forEach(r => (groups[r.group_name] = groups[r.group_name] || []).push(r));
+      el.innerHTML = Object.entries(groups).map(([g, rows]) => {
+        const sum = rows.reduce((a, r) => a + r.verses, 0), goal = [30, 60, 100, 150, 200].find(x => x > sum) || sum;
+        return `<div style="margin:4px 0 10px"><b>🤝 ${escH(g)}</b> — 함께 모은 구절 카드 <b>${sum}</b>장 · 다음 목표 ${goal}장<div class="oik-bar"><i style="width:${Math.min(100, sum / goal * 100)}%"></i></div>`
+          + rows.map(r => `<div class="rkrow${r.is_mine ? ' mine' : ''}"><span class="nm">${escH(r.nickname || '친구')}${r.is_mine ? ' (나)' : ''}</span><span class="v">${r.verses}장</span></div>`).join('') + `</div>`;
+      }).join('') + '<div style="font-size:12px;opacity:.75">오이코스 친구들이 구절 카드를 모을수록 함께 채워져요.</div>';
+      return;
+    }
+    const tab = RANK_TABS.find(t => t.k === rankTab), rows = rankData.filter(r => r.kind === rankTab);
+    const rule = rankTab === 'dark' ? '빨리 찾은 순' : rankTab === 'progress' ? '마친 장 → 모은 구절 순' : '높은 기록 순';
+    el.innerHTML = `<div style="font-size:12px;opacity:.75;margin-bottom:4px">${rule}</div>` + (rows.length ? rows.map(r => `<div class="rkrow${r.is_mine ? ' mine' : ''}"><span class="no">${['🥇', '🥈', '🥉'][r.rank - 1] || r.rank}</span><span class="nm">${escH(r.nickname || '친구')}${r.is_mine ? ' (나)' : ''}${r.title ? `<small>🏷 ${escH(r.title)}</small>` : ''}</span><span class="v">${tab.fmt(r)}</span></div>`).join('')
+      : '<div class="logline">아직 기록이 없어요. 첫 번째 주인공이 되어 볼까요?</div>');
+  }
+  document.getElementById('rank-tabs').addEventListener('click', e => { const b = e.target.closest('button[data-rt]'); if (b){ rankTab = b.dataset.rt; renderRank(); } });
+  document.getElementById('btn-rank').onclick = async () => {
+    rankData = null; renderRank(); openModal('rank-modal');
+    if (!msuOn()) return;
+    clearTimeout(progT); lastProg = ''; queueProgress();
+    const [a, b] = await Promise.all([MSU.client.rpc('get_odyssey_rankings', { p_limit: 10 }), MSU.client.rpc('get_odyssey_oikos')]);
+    rankData = a.data || []; oikData = b.data || []; renderRank();
   };
   document.getElementById('btn-log').onclick = () => {
     document.getElementById('log-list').innerHTML = ST.log.length ? ST.log.slice().reverse().map(l => `<div class="logline">${l.n ? `<b>${l.n}</b> ` : ''}${l.t}</div>`).join('') : '<div class="logline">아직 나눈 대화가 없어요.</div>';
@@ -4899,7 +4959,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
