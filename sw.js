@@ -1,7 +1,7 @@
 // 말씀우물 PWA 서비스 워커: 앱 셸을 미리 캐시해두되, 온라인일 때는 항상 최신 버전을
 // 먼저 시도하는 네트워크 우선(network-first) 방식으로 처리하고, 오프라인일 때만 캐시로 대체한다.
 // (예전에는 캐시 우선 방식이라 배포 후에도 옛 버전이 계속 보이는 문제가 있었음)
-var CACHE_VERSION = "msu-v166";
+var CACHE_VERSION = "msu-v167";
 var PRECACHE = [
   "./",
   "index.html",
@@ -142,7 +142,14 @@ self.addEventListener("fetch", function (event) {
 
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // Supabase/CDN/성경 API 등 외부 요청은 그대로 네트워크로 보낸다
-  if (url.pathname.indexOf("/odyssey/") === 0) return; // 성경 모험 게임: 파일이 크고 많아(수십 MB) 서비스워커 캐시에 넣지 않고 브라우저 기본 캐시에 맡긴다
+  if (url.pathname.indexOf("/odyssey/") === 0) {
+    // 성경 모험 게임: 게임 화면(html)은 배포하면 바로 보이게 매번 새로 받고(캐시에 넣지 않음),
+    // 큰 모델·그림 파일(수십 MB)은 서비스워커 캐시에 넣지 않고 브라우저 기본 캐시에 맡긴다.
+    if (req.mode === "navigate" || /\/odyssey\/(index\.html)?$/.test(url.pathname)) {
+      event.respondWith(fetch(new Request(req, { cache: "no-store" })).catch(function () { return fetch(req); }));
+    }
+    return;
+  }
 
   // GitHub Pages가 정적 파일에 max-age=600 캐시를 걸어놔서, cache 옵션을 안 주면
   // "네트워크 우선"이라 해도 10분 안에는 브라우저가 서버에 물어보지도 않고 예전 응답을
