@@ -46,7 +46,7 @@
     <span class="ico-circle">🧭</span>
     <div style="flex:1 1 auto;min-width:0;">
       <div style="font-weight:800;color:var(--well-deep);">In Odyssey — 성경 모험 게임</div>
-      <div style="font-size:12px;color:var(--text-soft);">시험 중 · 관리자에게만 보여요</div>
+      <div style="font-size:12px;color:var(--text-soft);">시험 중 · 초대받은 사람에게만 보여요</div>
     </div>
     <span style="color:var(--text-soft);">›</span>
   </a>
@@ -138,13 +138,13 @@
 <script src="assets/appshell.js"></script>
 <script>
   initHeaderAuthState();
-  // In Odyssey 카드: 관리자 계정일 때만 보여 준다(시험 공개 기간)
+  // In Odyssey 카드: 관리자 + 시험 참여로 지정한 학생에게만 보여 준다(시험 공개 기간, DB 함수 can_see_odyssey)
   (function () {
     if (typeof getClient !== "function" || !getClient()) return;
     getSession().then(function (session) {
       if (!session) return;
-      getClient().from("profiles").select("is_admin").eq("user_id", session.user.id).maybeSingle().then(function (res) {
-        if (res && res.data && res.data.is_admin) { var c = document.getElementById("odysseyCard"); if (c) c.style.display = "flex"; }
+      getClient().rpc("can_see_odyssey").then(function (res) {
+        if (res && res.data === true) { var c = document.getElementById("odysseyCard"); if (c) c.style.display = "flex"; }
       });
     });
   })();
