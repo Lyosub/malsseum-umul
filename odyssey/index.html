@@ -354,6 +354,10 @@
   .hp-it.lock { opacity:.5; }
   body.homeedit #joystick-zone, body.homeedit #joy-hit, body.homeedit #action-cluster, body.homeedit #skill-bar, body.homeedit #interact-btn, body.homeedit #quest-panel, body.homeedit #tut, body.homeedit #hint, body.homeedit #compass, body.homeedit #hud-btns, body.homeedit #home-btns { display:none !important; }
   /* 오늘의 퀘스트 */
+  #replay-bar { position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:13; display:flex; align-items:center; gap:10px; background:rgba(28,19,10,.9); border:2px solid #8fe0ff; border-radius:16px; padding:6px 12px; color:#f5e9d0; font:800 14px 'Pretendard', sans-serif; white-space:nowrap; }
+  #replay-bar.hidden { display:none; }
+  #replay-bar button { padding:5px 10px; border-radius:10px; border:none; background:rgba(255,255,255,.14); color:inherit; font-weight:800; font-size:12.5px; }
+  .rp-h { font-size:13.5px; font-weight:800; margin:10px 0 2px; color:#ffd27a; }
   .warp-go { display:block; width:100%; margin:6px 0; padding:11px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.07); color:inherit; font:700 15px 'Pretendard', sans-serif; text-align:left; }
   .warp-go small { display:block; font-size:11.5px; opacity:.7; font-weight:500; }
   .warp-go:disabled { opacity:.4; }
@@ -503,6 +507,8 @@
   <div class="set-btns"><button id="btn-save-exit">💾 저장하고 나가기</button><button class="close">닫기</button></div></div></div>
 <div id="book-modal" class="modal hidden"><div class="sheet"><h3>📖 구절 수집첩</h3><div class="cards" id="book-cards"></div><button class="close">닫기</button></div></div>
 <div id="warp-modal" class="modal hidden"><div class="sheet" style="max-width:380px"><h3>🧭 어디로 갈까요?</h3><div id="warp-list"></div><button class="close">닫기</button></div></div>
+<div id="replay-modal" class="modal hidden"><div class="sheet"><h3>🎬 기념 전시관 — 다시 하기</h3><div id="replay-list"></div><button class="close">닫기</button></div></div>
+<div id="replay-bar" class="hidden"><span id="replay-t"></span><button id="replay-stop">그만두기</button></div>
 <div id="daily-modal" class="modal hidden"><div class="sheet"><h3>📅 오늘의 퀘스트</h3><div id="daily-list"></div><button id="daily-claim"></button>
 <h3 style="margin-top:14px">🗓 이번 주 퀘스트</h3><div id="weekly-list"></div><button id="weekly-claim" class="wk-claim"></button>
 <div style="font-size:12px;opacity:.8;margin-top:10px;line-height:1.6">🏅 업적 보상도 있어요 — 배지를 얻으면 하나에 💰3, 한 마을의 숨은 두루마리 5개를 다 모으면 💰10이 자동으로 들어와요.</div><button class="close">닫기</button></div></div>
@@ -3263,6 +3269,7 @@
   const STORY_KEY = 'inodyssey.proto.story';
   const ST = { v: 1, ch: 0, step: 0, rumor: [], straw: 0, water: 0, frogs: 0, herd: null, warned: 0, verses: [], badges: [], stars: 0, quiz: {}, keys: [], cleared: false, log: [] };
   try { Object.assign(ST, JSON.parse(localStorage.getItem(STORY_KEY) || '{}')); } catch (e){}
+  if (ST.replayBackup){ Object.assign(ST, ST.replayBackup); delete ST.replayBackup; }
   if (/[?&]reset(&|$)/.test(location.search)) { Object.assign(ST, { ch: 0, step: 0, rumor: [], straw: 0, water: 0, frogs: 0, verses: [], badges: [], stars: 0, quiz: {}, keys: [], cleared: false, log: [] }); }
   const saveST = () => { try { localStorage.setItem(STORY_KEY, JSON.stringify({ ...ST, log: ST.log.slice(-80) })); } catch (e){} try { queueProgress(); } catch (e){} };
   if (ST.ch === 0 && ST.cleared){ ST.ch = 1; ST.step = 0; ST.cleared = false; }   // 예전 저장: 1장을 이미 끝냈으면 2장부터
@@ -3938,6 +3945,10 @@
     hail:   { name: '우박 피하기', unit: '초', high: true },
     rhythm: { name: '소고 찬양', unit: '점', high: true },
     dark:   { name: '흑암 길 찾기', unit: '초', high: false },
+    rp_straw:  { name: '짚단 모으기', unit: '초', high: false },
+    rp_hail:   { name: '우박 알리기', unit: '초', high: false },
+    rp_marks:  { name: '문설주 바르기', unit: '초', high: false },
+    rp_redsea: { name: '홍해 건너기', unit: '초', high: false },
   };
   function recordBest(kind, v){
     ST.best = ST.best || {}; const info = CH_INFO[kind] || { high: true }, old = ST.best[kind];
@@ -4083,6 +4094,7 @@
     btn.onclick = () => { m.classList.add('hidden'); onClose && onClose(); };
   }
   function showClear(){
+    if (REPLAY && REPLAY.def.chapter !== undefined){ finishReplay(true); return; }
     document.getElementById('clear-title').textContent = CHAPTER.clearTitle;
     document.getElementById('clear-badge').src = A('ui/game/badge-moses-clear.png');
     const bs = ST.badges.map(b => BADGES[b].ico + ' ' + BADGES[b].name).join(', ') || '없음';
@@ -4145,6 +4157,72 @@
     b.textContent = D.claimed ? '✓ 오늘 달란트를 받았어요' : !logged ? '말씀우물에 로그인하면 달란트를 받아요' : dqAll() ? '💰 5달란트 받기' : '퀘스트를 다 하면 받을 수 있어요';
   }
   document.getElementById('btn-daily').onclick = () => { dailyInit(); weeklyInit(); renderDaily(); renderWeekly(); openModal('daily-modal'); };
+  // ══ 🎬 다시 하기: 기념 전시관(두루마리마을)에서 마친 장의 장면·장 전체를 다시. 이야기 진행은 끝나면 원래대로 ══
+  const REPLAYS = [
+    { key: 'rp_straw',  name: '🌾 흩어진 짚단 모으기', ch: 0, step: 's12',   zone: 'egypt',   spawn: [6, 2],     need: 1 },
+    { key: 'rp_hail',   name: '📢 들판에 우박 알리기', ch: 1, step: 'c2s17', zone: 'egypt',   spawn: [22, 4],    need: 2 },
+    { key: 'dark',      name: '🕯 흑암 속 고센 찾기',  ch: 1, step: 'c2s22', zone: 'egypt',   spawn: [25.5, -10], need: 2 },
+    { key: 'rp_marks',  name: '🐑 문설주에 피 바르기', ch: 2, step: 'c3s5',  zone: 'egypt',   spawn: [-6, 2],    need: 3 },
+    { key: 'rp_redsea', name: '🌊 홍해 건너기(추격)',  ch: 3, step: 'c4s9',  zone: 'redsea',  spawn: [14.5, 0],  need: 4 },
+  ];
+  const PROG_KEYS = ['ch', 'step', 'cleared', 'rumor', 'straw', 'water', 'frogs', 'warned'];
+  let REPLAY = null;
+  function openReplay(){
+    const done = chaptersDone(), fmt = k => ST.best && ST.best[k] !== undefined ? ` · 내 최고 ${ST.best[k]}초` : '';
+    let h = `<div class="rp-h">🎬 장면 다시 하기 — 기록 도전(🏆 랭킹에 올라가요)</div>`
+      + REPLAYS.map(r => `<button class="warp-go" data-rp="${r.key}" ${done >= r.need ? '' : 'disabled'}>${r.name}<small>${done >= r.need ? '빨리 해낼수록 좋아요' + fmt(r.key) : `🔒 ${r.need}장을 마치면`}</small></button>`).join('')
+      + `<div class="rp-h">📖 장 처음부터 다시 하기 — 놓친 선택지 배지를 모을 수 있어요</div>`
+      + CHAPTERS.map((c, i) => `<button class="warp-go" data-rc="${i}" ${done > i ? '' : 'disabled'}>${c.title.replace('📜 ', '')}<small>${done > i ? '구절·배지·칭호는 그대로, 끝나면 지금 이야기로 돌아와요' : '🔒 아직 마치지 않은 장'}</small></button>`).join('')
+      + `<div style="font-size:12px;opacity:.75;margin-top:8px">다시 하기로는 달란트를 받지 않아요. 새 기록·배지가 목표예요!</div>`;
+    document.getElementById('replay-list').innerHTML = h;
+    openModal('replay-modal');
+  }
+  document.getElementById('replay-list').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || b.disabled) return;
+    document.querySelector('#replay-modal .close').click();
+    if (b.dataset.rp) startReplay(REPLAYS.find(r => r.key === b.dataset.rp));
+    if (b.dataset.rc !== undefined){ const i = +b.dataset.rc, z = CHAPTERS[i].steps[0].zone; startReplay({ chapter: i, name: CHAPTERS[i].title.replace('📜 ', '') + ' 다시 하기', ch: i, zone: z, spawn: ZONES[z].spawn }); }
+  });
+  async function startReplay(def){
+    if (REPLAY || dlgState || traveling || homeEdit || VISIT) return;
+    const bk = {}; PROG_KEYS.forEach(k => bk[k] = JSON.parse(JSON.stringify(ST[k] ?? null)));
+    ST.replayBackup = bk;
+    ST.ch = def.ch; STORY = CHAPTERS[def.ch].steps; CHAPTER = CHAPTERS[def.ch];
+    ST.cleared = false; ST.step = def.step ? stepIdx(def.step) : 0; ST.rumor = []; ST.straw = 0; ST.water = 0; ST.frogs = 0; ST.warned = 0;
+    reachDone = null; chase.on = false;
+    REPLAY = { def, t0: 0 };
+    saveST(); renderQuestList();
+    document.getElementById('replay-t').textContent = `🎬 ${def.name} · 준비`;
+    document.getElementById('replay-bar').classList.remove('hidden');
+    await travelTo({ id: 'replay', to: def.zone, spawn: def.spawn });
+    for (let i = 0; i < 60 && traveling; i++) await new Promise(r => setTimeout(r, 100));
+    if (!REPLAY) return;
+    if (def.step){ const [x, z] = def.spawn; player.position.set(x, heightAt(x, z), z); }
+    spawnTasks(); refreshShow(); renderQuestList();
+    REPLAY.t0 = performance.now();
+    toast(def.chapter !== undefined ? `📖 ${def.name} — 처음부터 다시!` : `🎬 ${def.name} — 시작!`, 2000);
+  }
+  function updateReplayBar(){
+    if (!REPLAY || !REPLAY.t0) return;
+    const sec = (performance.now() - REPLAY.t0) / 1000;
+    document.getElementById('replay-t').textContent = REPLAY.def.chapter !== undefined ? `📖 ${REPLAY.def.name}` : `🎬 ${REPLAY.def.name} · ${sec.toFixed(1)}초`;
+  }
+  async function finishReplay(ok){
+    if (!REPLAY) return;
+    const def = REPLAY.def, sec = REPLAY.t0 ? (performance.now() - REPLAY.t0) / 1000 : 0;
+    REPLAY = null;
+    if (dlgState){ dlgState = null; dlgEl.classList.add('hidden'); talking = false; talkingWith = null; }
+    if (ST.replayBackup){ Object.assign(ST, ST.replayBackup); delete ST.replayBackup; }
+    STORY = CHAPTERS[ST.ch].steps; CHAPTER = CHAPTERS[ST.ch]; reachDone = null; chase.on = false;
+    saveST(); document.getElementById('replay-bar').classList.add('hidden');
+    if (ok && def.step){ const v = Math.max(1, Math.round(sec)); const nb = recordBest(def.key, v); setTimeout(() => toast(`🎬 ${def.name} ${sec.toFixed(1)}초!${nb ? ' 🏆 새 기록!' : ` (최고 ${ST.best[def.key]}초)`}`, 3000), 1600); }
+    if (ok && def.chapter !== undefined) setTimeout(() => toast(`📖 ${def.name} 완료! 모은 배지·구절은 그대로예요`, 3000), 1600);
+    if (!ok) setTimeout(() => toast('🎬 다시 하기를 그만뒀어요', 1800), 1600);
+    await travelTo({ id: 'replay', to: 'alpha', spawn: [8, -2.5] });
+    renderQuestList(); spawnTasks(); refreshShow();
+  }
+  document.getElementById('replay-stop').onclick = () => { if (confirm('다시 하기를 그만둘까요? 원래 이야기로 돌아가요.')) finishReplay(false); };
+
   // ══ 🗓 이번 주 퀘스트: 한국 시간 월요일마다 3개, 다 하면 15달란트 ══
   const kstMonday = () => { const d = new Date(Date.now() + 9 * 3600e3); const w = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - w); return d.toISOString().slice(0, 10); };
   const WQ_POOL = [
@@ -4620,7 +4698,9 @@
     { k: 'progress', l: '📜 모험 진행', fmt: r => `${r.value}장 · 구절 ${String(r.extra || '').split('/')[0]}장` },
     { k: 'brick', l: '🧱 벽돌', fmt: r => r.value + '장' }, { k: 'frogs', l: '🐸 개구리', fmt: r => r.value + '마리' },
     { k: 'hail', l: '🧊 우박', fmt: r => r.value + '초' }, { k: 'dark', l: '🕯 흑암', fmt: r => r.value + '초' },
-    { k: 'rhythm', l: '🥁 소고', fmt: r => r.value + '점' }, { k: 'oikos', l: '🤝 우리 오이코스' },
+    { k: 'rhythm', l: '🥁 소고', fmt: r => r.value + '점' }, { k: 'rp_redsea', l: '🌊 홍해', fmt: r => r.value + '초' },
+    { k: 'rp_marks', l: '🐑 문설주', fmt: r => r.value + '초' }, { k: 'rp_hail', l: '📢 우박 알리기', fmt: r => r.value + '초' }, { k: 'rp_straw', l: '🌾 짚단', fmt: r => r.value + '초' },
+    { k: 'oikos', l: '🤝 우리 오이코스' },
   ];
   let rankData = null, oikData = null, rankTab = 'progress';
   const escH = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -4640,7 +4720,7 @@
       return;
     }
     const tab = RANK_TABS.find(t => t.k === rankTab), rows = rankData.filter(r => r.kind === rankTab);
-    const rule = rankTab === 'dark' ? '빨리 찾은 순' : rankTab === 'progress' ? '마친 장 → 모은 구절 순' : '높은 기록 순';
+    const rule = rankTab === 'dark' || rankTab.startsWith('rp_') ? '빨리 해낸 순' : rankTab === 'progress' ? '마친 장 → 모은 구절 순' : '높은 기록 순';
     el.innerHTML = `<div style="font-size:12px;opacity:.75;margin-bottom:4px">${rule}</div>` + (rows.length ? rows.map(r => `<div class="rkrow${r.is_mine ? ' mine' : ''}"><span class="no">${['🥇', '🥈', '🥉'][r.rank - 1] || r.rank}</span><span class="nm">${escH(r.nickname || '친구')}${r.is_mine ? ' (나)' : ''}${r.title ? `<small>🏷 ${escH(r.title)}</small>` : ''}</span><span class="v">${tab.fmt(r)}</span></div>`).join('')
       : '<div class="logline">아직 기록이 없어요. 첫 번째 주인공이 되어 볼까요?</div>');
   }
@@ -5120,6 +5200,7 @@
     if (bloodT >= 0 && Z && Z._water){ bloodT += dt; const k = Math.min(1, bloodT / 2.5); Z._water.material.color.copy(WATER_BLUE).lerp(WATER_BLOOD, k); if (k >= 1) bloodT = -1; }
   }
   function completeTask(q){
+    if (REPLAY && REPLAY.def.step && q.id === REPLAY.def.step){ finishReplay(true); return; }
     if (q.doneDlg) runDialog(DLG[q.doneDlg].concat(quizLines(q.doneDlg)), () => giveReward(q.reward, advance), null, q.doneDlg);
     else giveReward(q.reward, advance);
   }
@@ -5309,6 +5390,7 @@
     if (d.help){ helpTired(nearPoint); return; }
     if (storyInteract(nearPoint)) return;
     if (d.id === 'a_shop'){ openShop(); return; }
+    if (d.id === 'a_keeper' || d.id === 'memorial'){ openReplay(); return; }
     { const q = curStep(); if (q && q.skillAt === d.id){ toast('🦯 오른쪽 아래 「✨ 스킬」을 누르고 「지팡이」를 골라 보세요!', 2600); return; } }
     simple(d.title, d.body || '…', d.model ? nearPoint : null);
   }
@@ -5561,7 +5643,7 @@
       const score = isTarget ? d - 100 : d;
       if (d < range && score < closestDist){ closestDist = score; closest = m; }
     });
-    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updateHomeBtn(); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
+    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updateHomeBtn(); updateReplayBar(); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
     if (closest !== nearPoint){
       nearPoint = closest;
       interactBtn.classList.toggle('hidden', !nearPoint);
@@ -5655,7 +5737,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
