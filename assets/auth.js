@@ -199,7 +199,9 @@ function initLoginForm() {
           localStorage.removeItem("msu_saved_email");
         }
       }
-      window.location.href = "mypage.html";
+      // ?next=/odyssey/ 처럼 이 사이트 안의 주소가 오면 로그인 뒤 그곳으로(다른 사이트 주소는 무시)
+      var nx = (new URLSearchParams(window.location.search)).get("next") || "";
+      window.location.href = (/^\/[A-Za-z0-9_\-\/.]*$/.test(nx) && nx.indexOf("//") < 0) ? nx : "mypage.html";
     }).catch(function (err) {
       // fetch 자체가 실패(Load failed / Failed to fetch / 타임아웃) — 계정 문제가 아니라 네트워크/서버 문제.
       var m = (err && err.message ? String(err.message) : "").toLowerCase();
