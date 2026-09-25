@@ -91,7 +91,15 @@
     justify-content:center; line-height:1.15; box-shadow:0 4px 14px rgba(0,0,0,0.35); user-select:none; cursor:pointer;
   }
   .skill-btn .ico { font-size:20px; line-height:1; margin-bottom:2px; }
-  .skill-btn.new { animation:skillGlow 1.2s ease-in-out 3; }
+  .skill-btn.new { animation:skillGlow 1.2s ease-in-out infinite; }
+  #skill-bar { align-items:flex-end; }
+  .skill-list { display:flex; flex-direction:row-reverse; gap:8px; pointer-events:none; }
+  .skill-list .skill-btn { opacity:0; transform:translateX(34px) scale(.6); transition:opacity .22s ease, transform .28s cubic-bezier(.2,1.4,.4,1); transition-delay:calc(var(--i) * 45ms); }
+  #skill-bar.open .skill-list { pointer-events:auto; }
+  #skill-bar.open .skill-list .skill-btn { opacity:1; transform:none; }
+  .skill-toggle { background:rgba(90,60,20,.9) !important; border-color:#ffd27a !important; position:relative; }
+  #skill-bar.open .skill-toggle { background:rgba(255,210,122,.3) !important; }
+  .skill-toggle.has-new::after { content:'NEW'; position:absolute; top:-8px; right:-8px; background:#ff5a4a; color:#fff; font-size:9px; font-weight:800; padding:2px 5px; border-radius:8px; box-shadow:0 0 6px #ff5a4a; }
   @keyframes skillGlow { 0%,100%{ box-shadow:0 0 0 rgba(255,210,122,0);} 50%{ box-shadow:0 0 22px rgba(255,210,122,0.95);} }
   #skill-modal {
     position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
@@ -2305,17 +2313,35 @@
   try { (JSON.parse(localStorage.getItem(SAVE_KEY) || '[]')).forEach(id => SKILLS[id] && unlocked.add(id)); } catch(e){}
   if (/[?&]reset(&|$)/.test(location.search)) { unlocked.clear(); try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('inodyssey-tutorial'); } catch(e){} }
   const skillBar = document.getElementById('skill-bar');
+  // 스킬은 「✨ 스킬」 버튼 하나로 접혀 있다가, 누르면 왼쪽으로 촤라락 펼쳐짐(쓰고 나면 다시 접힘)
+  let skillOpen = false, skillNew = null, skillCloseT = 0;
+  function setSkillOpen(on){
+    skillOpen = on; skillBar.classList.toggle('open', on);
+    clearTimeout(skillCloseT); if (on) skillCloseT = setTimeout(() => setSkillOpen(false), 6000);
+    if (on && skillNew){ skillBar.querySelector('.skill-toggle').classList.remove('has-new'); }
+  }
   function renderSkills(newId){
     skillBar.innerHTML = '';
+    if (!unlocked.size) return;
+    if (newId) skillNew = newId;
+    const tg = document.createElement('div');
+    tg.className = 'skill-btn skill-toggle' + (skillNew ? ' has-new' : '');
+    tg.innerHTML = `<span class="ico">✨</span>스킬`;
+    const toggle = e => { e.preventDefault(); setSkillOpen(!skillOpen); };
+    tg.addEventListener('click', toggle); tg.addEventListener('touchstart', toggle, { passive:false });
+    skillBar.appendChild(tg);
+    const list = document.createElement('div'); list.className = 'skill-list'; skillBar.appendChild(list);
     [...unlocked].forEach((id, i) => {
       const sk = SKILLS[id];
       const b = document.createElement('div');
-      b.className = 'skill-btn' + (id === newId ? ' new' : '');
+      b.style.setProperty('--i', i);
+      b.className = 'skill-btn' + (id === skillNew ? ' new' : '');
       b.innerHTML = `<span class="ico">${sk.ico}</span>${sk.short}`;
       b.title = `${sk.name} (키보드 ${i+1})`;
-      b.addEventListener('click', () => useSkill(id));
-      b.addEventListener('touchstart', e => { e.preventDefault(); useSkill(id); }, { passive:false });
-      skillBar.appendChild(b);
+      const use = e => { if (e) e.preventDefault(); if (id === skillNew){ skillNew = null; b.classList.remove('new'); } setSkillOpen(false); useSkill(id); };
+      b.addEventListener('click', use);
+      b.addEventListener('touchstart', use, { passive:false });
+      list.appendChild(b);
     });
   }
   const skillCool = {};
@@ -2337,10 +2363,14 @@
     if (quiet) return;
     document.getElementById('skill-modal-ico').textContent = sk.ico;
     document.getElementById('skill-modal-name').textContent = sk.name;
-    document.getElementById('skill-modal-desc').textContent = sk.desc;
+    document.getElementById('skill-modal-desc').textContent = sk.desc + '\n\n✨ 이 스킬은 오른쪽 아래 「✨ 스킬」 버튼 안에 들어 있어요. 누르면 스킬들이 펼쳐져요!';
     setTimeout(() => document.getElementById('skill-modal').classList.remove('hidden'), 400);
   }
-  document.getElementById('skill-modal-ok').addEventListener('click', () => document.getElementById('skill-modal').classList.add('hidden'));
+  document.getElementById('skill-modal-ok').addEventListener('click', () => {
+    document.getElementById('skill-modal').classList.add('hidden');
+    // 어디에 들어갔는지 직접 보여 주기: 잠깐 펼쳐서 새 스킬을 반짝이게
+    setTimeout(() => { setSkillOpen(true); toast('✨ 새 스킬은 여기 「스킬」 버튼 안에 있어요!', 2400); }, 250);
+  });
   window.addEventListener('keydown', e => {
     const n = parseInt(e.key, 10);
     if (n >= 1 && n <= 9 && !e.repeat){ const id = [...unlocked][n-1]; if (id) useSkill(id); }
@@ -3094,7 +3124,7 @@
     { id: 'c4s5',  zone: 'redsea', obj: '모세에게 가기', where: '진영 동쪽, 바다 가까이', npc: 'moses', dlg: 'c4_fear', reward: { verse: ['ex14-13', 'ex14-14'] } },
     { id: 'c4s6',  zone: 'redsea', obj: '아론에게 가기 — 구름 기둥이 움직여요', where: '진영 서쪽 끝', npc: 'aaron', dlg: 'c4_cloud', place: { aaron: [-24, 4] } },
     { id: 'c4s7',  zone: 'redsea', obj: '바닷가의 모세 곁으로', where: '진영 동쪽 바닷가', npc: 'moses', dlg: 'c4_ready', place: { moses: [13.6, 2.2], aaron: [12.4, -1.6] } },
-    { id: 'c4s8',  zone: 'redsea', obj: '바닷가에서 「지팡이 들기」 스킬 쓰기', where: '바닷가의 빛나는 곳에서 오른쪽 🦯 지팡이 버튼', skillAt: 'sea', doneDlg: 'c4_part' },
+    { id: 'c4s8',  zone: 'redsea', obj: '바닷가에서 「지팡이 들기」 스킬 쓰기', where: '바닷가의 빛나는 곳에서 오른쪽 ✨ 스킬 → 🦯 지팡이 버튼', skillAt: 'sea', doneDlg: 'c4_part' },
     { id: 'c4s9',  zone: 'redsea', obj: '바다 가운데 마른 땅으로 건너가기', where: '갈라진 바다 사이 길을 따라 건너편 해변까지 — 애굽 군대가 뒤따라와요, 서둘러요!', reach: { minX: 51 }, chase: true, doneDlg: 'c4_close', reward: { verse: 'ex14-22' } },
     { id: 'c4s10', zone: 'redsea', obj: '건너편 바닷가에서 모세에게 가기', where: '바다 건너편 해변', npc: 'moses', dlg: 'c4_believe', place: { moses: [55.5, 2.5], aaron: [57, 4.6], miriam: [57.5, -3.2], rs_singer: [59, -5], rs_mom: [59.8, -2.2] } },
     { id: 'c4s11', zone: 'redsea', obj: '미리암과 함께 여호와를 찬송하기', where: '건너편 해변의 미리암', npc: 'miriam', dlg: 'c4_song', reward: { verse: 'ex15-2', skill: 'praise', clear: true } },
@@ -5231,7 +5261,7 @@
     const t = targetPos();
     const far = t && Math.hypot(t.x - player.position.x, t.z - player.position.z) > 10;
     const q = curStep(), wait = q && q.id === 'c2s22' ? 3 : q && (q.npc || q.point || q.rumor || q.exit || q.dig || q.reach || q.warn || q.skillAt) ? 10 : 40;
-    document.querySelectorAll('.skill-btn').forEach(b => b.classList.toggle('tut-glow', !!(q && q.skillAt)));
+    document.querySelectorAll('.skill-btn').forEach(b => b.classList.toggle('tut-glow', !!(q && q.skillAt) && (b.classList.contains('skill-toggle') ? !skillOpen : true)));
     const show = t && far && stepT > wait;
     compassEl.style.opacity = show ? String(Math.min(0.9, (stepT - wait) / 6)) : '0';
     if (show){
@@ -5279,7 +5309,7 @@
     if (d.help){ helpTired(nearPoint); return; }
     if (storyInteract(nearPoint)) return;
     if (d.id === 'a_shop'){ openShop(); return; }
-    { const q = curStep(); if (q && q.skillAt === d.id){ toast('🦯 오른쪽의 「지팡이」 스킬 버튼을 눌러 보세요!', 2400); return; } }
+    { const q = curStep(); if (q && q.skillAt === d.id){ toast('🦯 오른쪽 아래 「✨ 스킬」을 누르고 「지팡이」를 골라 보세요!', 2600); return; } }
     simple(d.title, d.body || '…', d.model ? nearPoint : null);
   }
   interactBtn.addEventListener('click', openInfo);
