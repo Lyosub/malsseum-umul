@@ -259,6 +259,12 @@
   .ntag { position:absolute; left:0; top:0; display:none; white-space:nowrap; font-family:'Pretendard', 'Apple SD Gothic Neo', sans-serif; font-weight:800; font-size:12px; color:#fff;
     text-shadow:0 0 3px rgba(30,18,6,0.95), 0 1px 2px rgba(30,18,6,0.95), 1px 0 2px rgba(30,18,6,0.9), -1px 0 2px rgba(30,18,6,0.9); will-change:transform; }
   .ntag.tgt { color:#ffd76e; font-size:13px; }
+  /* 연출 카메라: 위아래 검은 띠, 조작 UI 잠깐 숨김 */
+  body::before, body::after { content:''; position:fixed; left:0; right:0; height:0; background:#000; z-index:40; transition:height .6s ease; pointer-events:none; }
+  body::before { top:0; } body::after { bottom:0; }
+  body.cine::before, body.cine::after { height:9vh; }
+  body.cine #quest-panel, body.cine #minimap, body.cine #hud-btns, body.cine #action-cluster, body.cine #joystick-zone, body.cine #skill-bar, body.cine #interact-btn, body.cine #compass, body.cine #tag-layer, body.cine #hint, body.cine #tut { opacity:0; transition:opacity .4s; pointer-events:none; }
+  body.praising #run-btn { box-shadow:0 0 18px #ffe07a; }
   /* 미니게임 */
   #mg { position:fixed; inset:0; z-index:70; background:rgba(10,6,2,0.6); display:flex; align-items:center; justify-content:center; font-family:'Pretendard', sans-serif; }
   #mg.hidden { display:none; }
@@ -1835,7 +1841,7 @@
     if (Z.room){ zoneRoot.children.forEach(o => { if (!roomObjs.includes(o) && inRoom(o.position.x, o.position.z) && !markers.some(m => m.mesh === o)) roomObjs.push(o); }); }
     buildNav(); buildPOIs();
     markers.forEach(m => { if (m.ai){ const [x, z] = nearestWalkable(m.mesh.position.x, m.mesh.position.z); m.mesh.position.set(x, heightAt(x, z), z); m.col.x = x; m.col.z = z; } });
-    renderQuestList(); spawnTasks(); spawnScrolls();
+    renderQuestList(); spawnTasks(); spawnScrolls(); grantPastSkills();
     renderer.compile(scene, camera);
     setTimeout(loadLazyNPCs, 300);
   }
@@ -2179,6 +2185,16 @@
       }
     },
   };
+  SKILLS.pray = {
+    name: '기도', short: '기도', ico: '🙏', anim: 'Dig', cool: 15,
+    desc: '"모세와 아론이 바로를 떠나 나가서 바로에게 내리신 개구리에 대하여 모세가 여호와께 간구하매"(출애굽기 8:12)\n길을 모르겠을 때 기도해 보세요. 가야 할 곳에 빛이 비춰요.',
+    use(){ prayBeam(); }
+  };
+  SKILLS.praise = {
+    name: '찬양', short: '찬양', ico: '🎵', anim: 'Wave', cool: 25,
+    desc: '"내가 여호와를 찬송하리니 그는 높고 영화로우심이요"(출애굽기 15:1)\n찬양하면 힘이 나요! 10초 동안 더 빨리 걷고, 숨찬 것도 금방 회복돼요.',
+    use(){ praiseBoost(); }
+  };
   const SAVE_KEY = 'inodyssey.proto.skills.v1';
   const unlocked = new Set();
   try { (JSON.parse(localStorage.getItem(SAVE_KEY) || '[]')).forEach(id => SKILLS[id] && unlocked.add(id)); } catch(e){}
@@ -2197,20 +2213,23 @@
       skillBar.appendChild(b);
     });
   }
+  const skillCool = {};
   function useSkill(id){
     const sk = SKILLS[id];
     if (!sk || !unlocked.has(id) || gestureLock) return;
+    if (sk.cool){ const left = (skillCool[id] || 0) - performance.now() / 1000; if (left > 0){ toast(`${sk.ico} ${Math.ceil(left)}초 뒤에 다시 쓸 수 있어요`, 1200); return; } skillCool[id] = performance.now() / 1000 + sk.cool; }
     playOneShot(sk.anim, { lockMove:true });
     sk.use();
     const q = curStep();
     if (q && q.skillAt && Z && q.zone === Z.id && id === 'staff' && nearPoint && nearPoint.data.id === q.skillAt && !q._done){ q._done = true; setTimeout(() => { q._done = false; completeTask(q); }, 1300); }
   }
-  function unlockSkill(id){
+  function unlockSkill(id, quiet){
     const sk = SKILLS[id];
     if (!sk || unlocked.has(id)) return;
     unlocked.add(id);
     try { localStorage.setItem(SAVE_KEY, JSON.stringify([...unlocked])); } catch(e){}
-    renderSkills(id);
+    renderSkills(quiet ? null : id);
+    if (quiet) return;
     document.getElementById('skill-modal-ico').textContent = sk.ico;
     document.getElementById('skill-modal-name').textContent = sk.name;
     document.getElementById('skill-modal-desc').textContent = sk.desc;
@@ -2665,7 +2684,7 @@
     c2_livestock: { q: '가축의 돌림병 때 이스라엘 자손의 가축은 어떻게 되었나요?', a: '하나도 죽지 않았다', w: ['절반쯤 죽었다', '모두 애굽 들판으로 옮겨졌다'] },
   });
   // c2s5에서 끝나던 1부를 이어 붙임
-  STORY2.find(q => q.id === 'c2s5').reward = { verse: 'ex8-10' };
+  STORY2.find(q => q.id === 'c2s5').reward = { verse: 'ex8-10', skill: 'pray' };
   DLG.c2_frogs[DLG.c2_frogs.length - 1] = [NAR, '하지만 하나님의 일은 아직 끝나지 않았어요.'];
 
   // ══ 2장 이어서: 악성 종기(9:8-12) · 우박(9:13-35) · 메뚜기(10:1-20) · 흑암(10:21-29) ══
@@ -2973,7 +2992,7 @@
     { id: 'c4s8',  zone: 'redsea', obj: '바닷가에서 「지팡이 들기」 스킬 쓰기', where: '바닷가의 빛나는 곳에서 왼쪽 위 🦯 지팡이 버튼', skillAt: 'sea', doneDlg: 'c4_part' },
     { id: 'c4s9',  zone: 'redsea', obj: '바다 가운데 마른 땅으로 건너가기', where: '갈라진 바다 사이 길을 따라 건너편 해변까지 — 애굽 군대가 뒤따라와요, 서둘러요!', reach: { minX: 51 }, chase: true, doneDlg: 'c4_close', reward: { verse: 'ex14-22' } },
     { id: 'c4s10', zone: 'redsea', obj: '건너편 바닷가에서 모세에게 가기', where: '바다 건너편 해변', npc: 'moses', dlg: 'c4_believe', place: { moses: [55.5, 2.5], aaron: [57, 4.6], miriam: [57.5, -3.2], rs_singer: [59, -5], rs_mom: [59.8, -2.2] } },
-    { id: 'c4s11', zone: 'redsea', obj: '미리암과 함께 여호와를 찬송하기', where: '건너편 해변의 미리암', npc: 'miriam', dlg: 'c4_song', reward: { verse: 'ex15-2', clear: true } },
+    { id: 'c4s11', zone: 'redsea', obj: '미리암과 함께 여호와를 찬송하기', where: '건너편 해변의 미리암', npc: 'miriam', dlg: 'c4_song', reward: { verse: 'ex15-2', skill: 'praise', clear: true } },
   ];
   Object.assign(VERSES, {
     'ex14-13': { ref: '출애굽기 14:13', text: '모세가 백성에게 이르되 너희는 두려워하지 말고 가만히 서서 여호와께서 오늘 너희를 위하여 행하시는 구원을 보라 너희가 오늘 본 애굽 사람을 영원히 다시 보지 아니하리라' },
@@ -3262,6 +3281,101 @@
           ? `<div class="keyline"><b>${p.n}</b> — ${p.t}</div>`
           : `<div class="keyline" style="opacity:.45"><b>???</b> — 아직 만나지 않았어요</div>`).join('')
       + `<div style="font-size:13px;margin-top:6px">🙋 이야기 나눈 마을 사람 ${vill.length}명${vill.length ? ' — ' + vill.join(', ') : ''}</div></div>`;
+  }
+  // 기도: 지금 할 일이 있는 곳에 하늘에서 빛기둥(8초) + 발밑부터 빛 방울 길
+  let prayFx = null, praiseUntil = 0;
+  function prayBeam(){
+    const t = targetPos();
+    if (prayFx){ prayFx.g.parent && prayFx.g.parent.remove(prayFx.g); prayFx = null; }
+    if (!t){ toast('🙏 기도했어요. 지금은 해야 할 일을 다 했어요 — 숨은 두루마리를 찾아볼까요?', 2400); return; }
+    const g = new THREE.Group(), y = heightAt(t.x, t.z);
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 40, 20, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff2b0, transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+    beam.position.set(t.x, y + 20, t.z); g.add(beam);
+    const dots = [], P = player.position, d = Math.hypot(t.x - P.x, t.z - P.z), n = Math.min(24, Math.floor(d / 1.6));
+    const dm = new THREE.SpriteMaterial({ map: flameTex, color: 0xffe7a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 });
+    for (let i = 1; i <= n; i++){ const k = i / (n + 1), x = P.x + (t.x - P.x) * k, z = P.z + (t.z - P.z) * k; const sp = new THREE.Sprite(dm); sp.scale.set(0.35, 0.45, 1); sp.position.set(x, heightAt(x, z) + 0.3, z); sp.userData.k = k; g.add(sp); dots.push(sp); }
+    zoneRoot.add(g); prayFx = { g, beam, dm, t: 0 };
+    toast('🙏 기도했더니 가야 할 곳에 빛이 비춰요', 2200);
+  }
+  function praiseBoost(){
+    praiseUntil = performance.now() + 10000; stamina = 1; exhausted = false;
+    toast('🎵 찬양하니 힘이 나요! 10초 동안 더 빨라요', 2000);
+    for (let i = 0; i < 8; i++) setTimeout(() => floatNote(), i * 180);
+  }
+  function floatNote(){
+    const el = document.createElement('div'); el.textContent = ['🎵', '🎶', '♪'][(Math.random() * 3) | 0];
+    const v = player.position.clone(); v.y += 2.2; v.project(camera);
+    Object.assign(el.style, { position: 'fixed', left: ((v.x + 1) / 2 * innerWidth + (Math.random() - 0.5) * 60) + 'px', top: ((1 - v.y) / 2 * innerHeight) + 'px', fontSize: '22px', zIndex: 15, pointerEvents: 'none', transition: 'transform 1.4s ease-out, opacity 1.4s', opacity: '1' });
+    document.body.appendChild(el); requestAnimationFrame(() => { el.style.transform = `translate(${(Math.random() - 0.5) * 40}px, -70px)`; el.style.opacity = '0'; });
+    setTimeout(() => el.remove(), 1500);
+  }
+  function updateSkillFx(dt){
+    if (prayFx){ const f = prayFx; f.t += dt; const a = f.t < 0.8 ? f.t / 0.8 : f.t > 7 ? Math.max(0, 1 - (f.t - 7)) : 1;
+      f.beam.material.opacity = 0.45 * a * (0.85 + 0.15 * Math.sin(f.t * 5)); f.dm.opacity = 0.9 * a;
+      f.g.children.forEach(o => { if (o.isSprite) o.position.y += Math.sin(f.t * 3 + o.userData.k * 12) * 0.004; });
+      if (f.t > 8){ f.g.parent && f.g.parent.remove(f.g); prayFx = null; } }
+    const on = performance.now() < praiseUntil; document.body.classList.toggle('praising', on);
+    if (on && Math.random() < dt * 3) floatNote();
+  }
+
+  // ══ D-12. 칭호: 마친 장 수에 따라(수집첩에서 고르기) ══
+  const TITLES = [
+    { need: 0, t: '두루마리마을 새내기' },
+    { need: 1, t: '부르심에 응답한 사람' },
+    { need: 2, t: '재앙 속에서 믿은 사람' },
+    { need: 3, t: '어린양의 피 아래 선 사람' },
+    { need: 4, t: '바다를 건넌 믿음의 사람' },
+    { need: 'scroll', t: '말씀을 찾는 탐험가' },
+  ];
+  const chaptersDone = () => ST.ch + (ST.cleared ? 1 : 0);
+  const titleOk = x => x.need === 'scroll' ? ST.badges.includes('scroll_all') : chaptersDone() >= x.need;
+  function myTitle(){ const own = TITLES.filter(titleOk); const pick = own.find(x => x.t === ST.title); return (pick || own.filter(x => x.need !== 'scroll').pop() || TITLES[0]).t; }
+  function checkNewTitle(){
+    ST.titlesSeen = ST.titlesSeen || [];
+    const fresh = TITLES.filter(x => titleOk(x) && !ST.titlesSeen.includes(x.t));
+    if (!fresh.length) return;
+    fresh.forEach(x => ST.titlesSeen.push(x.t));
+    const top = fresh.filter(x => x.need !== 0).pop();
+    if (top){ ST.title = top.t; setTimeout(() => toast(`🏷 새 칭호: 「${top.t}」`, 2600), 2800); }
+    saveST();
+  }
+  function titleBookHTML(){
+    return `<div style="grid-column:1/-1;margin:0 0 8px"><div style="font-size:13px;opacity:.8">🏷 내 칭호 (눌러서 바꾸기)</div>`
+      + TITLES.map(x => { const ok = titleOk(x), on = ok && x.t === myTitle();
+          return `<button data-title="${x.t}" ${ok ? '' : 'disabled'} style="margin:4px 6px 0 0;padding:5px 10px;border-radius:12px;border:${on ? '2px solid #ffd27a' : '1px solid rgba(255,255,255,.25)'};background:${on ? 'rgba(255,210,122,.25)' : 'rgba(255,255,255,.06)'};color:inherit;font-size:12.5px;opacity:${ok ? 1 : .4}">${ok ? x.t : '🔒 ' + (x.need === 'scroll' ? '두루마리를 모두 모으면' : x.need + '장을 마치면')}</button>`; }).join('') + `</div>`;
+  }
+  document.addEventListener('click', e => { const b = e.target.closest('button[data-title]'); if (!b) return; ST.title = b.dataset.title; saveST(); document.getElementById('btn-book').click(); toast(`🏷 칭호를 「${ST.title}」(으)로 바꿨어요`, 1600); });
+
+  // ══ D-13. 연출 카메라: 큰 장면에서 위아래 검은 띠 + 천천히 돌며 보여 줌 ══
+  const cine = { on: false, t: 0, dur: 0, x: 0, y: 0, z: 0, r: 14, h: 6, spin: 0.5, a0: 0, seen: {} };
+  function startCine(key, x, y, z, o = {}){
+    if ((NOTYPE && key !== 'test') || cine.seen[key]) return; cine.seen[key] = true;
+    Object.assign(cine, { on: true, t: 0, dur: o.dur || 5, x, y, z, r: o.r || 14, h: o.h || 6, spin: o.spin ?? 0.5, a0: Math.atan2(camera.position.x - x, camera.position.z - z) });
+    document.body.classList.add('cine');
+  }
+  const _cp = new THREE.Vector3(), _cl = new THREE.Vector3();
+  function applyCine(dt){
+    if (!cine.on) return;
+    cine.t += dt; const T = cine.t, D = cine.dur;
+    let k = Math.min(1, T / 0.9, (D - T) / 0.9); k = Math.max(0, k); k = k * k * (3 - 2 * k);
+    const a = cine.a0 + cine.spin * (T / D);
+    _cp.set(cine.x + Math.sin(a) * cine.r, cine.y + cine.h, cine.z + Math.cos(a) * cine.r);
+    camera.position.lerp(_cp, k);
+    _cl.set(player.position.x, player.position.y + LOOK_Y, player.position.z).lerp(new THREE.Vector3(cine.x, cine.y + 2, cine.z), k);
+    camera.lookAt(_cl);
+    if (T >= D){ cine.on = false; document.body.classList.remove('cine'); }
+  }
+  function updateCineTriggers(){
+    if (!Z || cine.on) return;
+    if (Z.id === 'midian' && ST.ch === 0 && !ST.cleared){ const b = markers.find(m => m.isBush); if (b && Math.hypot(player.position.x - b.data.x, player.position.z - b.data.z) < 10) startCine('bush', b.data.x, heightAt(b.data.x, b.data.z), b.data.z, { r: 7, h: 3, dur: 4.5, spin: 0.8 }); }
+  }
+
+  // 이미 그 단계를 지난 저장에는 스킬을 조용히 줌(업데이트 전에 지나간 학생)
+  function grantPastSkills(){
+    const past = (ch, id) => ST.ch > ch || (ST.ch === ch && (ST.cleared || ST.step > stepIdx(id)));
+    if (past(1, 'c2s5')) unlockSkill('pray', true);
+    if (ST.ch > 3 || (ST.ch === 3 && ST.cleared)) unlockSkill('praise', true);
+    checkNewTitle();
   }
   function giveReward(r, then){
     if (!r){ then && then(); return; }
@@ -3780,10 +3894,12 @@
     document.getElementById('clear-body').textContent = `모은 구절 카드 ${ST.verses.length} / ${Object.keys(VERSES).length}장 · ⭐ 지혜 별 ${ST.stars} / ${Object.keys(QUIZ).length} · 얻은 스킬: 지팡이 들기\n배지: ${bs}\n💰 ${ST.ch + 1}장 완료 보상 20달란트${(MSU.client && MSU.session) || SHOP_MOCK ? '' : ' (말씀우물에 로그인하면 받아요)'}\n\n다른 선택을 하면 다른 카드와 배지를 얻을 수 있어요!\n다음: ${CHAPTER.next}`;
     const nextCh = ST.ch + 1;
     claimChapter(ST.ch + 1);
+    setTimeout(checkNewTitle, 100);
     setTimeout(() => openModal('clear-modal', () => { if (CHAPTERS[nextCh]) startChapter(nextCh); }), 500);
   }
   document.getElementById('btn-book').onclick = () => {
-    document.getElementById('book-cards').innerHTML = Object.keys(VERSES).map(id => cardHTML(id, !ST.verses.includes(id))).join('')
+    checkNewTitle();
+    document.getElementById('book-cards').innerHTML = titleBookHTML() + Object.keys(VERSES).map(id => cardHTML(id, !ST.verses.includes(id))).join('')
       + `<div style="grid-column:1/-1;margin-top:10px"><h3 style="font-size:15px;margin-bottom:4px">🔑 기억할 말 · ⭐ 지혜 별 ${ST.stars} / ${Object.keys(QUIZ).length}</h3>${ST.keys.length ? ST.keys.map(k => `<div class="keyline"><b>${k.scene}</b> — ${k.t}</div>`).join('') : '<div class="keyline">이야기 속 금색 🔑 문장이 여기에 모여요.</div>'}</div>`
       + scrollBookHTML() + peopleBookHTML()
       + `<div style="grid-column:1/-1;margin-top:8px;font-size:13px">🏅 배지: ${Object.entries(BADGES).map(([k, b]) => `<span style="opacity:${ST.badges.includes(k) ? 1 : 0.35};margin-right:10px">${b.ico} ${b.name}</span>`).join('')}</div>`;
@@ -3953,13 +4069,13 @@
     if (name === 'dusk'){ duskOn = true; }
     if (name === 'night'){ nightOn = true; toast('🌙 밤중이 되었어요', 1800); }
     if (name === 'army'){ armyOn = true; spawnArmy(); toast('🐎 서쪽에서 애굽 군대가 다가와요', 2200); }
-    if (name === 'cloud'){ cloudOn = true; nightOn = true; spawnCloud(); toast('☁️ 구름 기둥이 백성 뒤로 옮겨 갔어요', 2400); }
-    if (name === 'part'){ sea.target = 1; toast('🌬 큰 동풍이 불어 바닷물이 물러가요', 2400); }
+    if (name === 'cloud'){ cloudOn = true; nightOn = true; spawnCloud(); if (cloudObj) startCine('cloud', cloudObj.position.x, cloudObj.position.y, cloudObj.position.z, { r: 18, h: 7, dur: 5 }); toast('☁️ 구름 기둥이 백성 뒤로 옮겨 갔어요', 2400); }
+    if (name === 'part'){ startCine('part', 33, 0, 0, { r: 24, h: 13, dur: 6.5, spin: 0.7 }); sea.target = 1; toast('🌬 큰 동풍이 불어 바닷물이 물러가요', 2400); }
     if (name === 'dawn'){ nightOn = false; }
     if (name === 'close'){ sea.target = 0; armyOn = false; spawnArmy(); cloudOn = false; spawnCloud(); }
     if (name === 'dance'){ startDance(); }
     if (name === 'rhythm' && dlgState && !NOTYPE){ dlgEl.classList.add('hidden'); rhythmGame('', () => { dlgEl.classList.remove('hidden'); }); document.getElementById('mg-close').textContent = '계속하기'; mg.onClose = () => { dlgEl.classList.remove('hidden'); document.getElementById('mg-close').textContent = '나가기'; }; }
-    if (name === 'pillar'){ pillarOn = true; spawnPillar(); toast('🔥 불 기둥이 백성 앞에 나타났어요', 2400); }
+    if (name === 'pillar'){ pillarOn = true; spawnPillar(); if (pillarObj) startCine('pillar', pillarObj.position.x, pillarObj.position.y, pillarObj.position.z, { r: 16, h: 5, dur: 5 }); toast('🔥 불 기둥이 백성 앞에 나타났어요', 2400); }
   }
   // 파리 떼는 c2s8~c2s10 동안 애굽 쪽(동쪽)에만 — 고센(서쪽 집들)에는 없음(출 8:22)
   const fliesActive = () => fliesOn || (ST.ch === 1 && ST.step >= stepIdx('c2s8') && ST.step <= stepIdx('c2s10') && !fliesGoneSeen);
@@ -4548,7 +4664,8 @@
     runBtn.classList.toggle('exhausted', exhausted);
     drawStamina();
 
-    const targetSpeed = moving ? (isRunning ? RUN_SPEED : WALK_SPEED * Math.min(1, Math.max(0.45, mag / 0.6))) : 0;   // 조금만 밀어도 제 속도
+    const boost = performance.now() < praiseUntil ? 1.35 : 1;
+    const targetSpeed = (moving ? (isRunning ? RUN_SPEED : WALK_SPEED * Math.min(1, Math.max(0.45, mag / 0.6))) : 0) * boost;   // 조금만 밀어도 제 속도
     moveSpeed += (targetSpeed - moveSpeed) * Math.min(1, dt * 10);
 
     if (moving){
@@ -4613,6 +4730,7 @@
     camera.position.lerp(desiredCamPos, dragging ? 1 : 1-Math.pow(0.001, dt));
     camera.position.y = Math.max(camera.position.y, heightAt(camera.position.x, camera.position.z) + 0.6);
     camera.lookAt(player.position.x, player.position.y+LOOK_Y, player.position.z);
+    applyCine(dt);
 
     // 카메라와 플레이어 사이를 가리는 천막·야자수·큰 바위는 반투명하게(항상 주인공이 보이도록)
     {
@@ -4687,7 +4805,7 @@
       const score = isTarget ? d - 100 : d;
       if (d < range && score < closestDist){ closestDist = score; closest = m; }
     });
-    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
+    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
     if (closest !== nearPoint){
       nearPoint = closest;
       interactBtn.classList.toggle('hidden', !nearPoint);
@@ -4781,7 +4899,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
