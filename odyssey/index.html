@@ -239,8 +239,17 @@
   #quest-panel.compact .prog { flex:none; margin:0; font-size:11px; }
   #quest-panel.compact .prog .zn { display:none; }
   #quest-panel .more { font-size:10px; opacity:.6; margin-left:4px; }
-  #quality-opts { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  #quality-opts button { padding:10px 0; border-radius:10px; border:2px solid rgba(255,210,122,0.5); background:rgba(255,255,255,0.06); color:#f5e9d0; font-size:14px; font-weight:700; }
+  .set-sheet { max-width:380px; max-height:92vh; overflow:auto; }
+  .set-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0 6px; }
+  .set-lbl { font-weight:800; font-size:14px; }
+  .set-now { font-size:12px; opacity:.75; }
+  .set-tg { padding:7px 16px; border-radius:999px; border:2px solid #ffd27a; background:#ffd27a; color:#2a1d10; font-weight:800; font-size:13px; }
+  .set-tg.off { background:transparent; color:#f5e9d0; border-color:rgba(255,210,122,0.45); }
+  .set-btns { display:flex; gap:8px; margin-top:14px; }
+  .set-btns button { flex:1; margin:0 !important; }
+  #btn-save-exit { padding:11px 0; border-radius:12px; border:2px solid rgba(255,210,122,0.6); background:rgba(255,255,255,0.08); color:#f5e9d0; font-weight:800; font-size:14px; }
+  #quality-opts { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+  #quality-opts button { padding:8px 0; border-radius:10px; border:2px solid rgba(255,210,122,0.5); background:rgba(255,255,255,0.06); color:#f5e9d0; font-size:14px; font-weight:700; }
   #quality-opts button.on { background:#ffd27a; color:#2a1d10; border-color:#ffd27a; }
   .modal .sheet { width:min(92%,560px); max-height:84vh; overflow:auto; background:#2a1d10; color:#f5e9d0; border:2px solid #ffd27a; border-radius:18px; padding:18px; }
   .modal h3 { color:#ffd27a; font-size:17px; margin-bottom:12px; }
@@ -320,6 +329,7 @@
 <div id="loading"><img id="logo-img" alt="In Odyssey" style="width:min(78vw,420px);display:none"><div class="logo" id="logo-text">In Odyssey</div><div class="sub" id="loading-sub">불러오는 중...</div></div>
 <div id="canvas-wrap"></div>
 <div id="hint">조이스틱(WASD)으로 이동 · 화면을 드래그하면 시점 회전 · 스페이스로 점프 · 모세에게 말을 걸어보세요</div>
+<script>if ('ontouchstart' in window || navigator.maxTouchPoints > 0) document.getElementById('hint').textContent = '조이스틱으로 이동 · 화면을 끌어 둘러보기 · 사람에게 다가가 「대화하기」를 눌러 보세요';</script>
 <div id="minimap"><canvas id="minimap-canvas" width="118" height="118"></canvas></div>
 <div id="zoom-ctrl"><button id="zoom-in" aria-label="확대">＋</button><button id="zoom-out" aria-label="축소">－</button></div>
 <div id="quest-panel">
@@ -361,11 +371,11 @@
   <div id="shop-grid"></div>
   <div id="shop-msg"></div>
   <button class="close">닫기</button></div></div>
-<div id="set-modal" class="modal hidden"><div class="sheet" style="max-width:340px"><h3>⚙️ 설정 — 화질</h3>
-  <p style="font-size:13px;line-height:1.6;opacity:0.85;margin:6px 0 10px">화면이 끊기면 화질을 낮춰 보세요. 자동으로 두면 폰에 맞게 알아서 맞춰요.</p>
-  <div id="quality-opts"><button data-q="auto">자동</button><button data-q="low">저화질</button><button data-q="mid">중화질</button><button data-q="high">고화질</button></div>
-  <div id="quality-now" style="font-size:12.5px;opacity:0.75;margin-top:8px"></div>
-  <button class="close">닫기</button></div></div>
+<div id="set-modal" class="modal hidden"><div class="sheet set-sheet"><h3>⚙️ 설정</h3>
+  <div class="set-row"><span class="set-lbl">🖥 화질</span><span id="quality-now" class="set-now"></span></div>
+  <div id="quality-opts"><button data-q="auto">자동</button><button data-q="low">저</button><button data-q="mid">중</button><button data-q="high">고</button></div>
+  <div class="set-row"><span class="set-lbl">🎵 배경음악</span><button id="bgm-toggle" class="set-tg"></button></div>
+  <div class="set-btns"><button id="btn-save-exit">💾 저장하고 나가기</button><button class="close">닫기</button></div></div></div>
 <div id="book-modal" class="modal hidden"><div class="sheet"><h3>📖 구절 수집첩</h3><div class="cards" id="book-cards"></div><button class="close">닫기</button></div></div>
 <div id="log-modal" class="modal hidden"><div class="sheet"><h3>💬 대화 기록</h3><div id="log-list"></div><button class="close">닫기</button></div></div>
 <div id="card-modal" class="modal hidden"><div class="sheet" style="max-width:300px"><h3>📖 새 구절 카드!</h3><div id="card-one"></div><button class="close">수집첩에 넣기</button></div></div>
@@ -2551,6 +2561,23 @@
     setTimeout(next, r.skill ? 900 : 200);
   }
   const cardHTML = (id, locked) => { const v = VERSES[id]; return `<div class="vcard${locked ? ' locked' : ''}" style="background-image:url('${A('ui/game/verse-card.jpg')}')"><div class="ref">${v.ref}</div><div>${locked ? '아직 모으지 못한 구절' : v.text}</div><div class="chk">개역개정</div></div>`; };
+  const BGM = { on: (() => { try { return localStorage.getItem('inodyssey-bgm') !== 'off'; } catch (e){ return true; } })(), ctx: null, src: null, gain: null, buf: null, starting: false };
+  async function bgmStart(){
+    if (!BGM.on || BGM.src || BGM.starting) return; BGM.starting = true;
+    try {
+      BGM.ctx = BGM.ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (BGM.ctx.state === 'suspended') await BGM.ctx.resume();
+      if (!BGM.buf) BGM.buf = await BGM.ctx.decodeAudioData((await fetchBytes('audio/bgm-village.mp3')).slice(0));
+      if (!BGM.on){ BGM.starting = false; return; }
+      const src = BGM.ctx.createBufferSource(), g = BGM.ctx.createGain(); src.buffer = BGM.buf; src.loop = true;
+      g.gain.setValueAtTime(0, BGM.ctx.currentTime); g.gain.linearRampToValueAtTime(0.42, BGM.ctx.currentTime + 2.5);
+      src.connect(g).connect(BGM.ctx.destination); src.start(); BGM.src = src; BGM.gain = g;
+    } catch (e){ console.warn('배경음악', e); }
+    BGM.starting = false;
+  }
+  function bgmStop(){ if (BGM.src){ try { BGM.gain.gain.linearRampToValueAtTime(0, BGM.ctx.currentTime + 0.4); const s0 = BGM.src; setTimeout(() => { try { s0.stop(); } catch (e){} }, 450); } catch (e){} BGM.src = null; } }
+  ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, () => bgmStart(), { passive: true }));
+  document.addEventListener('visibilitychange', () => { if (!BGM.ctx) return; if (document.hidden) BGM.ctx.suspend(); else if (BGM.on) BGM.ctx.resume(); });
   function setQuality(level, mode){
     const prevShadow = Q.shadow, prevSoft = Q.soft;
     qLevel = level; qMode = mode; Q = QUALITY[level];
@@ -2565,8 +2592,19 @@
   function renderQualityUI(){
     document.querySelectorAll('#quality-opts button').forEach(b => b.classList.toggle('on', b.dataset.q === qMode));
     document.getElementById('quality-now').textContent = qMode === 'auto' ? `자동 — 지금 ${Q.name}` : Q.name;
+    const tg = document.getElementById('bgm-toggle'); tg.textContent = BGM.on ? '켜짐' : '꺼짐'; tg.classList.toggle('off', !BGM.on);
   }
   document.getElementById('btn-set').onclick = () => { renderQualityUI(); openModal('set-modal'); };
+  document.getElementById('bgm-toggle').onclick = () => {
+    BGM.on = !BGM.on; try { localStorage.setItem('inodyssey-bgm', BGM.on ? 'on' : 'off'); } catch (e){}
+    if (BGM.on) bgmStart(); else bgmStop(); renderQualityUI();
+  };
+  // 저장하고 나가기: 진행·장착은 이미 저장되지만 한 번 더 확실히 저장하고 말씀우물 놀이터로
+  document.getElementById('btn-save-exit').onclick = () => {
+    saveST(); try { saveLocal(); } catch (e){}
+    bgmStop(); toast('💾 저장했어요! 다음에 이어서 할 수 있어요', 1600);
+    if (!window.__ASSETS && location.protocol !== 'file:') setTimeout(() => { location.href = MSU_BASE + 'play.html'; }, 900);
+  };
   document.querySelectorAll('#quality-opts button').forEach(b => b.onclick = () => {
     const q = b.dataset.q;
     if (q === 'auto'){ autoQ.done = false; autoQ.t = 0; autoQ.frames = 0; setQuality('high', 'auto'); }
@@ -3704,7 +3742,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { get bgm(){ return BGM.src ? "playing" : (BGM.on ? "ready" : "off"); }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
