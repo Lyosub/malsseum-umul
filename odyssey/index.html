@@ -254,6 +254,24 @@
     background:rgba(0,0,0,0.55); color:#9be58a; font:11px/1.4 monospace; padding:3px 8px;
     border-radius:6px; pointer-events:none; display:none; white-space:nowrap;
   }
+
+  /* ── 휴대폰 세로 배치(겹침 정리): 왼쪽 위 퀘스트 · 오른쪽 위 지도 → 그 아래 한 줄로 ＋ − 📖 💬 ⚙️ 🛍️ · 연습 카드는 오른쪽 버튼 줄을 비켜서 ── */
+  @media (max-width: 560px){
+    #quest-panel { top:12px; left:12px; width:calc(100vw - 142px); max-width:240px; padding:9px 12px; }
+    #minimap { top:12px; right:12px; width:104px; height:104px; }
+    #zoom-ctrl { top:124px; right:14px; }
+    #hud-btns { top:218px; right:12px; left:auto; gap:6px; }
+    #hud-btns button { width:42px; height:42px; font-size:18px; }
+    #tut { left:12px; right:66px; width:auto; transform:none; bottom:216px; top:auto; }
+    #hint { bottom:216px; left:12px; right:66px; width:auto; max-width:none; transform:none; }
+  }
+  /* ── 휴대폰을 가로로 들면: 세로로 돌려 달라는 안내(버튼들이 겹치지 않는 세로 화면 기준으로 만듦) ── */
+  #rotate { position:fixed; inset:0; z-index:200; display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    background:#1c130a; color:#f5e9d0; font-family:'Pretendard', -apple-system, sans-serif; text-align:center; padding:24px; }
+  #rotate .ph { font-size:54px; animation: rotPh 1.8s ease-in-out infinite; }
+  @keyframes rotPh { 0%,30% { transform:rotate(90deg); } 60%,100% { transform:rotate(0deg); } }
+  #rotate b { font-size:19px; color:#ffd27a; }
+  @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse){ #rotate { display:flex; } }
 </style>
 </head>
 <body>
@@ -310,6 +328,7 @@
 <div id="card-modal" class="modal hidden"><div class="sheet" style="max-width:300px"><h3>📖 새 구절 카드!</h3><div id="card-one"></div><button class="close">수집첩에 넣기</button></div></div>
 <div id="clear-modal" class="modal hidden"><div class="sheet"><h3 id="clear-title"></h3><img id="clear-badge" alt=""><div id="clear-body" style="font-size:14px;line-height:1.7;white-space:pre-line"></div><button class="close">좋아요!</button></div></div>
 <div id="warp"></div>
+<div id="rotate"><div class="ph">📱</div><b>휴대폰을 세로로 돌려 주세요</b><div style="font-size:14px;opacity:.85;line-height:1.6">In Odyssey는 세로 화면으로 플레이해요.<br>화면 자동 회전이 꺼져 있으면 켜 주세요.</div></div>
 <div id="pick-modal" class="modal hidden"><div class="sheet" style="max-width:340px;text-align:center">
   <h3>나는 누구로 모험할까요?</h3>
   <p style="font-size:13px;opacity:.85;margin:6px 0 12px">나중에 🛍️ 상점의 「꾸미기」에서 언제든 바꿀 수 있어요.</p>
