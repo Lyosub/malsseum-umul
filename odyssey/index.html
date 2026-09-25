@@ -301,6 +301,21 @@
   .vcard.locked { filter:grayscale(1) brightness(0.55); }
   .vcard .ref { font-weight:900; font-size:13px; margin-bottom:6px; color:#6b3f12; }
   .vcard .chk { margin-top:auto; font-size:9.5px; opacity:0.7; }
+  /* 오늘의 퀘스트 */
+  .dq { display:flex; align-items:center; gap:10px; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,.08); font-size:14px; }
+  .dq .ck { width:24px; text-align:center; font-size:18px; } .dq .tx { flex:1; } .dq .pg { font-weight:800; font-size:13px; }
+  .dq.done .tx { opacity:.7; text-decoration:line-through; }
+  #daily-claim { width:100%; margin-top:10px; padding:11px 0; border-radius:12px; border:none; background:#ffd27a; color:#2a1d10; font-weight:800; font-size:15px; }
+  #daily-claim:disabled { background:rgba(255,255,255,.12); color:rgba(255,255,255,.6); }
+  #btn-menu.dot::after { content:''; position:absolute; top:4px; right:4px; width:10px; height:10px; border-radius:50%; background:#ff5a4a; box-shadow:0 0 6px #ff5a4a; }
+  #btn-menu { position:relative; }
+  /* 친구: 인사 이모티콘 · 접속 표시 · 말풍선 */
+  #emo-bar { position:fixed; top:56px; right:112px; z-index:12; display:flex; gap:6px; background:rgba(28,19,10,.86); border:1px solid rgba(255,255,255,.3); border-radius:14px; padding:6px; }
+  #emo-bar.hidden { display:none; }
+  #emo-bar button { width:40px; height:40px; border-radius:10px; border:none; background:rgba(255,255,255,.1); font-size:22px; }
+  #friend-pill { position:fixed; top:56px; left:50%; transform:translateX(-50%); z-index:9; background:rgba(28,19,10,.78); color:#fff; border:1px solid rgba(143,224,255,.6); border-radius:12px; padding:3px 10px; font:700 12px 'Pretendard', sans-serif; pointer-events:none; }
+  #friend-pill.hidden { display:none; }
+  .emo-bub { position:fixed; z-index:7; font-size:30px; pointer-events:none; transform:translate(-50%, -100%); filter:drop-shadow(0 2px 3px rgba(0,0,0,.4)); transition:opacity .4s; }
   #rank-tabs { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px; }
   #rank-tabs button { padding:5px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.06); color:inherit; font-size:12.5px; }
   #rank-tabs button.on { border:2px solid #ffd27a; background:rgba(255,210,122,.22); }
@@ -415,8 +430,8 @@
 <div id="dlg" class="hidden"><div class="row"><img id="dlg-face" alt=""><div style="flex:1">
   <div id="dlg-name"></div><div id="dlg-text"></div></div></div>
   <div id="dlg-choices"></div><button id="dlg-next">다음 ▶</button></div>
-<div id="hud-btns"><button id="btn-menu" title="메뉴">☰</button>
-  <div id="hud-menu" class="hidden"><button id="btn-book" title="구절 수집첩">📖<span>수집첩</span></button><button id="btn-log" title="대화 기록">💬<span>대화 기록</span></button><button id="btn-rank" title="랭킹">🏆<span>랭킹·오이코스</span></button><button id="btn-shop" title="상점">🛍️<span>상점·꾸미기</span></button><button id="btn-set" title="설정">⚙️<span>설정</span></button></div></div>
+<div id="hud-btns"><button id="btn-emo" title="인사하기" class="hidden">😊</button><button id="btn-menu" title="메뉴">☰</button>
+  <div id="hud-menu" class="hidden"><button id="btn-book" title="구절 수집첩">📖<span>수집첩</span></button><button id="btn-log" title="대화 기록">💬<span>대화 기록</span></button><button id="btn-daily" title="오늘의 퀘스트">📅<span>오늘의 퀘스트</span></button><button id="btn-rank" title="랭킹">🏆<span>랭킹·오이코스</span></button><button id="btn-shop" title="상점">🛍️<span>상점·꾸미기</span></button><button id="btn-set" title="설정">⚙️<span>설정</span></button></div></div>
 <div id="shop-modal" class="modal hidden"><div class="sheet" style="max-width:440px">
   <h3>🛍️ 두루마리 상점</h3>
   <div id="shop-bal"></div>
@@ -430,6 +445,9 @@
   <div class="set-row"><span class="set-lbl">🎵 배경음악</span><button id="bgm-toggle" class="set-tg"></button></div>
   <div class="set-btns"><button id="btn-save-exit">💾 저장하고 나가기</button><button class="close">닫기</button></div></div></div>
 <div id="book-modal" class="modal hidden"><div class="sheet"><h3>📖 구절 수집첩</h3><div class="cards" id="book-cards"></div><button class="close">닫기</button></div></div>
+<div id="daily-modal" class="modal hidden"><div class="sheet"><h3>📅 오늘의 퀘스트</h3><div id="daily-list"></div><button id="daily-claim"></button><button class="close">닫기</button></div></div>
+<div id="emo-bar" class="hidden"><button>👋</button><button>🙏</button><button>🎵</button><button>😄</button><button>❤️</button><button>👍</button></div>
+<div id="friend-pill" class="hidden"></div>
 <div id="rank-modal" class="modal hidden"><div class="sheet"><h3>🏆 In Odyssey 랭킹</h3><div id="rank-tabs"></div><div id="rank-list"></div><button class="close">닫기</button></div></div>
 <div id="log-modal" class="modal hidden"><div class="sheet"><h3>💬 대화 기록</h3><div id="log-list"></div><button class="close">닫기</button></div></div>
 <div id="card-modal" class="modal hidden"><div class="sheet" style="max-width:300px"><h3>📖 새 구절 카드!</h3><div id="card-one"></div><button class="close">수집첩에 넣기</button></div></div>
@@ -1308,8 +1326,8 @@
   const HAIR_FIT = { 'boy-default': { w: 1.0, top: -0.02, z: -0.04 }, 'girl-long': { w: 1.04, top: -0.01, z: -0.12 } };   // 머리 모양별 미세 조정(폭 배율·위·앞뒤)
   let playerHair = null;
   // 머리카락 씌우기: 몸 모델에서 머리뼈(Head)에 붙은 정점들의 크기·위치를 재서, 머리 모양을 그 폭·꼭대기에 맞춰 붙인다
-  async function attachHair(model, key){
-    if (playerHair){ playerHair.parent && playerHair.parent.remove(playerHair); playerHair = null; }
+  async function attachHair(model, key, own = true){
+    if (own && playerHair){ playerHair.parent && playerHair.parent.remove(playerHair); playerHair = null; }
     const head = model.getObjectByName('Head'); if (!head || !key) return;
     const g = await loadGLB(`hair3d/${key}.glb`);            // 먼저 받아 두고, 재기·붙이기는 한 번에(그 사이 학생이 움직여도 어긋나지 않게)
     model.updateWorldMatrix(true, true);   // 학생(부모) 위치까지 최신으로 — 아니면 옛 위치 기준으로 계산됨
@@ -1330,7 +1348,8 @@
     hair.rotation.y = Math.atan2(fwd.x, fwd.z);   // 얼굴 방향으로 돌림(머리 모양 원본은 +z가 앞)
     const holder = new THREE.Group(); scene.add(holder); holder.add(hair); holder.updateMatrixWorld(true);
     head.attach(holder);                                   // 월드 위치 그대로 머리뼈에 붙임 → 고개를 돌리면 함께 움직임
-    playerHair = holder;
+    if (own) playerHair = holder;
+    return holder;
   }
   function loadPlayer(){
     return new Promise((resolve, reject) => {
@@ -1820,6 +1839,7 @@
     Promise.allSettled(a.files.map(f => fetchBytes(f))).then(() => a.lazy.forEach(f => fetchBytes(f).catch(() => {})));
   }
   function unloadZone(){
+    if (typeof darkTrail !== 'undefined') darkTrail.length = 0;
     markers.forEach(m => { if (m.mixer){ m.mixer.stopAllAction(); m.mixer.uncacheRoot(m.mixer.getRoot()); } });
     zoneRoot.traverse(o => {
       if (o.userData.ownGPU){ o.traverse(q => { if (q.isMesh){ q.geometry.dispose(); const mt = q.material; if (mt.map) mt.map.dispose(); mt.dispose(); } }); }
@@ -1852,7 +1872,7 @@
     if (Z.room){ zoneRoot.children.forEach(o => { if (!roomObjs.includes(o) && inRoom(o.position.x, o.position.z) && !markers.some(m => m.mesh === o)) roomObjs.push(o); }); }
     buildNav(); buildPOIs();
     markers.forEach(m => { if (m.ai){ const [x, z] = nearestWalkable(m.mesh.position.x, m.mesh.position.z); m.mesh.position.set(x, heightAt(x, z), z); m.col.x = x; m.col.z = z; } });
-    renderQuestList(); spawnTasks(); spawnScrolls(); grantPastSkills();
+    renderQuestList(); spawnTasks(); spawnScrolls(); grantPastSkills(); friendsClear(); dailyInit();
     renderer.compile(scene, camera);
     setTimeout(loadLazyNPCs, 300);
   }
@@ -2156,6 +2176,7 @@
     return null;
   }
   function startClimb(c){
+    try { dq('climb'); } catch (e){}
     const P = player.position, h = Math.max(0.6, c.top - P.y);
     climb = { t: 0, dur: (c.kind === 'up' ? 0.42 : 0.55) + h * 0.12, x0: P.x, z0: P.z, y0: P.y, ...c };
     grounded = true; vy = 0;
@@ -2199,7 +2220,7 @@
   SKILLS.pray = {
     name: '기도', short: '기도', ico: '🙏', anim: 'Dig', cool: 15,
     desc: '"모세와 아론이 바로를 떠나 나가서 바로에게 내리신 개구리에 대하여 모세가 여호와께 간구하매"(출애굽기 8:12)\n길을 모르겠을 때 기도해 보세요. 가야 할 곳에 빛이 비춰요.',
-    use(){ prayBeam(); }
+    use(){ prayBeam(); dq('pray'); }
   };
   SKILLS.praise = {
     name: '찬양', short: '찬양', ico: '🎵', anim: 'Wave', cool: 25,
@@ -3253,7 +3274,7 @@
       o.g.position.y = o.y + 0.45 + Math.sin(now / 1000 * 2 + o.ph) * 0.08; o.g.rotation.y += dt * 1.2;
       if (Math.hypot(P.x - o.x, P.z - o.z) < 0.95 && Math.abs(P.y - o.y) < 1.1){
         zoneRoot.remove(o.g); scrolls.splice(k, 1);
-        const got = ST.scrolls[Z.id] = (ST.scrolls[Z.id] || []).concat(o.i); saveST();
+        const got = ST.scrolls[Z.id] = (ST.scrolls[Z.id] || []).concat(o.i); saveST(); dq('scroll');
         if (got.length >= SCROLL_N){
           toast(`📜 ${Z.name}의 두루마리를 다 모았어요! 두루마리를 펴 보니…`, 2600);
           setTimeout(() => giveReward({ verse: SCROLL_VERSE[Z.id] }, () => {
@@ -3766,6 +3787,7 @@
     const better = old === undefined || (info.high ? v > old : v < old);
     if (better){ ST.best[kind] = v; saveST(); if (old !== undefined) setTimeout(() => toast(`🏆 새 기록! ${info.name} ${v}${info.unit || ''}`, 2400), 600); }
     if (typeof submitRecord === 'function') submitRecord(kind, v);
+    if (kind !== 'dark') dq('game');
     return better;
   }
   const mg = { el: document.getElementById('mg'), on: null, raf: 0 };
@@ -3909,13 +3931,179 @@
     setTimeout(() => openModal('clear-modal', () => { if (CHAPTERS[nextCh]) startChapter(nextCh); }), 500);
   }
   document.getElementById('btn-book').onclick = () => {
-    checkNewTitle();
+    checkNewTitle(); dq('verse');
     document.getElementById('book-cards').innerHTML = titleBookHTML() + Object.keys(VERSES).map(id => cardHTML(id, !ST.verses.includes(id))).join('')
       + `<div style="grid-column:1/-1;margin-top:10px"><h3 style="font-size:15px;margin-bottom:4px">🔑 기억할 말 · ⭐ 지혜 별 ${ST.stars} / ${Object.keys(QUIZ).length}</h3>${ST.keys.length ? ST.keys.map(k => `<div class="keyline"><b>${k.scene}</b> — ${k.t}</div>`).join('') : '<div class="keyline">이야기 속 금색 🔑 문장이 여기에 모여요.</div>'}</div>`
       + scrollBookHTML() + peopleBookHTML()
       + `<div style="grid-column:1/-1;margin-top:8px;font-size:13px">🏅 배지: ${Object.entries(BADGES).map(([k, b]) => `<span style="opacity:${ST.badges.includes(k) ? 1 : 0.35};margin-right:10px">${b.ico} ${b.name}</span>`).join('')}</div>`;
     openModal('book-modal');
   };
+  // ══ 3. 오늘의 퀘스트: 날마다 3개(한국 날짜), 다 하면 5달란트 ══
+  const kstDate = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const scrollLeft = () => Object.keys(SCROLL_VERSE).some(z => (z === 'alpha' || z === 'midian' || (z === 'egypt' && (ST.ch >= 1 || ST.cleared)) || (z === 'redsea' && ST.ch >= 3)) && (ST.scrolls && ST.scrolls[z] || []).length < SCROLL_N);
+  const DQ_POOL = [
+    { k: 'talk',   t: '마을 사람 3명과 이야기하기', n: 3, ok: () => true },
+    { k: 'climb',  t: '점프로 상자에 올라서거나 담 넘기 3번', n: 3, ok: () => true },
+    { k: 'run',    t: '달리기로 150m 달리기', n: 150, ok: () => true },
+    { k: 'verse',  t: '📖 수집첩을 열어 구절 카드 읽기', n: 1, ok: () => true },
+    { k: 'scroll', t: '📜 숨은 두루마리 조각 1개 찾기', n: 1, ok: scrollLeft },
+    { k: 'pray',   t: '🙏 기도 스킬 2번 쓰기', n: 2, ok: () => unlocked.has('pray') },
+    { k: 'game',   t: '🎮 도전(미니게임) 1판 하기', n: 1, ok: () => ST.ch >= 1 || ST.cleared },
+  ];
+  function dailyInit(){
+    const today = kstDate();
+    if (ST.daily && ST.daily.date === today){ dailyDot(); return; }
+    let h = [...today].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 2147483647, 17);
+    const rr = () => { h = (h * 16807) % 2147483647; return (h - 1) / 2147483646; };
+    const pool = DQ_POOL.filter(q => q.ok()).map(q => [rr(), q.k]).sort((a, b) => a[0] - b[0]).slice(0, 3).map(x => x[1]);
+    ST.daily = { date: today, q: pool, p: {}, talked: [], claimed: false }; saveST();
+    setTimeout(() => toast('📅 오늘의 퀘스트 3개가 열렸어요 — ☰ 메뉴에서 볼 수 있어요', 2600), 3500);
+    dailyDot();
+  }
+  const dqDef = k => DQ_POOL.find(q => q.k === k);
+  const dqDone = k => (ST.daily.p[k] || 0) >= dqDef(k).n;
+  const dqAll = () => ST.daily && ST.daily.q.every(dqDone);
+  function dq(k, amt = 1, quiet){
+    const D = ST.daily; if (!D || D.date !== kstDate() || !D.q.includes(k) || dqDone(k)) return;
+    D.p[k] = Math.min(dqDef(k).n, (D.p[k] || 0) + amt);
+    if (dqDone(k)){ saveST(); toast(`✅ 오늘의 퀘스트: ${dqDef(k).t}`, 2200); if (dqAll()) setTimeout(() => toast('📅 오늘의 퀘스트를 다 했어요! ☰ 메뉴에서 달란트를 받아요', 2800), 2400); dailyDot(); }
+    else if (!quiet) saveST();
+  }
+  let runAcc = 0;
+  function dqRun(m){ runAcc += m; if (runAcc >= 5){ const n = Math.floor(runAcc); runAcc -= n; dq('run', n, true); } }
+  function dqTalk(m){ const D = ST.daily; if (!D || !D.q.includes('talk') || !m.data.title) return; if (D.talked.includes(m.data.title)) return; D.talked.push(m.data.title); dq('talk'); }
+  function dailyDot(){ document.getElementById('btn-menu').classList.toggle('dot', !!(ST.daily && dqAll() && !ST.daily.claimed)); }
+  function renderDaily(msg){
+    const D = ST.daily, el = document.getElementById('daily-list'), b = document.getElementById('daily-claim');
+    el.innerHTML = D.q.map(k => { const q = dqDef(k), v = Math.floor(D.p[k] || 0), done = v >= q.n;
+      return `<div class="dq${done ? ' done' : ''}"><span class="ck">${done ? '✅' : '⬜'}</span><span class="tx">${q.t}</span><span class="pg">${q.k === 'run' ? v + 'm' : v} / ${q.k === 'run' ? q.n + 'm' : q.n}</span></div>`; }).join('')
+      + `<div style="font-size:12px;opacity:.75;margin-top:6px">${msg || '매일 새 퀘스트 3개가 열려요(한국 시간 자정). 다 하면 💰 5달란트!'}</div>`;
+    const logged = typeof msuOn === 'function' && msuOn();
+    b.disabled = !dqAll() || D.claimed || !logged;
+    b.textContent = D.claimed ? '✓ 오늘 달란트를 받았어요' : !logged ? '말씀우물에 로그인하면 달란트를 받아요' : dqAll() ? '💰 5달란트 받기' : '퀘스트를 다 하면 받을 수 있어요';
+  }
+  document.getElementById('btn-daily').onclick = () => { dailyInit(); renderDaily(); openModal('daily-modal'); };
+  document.getElementById('daily-claim').onclick = async () => {
+    const b = document.getElementById('daily-claim'); b.disabled = true;
+    try {
+      const { data, error } = await MSU.client.rpc('claim_odyssey_daily');
+      if (error) throw error;
+      ST.daily.claimed = true; saveST(); dailyDot();
+      renderDaily(data > 0 ? '💰 5달란트를 받았어요! 내일 또 만나요.' : '오늘 달란트는 이미 받았어요.');
+      if (data > 0) toast('💰 오늘의 퀘스트 보상 5달란트!', 2200);
+    } catch (e){ renderDaily('달란트를 받지 못했어요. 잠시 뒤 다시 눌러 주세요.'); }
+  };
+
+  // ══ 2. 같은 마을 친구 보기(실시간): 위치·걷기 동작·이름표·인사 이모티콘 ══
+  const FR = { ch: null, me: null, list: new Map(), meta: {}, tpl: {}, root: new THREE.Group(), sentAt: 0, sentKey: '', online: 0 };
+  scene.add(FR.root);
+  async function friendsInit(){
+    if (!(MSU.client && MSU.session) || FR.ch || !THREE.SkeletonUtils) return;
+    try {
+      const uid = MSU.session.user.id, { data: nick } = await MSU.client.rpc('get_my_odyssey_name');
+      if (!nick) return;
+      FR.me = { id: uid, nick };
+      try { MSU.client.realtime.setAuth(MSU.session.access_token); } catch (e){}
+      const ch = MSU.client.channel('odyssey-world', { config: { private: true, presence: { key: uid }, broadcast: { self: false } } });
+      ch.on('broadcast', { event: 'pos' }, ({ payload }) => onFriendPos(payload))
+        .on('broadcast', { event: 'emo' }, ({ payload }) => { const f = FR.list.get(payload.id); if (f) showBubble(f.g, payload.e); })
+        .on('presence', { event: 'sync' }, () => {
+          const st = ch.presenceState(); FR.meta = {};
+          Object.entries(st).forEach(([k, arr]) => { if (k !== uid && arr[0]) FR.meta[k] = arr[0]; });
+          FR.online = Object.keys(FR.meta).length; friendPill();
+          [...FR.list.keys()].forEach(k => { if (!FR.meta[k]) friendRemove(k); });
+        })
+        .subscribe(async status => {
+          if (status !== 'SUBSCRIBED') return;
+          FR.ch = ch;
+          await ch.track({ nick, body: CHAR.body || 'boy', hair: CHAR.body ? (CHAR.hair || HAIR_DEFAULT[CHAR.body]) : null, title: typeof myTitle === 'function' ? myTitle() : '' });
+          document.getElementById('btn-emo').classList.remove('hidden');
+          FR.sentKey = ''; sendMyPos(true);
+        });
+    } catch (e){ console.warn('친구 연결 실패', e); }
+  }
+  function friendPill(){
+    const here = [...FR.list.values()].length, el = document.getElementById('friend-pill');
+    el.classList.toggle('hidden', !FR.online);
+    el.textContent = `👥 접속한 친구 ${FR.online}명${here ? ` · 이 마을 ${here}명` : ''}`;
+  }
+  function sendMyPos(force){
+    if (!FR.ch || !Z) return;
+    const P = player.position, a = moveSpeed < 0.35 ? 'Idle' : moveSpeed > (WALK_SPEED + RUN_SPEED) / 2 ? 'Run' : 'Walk';
+    const msg = { id: FR.me.id, z: Z.id, x: +P.x.toFixed(2), y: +P.y.toFixed(2), w: +P.z.toFixed(2), h: +heading.toFixed(2), a };
+    const key = [msg.z, msg.x, msg.y, msg.w, msg.h, a].join(), now = performance.now();
+    if (!force && ((key === FR.sentKey && now - FR.sentAt < 2000) || now - FR.sentAt < 200)) return;
+    FR.sentKey = key; FR.sentAt = now;
+    FR.ch.send({ type: 'broadcast', event: 'pos', payload: msg });
+  }
+  async function friendTemplate(body){
+    if (!FR.tpl[body]) FR.tpl[body] = loadGLB(`chars/base-${body}.glb`).then(g => {
+      g.scene.traverse(o => { if (o.isMesh){ const src = o.material; if (src.map){ src.map.generateMipmaps = false; src.map.minFilter = THREE.LinearFilter; } o.material = new THREE.MeshToonMaterial({ map: src.map, color: 0xffffff, gradientMap: toonGradient }); o.castShadow = true; o.frustumCulled = false; } });
+      g.animations.forEach(c => { c.tracks = c.tracks.filter(t => !/\.scale$/.test(t.name)); c.resetDuration(); });
+      return g;
+    });
+    return FR.tpl[body];
+  }
+  function onFriendPos(m){
+    if (!Z || m.z !== Z.id){ friendRemove(m.id); return; }
+    let f = FR.list.get(m.id);
+    if (!f){
+      const meta = FR.meta[m.id]; if (!meta) return;
+      const g = new THREE.Group(); g.position.set(m.x, m.y, m.w); FR.root.add(g);
+      const tag = makeTag(meta.nick || '친구'); tag.position.y = 2.75; g.add(tag);
+      f = { g, tag, tx: m.x, ty: m.y, tz: m.w, h: m.h, a: 'Idle', t: performance.now(), mixer: null, actions: {}, cur: null };
+      FR.list.set(m.id, f); friendPill();
+      friendTemplate(meta.body === 'girl' ? 'girl' : 'boy').then(async tpl => {
+        if (FR.list.get(m.id) !== f) return;
+        const model = THREE.SkeletonUtils.clone(tpl.scene); model.scale.setScalar(PLAYER_HEIGHT / RIG_HEIGHT_M); g.add(model);
+        f.mixer = new THREE.AnimationMixer(model); tpl.animations.forEach(c => { f.actions[c.name] = f.mixer.clipAction(c); });
+        if (meta.hair){ g.updateMatrixWorld(true); try { await attachHair(model, meta.hair, false); } catch (e){} }
+      }).catch(() => {});
+    }
+    Object.assign(f, { tx: m.x, ty: m.y, tz: m.w, h: m.h, a: m.a, t: performance.now() });
+  }
+  function friendRemove(id){ const f = FR.list.get(id); if (!f) return; FR.root.remove(f.g); if (f.mixer) f.mixer.stopAllAction(); FR.list.delete(id); friendPill(); }
+  function friendsClear(){ [...FR.list.keys()].forEach(friendRemove); if (FR.ch){ FR.sentKey = ''; setTimeout(() => sendMyPos(true), 300); } }
+  function updateFriends(dt, now){
+    if (!FR.ch) return;
+    sendMyPos(false);
+    FR.list.forEach((f, id) => {
+      if (now - f.t > 12000){ friendRemove(id); return; }
+      const k = Math.min(1, dt * 8);
+      f.g.position.x += (f.tx - f.g.position.x) * k; f.g.position.z += (f.tz - f.g.position.z) * k; f.g.position.y += (f.ty - f.g.position.y) * k;
+      if (Math.hypot(f.tx - f.g.position.x, f.tz - f.g.position.z) > 8) f.g.position.set(f.tx, f.ty, f.tz);   // 순간이동(문·출구)
+      let d = (Math.PI - f.h) - f.g.rotation.y; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; f.g.rotation.y += d * Math.min(1, dt * 10);
+      if (f.mixer){
+        const want = f.actions[f.a] ? f.a : 'Idle';
+        if (f.cur !== want){ const nx = f.actions[want]; if (nx){ nx.reset().fadeIn(0.2).play(); if (f.cur && f.actions[f.cur]) f.actions[f.cur].fadeOut(0.2); f.cur = want; } }
+        f.mixer.update(dt);
+      }
+    });
+  }
+  // 인사 이모티콘: 내 머리 위 + 같은 마을 친구들에게
+  const bubbles = [];
+  function showBubble(obj, e){
+    const el = document.createElement('div'); el.className = 'emo-bub'; el.textContent = e; document.body.appendChild(el);
+    bubbles.push({ el, obj, until: performance.now() + 2600 });
+  }
+  const _bv = new THREE.Vector3();
+  function updateBubbles(){
+    const now = performance.now();
+    for (let i = bubbles.length - 1; i >= 0; i--){
+      const b = bubbles[i];
+      if (now > b.until || !b.obj.parent){ b.el.remove(); bubbles.splice(i, 1); continue; }
+      b.obj.getWorldPosition(_bv); _bv.y += 3.3; _bv.project(camera);
+      b.el.style.left = ((_bv.x + 1) / 2 * innerWidth) + 'px'; b.el.style.top = ((1 - _bv.y) / 2 * innerHeight) + 'px';
+      b.el.style.opacity = _bv.z > 1 ? '0' : now > b.until - 400 ? '0' : '1';
+    }
+  }
+  document.getElementById('btn-emo').onclick = e => { e.stopPropagation(); document.getElementById('emo-bar').classList.toggle('hidden'); };
+  document.getElementById('emo-bar').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    showBubble(player, b.textContent); document.getElementById('emo-bar').classList.add('hidden');
+    if (FR.ch) FR.ch.send({ type: 'broadcast', event: 'emo', payload: { id: FR.me.id, e: b.textContent } });
+  });
+
   // ══ C. 기록 랭킹 · 오이코스 함께 모으기(말씀우물 로그인 + 시험 참여자만) ══
   const msuOn = () => !!(MSU.client && MSU.session);
   function submitRecord(kind, v){ if (msuOn()) MSU.client.rpc('submit_odyssey_score', { p_kind: kind, p_value: Math.round(v) }).then(() => {}, () => {}); }
@@ -3978,7 +4166,7 @@
   let typeTimer = null;
   function runDialog(lines, onEnd, npcMarker, key){
     dlgState = { lines, i: 0, onEnd, npc: npcMarker, stack: [], key, typing: false, readyAt: 0 };
-    if (npcMarker) meet(npcMarker);
+    if (npcMarker){ meet(npcMarker); dqTalk(npcMarker); }
     talking = !!npcMarker; talkingWith = npcMarker || null;
     dlgEl.classList.remove('hidden'); document.getElementById('hint').classList.add('fade'); showLine();
   }
@@ -4292,7 +4480,7 @@
     a.needsUpdate = true;
   }
   // ── 흑암: 애굽 쪽은 캄캄, 이스라엘 자손이 사는 서쪽(고센)은 빛(10:23) ──
-  let darkK = 0;
+  let darkK = 0; const darkTrail = [];
   const beacons = [];
   function updateDark(dt){
     const on = darkOn && Z && Z.id === 'egypt';
@@ -4307,12 +4495,20 @@
         sp.scale.set(2.2, 3.4, 1); sp.position.set(x, heightAt(x, z) + 3.2, z); zoneRoot.add(sp); beacons.push(sp);
       });
     }
+    if (on && !darkTrail.length && Z && Z.id === 'egypt'){
+      // 궁전 정문 앞에서 고센(서쪽)까지 바닥 등불 — 어둠 속에서도 따라갈 수 있게(출 10:23 "이스라엘 자손이 거주하는 곳에는 빛이 있었더라")
+      const pts = []; for (let t = 0; t <= 1.0001; t += 1 / 9){ const x = 22 + (2 - 22) * t, z = -9 + (1 - (-9)) * t; pts.push(nearestWalkable(x, z)); }
+      pts.forEach(([x, z]) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xffd98a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
+        sp.scale.set(0.8, 1.2, 1); sp.position.set(x, heightAt(x, z) + 0.6, z); zoneRoot.add(sp); darkTrail.push(sp); });
+      toast('🕯 서쪽 고센의 불빛과 바닥 등불을 따라가요 — 길을 모르겠으면 🙏 기도!', 3200);
+    }
+    if (!on && darkTrail.length){ darkTrail.forEach(b => zoneRoot.remove(b)); darkTrail.length = 0; }
     if (!on && !eve && beacons.length && darkK < 0.02){ beacons.forEach(b => zoneRoot.remove(b)); beacons.length = 0; }
     beacons.forEach(b => b.material.opacity = 0.35 + 0.65 * darkK);
     if (!Z) return;
     const e = Z.env, k = darkK;
     scene.fog.color.set(e.fog).lerp(tint, k); scene.background.copy(scene.fog.color);
-    scene.fog.density = e.fogD + k * (on ? 0.085 : 0.012);   // 흑암은 더듬을 만큼 짙게, 밤은 멀리까지 보이게
+    scene.fog.density = e.fogD + k * (on ? 0.05 : 0.012);   // 흑암은 더듬을 만큼 짙게, 밤은 멀리까지 보이게
     darkLight.intensity = (on ? 2.2 : 1.5) * k; darkLight.color.set(on ? 0xbfc8ff : 0xffc98a); darkLight.position.set(player.position.x, player.position.y + 2.2, player.position.z);   // 밤에는 등잔불처럼 따뜻하게
     hemi.intensity = 0.9 * (1 - 0.85 * k); sun.intensity = 1.6 * (1 - 0.95 * k);
     skyMat.uniforms.top.value.set(e.top).lerp(tint, k); skyMat.uniforms.bottom.value.set(e.bottom).lerp(tint, k);
@@ -4565,11 +4761,10 @@
     stepT += dt;
     const t = targetPos();
     const far = t && Math.hypot(t.x - player.position.x, t.z - player.position.z) > 10;
-    const q = curStep(), wait = q && (q.npc || q.point || q.rumor || q.exit || q.dig || q.reach || q.warn || q.skillAt) ? 10 : 40;
+    const q = curStep(), wait = q && q.id === 'c2s22' ? 3 : q && (q.npc || q.point || q.rumor || q.exit || q.dig || q.reach || q.warn || q.skillAt) ? 10 : 40;
     document.querySelectorAll('.skill-btn').forEach(b => b.classList.toggle('tut-glow', !!(q && q.skillAt)));
     const show = t && far && stepT > wait;
     compassEl.style.opacity = show ? String(Math.min(0.9, (stepT - wait) / 6)) : '0';
-    { const blind = darkK > 0.5; mmEl.style.opacity = blind ? '0.08' : ''; if (blind) compassEl.style.opacity = '0'; }   // 흑암 속에서는 지도·나침반이 안 보임(빛만 보고 찾아가기)
     if (show){
       const dx = t.x - player.position.x, dz = t.z - player.position.z;
       const fx = -Math.sin(camYaw), fz = -Math.cos(camYaw);            // 카메라가 보는 방향
@@ -4721,6 +4916,7 @@
       if (exhausted && stamina >= STAMINA.recoverAt) exhausted = false;
     }
     runBtn.classList.toggle('active', isRunning);
+    if (isRunning && moveSpeed > 1) dqRun(moveSpeed * dt);
     runBtn.classList.toggle('exhausted', exhausted);
     drawStamina();
 
@@ -4865,7 +5061,7 @@
       const score = isTarget ? d - 100 : d;
       if (d < range && score < closestDist){ closestDist = score; closest = m; }
     });
-    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
+    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
     if (closest !== nearPoint){
       nearPoint = closest;
       interactBtn.classList.toggle('hidden', !nearPoint);
@@ -4952,14 +5148,14 @@
     if (navigator.webdriver) begin();
     else { ld.classList.add('ready'); ld.addEventListener('pointerdown', begin, { once: true }); }
     setTimeout(prefetchAll, 1500);
-    applyEquip(); msuInit();
+    applyEquip(); msuInit().then(friendsInit, () => {});
   }).catch(err => {
     document.getElementById('loading-sub').textContent = '캐릭터를 불러오지 못했어요: ' + (err && err.message || err);
     console.error(err);
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
