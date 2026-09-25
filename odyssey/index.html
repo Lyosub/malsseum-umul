@@ -38,7 +38,7 @@
   @media (max-width: 560px){ #hint { top:auto; bottom:170px; font-size:13px; } }
 
   #joystick-zone {
-    position:fixed; right:24px; bottom:28px; width:120px; height:120px;
+    position:fixed; left:24px; bottom:28px; width:120px; height:120px;
     border-radius:50%; background:rgba(255,255,255,0.12); border:2px solid rgba(255,255,255,0.3);
     z-index:10; touch-action:none;
   }
@@ -49,7 +49,7 @@
   }
 
   #action-cluster {
-    position:fixed; left:20px; bottom:24px; width:170px; height:150px; z-index:10;
+    position:fixed; right:20px; bottom:24px; width:170px; height:150px; z-index:10;
   }
   .action-btn {
     position:absolute; border-radius:50%; border:2px solid rgba(255,255,255,0.75);
@@ -81,7 +81,9 @@
   }
   #jump-btn.active { transform:scale(0.92); }
   /* 스킬 슬롯: 퀘스트로 얻은 스킬만 나타난다 */
-  #skill-bar { position:fixed; left:20px; bottom:218px; z-index:10; display:flex; gap:8px; }
+  #skill-bar { position:fixed; right:112px; bottom:178px; z-index:10; display:flex; flex-direction:row-reverse; gap:8px; }
+  /* 조이스틱 잡는 곳: 왼쪽 아래 넓은 영역 어디를 눌러도 그 자리에 조이스틱이 생김(작은 원을 정확히 안 눌러도 됨) */
+  #joy-hit { position:fixed; left:0; bottom:0; width:38vw; height:58vh; z-index:9; touch-action:none; }
   .skill-btn {
     width:56px; height:56px; border-radius:14px; border:2px solid rgba(255,230,160,0.9);
     background:rgba(60,40,20,0.8); color:#ffe6a0; font-family:'Pretendard', sans-serif;
@@ -107,7 +109,7 @@
   #skill-modal button { width:100%; padding:10px; border:none; border-radius:10px; background:#ffd27a; color:#3a2400; font-weight:800; font-size:14px; }
 
   #interact-btn {
-    position:fixed; left:20px; bottom:128px; width:78px; height:78px; border-radius:50%;
+    position:fixed; right:20px; bottom:170px; width:78px; height:78px; border-radius:50%;
     background:rgba(255,200,80,0.85); border:2px solid rgba(255,255,255,0.9);
     color:#3a2400; font-weight:800; font-size:14px; font-family:'Pretendard', sans-serif;
     z-index:11; display:flex; align-items:center; justify-content:center; text-align:center;
@@ -328,7 +330,7 @@
     #hint { bottom:216px; left:12px; right:66px; width:auto; max-width:none; transform:none; }
   }
   /* ── 휴대폰 가로 배치(기본): 왼쪽 위 퀘스트 · 오른쪽 위 지도, 그 왼쪽에 ＋ − 📖 💬 ⚙️ 🛍️ 한 줄 ·
-        왼쪽 아래 점프·달리기·살펴보기, 오른쪽 아래 조이스틱 · 연습 카드·안내는 아래 가운데(두 손 사이) ── */
+        왼쪽 아래 조이스틱, 오른쪽 아래 점프·달리기·살펴보기 · 연습 카드·안내는 아래 가운데(두 손 사이) ── */
   @media (orientation: landscape) and (max-height: 500px){
     #quest-panel { top:8px; left:10px; width:min(34vw, 250px); padding:7px 11px; }
     #quest-panel h4 { font-size:11px; margin-bottom:3px; }
@@ -340,10 +342,10 @@
     #hud-btns { top:10px; right:112px; left:auto; flex-direction:row; gap:6px; }
     #hud-btns button { width:38px; height:38px; border-radius:11px; font-size:17px; }
     #compass { top:106px; left:auto; right:37px; transform:none; width:40px; height:40px; }
-    #action-cluster { left:14px; bottom:12px; }
-    #interact-btn { left:14px; bottom:120px; width:70px; height:70px; font-size:13px; }
-    #joystick-zone { right:18px; bottom:16px; }
-    #skill-bar { left:96px; bottom:170px; }
+    #action-cluster { right:14px; left:auto; bottom:12px; }
+    #interact-btn { right:14px; left:auto; bottom:120px; width:70px; height:70px; font-size:13px; }
+    #joystick-zone { left:22px; right:auto; bottom:16px; }
+    #skill-bar { right:92px; left:auto; bottom:124px; }
     #tut, #hint { left:50%; right:auto; top:auto; bottom:10px; transform:translateX(-50%); width:min(42vw, 400px); max-width:none; }
     #tut { padding:8px 12px 7px; }
     #tut .t { font-size:13.5px; line-height:1.4; }
@@ -371,6 +373,7 @@
   <ul id="quest-list"></ul>
 </div>
 <div id="quest-toast"></div>
+<div id="joy-hit"></div>
 <div id="joystick-zone"><div id="joystick-knob"></div></div>
 <div id="action-cluster">
   <div id="run-btn" class="action-btn">달리기
@@ -711,7 +714,7 @@
       case 'ring': { const R = Math.min(hx, hz) * 0.9;
         for (let a = 0; a < Math.PI * 2; a += Math.PI / 12){
           if (Math.abs(Math.atan2(Math.sin(a - Math.PI), Math.cos(a - Math.PI))) < 0.35) continue; // 서쪽(마을 쪽) = 입구
-          obstacles.push({ x: x + Math.cos(a) * R, z: z + Math.sin(a) * R, r: 0.75 });
+          obstacles.push({ x: x + Math.cos(a) * R, z: z + Math.sin(a) * R, r: 0.75, h: top });   // 돌담 — 점프로 넘을 수 있음
         } } break;
       case 'gate': { const off = hx * 0.82;
         obstacles.push({ x: x - Math.cos(rot) * off, z: z + Math.sin(rot) * off, r: 0.9 }, { x: x + Math.cos(rot) * off, z: z - Math.sin(rot) * off, r: 0.9 }); } break;
@@ -866,35 +869,23 @@
           body: "\"우리 조상 요셉이 이 땅에 있을 때는 좋았다지. 그런데 요셉을 알지 못하는 새 왕이 일어난 뒤로 모든 게 달라졌단다.\"\n\n요셉을 알지 못하는 새 왕이 애굽을 다스리면서 이스라엘 자손의 고난이 시작되었습니다 (출애굽기 1:8)." },
         { id: 'hb_mother', x: -9, z: 1, type: 'villager', title: "히브리 어머니", lazy: 1, model: 'he-mother',
           body: "\"아이들이 자꾸 늘어나니 애굽 사람들이 우리를 더 두려워한대. 그래도 하나님이 주신 생명인걸.\"\n\n애굽 사람들이 괴롭게 할수록 이스라엘 백성은 더욱 번성하여 퍼져 나갔습니다 (출애굽기 1:12)." },
-        { id: 'hb_grandpa', x: -18, z: 1, type: 'villager', title: "히브리 할아버지", lazy: 1, model: 'he-grandpa',
-          body: "\"요셉은 죽기 전에 말했지. 하나님이 반드시 너희를 돌보시고 이 땅에서 인도해 내실 거라고. 난 그 약속을 믿는다.\"\n\n요셉은 형제들에게 하나님이 그들을 돌보셔서 조상들에게 맹세하신 땅으로 인도하실 것이라고 말했습니다 (창세기 50:24)." },
         { id: 'hb_grandma', x: -10, z: 12, type: 'villager', title: "히브리 할머니", lazy: 1, model: 'he-grandma',
           body: "\"밤마다 하나님께 부르짖는단다. 하나님은 우리의 신음 소리를 듣고 계셔.\"\n\n이스라엘 자손이 고된 노동 때문에 탄식하며 부르짖자, 하나님이 그 신음 소리를 들으시고 아브라함·이삭·야곱과 세운 언약을 기억하셨습니다 (출애굽기 2:23-24)." },
         { id: 'hb_boy', x: 2, z: 3, type: 'villager', title: "히브리 소년", lazy: 1, model: 'he-boy-hb',
           body: "\"우리 아빠는 매일 흙을 이기고 벽돌을 구워요. 나도 크면 해야 하는 걸까요?\"\n\n애굽 사람들은 흙 이기기와 벽돌 굽기와 농사의 여러 가지 고된 일로 이스라엘 백성을 괴롭혔습니다 (출애굽기 1:14)." },
-        { id: 'hb_girl', x: -2, z: -1, type: 'villager', title: "히브리 소녀", lazy: 1, model: 'he-girl-hb',
-          body: "\"미리암 언니가 그러는데, 아기였던 모세를 바로의 딸이 건져서 키웠대요. 정말 신기하죠?\"\n\n바로의 딸이 갈대 상자 속 아기를 발견하고 그 이름을 모세라 하였습니다 — 물에서 건져 내었다는 뜻이에요 (출애굽기 2:5-10)." },
         { id: 'hb_brickmaker', x: 10, z: 11, type: 'villager', title: "벽돌공", lazy: 1, model: 'he-brickmaker',
           body: "\"감독들이 매일 벽돌 개수를 세어요. 짚은 우리가 직접 주워 와야 하고요.\"\n\n바로는 백성에게 짚을 주지 말고 스스로 줍게 하되, 벽돌 수는 전과 같이 채우게 하라고 명령했습니다 (출애굽기 5:7-8)." },
-        { id: 'hb_levite', x: -6, z: -16, type: 'villager', title: "레위 사람", lazy: 1, model: 'he-levite',
-          body: "\"모세와 아론은 우리 레위 지파 사람이란다. 레위 집안의 한 부부가 낳은 아들이 바로 모세였지.\"\n\n레위 가족 중 한 사람이 레위 여자에게 장가들어 아들을 낳았는데, 그 아기가 모세입니다 (출애굽기 2:1-2)." },
         // ── 애굽 사람들 ──
-        { id: 'eg_merchant', x: 6, z: 13, type: 'villager', title: "애굽 상인", lazy: 1, model: 'eg-merchant-eg',
-          body: "\"나일 강 덕분에 곡식이 넘쳐난다오. 무화과도, 대추야자도 있소. 구경하고 가시오!\"" },
         { id: 'eg_gatekeeper', x: 26.4, z: -19.3, type: 'villager', title: "궁전 문지기", lazy: 1, model: 'eg-gatekeeper',
           body: "\"이곳은 바로의 궁전이다. 아무나 들어갈 수 없다.\"" },
         { id: 'eg_noble', x: 22, z: -20, type: 'villager', title: "애굽 귀족 부인", lazy: 1, model: 'eg-noble-f',
           body: "\"히브리 사람들이 너무 많아졌다고 다들 걱정하더군요. 그래서 왕께서 그들에게 더 무거운 일을 시키신대요.\"\n\n애굽 왕은 이스라엘 자손이 많고 강해지는 것을 두려워해 감독들을 세우고 무거운 짐을 지웠습니다 (출애굽기 1:9-11)." },
         { id: 'eg_farmer_m', x: 26, z: 6, type: 'villager', title: "애굽 농부", lazy: 1, model: 'eg-farmer-m',
           body: "\"해마다 나일 강이 넘치면 밭이 기름져진다네. 애굽 사람들은 나일 강 없이는 살 수 없지.\"" },
-        { id: 'eg_farmer_f', x: 31, z: 9.5, type: 'villager', title: "애굽 농부 아내", lazy: 1, model: 'eg-farmer-f',
-          body: "\"올해 보리랑 삼이 잘 자라고 있어요. 이대로만 가면 좋겠네요.\"" },
         { id: 'eg_water', x: 21, z: -2, type: 'villager', title: "물 긷는 애굽 여인", lazy: 1, model: 'eg-water-carrier-f',
           body: "\"매일 아침 나일 강에 가서 물을 길어 와요. 강물이 없으면 하루도 못 살아요.\"" },
         { id: 'eg_boy', x: 24, z: 9.5, type: 'villager', title: "애굽 소년", lazy: 1, model: 'eg-boy-eg',
           body: "\"저 히브리 아이는 왜 맨날 일만 해? 난 오늘 강가에 가서 놀 건데!\"" },
-        { id: 'eg_girl', x: 28, z: 1, type: 'villager', title: "애굽 소녀", lazy: 1, model: 'eg-girl-eg',
-          body: "\"우리 엄마가 그러는데, 바로는 신처럼 높은 분이래요. 정말 그럴까요?\"" },
         // ── 바로의 궁전 사람들 ──
         { id: 'pal_servant_m', x: 32, z: -11, type: 'villager', title: "바로의 신하", lazy: 1, model: 'pal-servant-m',
           body: "\"왕께서 오늘도 두루마리에 적을 명령을 내리셨소. 벽돌 수를 줄이지 말라는 명령이지.\"\n\n바로는 백성의 감독들과 기록원들에게 벽돌 수를 줄이지 말라고 명령했습니다 (출애굽기 5:6-8)." },
@@ -938,10 +929,7 @@
         { id: 'rs_man', x: -6, z: 10.5, type: 'villager', title: "이스라엘 사람", model: 'ca-craftsman', body: "\"애굽을 떠나다니, 아직도 꿈만 같아.\"" },
         { id: 'rs_singer', x: -1, z: 12, type: 'villager', title: "노래하는 여인", lazy: 1, model: 'ca-singer-f', body: "\"여호와께서 우리를 인도하신다!\"" },
         { id: 'rs_water', x: 8, z: -2, type: 'villager', title: "물 나르는 소년", lazy: 1, model: 'ca-water-boy', body: "\"물통이 무거워요!\"" },
-        { id: 'rs_banner', x: -14, z: -2, type: 'villager', title: "깃발 든 사람", lazy: 1, model: 'ca-banner-bearer', body: "\"지파마다 깃발 아래 모여 있어요.\"" },
-        { id: 'rs_horn', x: 2, z: -15, type: 'villager', title: "나팔 부는 사람", lazy: 1, model: 'ca-horn-blower', body: "\"출발할 때가 되면 알려 줄게요.\"" },
         { id: 'rs_elder', x: -8, z: -4, type: 'villager', title: "이스라엘 장로", lazy: 1, model: 'ca-israel-elder', body: "\"요셉의 유골도 우리와 함께 있다네.\" (출애굽기 13:19)" },
-        { id: 'rs_girl', x: 12, z: 6, type: 'villager', title: "이스라엘 소녀", lazy: 1, model: 'he-girl-hb', body: "\"바다가 엄청 커요!\"" },
         { id: 'rs_boy', x: -12, z: 12, type: 'villager', title: "이스라엘 소년", lazy: 1, model: 'he-boy-hb', body: "\"불 기둥이 밤새 우리를 비춰 줬어요!\"" },
         { id: 'ch_rhythm', x: 56.5, z: -6.5, type: 'lore', title: "🎮 소고 찬양 도전", challenge: 'rhythm', cond: 'rhythm', body: '' },
         { id: 'rs_tired1', x: 30, z: 2.5, type: 'villager', title: "지친 할머니", model: 'he-grandma', persona: 'rs_static', cond: 'tired', help: true, body: '' },
@@ -1467,7 +1455,7 @@
   const NAV = { x0: -40, z0: -56, cell: 0.7, w: 0, h: 0, walk: null };   // 알현실(x 51~69, z -54~-30)까지 포함
   function buildNav(){
     NAV.w = Math.ceil(110 / NAV.cell); NAV.h = Math.ceil(86 / NAV.cell);
-    NAV.walk = new Uint8Array(NAV.w * NAV.h);
+    NAV.walk = new Uint8Array(NAV.w * NAV.h); NAV.reach = null;
     const npcCols = new Set(markers.map(m => m.col).filter(Boolean));
     const R = 0.6;   // NPC 몸 반지름 + 여유
     for (let j = 0; j < NAV.h; j++) for (let i = 0; i < NAV.w; i++){
@@ -1483,6 +1471,16 @@
   }
   const cellOf = (x, z) => [Math.floor((x - NAV.x0) / NAV.cell), Math.floor((z - NAV.z0) / NAV.cell)];
   const walkable = (x, z) => { const [i, j] = cellOf(x, z); return i >= 0 && j >= 0 && i < NAV.w && j < NAV.h && NAV.walk[j * NAV.w + i] === 1; };
+  // 마을 입구에서 걸어서 닿는 칸(막힌 우리 안·물 건너편 제외) — 줍기 물건을 놓을 때 사용
+  function reachFill(){
+    const R = new Uint8Array(NAV.w * NAV.h), [si, sj] = cellOf(...nearestWalkable(Z.spawn[0], Z.spawn[1])), q = [sj * NAV.w + si];
+    if (si < 0 || sj < 0 || si >= NAV.w || sj >= NAV.h) return R;
+    R[q[0]] = 1;
+    for (let h = 0; h < q.length; h++){ const c = q[h], i = c % NAV.w, j = (c / NAV.w) | 0;
+      for (const [a, b] of [[1,0],[-1,0],[0,1],[0,-1]]){ const ni = i + a, nj = j + b; if (ni < 0 || nj < 0 || ni >= NAV.w || nj >= NAV.h) continue; const n = nj * NAV.w + ni; if (!R[n] && NAV.walk[n]){ R[n] = 1; q.push(n); } } }
+    return R;
+  }
+  const reachable = (x, z) => { if (!NAV.reach) NAV.reach = reachFill(); const [i, j] = cellOf(x, z); return i >= 0 && j >= 0 && i < NAV.w && j < NAV.h && NAV.reach[j * NAV.w + i] === 1; };
   function lineClear(ax, az, bx, bz){
     const d = Math.hypot(bx - ax, bz - az), n = Math.ceil(d / 0.3);
     for (let k = 1; k < n; k++){ const t = k / n; if (!walkable(ax + (bx - ax) * t, az + (bz - az) * t)) return false; }
@@ -1623,6 +1621,15 @@
     rs_miriam:     { home: [-4, 5], range: 7, social: 0.35, like: { fire: 3, tent: 2 } },
   };
   const rnd = (a, b) => a + Math.random() * (b - a);
+  // 돌아다니는 사람은 몇 명만(아이들·물·짐 나르는 사람) — 나머지는 제자리에서 자연스럽게 행동(먼 길을 오가는 모습이 어색했음)
+  const WALKERS = new Set(['a_kid1', 'a_kid2', 'child', 'hb_boy', 'eg_boy', 'eg_water', 'merchant', 'shepherd', 'rs_water']);
+  function calmPersona(m, P){
+    if (!P) return null;
+    if (WALKERS.has(m.data.id)) return Object.assign({}, P, { range: Math.min(P.range, 12), social: Math.min(P.social, 0.1) });
+    const story = m.data.type === 'npc';
+    if (story && P.range > 0) return Object.assign({}, P, { home: [m.data.x, m.data.z], range: Math.min(P.range, 5), social: 0 });   // 이야기 인물은 찾기 쉽게 제자리 근처
+    return Object.assign({}, P, { home: [m.data.x, m.data.z], range: 0, social: 0, still: true });
+  }
   const pickWeighted = (items, w) => { const tot = items.reduce((s, it) => s + w(it), 0); let r = Math.random() * tot; for (const it of items){ r -= w(it); if (r <= 0) return it; } return items[items.length - 1]; };
   const angTo = (from, x, z) => Math.atan2(x - from.mesh.position.x, z - from.mesh.position.z);
   function turnTo(m, want, dt, rate = 5){
@@ -1665,6 +1672,15 @@
       }
     }
     // 가끔은 그 자리에서 둘러보기(제자리 인물은 항상)
+    if (P.still){
+      // 제자리 인물: 옆 사람과 이야기 · 가까운 일터(물동이·벽돌 등)에서 일 · 둘러보기 중 하나
+      const r = Math.random(), pos0 = m.mesh.position;
+      const mate = markers.find(o => o !== m && o.ai && !o.hidden && o.ai.persona && o.ai.persona.still && Math.hypot(o.mesh.position.x - pos0.x, o.mesh.position.z - pos0.z) < 3.5);
+      if (mate && r < 0.4){ A.state = 'act'; A.act = talkAnim(m); A.t = rnd(4, 7); A.face = [mate.mesh.position.x, mate.mesh.position.z]; return; }
+      const poi = POIS.filter(q => Math.hypot(q.x - pos0.x, q.z - pos0.z) < 2.5)[0];
+      if (poi && r < 0.7){ const acts = POI_KIND[poi.kind].acts.filter(([a]) => has(m, a)); if (acts.length){ const [a, t0, t1] = acts[(Math.random() * acts.length) | 0]; A.state = 'act'; A.act = a; A.t = rnd(t0, t1) * 1.3; A.face = [poi.fx, poi.fz]; return; } }
+      A.state = 'act'; A.act = Math.random() < 0.5 && has(m, 'LookAround') ? 'LookAround' : 'Idle'; A.t = rnd(4, 8); A.face = null; return;
+    }
     if (Math.random() < 0.12 || P.range === 0){ A.state = 'act'; A.act = has(m, 'LookAround') ? 'LookAround' : 'Idle'; A.t = rnd(3, 6); A.face = null; return; }
     // 장소 고르기(성격 가중치 × 거리 제한)
     const free = POIS.filter(q => !q.busy && P.like[q.kind] && Math.hypot(q.x - P.home[0], q.z - P.home[1]) < P.range && Math.hypot(q.x - pos.x, q.z - pos.z) > 1.5);
@@ -1920,7 +1936,7 @@
       g.animations.forEach(c => m.actions[c.name] = m.mixer.clipAction(c));
       npcPlay(m, 'Idle', 0);
       if (m.actions.Idle) m.actions.Idle.time = rand() * 3; // NPC마다 동작이 어긋나게
-      m.ai = { state: 'idle', t: 0.5 + Math.random() * 3, persona: PERSONA[m.data.persona || m.data.id] || { home: [m.data.x, m.data.z], range: 10, social: 0.2, like: { house: 1, palm: 1, market: 1, fire: 1, plaza: 1 } }, speed: {} };
+      m.ai = { state: 'idle', t: 0.5 + Math.random() * 3, persona: calmPersona(m, PERSONA[m.data.persona || m.data.id]) || { home: [m.data.x, m.data.z], range: 10, social: 0.2, like: { house: 1, palm: 1, market: 1, fire: 1, plaza: 1 } }, speed: {} };
       for (const n of ['Walk', 'Run', 'Carry', 'Look']){
         const clip = g.animations.find(c => c.name === n);
         const sp = clip && measureNaturalSpeed(model, clip);
@@ -1936,25 +1952,38 @@
   let joyActive = false, joyVec = {x:0,y:0}, joyTouchId = null;
   const zoneRect = () => zone.getBoundingClientRect();
 
-  function joyStart(id){ joyActive = true; joyTouchId = id; }
+  // 누른 자리가 조이스틱 중심(떠 있는 조이스틱) — 작은 원의 가운데를 정확히 누르지 않아도 처음 민 방향 그대로 감
+  let joyC = null;
+  function joyStart(id, cx, cy){
+    joyActive = true; joyTouchId = id;
+    if (cx !== undefined){
+      const r = zone.getBoundingClientRect(), half = r.width / 2;
+      const x = Math.max(half + 6, Math.min(innerWidth * 0.5, cx)), y = Math.max(half + 6, Math.min(innerHeight - half - 6, cy));
+      zone.style.left = (x - half) + 'px'; zone.style.bottom = (innerHeight - y - half) + 'px'; zone.style.right = 'auto';
+      joyC = [x, y];
+    } else { const r = zoneRect(); joyC = [r.left + r.width / 2, r.top + r.height / 2]; }
+  }
   function joyMove(cx, cy){
     if (!joyActive) return;
-    const r = zoneRect();
-    const cxCenter = r.left + r.width/2, cyCenter = r.top + r.height/2;
-    let dx = cx - cxCenter, dy = cy - cyCenter;
-    const max = r.width/2;
+    const max = zone.offsetWidth / 2;
+    let dx = cx - joyC[0], dy = cy - joyC[1];
     const dist = Math.min(Math.hypot(dx,dy), max);
     const ang = Math.atan2(dy,dx);
     dx = Math.cos(ang)*dist; dy = Math.sin(ang)*dist;
     knob.style.left = (35+dx) + 'px';
     knob.style.top = (35+dy) + 'px';
-    joyVec.x = dx/max; joyVec.y = dy/max;
+    const m = dist / max, dz = 0.14;                                   // 데드존: 손가락 떨림으로 엉뚱하게 가지 않게
+    const k = m < dz ? 0 : (m - dz) / (1 - dz) / (m || 1);
+    joyVec.x = dx / max * k; joyVec.y = dy / max * k;
   }
   function joyEnd(){
     joyActive = false; joyTouchId = null; joyVec.x=0; joyVec.y=0;
     knob.style.left='35px'; knob.style.top='35px';
+    zone.style.left = ''; zone.style.bottom = ''; zone.style.right = '';
   }
   zone.addEventListener('touchstart', e=>{ e.preventDefault(); const t=e.changedTouches[0]; joyStart(t.identifier); joyMove(t.clientX, t.clientY); }, {passive:false});
+  const joyHit = document.getElementById('joy-hit');
+  joyHit.addEventListener('touchstart', e=>{ e.preventDefault(); if (joyActive) return; const t=e.changedTouches[0]; joyStart(t.identifier, t.clientX, t.clientY); joyMove(t.clientX, t.clientY); }, {passive:false});
   window.addEventListener('touchmove', e=>{
     for (const t of e.changedTouches){ if (t.identifier===joyTouchId){ joyMove(t.clientX, t.clientY); } }
   }, {passive:false});
@@ -1983,7 +2012,7 @@
   window.addEventListener('mousemove', e => { if (dragId === 'm'){ dragBy(e.clientX - dragX, e.clientY - dragY); dragX = e.clientX; dragY = e.clientY; } });
   window.addEventListener('mouseup', () => { if (dragId === 'm'){ dragging = false; dragId = null; } });
   renderer.domElement.addEventListener('touchstart', e => {
-    if (e.touches.length === 1 && dragId === null){ const t = e.changedTouches[0]; dragId = t.identifier; dragging = true; dragX = t.clientX; dragY = t.clientY; }
+    if (e.targetTouches.length === 1 && dragId === null){ const t = e.changedTouches[0]; dragId = t.identifier; dragging = true; dragX = t.clientX; dragY = t.clientY; }
     else if (pinch.ids.length >= 2){ dragging = false; dragId = null; }   // 두 손가락이면 회전 멈추고 줌
   }, { passive:true });
   renderer.domElement.addEventListener('touchmove', e => {
@@ -2081,8 +2110,54 @@
   // Meshy 'Regular_Jump'는 동작 자체에 뛰어오르는 높이가 들어 있음 → 물리 계산 없이 동작으로 점프.
   // 앞 0.5초 웅크리는 준비 구간 중 0.3초는 건너뛰고 1.25배 빠르게 — 버튼 반응이 굼뜨지 않게.
   const jumpBtn = document.getElementById('jump-btn');
+  // 앞에 낮은 담·상자가 있으면: 올라설 수 있는 건 위로(벽타기), 얇은 담은 넘어가기(담넘기)
+  let climb = null;
+  const CLIMB_MIN = 0.5, CLIMB_MAX = 2.8;
+  function insideBox(b, x, z, m){ const c = Math.cos(b.rot), sn = Math.sin(b.rot), rx = x - b.x, rz = z - b.z; return Math.abs(rx * c - rz * sn) < b.hx + m && Math.abs(rx * sn + rz * c) < b.hz + m; }
+  function blockedAt(x, z, feet){
+    for (const b of boxes) if (b.top > feet + 0.3 && insideBox(b, x, z, PR * 0.8)) return true;
+    for (const o of obstacles) if (Math.hypot(x - o.x, z - o.z) < o.r + PR * 0.8) return true;
+    return false;
+  }
+  function findClimb(){
+    const fx = Math.sin(heading), fz = -Math.cos(heading), P = player.position, feet = P.y;
+    for (const d of [0.45, 0.7, 0.95]){
+      const px = P.x + fx * d, pz = P.z + fz * d;
+      let hit = null;
+      for (const b of boxes){ const dh = b.top - feet; if (dh < CLIMB_MIN || dh > CLIMB_MAX) continue; if (insideBox(b, px, pz, 0.05)){ hit = { b, top: b.top }; break; } }
+      if (!hit) for (const o of obstacles){ if (!o.h) continue; const dh = o.h - feet; if (dh < CLIMB_MIN || dh > CLIMB_MAX) continue; if (Math.hypot(px - o.x, pz - o.z) < o.r + 0.05){ hit = { o, top: o.h }; break; } }
+      if (!hit) continue;
+      // 올라서기: 윗면에 설 수 있고 충분히 넓으면 그 위로
+      if (hit.b && hit.b.stand){ const tx = P.x + fx * (d + 0.45), tz = P.z + fz * (d + 0.45); if (insideBox(hit.b, tx, tz, 0.1)) return { tx, tz, ty: hit.b.top, top: hit.top, kind: 'up' }; }
+      // 넘어가기: 담 너머 빈 곳까지
+      for (let e = d + 0.3; e < d + 3.2; e += 0.1){
+        const tx = P.x + fx * e, tz = P.z + fz * e, g = heightAt(tx, tz);
+        if (!blockedAt(tx, tz, g) && Math.abs(g - feet) < 1.2) return { tx, tz, ty: groundAt(tx, tz, g + 0.1), top: hit.top, kind: 'over' };
+      }
+      return null;
+    }
+    return null;
+  }
+  function startClimb(c){
+    const P = player.position, h = Math.max(0.6, c.top - P.y);
+    climb = { t: 0, dur: (c.kind === 'up' ? 0.42 : 0.55) + h * 0.12, x0: P.x, z0: P.z, y0: P.y, ...c };
+    grounded = true; vy = 0;
+    playOneShot('Jump', { lockMove: false, startAt: 0.5, timeScale: 1.25, fade: 0.08 });
+    jumpBtn.classList.add('active'); setTimeout(() => jumpBtn.classList.remove('active'), 150);
+  }
+  function updateClimb(dt){
+    if (!climb) return false;
+    const c = climb; c.t += dt; const k = Math.min(1, c.t / c.dur), P = player.position;
+    const kh = k < 0.45 ? 0 : (k - 0.45) / 0.55, e = kh * kh * (3 - 2 * kh);          // 먼저 오르고, 그다음 앞으로
+    P.x = c.x0 + (c.tx - c.x0) * e; P.z = c.z0 + (c.tz - c.z0) * e;
+    const up = Math.min(1, k / 0.45), over = c.top + 0.25;
+    P.y = k < 0.45 ? c.y0 + (over - c.y0) * Math.sin(up * Math.PI / 2) : over + (c.ty - over) * kh * kh;
+    if (k >= 1){ P.y = c.ty; climb = null; grounded = true; vy = 0; }
+    return true;
+  }
   function doJump(){
-    if (gestureLock || !grounded) return;
+    if (gestureLock || !grounded || climb) return;
+    { const c = findClimb(); if (c){ startClimb(c); tut.jumps++; return; } }
     vy = JUMP_V; grounded = false; tut.jumps++;
     if (playOneShot('Jump', { lockMove:false, startAt:0.5, timeScale:1.0, fade:0.08 })){
       jumpBtn.classList.add('active'); setTimeout(()=>jumpBtn.classList.remove('active'), 150);
@@ -3207,9 +3282,9 @@
   const TUT_KEY = 'inodyssey-tutorial';
   const TOUCH = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   const TUT = [
-    { k: '걷기', t: TOUCH ? '오른쪽 아래 동그란 조이스틱을 밀어서 걸어 보세요' : 'W A S D (또는 방향키)로 걸어 보세요', need: 4, glow: 'joystick-zone' },
-    { k: '달리기', t: TOUCH ? '왼쪽 아래 「달리기」를 누른 채로 움직여 보세요 — 초록 고리가 체력이에요' : 'Shift를 누른 채로 움직여 달려 보세요 — 초록 고리가 체력이에요', need: 1.5, glow: 'run-btn' },
-    { k: '점프', t: TOUCH ? '「점프」를 눌러 뛰어 보세요 — 낮은 물건 위에도 올라갈 수 있어요' : '스페이스바로 뛰어 보세요 — 낮은 물건 위에도 올라갈 수 있어요', need: 2, glow: 'jump-btn' },
+    { k: '걷기', t: TOUCH ? '왼쪽 아래를 누른 채 밀어서 걸어 보세요(누른 자리에 조이스틱이 생겨요)' : 'W A S D (또는 방향키)로 걸어 보세요', need: 4, glow: 'joystick-zone' },
+    { k: '달리기', t: TOUCH ? '오른쪽 아래 「달리기」를 누른 채로 움직여 보세요 — 초록 고리가 체력이에요' : 'Shift를 누른 채로 움직여 달려 보세요 — 초록 고리가 체력이에요', need: 1.5, glow: 'run-btn' },
+    { k: '점프', t: TOUCH ? '「점프」를 눌러 뛰어 보세요 — 낮은 담·상자 앞에서 누르면 넘어가거나 올라서요' : '스페이스바로 뛰어 보세요 — 낮은 담·상자 앞에서 누르면 넘어가거나 올라서요', need: 2, glow: 'jump-btn' },
     { k: '둘러보기', t: TOUCH ? '화면 빈 곳을 손가락으로 끌어서 주변을 둘러보세요' : '화면을 마우스로 끌어서(또는 Q·E) 주변을 둘러보세요', need: 2.2 },
     { k: '가까이·멀리', t: TOUCH ? '두 손가락으로 화면을 벌리거나 오므려서 가까이·멀리 보세요' : '＋ − 버튼이나 마우스 휠로 가까이·멀리 보세요', need: 0.35, glow: TOUCH ? null : 'zoom-ctrl' },
     { k: '메뉴', t: '오른쪽 위 ☰ 메뉴를 눌러 보세요 — 구절 수집첩·대화 기록·상점·설정이 들어 있어요. 다른 곳을 누르면 접혀요', need: 1, glow: 'btn-menu' },
@@ -3547,7 +3622,7 @@
     mgOpen('🐸 개구리 몰기 도전', `강가와 집 둘레에 개구리가 가득해요! <b>60초</b> 동안 개구리에게 다가가 나일 강 쪽으로 몰아내세요.${best}`);
     mgAct.onclick = () => { mgCloseAll(); liveEnd(); live.kind = 'frogs'; live.t = 60; live.n = 0; hudCh.classList.remove('hidden');
       for (let k = 0, tries = 0; k < 24 && tries < 800; tries++){ const x = -26 + Math.random() * 22, z = -14 + Math.random() * 28;
-        if (!walkable(x, z) || Math.hypot(x - player.position.x, z - player.position.z) < 3) continue;
+        if (!reachable(x, z) || Math.hypot(x - PEN_C[0], z - PEN_C[1]) < PEN_WALL + 1.2 || Math.hypot(x - player.position.x, z - player.position.z) < 3) continue;
         const g = new THREE.Group(), b = new THREE.Mesh(frogGeo, frogMat); b.scale.set(1, 0.72, 1.25); b.position.y = 0.15; g.add(b);
         g.scale.setScalar(2.4); g.position.set(x, heightAt(x, z), z); g.userData = { x, z, flee: -1, t: Math.random() * 3 }; zoneRoot.add(g); live.objs.push(g); k++; } };
   }
@@ -4127,7 +4202,7 @@
     for (let k = 0, tries = 0; k < need && tries < 600; tries++){
       const [, hx, hz] = houses[(Math.random() * houses.length) | 0], a = Math.random() * Math.PI * 2, r = 3 + Math.random() * 3;
       const x = hx + Math.cos(a) * r, z = hz + Math.sin(a) * r;
-      if (!walkable(x, z) || frogs.some(f => Math.hypot(f.x - x, f.z - z) < 2.5) || Math.hypot(x - player.position.x, z - player.position.z) < 4) continue;
+      if (!reachable(x, z) || frogs.some(f => Math.hypot(f.x - x, f.z - z) < 2.5) || Math.hypot(x - player.position.x, z - player.position.z) < 4) continue;
       const g = new THREE.Group();
       const b = new THREE.Mesh(frogGeo, frogMat); b.scale.set(1, 0.72, 1.25); b.position.y = 0.15; b.castShadow = true; g.add(b);
       for (const sx of [-0.09, 0.09]){ const e = new THREE.Mesh(eyeGeo, frogMat); e.position.set(sx, 0.3, 0.15); g.add(e); const pu = new THREE.Mesh(eyeGeo, pupilMat); pu.scale.setScalar(0.45); pu.position.set(sx, 0.32, 0.2); g.add(pu); }
@@ -4164,7 +4239,7 @@
     const mat = new THREE.MeshToonMaterial({ color: 0xd9b45a, gradientMap: toonGradient }), band = new THREE.MeshToonMaterial({ color: 0x8a6a3a, gradientMap: toonGradient });
     for (let k = 0, tries = 0; k < need && tries < 400; tries++){
       const a = rand() * Math.PI * 2, r = 9 + rand() * 15, x = Z.center[0] + Math.cos(a) * r, z = Z.center[1] + Math.sin(a) * r;
-      if (!walkable(x, z) || straws.some(o => Math.hypot(o.x - x, o.z - z) < 6)) continue;
+      if (!reachable(x, z) || Math.hypot(x - PEN_C[0], z - PEN_C[1]) < PEN_WALL + 1.2 || straws.some(o => Math.hypot(o.x - x, o.z - z) < 6)) continue;
       const g = new THREE.Group();
       for (let i = 0; i < 7; i++){ const c = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.1, 5), mat); c.rotation.z = Math.PI / 2 + (Math.random() - 0.5) * 0.3; c.rotation.y = (Math.random() - 0.5) * 0.4; c.position.set(0, 0.18 + (i % 3) * 0.1, (i - 3) * 0.07); c.castShadow = true; g.add(c); }
       const b = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.04, 5, 10), band); b.rotation.y = Math.PI / 2; b.position.y = 0.28; g.add(b);
@@ -4263,7 +4338,7 @@
     if (d.help){ helpTired(nearPoint); return; }
     if (storyInteract(nearPoint)) return;
     if (d.id === 'a_shop'){ openShop(); return; }
-    { const q = curStep(); if (q && q.skillAt === d.id){ toast('🦯 왼쪽의 「지팡이」 스킬 버튼을 눌러 보세요!', 2400); return; } }
+    { const q = curStep(); if (q && q.skillAt === d.id){ toast('🦯 오른쪽의 「지팡이」 스킬 버튼을 눌러 보세요!', 2400); return; } }
     simple(d.title, d.body || '…', d.model ? nearPoint : null);
   }
   interactBtn.addEventListener('click', openInfo);
@@ -4318,7 +4393,7 @@
   let heading = Math.PI;
   const clock = new THREE.Clock();
   const desiredCamPos = new THREE.Vector3();
-  const WALK_SPEED = 2.0, RUN_SPEED = 4.2; // 동작 원래 속도(걷기 1.62·달리기 2.90 유닛/초)의 1.2~1.45배 — 동작이 빨리감기처럼 보이지 않게
+  const WALK_SPEED = 2.6, RUN_SPEED = 5.6; // 동작 원래 속도(걷기 1.62·달리기 2.90 유닛/초)의 1.2~1.45배 — 동작이 빨리감기처럼 보이지 않게
   let moveSpeed = 0;           // 부드러운 가감속
   let hintFaded = false;
 
@@ -4351,7 +4426,7 @@
     }
     let mag = Math.hypot(mx,my);
     if (mag > 1){ mx/=mag; my/=mag; mag = 1; }
-    const moving = mag > 0.08 && !gestureLock;
+    const moving = mag > 0.05 && !gestureLock;
     const wantRun = runHeld || keys['shift'] || gpRunHeld;
 
     // 스태미나
@@ -4373,7 +4448,7 @@
     runBtn.classList.toggle('exhausted', exhausted);
     drawStamina();
 
-    const targetSpeed = moving ? (isRunning ? RUN_SPEED : WALK_SPEED * Math.max(0.45, mag)) : 0;
+    const targetSpeed = moving ? (isRunning ? RUN_SPEED : WALK_SPEED * Math.min(1, Math.max(0.45, mag / 0.6))) : 0;   // 조금만 밀어도 제 속도
     moveSpeed += (targetSpeed - moveSpeed) * Math.min(1, dt * 10);
 
     if (moving){
@@ -4381,10 +4456,11 @@
       let diff = targetHeading - heading;
       while (diff > Math.PI) diff -= Math.PI*2;
       while (diff < -Math.PI) diff += Math.PI*2;
-      heading += diff * Math.min(1, dt*7); // 방향 전환을 조금 부드럽게
+      heading += diff * Math.min(1, dt*14); // 방향 전환: 민 방향으로 빠르게(너무 느리면 원하는 대로 안 가는 느낌)
       if (!hintFaded){ hintFaded = true; setTimeout(()=>document.getElementById('hint').classList.add('fade'), 2500); }
     }
-    if (moveSpeed > 0.01){
+    if (updateClimb(dt)){ moveSpeed = 0; }
+    else if (moveSpeed > 0.01){
       player.position.x += Math.sin(heading) * moveSpeed * dt;
       player.position.z += -Math.cos(heading) * moveSpeed * dt;
       resolveCollisions(player.position, player.position.y);
@@ -4396,7 +4472,8 @@
     player.rotation.y = Math.PI - heading;
     {
       const g = groundAt(player.position.x, player.position.z, player.position.y);
-      if (grounded){
+      if (climb){}
+      else if (grounded){
         if (player.position.y - g > 0.45){ grounded = false; vy = 0; }   // 윗면에서 걸어 나가면 떨어짐
         else player.position.y = g;                                      // 지형 굴곡은 그대로 따라감
       }
@@ -4416,8 +4493,8 @@
         if (moveSpeed < 0.35) playAnim(talking && actions.Talk ? 'Talk' : 'Idle');
         else if (isRunning || moveSpeed > (WALK_SPEED + RUN_SPEED) / 2) playAnim('Run');
         else playAnim('Walk');
-        if (actions.Walk) actions.Walk.timeScale = THREE.MathUtils.clamp(moveSpeed / natural.Walk, 0.7, 1.6);
-        if (actions.Run) actions.Run.timeScale = THREE.MathUtils.clamp(moveSpeed / natural.Run, 0.8, 1.6);
+        if (actions.Walk) actions.Walk.timeScale = THREE.MathUtils.clamp(moveSpeed / natural.Walk, 0.7, 1.75);
+        if (actions.Run) actions.Run.timeScale = THREE.MathUtils.clamp(moveSpeed / natural.Run, 0.8, 1.95);
       }
       mixer.update(dt);
     }
@@ -4604,7 +4681,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
