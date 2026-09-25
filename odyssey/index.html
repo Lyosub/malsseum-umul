@@ -1058,6 +1058,39 @@
         { id: 'sea', x: 15.4, z: 0, type: 'lore', title: "홍해 바닷가", body: "앞은 넓은 바다예요. 건너갈 길이 보이지 않아요." },
         { id: 'to-egypt3', x: -50, z: 0, type: 'exit', title: "애굽 쪽으로", to: 'egypt', spawn: [44, 14] },
         { id: 'to-alpha3', x: 62, z: 3, type: 'exit', title: "두루마리마을로(복습)", to: 'alpha', spawn: [0, 16], needStep: 'c4s10', lockMsg: '먼저 바다를 건너야 해요' },
+        { id: 'to-wild', x: 61, z: -6, type: 'exit', title: "신 광야로", to: 'wild', spawn: [-35, 2], showCh: 4 },
+      ],
+    },
+    wild: {
+      name: '신 광야', questTitle: '📜 퀘스트 — 광야의 만나',
+      env: { top: 0x4a7fc4, bottom: 0xf6dcb0, fog: 0xecd6b4, fogD: 0.012, sun: 0xfff0d0, sunDir: [0.4, 0.45, -0.7], cloud: 0.25, cloudCol: 0xffffff, stars: 0, far: 'far-mountains' },
+      center: [0, 0], spawn: [-35, 2],
+      // 물웅덩이: [x, z, 반지름, 종류] — 마라(처음엔 쓴 물)·엘림 샘 열둘
+      pools: [[-22, -3, 3.4, 'mara']].concat(Array.from({ length: 12 }, (_, i) => [4 + Math.cos(i / 12 * Math.PI * 2) * 5, -16 + Math.sin(i / 12 * Math.PI * 2) * 5, 0.8, 'spring'])),
+      layout: [
+        ['env-acacia', -17.5, -8.8, 0.6],
+        ['env-date-palm', 4 + 9, -16, 0.2], ['env-date-palm', 4 - 9, -16, 1.4], ['env-date-palm', 4, -16 + 9, 2.2], ['env-date-palm', 4 + 6.4, -16 - 6.4, 0.9], ['env-date-palm', 4 - 6.4, -16 + 6.4, 2.9],
+        ['palm', 4 - 6.4, -16 - 6.4, 0.3], ['palm', 4 + 6.4, -16 + 6.4, 1.8], ['palm', 4, -16 - 9.5, 2.6], ['palm', 4 + 9.5, -9, 0.7],
+        ['tent-cluster', 26, -3, faceTo(26, -3, 22, 2)], ['tent-large', 17, 9, faceTo(17, 9, 22, 2)], ['tent-mid', 28, 9, faceTo(28, 9, 22, 2)], ['tent-mid', 15, -6, faceTo(15, -6, 22, 2)],
+        ['tent-small', 22, -10, faceTo(22, -10, 22, 2)], ['tent-small', 31, 2, faceTo(31, 2, 22, 2)],
+        ['camp-firepit', 22, 2, 0], ['tribe-banner', 18.5, 3.5, 0.3], ['tribe-banner', 26, 6.5, 1.1], ['crates-sacks', 24.5, -6.8, 0.4], ['jars', 19.5, -4.5, 0.2],
+        ['env-rock-hill', -31, -20, 0.4], ['env-rocks-strata', -6, 20, 1.2], ['env-rocks-strata', 36, -20, 2.4], ['env-river-stones', -24.5, 1.2, 0.3], ['dry-bush', -28, -9, 0], ['dry-bush', -12, 6, 0],
+      ],
+      scatter: [['dry-bush', 10, 16, 55], ['rock-group', 8, 20, 55]],
+      clear: [[-22, -3, 7], [4, -16, 11], [22, 1, 14], [-35, 2, 5], [33, 7, 5]],
+      fires: [],
+      points: [
+        { id: 'moses', x: -19.5, z: 1.2, type: 'npc', title: "모세", model: 'moses', persona: 'rs_static' },
+        { id: 'aaron', x: 21.5, z: 1.5, type: 'npc', title: "아론", model: 'aaron', persona: 'rs_static' },
+        { id: 'wd_thirsty1', x: -25.5, z: 1.8, type: 'villager', title: "목마른 할아버지", model: 'he-grandpa', persona: 'rs_static', body: "\"물이 달아졌어! 살았다…\"" },
+        { id: 'wd_thirsty2', x: -26.5, z: -6.8, type: 'villager', title: "목마른 어머니", model: 'he-mother', persona: 'rs_static', body: "\"아이들이 이제 물을 마셔요. 여호와께 감사해요.\"" },
+        { id: 'wd_hungry1', x: 16.5, z: 5.5, type: 'villager', title: "배고픈 사람", model: 'ca-craftsman', persona: 'rs_static', body: "\"아침마다 만나가 내리다니… 원망했던 게 부끄럽구나.\"" },
+        { id: 'wd_hungry2', x: 25.5, z: 7.8, type: 'villager', title: "배고픈 아이", model: 'he-boy-hb', persona: 'rs_static', body: "\"만나는 꿀 섞은 과자 맛이 나요!\"" },
+        { id: 'wd_greedy', x: 21.5, z: -7.5, type: 'villager', title: "욕심 많은 사람", model: 'he-father', persona: 'rs_static', body: "\"이제는 먹을 만큼만 거둬. 내일 것은 내일 주시니까.\"" },
+        { id: 'mara_tree', x: -17.5, z: -6.8, type: 'lore', title: "가리키신 나무", showCh: 4, body: "여호와께서 모세에게 가리키신 나무예요." },
+        { id: 'quail_spot', x: 24, z: -14.5, type: 'lore', title: "진영 가장자리", showCh: 4, body: "진영 남쪽 가장자리예요. 저녁이면 메추라기가 날아왔던 곳이에요." },
+        { id: 'field_empty', x: 34, z: 7, type: 'lore', title: "만나 들판", showCh: 4, body: "아침마다 만나가 내리는 들판이에요." },
+        { id: 'to-redsea2', x: -39.5, z: 2, type: 'exit', title: "홍해 쪽으로", to: 'redsea', spawn: [56, 6] },
       ],
     },
   };
@@ -1133,7 +1166,7 @@
   // 바다: 북쪽·남쪽 물 + 가운데 길(갈라지는 곳). 갈라지면 가운데 물이 사라지고 양쪽에 물 벽이 솟음(14:21-22)
   const sea = { k: 0, target: 0, walls: [], mid: null, floor: null, gate: null, wind: null };
   function zoneSpawn(sp){
-    if (Z && Z.id === 'redsea' && ST.ch === 3 && (ST.cleared || ST.step >= stepIdx('c4s10'))) return [56, 6];   // 바다를 건넌 뒤에는 건너편 해변
+    if (Z && Z.id === 'redsea' && (ST.ch > 3 || (ST.ch === 3 && (ST.cleared || ST.step >= stepIdx('c4s10'))))) return [56, 6];   // 바다를 건넌 뒤에는 건너편 해변
     return sp;
   }
   function buildSea(){
@@ -1293,6 +1326,7 @@
     Z.layout.forEach(([n, x, z, r, sc]) => placeProp(n, x, z, r, sc || 1));
     if (Z.room) buildRoom();
     if (Z.sea) buildSea();
+    if (Z.pools) buildPools();
     // 강(나일 등): 지형을 따라 휘는 물 띠 + 들어가지 못하게 상자 충돌
     if (Z.water){
       const w = Z.water, geo = new THREE.PlaneGeometry(w.x1 - w.x0, w.z1 - w.z0, 16, 60); geo.rotateX(-Math.PI / 2);
@@ -1961,7 +1995,7 @@
     if (Z.room){ zoneRoot.children.forEach(o => { if (!roomObjs.includes(o) && inRoom(o.position.x, o.position.z) && !markers.some(m => m.mesh === o)) roomObjs.push(o); }); }
     buildNav(); buildPOIs();
     markers.forEach(m => { if (m.ai){ const [x, z] = nearestWalkable(m.mesh.position.x, m.mesh.position.z); m.mesh.position.set(x, heightAt(x, z), z); m.col.x = x; m.col.z = z; } });
-    renderQuestList(); spawnTasks(); spawnScrolls(); grantPastSkills(); friendsClear(); dailyInit(); weeklyInit(); homeLoad(); buildYardRope();
+    renderQuestList(); spawnTasks(); spawnScrolls(); grantPastSkills(); friendsClear(); dailyInit(); weeklyInit(); homeLoad(); mannaSpoil(); mannaHello(); buildYardRope();
     renderer.compile(scene, camera);
     setTimeout(loadLazyNPCs, 300);
   }
@@ -3231,7 +3265,7 @@
         { l: '🥁 소고를 치며 함께 찬송한다', say: [[MIRIAM_S, '그래, 함께 여호와를 찬송하자! 박자에 맞춰 소고를 두드려 보렴.', 'happy'], { event: 'rhythm' }] },
         { l: '🙏 조용히 감사 기도를 드린다', say: [[ME, '하나님, 우리를 위해 싸워 주셔서 감사합니다.', 'happy']] },
       ] },
-      [NAR, '이렇게 이스라엘 자손이 홍해를 건넜어요. 다음 이야기: 광야의 길(준비 중).'],
+      [NAR, '이렇게 이스라엘 자손이 홍해를 건넜어요. 다음 이야기: 5장 「광야의 만나」 — 건너편 해변 동쪽 끝에서 광야로 떠나요.'],
     ],
   });
   Object.assign(KEYS, {
@@ -3251,11 +3285,156 @@
     together: { ico: '🤝', name: '함께 건넌 마음' },
     timbrel: { ico: '🥁', name: '소고 찬양' },
   });
+  // ══ 5장 「광야의 만나」 (출 15:22–16:35) ══════════════════════════════
+  // 홍해 건너편 → 수르 광야 사흘길 → 마라의 쓴 물(한 나무를 던지니 단 물) → 엘림(샘 열둘·종려 일흔) →
+  // 신 광야의 원망 → "하늘에서 양식을 비 같이" → 저녁 메추라기 → 아침 만나(한 오멜씩) → 아침까지 남긴 만나 →
+  // 여섯째 날 갑절 → 일곱째 날 안식 → 만나 한 오멜을 항아리에
+  const THIRSTY = { n: '목마른 할아버지' }, GREEDY = { n: '욕심 많은 사람' };
+  const STORY5 = [
+    { id: 'c5s1',  zone: 'redsea', obj: '홍해 건너편에서 광야로 떠나기', where: '건너편 해변 동쪽 끝의 초록 빛기둥', exit: 'to-wild' },
+    { id: 'c5s2',  zone: 'wild',   obj: '사흘 길을 걸어 마라에 이르기', where: '광야 서쪽의 작은 물웅덩이', reach: { near: [-22, -3], r: 6 }, doneDlg: 'c5_mara' },
+    { id: 'c5s3',  zone: 'wild',   obj: '목마른 백성의 이야기 듣기', where: '마라 물가의 사람들 — 머리 위에 이름이 보이는 사람', rumor: 2, rumorIds: ['wd_thirsty1', 'wd_thirsty2'] },
+    { id: 'c5s4',  zone: 'wild',   obj: '모세에게 가기', where: '마라 물가', npc: 'moses', dlg: 'c5_cry' },
+    { id: 'c5s5',  zone: 'wild',   obj: '여호와께서 가리키신 나무를 물에 던지기', where: '마라 물가 옆의 빛나는 나무', point: 'mara_tree', dlg: 'c5_sweet', reward: { verse: ['ex15-25', 'ex15-26'] } },
+    { id: 'c5s6',  zone: 'wild',   obj: '엘림으로 가기', where: '광야 북쪽 — 샘과 종려나무가 모인 곳', reach: { near: [4, -16], r: 7.5 }, doneDlg: 'c5_elim' },
+    { id: 'c5s7',  zone: 'wild',   obj: '신 광야 진영에서 원망하는 소리 듣기', where: '동쪽 진영의 사람들 — 머리 위에 이름이 보이는 사람', rumor: 2, rumorIds: ['wd_hungry1', 'wd_hungry2'], place: { moses: [19, -2], aaron: [21.5, 1.5] } },
+    { id: 'c5s8',  zone: 'wild',   obj: '모세에게 가기 — 하늘에서 내리는 양식', where: '동쪽 진영 가운데', npc: 'moses', dlg: 'c5_promise', reward: { verse: 'ex16-4' } },
+    { id: 'c5s9',  zone: 'wild',   obj: '해 질 녘, 진영 가장자리 살펴보기', where: '진영 남쪽 가장자리의 빛', point: 'quail_spot', dlg: 'c5_quail' },
+    { id: 'c5s10', zone: 'wild',   obj: '아침 이슬이 마른 뒤 만나 한 오멜 거두기', where: '진영 둘레 들판의 하얀 알갱이(가까이 가면 저절로 주워요)', manna: 5, doneDlg: 'c5_what', reward: { verse: 'ex16-15' } },
+    { id: 'c5s11', zone: 'wild',   obj: '아침까지 만나를 남겨 둔 사람 만나기', where: '진영 북쪽 천막 앞', npc: 'wd_greedy', dlg: 'c5_worms', reward: { verse: 'ex16-18' } },
+    { id: 'c5s12', zone: 'wild',   obj: '여섯째 날 — 갑절(두 오멜) 거두기', where: '진영 둘레 들판의 하얀 알갱이', manna: 10, doneDlg: 'c5_sixth' },
+    { id: 'c5s13', zone: 'wild',   obj: '일곱째 날 아침, 들판에 나가 보기', where: '동쪽 끝 들판의 빛', point: 'field_empty', dlg: 'c5_sabbath' },
+    { id: 'c5s14', zone: 'wild',   obj: '아론에게 가기 — 만나 한 오멜을 항아리에', where: '동쪽 진영 가운데', npc: 'aaron', dlg: 'c5_jar', reward: { verse: 'ex16-35', clear: true } },
+  ];
+  Object.assign(VERSES, {
+    'ex15-25': { ref: '출애굽기 15:25', text: '모세가 여호와께 부르짖었더니 여호와께서 그에게 한 나무를 가리키시니 그가 물에 던지니 물이 달게 되었더라' },
+    'ex15-26': { ref: '출애굽기 15:26', text: '나는 너희를 치료하는 여호와임이라' },
+    'ex16-4':  { ref: '출애굽기 16:4',  text: '그 때에 여호와께서 모세에게 이르시되 보라 내가 너희를 위하여 하늘에서 양식을 비 같이 내리리니 백성이 나가서 일용할 것을 날마다 거둘 것이라' },
+    'ex16-15': { ref: '출애굽기 16:15', text: '이스라엘 자손이 보고 그것이 무엇인지 알지 못하여 서로 이르되 이것이 무엇이냐 하니 모세가 그들에게 이르되 이는 여호와께서 너희에게 주어 먹게 하신 양식이라' },
+    'ex16-18': { ref: '출애굽기 16:18', text: '오멜로 되어 본즉 많이 거둔 자도 남음이 없고 적게 거둔 자도 부족함이 없이 각 사람은 먹을 만큼만 거두었더라' },
+    'ex16-35': { ref: '출애굽기 16:35', text: '사람이 사는 땅에 이르기까지 이스라엘 자손이 사십 년 동안 만나를 먹었으니 곧 가나안 땅 접경에 이르기까지 그들이 만나를 먹었더라' },
+  });
+  Object.assign(DLG, {
+    c5_mara: [
+      [NAR, '모세가 홍해에서 이스라엘을 인도하매, 그들이 수르 광야로 들어가서 거기서 사흘길을 걸었으나 물을 얻지 못했어요.'],
+      [NAR, '마라에 이르렀더니 그 곳 물이 써서 마시지 못했어요. 그래서 그 이름을 마라(쓴 것)라 했어요.'],
+      [ME, '물이다…! 그런데 냄새가… 써서 못 마시겠어요.', 'worried'],
+      [NAR, '사람들이 웅성거려요. 물가 사람들의 이야기를 들어 보세요.'],
+    ],
+    c5_cry: [
+      [MOSES, '백성이 나에게 원망하는구나. "우리가 무엇을 마실까" 하고.', 'worried'],
+      [MOSES, '나는 여호와께 부르짖겠다. 이 광야에서 우리를 살리실 분은 여호와뿐이시니까.'],
+      [NAR, '모세가 여호와께 부르짖었어요. 그러자 여호와께서 그에게 한 나무를 가리키셨어요.'],
+      [MOSES, '저기 물가 옆의 나무야! 여호와께서 가리키신 저 나무를 물에 던지자.', 'happy'],
+    ],
+    c5_sweet: [
+      [ME, '이 나무 맞죠? 영차…!', 'happy'],
+      { event: 'sweet' },
+      [NAR, '나무를 물에 던지니 물이 달게 되었어요.'],
+      [ME, '물이… 달아졌어요! 마실 수 있어요!', 'surprised'],
+      [MOSES, '거기서 여호와께서 그들을 위하여 법도와 율례를 정하시고 그들을 시험하셨단다.'],
+      [MOSES, '"너희가 너희 하나님 나 여호와의 말을 들어 순종하고… 내 모든 규례를 지키면… 나는 너희를 치료하는 여호와임이라"'],
+      { choice: [
+        { l: '🙏 쓴 것도 달게 하시는 하나님', say: [[MOSES, '그래. 우리의 쓴 마음도 여호와께서 고치신단다.', 'happy']] },
+        { l: '🤔 나무에 특별한 힘이 있었을까요?', say: [[MOSES, '나무가 아니라 여호와께서 하신 일이란다. 우리는 가리키신 대로 했을 뿐이야.']] },
+      ] },
+      [MOSES, '이제 엘림으로 가자. 광야 북쪽이야.'],
+    ],
+    c5_elim: [
+      [NAR, '그들이 엘림에 이르니, 거기에 물 샘 열둘과 종려나무 일흔 그루가 있었어요.'],
+      [NAR, '거기서 그들이 그 물 곁에 장막을 쳤어요.'],
+      [ME, '샘이… 하나, 둘, 셋… 열둘이나 있어요! 쉬어 갈 수 있겠다.', 'happy'],
+      [NAR, '엘림에서 쉰 뒤, 온 회중이 엘림과 시내 산 사이에 있는 신 광야에 이르렀어요. 애굽에서 나온 후 둘째 달 십오일이었어요.'],
+      [NAR, '동쪽 진영으로 가 보세요. 사람들 사이에 또 웅성거리는 소리가 들려요.'],
+    ],
+    c5_promise: [
+      [MOSES, '온 회중이 나와 아론을 원망하는구나. 애굽의 고기 가마 곁이 좋았다고…', 'worried'],
+      [MOSES, '그런데 여호와께서 말씀하셨단다.\n"보라 내가 너희를 위하여 하늘에서 양식을 비 같이 내리리니 백성이 나가서 일용할 것을 날마다 거둘 것이라"'],
+      [AARON, '"너희가 해 질 때에는 고기를 먹고 아침에는 떡으로 배부르리니 내가 여호와 너희의 하나님인 줄 알리라"'],
+      [MOSES, '우리가 누구냐? 너희의 원망은 우리를 향하여 함이 아니요 여호와를 향하여 함이로다.'],
+      { choice: [
+        { l: '🙏 원망 대신 기다릴게요', say: [[MOSES, '그래. 여호와께서 원망하는 소리까지 들으셨단다.', 'happy']] },
+        { l: '😟 정말 하늘에서 떡이 와요?', say: [[AARON, '저녁이 되면 알게 될 거야. 여호와의 영광이 구름 속에 나타나셨거든.']] },
+      ] },
+      [AARON, '해가 지고 있구나. 진영 남쪽 가장자리에 가 보렴.'],
+    ],
+    c5_quail: [
+      { event: 'quail' },
+      [NAR, '저녁에는 메추라기가 와서 진에 덮였어요.'],
+      [ME, '새가… 이렇게 많이! 저녁에는 고기를 주신다더니 정말이에요!', 'surprised'],
+      [NAR, '그리고 아침에는 이슬이 진 주위에 있었어요.'],
+      { event: 'manna' },
+      [NAR, '그 이슬이 마른 후에 광야 지면에 작고 둥글며 서리 같이 가는 것이 있었어요.'],
+      [ME, '들판에 하얀 게 잔뜩 있어요. 한 사람에 한 오멜씩 거두라고 하셨으니… 주워 볼게요!', 'happy'],
+    ],
+    c5_what: [
+      [NAR, '이스라엘 자손이 보고 그것이 무엇인지 알지 못하여 서로 이르되 "이것이 무엇이냐" 하니'],
+      [MOSES, '"이는 여호와께서 너희에게 주어 먹게 하신 양식이라"'],
+      [MOSES, '여호와께서 명령하셨단다. 각 사람은 먹을 만큼만, 한 사람에 한 오멜씩 거두라고. 그리고 아무든지 아침까지 그것을 남겨 두지 말라고.'],
+      [NAR, '이스라엘 족속이 그 이름을 만나라 했어요. 깟씨 같이 희고 맛은 꿀 섞은 과자 같았어요.'],
+    ],
+    c5_worms: [
+      [GREEDY, '어… 이거 봐. 혹시 몰라서 어제 거둔 만나를 아침까지 남겨 뒀거든.'],
+      [GREEDY, '그랬더니… 벌레가 생기고 냄새가 나! 으으.', 'worried'],
+      [ME, '모세님이 아침까지 남겨 두지 말라고 하셨잖아요.', 'worried'],
+      [NAR, '그들이 모세에게 순종하지 아니하고 더러는 아침까지 두었더니 벌레가 생기고 냄새가 났어요. 모세가 그들에게 노했어요.'],
+      [NAR, '오멜로 되어 본즉 많이 거둔 자도 남음이 없고 적게 거둔 자도 부족함이 없었어요.'],
+      { choice: [
+        { l: '🍞 내일 것은 하나님께 맡겨요', say: [[GREEDY, '…그래, 내일도 주실 거라고 믿어야겠구나.', 'happy']], reward: { badge: 'daily_bread' } },
+        { l: '😅 그래도 불안한 마음은 알겠어요', say: [[GREEDY, '고맙구나. 그래도 이제는 먹을 만큼만 거둘게.']] },
+      ] },
+      [NAR, '무리가 아침마다 각 사람은 먹을 만큼만 거두었고, 햇볕이 뜨겁게 쬐면 그것이 스러졌어요.'],
+      [NAR, '…며칠이 지나 여섯째 날 아침이 되었어요.'],
+    ],
+    c5_sixth: [
+      [NAR, '여섯째 날에는 각 사람이 갑절의 식물, 곧 하나에 두 오멜씩 거두었어요.'],
+      [MOSES, '"내일은 휴일이니 여호와께 거룩한 안식일이라… 그 나머지는 다 너희를 위하여 아침까지 간수하라"'],
+      [ME, '오늘 남긴 건 내일도 괜찮은 거예요?', 'surprised'],
+      [NAR, '모세의 명령대로 아침까지 간수하였으나 냄새도 나지 아니하고 벌레도 생기지 아니했어요.'],
+    ],
+    c5_sabbath: [
+      [NAR, '일곱째 날에 백성 중 어떤 사람들이 거두러 나갔다가 얻지 못했어요.'],
+      [ME, '정말… 하나도 없어요.', 'surprised'],
+      [MOSES, '"오늘은 여호와의 안식일인즉 오늘은 너희가 들에서 그것을 얻지 못하리라"'],
+      [MOSES, '"볼지어다 여호와가 너희에게 안식일을 줌으로 여섯째 날에는 이틀 양식을 너희에게 주는 것이니"'],
+      [NAR, '그러므로 백성이 일곱째 날에 안식했어요.'],
+      { choice: [
+        { l: '😌 쉬는 날도 선물이구나', say: [[MOSES, '그래. 일하지 않아도 먹이시는 분이 여호와시란다.', 'happy']] },
+        { l: '🤔 그럼 우리도 주일에…', say: [[MOSES, '그래. 하나님께 드리는 날로 기억하렴.', 'happy']] },
+      ] },
+      [MOSES, '아론에게 가 보렴. 여호와께서 명령하신 일이 하나 더 있단다.'],
+    ],
+    c5_jar: [
+      [AARON, '모세가 이렇게 말했단다. "항아리를 가져다가 그 속에 만나 한 오멜을 담아 여호와 앞에 두어 너희 대대로 간수하라"'],
+      [AARON, '광야에서 너희에게 먹인 양식을 후손들에게 보이기 위해서란다.'],
+      [ME, '그럼 우리가 먹은 만나를 나중 사람들도 보겠네요!', 'happy'],
+      [NAR, '아론이 여호와께서 모세에게 명령하신 대로 그것을 증거판 앞에 두어 간수하게 했어요.'],
+      [NAR, '사람이 사는 땅에 이르기까지, 이스라엘 자손이 사십 년 동안 만나를 먹었어요. 곧 가나안 땅 접경에 이르기까지요.'],
+      [NAR, '이렇게 5장 「광야의 만나」가 끝났어요. 이제 매일 아침 신 광야 들판에 만나가 내려요 — 금요일엔 갑절, 토요일엔 없어요!'],
+    ],
+  });
+  Object.assign(KEYS, {
+    c5_sweet:   { scene: '마라의 물', t: '나는 너희를 치료하는 여호와임이라' },
+    c5_promise: { scene: '신 광야', t: '하늘에서 양식을 비 같이 내리리니' },
+    c5_what:    { scene: '만나', t: '이는 여호와께서 너희에게 주어 먹게 하신 양식이라' },
+    c5_sabbath: { scene: '안식일', t: '백성이 일곱째 날에 안식했어요' },
+  });
+  Object.assign(QUIZ, {
+    c5_sweet:   { q: '마라의 쓴 물은 어떻게 달게 되었나요?', a: '여호와께서 가리키신 나무를 던지자', w: ['물을 끓여서', '엘림의 샘물을 부어서'] },
+    c5_elim:    { q: '엘림에는 무엇이 있었나요?', a: '물 샘 열둘과 종려나무 일흔 그루', w: ['물 샘 일곱과 무화과나무 열 그루', '큰 강 하나'] },
+    c5_what:    { q: '만나를 처음 본 백성은 서로 뭐라고 했나요?', a: '이것이 무엇이냐', w: ['이것은 꿀이다', '애굽의 떡이다'] },
+    c5_worms:   { q: '아침까지 남겨 둔 만나는 어떻게 되었나요?', a: '벌레가 생기고 냄새가 났다', w: ['두 배로 늘어났다', '딱딱하게 굳었다'] },
+    c5_sabbath: { q: '일곱째 날 들에 나간 사람들은 어떻게 되었나요?', a: '만나를 얻지 못했다', w: ['갑절을 거두었다', '메추라기를 잡았다'] },
+  });
+  Object.assign(BADGES, {
+    daily_bread: { ico: '🍞', name: '하루 분량의 믿음' },
+  });
   const CHAPTERS = [
     { title: '📜 모세와 함께 1장 — 부르심', clearTitle: '🎉 모세와 함께 1장 「부르심」 완료!', steps: STORY1, next: '2장: 열 가지 재앙' },
     { title: '📜 모세와 함께 2장 — 열 가지 재앙', clearTitle: '🎉 2장 「아홉 가지 재앙」 완료!', steps: STORY2, next: '3장: 유월절 밤' },
     { title: '📜 모세와 함께 3장 — 유월절 밤', clearTitle: '🎉 3장 「유월절 밤」 완료!', steps: STORY3, next: '4장: 홍해를 건너다' },
-    { title: '📜 모세와 함께 4장 — 홍해를 건너다', clearTitle: '🎉 4장 「홍해를 건너다」 완료!', steps: STORY4, next: '5장: 광야의 길 (준비 중)' },
+    { title: '📜 모세와 함께 4장 — 홍해를 건너다', clearTitle: '🎉 4장 「홍해를 건너다」 완료!', steps: STORY4, next: '5장: 광야의 만나' },
+    { title: '📜 모세와 함께 5장 — 광야의 만나', clearTitle: '🎉 5장 「광야의 만나」 완료!', steps: STORY5, next: '6장: 준비 중' },
   ];
 
   // 단서(소문): 미디안 마을 사람들에게 모세 소식을 물으면
@@ -3272,6 +3451,12 @@
     rs_old: ['애굽에 매장지가 없어서 우리를 이 광야에서 죽게 하느냐고… 다들 그렇게 말하고 있다네.', '저 뒤를 보게. 바로의 병거가 오고 있어.'],
     rs_mom: ['우리 아이들은 어떻게 해요? 앞은 바다, 뒤는 애굽 군대예요.', '차라리 애굽 사람을 섬기는 게 광야에서 죽는 것보다 낫겠다는 사람도 있어요.'],
     rs_man: ['우리가 애굽에서 모세에게 뭐라고 했는지 알아? 우리를 내버려 두라고 했었지.', '…이제 어떡하지?'],
+  });
+  Object.assign(RUMORS, {
+    wd_thirsty1: ['사흘이나 걸었는데 물 한 모금 못 마셨어. 겨우 물을 찾았더니 쓰디쓴 물이야.', '우리가 무엇을 마실까…'],
+    wd_thirsty2: ['아이들이 목이 말라 울어요. 이 물은 너무 써서 줄 수가 없어요.', '모세님께 가서 물어봐야겠어요.'],
+    wd_hungry1: ['애굽에서는 고기 가마 곁에 앉아 떡을 배불리 먹었는데…', '차라리 애굽 땅에서 여호와의 손에 죽었더라면 좋았겠다는 사람도 있어.'],
+    wd_hungry2: ['배고파요… 광야에는 먹을 게 하나도 없어요.', '모세님이 이 광야로 우리를 데려와서 다 굶어 죽게 한대요. 정말이에요?'],
   });
   // 저장(버전 번호 + 새 필드는 기본값 — 데이터 마이그레이션 원칙)
   const STORY_KEY = 'inodyssey.proto.story';
@@ -3290,6 +3475,8 @@
     const q = curStep(); if (q) setTimeout(() => toast(`${CHAPTER.title}\n▶ ${q.obj}`, 2600), 300);
   }
   const stepIdx = id => STORY.findIndex(q => q.id === id);
+  const rumorOk = (q, id) => !!RUMORS[id] && (!q.rumorIds || q.rumorIds.includes(id));
+  const rumorCount = q => q.rumorIds ? ST.rumor.filter(x => q.rumorIds.includes(x)).length : ST.rumor.length;
   const curStep = () => ST.cleared ? null : STORY[ST.step];
   let stepT = 0;                          // 지금 단계에 머문 시간(헤맴 힌트용)
 
@@ -3302,7 +3489,8 @@
     const q = curStep(), panel = document.getElementById('quest-panel');
     panel.querySelector('h4').textContent = CHAPTER.title;
     let obj = q ? q.obj : `완료! 다음: ${CHAPTER.next}`;
-    if (q && q.rumor) obj += ` (${Math.min(ST.rumor.length, q.rumor)}/${q.rumor})`;
+    if (q && q.rumor) obj += ` (${Math.min(rumorCount(q), q.rumor)}/${q.rumor})`;
+    if (q && q.manna) obj += ` (${Math.min(ST.mannaGot || 0, q.manna)}/${q.manna})`;
     if (q && q.collect) obj += ` (${Math.min(ST.straw, q.collect)}/${q.collect})`;
     if (q && q.dig) obj += ` (💧 ${Math.min(ST.water, q.dig)}/${q.dig})`;
     if (q && q.frogs) obj += ` (🐸 ${Math.min(ST.frogs, q.frogs)}/${q.frogs})`;
@@ -3475,6 +3663,7 @@
     { need: 2, t: '재앙 속에서 믿은 사람' },
     { need: 3, t: '어린양의 피 아래 선 사람' },
     { need: 4, t: '바다를 건넌 믿음의 사람' },
+    { need: 5, t: '광야에서 만나를 먹은 사람' },
     { need: 'scroll', t: '말씀을 찾는 탐험가' },
   ];
   const chaptersDone = () => ST.ch + (ST.cleared ? 1 : 0);
@@ -3494,7 +3683,7 @@
     pray_start: '두루마리마을 기념 전시관 앞에서…', companion: '떨기나무 앞, 걱정하는 모세에게…', prayer: '바로 앞에 들어가기 전, 떨리는 모세와…',
     share: '짚을 모아 준 일꾼들과…', trust: '뱀이 된 지팡이 이야기를 들을 때…', true_heart: '우박이 그친 뒤 바로의 모습을 보고…',
     passover_lamb: '문설주에 피를 바른 뒤 궁금한 것을…', bold_step: '바다가 갈라진 순간…', together: '바다를 건널 때 주변을 잘 살펴보면…',
-    timbrel: '미리암과 함께 소고를 잘 두드리면…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면',
+    timbrel: '미리암과 함께 소고를 잘 두드리면…', daily_bread: '만나를 아침까지 남겨 둔 사람에게…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면',
   };
   function badgeBookHTML(){
     const all = Object.entries(BADGES), n = all.filter(([k]) => ST.badges.includes(k)).length;
@@ -3502,7 +3691,7 @@
       + all.map(([k, b]) => ST.badges.includes(k) ? `<div class="bdg"><b>${b.ico}</b>${b.name}</div>`
           : `<div class="bdg off"><b>❓</b>???<i>${BADGE_HINT[k] || '이야기 속 어딘가에서…'}</i></div>`).join('') + `</div></div>`;
   }
-  const TITLE_ICO = { '두루마리마을 새내기': '📜', '부르심에 응답한 사람': '🔥', '재앙 속에서 믿은 사람': '⚡', '어린양의 피 아래 선 사람': '🐑', '바다를 건넌 믿음의 사람': '🌊', '말씀을 찾는 탐험가': '🧭' };
+  const TITLE_ICO = { '두루마리마을 새내기': '📜', '부르심에 응답한 사람': '🔥', '재앙 속에서 믿은 사람': '⚡', '어린양의 피 아래 선 사람': '🐑', '바다를 건넌 믿음의 사람': '🌊', '광야에서 만나를 먹은 사람': '🍞', '말씀을 찾는 탐험가': '🧭' };
   // 칭호 전체: 얻은 칭호는 컬러 배지+이름(누르면 사용), 못 얻은 칭호는 흑백 ❓ · 이름 숨김(얻는 조건만 작게)
   function titleBookHTML(){
     const mine = myTitle(), n = TITLES.filter(titleOk).length;
@@ -3543,8 +3732,8 @@
   function warpTargets(){
     const q = curStep(), done = chaptersDone(), out = [];
     const exitTo = q && q.exit ? ((ZONES[q.zone].points.find(p => p.id === q.exit) || {}).to) : null;
-    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4 };
-    for (const z of ['alpha', 'midian', 'egypt', 'redsea']){
+    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5 };
+    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild']){
       const story = q && (q.zone === z || exitTo === z);
       const ok = z === 'alpha' || done >= need[z] || story;
       out.push({ z, ok, story, here: Z && Z.id === z, note: z === 'alpha' ? '언제든 갈 수 있어요 · 내 장막' : story ? '📜 지금 이야기가 있는 곳' : ok ? '이야기를 마친 곳' : `🔒 ${need[z]}장을 마치면` });
@@ -3597,7 +3786,7 @@
   const cardHTML = (id, locked) => { const v = VERSES[id]; return `<div class="vcard${locked ? ' locked' : ''}" style="background-image:url('${A('ui/game/verse-card.jpg')}')"><div class="ref">${v.ref}</div><div>${locked ? '아직 모으지 못한 구절' : v.text}</div><div class="chk">개역개정</div></div>`; };
   // 곡: title(처음 테마) · village(두루마리마을) · midian(미디안 광야) · egypt(애굽 고센) · palace(바로의 궁전 알현실)
   const BGM = { on: (() => { try { return localStorage.getItem('inodyssey-bgm') !== 'off'; } catch (e){ return true; } })(), ctx: null, src: null, gain: null, bufs: {}, cur: null, want: 'title', starting: false, titleUntil: 0 };
-  const ZONE_BGM = { alpha: 'village', midian: 'midian', egypt: 'egypt', redsea: 'redsea' };
+  const ZONE_BGM = { alpha: 'village', midian: 'midian', egypt: 'egypt', redsea: 'redsea', wild: 'midian' };
   function bgmWanted(){
     if (performance.now() < BGM.titleUntil) return 'title';                      // 시작할 때 테마를 한 바퀴
     if (Z && Z.room && inRoom(player.position.x, player.position.z)) return 'palace';
@@ -3900,7 +4089,7 @@
     if (SHOP_MOCK || !MSU.client || !MSU.session) return 0;
     try { const { data, error } = await MSU.client.rpc('claim_odyssey_chapter', { p_ch: ch }); if (error) throw error; if (data > 0){ MSU.balance = (MSU.balance || 0) + data; toast(`💰 ${ch}장 완료 보상 ${data}달란트를 받았어요!`, 3000); } return data; } catch (e){ return 0; }
   }
-  async function claimClearedChapters(){ const n = ST.ch + (ST.cleared ? 1 : 0); for (let c = 1; c <= Math.min(n, 4); c++) await claimChapter(c); }
+  async function claimClearedChapters(){ const n = ST.ch + (ST.cleared ? 1 : 0); for (let c = 1; c <= Math.min(n, 5); c++) await claimChapter(c); }
 
   // 장착: 지팡이는 오른손에, 동물 친구는 뒤를 따라다님(마을을 옮겨도 함께)
   const equipObj = { staff: null, staffKey: null, pet: null, petKey: null, petT: 0 };
@@ -4211,7 +4400,7 @@
   function dq(k, amt = 1, quiet){
     const D = ST.daily; if (!D || D.date !== kstDate() || !D.q.includes(k) || dqDone(k)) return;
     D.p[k] = Math.min(dqDef(k).n, (D.p[k] || 0) + amt);
-    if (dqDone(k)){ saveST(); toast(`✅ 오늘의 퀘스트: ${dqDef(k).t}`, 2200); if (dqAll()){ ST.manna = (ST.manna || 0) + 2; setTimeout(() => toast('📅 오늘의 퀘스트를 다 했어요! ☰ 메뉴에서 달란트를 받아요 · 🍞 만나 2개도 받았어요', 3000), 2400); weeklyInit(); const W = ST.weekly; if (W && !W.days.includes(D.date)){ W.days.push(D.date); wq('daily3'); } } dailyDot(); }
+    if (dqDone(k)){ saveST(); toast(`✅ 오늘의 퀘스트: ${dqDef(k).t}`, 2200); if (dqAll()){ addManna(2); setTimeout(() => toast('📅 오늘의 퀘스트를 다 했어요! ☰ 메뉴에서 달란트를 받아요 · 🍞 만나 2개도 받았어요', 3000), 2400); weeklyInit(); const W = ST.weekly; if (W && !W.days.includes(D.date)){ W.days.push(D.date); wq('daily3'); } } dailyDot(); }
     else if (!quiet) saveST();
   }
   let runAcc = 0;
@@ -4237,7 +4426,7 @@
     { key: 'rp_marks',  name: '🐑 문설주에 피 바르기', ch: 2, step: 'c3s5',  zone: 'egypt',   spawn: [-6, 2],    need: 3 },
     { key: 'rp_redsea', name: '🌊 홍해 건너기(추격)',  ch: 3, step: 'c4s9',  zone: 'redsea',  spawn: [14.5, 0],  need: 4 },
   ];
-  const PROG_KEYS = ['ch', 'step', 'cleared', 'rumor', 'straw', 'water', 'frogs', 'warned'];
+  const PROG_KEYS = ['ch', 'step', 'cleared', 'rumor', 'straw', 'water', 'frogs', 'warned', 'mannaGot'];
   let REPLAY = null;
   function openReplay(){
     const done = chaptersDone(), fmt = k => ST.best && ST.best[k] !== undefined ? ` · 내 최고 ${ST.best[k]}초` : '';
@@ -4260,7 +4449,7 @@
     const bk = {}; PROG_KEYS.forEach(k => bk[k] = JSON.parse(JSON.stringify(ST[k] ?? null)));
     ST.replayBackup = bk;
     ST.ch = def.ch; STORY = CHAPTERS[def.ch].steps; CHAPTER = CHAPTERS[def.ch];
-    ST.cleared = false; ST.step = def.step ? stepIdx(def.step) : 0; ST.rumor = []; ST.straw = 0; ST.water = 0; ST.frogs = 0; ST.warned = 0;
+    ST.cleared = false; ST.step = def.step ? stepIdx(def.step) : 0; ST.rumor = []; ST.straw = 0; ST.water = 0; ST.frogs = 0; ST.warned = 0; ST.mannaGot = 0;
     reachDone = null; chase.on = false;
     REPLAY = { def, t0: 0 };
     saveST(); renderQuestList();
@@ -4940,9 +5129,9 @@
       runDialog(DLG[q.dlg].concat(quizLines(q.dlg)), () => giveReward(q.reward, advance), m.data.model ? m : null, q.dlg);
       return true;
     }
-    if (q.rumor && RUMORS[d.id]){
+    if (q.rumor && rumorOk(q, d.id)){
       if (!ST.rumor.includes(d.id)) ST.rumor.push(d.id);
-      runDialog(RUMORS[d.id].map(t => [{ n: d.title }, t]), () => { renderQuestList(); if (ST.rumor.length >= q.rumor) advance(); }, m);
+      runDialog(RUMORS[d.id].map(t => [{ n: d.title }, t]), () => { renderQuestList(); if (rumorCount(q) >= q.rumor) advance(); }, m);
       return true;
     }
     return false;
@@ -4950,7 +5139,7 @@
 
   // 짚단(출 5:12): 애굽에서 짚 모으기 단계일 때만 나타나고, 가까이 가면 줍는다
   const straws = [];
-  function spawnTasks(){ applyPlace(); applyWorld(); spawnStraw(); spawnDig(); spawnFrogs(); spawnHerd(); spawnWarn(); spawnMarksStatic(); spawnPillar(); spawnArmy(); spawnCloud(); }
+  function spawnTasks(){ spawnManna(); applyPlace(); applyWorld(); spawnStraw(); spawnDig(); spawnFrogs(); spawnHerd(); spawnWarn(); spawnMarksStatic(); spawnPillar(); spawnArmy(); spawnCloud(); }
   // 이 단계까지 지정된 자리(place)를 모두 합쳐서 인물을 세움
   function applyPlace(){
     if (!Z) return;
@@ -4968,6 +5157,7 @@
   let bloodT = -1;
   function applyWorld(){
     if (!Z) return;
+    if (Z.id === 'wild') spawnQuail(ST.ch === 4 && !ST.cleared && ST.step >= stepIdx('c5s10') && ST.step <= stepIdx('c5s11'));
     if (Z._water){
       const red = ST.ch === 1 && ST.step >= stepIdx('c2s3') && ST.step < stepIdx('c2s4');   // 이레 뒤(개구리부터)는 원래 물빛
       Z._water.material.color.copy(red ? WATER_BLOOD : WATER_BLUE);
@@ -5003,6 +5193,9 @@
     if (name === 'dawn'){ nightOn = false; }
     if (name === 'close'){ sea.target = 0; armyOn = false; spawnArmy(); cloudOn = false; spawnCloud(); }
     if (name === 'dance'){ startDance(); }
+    if (name === 'sweet'){ toast('💧 쓴 물이 단 물이 되었어요!', 2200); }
+    if (name === 'quail'){ spawnQuail(true); toast('🐦 메추라기가 날아와 진영을 덮어요', 2200); }
+    if (name === 'manna'){ setTimeout(spawnManna, 50); }
     if (name === 'rhythm' && dlgState && !NOTYPE){ dlgEl.classList.add('hidden'); rhythmGame('', () => { dlgEl.classList.remove('hidden'); }); document.getElementById('mg-close').textContent = '계속하기'; mg.onClose = () => { dlgEl.classList.remove('hidden'); document.getElementById('mg-close').textContent = '나가기'; }; }
     if (name === 'pillar'){ pillarOn = true; spawnPillar(); if (pillarObj) startCine('pillar', pillarObj.position.x, pillarObj.position.y, pillarObj.position.z, { r: 16, h: 5, dur: 5 }); toast('🔥 불 기둥이 백성 앞에 나타났어요', 2400); }
   }
@@ -5306,6 +5499,101 @@
     if (q.doneDlg) runDialog(DLG[q.doneDlg].concat(quizLines(q.doneDlg)), () => giveReward(q.reward, advance), null, q.doneDlg);
     else giveReward(q.reward, advance);
   }
+  // ══ 5장: 물웅덩이 · 메추라기 · 만나 ══════════════════════════════
+  const MARA_BITTER = new THREE.Color(0x7d7a4a), MARA_SWEET = new THREE.Color(0x4fa0c8);
+  let pools = [];
+  function buildPools(){
+    pools = [];
+    Z.pools.forEach(([x, z, r, kind]) => {
+      const y = heightAt(x, z);
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(r, 28).rotateX(-Math.PI / 2), new THREE.MeshToonMaterial({ color: kind === 'mara' ? MARA_BITTER : MARA_SWEET, gradientMap: toonGradient, transparent: true, opacity: 0.92 }));
+      disc.position.set(x, y + 0.08, z); zoneRoot.add(disc);
+      const rim = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.35, 28).rotateX(-Math.PI / 2), new THREE.MeshToonMaterial({ color: 0xb89a6a, gradientMap: toonGradient }));
+      rim.position.set(x, y + 0.06, z); zoneRoot.add(rim);
+      obstacles.push({ x, z, r: r * 0.85 });
+      pools.push({ kind, disc });
+    });
+  }
+  const maraSweet = () => ST.ch > 4 || (ST.ch === 4 && (ST.cleared || ST.step > stepIdx('c5s5')));
+  let sweetK = 0, quailObj = null, mannaFlakes = [];
+  function updatePools(dt){
+    if (!pools.length) return;
+    const want = maraSweet() ? 1 : 0; sweetK += (want - sweetK) * Math.min(1, dt * 1.2);
+    pools.forEach(p => { if (p.kind === 'mara') p.disc.material.color.copy(MARA_BITTER).lerp(MARA_SWEET, sweetK); });
+  }
+  // 메추라기: 저녁에 진영 둘레로 내려앉음(출 16:13)
+  function spawnQuail(on){
+    if (quailObj){ quailObj.parent && quailObj.parent.remove(quailObj); quailObj = null; }
+    if (!on || !Z || Z.id !== 'wild') return;
+    const g = new THREE.Group(), body = new THREE.MeshToonMaterial({ color: 0x8a6a44, gradientMap: toonGradient }), head = new THREE.MeshToonMaterial({ color: 0x5a4430, gradientMap: toonGradient });
+    const bg = new THREE.SphereGeometry(0.22, 8, 6), hg = new THREE.SphereGeometry(0.12, 8, 6);
+    for (let i = 0; i < 40; i++){
+      const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 12, x = 22 + Math.cos(a) * r, z = 1 + Math.sin(a) * r;
+      const q = new THREE.Group(); const b = new THREE.Mesh(bg, body); b.scale.set(1, 0.8, 1.3); const h = new THREE.Mesh(hg, head); h.position.set(0, 0.16, 0.22); q.add(b, h);
+      q.position.set(x, heightAt(x, z) + 8 + Math.random() * 6, z); q.rotation.y = Math.random() * 6.28; q.userData = { gy: heightAt(x, z) + 0.18, v: 2 + Math.random() * 2 };
+      g.add(q);
+    }
+    zoneRoot.add(g); quailObj = g;
+  }
+  function updateQuail(dt){ if (!quailObj) return; quailObj.children.forEach(q => { const u = q.userData; if (q.position.y > u.gy) q.position.y = Math.max(u.gy, q.position.y - u.v * dt); }); }
+  // 만나: 이야기(한 오멜 = 5, 여섯째 날 = 10) + 5장을 마친 뒤 매일 아침(한국 시간) — 금요일 갑절, 토요일 없음
+  const mannaGeo = new THREE.SphereGeometry(0.09, 6, 4), mannaMat = new THREE.MeshToonMaterial({ color: 0xfbf8ee, gradientMap: toonGradient, emissive: 0x555040 });
+  function kstDow(){ return new Date(Date.now() + 9 * 3600e3).getUTCDay(); }   // 0=일 … 5=금 6=토
+  function mannaFieldToday(){
+    const d = kstDate(); ST.mannaField = ST.mannaField && ST.mannaField.d === d ? ST.mannaField : { d, got: 0 };
+    const dow = kstDow(); return dow === 6 ? 0 : dow === 5 ? 10 : 5;
+  }
+  function spawnManna(){
+    mannaFlakes.forEach(f => f.parent && f.parent.remove(f)); mannaFlakes = [];
+    if (!Z || Z.id !== 'wild') return;
+    const q = curStep(); let n = 0, story = false;
+    if (q && q.manna && q.zone === 'wild'){ n = q.manna - (ST.mannaGot || 0); story = true; }
+    else if (chaptersDone() >= 5){ n = mannaFieldToday() - ST.mannaField.got; }
+    if (n <= 0) return;
+    if (!NAV.reach) reachable(0, 0);
+    let seed = [...kstDate()].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) % 2147483647;
+    const rr = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    for (let k = 0, tries = 0; k < n && tries < 600; tries++){
+      const a = rr() * Math.PI * 2, r = 8 + rr() * 12, x = 22 + Math.cos(a) * r, z = 1 + Math.sin(a) * r;
+      if (!reachable(x, z) || mannaFlakes.some(f => Math.hypot(f.userData.x - x, f.userData.z - z) < 3)) continue;
+      const g = new THREE.Group(); for (let i = 0; i < 9; i++){ const m = new THREE.Mesh(mannaGeo, mannaMat); m.position.set((rr() - 0.5) * 0.8, 0.05, (rr() - 0.5) * 0.8); g.add(m); }
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 })); glow.scale.set(1.2, 0.8, 1); glow.position.y = 0.3; g.add(glow);
+      g.position.set(x, heightAt(x, z), z); g.userData = { x, z, story }; zoneRoot.add(g); mannaFlakes.push(g); k++;
+    }
+  }
+  function updateManna(){
+    if (!mannaFlakes.length) return;
+    const P = player.position;
+    for (let i = mannaFlakes.length - 1; i >= 0; i--){
+      const f = mannaFlakes[i]; if (Math.hypot(P.x - f.userData.x, P.z - f.userData.z) > 1.1) continue;
+      zoneRoot.remove(f); mannaFlakes.splice(i, 1);
+      if (f.userData.story){
+        const q = curStep(); if (!q || !q.manna) continue;
+        ST.mannaGot = (ST.mannaGot || 0) + 1; saveST(); renderQuestList();
+        toast(`🍞 만나 ${Math.min(ST.mannaGot, q.manna)} / ${q.manna}`, 900);
+        if (ST.mannaGot >= q.manna){ ST.mannaGot = 0; completeTask(q); }
+      } else {
+        ST.mannaField.got++; addManna(1);
+        const left = mannaFieldToday() - ST.mannaField.got;
+        toast(left > 0 ? `🍞 오늘의 만나 +1 (남은 ${left}) — 🐾 펫에게 먹일 수 있어요` : '🍞 오늘 거둘 만나를 다 거뒀어요! 내일 아침 또 내려요', 1800);
+      }
+    }
+  }
+  // 만나는 그날 쓰는 양식: 다음 날이 되면 벌레가 생겨 사라짐(출 16:20) — 금요일에 거둔 것은 토요일까지(출 16:24)
+  function addManna(n){ mannaSpoil(); ST.manna = (ST.manna || 0) + n; ST.mannaDay = kstDate(); saveST(); }
+  function mannaSpoil(){
+    const today = kstDate(); if (!ST.manna || !ST.mannaDay || ST.mannaDay === today) return;
+    const y = new Date(Date.now() + 9 * 3600e3 - 86400e3).toISOString().slice(0, 10);
+    if (ST.mannaDay === y && kstDow() === 6 && new Date(Date.parse(y + 'T00:00:00Z')).getUTCDay() === 5) return;   // 금요일 것은 안식일까지 그대로
+    const lost = ST.manna; ST.manna = 0; ST.mannaDay = today; saveST();
+    setTimeout(() => toast(`🐛 어제 남긴 만나 ${lost}개에 벌레가 생겼어요 (출 16:20) — 만나는 그날 먹여요!`, 3200), 5000);
+  }
+  function mannaHello(){
+    if (!Z || Z.id !== 'wild' || chaptersDone() < 5) return;
+    const n = mannaFieldToday();
+    setTimeout(() => toast(n === 0 ? '😌 오늘은 안식일이라 들에 만나가 없어요 (출 16:26)' : n === 10 ? '🍞 여섯째 날! 오늘은 만나를 갑절(10개) 거둘 수 있어요' : '🍞 아침 이슬이 마른 뒤, 들판에 만나가 내렸어요 (오늘 5개)', 3000), 1800);
+  }
+
   // 강가 파기(출 7:24): 젖은 흙 자리 중 몇 곳에서만 물이 나온다
   const moundGeo = new THREE.SphereGeometry(0.55, 10, 6), moundMat = new THREE.MeshToonMaterial({ color: 0x6b4a2e, gradientMap: toonGradient });
   const dugMat = new THREE.MeshToonMaterial({ color: 0x3e2a18, gradientMap: toonGradient }), wetMat = new THREE.MeshToonMaterial({ color: 0x3b6f86, gradientMap: toonGradient });
@@ -5416,7 +5704,8 @@
 
   // 방향 힌트: 한 단계에 오래 머물면(40초~) 목표 쪽 화살표가 서서히 나타남
   const mmEl = document.getElementById('minimap'), compassEl = document.getElementById('compass'), compassArrow = document.getElementById('compass-arrow');
-  const ROUTE = { alpha: { midian: 'to-midian', egypt: 'to-midian', redsea: 'to-midian' }, midian: { alpha: 'to-alpha', egypt: 'to-egypt', redsea: 'to-egypt' }, egypt: { midian: 'to-midian2', alpha: 'to-midian2', redsea: 'to-redsea' }, redsea: { egypt: 'to-egypt3', midian: 'to-egypt3', alpha: 'to-egypt3' } };
+  const ROUTE = { alpha: { midian: 'to-midian', egypt: 'to-midian', redsea: 'to-midian' }, midian: { alpha: 'to-alpha', egypt: 'to-egypt', redsea: 'to-egypt' }, egypt: { midian: 'to-midian2', alpha: 'to-midian2', redsea: 'to-redsea' }, redsea: { egypt: 'to-egypt3', midian: 'to-egypt3', alpha: 'to-alpha3', wild: 'to-wild' }, wild: { redsea: 'to-redsea2', egypt: 'to-redsea2', midian: 'to-redsea2', alpha: 'to-redsea2' } };
+  ['alpha', 'midian', 'egypt'].forEach(z => { ROUTE[z].wild = ROUTE[z].redsea; });
   let doorTarget = null;
   function targetPos(){
     doorTarget = null;
@@ -5430,12 +5719,13 @@
       }
       return m.mesh.position;
     }
-    if (q.rumor){ const m = markers.filter(m => RUMORS[m.data.id] && !ST.rumor.includes(m.data.id)).sort((a, b) => a.mesh.position.distanceTo(player.position) - b.mesh.position.distanceTo(player.position))[0]; return m && m.mesh.position; }
+    if (q.rumor){ const m = markers.filter(m => rumorOk(q, m.data.id) && !ST.rumor.includes(m.data.id)).sort((a, b) => a.mesh.position.distanceTo(player.position) - b.mesh.position.distanceTo(player.position))[0]; return m && m.mesh.position; }
     if (q.warn){ const m = markers.filter(x => x.isWarn && !x.done).sort((a, b) => a.mesh.position.distanceTo(player.position) - b.mesh.position.distanceTo(player.position))[0]; return m && m.mesh.position; }
     if (q.reach && q.reach.near){ return new THREE.Vector3(q.reach.near[0], 0, q.reach.near[1]); }
     if (q.reach){ return q.reach.minX !== undefined ? (Z.id === 'redsea' ? new THREE.Vector3(56, 0, 0) : new THREE.Vector3(24, 0, -12)) : new THREE.Vector3(-4, 0, 0); }
     if (q.dig){ const m = markers.filter(x => x.isDig && !x.done).sort((a, b) => a.mesh.position.distanceTo(player.position) - b.mesh.position.distanceTo(player.position))[0]; return m && m.mesh.position; }
     if (q.frogs && frogs.length){ return frogs.map(f => new THREE.Vector3(f.x, 0, f.z)).sort((a, b) => a.distanceTo(player.position) - b.distanceTo(player.position))[0]; }
+    if (q.manna && mannaFlakes.length){ return mannaFlakes.map(o => new THREE.Vector3(o.userData.x, 0, o.userData.z)).sort((a, b) => a.distanceTo(player.position) - b.distanceTo(player.position))[0]; }
     if (q.collect && straws.length){ return straws.map(o => new THREE.Vector3(o.x, 0, o.z)).sort((a, b) => a.distanceTo(player.position) - b.distanceTo(player.position))[0]; }
     return null;
   }
@@ -5443,7 +5733,7 @@
     stepT += dt;
     const t = targetPos();
     const far = t && Math.hypot(t.x - player.position.x, t.z - player.position.z) > 10;
-    const q = curStep(), wait = q && q.id === 'c2s22' ? 3 : q && (q.npc || q.point || q.rumor || q.exit || q.dig || q.reach || q.warn || q.skillAt) ? 10 : 40;
+    const q = curStep(), wait = q && q.id === 'c2s22' ? 3 : q && (q.manna || q.npc || q.point || q.rumor || q.exit || q.dig || q.reach || q.warn || q.skillAt) ? 10 : 40;
     document.querySelectorAll('.skill-btn').forEach(b => b.classList.toggle('tut-glow', !!(q && q.skillAt) && (b.classList.contains('skill-toggle') ? !skillOpen : true)));
     const show = t && far && stepT > wait;
     compassEl.style.opacity = show ? String(Math.min(0.9, (stepT - wait) / 6)) : '0';
@@ -5704,7 +5994,7 @@
       if (m.hidden){ if (m.tag) m.tag.visible = false; return; }
       if (Z.room && m.data.model) m.mesh.visible = !inRoom(m.mesh.position.x, m.mesh.position.z) || roomObjs.shown;
       if (m.tag){
-        const q = curStep(), isT = !!(q && Z && q.zone === Z.id && ((m.isDig && !m.done) || (m.isWarn && !m.done) || q.npc === m.data.id || q.point === m.data.id || q.exit === m.data.id || q.skillAt === m.data.id || doorTarget === m.data.id || (q.rumor && RUMORS[m.data.id] && !ST.rumor.includes(m.data.id))));
+        const q = curStep(), isT = !!(q && Z && q.zone === Z.id && ((m.isDig && !m.done) || (m.isWarn && !m.done) || q.npc === m.data.id || q.point === m.data.id || q.exit === m.data.id || q.skillAt === m.data.id || doorTarget === m.data.id || (q.rumor && rumorOk(q, m.data.id) && !ST.rumor.includes(m.data.id))));
         drawTag(m.tag, isT);
         m.tag.visible = d < (isT ? 40 : 16) && !dlgState;
         if (m.tag.visible && m.headBone){ m.headBone.getWorldPosition(_tagV); m.tag.position.y = _tagV.y - m.mesh.position.y + 0.42; }   // 머리 꼭대기 위
@@ -5741,11 +6031,11 @@
       if ((m.isDig || m.isWarn) && m.done) return;
       const range = m.data.model ? 3.2 : (m.isDoor ? 2.4 : m.isExit ? 3.0 : (m.isDig ? 1.8 : (m.isWarn ? 2.4 : 4.5)));
       // 지금 이야기 단계의 목표(인물·장소)가 범위 안이면 우선(옆에 다른 NPC가 더 가까이 있어도)
-      const q = curStep(), isTarget = q && Z && q.zone === Z.id && (q.npc === m.data.id || q.point === m.data.id || q.skillAt === m.data.id || (q.dig && m.isDig) || (q.warn && m.isWarn) || (q.rumor && RUMORS[m.data.id] && !ST.rumor.includes(m.data.id)));
+      const q = curStep(), isTarget = q && Z && q.zone === Z.id && (q.npc === m.data.id || q.point === m.data.id || q.skillAt === m.data.id || (q.dig && m.isDig) || (q.warn && m.isWarn) || (q.rumor && rumorOk(q, m.data.id) && !ST.rumor.includes(m.data.id)));
       const score = isTarget ? d - 100 : d;
       if (d < range && score < closestDist){ closestDist = score; closest = m; }
     });
-    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updateHomeBtn(); updateReplayBar(); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
+    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updateHomeBtn(); updateReplayBar(); updatePools(dt); updateQuail(dt); updateManna(); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
     if (closest !== nearPoint){
       nearPoint = closest;
       interactBtn.classList.toggle('hidden', !nearPoint);
@@ -5839,7 +6129,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
