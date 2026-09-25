@@ -3206,7 +3206,7 @@
   const prefetchState = { total: 0, done: 0 };
   async function prefetchAll(){
     if (window.__ASSETS){ prefetchState.total = prefetchState.done = 1; return; }   // 파일 하나짜리 미리보기는 이미 다 들어 있음
-    const order = { alpha: ['midian', 'egypt'], midian: ['egypt', 'alpha'], egypt: ['midian', 'alpha'] }[Z.id] || [];
+    const order = { alpha: ['midian', 'egypt', 'redsea'], midian: ['egypt', 'alpha', 'redsea'], egypt: ['redsea', 'midian', 'alpha'], redsea: ['egypt', 'alpha', 'midian'] }[Z.id] || [];
     const todo = order.filter(z => !prefetched.has(z)).map(z => { prefetched.add(z); const a = zoneAssets(z); return [...a.files, ...a.lazy]; });
     const files = [...new Set(todo.flat())].filter(f => !bytesCache.has(f));
     prefetchState.total = files.length;   // 전체 개수를 먼저 정해 두어 %가 거꾸로 가지 않게
