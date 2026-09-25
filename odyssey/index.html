@@ -354,6 +354,13 @@
   .hp-it.lock { opacity:.5; }
   body.homeedit #joystick-zone, body.homeedit #joy-hit, body.homeedit #action-cluster, body.homeedit #skill-bar, body.homeedit #interact-btn, body.homeedit #quest-panel, body.homeedit #tut, body.homeedit #hint, body.homeedit #compass, body.homeedit #hud-btns, body.homeedit #home-btns { display:none !important; }
   /* 오늘의 퀘스트 */
+  .pet-bar { height:14px; border-radius:7px; background:rgba(255,255,255,.12); overflow:hidden; margin:6px 0 4px; }
+  .pet-bar i { display:block; height:100%; background:linear-gradient(90deg,#ff9fb3,#ffd27a); }
+  .pet-acts { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:10px; }
+  .pet-acts button { padding:10px 4px; border-radius:12px; border:none; background:#ffd27a; color:#2a1d10; font:800 13.5px 'Pretendard', sans-serif; }
+  .pet-acts button small { display:block; font-weight:600; font-size:11px; opacity:.8; }
+  .pet-acts button:disabled { background:rgba(255,255,255,.12); color:rgba(255,255,255,.55); }
+  .pet-lv { font-size:12.5px; line-height:1.8; margin-top:8px; }
   #replay-bar { position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:13; display:flex; align-items:center; gap:10px; background:rgba(28,19,10,.9); border:2px solid #8fe0ff; border-radius:16px; padding:6px 12px; color:#f5e9d0; font:800 14px 'Pretendard', sans-serif; white-space:nowrap; }
   #replay-bar.hidden { display:none; }
   #replay-bar button { padding:5px 10px; border-radius:10px; border:none; background:rgba(255,255,255,.14); color:inherit; font-weight:800; font-size:12.5px; }
@@ -491,7 +498,7 @@
 <div id="dlg" class="hidden"><div class="row"><img id="dlg-face" alt=""><div style="flex:1">
   <div id="dlg-name"></div><div id="dlg-text"></div></div></div>
   <div id="dlg-choices"></div><button id="dlg-next">다음 ▶</button></div>
-<div id="hud-btns"><button id="btn-emo" title="인사하기" class="hidden">😊</button><button id="btn-menu" title="메뉴">☰</button>
+<div id="hud-btns"><button id="btn-pet" title="내 펫" class="hidden">🐾</button><button id="btn-emo" title="인사하기" class="hidden">😊</button><button id="btn-menu" title="메뉴">☰</button>
   <div id="hud-menu" class="hidden"><button id="btn-book" title="구절 수집첩">📖<span>수집첩</span></button><button id="btn-log" title="대화 기록">💬<span>대화 기록</span></button><button id="btn-friends" title="친구">👥<span>친구</span></button><button id="btn-daily" title="오늘의 퀘스트">📅<span>오늘의 퀘스트</span></button><button id="btn-rank" title="랭킹">🏆<span>랭킹·오이코스</span></button><button id="btn-shop" title="상점">🛍️<span>상점·꾸미기</span></button><button id="btn-set" title="설정">⚙️<span>설정</span></button></div></div>
 <div id="shop-modal" class="modal hidden"><div class="sheet" style="max-width:440px">
   <h3>🛍️ 두루마리 상점</h3>
@@ -507,6 +514,7 @@
   <div class="set-btns"><button id="btn-save-exit">💾 저장하고 나가기</button><button class="close">닫기</button></div></div></div>
 <div id="book-modal" class="modal hidden"><div class="sheet"><h3>📖 구절 수집첩</h3><div class="cards" id="book-cards"></div><button class="close">닫기</button></div></div>
 <div id="warp-modal" class="modal hidden"><div class="sheet" style="max-width:380px"><h3>🧭 어디로 갈까요?</h3><div id="warp-list"></div><button class="close">닫기</button></div></div>
+<div id="pet-modal" class="modal hidden"><div class="sheet" style="max-width:420px"><h3 id="pet-title">🐾 내 펫</h3><div id="pet-body"></div><button class="close">닫기</button></div></div>
 <div id="replay-modal" class="modal hidden"><div class="sheet"><h3>🎬 기념 전시관 — 다시 하기</h3><div id="replay-list"></div><button class="close">닫기</button></div></div>
 <div id="replay-bar" class="hidden"><span id="replay-t"></span><button id="replay-stop">그만두기</button></div>
 <div id="daily-modal" class="modal hidden"><div class="sheet"><h3>📅 오늘의 퀘스트</h3><div id="daily-list"></div><button id="daily-claim"></button>
@@ -3558,7 +3566,14 @@
     if (ex && ex.to === z) travelTo(ex);
     else travelTo({ id: 'warp', to: z, spawn: ZONES[z].spawn });
   });
+  function seasonHello(){
+    const sz = seasonNow(); if (!sz) return; ST.seasonSeen = ST.seasonSeen || [];
+    const key = sz + new Date(Date.now() + 9 * 3600e3).getUTCFullYear(); if (ST.seasonSeen.includes(key)) return;
+    ST.seasonSeen.push(key); saveST();
+    setTimeout(() => toast(`${SEASONS[sz].n} 이벤트! 🏠 내 장막 꾸미기에서 한정 장식을 무료로 받아요 (${SEASONS[sz].end}까지)`, 3600), 6000);
+  }
   function grantPastSkills(){
+    seasonHello();
     if (!unlocked.has('warp')){ unlockSkill('warp', true); if (!ST.warpHello){ ST.warpHello = true; saveST(); setTimeout(() => toast('🧭 새 스킬 「이동」: 두루마리마을과 마친 마을로 바로 갈 수 있어요', 3000), 4500); } }
     const past = (ch, id) => ST.ch > ch || (ST.ch === ch && (ST.cleared || ST.step > stepIdx(id)));
     if (past(1, 'c2s5')) unlockSkill('pray', true);
@@ -3911,6 +3926,53 @@
       if (equip.pet && owned.has(equip.pet)){ const o = await loadShopModel(equip.pet); if (equipObj.petKey === equip.pet){ equipObj.pet = o; o.position.copy(player.position); scene.add(o); equipObj.petWings = SHOP[equip.pet].fly ? addWings(o, SHOP[equip.pet].h * WPM) : null; equipObj.petGait = SHOP[equip.pet].fly ? null : addGait(o, equip.pet === 'pet-donkey' ? 0.45 : 0.38); } }
     }
   }
+  // ══ 🐾 펫 친밀도: 쓰다듬기(하루 5번 +2) · 만나 먹이기(+6) → 레벨마다 새 행동 ══
+  const PET_LV = [
+    { need: 0,  n: 'Lv.1 처음 만난 사이', unlock: '' },
+    { need: 20, n: 'Lv.2 친한 사이', unlock: '🪑 앉기 — 멈춰 서 있으면 옆에 앉아요' },
+    { need: 50, n: 'Lv.3 단짝', unlock: '🎪 재주 부리기 — 빙글 돌며 뛰어올라요' },
+    { need: 85, n: 'Lv.4 가장 좋은 친구', unlock: '🏃 따라 뛰기 — 달리면 신나게 따라 뛰어요' },
+  ];
+  const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 ? a : b); };
+  const petAff = k => (ST.petAff && ST.petAff[k]) || 0;
+  const petLv = k => PET_LV.filter(l => petAff(k) >= l.need).length;   // 1~4
+  function addAff(k, n){
+    ST.petAff = ST.petAff || {}; const before = petLv(k);
+    ST.petAff[k] = Math.min(100, petAff(k) + n); saveST();
+    const after = petLv(k);
+    if (after > before) setTimeout(() => toast(`🎉 ${josa(SHOP[k].name, '과', '와')} ${PET_LV[after - 1].n}이 됐어요! ${PET_LV[after - 1].unlock}`, 3400), 700);
+  }
+  function petHearts(){
+    const pet = equipObj.pet; if (!pet) return;
+    for (let i = 0; i < 4; i++) setTimeout(() => {
+      const el = document.createElement('div'); el.textContent = ['❤️', '💕', '💖'][(Math.random() * 3) | 0];
+      const v = pet.position.clone(); v.y += 1.0; v.project(camera);
+      Object.assign(el.style, { position: 'fixed', left: ((v.x + 1) / 2 * innerWidth + (Math.random() - 0.5) * 40) + 'px', top: ((1 - v.y) / 2 * innerHeight) + 'px', fontSize: '20px', zIndex: 15, pointerEvents: 'none', transition: 'transform 1.2s ease-out, opacity 1.2s', opacity: '1' });
+      document.body.appendChild(el); requestAnimationFrame(() => { el.style.transform = 'translateY(-50px)'; el.style.opacity = '0'; }); setTimeout(() => el.remove(), 1300);
+    }, i * 150);
+  }
+  function renderPet(msg){
+    const k = equipObj.petKey, it = SHOP[k]; if (!k) return;
+    const aff = petAff(k), lv = petLv(k), next = PET_LV[lv], today = kstDate();
+    ST.petDay = ST.petDay || {}; const pd = ST.petDay[k] && ST.petDay[k].d === today ? ST.petDay[k] : { d: today, n: 0 };
+    document.getElementById('pet-title').textContent = `🐾 ${it.name} · ${PET_LV[lv - 1].n}`;
+    document.getElementById('pet-body').innerHTML = `<div style="font-size:13px">친밀도 ${aff} / 100${next ? ` · 다음 레벨까지 ${next.need - aff}` : ' · 최고 레벨!'}</div>`
+      + `<div class="pet-bar"><i style="width:${aff}%"></i></div>`
+      + `<div class="pet-acts"><button data-pa="pat" ${pd.n >= 5 ? 'disabled' : ''}>🤚 쓰다듬기<small>오늘 ${pd.n}/5 · +2</small></button>`
+      + `<button data-pa="feed" ${(ST.manna || 0) > 0 ? '' : 'disabled'}>🍞 만나 먹이기<small>만나 ${ST.manna || 0}개 · +6</small></button>`
+      + `<button data-pa="trick" ${lv >= 3 ? '' : 'disabled'}>🎪 재주<small>${lv >= 3 ? '보여 줘!' : 'Lv.3부터'}</small></button></div>`
+      + `<div class="pet-lv">${PET_LV.slice(1).map((l, i) => `${lv >= i + 2 ? '✅' : '🔒'} ${l.unlock} <span style="opacity:.6">(${l.need})</span>`).join('<br>')}</div>`
+      + `<div style="font-size:12px;opacity:.75;margin-top:8px">${msg || '🍞 만나는 오늘의 퀘스트를 다 하면 2개씩 받아요.'}</div>`;
+  }
+  document.getElementById('btn-pet').onclick = () => { renderPet(); openModal('pet-modal'); };
+  document.getElementById('pet-body').addEventListener('click', e => {
+    const b = e.target.closest('[data-pa]'); if (!b || b.disabled) return;
+    const k = equipObj.petKey, today = kstDate();
+    if (b.dataset.pa === 'pat'){ ST.petDay = ST.petDay || {}; if (!ST.petDay[k] || ST.petDay[k].d !== today) ST.petDay[k] = { d: today, n: 0 }; ST.petDay[k].n++; addAff(k, 2); petHearts(); renderPet(`${josa(SHOP[k].name, '이', '가')} 기분 좋아해요!`); }
+    if (b.dataset.pa === 'feed'){ ST.manna = (ST.manna || 0) - 1; addAff(k, 6); petHearts(); renderPet(`냠냠! ${josa(SHOP[k].name, '이', '가')} 만나를 맛있게 먹었어요`); }
+    if (b.dataset.pa === 'trick'){ equipObj.trickT = 1.2; document.querySelector('#pet-modal .close').click(); }
+  });
+  let playerIdleT = 0;
   function addWings(o, H){
     const shape = new THREE.Shape(); shape.moveTo(0, 0.12); shape.quadraticCurveTo(0.55, 0.42, 1.0, 0.12); shape.lineTo(0.9, -0.02); shape.quadraticCurveTo(0.5, -0.22, 0, -0.3); shape.lineTo(0, 0.12);
     const geo = new THREE.ShapeGeometry(shape, 8); geo.rotateX(-Math.PI / 2); geo.scale(H * 0.85, 1, H * 0.85);
@@ -3920,22 +3982,32 @@
   }
   const _hand = new THREE.Vector3();
   function updateEquip(dt){
+    document.getElementById('btn-pet').classList.toggle('hidden', !equipObj.pet);
+    playerIdleT = moveSpeed < 0.2 ? playerIdleT + dt : 0;
     const st = equipObj.staff;
     if (st && playerHand){ playerHand.getWorldPosition(_hand); player.worldToLocal(_hand); st.position.set(_hand.x, 0.02, _hand.z); }   // 손 위치를 따라 땅을 짚은 지팡이
     const pet = equipObj.pet; if (!pet) return;
     const it = SHOP[equipObj.petKey], fx = Math.sin(heading), fz = -Math.cos(heading);   // 학생이 보는 방향
-    const tx = player.position.x - fx * 1.5 + fz * 0.9, tz = player.position.z - fz * 1.5 - fx * 0.9;
+    const lv = petLv(equipObj.petKey), runFollow = lv >= 4 && moveSpeed > (WALK_SPEED + RUN_SPEED) / 2;
+    const side = runFollow ? 1.1 : 0.9, back = runFollow ? 0.4 : 1.5;   // 따라 뛰기: 옆에 바짝 붙어 나란히
+    const tx = player.position.x - fx * back + fz * side, tz = player.position.z - fz * back - fx * side;
     const dx = tx - pet.position.x, dz = tz - pet.position.z, dist = Math.hypot(dx, dz);
     if (dist > 25){ pet.position.set(tx, 0, tz); }                                          // 마을 이동·순간이동 뒤엔 바로 옆으로
     const k = Math.min(1, dt * (dist > 3 ? 5 : 2.6)); pet.position.x += dx * k; pet.position.z += dz * k;
     if (!it.fly && dist < 25) resolveCollisions(pet.position, heightAt(pet.position.x, pet.position.z));   // 담·건물을 뚫고 지나가지 않게
     const moving = dist > 0.25; equipObj.petT += dt * (moving ? 11 : 3);
-    const w = equipObj.petWings; if (w){ w.t += dt * (dist > 0.25 ? 17 : 9); const a = 0.25 + Math.sin(w.t) * (dist > 0.25 ? 0.95 : 0.6); w.r.rotation.z = a; w.l.rotation.z = -a; }
     const g = equipObj.petGait; if (g){ g.ph.value += dt * (moving ? 9 : 0); g.amp.value += ((moving ? 1 : 0) - g.amp.value) * Math.min(1, dt * 6); }
     const ground = heightAt(pet.position.x, pet.position.z);
-    pet.position.y = it.fly ? player.position.y + 1.9 + Math.sin(equipObj.petT * 0.5) * 0.18 : ground + (moving ? Math.abs(Math.sin(equipObj.petT)) * 0.04 : 0);
+    const sit = lv >= 2 && !moving && playerIdleT > 2.5;
+    if (equipObj.trickT > 0){ equipObj.trickT -= dt; pet.rotation.y += dt * 11; }
+    const hop = equipObj.trickT > 0 ? Math.sin((1.2 - equipObj.trickT) / 1.2 * Math.PI) * 0.9 : 0;
+    const runHop = runFollow ? Math.abs(Math.sin(equipObj.petT * 1.4)) * 0.3 : 0;
+    const flyY = sit ? ground + 0.02 : player.position.y + 1.9 + Math.sin(equipObj.petT * 0.5) * 0.18;
+    pet.position.y = it.fly ? pet.position.y + (flyY + hop - pet.position.y) * Math.min(1, dt * 3) : ground + hop + runHop + (moving ? Math.abs(Math.sin(equipObj.petT)) * 0.04 : 0);
+    pet.scale.y += ((sit && !it.fly ? 0.8 : 1) - pet.scale.y) * Math.min(1, dt * 5);   // 앉기: 몸을 낮춤
+    const w = equipObj.petWings; if (w && sit && Math.abs(pet.position.y - ground) < 0.3){ w.r.rotation.z += (0.05 - w.r.rotation.z) * Math.min(1, dt * 6); w.l.rotation.z = -w.r.rotation.z; } else if (w){ w.t += dt * (dist > 0.25 ? 17 : 9); const a = 0.25 + Math.sin(w.t) * (dist > 0.25 ? 0.95 : 0.6); w.r.rotation.z = a; w.l.rotation.z = -a; }
     const want = moving ? Math.atan2(dx, dz) : Math.atan2(player.position.x - pet.position.x, player.position.z - pet.position.z);
-    let df = want - pet.rotation.y; while (df > Math.PI) df -= Math.PI * 2; while (df < -Math.PI) df += Math.PI * 2; pet.rotation.y += df * Math.min(1, dt * 6);
+    if (!(equipObj.trickT > 0)){ let df = want - pet.rotation.y; while (df > Math.PI) df -= Math.PI * 2; while (df < -Math.PI) df += Math.PI * 2; pet.rotation.y += df * Math.min(1, dt * 6); }
   }
   // ══ 도전(미니게임) · 개인 기록 ══════════════════════════════════
   // 기록은 이 기기에 저장(ST.best)하고, 말씀우물에 로그인했으면 랭킹에도 올림(recordBest → submitRecord)
@@ -4139,7 +4211,7 @@
   function dq(k, amt = 1, quiet){
     const D = ST.daily; if (!D || D.date !== kstDate() || !D.q.includes(k) || dqDone(k)) return;
     D.p[k] = Math.min(dqDef(k).n, (D.p[k] || 0) + amt);
-    if (dqDone(k)){ saveST(); toast(`✅ 오늘의 퀘스트: ${dqDef(k).t}`, 2200); if (dqAll()){ setTimeout(() => toast('📅 오늘의 퀘스트를 다 했어요! ☰ 메뉴에서 달란트를 받아요', 2800), 2400); weeklyInit(); const W = ST.weekly; if (W && !W.days.includes(D.date)){ W.days.push(D.date); wq('daily3'); } } dailyDot(); }
+    if (dqDone(k)){ saveST(); toast(`✅ 오늘의 퀘스트: ${dqDef(k).t}`, 2200); if (dqAll()){ ST.manna = (ST.manna || 0) + 2; setTimeout(() => toast('📅 오늘의 퀘스트를 다 했어요! ☰ 메뉴에서 달란트를 받아요 · 🍞 만나 2개도 받았어요', 3000), 2400); weeklyInit(); const W = ST.weekly; if (W && !W.days.includes(D.date)){ W.days.push(D.date); wq('daily3'); } } dailyDot(); }
     else if (!quiet) saveST();
   }
   let runAcc = 0;
@@ -4308,18 +4380,45 @@
     { k: 'palm', n: '야자수', ico: '🌴', p: 30, max: 2 }, { k: 'tent-small', n: '작은 장막', ico: '⛺', p: 30, max: 1 },
     { k: 'well', n: '우물', ico: '⛲', p: 35, max: 1 }, { k: 'camel', n: '낙타', ico: '🐪', p: 40, max: 1 }, { k: 'tent-mid', n: '장막', ico: '🏕️', p: 40, max: 1 },
     { k: 'scroll-shelf', n: '두루마리 선반', ico: '📜', p: 0, max: 1, badge: 'scroll_all', how: '두루마리 20개를 모두 모으면' },
+    { k: 'harvest-sheaf', n: '곡식단', ico: '🌾', p: 0, max: 3, season: 'harvest' }, { k: 'fruit-basket', n: '과일 바구니', ico: '🧺', p: 0, max: 2, season: 'harvest' },
+    { k: 'star-lamp', n: '별 등불', ico: '⭐', p: 0, max: 2, season: 'xmas' }, { k: 'manger', n: '구유', ico: '🌟', p: 0, max: 1, season: 'xmas' },
     { k: 'timbrel', n: '미리암의 소고', ico: '🥁', p: 0, max: 1, badge: 'timbrel', how: '소고 찬양 70점 이상이면' },
   ];
   const homeIt = k => HOME_ITEMS.find(i => i.k === k);
   const homeObjs = [];
   let homeEdit = false, homePick = null, homeSel = null, homeMoving = false, homeLoaded = false;
-  const homeHas = it => it.badge ? ST.badges.includes(it.badge) : it.p === 0 || owned.has('home-' + it.k);
+  // 절기: 11월 추수감사 · 12월 성탄 (한국 시간). ?season=harvest|xmas 로 미리보기
+  const SEASONS = { harvest: { n: '🍂 추수감사', m: 11, end: '11/30' }, xmas: { n: '🎄 성탄', m: 12, end: '12/31' } };
+  const seasonNow = () => { const q = (location.search.match(/[?&]season=(\w+)/) || [])[1]; if (SEASONS[q]) return q; const m = new Date(Date.now() + 9 * 3600e3).getUTCMonth() + 1; return Object.keys(SEASONS).find(k => SEASONS[k].m === m) || null; };
+  const homeHas = it => it.season ? (ST.seasonal || []).includes(it.k) : it.badge ? ST.badges.includes(it.badge) : it.p === 0 || owned.has('home-' + it.k);
+  const homeShow = it => !it.season || homeHas(it) || seasonNow() === it.season;
   function makeHomeMesh(k){
     const g = new THREE.Group();
     if (k === 'scroll-shelf'){
       const wood = new THREE.MeshToonMaterial({ color: 0x8a5a2a, gradientMap: toonGradient });
       const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 0.5), wood); shelf.position.y = 0.55; g.add(shelf);
       for (let i = 0; i < 3; i++){ const sc = new THREE.Group(); sc.add(new THREE.Mesh(scrollGeo, scrollMat), new THREE.Mesh(capGeo, capMat)); sc.position.set(-0.4 + i * 0.4, 1.22, 0); sc.rotation.y = Math.PI / 2; g.add(sc); }
+    } else if (k === 'harvest-sheaf'){
+      const gold = new THREE.MeshToonMaterial({ color: 0xe0b44a, gradientMap: toonGradient }), tie = new THREE.MeshToonMaterial({ color: 0x8a5a2a, gradientMap: toonGradient });
+      for (let i = 0; i < 26; i++){ const a = i / 26 * Math.PI * 2, r = 0.08 + (i % 3) * 0.06; const st = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.5, 4), gold); st.position.set(Math.cos(a) * r, 0.75, Math.sin(a) * r); st.rotation.set(Math.sin(a) * 0.18, 0, Math.cos(a) * 0.18); g.add(st);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.06, 5, 4), gold); head.scale.y = 2.2; head.position.set(Math.cos(a) * r * 2.2, 1.55, Math.sin(a) * r * 2.2); g.add(head); }
+      const band = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.04, 6, 16), tie); band.rotation.x = Math.PI / 2; band.position.y = 0.75; g.add(band);
+    } else if (k === 'fruit-basket'){
+      const wood = new THREE.MeshToonMaterial({ color: 0xa06a32, gradientMap: toonGradient, side: THREE.DoubleSide });
+      const bk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.36, 0.4, 16, 1, true), wood); bk.position.y = 0.2; g.add(bk);
+      const bot = new THREE.Mesh(new THREE.CircleGeometry(0.36, 16).rotateX(-Math.PI / 2), wood); bot.position.y = 0.01; g.add(bot);
+      [[0xd8322a, 0.14], [0xf08c1e, 0.14], [0xe8c63a, 0.12], [0x7a3d9a, 0.08], [0x7a3d9a, 0.08], [0x5aa84a, 0.13]].forEach(([c, r], i) => { const f = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient })); const a = i * 1.1; f.position.set(Math.cos(a) * 0.2, 0.42 + (i % 2) * 0.08, Math.sin(a) * 0.2); g.add(f); });
+    } else if (k === 'star-lamp'){
+      const sh = new THREE.Shape(); for (let i = 0; i < 10; i++){ const r = i % 2 ? 0.16 : 0.38, a = i / 10 * Math.PI * 2 + Math.PI / 2; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+      const star = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.08, bevelEnabled: false }), new THREE.MeshToonMaterial({ color: 0xffd84a, emissive: 0x806010, gradientMap: toonGradient })); star.position.y = 1.9; g.add(star);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.7, 8), new THREE.MeshToonMaterial({ color: 0x6a4a2a, gradientMap: toonGradient })); pole.position.y = 0.85; g.add(pole);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff0a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 })); glow.scale.set(1.3, 1.3, 1); glow.position.y = 1.95; g.add(glow);
+    } else if (k === 'manger'){
+      const wood = new THREE.MeshToonMaterial({ color: 0x8a5a2a, gradientMap: toonGradient }), hay = new THREE.MeshToonMaterial({ color: 0xe8c46a, gradientMap: toonGradient });
+      [[-0.45, 0.28, 0.4], [0.45, -0.28, 0.4]].forEach(([x, r]) => { const s = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.6, 0.55), wood); s.position.set(x, 0.3, 0); s.rotation.z = r; g.add(s); });
+      const trough = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.18, 0.55), wood); trough.position.y = 0.42; g.add(trough);
+      const h = new THREE.Mesh(new THREE.SphereGeometry(0.46, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), hay); h.scale.set(1, 0.35, 0.55); h.position.y = 0.5; g.add(h);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff4c0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 })); glow.scale.set(1.4, 1, 1); glow.position.y = 0.75; g.add(glow);
     } else if (k === 'timbrel'){
       const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.14, 20), new THREE.MeshToonMaterial({ color: 0xe8d2a0, gradientMap: toonGradient }));
       drum.rotation.x = Math.PI / 2.4; drum.position.y = 0.9; g.add(drum);
@@ -4374,8 +4473,8 @@
     document.getElementById('hp-msg').textContent = msg || (homeSel ? '고른 물건을 돌리거나 옮기거나 치울 수 있어요' : homePick ? `마당을 눌러 ${homeIt(homePick).n}을(를) 놓아요` : '아래에서 물건을 고르고 마당을 눌러 놓아요 · 놓은 물건을 누르면 고칠 수 있어요');
     document.getElementById('hp-sel').classList.toggle('hidden', !homeSel);
     const cnt = k => homeObjs.filter(o => o.e.k === k).length;
-    document.getElementById('hp-items').innerHTML = HOME_ITEMS.map(it => { const has = homeHas(it), c = cnt(it.k);
-      const sub = it.badge && !has ? '🔒 배지' : has ? `${c}/${it.max}` : `💰${it.p}`;
+    document.getElementById('hp-items').innerHTML = HOME_ITEMS.filter(homeShow).map(it => { const has = homeHas(it), c = cnt(it.k);
+      const sub = it.season && !has ? '🎁 한정 무료' : it.badge && !has ? '🔒 배지' : has ? `${c}/${it.max}` : `💰${it.p}`;
       return `<button class="hp-it${homePick === it.k ? ' on' : ''}${it.badge && !has ? ' lock' : ''}" data-hk="${it.k}"><b>${it.ico}</b>${it.n}<br>${sub}</button>`; }).join('');
   }
   async function homeEnter(){
@@ -4399,6 +4498,9 @@
     const b = e.target.closest('[data-hk]'); if (!b) return;
     const it = homeIt(b.dataset.hk);
     homeSel = null; homeMoving = false; selRing.visible = false;
+    if (!homeHas(it) && it.season && seasonNow() === it.season){
+      ST.seasonal = (ST.seasonal || []).concat(it.k); saveST(); toast(`🎁 ${SEASONS[it.season].n} 한정 「${it.n}」 장식을 받았어요! 이벤트가 끝나도 계속 가져요`, 3000);
+    }
     if (!homeHas(it)){
       if (it.badge){ renderHomePanel(`🔒 ${it.n}: ${it.how} 받아요`); return; }
       const logged = SHOP_MOCK || (typeof msuOn === 'function' && msuOn());
