@@ -260,6 +260,10 @@
   .bdg-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:6px; margin-top:4px; }
   .bdg { border-radius:12px; padding:7px 6px; text-align:center; font-size:12px; line-height:1.3; background:rgba(255,210,122,.14); border:1px solid rgba(255,210,122,.55); }
   .bdg b { display:block; font-size:24px; }
+  button.bdg { color:inherit; font:inherit; font-size:12px; cursor:pointer; }
+  .bdg.ttl.on { border:2px solid #ffd27a; background:rgba(255,210,122,.3); box-shadow:0 0 10px rgba(255,210,122,.45); }
+  .bdg.ttl i { display:block; font-style:normal; font-size:11px; color:#ffd27a; margin-top:2px; }
+  .bdg.off b { filter:grayscale(1); opacity:.6; }
   .bdg.off { background:rgba(255,255,255,.04); border:1px dashed rgba(255,255,255,.25); color:rgba(245,233,208,.7); }
   .bdg.off i { display:block; font-style:normal; font-size:11px; opacity:.85; margin-top:2px; }
   .ntag { position:absolute; left:0; top:0; display:none; white-space:nowrap; font-family:'Pretendard', 'Apple SD Gothic Neo', sans-serif; font-weight:800; font-size:12px; color:#fff;
@@ -3446,11 +3450,16 @@
       + all.map(([k, b]) => ST.badges.includes(k) ? `<div class="bdg"><b>${b.ico}</b>${b.name}</div>`
           : `<div class="bdg off"><b>❓</b>???<i>${BADGE_HINT[k] || '이야기 속 어딘가에서…'}</i></div>`).join('') + `</div></div>`;
   }
+  const TITLE_ICO = { '두루마리마을 새내기': '📜', '부르심에 응답한 사람': '🔥', '재앙 속에서 믿은 사람': '⚡', '어린양의 피 아래 선 사람': '🐑', '바다를 건넌 믿음의 사람': '🌊', '말씀을 찾는 탐험가': '🧭' };
+  // 칭호 전체: 얻은 칭호는 컬러 배지+이름(누르면 사용), 못 얻은 칭호는 흑백 ❓ · 이름 숨김(얻는 조건만 작게)
   function titleBookHTML(){
-    return `<div style="grid-column:1/-1;margin:0 0 8px"><div style="font-size:13px;opacity:.8">🏷 내 칭호 (눌러서 바꾸기)</div>`
-      + TITLES.map(x => { const ok = titleOk(x), on = ok && x.t === myTitle();
-          return `<button data-title="${x.t}" ${ok ? '' : 'disabled'} style="margin:4px 6px 0 0;padding:5px 10px;border-radius:12px;border:${on ? '2px solid #ffd27a' : '1px solid rgba(255,255,255,.25)'};background:${on ? 'rgba(255,210,122,.25)' : 'rgba(255,255,255,.06)'};color:inherit;font-size:12.5px;opacity:${ok ? 1 : .4}">${ok ? x.t : '🔒 ' + (x.need === 'scroll' ? '두루마리를 모두 모으면' : x.need + '장을 마치면')}</button>`; }).join('') + `</div>`;
+    const mine = myTitle(), n = TITLES.filter(titleOk).length;
+    return `<div style="grid-column:1/-1;margin:0 0 8px"><div style="font-size:13px;opacity:.8">🏷 칭호 ${n} / ${TITLES.length} · 얻은 칭호를 누르면 그 칭호를 써요</div><div class="bdg-grid">`
+      + TITLES.map(x => titleOk(x)
+          ? `<button data-title="${x.t}" class="bdg ttl${x.t === mine ? ' on' : ''}"><b>${TITLE_ICO[x.t] || '🏷'}</b>${x.t}${x.t === mine ? '<i>✓ 사용 중</i>' : ''}</button>`
+          : `<div class="bdg off ttl-off"><b>❓</b>???<i>${x.need === 'scroll' ? '숨은 두루마리를 모두 모으면' : x.need + '장을 마치면'}</i></div>`).join('') + `</div></div>`;
   }
+
   document.addEventListener('click', e => { const b = e.target.closest('button[data-title]'); if (!b) return; ST.title = b.dataset.title; saveST(); retrackTitle(); document.getElementById('btn-book').click(); toast(`🏷 칭호를 「${ST.title}」(으)로 바꿨어요`, 1600); });
 
   // ══ D-13. 연출 카메라: 큰 장면에서 위아래 검은 띠 + 천천히 돌며 보여 줌 ══
