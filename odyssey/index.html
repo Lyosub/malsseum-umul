@@ -256,6 +256,12 @@
   #btn-save-exit { padding:11px 0; border-radius:12px; border:2px solid rgba(255,210,122,0.6); background:rgba(255,255,255,0.08); color:#f5e9d0; font-weight:800; font-size:14px; }
   /* 이름표(화면 글자) */
   #tag-layer { position:fixed; inset:0; pointer-events:none; z-index:6; overflow:hidden; }
+  .ntag small { display:block; font-size:10.5px; font-weight:700; color:#ffd27a; margin-top:1px; }
+  .bdg-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:6px; margin-top:4px; }
+  .bdg { border-radius:12px; padding:7px 6px; text-align:center; font-size:12px; line-height:1.3; background:rgba(255,210,122,.14); border:1px solid rgba(255,210,122,.55); }
+  .bdg b { display:block; font-size:24px; }
+  .bdg.off { background:rgba(255,255,255,.04); border:1px dashed rgba(255,255,255,.25); color:rgba(245,233,208,.7); }
+  .bdg.off i { display:block; font-style:normal; font-size:11px; opacity:.85; margin-top:2px; }
   .ntag { position:absolute; left:0; top:0; display:none; white-space:nowrap; font-family:'Pretendard', 'Apple SD Gothic Neo', sans-serif; font-weight:800; font-size:12px; color:#fff;
     text-shadow:0 0 3px rgba(30,18,6,0.95), 0 1px 2px rgba(30,18,6,0.95), 1px 0 2px rgba(30,18,6,0.9), -1px 0 2px rgba(30,18,6,0.9); will-change:transform; }
   .ntag.tgt { color:#ffd76e; font-size:13px; }
@@ -3424,15 +3430,28 @@
     if (!fresh.length) return;
     fresh.forEach(x => ST.titlesSeen.push(x.t));
     const top = fresh.filter(x => x.need !== 0).pop();
-    if (top){ ST.title = top.t; setTimeout(() => toast(`🏷 새 칭호: 「${top.t}」`, 2600), 2800); }
+    if (top){ ST.title = top.t; setTimeout(() => toast(`🏷 새 칭호: 「${top.t}」`, 2600), 2800); if (typeof retrackTitle === 'function') try { retrackTitle(); } catch (e){} }
     saveST();
+  }
+  // 못 얻은 배지는 이름 대신 힌트만(어디서 무엇을 하면 되는지 살짝)
+  const BADGE_HINT = {
+    pray_start: '두루마리마을 기념 전시관 앞에서…', companion: '떨기나무 앞, 걱정하는 모세에게…', prayer: '바로 앞에 들어가기 전, 떨리는 모세와…',
+    share: '짚을 모아 준 일꾼들과…', trust: '뱀이 된 지팡이 이야기를 들을 때…', true_heart: '우박이 그친 뒤 바로의 모습을 보고…',
+    passover_lamb: '문설주에 피를 바른 뒤 궁금한 것을…', bold_step: '바다가 갈라진 순간…', together: '바다를 건널 때 주변을 잘 살펴보면…',
+    timbrel: '미리암과 함께 소고를 잘 두드리면…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면',
+  };
+  function badgeBookHTML(){
+    const all = Object.entries(BADGES), n = all.filter(([k]) => ST.badges.includes(k)).length;
+    return `<div style="grid-column:1/-1;margin:2px 0 10px"><div style="font-size:13px;opacity:.8">🏅 배지 ${n} / ${all.length}</div><div class="bdg-grid">`
+      + all.map(([k, b]) => ST.badges.includes(k) ? `<div class="bdg"><b>${b.ico}</b>${b.name}</div>`
+          : `<div class="bdg off"><b>❓</b>???<i>${BADGE_HINT[k] || '이야기 속 어딘가에서…'}</i></div>`).join('') + `</div></div>`;
   }
   function titleBookHTML(){
     return `<div style="grid-column:1/-1;margin:0 0 8px"><div style="font-size:13px;opacity:.8">🏷 내 칭호 (눌러서 바꾸기)</div>`
       + TITLES.map(x => { const ok = titleOk(x), on = ok && x.t === myTitle();
           return `<button data-title="${x.t}" ${ok ? '' : 'disabled'} style="margin:4px 6px 0 0;padding:5px 10px;border-radius:12px;border:${on ? '2px solid #ffd27a' : '1px solid rgba(255,255,255,.25)'};background:${on ? 'rgba(255,210,122,.25)' : 'rgba(255,255,255,.06)'};color:inherit;font-size:12.5px;opacity:${ok ? 1 : .4}">${ok ? x.t : '🔒 ' + (x.need === 'scroll' ? '두루마리를 모두 모으면' : x.need + '장을 마치면')}</button>`; }).join('') + `</div>`;
   }
-  document.addEventListener('click', e => { const b = e.target.closest('button[data-title]'); if (!b) return; ST.title = b.dataset.title; saveST(); document.getElementById('btn-book').click(); toast(`🏷 칭호를 「${ST.title}」(으)로 바꿨어요`, 1600); });
+  document.addEventListener('click', e => { const b = e.target.closest('button[data-title]'); if (!b) return; ST.title = b.dataset.title; saveST(); retrackTitle(); document.getElementById('btn-book').click(); toast(`🏷 칭호를 「${ST.title}」(으)로 바꿨어요`, 1600); });
 
   // ══ D-13. 연출 카메라: 큰 장면에서 위아래 검은 띠 + 천천히 돌며 보여 줌 ══
   const cine = { on: false, t: 0, dur: 0, x: 0, y: 0, z: 0, r: 14, h: 6, spin: 0.5, a0: 0, seen: {} };
@@ -4012,7 +4031,7 @@
     document.getElementById('clear-title').textContent = CHAPTER.clearTitle;
     document.getElementById('clear-badge').src = A('ui/game/badge-moses-clear.png');
     const bs = ST.badges.map(b => BADGES[b].ico + ' ' + BADGES[b].name).join(', ') || '없음';
-    document.getElementById('clear-body').textContent = `모은 구절 카드 ${ST.verses.length} / ${Object.keys(VERSES).length}장 · ⭐ 지혜 별 ${ST.stars} / ${Object.keys(QUIZ).length} · 얻은 스킬: 지팡이 들기\n배지: ${bs}\n💰 ${ST.ch + 1}장 완료 보상 20달란트${(MSU.client && MSU.session) || SHOP_MOCK ? '' : ' (말씀우물에 로그인하면 받아요)'}\n\n다른 선택을 하면 다른 카드와 배지를 얻을 수 있어요!\n다음: ${CHAPTER.next}`;
+    document.getElementById('clear-body').textContent = `모은 구절 카드 ${ST.verses.length} / ${Object.keys(VERSES).length}장 · ⭐ 지혜 별 ${ST.stars} / ${Object.keys(QUIZ).length} · 얻은 스킬: ${[...unlocked].map(id => SKILLS[id].name).join(', ')}\n배지: ${bs}\n💰 ${ST.ch + 1}장 완료 보상 20달란트${(MSU.client && MSU.session) || SHOP_MOCK ? '' : ' (말씀우물에 로그인하면 받아요)'}\n\n다른 선택을 하면 다른 카드와 배지를 얻을 수 있어요!\n다음: ${CHAPTER.next}`;
     const nextCh = ST.ch + 1;
     claimChapter(ST.ch + 1);
     setTimeout(checkNewTitle, 100);
@@ -4020,10 +4039,9 @@
   }
   document.getElementById('btn-book').onclick = () => {
     checkNewTitle(); dq('verse');
-    document.getElementById('book-cards').innerHTML = titleBookHTML() + Object.keys(VERSES).map(id => cardHTML(id, !ST.verses.includes(id))).join('')
+    document.getElementById('book-cards').innerHTML = titleBookHTML() + badgeBookHTML() + Object.keys(VERSES).map(id => cardHTML(id, !ST.verses.includes(id))).join('')
       + `<div style="grid-column:1/-1;margin-top:10px"><h3 style="font-size:15px;margin-bottom:4px">🔑 기억할 말 · ⭐ 지혜 별 ${ST.stars} / ${Object.keys(QUIZ).length}</h3>${ST.keys.length ? ST.keys.map(k => `<div class="keyline"><b>${k.scene}</b> — ${k.t}</div>`).join('') : '<div class="keyline">이야기 속 금색 🔑 문장이 여기에 모여요.</div>'}</div>`
       + scrollBookHTML() + peopleBookHTML()
-      + `<div style="grid-column:1/-1;margin-top:8px;font-size:13px">🏅 배지: ${Object.entries(BADGES).map(([k, b]) => `<span style="opacity:${ST.badges.includes(k) ? 1 : 0.35};margin-right:10px">${b.ico} ${b.name}</span>`).join('')}</div>`;
     openModal('book-modal');
   };
   // ══ 3. 오늘의 퀘스트: 날마다 3개(한국 날짜), 다 하면 5달란트 ══
@@ -4367,6 +4385,7 @@
           const st = ch.presenceState(); FR.meta = {};
           Object.entries(st).forEach(([k, arr]) => { if (k !== uid && arr[0]) FR.meta[k] = arr[0]; });
           FR.online = Object.keys(FR.meta).length; friendPill();
+          FR.list.forEach((f, id) => { if (FR.meta[id]) setTagTitle(f.tag, FR.meta[id]); });   // 친구가 칭호를 바꾸면 바로 반영
           [...FR.list.keys()].forEach(k => { if (!FR.meta[k]) friendRemove(k); });
         })
         .subscribe(async status => {
@@ -4379,6 +4398,12 @@
         });
     } catch (e){ console.warn('친구 연결 실패', e); }
   }
+  function setTagTitle(tag, meta){
+    const el = tag.userData.el, esc = t => String(t || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    el.innerHTML = esc(meta.nick || '친구') + (meta.title ? `<small>🏷 ${esc(meta.title)}</small>` : '');
+  }
+  // 내 칭호가 바뀌면 친구들 화면의 내 이름표도 바뀌게 다시 알림
+  function retrackTitle(){ if (FR.ch && FR.me) FR.ch.track({ nick: FR.me.nick, body: CHAR.body || 'boy', hair: CHAR.body ? (CHAR.hair || HAIR_DEFAULT[CHAR.body]) : null, title: myTitle() }).catch(() => {}); }
   function friendPill(){
     const here = [...FR.list.values()].length, el = document.getElementById('friend-pill');
     el.classList.toggle('hidden', !FR.online);
@@ -4407,7 +4432,7 @@
     if (!f){
       const meta = FR.meta[m.id]; if (!meta) return;
       const g = new THREE.Group(); g.position.set(m.x, m.y, m.w); FR.root.add(g);
-      const tag = makeTag(meta.nick || '친구'); tag.position.y = 2.75; g.add(tag);
+      const tag = makeTag(meta.nick || '친구'); tag.position.y = 2.75; g.add(tag); setTagTitle(tag, meta);
       f = { g, tag, tx: m.x, ty: m.y, tz: m.w, h: m.h, a: 'Idle', t: performance.now(), mixer: null, actions: {}, cur: null };
       FR.list.set(m.id, f); friendPill();
       friendTemplate(meta.body === 'girl' ? 'girl' : 'boy').then(async tpl => {
