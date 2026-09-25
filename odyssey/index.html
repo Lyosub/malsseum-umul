@@ -265,13 +265,36 @@
     #tut { left:12px; right:66px; width:auto; transform:none; bottom:216px; top:auto; }
     #hint { bottom:216px; left:12px; right:66px; width:auto; max-width:none; transform:none; }
   }
-  /* ── 휴대폰을 가로로 들면: 세로로 돌려 달라는 안내(버튼들이 겹치지 않는 세로 화면 기준으로 만듦) ── */
+  /* ── 휴대폰 가로 배치(기본): 왼쪽 위 퀘스트 · 오른쪽 위 지도, 그 왼쪽에 ＋ − 📖 💬 ⚙️ 🛍️ 한 줄 ·
+        왼쪽 아래 점프·달리기·살펴보기, 오른쪽 아래 조이스틱 · 연습 카드·안내는 아래 가운데(두 손 사이) ── */
+  @media (orientation: landscape) and (max-height: 500px){
+    #quest-panel { top:8px; left:10px; width:min(34vw, 250px); padding:7px 11px; }
+    #quest-panel h4 { font-size:11px; margin-bottom:3px; }
+    #quest-panel .obj { font-size:12px; line-height:1.4; }
+    #quest-panel .where { font-size:11px; }
+    #minimap { top:8px; right:10px; width:92px; height:92px; }
+    #zoom-ctrl { top:10px; right:112px; flex-direction:row; gap:6px; }
+    #zoom-ctrl button { width:38px; height:38px; font-size:18px; }
+    #hud-btns { top:10px; right:200px; left:auto; flex-direction:row; gap:6px; }
+    #hud-btns button { width:38px; height:38px; border-radius:11px; font-size:17px; }
+    #compass { top:56px; }
+    #action-cluster { left:14px; bottom:12px; }
+    #interact-btn { left:14px; bottom:120px; width:70px; height:70px; font-size:13px; }
+    #joystick-zone { right:18px; bottom:16px; }
+    #skill-bar { left:96px; bottom:170px; }
+    #tut, #hint { left:50%; right:auto; top:auto; bottom:10px; transform:translateX(-50%); width:min(42vw, 400px); max-width:none; }
+    #tut { padding:8px 12px 7px; }
+    #tut .t { font-size:13.5px; line-height:1.4; }
+    #quest-toast { top:30%; }
+    #dlg { width:min(70vw, 560px); }
+  }
+  /* ── 휴대폰을 세로로 들면: 가로로 돌려 달라는 안내(가로 화면 기준으로 만듦) ── */
   #rotate { position:fixed; inset:0; z-index:200; display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px;
     background:#1c130a; color:#f5e9d0; font-family:'Pretendard', -apple-system, sans-serif; text-align:center; padding:24px; }
   #rotate .ph { font-size:54px; animation: rotPh 1.8s ease-in-out infinite; }
-  @keyframes rotPh { 0%,30% { transform:rotate(90deg); } 60%,100% { transform:rotate(0deg); } }
+  @keyframes rotPh { 0%,30% { transform:rotate(0deg); } 60%,100% { transform:rotate(90deg); } }
   #rotate b { font-size:19px; color:#ffd27a; }
-  @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse){ #rotate { display:flex; } }
+  @media (orientation: portrait) and (max-width: 560px) and (pointer: coarse){ #rotate { display:flex; } }
 </style>
 </head>
 <body>
@@ -328,7 +351,7 @@
 <div id="card-modal" class="modal hidden"><div class="sheet" style="max-width:300px"><h3>📖 새 구절 카드!</h3><div id="card-one"></div><button class="close">수집첩에 넣기</button></div></div>
 <div id="clear-modal" class="modal hidden"><div class="sheet"><h3 id="clear-title"></h3><img id="clear-badge" alt=""><div id="clear-body" style="font-size:14px;line-height:1.7;white-space:pre-line"></div><button class="close">좋아요!</button></div></div>
 <div id="warp"></div>
-<div id="rotate"><div class="ph">📱</div><b>휴대폰을 세로로 돌려 주세요</b><div style="font-size:14px;opacity:.85;line-height:1.6">In Odyssey는 세로 화면으로 플레이해요.<br>화면 자동 회전이 꺼져 있으면 켜 주세요.</div></div>
+<div id="rotate"><div class="ph">📱</div><b>휴대폰을 가로로 돌려 주세요</b><div style="font-size:14px;opacity:.85;line-height:1.6">In Odyssey는 가로 화면으로 넓게 플레이해요.<br>화면 자동 회전이 꺼져 있으면 켜 주세요.</div></div>
 <div id="pick-modal" class="modal hidden"><div class="sheet" style="max-width:340px;text-align:center">
   <h3>나는 누구로 모험할까요?</h3>
   <p style="font-size:13px;opacity:.85;margin:6px 0 12px">나중에 🛍️ 상점의 「꾸미기」에서 언제든 바꿀 수 있어요.</p>
