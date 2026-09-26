@@ -1,0 +1,46 @@
+name: In Odyssey 하루 요약
+
+# 하루 3번(07:40 / 14:40 / 21:40 KST) — NEW-BRAIN 일일 자동 점검(08:00 / 15:00 / 22:00) 20분 전.
+# 공개 집계 함수 get_odyssey_summary(숫자만, 이름·아이디 없음)를 불러
+# `health` 브랜치의 odyssey-summary.json 에 저장한다. 사이트 배포 브랜치(master)는 건드리지 않는다.
+# 클라우드 점검 루틴은 raw.githubusercontent.com/Lyosub/malsseum-umul/health/odyssey-summary.json 을 읽는다.
+
+on:
+  schedule:
+    - cron: "40 22,5,12 * * *"   # UTC → 07:40 / 14:40 / 21:40 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: odyssey-summary
+  cancel-in-progress: false
+
+jobs:
+  summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: health
+      - name: 요약 받기
+        run: |
+          set -e
+          SB="https://qaxwxbaqduxqzjqoahcb.supabase.co"
+          ANON="sb_publishable_Q5HhLUzyLoFlNK0MCai_eQ_SOFeu_ks"   # 사이트에 그대로 배포되는 공개(anon) 키
+          BODY=$(curl -s --max-time 30 -X POST "${SB}/rest/v1/rpc/get_odyssey_summary" -H "apikey: ${ANON}" -H "Content-Type: application/json" -d '{}' || echo "")
+          KST=$(TZ=Asia/Seoul date +"%Y-%m-%d %H:%M")
+          if echo "$BODY" | jq -e '.testers' >/dev/null 2>&1; then
+            echo "$BODY" | jq --arg t "$KST" '. + {generated_kst: $t, ok: true}' > odyssey-summary.json
+          else
+            jq -n --arg t "$KST" --arg b "$BODY" '{generated_kst: $t, ok: false, error: $b}' > odyssey-summary.json
+          fi
+          cat odyssey-summary.json
+      - name: 기록
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add odyssey-summary.json
+          git commit -m "In Odyssey 요약 $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M') KST" || exit 0
+          git push origin HEAD:health
