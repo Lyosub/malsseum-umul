@@ -385,6 +385,7 @@
   /* 친구: 인사 이모티콘 · 접속 표시 · 말풍선 */
   #emo-bar { position:fixed; top:56px; right:112px; z-index:12; display:flex; gap:6px; background:rgba(28,19,10,.86); border:1px solid rgba(255,255,255,.3); border-radius:14px; padding:6px; }
   #emo-bar.hidden { display:none; }
+  #mg .hidden, #btn-emo.hidden, #btn-pet.hidden { display:none !important; }
   #emo-bar button { width:40px; height:40px; border-radius:10px; border:none; background:rgba(255,255,255,.1); font-size:22px; }
   #friend-pill { position:fixed; top:56px; left:50%; transform:translateX(-50%); z-index:9; background:rgba(28,19,10,.78); color:#fff; border:1px solid rgba(143,224,255,.6); border-radius:12px; padding:3px 10px; font:700 12px 'Pretendard', sans-serif; pointer-events:none; }
   #friend-pill.hidden { display:none; }
@@ -1097,6 +1098,69 @@
         { id: 'quail_spot', x: 24, z: -14.5, type: 'lore', title: "진영 가장자리", showCh: 4, body: "진영 남쪽 가장자리예요. 저녁이면 메추라기가 날아왔던 곳이에요." },
         { id: 'field_empty', x: 34, z: 7, type: 'lore', title: "만나 들판", showCh: 4, body: "아침마다 만나가 내리는 들판이에요." },
         { id: 'to-redsea2', x: -39.5, z: 2, type: 'exit', title: "홍해 쪽으로", to: 'redsea', spawn: [56, 6] },
+        { id: 'to-rephidim', x: 38, z: -9, type: 'exit', title: "르비딤으로", to: 'rephidim', spawn: [-34, 4], showCh: 5 },
+      ],
+    },
+    rephidim: {
+      name: '르비딤', questTitle: '📜 퀘스트 — 르비딤',
+      env: { top: 0x5a86c0, bottom: 0xf0d2a4, fog: 0xe6ceaa, fogD: 0.013, sun: 0xffe9c8, sunDir: [0.5, 0.42, -0.6], cloud: 0.2, cloudCol: 0xffffff, stars: 0, far: 'far-mountains' },
+      center: [0, 0], spawn: [-34, 4],
+      layout: [
+        ['env-rock-hill', -19, -13.5, 0.4, 1.35], ['env-rocks-strata', -24, -8, 1.1],
+        ['env-rock-hill', 27, -21, 2.1, 1.25], ['env-rocks-strata', 31, -15, 0.3], ['rock-group', 22, -18, 1.2, 0.9],
+        ['tent-cluster', -2, -9, faceTo(-2, -9, 0, 0)], ['tent-large', 9, -6, faceTo(9, -6, 0, 0)], ['tent-mid', -10, 6, faceTo(-10, 6, 0, 0)], ['tent-mid', 7, 9, faceTo(7, 9, 0, 0)],
+        ['tent-small', -13, -4, faceTo(-13, -4, 0, 0)], ['tent-small', 13, 3, faceTo(13, 3, 0, 0)],
+        ['camp-firepit', 0, 1, 0], ['tribe-banner', -4, 5, 0.3], ['crates-sacks', 4, -3, 0.5], ['jars', -6, -1, 0.2],
+        ['dry-bush', 20, 8, 0], ['dry-bush', -26, 10, 0], ['env-acacia', 34, 12, 0.8],
+      ],
+      scatter: [['dry-bush', 10, 16, 55], ['rock-group', 10, 20, 55]],
+      clear: [[0, 0, 13], [-17, -11, 8], [26, -16, 8], [18, -6, 5], [28, 4, 12], [-34, 4, 5]],
+      fires: [],
+      points: [
+        { id: 'moses', x: 2, z: 2.5, type: 'npc', title: "모세", model: 'moses', persona: 'rs_static' },
+        { id: 'aaron', x: 4.5, z: 0.5, type: 'npc', title: "아론", model: 'aaron', persona: 'rs_static' },
+        { id: 'hur', x: 6, z: 2.5, type: 'npc', title: "훌", model: 'hur', persona: 'rs_static' },
+        { id: 'joshua', x: -1.5, z: 4.5, type: 'npc', title: "여호수아", model: 'joshua', persona: 'rs_static' },
+        { id: 'rp_elder', x: -8, z: 1, type: 'villager', title: "이스라엘 장로", model: 'ca-israel-elder', persona: 'rs_static', body: "\"반석에서 물이 솟던 날을 잊지 못할 게다.\"" },
+        { id: 'rp_angry1', x: -6.5, z: 8.5, type: 'villager', title: "목마른 아버지", model: 'he-father', persona: 'rs_static', body: "\"다툰 게 부끄럽구나. 여호와께서 우리 중에 계셨는데.\"" },
+        { id: 'rp_angry2', x: 9.5, z: -1.5, type: 'villager', title: "걱정하는 어머니", model: 'he-mother', persona: 'rs_static', body: "\"아이들이 물을 실컷 마셨어요!\"" },
+        { id: 'horeb_rock', x: -15.5, z: -10, type: 'lore', title: "호렙 반석", showCh: 5, body: "여호와께서 모세 앞에 서신 반석이에요. 지팡이로 치니 물이 솟아났어요." },
+        { id: 'hands_spot', x: 26, z: -14.2, type: 'lore', title: "산 꼭대기", showCh: 5, body: "모세와 아론과 훌이 올라 손을 들고 기도한 곳이에요." },
+        { id: 'altar_nissi', x: 18, z: -6, type: 'lore', title: "여호와 닛시 제단", showCh: 5, body: "모세가 쌓은 제단 — 여호와는 나의 깃발." },
+        { id: 'to-wild2', x: -39.5, z: 4, type: 'exit', title: "신 광야로", to: 'wild', spawn: [34, -6] },
+        { id: 'to-sinai', x: 4, z: 27, type: 'exit', title: "하나님의 산으로", to: 'sinai', spawn: [-34, 6], showCh: 6 },
+      ],
+    },
+    sinai: {
+      name: '시내 산 앞', questTitle: '📜 퀘스트 — 하나님의 산',
+      env: { top: 0x4c78b4, bottom: 0xe9d6b8, fog: 0xdcccb4, fogD: 0.011, sun: 0xfff0d8, sunDir: [0.3, 0.5, -0.8], cloud: 0.3, cloudCol: 0xffffff, stars: 0, far: 'far-mountains' },
+      center: [0, 0], spawn: [-34, 6],
+      mountain: { x: 0, z: -48, r: 19, h: 38 },
+      layout: [
+        ['tent-large', 1, 7, faceTo(1, 7, 0, 0)], ['tent-cluster', 12, 10, faceTo(12, 10, 0, 0)], ['tent-cluster', -12, 12, faceTo(-12, 12, 0, 0)],
+        ['tent-mid', 18, 1, faceTo(18, 1, 0, 0)], ['tent-mid', -18, 2, faceTo(-18, 2, 0, 0)], ['tent-small', 8, 16, 0.4], ['tent-small', -6, 18, 2.1],
+        ['camp-firepit', 0, 13, 0], ['tribe-banner', -3.5, 2, 0.2], ['tribe-banner', 6, 2.5, 1.2], ['crates-sacks', 10, 4, 0.4], ['jars', -9, 6, 0.3],
+        ['env-rocks-strata', -26, -20, 0.6], ['env-rocks-strata', 24, -22, 2.1], ['env-rock-hill', -34, -30, 0.5], ['env-rock-hill', 34, -32, 1.9],
+        ['dry-bush', -20, -10, 0], ['dry-bush', 18, -12, 0],
+      ],
+      scatter: [['dry-bush', 8, 20, 55], ['rock-group', 10, 22, 55]],
+      clear: [[0, 6, 20], [0, -30, 14], [-34, 6, 5]],
+      fires: [],
+      points: [
+        { id: 'moses', x: -2, z: 4.5, type: 'npc', title: "모세", model: 'moses', persona: 'rs_static' },
+        { id: 'aaron', x: 3, z: 1, type: 'npc', title: "아론", model: 'aaron', persona: 'rs_static' },
+        { id: 'jethro', x: -30, z: 4, type: 'npc', title: "이드로", model: 'jethro', persona: 'rs_static', cond: 'jethroHere' },
+        { id: 'zipporah', x: -28, z: 6.5, type: 'villager', title: "십보라", model: 'he-mother', persona: 'rs_static', cond: 'jethroHere', body: "\"모세가 이렇게 많은 백성을 이끌고 있었다니…\"" },
+        { id: 'gershom', x: -26.5, z: 5, type: 'villager', title: "게르솜", model: 'shepherd-boy', persona: 'rs_static', cond: 'jethroHere', body: "\"아버지가 홍해를 건넌 이야기를 해 주셨어!\"" },
+        { id: 'eliezer', x: -27, z: 8, type: 'villager', title: "엘리에셀", model: 'child', persona: 'rs_static', cond: 'jethroHere', body: "\"내 이름은 하나님이 도우신다는 뜻이야!\"" },
+        { id: 'sn_line1', x: -6, z: -9, type: 'villager', title: "다툼이 있는 할아버지", model: 'he-grandpa', persona: 'rs_static', body: "\"십부장님이 금방 해결해 주셨지 뭐냐.\"" },
+        { id: 'sn_line2', x: -3, z: -11, type: 'villager', title: "물으러 온 사람", model: 'ca-craftsman', persona: 'rs_static', body: "\"이제는 줄이 금방 줄어요.\"" },
+        { id: 'sn_line3', x: 0, z: -12, type: 'villager', title: "기다리는 여인", model: 'ca-singer-f', persona: 'rs_static', body: "\"오늘은 해 지기 전에 집에 가요!\"" },
+        { id: 'sn_family1', x: 14, z: 6, type: 'villager', title: "천막의 아버지", model: 'he-father', persona: 'rs_static', body: "\"깨끗한 옷을 입고 셋째 날을 기다린다.\"" },
+        { id: 'sn_family2', x: -14, z: 7, type: 'villager', title: "천막의 할머니", model: 'he-grandma', persona: 'rs_static', body: "\"하나님은 거룩하시단다.\"" },
+        { id: 'sn_family3', x: 7, z: 12.5, type: 'villager', title: "천막의 소년", model: 'he-boy-hb', persona: 'rs_static', body: "\"경계 안으로는 절대 안 들어가요!\"" },
+        { id: 'boundary', x: 6, z: -25, type: 'lore', title: "산의 경계", showCh: 7, body: "산 둘레에 세운 경계예요. 삼가 산에 오르거나 경계를 침범하지 말라 하셨어요." },
+        { id: 'to-rephidim2', x: -39.5, z: 6, type: 'exit', title: "르비딤으로", to: 'rephidim', spawn: [4, 22] },
       ],
     },
   };
@@ -1333,6 +1397,7 @@
     if (Z.room) buildRoom();
     if (Z.sea) buildSea();
     if (Z.pools) buildPools();
+    if (Z.mountain) buildMountain();
     // 강(나일 등): 지형을 따라 휘는 물 띠 + 들어가지 못하게 상자 충돌
     if (Z.water){
       const w = Z.water, geo = new THREE.PlaneGeometry(w.x1 - w.x0, w.z1 - w.z0, 16, 60); geo.rotateX(-Math.PI / 2);
@@ -3417,6 +3482,7 @@
       [NAR, '아론이 여호와께서 모세에게 명령하신 대로 그것을 증거판 앞에 두어 간수하게 했어요.'],
       [NAR, '사람이 사는 땅에 이르기까지, 이스라엘 자손이 사십 년 동안 만나를 먹었어요. 곧 가나안 땅 접경에 이르기까지요.'],
       [NAR, '이렇게 5장 「광야의 만나」가 끝났어요. 이제 매일 아침 신 광야 들판에 만나가 내려요 — 금요일엔 갑절, 토요일엔 없어요!'],
+      [NAR, '다음 이야기: 6장 「반석의 물과 아말렉」 — 신 광야 동쪽 끝에서 르비딤으로 가요.'],
     ],
   });
   Object.assign(KEYS, {
@@ -3435,12 +3501,247 @@
   Object.assign(BADGES, {
     daily_bread: { ico: '🍞', name: '하루 분량의 믿음' },
   });
+  // ══ 6장 「반석의 물과 아말렉」 (출 17장) ══════════════════════════════
+  // 신 광야 → 르비딤(물이 없음) → 다툼 → 모세가 부르짖음 → 호렙 반석을 치니 물(맛사·므리바) → 아말렉이 옴 →
+  // 여호수아는 싸우고 모세·아론·훌은 산 꼭대기로 → 손을 들면 이기고 내리면 짐(손 들기) → 돌 위에 앉고 아론·훌이 붙듦 → 여호와 닛시
+  const HUR = { n: '훌' }, JOSHUA6 = { n: '여호수아' }, ELDER6 = { n: '이스라엘 장로' };
+  const STORY6 = [
+    { id: 'c6s1',  zone: 'wild',     obj: '신 광야를 떠나 르비딤으로 가기', where: '신 광야 동쪽 끝의 초록 빛기둥', exit: 'to-rephidim' },
+    { id: 'c6s2',  zone: 'rephidim', obj: '르비딤 진영에 도착하기', where: '광야 가운데 천막들이 모인 곳', reach: { near: [0, 0], r: 8 }, doneDlg: 'c6_nowater' },
+    { id: 'c6s3',  zone: 'rephidim', obj: '목말라 다투는 백성의 이야기 듣기', where: '진영의 사람들 — 머리 위에 이름이 보이는 사람', rumor: 2, rumorIds: ['rp_angry1', 'rp_angry2'] },
+    { id: 'c6s4',  zone: 'rephidim', obj: '모세에게 가기', where: '진영 가운데', npc: 'moses', dlg: 'c6_cry' },
+    { id: 'c6s5',  zone: 'rephidim', obj: '장로들과 함께 호렙 반석으로 가서 「지팡이 들기」 쓰기', where: '진영 북서쪽의 큰 반석 — 오른쪽 ✨ 스킬 → 🦯 지팡이', skillAt: 'horeb_rock', doneDlg: 'c6_water', place: { moses: [-15, -9], rp_elder: [-12, -7] }, reward: { verse: 'ex17-6' } },
+    { id: 'c6s6',  zone: 'rephidim', obj: '아말렉이 쳐들어왔어요 — 모세에게 가기', where: '반석 옆의 모세', npc: 'moses', dlg: 'c6_amalek' },
+    { id: 'c6s7',  zone: 'rephidim', obj: '모세·아론·훌과 함께 산 꼭대기로 올라가기', where: '진영 동쪽 바위 언덕 위', reach: { near: [26, -16], r: 5 }, doneDlg: 'c6_hilltop', place: { moses: [26, -17.5], aaron: [24, -16.5], hur: [28, -16.5] } },
+    { id: 'c6s8',  zone: 'rephidim', obj: '모세와 함께 손을 들어 기도하기', where: '산 꼭대기의 모세 곁(빛나는 곳)', point: 'hands_spot', game: 'hands', doneDlg: 'c6_victory', reward: { verse: ['ex17-11', 'ex17-12'] } },
+    { id: 'c6s9',  zone: 'rephidim', obj: '여호수아에게 가기', where: '산 아래 싸움터', npc: 'joshua', dlg: 'c6_joshua', place: { joshua: [18, -4] } },
+    { id: 'c6s10', zone: 'rephidim', obj: '모세가 쌓은 제단 앞에 서기 — 여호와 닛시', where: '산 아래의 돌 제단', point: 'altar_nissi', dlg: 'c6_nissi', reward: { verse: 'ex17-15', clear: true } },
+  ];
+  // ══ 7장 「이드로의 방문」 (출 18장) ══════════════════════════════════
+  const JETHRO7 = { n: '이드로' }, ZIPPORAH = { n: '십보라' };
+  const STORY7 = [
+    { id: 'c7s1', zone: 'rephidim', obj: '르비딤을 떠나 하나님의 산 앞으로', where: '르비딤 북쪽 끝의 초록 빛기둥', exit: 'to-sinai' },
+    { id: 'c7s2', zone: 'sinai',    obj: '진영에 찾아온 손님 맞이하기', where: '진영 서쪽 입구', npc: 'jethro', dlg: 'c7_arrive' },
+    { id: 'c7s3', zone: 'sinai',    obj: '모세의 장막에서 이드로와 이야기하기', where: '진영 가운데 큰 장막 앞', npc: 'moses', dlg: 'c7_tell', place: { jethro: [3, 4], moses: [1, 4.5] }, reward: { verse: 'ex18-11' } },
+    { id: 'c7s4', zone: 'sinai',    obj: '이튿날 — 재판을 기다리는 백성의 이야기 듣기', where: '모세 앞에 줄 선 사람들', rumor: 3, rumorIds: ['sn_line1', 'sn_line2', 'sn_line3'], place: { moses: [-4, -6], jethro: [-8, -3] } },
+    { id: 'c7s5', zone: 'sinai',    obj: '이드로의 조언 듣기', where: '줄 옆에서 지켜보는 이드로', npc: 'jethro', dlg: 'c7_advice', reward: { verse: 'ex18-21' } },
+    { id: 'c7s6', zone: 'sinai',    obj: '모세와 함께 지도자 세우기', where: '재판석의 모세', npc: 'moses', dlg: 'c7_choose' },
+    { id: 'c7s7', zone: 'sinai',    obj: '고향으로 돌아가는 이드로 배웅하기', where: '진영 서쪽 입구', npc: 'jethro', dlg: 'c7_farewell', place: { jethro: [-30, 4], zipporah: [-28, 6] }, reward: { clear: true } },
+  ];
+  // ══ 8장 「시내산」 (출 19–20장) ══════════════════════════════════════
+  const STORY8 = [
+    { id: 'c8s1', zone: 'sinai', obj: '시내 산 앞에 서기', where: '진영 북쪽 — 커다란 산이 보이는 곳', reach: { near: [0, -18], r: 7 }, doneDlg: 'c8_arrive' },
+    { id: 'c8s2', zone: 'sinai', obj: '산에서 내려온 모세의 말 듣기', where: '산 앞의 모세', npc: 'moses', dlg: 'c8_covenant', place: { moses: [2, -20] }, reward: { verse: ['ex19-5', 'ex19-6'] } },
+    { id: 'c8s3', zone: 'sinai', obj: '진영에 알리기 — 옷을 빨고 셋째 날을 기다려요', where: '진영의 가족들 — 머리 위에 이름이 보이는 사람', rumor: 3, rumorIds: ['sn_family1', 'sn_family2', 'sn_family3'] },
+    { id: 'c8s4', zone: 'sinai', obj: '산 둘레의 경계 살펴보기', where: '산기슭의 줄과 말뚝(빛나는 곳)', point: 'boundary', dlg: 'c8_boundary' },
+    { id: 'c8s5', zone: 'sinai', obj: '셋째 날 아침 — 백성과 함께 산기슭에 서기', where: '산기슭 경계 앞', reach: { near: [0, -22], r: 6 }, doneDlg: 'c8_storm' },
+    { id: 'c8s6', zone: 'sinai', obj: '모세가 전한 열 가지 말씀을 돌판에 새기기', where: '산기슭의 모세', npc: 'moses', game: 'tablets', place: { moses: [-2, -23] }, doneDlg: 'c8_tablets', reward: { verse: ['ex20-3', 'ex20-12'] } },
+    { id: 'c8s7', zone: 'sinai', obj: '떨고 있는 백성에게 가기', where: '멀리 선 백성', npc: 'aaron', dlg: 'c8_fear', place: { aaron: [4, -8] }, reward: { verse: 'ex20-20', clear: true } },
+  ];
+  Object.assign(VERSES, {
+    'ex17-6':  { ref: '출애굽기 17:6',  text: '내가 호렙 산에 있는 그 반석 위 거기서 네 앞에 서리니 너는 그 반석을 치라 그것에서 물이 나오리니 백성이 마시리라' },
+    'ex17-11': { ref: '출애굽기 17:11', text: '모세가 손을 들면 이스라엘이 이기고 손을 내리면 아말렉이 이기더니' },
+    'ex17-12': { ref: '출애굽기 17:12', text: '아론과 훌이 한 사람은 이쪽에서, 한 사람은 저쪽에서 모세의 손을 붙들어 올렸더니 그 손이 해가 지도록 내려오지 아니한지라' },
+    'ex17-15': { ref: '출애굽기 17:15', text: '모세가 제단을 쌓고 그 이름을 여호와 닛시라 하고' },
+    'ex18-11': { ref: '출애굽기 18:11', text: '이제 내가 알았도다 여호와는 모든 신보다 크시므로' },
+    'ex18-21': { ref: '출애굽기 18:21', text: '너는 또 온 백성 가운데서 능력 있는 사람들 곧 하나님을 두려워하며 진실하며 불의한 이익을 미워하는 자를 살펴서 백성 위에 세워' },
+    'ex19-5':  { ref: '출애굽기 19:5',  text: '세계가 다 내게 속하였나니 너희가 내 말을 잘 듣고 내 언약을 지키면 너희는 모든 민족 중에서 내 소유가 되겠고' },
+    'ex19-6':  { ref: '출애굽기 19:6',  text: '너희가 내게 대하여 제사장 나라가 되며 거룩한 백성이 되리라' },
+    'ex20-3':  { ref: '출애굽기 20:3',  text: '너는 나 외에는 다른 신들을 네게 두지 말라' },
+    'ex20-12': { ref: '출애굽기 20:12', text: '네 부모를 공경하라 그리하면 네 하나님 여호와가 네게 준 땅에서 네 생명이 길리라' },
+    'ex20-20': { ref: '출애굽기 20:20', text: '모세가 백성에게 이르되 두려워하지 말라 하나님이 임하심은 너희를 시험하고 너희로 경외하여 범죄하지 않게 하려 하심이니라' },
+  });
+  Object.assign(DLG, {
+    // ── 6장 ──
+    c6_nowater: [
+      [NAR, '이스라엘 자손의 온 회중이 여호와의 명령대로 신 광야에서 떠나 그 노정대로 행하여 르비딤에 장막을 쳤어요.'],
+      [NAR, '그런데 백성이 마실 물이 없었어요.'],
+      [ME, '물통이 텅 비었어요… 진영이 소란스러워요.', 'worried'],
+    ],
+    c6_cry: [
+      [MOSES, '백성이 나와 다투는구나. "우리에게 물을 주어 마시게 하라" 하고.', 'worried'],
+      [MOSES, '"너희가 어찌하여 나와 다투느냐 너희가 어찌하여 여호와를 시험하느냐"'],
+      [NAR, '모세가 여호와께 부르짖어 이르되 "내가 이 백성에게 어떻게 하리이까 그들이 조금 있으면 내게 돌을 던지겠나이다"'],
+      [MOSES, '여호와께서 말씀하셨단다. "백성 앞을 지나서 이스라엘 장로들을 데리고 나일 강을 치던 네 지팡이를 손에 잡고 가라"'],
+      [MOSES, '"내가 호렙 산에 있는 그 반석 위 거기서 네 앞에 서리니 너는 그 반석을 치라 그것에서 물이 나오리니 백성이 마시리라"'],
+      { choice: [
+        { l: '🦯 나일 강을 치던 그 지팡이!', say: [[MOSES, '그래. 그때도 지금도 여호와께서 함께하신단다.', 'happy']] },
+        { l: '😟 백성이 정말 돌을 던질까요?', say: [[MOSES, '두렵지만, 그래서 더 여호와께 부르짖는 거란다.']] },
+      ] },
+      [MOSES, '장로들과 함께 북서쪽의 큰 반석으로 가자. 너도 지팡이를 들렴.'],
+    ],
+    c6_water: [
+      [NAR, '모세가 이스라엘 장로들의 목전에서 그대로 행했어요.'],
+      { event: 'rockwater' },
+      [ME, '반석에서… 물이 쏟아져요!!', 'surprised'],
+      [ELDER6, '마실 물이다! 모두 와서 마셔라!', 'happy'],
+      [NAR, '그가 그 곳 이름을 맛사 또는 므리바라 불렀어요. 이스라엘 자손이 다투었고, "여호와께서 우리 중에 계신가 안 계신가" 하며 여호와를 시험했기 때문이에요.'],
+      { choice: [
+        { l: '🙏 여호와는 우리 중에 계세요', say: [[MOSES, '그래. 물이 없을 때도 계셨고, 지금도 계신단다.', 'happy']] },
+        { l: '💧 다투지 말고 부르짖을걸', say: [[MOSES, '그래. 다툼 대신 기도가 먼저란다.', 'happy']] },
+      ] },
+    ],
+    c6_amalek: [
+      { event: 'amalek' },
+      [NAR, '그 때에 아말렉이 와서 이스라엘과 르비딤에서 싸웠어요.'],
+      [ME, '저기 동쪽에서 사람들이 몰려와요!', 'worried'],
+      [MOSES, '여호수아야! "우리를 위하여 사람들을 택하여 나가서 아말렉과 싸우라 내일 내가 하나님의 지팡이를 손에 잡고 산 꼭대기에 서리라"'],
+      [JOSHUA6, '네, 모세님! 말씀대로 하겠습니다.'],
+      [MOSES, '아론과 훌과 함께 동쪽 바위 언덕 꼭대기로 올라가자. 너도 따라오렴.'],
+    ],
+    c6_hilltop: [
+      [NAR, '여호수아가 모세의 말대로 행하여 아말렉과 싸우고, 모세와 아론과 훌은 산 꼭대기에 올라갔어요.'],
+      [HUR, '여기서 싸움터가 다 보이는구나.'],
+      [AARON, '모세야, 지팡이를 들어라. 우리가 곁에 있을게.'],
+      [MOSES, '얘야, 너도 나와 함께 손을 들어 기도하자. 모세 곁의 빛나는 곳에 서렴.', 'happy'],
+    ],
+    c6_victory: [
+      [NAR, '모세가 손을 들면 이스라엘이 이기고, 손을 내리면 아말렉이 이겼어요.'],
+      [NAR, '모세의 팔이 피곤하매, 그들이 돌을 가져다가 모세의 아래에 놓아 그가 그 위에 앉게 하고, 아론과 훌이 한 사람은 이쪽에서, 한 사람은 저쪽에서 모세의 손을 붙들어 올렸어요.'],
+      [NAR, '그 손이 해가 지도록 내려오지 아니했어요. 여호수아가 칼날로 아말렉과 그 백성을 쳐서 무찔렀어요.'],
+      [HUR, '혼자서는 해가 질 때까지 들 수 없었을 거야.'],
+      { choice: [
+        { l: '🤝 서로 붙들어 주면 끝까지 할 수 있어요', say: [[AARON, '그래. 기도도 혼자가 아니라 함께 하는 거란다.', 'happy']], reward: { badge: 'raised_hands' } },
+        { l: '💪 팔이 너무 아팠어요!', say: [[HUR, '하하, 모세도 그랬단다. 그래서 우리가 있는 거지.', 'happy']] },
+      ] },
+      [MOSES, '여호수아에게 가 보렴. 산 아래 싸움터에 있단다.'],
+    ],
+    c6_joshua: [
+      [JOSHUA6, '이겼어! 그런데 이상하지? 싸우는 동안 어떤 때는 밀리고 어떤 때는 이겼어.', 'happy'],
+      [ME, '산 위에서 모세님이 손을 들고 있을 때 이겼어요!', 'happy'],
+      [JOSHUA6, '그렇구나… 칼을 든 건 나지만, 이기게 하신 분은 여호와셨어.'],
+      [NAR, '여호와께서 모세에게 이르셨어요. "이것을 책에 기록하여 기념하게 하고 여호수아의 귀에 외워 들리라"'],
+      [JOSHUA6, '모세님이 저 아래에 제단을 쌓고 계셔. 가 보자.'],
+    ],
+    c6_nissi: [
+      [NAR, '모세가 제단을 쌓고 그 이름을 여호와 닛시라 했어요. "여호와는 나의 깃발"이라는 뜻이에요.'],
+      [MOSES, '"여호와께서 맹세하시기를 여호와가 아말렉과 더불어 대대로 싸우리라 하셨다"'],
+      [ME, '이긴 건 우리 힘이 아니라… 여호와가 우리의 깃발이 되어 주셨기 때문이에요.', 'happy'],
+      [NAR, '이렇게 6장 「반석의 물과 아말렉」이 끝났어요. 다음 이야기: 7장 「이드로의 방문」 — 르비딤 북쪽 끝에서 하나님의 산으로 가요.'],
+    ],
+    // ── 7장 ──
+    c7_arrive: [
+      [JETHRO7, '여기 있었구나! 모세의 장인 나 이드로란다. 네 아내와 두 아들을 데리고 왔다고 모세에게 전해 주겠니?', 'happy'],
+      [ZIPPORAH, '저는 십보라예요. 이 아이는 게르솜, 이 아이는 엘리에셀이에요.'],
+      [NAR, '게르솜은 "내가 이방에서 나그네가 되었다"는 뜻이고, 엘리에셀은 "내 아버지의 하나님이 나를 도우사 바로의 칼에서 구원하셨다"는 뜻이에요.'],
+      [NAR, '모세가 나가서 그의 장인을 맞아 절하고 그에게 입 맞추고, 그들이 서로 문안하고 함께 장막에 들어갔어요.'],
+      [JETHRO7, '모세에게 그동안의 이야기를 꼭 듣고 싶구나. 장막으로 같이 가자.'],
+    ],
+    c7_tell: [
+      [MOSES, '장인어른, 여호와께서 바로와 애굽 사람에게 행하신 모든 일을 말씀드릴게요. 열 가지 재앙, 유월절 밤, 홍해, 만나, 반석의 물까지요.'],
+      [NAR, '모세가 길에서 그들이 당한 모든 고난과, 여호와께서 그들을 구원하신 일을 다 그 장인에게 말했어요.'],
+      [JETHRO7, '"여호와를 찬송하리로다 너희를 애굽 사람의 손에서와 바로의 손에서 건져내시고"', 'happy'],
+      [JETHRO7, '"이제 내가 알았도다 여호와는 모든 신보다 크시므로 이스라엘에게 교만하게 행하는 그들을 이기셨도다"'],
+      [NAR, '이드로가 하나님께 제물을 드리자, 아론과 이스라엘 모든 장로가 와서 함께 하나님 앞에서 떡을 먹었어요.'],
+      [NAR, '…이튿날이 되었어요.'],
+    ],
+    c7_advice: [
+      [JETHRO7, '"네가 이 백성에게 행하는 이 일이 어찌 됨이냐 어찌하여 네가 홀로 앉아 있고 백성은 아침부터 저녁까지 네 곁에 서 있느냐"'],
+      [MOSES, '"백성이 하나님께 물으려고 내게로 옴이라… 내가 그 양쪽을 재판하여 하나님의 율례와 법도를 알게 하나이다"'],
+      [JETHRO7, '"네가 하는 것이 옳지 못하도다 너와 또 너와 함께 한 이 백성이 필경 기력이 쇠하리니 이 일이 네게 너무 중함이라 네가 혼자 할 수 없으리라"'],
+      [JETHRO7, '"너는 또 온 백성 가운데서 능력 있는 사람들 곧 하나님을 두려워하며 진실하며 불의한 이익을 미워하는 자를 살펴서" 천부장과 백부장과 오십부장과 십부장을 삼아라.'],
+      [JETHRO7, '작은 일은 그들이 재판하고, 큰 일만 네게 가져오게 하면 일이 네게 쉬우리라.'],
+      [ME, '모세님 혼자 다 하시지 않아도 되는 거네요!', 'happy'],
+    ],
+    c7_choose: [
+      [MOSES, '장인어른의 말씀대로 하려고 한단다. 어떤 사람을 지도자로 세우면 좋을까? 네 생각은 어때?'],
+      { choice: [
+        { l: '🙏 하나님을 두려워하고, 거짓말하지 않고, 뇌물을 싫어하는 사람', say: [[MOSES, '그래! 장인어른이 말씀하신 바로 그 사람이구나. 하나님을 두려워하며 진실하며 불의한 이익을 미워하는 자.', 'happy']], reward: { badge: 'true_leader' } },
+        { l: '💪 힘이 세고 싸움을 잘하는 사람', say: [[MOSES, '힘도 필요하지. 하지만 재판하는 사람에게 먼저 필요한 건 하나님을 두려워하는 진실한 마음이란다.']] },
+        { l: '💰 부자라서 사람들이 따르는 사람', say: [[MOSES, '재물이 아니라, 오히려 불의한 이익을 미워하는 사람이어야 한단다.']] },
+      ] },
+      [NAR, '모세가 이스라엘 무리 중에서 능력 있는 사람들을 택하여, 천부장과 백부장과 오십부장과 십부장을 삼았어요.'],
+      [NAR, '그들이 때를 따라 백성을 재판하되, 어려운 일은 모세에게 가져오고 모든 작은 일은 스스로 재판했어요.'],
+      [MOSES, '이제 장인어른이 고향으로 돌아가신대. 진영 서쪽 입구에서 배웅하자.'],
+    ],
+    c7_farewell: [
+      [JETHRO7, '얘야, 모세를 잘 도와주렴. 일은 나누어 질 때 가벼워진단다.', 'happy'],
+      [ZIPPORAH, '아버지, 조심히 가세요.'],
+      [NAR, '모세가 그의 장인을 보내니, 그가 자기 땅으로 갔어요.'],
+      [NAR, '이렇게 7장 「이드로의 방문」이 끝났어요. 다음 이야기: 8장 「시내산」 — 진영 북쪽의 커다란 산 앞으로 가요.'],
+    ],
+    // ── 8장 ──
+    c8_arrive: [
+      [NAR, '이스라엘 자손이 애굽 땅을 떠난 지 삼 개월이 되던 날, 그들이 시내 광야에 이르렀어요.'],
+      [NAR, '이스라엘이 거기 산 앞에 장막을 쳤어요.'],
+      [ME, '정말 큰 산이에요… 여기가 모세님이 떨기나무 불꽃을 보셨던 하나님의 산이구나.', 'surprised'],
+      [NAR, '모세가 하나님 앞에 올라갔다가 내려왔어요. 산 앞의 모세에게 가 보세요.'],
+    ],
+    c8_covenant: [
+      [MOSES, '여호와께서 산에서 나를 불러 말씀하셨단다.'],
+      [MOSES, '"내가 애굽 사람에게 어떻게 행하였음과 내가 어떻게 독수리 날개로 너희를 업어 내게로 인도하였음을 너희가 보았느니라"'],
+      [MOSES, '"세계가 다 내게 속하였나니 너희가 내 말을 잘 듣고 내 언약을 지키면 너희는 모든 민족 중에서 내 소유가 되겠고"'],
+      [MOSES, '"너희가 내게 대하여 제사장 나라가 되며 거룩한 백성이 되리라"'],
+      [NAR, '백성이 일제히 응답하여 이르되 "여호와께서 명령하신 대로 우리가 다 행하리이다" 했어요.'],
+      { choice: [
+        { l: '🦅 독수리 날개로 업어 오셨구나', say: [[MOSES, '그래. 홍해도, 광야도 다 업혀서 온 길이란다.', 'happy']] },
+        { l: '🙏 저도 그 말씀을 잘 들을게요', say: [[MOSES, '그래. 들으면 지키고 싶어지는 게 언약이란다.', 'happy']] },
+      ] },
+      [MOSES, '여호와께서 셋째 날에 온 백성의 목전에서 시내 산에 강림하신대. 오늘과 내일 백성을 성결하게 하고 옷을 빨게 하라고 하셨단다. 진영에 알려 주렴.'],
+    ],
+    c8_boundary: [
+      [NAR, '산 둘레에 줄과 말뚝이 세워져 있어요.'],
+      [MOSES, '"너는 백성을 위하여 주위에 경계를 정하고 이르기를 너희는 삼가 산에 오르거나 그 경계를 침범하지 말지니"'],
+      [ME, '하나님이 거룩하셔서, 아무나 함부로 올라가면 안 되는 거군요.', 'surprised'],
+      [MOSES, '그래. "나팔을 길게 불거든 산 앞에 이를 것이니라." 셋째 날을 준비하며 기다리자.'],
+      [NAR, '…셋째 날 아침이 되었어요. 산기슭 경계 앞으로 가세요.'],
+    ],
+    c8_storm: [
+      { event: 'storm' },
+      [NAR, '셋째 날 아침에 우레와 번개와 빽빽한 구름이 산 위에 있고, 나팔 소리가 매우 크게 들리니 진중에 있는 모든 백성이 다 떨었어요.'],
+      [NAR, '모세가 하나님을 맞으려고 백성을 거느리고 진에서 나오매, 그들이 산 기슭에 서 있었어요.'],
+      [NAR, '시내 산에 연기가 자욱하니 여호와께서 불 가운데서 거기 강림하심이라. 그 연기가 옹기 가마 연기 같이 떠오르고 온 산이 크게 진동했어요.'],
+      [ME, '산이… 흔들려요!', 'surprised'],
+      [NAR, '나팔 소리가 점점 커질 때에 모세가 말한즉 하나님이 음성으로 대답하셨어요. 모세가 산 꼭대기로 올라갔다가 내려왔어요.'],
+    ],
+    c8_tablets: [
+      [MOSES, '"나는 너를 애굽 땅, 종 되었던 집에서 인도하여 낸 네 하나님 여호와니라"'],
+      [MOSES, '하나님이 이 모든 말씀으로 말씀하셨단다. 종이었던 우리를 건지신 하나님이, 이제 자유롭게 살아가는 길을 주신 거야.'],
+      { choice: [
+        { l: '📜 하나님 사랑 넷, 이웃 사랑 여섯이네요', say: [[MOSES, '그래! 앞의 말씀은 하나님을 사랑하는 길, 뒤의 말씀은 이웃을 사랑하는 길이란다.', 'happy']] },
+        { l: '😟 다 지킬 수 있을까요?', say: [[MOSES, '그래서 매일 하나님께 가까이 가는 거란다. 종에서 건지신 분이 도와주시니까.', 'happy']] },
+      ] },
+      [NAR, '뭇 백성이 우레와 번개와 나팔 소리와 산의 연기를 보고 떨며 멀리 서 있어요. 아론에게 가 보세요.'],
+    ],
+    c8_fear: [
+      [AARON, '백성이 모세에게 이렇게 말했단다. "당신이 우리에게 말씀하소서 우리가 들으리이다 하나님이 우리에게 말씀하시지 말게 하소서 우리가 죽을까 하나이다"'],
+      [ME, '저도 무서웠어요… 산이 흔들리고 불이 나고.', 'worried'],
+      [MOSES, '"두려워하지 말라 하나님이 임하심은 너희를 시험하고 너희로 경외하여 범죄하지 않게 하려 하심이니라"'],
+      [NAR, '백성은 멀리 서 있고, 모세는 하나님이 계신 흑암으로 가까이 갔어요.'],
+      [NAR, '이렇게 8장 「시내산」이 끝났어요. 하나님이 주신 열 가지 말씀은 수집첩에 구절 카드로 남아 있어요.'],
+    ],
+  });
+  Object.assign(KEYS, {
+    c6_water:   { scene: '호렙 반석', t: '너는 그 반석을 치라 그것에서 물이 나오리니' },
+    c6_victory: { scene: '르비딤 산 꼭대기', t: '모세가 손을 들면 이스라엘이 이기고' },
+    c6_nissi:   { scene: '여호와 닛시', t: '여호와는 나의 깃발' },
+    c7_tell:    { scene: '이드로의 고백', t: '이제 내가 알았도다 여호와는 모든 신보다 크시므로' },
+    c7_advice:  { scene: '이드로의 조언', t: '네가 혼자 할 수 없으리라' },
+    c8_covenant:{ scene: '시내 산 언약', t: '너희는 모든 민족 중에서 내 소유가 되겠고' },
+    c8_fear:    { scene: '두려워하지 말라', t: '너희로 경외하여 범죄하지 않게 하려 하심이니라' },
+  });
+  Object.assign(QUIZ, {
+    c6_water:   { q: '르비딤에서 물은 어디에서 나왔나요?', a: '호렙 산의 반석', w: ['엘림의 샘', '땅을 판 우물'] },
+    c6_victory: { q: '모세의 팔이 피곤할 때 누가 손을 붙들어 올렸나요?', a: '아론과 훌', w: ['여호수아와 갈렙', '이드로와 십보라'] },
+    c6_nissi:   { q: '모세가 쌓은 제단의 이름은?', a: '여호와 닛시', w: ['여호와 이레', '여호와 샬롬'] },
+    c7_advice:  { q: '이드로는 어떤 사람을 지도자로 세우라고 했나요?', a: '하나님을 두려워하며 진실한 사람', w: ['가장 힘센 사람', '가장 나이 많은 사람'] },
+    c8_covenant:{ q: '하나님은 이스라엘이 언약을 지키면 무엇이 되리라 하셨나요?', a: '제사장 나라, 거룩한 백성', w: ['가장 부유한 나라', '가장 강한 군대'] },
+    c8_fear:    { q: '모세는 떨고 있는 백성에게 뭐라고 했나요?', a: '두려워하지 말라', w: ['빨리 도망하라', '산에 올라오라'] },
+  });
+  Object.assign(BADGES, {
+    raised_hands: { ico: '🙌', name: '붙들어 준 손' },
+    true_leader:  { ico: '⚖️', name: '진실한 사람을 알아본 눈' },
+    ten_words:    { ico: '🪨', name: '열 가지 말씀' },
+  });
   const CHAPTERS = [
     { title: '📜 모세와 함께 1장 — 부르심', clearTitle: '🎉 모세와 함께 1장 「부르심」 완료!', steps: STORY1, next: '2장: 열 가지 재앙' },
     { title: '📜 모세와 함께 2장 — 열 가지 재앙', clearTitle: '🎉 2장 「아홉 가지 재앙」 완료!', steps: STORY2, next: '3장: 유월절 밤' },
     { title: '📜 모세와 함께 3장 — 유월절 밤', clearTitle: '🎉 3장 「유월절 밤」 완료!', steps: STORY3, next: '4장: 홍해를 건너다' },
     { title: '📜 모세와 함께 4장 — 홍해를 건너다', clearTitle: '🎉 4장 「홍해를 건너다」 완료!', steps: STORY4, next: '5장: 광야의 만나' },
-    { title: '📜 모세와 함께 5장 — 광야의 만나', clearTitle: '🎉 5장 「광야의 만나」 완료!', steps: STORY5, next: '6장: 준비 중' },
+    { title: '📜 모세와 함께 5장 — 광야의 만나', clearTitle: '🎉 5장 「광야의 만나」 완료!', steps: STORY5, next: '6장: 반석의 물과 아말렉' },
+    { title: '📜 모세와 함께 6장 — 반석의 물과 아말렉', clearTitle: '🎉 6장 「반석의 물과 아말렉」 완료!', steps: STORY6, next: '7장: 이드로의 방문' },
+    { title: '📜 모세와 함께 7장 — 이드로의 방문', clearTitle: '🎉 7장 「이드로의 방문」 완료!', steps: STORY7, next: '8장: 시내산' },
+    { title: '📜 모세와 함께 8장 — 시내산', clearTitle: '🎉 8장 「시내산」 완료!', steps: STORY8, next: '9장: 준비 중' },
   ];
 
   // 단서(소문): 미디안 마을 사람들에게 모세 소식을 물으면
@@ -3463,6 +3764,16 @@
     wd_thirsty2: ['아이들이 목이 말라 울어요. 이 물은 너무 써서 줄 수가 없어요.', '모세님께 가서 물어봐야겠어요.'],
     wd_hungry1: ['애굽에서는 고기 가마 곁에 앉아 떡을 배불리 먹었는데…', '차라리 애굽 땅에서 여호와의 손에 죽었더라면 좋았겠다는 사람도 있어.'],
     wd_hungry2: ['배고파요… 광야에는 먹을 게 하나도 없어요.', '모세님이 이 광야로 우리를 데려와서 다 굶어 죽게 한대요. 정말이에요?'],
+  });
+  Object.assign(RUMORS, {
+    rp_angry1: ['물! 물이 없어! 우리 아이들과 가축이 목말라 죽겠어.', '당신이 어찌하여 우리를 애굽에서 인도해 내었냐고, 다들 모세님께 따지러 가고 있어.'],
+    rp_angry2: ['아까 누가 그러더라고요. 여호와께서 우리 중에 계신가 안 계신가…', '저도 무서워요. 사람들이 모세님께 돌을 던질까 봐요.'],
+    sn_line1: ['아침부터 줄을 섰는데 아직도 차례가 안 왔어. 이웃과 양 한 마리 때문에 다툼이 있거든.', '모세님 혼자 이 많은 사람을 다 재판하시니… 해가 지겠구나.'],
+    sn_line2: ['하나님께 물어볼 일이 있어서 왔어요. 그런데 줄이 너무 길어요.', '모세님 얼굴이 많이 지쳐 보여요.'],
+    sn_line3: ['어제도 저녁까지 기다리다 그냥 돌아갔어요.', '누군가 모세님을 좀 도와드리면 좋을 텐데요.'],
+    sn_family1: ['옷을 빨고 셋째 날을 기다리라고? 알겠다, 다 같이 준비하자!', '산 둘레 경계는 절대 넘지 말라고 아이들에게도 일러 둘게.'],
+    sn_family2: ['하나님이 산에 내려오신다니… 이 늙은이도 깨끗한 옷을 입고 기다려야지.', '평생에 이런 날을 보게 될 줄 몰랐구나.'],
+    sn_family3: ['셋째 날에 나팔 소리가 난대요! 저도 옷 빨래 도울게요.', '산에 올라가 보면 안 돼요? …아, 경계 안으로는 절대 안 되는구나.'],
   });
   // 저장(버전 번호 + 새 필드는 기본값 — 데이터 마이그레이션 원칙)
   const STORY_KEY = 'inodyssey.proto.story';
@@ -3514,6 +3825,7 @@
     hail: () => passed(1, 'c2s17'),
     rhythm: () => passed(3, 'c4s10'),
     tired: d => ST.ch === 3 && !ST.cleared && ST.step === stepIdx('c4s9') && !(ST.helped || []).includes(d.id),
+    jethroHere: () => ST.ch === 6 && !ST.cleared,
   };
   function refreshShow(){ markers.forEach(m => { if (m.data.showFrom || m.data.showCh !== undefined || m.data.cond) applyShow(m); }); }
   function applyShow(m){
@@ -3671,6 +3983,9 @@
     { need: 3, t: '어린양의 피 아래 선 사람' },
     { need: 4, t: '바다를 건넌 믿음의 사람' },
     { need: 5, t: '광야에서 만나를 먹은 사람' },
+    { need: 6, t: '손을 들어 이긴 사람' },
+    { need: 7, t: '함께 짐을 나눈 사람' },
+    { need: 8, t: '시내산 언약의 사람' },
     { need: 'scroll', t: '말씀을 찾는 탐험가' },
   ];
   const chaptersDone = () => ST.ch + (ST.cleared ? 1 : 0);
@@ -3690,7 +4005,7 @@
     pray_start: '두루마리마을 기념 전시관 앞에서…', companion: '떨기나무 앞, 걱정하는 모세에게…', prayer: '바로 앞에 들어가기 전, 떨리는 모세와…',
     share: '짚을 모아 준 일꾼들과…', trust: '뱀이 된 지팡이 이야기를 들을 때…', true_heart: '우박이 그친 뒤 바로의 모습을 보고…',
     passover_lamb: '문설주에 피를 바른 뒤 궁금한 것을…', bold_step: '바다가 갈라진 순간…', together: '바다를 건널 때 주변을 잘 살펴보면…',
-    timbrel: '미리암과 함께 소고를 잘 두드리면…', daily_bread: '만나를 아침까지 남겨 둔 사람에게…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면',
+    timbrel: '미리암과 함께 소고를 잘 두드리면…', daily_bread: '만나를 아침까지 남겨 둔 사람에게…', raised_hands: '산 꼭대기에서 손을 들고 난 뒤…', true_leader: '모세와 함께 지도자를 고를 때…', ten_words: '열 가지 말씀을 한 번도 틀리지 않고…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면',
   };
   function badgeBookHTML(){
     const all = Object.entries(BADGES), n = all.filter(([k]) => ST.badges.includes(k)).length;
@@ -3698,7 +4013,7 @@
       + all.map(([k, b]) => ST.badges.includes(k) ? `<div class="bdg"><b>${b.ico}</b>${b.name}</div>`
           : `<div class="bdg off"><b>❓</b>???<i>${BADGE_HINT[k] || '이야기 속 어딘가에서…'}</i></div>`).join('') + `</div></div>`;
   }
-  const TITLE_ICO = { '두루마리마을 새내기': '📜', '부르심에 응답한 사람': '🔥', '재앙 속에서 믿은 사람': '⚡', '어린양의 피 아래 선 사람': '🐑', '바다를 건넌 믿음의 사람': '🌊', '광야에서 만나를 먹은 사람': '🍞', '말씀을 찾는 탐험가': '🧭' };
+  const TITLE_ICO = { '두루마리마을 새내기': '📜', '부르심에 응답한 사람': '🔥', '재앙 속에서 믿은 사람': '⚡', '어린양의 피 아래 선 사람': '🐑', '바다를 건넌 믿음의 사람': '🌊', '광야에서 만나를 먹은 사람': '🍞', '손을 들어 이긴 사람': '🙌', '함께 짐을 나눈 사람': '⚖️', '시내산 언약의 사람': '🪨', '말씀을 찾는 탐험가': '🧭' };
   // 칭호 전체: 얻은 칭호는 컬러 배지+이름(누르면 사용), 못 얻은 칭호는 흑백 ❓ · 이름 숨김(얻는 조건만 작게)
   function titleBookHTML(){
     const mine = myTitle(), n = TITLES.filter(titleOk).length;
@@ -3739,8 +4054,8 @@
   function warpTargets(){
     const q = curStep(), done = chaptersDone(), out = [];
     const exitTo = q && q.exit ? ((ZONES[q.zone].points.find(p => p.id === q.exit) || {}).to) : null;
-    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5 };
-    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild']){
+    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5, rephidim: 6, sinai: 8 };
+    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai']){
       const story = q && (q.zone === z || exitTo === z);
       const ok = z === 'alpha' || done >= need[z] || story;
       out.push({ z, ok, story, here: Z && Z.id === z, note: z === 'alpha' ? '언제든 갈 수 있어요 · 내 장막' : story ? '📜 지금 이야기가 있는 곳' : ok ? '이야기를 마친 곳' : `🔒 ${need[z]}장을 마치면` });
@@ -3793,10 +4108,11 @@
   const cardHTML = (id, locked) => { const v = VERSES[id]; return `<div class="vcard${locked ? ' locked' : ''}" style="background-image:url('${A('ui/game/verse-card.jpg')}')"><div class="ref">${v.ref}</div><div>${locked ? '아직 모으지 못한 구절' : v.text}</div><div class="chk">개역개정</div></div>`; };
   // 곡: title(처음 테마) · village(두루마리마을) · midian(미디안 광야) · egypt(애굽 고센) · palace(바로의 궁전 알현실)
   const BGM = { on: (() => { try { return localStorage.getItem('inodyssey-bgm') !== 'off'; } catch (e){ return true; } })(), ctx: null, src: null, gain: null, bufs: {}, cur: null, want: 'title', starting: false, titleUntil: 0 };
-  const ZONE_BGM = { alpha: 'village', midian: 'midian', egypt: 'egypt', redsea: 'redsea', wild: 'midian' };
+  const ZONE_BGM = { alpha: 'village', midian: 'midian', egypt: 'egypt', redsea: 'redsea', wild: 'midian', rephidim: 'midian', sinai: 'midian' };
   function bgmWanted(){
     if (performance.now() < BGM.titleUntil) return 'title';                      // 시작할 때 테마를 한 바퀴
     if (Z && Z.room && inRoom(player.position.x, player.position.z)) return 'palace';
+    if ((Z && Z.id === 'sinai' && stormObj) || (Z && Z.id === 'rephidim' && battleObj)) return 'redsea';
     if (Z && Z.id === 'redsea' && ST.ch >= 3 && (ST.ch > 3 || ST.cleared || ST.step >= stepIdx('c4s10'))) return 'praise';
     return (Z && ZONE_BGM[Z.id]) || 'village';
   }
@@ -4096,7 +4412,7 @@
     if (SHOP_MOCK || !MSU.client || !MSU.session) return 0;
     try { const { data, error } = await MSU.client.rpc('claim_odyssey_chapter', { p_ch: ch }); if (error) throw error; if (data > 0){ MSU.balance = (MSU.balance || 0) + data; toast(`💰 ${ch}장 완료 보상 ${data}달란트를 받았어요!`, 3000); } return data; } catch (e){ return 0; }
   }
-  async function claimClearedChapters(){ const n = ST.ch + (ST.cleared ? 1 : 0); for (let c = 1; c <= Math.min(n, 5); c++) await claimChapter(c); }
+  async function claimClearedChapters(){ const n = ST.ch + (ST.cleared ? 1 : 0); for (let c = 1; c <= Math.min(n, 8); c++) await claimChapter(c); }
 
   // 장착: 지팡이는 오른손에, 동물 친구는 뒤를 따라다님(마을을 옮겨도 함께)
   const equipObj = { staff: null, staffKey: null, pet: null, petKey: null, petT: 0 };
@@ -5172,6 +5488,7 @@
     const q = curStep(), d = m.data;
     if (!q || q.zone !== Z.id) return false;
     if (q.count && q.npc === d.id){ runDialog(countLines(), () => giveReward(q.reward, advance), m, 'c2_count'); return true; }
+    if (q.game && ((q.npc && q.npc === d.id) || (q.point && q.point === d.id))){ startStoryGame(q); return true; }
     if ((q.npc && q.npc === d.id) || (q.point && q.point === d.id)){
       runDialog(DLG[q.dlg].concat(quizLines(q.dlg)), () => giveReward(q.reward, advance), m.data.model ? m : null, q.dlg);
       return true;
@@ -5204,6 +5521,13 @@
   let bloodT = -1;
   function applyWorld(){
     if (!Z) return;
+    if (Z.id === 'rephidim'){
+      buildRockWater(rockWaterOn());
+      buildBattle(ST.ch === 5 && !ST.cleared && ST.step >= stepIdx('c6s6') && ST.step <= stepIdx('c6s9'));
+      if (ST.ch === 5 && !ST.cleared && ST.step >= stepIdx('c6s9')) armyPush = 1;
+      buildAltar(ST.ch > 5 || (ST.ch === 5 && (ST.cleared || ST.step >= stepIdx('c6s10'))));
+    }
+    if (Z.id === 'sinai') buildStorm(stormOn());
     if (Z.id === 'wild') spawnQuail(ST.ch === 4 && !ST.cleared && ST.step >= stepIdx('c5s10') && ST.step <= stepIdx('c5s11'));
     if (Z._water){
       const red = ST.ch === 1 && ST.step >= stepIdx('c2s3') && ST.step < stepIdx('c2s4');   // 이레 뒤(개구리부터)는 원래 물빛
@@ -5240,6 +5564,9 @@
     if (name === 'dawn'){ nightOn = false; }
     if (name === 'close'){ sea.target = 0; armyOn = false; spawnArmy(); cloudOn = false; spawnCloud(); }
     if (name === 'dance'){ startDance(); }
+    if (name === 'rockwater'){ buildRockWater(true); toast('💧 반석에서 물이 솟아나요!', 2200); }
+    if (name === 'amalek'){ armyPush = 0.5; buildBattle(true); toast('⚔️ 아말렉이 쳐들어왔어요', 2200); }
+    if (name === 'storm'){ buildStorm(true); if (Z.mountain) startCine('storm', Z.mountain.x, heightAt(Z.mountain.x, Z.mountain.z) + 12, Z.mountain.z, { r: 40, h: 14, dur: 6, spin: 0.4 }); toast('⚡ 우레와 번개, 나팔 소리!', 2200); }
     if (name === 'sweet'){ toast('💧 쓴 물이 단 물이 되었어요!', 2200); }
     if (name === 'quail'){ spawnQuail(true); toast('🐦 메추라기가 날아와 진영을 덮어요', 2200); }
     if (name === 'manna'){ setTimeout(spawnManna, 50); }
@@ -5546,6 +5873,163 @@
     if (q.doneDlg) runDialog(DLG[q.doneDlg].concat(quizLines(q.doneDlg)), () => giveReward(q.reward, advance), null, q.doneDlg);
     else giveReward(q.reward, advance);
   }
+  // ══ 6~8장: 반석의 물 · 아말렉 전투 · 시내산(산·경계·폭풍) · 손 들기 · 두 돌판 ══
+  function startStoryGame(q){
+    if (q.game === 'hands') handsGame(q);
+    if (q.game === 'tablets') tabletsGame(q);
+  }
+  // 손 들기(출 17:11-12): 누르고 있으면 이스라엘이 이기고 팔이 피곤해짐 → 한 번 지치면 돌 놓기 · 아론과 훌이 손 붙들기
+  function handsGame(q){
+    mgOpen('🙌 손을 들어 기도하기', '「손 들기」를 <b>누르고 있으면</b> 이스라엘이 이기고, 손을 내리면 아말렉이 이겨요. 팔이 피곤해지면 어떻게 될까요?<br><span style="opacity:.75">"모세가 손을 들면 이스라엘이 이기고 손을 내리면 아말렉이 이기더니" (출 17:11)</span>');
+    mgArea.style.height = '150px';
+    mgArea.innerHTML = `<div style="padding:8px 12px;font-size:12.5px">⚔️ 싸움 <b id="hg-b">50</b>%<div class="oik-bar" style="height:16px"><i id="hg-bar" style="width:50%;background:linear-gradient(90deg,#6fcf6a,#ffd27a)"></i></div>
+      💪 팔의 피곤함<div class="oik-bar"><i id="hg-f" style="width:0%;background:linear-gradient(90deg,#ffd27a,#e0735a)"></i></div><div id="hg-msg" style="font-weight:800;color:#ffd27a;min-height:20px"></div>
+      <div style="display:flex;gap:6px"><button id="hg-stone" class="hidden" style="flex:1;padding:8px;border-radius:10px;border:none;background:#8fe0ff;font-weight:800">🪨 돌 놓기</button><button id="hg-help" class="hidden" style="flex:1;padding:8px;border-radius:10px;border:none;background:#8fe0ff;font-weight:800">🤝 아론과 훌이 손 붙들기</button></div></div>`;
+    mgAct.textContent = '🙌 손 들기(누르고 있기)';
+    let battle = 50, fat = 0, holding = false, forced = 0, tired = false, stone = false, help = false, done = false, last = 0;
+    const el = id => document.getElementById(id);
+    const down = e => { e.preventDefault(); holding = true; }, up = () => { holding = false; };
+    mgAct.onpointerdown = down; mgAct.onpointerup = up; mgAct.onpointerleave = up; mgAct.onclick = null;
+    const key = e => { if (e.key === ' '){ e.preventDefault(); e.stopPropagation(); holding = e.type === 'keydown'; } };
+    window.addEventListener('keydown', key, true); window.addEventListener('keyup', key, true);
+    el('hg-stone').onclick = () => { stone = true; el('hg-stone').classList.add('hidden'); el('hg-help').classList.remove('hidden'); el('hg-msg').textContent = '🪨 돌을 가져다 놓아 모세가 그 위에 앉았어요'; };
+    el('hg-help').onclick = () => { help = true; fat = 0; el('hg-help').classList.add('hidden'); el('hg-msg').textContent = '🤝 아론과 훌이 이쪽저쪽에서 손을 붙들어 올렸어요 — 해가 지도록!'; };
+    const loop = now => {
+      const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
+      if (!done){
+        const up_ = help || (holding && forced <= 0);
+        if (forced > 0) forced -= dt;
+        battle += (up_ ? (help ? 14 : 9) : -7) * dt; battle = Math.max(8, Math.min(100, battle));
+        if (!help){ fat += (holding && forced <= 0 ? 22 : -18) * dt; fat = Math.max(0, Math.min(100, fat)); }
+        if (fat >= 100 && forced <= 0){ forced = 2.2; tired = true; fat = 70; el('hg-msg').textContent = '😮‍💨 모세의 팔이 피곤해 손이 내려갔어요… 아말렉이 밀고 와요!'; if (!stone) el('hg-stone').classList.remove('hidden'); }
+        el('hg-b').textContent = Math.round(battle); el('hg-bar').style.width = battle + '%'; el('hg-f').style.width = fat + '%';
+        armyPush = battle / 100;
+        if (battle >= 100){ done = true; el('hg-msg').textContent = '🎉 해가 지도록 손이 내려오지 않았어요 — 여호수아가 아말렉을 무찔렀어요!'; mgAct.textContent = '계속하기'; mgAct.onpointerdown = null; mgAct.onclick = finish; }
+      }
+      mg.raf = requestAnimationFrame(loop);
+    };
+    const finish = () => { window.removeEventListener('keydown', key, true); window.removeEventListener('keyup', key, true); mgArea.style.height = ''; mgAct.onpointerdown = mgAct.onpointerup = mgAct.onpointerleave = null; mgCloseAll(); completeTask(q); };
+    mg.onClose = () => { window.removeEventListener('keydown', key, true); window.removeEventListener('keyup', key, true); mgArea.style.height = ''; mgAct.onpointerdown = mgAct.onpointerup = mgAct.onpointerleave = null; };
+    cancelAnimationFrame(mg.raf); mg.raf = requestAnimationFrame(loop);
+  }
+  // 두 돌판(출 20:3-17): 열 가지 말씀을 차례대로 눌러 돌판에 새기기(앞 넷 = 하나님 사랑, 뒤 여섯 = 이웃 사랑)
+  const TEN = ['너는 나 외에는 다른 신들을 네게 두지 말라', '너를 위하여 새긴 우상을 만들지 말고', '너는 네 하나님 여호와의 이름을 망령되게 부르지 말라', '안식일을 기억하여 거룩하게 지키라', '네 부모를 공경하라', '살인하지 말라', '간음하지 말라', '도둑질하지 말라', '네 이웃에 대하여 거짓 증거하지 말라', '네 이웃의 집을 탐내지 말라'];
+  function tabletsGame(q){
+    mgOpen('🪨 열 가지 말씀을 돌판에', '모세가 전한 말씀을 <b>첫째부터 열째까지 차례대로</b> 눌러 두 돌판에 새겨요.<br><span style="opacity:.75">"나는 너를 애굽 땅, 종 되었던 집에서 인도하여 낸 네 하나님 여호와니라" (출 20:2)</span>');
+    mgArea.style.height = 'auto';
+    const order = TEN.map((t, i) => i).sort(() => Math.random() - 0.5);
+    let next = 0, miss = 0;
+    const draw = msg => {
+      const slab = (a, b) => `<div style="flex:1;background:#b9ab93;border-radius:40px 40px 8px 8px;padding:8px 6px;color:#2a1d10;font-size:11px;line-height:1.35;min-height:120px">${TEN.slice(a, b).map((t, i) => `<div style="opacity:${a + i < next ? 1 : .25}">${a + i + 1}. ${a + i < next ? t : '　'}</div>`).join('')}</div>`;
+      mgArea.innerHTML = `<div style="display:flex;gap:8px;padding:8px">${slab(0, 4)}${slab(4, 10)}</div><div style="text-align:center;font-weight:800;color:#ffd27a;font-size:13px;min-height:18px">${msg || (next < 10 ? `${next + 1}번째 말씀은?` : '')}</div>`
+        + `<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:6px 8px 10px">${order.filter(i => i >= next).map(i => `<button data-ten="${i}" style="padding:7px 6px;border-radius:9px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#f5e9d0;font-size:12px;text-align:left">${TEN[i]}</button>`).join('')}</div>`;
+    };
+    draw(); mgAct.textContent = '다 새기면 계속'; mgAct.disabled = true;
+    mgArea.onclick = e => {
+      const b = e.target.closest('[data-ten]'); if (!b) return;
+      const i = +b.dataset.ten;
+      if (i === next){ next++; draw(next < 10 ? '✓ 맞아요!' : (miss <= 1 ? '🎉 두 돌판이 다 새겨졌어요! (거의 틀리지 않았어요)' : '🎉 두 돌판이 다 새겨졌어요!')); if (next >= 10){ mgAct.disabled = false; if (miss <= 1 && !ST.badges.includes('ten_words')){ ST.badges.push('ten_words'); saveST(); setTimeout(() => toast('🪨 배지 획득: 열 가지 말씀', 2400), 600); } } }
+      else { miss++; b.style.background = 'rgba(224,115,90,.5)'; setTimeout(() => draw(`다시 생각해 봐요 — ${next + 1}번째 말씀은?`), 350); }
+    };
+    mgAct.onclick = () => { if (next < 10) return; mgArea.onclick = null; mgArea.style.height = ''; mgCloseAll(); completeTask(q); };
+    mg.onClose = () => { mgArea.onclick = null; mgArea.style.height = ''; };
+  }
+  // 반석의 물(출 17:6): 호렙 반석에서 쏟아지는 물줄기 + 흐르는 시내
+  let rockWater = null, battleObj = null, armyPush = 0.5, stormObj = null, mountainObj = null, altarObj = null;
+  const rockWaterOn = () => Z && Z.id === 'rephidim' && (ST.ch > 5 || (ST.ch === 5 && (ST.cleared || ST.step > stepIdx('c6s5'))));
+  function buildRockWater(on){
+    if (rockWater){ rockWater.parent && rockWater.parent.remove(rockWater); rockWater = null; }
+    if (!on) return;
+    const g = new THREE.Group(), x = -15.5, z = -11.5, y = heightAt(x, z);
+    const m = new THREE.MeshToonMaterial({ color: 0x5fb4dc, gradientMap: toonGradient, transparent: true, opacity: 0.85 });
+    const fall = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.6, 3.2, 10, 1, true), m); fall.position.set(x, y + 1.6, z); g.add(fall);
+    const pts = []; for (let t = 0; t <= 1.0001; t += 0.1){ const px = x + (0 - x) * t * 0.8, pz = z + (2 - z) * t * 0.8; pts.push(new THREE.Vector3(px, heightAt(px, pz) + 0.07, pz)); }
+    const stream = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.55, 6, false), m); stream.scale.y = 0.2; stream.position.y = pts[0].y * 0.8; g.add(stream);
+    const pool = new THREE.Mesh(new THREE.CircleGeometry(2.2, 20).rotateX(-Math.PI / 2), m); pool.position.set(x + 1.5, y + 0.06, z + 1.5); g.add(pool);
+    g.userData.fall = fall; zoneRoot.add(g); rockWater = g;
+  }
+  // 아말렉과의 싸움(출 17:8-13): 두 무리가 armyPush(0~1)에 따라 밀고 밀림
+  function buildBattle(on){
+    if (battleObj){ battleObj.parent && battleObj.parent.remove(battleObj); battleObj = null; }
+    if (!on) return;
+    const g = new THREE.Group(), isr = new THREE.MeshToonMaterial({ color: 0xd9c9a0, gradientMap: toonGradient }), ama = new THREE.MeshToonMaterial({ color: 0x7a3a2a, gradientMap: toonGradient });
+    const body = new THREE.CapsuleGeometry(0.28, 0.9, 3, 6), head = new THREE.SphereGeometry(0.22, 6, 5);
+    const mk = (mat, side) => { const f = new THREE.Group(); const b = new THREE.Mesh(body, mat); b.position.y = 0.75; const h = new THREE.Mesh(head, mat); h.position.y = 1.5; f.add(b, h); f.userData.side = side; f.userData.ph = Math.random() * 6; return f; };
+    for (let i = 0; i < 18; i++){ const f = mk(isr, -1); f.userData.lz = -4 + (i % 6) * 1.6; f.userData.lx = -1 - Math.floor(i / 6) * 1.2; g.add(f); }
+    for (let i = 0; i < 18; i++){ const f = mk(ama, 1); f.userData.lz = -4 + (i % 6) * 1.6; f.userData.lx = 1 + Math.floor(i / 6) * 1.2; g.add(f); }
+    g.position.set(30, 0, 6); zoneRoot.add(g); battleObj = g;
+  }
+  function updateBattle(now){
+    if (!battleObj) return; const front = (0.5 - armyPush) * 8, t = now / 1000;
+    battleObj.children.forEach(f => { const u = f.userData, x = battleObj.position.x + front + u.lx + Math.sin(t * 5 + u.ph) * 0.15, z = battleObj.position.z + u.lz;
+      f.position.set(x - battleObj.position.x, heightAt(x, z) + Math.abs(Math.sin(t * 6 + u.ph)) * 0.12, u.lz); f.rotation.y = u.side < 0 ? Math.PI / 2 : -Math.PI / 2; });
+  }
+  function buildAltar(on){
+    if (altarObj){ altarObj.parent && altarObj.parent.remove(altarObj); altarObj = null; }
+    if (!on) return;
+    const g = new THREE.Group(), x = 18, z = -8, y = heightAt(x, z), stoneM = new THREE.MeshToonMaterial({ color: 0x9a8a72, gradientMap: toonGradient });
+    for (let i = 0; i < 9; i++){ const st = new THREE.Mesh(new THREE.DodecahedronGeometry(0.45 + Math.random() * 0.15, 0), stoneM); st.position.set((i % 3 - 1) * 0.7, 0.35 + Math.floor(i / 3) * 0.5, ((i * 7) % 3 - 1) * 0.5); g.add(st); }
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 3.2, 6), new THREE.MeshToonMaterial({ color: 0x6a4a2a, gradientMap: toonGradient })); pole.position.set(1.6, 1.6, 0); g.add(pole);
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.9), new THREE.MeshToonMaterial({ color: 0xc03a2a, gradientMap: toonGradient, side: THREE.DoubleSide })); flag.position.set(2.3, 2.7, 0); g.add(flag);
+    g.position.set(x, y, z); zoneRoot.add(g); altarObj = g;
+  }
+  // 시내 산: 코드로 만든 큰 산 + 산 둘레 경계(출 19:12)
+  function buildMountain(){
+    const M = Z.mountain, mat = new THREE.MeshToonMaterial({ color: 0x9a6a4c, gradientMap: toonGradient, flatShading: true });
+    // 봉우리 셋(가운데가 가장 높음) — 매끈한 원뿔이 천막처럼 보이지 않게 울퉁불퉁한 바위산으로
+    const peak = (r, h, ox, oz, seed) => {
+      const geo = new THREE.ConeGeometry(r, h, 48, 16, true), pa = geo.attributes.position;
+      for (let i = 0; i < pa.count; i++){
+        const x = pa.getX(i), y = pa.getY(i), z = pa.getZ(i), t = y / h + 0.5;   // 0=바닥 1=꼭대기
+        const n = Math.sin(x * 0.9 + seed) * 1.0 + Math.sin(z * 1.3 - y * 0.4 + seed * 2) * 0.8 + Math.cos(x * 0.45 + y * 0.7) * 1.2 + Math.sin(Math.atan2(z, x) * 7 + seed) * 1.4;
+        const k = 1 + n * 0.1 * (1 - t * 0.5); pa.setX(i, x * k); pa.setZ(i, z * k); pa.setY(i, y + (t > 0.05 && t < 0.97 ? n * 0.6 : 0));
+      }
+      geo.computeVertexNormals();
+      const m = new THREE.Mesh(geo, mat); m.position.set(M.x + ox, heightAt(M.x + ox, M.z + oz) + h / 2 - 2, M.z + oz); m.receiveShadow = true; zoneRoot.add(m);
+      obstacles.push({ x: M.x + ox, z: M.z + oz, r: r * 0.9 });
+      return m;
+    };
+    mountainObj = peak(M.r, M.h, 0, 0, 1.3);
+    peak(M.r * 0.72, M.h * 0.62, -M.r * 0.85, 4, 4.1);
+    peak(M.r * 0.66, M.h * 0.55, M.r * 0.9, 5, 7.7);
+    // 경계: 산기슭 둘레 말뚝과 줄
+    const R = M.r + 4, postM = new THREE.MeshToonMaterial({ color: 0x6a4a2a, gradientMap: toonGradient }), pts = [];
+    for (let a = -Math.PI * 0.95; a <= -Math.PI * 0.05 + 1e-6; a += Math.PI / 18){ const x = M.x + Math.cos(a) * R * 1.35, z = M.z - Math.sin(a) * R; const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 1.1, 6), postM); post.position.set(x, heightAt(x, z) + 0.55, z); zoneRoot.add(post); pts.push(new THREE.Vector3(x, heightAt(x, z) + 0.95, z)); }
+    zoneRoot.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xd8c49a })));
+  }
+  // 셋째 날 아침(출 19:16-19): 산 위 빽빽한 구름·번개·불·연기·나팔 소리·진동
+  const stormOn = () => Z && Z.id === 'sinai' && ST.ch === 7 && !ST.cleared && ST.step >= stepIdx('c8s5');
+  let stormFlashT = 0, stormTrumpT = 0, stormShakeK = 0;
+  function buildStorm(on){
+    if (stormObj){ stormObj.parent && stormObj.parent.remove(stormObj); stormObj = null; }
+    if (!on || !Z.mountain) return;
+    const M = Z.mountain, g = new THREE.Group(), top = heightAt(M.x, M.z) + M.h - 2;
+    const cm = new THREE.SpriteMaterial({ map: flameTex, color: 0x2a2a34, transparent: true, opacity: 0.85, depthWrite: false });
+    for (let i = 0; i < 26; i++){ const sp = new THREE.Sprite(cm); const a = Math.random() * 6.28, r = Math.random() * 9; sp.position.set(M.x + Math.cos(a) * r, top + 2 + Math.random() * 6, M.z + Math.sin(a) * r); sp.scale.set(12, 7, 1); g.add(sp); }
+    const smoke = new THREE.SpriteMaterial({ map: flameTex, color: 0x6a6660, transparent: true, opacity: 0.6, depthWrite: false });
+    for (let i = 0; i < 14; i++){ const sp = new THREE.Sprite(smoke); sp.position.set(M.x + (Math.random() - 0.5) * 4, top + i * 2.2, M.z + (Math.random() - 0.5) * 4); sp.scale.set(5 + i * 0.6, 5 + i * 0.6, 1); sp.userData.smoke = i; g.add(sp); }
+    const fire = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xff9a3a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); fire.scale.set(9, 12, 1); fire.position.set(M.x, top + 3, M.z); g.add(fire); g.userData.fire = fire;
+    const light = new THREE.PointLight(0xbfd4ff, 0, 140); light.position.set(M.x, top + 8, M.z); g.add(light); g.userData.light = light;
+    zoneRoot.add(g); stormObj = g; stormFlashT = 1; stormTrumpT = 0.5;
+  }
+  function trumpet(){
+    try { const c = BGM.ctx || (BGM.ctx = new (window.AudioContext || window.webkitAudioContext)()); const o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+      o.type = 'sawtooth'; o2.type = 'square'; o.frequency.setValueAtTime(233, t); o.frequency.linearRampToValueAtTime(311, t + 0.4); o2.frequency.setValueAtTime(116, t);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.12, t + 0.3); g.gain.linearRampToValueAtTime(0.1, t + 2.2); g.gain.linearRampToValueAtTime(0, t + 2.8);
+      o.connect(g); o2.connect(g); g.connect(c.destination); o.start(t); o2.start(t); o.stop(t + 3); o2.stop(t + 3); } catch (e){}
+  }
+  function updateStorm(dt, now){
+    if (rockWater){ rockWater.userData.fall.material.opacity = 0.7 + Math.sin(now * 0.01) * 0.12; }
+    if (!stormObj) return;
+    const g = stormObj, L = g.userData.light;
+    stormFlashT -= dt; if (stormFlashT <= 0){ stormFlashT = 2 + Math.random() * 3; L.intensity = 9; stormShakeK = 0.5; const fl = document.getElementById('flash'); if (fl){ fl.style.transition = 'none'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.transition = 'opacity 0.5s'; fl.style.opacity = '0'; }, 70); } }
+    L.intensity *= Math.pow(0.02, dt);
+    stormTrumpT -= dt; if (stormTrumpT <= 0){ stormTrumpT = 9; trumpet(); }
+    g.userData.fire.material.opacity = 0.75 + Math.sin(now * 0.02) * 0.2;
+    g.children.forEach(o => { if (o.userData.smoke !== undefined) o.position.y += dt * 0.8, o.position.y > (heightAt(Z.mountain.x, Z.mountain.z) + Z.mountain.h + 30) && (o.position.y -= 30); });
+    if (stormShakeK > 0){ stormShakeK = Math.max(0, stormShakeK - dt); camera.position.x += (Math.random() - 0.5) * stormShakeK * 0.6; camera.position.y += (Math.random() - 0.5) * stormShakeK * 0.4; }
+  }
+
   // ══ 5장: 물웅덩이 · 메추라기 · 만나 ══════════════════════════════
   const MARA_BITTER = new THREE.Color(0x7d7a4a), MARA_SWEET = new THREE.Color(0x4fa0c8);
   let pools = [];
@@ -5751,8 +6235,12 @@
 
   // 방향 힌트: 한 단계에 오래 머물면(40초~) 목표 쪽 화살표가 서서히 나타남
   const mmEl = document.getElementById('minimap'), compassEl = document.getElementById('compass'), compassArrow = document.getElementById('compass-arrow');
-  const ROUTE = { alpha: { midian: 'to-midian', egypt: 'to-midian', redsea: 'to-midian' }, midian: { alpha: 'to-alpha', egypt: 'to-egypt', redsea: 'to-egypt' }, egypt: { midian: 'to-midian2', alpha: 'to-midian2', redsea: 'to-redsea' }, redsea: { egypt: 'to-egypt3', midian: 'to-egypt3', alpha: 'to-alpha3', wild: 'to-wild' }, wild: { redsea: 'to-redsea2', egypt: 'to-redsea2', midian: 'to-redsea2', alpha: 'to-redsea2' } };
+  const ROUTE = { alpha: { midian: 'to-midian', egypt: 'to-midian', redsea: 'to-midian' }, midian: { alpha: 'to-alpha', egypt: 'to-egypt', redsea: 'to-egypt' }, egypt: { midian: 'to-midian2', alpha: 'to-midian2', redsea: 'to-redsea' }, redsea: { egypt: 'to-egypt3', midian: 'to-egypt3', alpha: 'to-alpha3', wild: 'to-wild' }, wild: { redsea: 'to-redsea2', egypt: 'to-redsea2', midian: 'to-redsea2', alpha: 'to-redsea2', rephidim: 'to-rephidim', sinai: 'to-rephidim' },
+    rephidim: { wild: 'to-wild2', redsea: 'to-wild2', egypt: 'to-wild2', midian: 'to-wild2', alpha: 'to-wild2', sinai: 'to-sinai' },
+    sinai: { rephidim: 'to-rephidim2', wild: 'to-rephidim2', redsea: 'to-rephidim2', egypt: 'to-rephidim2', midian: 'to-rephidim2', alpha: 'to-rephidim2' } };
+  ['alpha', 'midian', 'egypt', 'redsea'].forEach(z => { ROUTE[z].rephidim = ROUTE[z].wild; ROUTE[z].sinai = ROUTE[z].wild; });
   ['alpha', 'midian', 'egypt'].forEach(z => { ROUTE[z].wild = ROUTE[z].redsea; });
+  ROUTE.redsea.rephidim = 'to-wild'; ROUTE.redsea.sinai = 'to-wild';
   let doorTarget = null;
   function targetPos(){
     doorTarget = null;
@@ -6082,7 +6570,7 @@
       const score = isTarget ? d - 100 : d;
       if (d < range && score < closestDist){ closestDist = score; closest = m; }
     });
-    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updateHomeBtn(); updateReplayBar(); updatePools(dt); updateQuail(dt); updateManna(); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
+    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updateHomeBtn(); updateReplayBar(); updatePools(dt); updateQuail(dt); updateManna(); updateBattle(now); updateStorm(dt, now); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
     if (closest !== nearPoint){
       nearPoint = closest;
       interactBtn.classList.toggle('hidden', !nearPoint);
