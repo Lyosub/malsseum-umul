@@ -523,7 +523,7 @@
   <div id="dlg-name"></div><div id="dlg-text"></div></div></div>
   <div id="dlg-choices"></div><button id="dlg-next">다음 ▶</button></div>
 <div id="hud-btns"><button id="btn-pet" title="내 펫" class="hidden">🐾</button><button id="btn-emo" title="인사하기" class="hidden">😊</button><button id="btn-menu" title="메뉴">☰</button>
-  <div id="hud-menu" class="hidden"><button id="btn-book" title="구절 수집첩">📖<span>수집첩</span></button><button id="btn-log" title="대화 기록">💬<span>대화 기록</span></button><button id="btn-worship" title="예배 암호">⛪<span>예배 암호</span></button><button id="btn-friends" title="친구">👥<span>친구</span></button><button id="btn-daily" title="오늘의 퀘스트">📅<span>오늘의 퀘스트</span></button><button id="btn-rank" title="랭킹">🏆<span>랭킹·오이코스</span></button><button id="btn-shop" title="상점">🛍️<span>상점·꾸미기</span></button><button id="btn-hq" title="히든 퀘스트">❔<span>히든 퀘스트</span></button><button id="btn-set" title="설정">⚙️<span>설정</span></button></div></div>
+  <div id="hud-menu" class="hidden"><button id="btn-book" title="구절 수집첩">📖<span>수집첩</span></button><button id="btn-log" title="대화 기록">💬<span>대화 기록</span></button><button id="btn-worship" title="예배 암호">⛪<span>예배 암호</span></button><button id="btn-friends" title="친구">👥<span>친구</span></button><button id="btn-daily" title="오늘의 퀘스트">📅<span>오늘의 퀘스트</span></button><button id="btn-rank" title="랭킹">🏆<span>랭킹·오이코스</span></button><button id="btn-shop" title="상점">🛍️<span>상점·꾸미기</span></button><button id="btn-recap" title="지난 이야기">📜<span>지난 이야기</span></button><button id="btn-hq" title="히든 퀘스트">❔<span>히든 퀘스트</span></button><button id="btn-set" title="설정">⚙️<span>설정</span></button></div></div>
 <div id="shop-modal" class="modal hidden"><div class="sheet" style="max-width:440px">
   <h3>🛍️ 두루마리 상점</h3>
   <div id="shop-bal"></div>
@@ -541,6 +541,9 @@
   <button class="close">닫기</button></div></div>
 <div id="hq-modal" class="modal hidden"><div class="sheet"><h3>❔ 히든 퀘스트</h3><div id="hq-list"></div><button class="close">닫기</button></div></div>
 <div id="lib-modal" class="modal hidden"><div class="sheet"><h3>📚 두루마리 도서관</h3><div id="lib-list" style="max-height:60vh;overflow:auto"></div><button class="close">닫기</button></div></div>
+<div id="recap-modal" class="modal hidden"><div class="sheet"><h3>📜 지난 이야기</h3><div id="recap-body"></div><button class="close">이어서 하기</button></div></div>
+<div id="exhibit-modal" class="modal hidden"><div class="sheet"><h3>🏛 기념 전시관</h3><div id="exhibit-body" style="max-height:58vh;overflow:auto"></div><div style="display:flex;gap:6px;margin-top:8px"><button id="exhibit-replay" class="set-tg" style="flex:1">🎬 다시 하기</button><button class="close" style="flex:1">닫기</button></div></div></div>
+<div id="journey-modal" class="modal hidden"><div class="sheet" style="max-width:720px"><h3>🗺 걸어온 여정</h3><div id="journey-body" style="max-height:62vh;overflow:auto"></div><button class="close">닫기</button></div></div>
 <div id="set-modal" class="modal hidden"><div class="sheet set-sheet"><h3>⚙️ 설정</h3>
   <div class="set-row"><span class="set-lbl">🖥 화질</span><span id="quality-now" class="set-now"></span></div>
   <div id="quality-opts"><button data-q="auto">자동</button><button data-q="low">저</button><button data-q="mid">중</button><button data-q="high">고</button></div>
@@ -2105,7 +2108,7 @@
     if (Z.room){ zoneRoot.children.forEach(o => { if (!roomObjs.includes(o) && inRoom(o.position.x, o.position.z) && !markers.some(m => m.mesh === o)) roomObjs.push(o); }); }
     buildNav(); buildPOIs();
     markers.forEach(m => { if (m.ai){ const [x, z] = nearestWalkable(m.mesh.position.x, m.mesh.position.z); m.mesh.position.set(x, heightAt(x, z), z); m.col.x = x; m.col.z = z; } });
-    renderQuestList(); spawnTasks(); spawnScrolls(); grantPastSkills(); friendsClear(); dailyInit(); weeklyInit(); homeLoad(); mannaSpoil(); mannaHello(); buildYardRope(); buildIdols(); applyGear(); spawnLostLamb(); hqRefresh(true); sideRefresh(true);
+    renderQuestList(); spawnTasks(); spawnScrolls(); grantPastSkills(); friendsClear(); dailyInit(); weeklyInit(); homeLoad(); mannaSpoil(); mannaHello(); buildYardRope(); buildIdols(); applyGear(); spawnLostLamb(); hqRefresh(true); sideRefresh(true); buildExhibit(); markVisited();
     renderer.compile(scene, camera);
     setTimeout(loadLazyNPCs, 300);
   }
@@ -6660,6 +6663,90 @@
   function openLibrary(){ renderLibrary(); openModal('lib-modal'); }
   document.getElementById('lib-list').addEventListener('click', e => { const b = e.target.closest('[data-lib]'); if (!b) return; const n = +b.dataset.lib;
     if ((ST.lib || []).includes(n)) return; if (!spendStars(2, `도서관 ${n}장 칸`)) return; ST.lib = [...(ST.lib || []), n]; saveST(); renderLibrary(); });
+  // ══ 📜 지난 이야기 30초 · 🏛 기념 전시관 · 🗺 걸어온 여정 지도 ══
+  // 장면 → 장 번호(🔑 핵심 장면 기록을 장별로 나눌 때)
+  const keyChapter = k => { const m = /^c(\d+)_/.exec(k); return m ? +m[1] : 1; };
+  const sceneChapter = {}; for (const [k, v] of Object.entries(KEYS)) sceneChapter[v.scene] = keyChapter(k);
+  const zoneName = z => (ZONES[z] && ZONES[z].name) || z;
+  const pointTitle = (z, id) => ((ZONES[z] && ZONES[z].points.find(p => p.id === id)) || {}).title || '';
+  // ── 3. 지난 이야기 30초 ──
+  function recapHTML(){
+    const keys = (ST.keys || []).slice(-3), q = curStep();
+    let now;
+    if (!q) now = `<div class="keyline">🎉 「모세와 함께」 ${chaptersDone()}장까지 마쳤어요. 📜 곁 이야기 · ❔ 히든 퀘스트 · 📚 도서관을 둘러보세요.</div>`;
+    else { const who = q.npc ? pointTitle(q.zone, q.npc) : q.point ? pointTitle(q.zone, q.point) : '';
+      now = `<div class="keyline"><b>${CHAPTER.title}</b></div><div class="keyline">▶ 지금 할 일: <b>${q.obj}</b></div><div class="keyline">📍 ${zoneName(q.zone)} — ${q.where || ''}</div>${who ? `<div class="keyline">🙋 다음에 만날 사람·장소: <b>${who}</b></div>` : ''}`; }
+    const past = keys.length ? keys.map(k => `<div class="keyline"><b>${k.scene}</b> — ${k.t}</div>`).join('') : '<div class="keyline" style="opacity:.7">아직 기억할 장면이 없어요.</div>';
+    return `<div style="font-size:13px;opacity:.8;margin-bottom:4px">🔑 최근에 지나온 장면</div>${past}<div style="font-size:13px;opacity:.8;margin:10px 0 4px">🧭 이어서 할 일</div>${now}`;
+  }
+  function openRecap(){ document.getElementById('recap-body').innerHTML = recapHTML(); openModal('recap-modal'); }
+  document.getElementById('btn-recap').onclick = openRecap;
+  function maybeRecap(){
+    const prev = ST.lastSeen || 0; ST.lastSeen = Date.now(); saveST();
+    if (!prev || Date.now() - prev < 20 * 3600e3) return;                 // 하루 가까이 지나서 돌아왔을 때만
+    if (chaptersDone() < 1 && ST.step < 3) return;                          // 막 시작한 학생에게는 띄우지 않음
+    if (/[?&](notut|notype|reset)(&|$)/.test(location.search)) return;
+    setTimeout(openRecap, 1800);
+  }
+  // ── 1. 기념 전시관: 모세 편(10장)을 마치면 첫 받침대에 두 돌판 ──
+  const PEDESTALS = [[7.2, -8.8], [8.4, -6.6], [9.9, -4.7]];
+  let exhibitObj = null;
+  async function buildExhibit(){
+    if (exhibitObj){ exhibitObj.parent && exhibitObj.parent.remove(exhibitObj); exhibitObj = null; }
+    if (!Z || Z.id !== 'alpha') return;
+    const g = new THREE.Group(), stone = new THREE.MeshToonMaterial({ color: 0xd8cdb6, gradientMap: toonGradient }), gold = new THREE.MeshToonMaterial({ color: 0xd8b04a, gradientMap: toonGradient });
+    PEDESTALS.forEach(([x, z], i) => {
+      const y = heightAt(x, z), base = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.0, 0.9), stone); base.position.set(x, y + 0.5, z); base.castShadow = true; g.add(base);
+      const rim = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 1.0), gold); rim.position.set(x, y + 1.02, z); g.add(rim);
+      obstacles.push({ x, z, r: 0.6 });
+    });
+    zoneRoot.add(g); exhibitObj = g;
+    if (chaptersDone() >= 10){
+      await loadProps(['stone-tablets']); if (!Z || Z.id !== 'alpha' || !exhibitObj) return;
+      const [x, z] = PEDESTALS[0], t = propTemplates['stone-tablets'].holder.clone(true); t.position.set(x, heightAt(x, z) + 1.06, z); t.rotation.y = faceTo(x, z, 0, 0); exhibitObj.add(t);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff0b0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 })); glow.scale.set(1.6, 1.6, 1); glow.position.set(x, heightAt(x, z) + 1.6, z); exhibitObj.add(glow);
+    }
+  }
+  const CH_NAMES = CHAPTERS.map(c => (c.clearTitle.match(/「([^」]+)」/) || [])[1] || '');
+  function openExhibit(){
+    const done = chaptersDone(), el = document.getElementById('exhibit-body');
+    const head = done >= 10
+      ? `<div class="keyline">🪨 <b>첫 번째 받침대 — 「모세와 함께」의 두 돌판</b><br><span style="opacity:.8">"모세가 돌판 둘을 처음 것과 같이 깎아 만들고" (출애굽기 34:4)</span></div>`
+      : `<div class="keyline" style="opacity:.8">「모세와 함께」 10장을 모두 마치면 첫 번째 받침대에 기념물이 놓여요. (지금 ${done}장 완료)</div>`;
+    const rows = CHAPTERS.map((c, i) => {
+      const n = i + 1; if (done < n) return `<div class="dq" style="opacity:.5"><span class="ck">🔒</span><span class="tx">${n}장 「${CH_NAMES[i]}」</span></div>`;
+      const scenes = (ST.keys || []).filter(k => sceneChapter[k.scene] === n);
+      const lib = LIB.find(x => x[0] === n), vs = lib ? ST.verses.filter(id => { const v = verseNum(id); return v >= lib[2] && v <= lib[3]; }) : [];
+      return `<details style="margin:6px 0"><summary style="font-weight:800">📜 ${n}장 「${CH_NAMES[i]}」 · 장면 ${scenes.length} · 구절 ${vs.length}</summary>${scenes.map(k => `<div class="keyline"><b>${k.scene}</b> — ${k.t}</div>`).join('')}${vs.map(id => `<div class="keyline">📖 <b>${VERSES[id].ref}</b> — ${VERSES[id].text}</div>`).join('')}</details>`;
+    }).join('');
+    el.innerHTML = head + rows + `<div style="margin-top:8px;font-size:12.5px;opacity:.75">두 번째·세 번째 받침대는 다음 두루마리를 기다리고 있어요.</div>`;
+    openModal('exhibit-modal');
+  }
+  document.getElementById('exhibit-replay').onclick = () => { document.querySelectorAll('.modal:not(.hidden) .close').forEach(b => b.click()); setTimeout(openReplay, 250); };
+  // ── 2. 걸어온 여정 지도(이야기 순서 지도 — 실제 거리·위치를 그린 역사 지도가 아님) ──
+  const JOURNEY = [
+    { z: 'midian', n: '미디안 광야', need: 1, x: 70, y: 70, s: [[1, '🔥 떨기나무의 부르심']] },
+    { z: 'egypt', n: '애굽 고센', need: 1, x: 190, y: 150, s: [[2, '🐸 아홉 가지 재앙'], [3, '🐑 유월절 밤']] },
+    { z: 'redsea', n: '홍해', need: 3, x: 320, y: 90, s: [[4, '🌊 바다 가운데 마른 땅']] },
+    { z: 'wild', n: '신 광야(마라·엘림)', need: 4, x: 430, y: 170, s: [[5, '🍞 하늘에서 내린 만나']] },
+    { z: 'rephidim', n: '르비딤', need: 5, x: 540, y: 90, s: [[6, '💧 반석의 물 · 🙌 손을 든 모세']] },
+    { z: 'sinai', n: '시내 산', need: 6, x: 650, y: 160, s: [[7, '⚖️ 이드로의 조언'], [8, '⛰ 시내 산 언약'], [9, '🐄 금송아지와 두 번째 돌판'], [10, '⛺ 성막']] },
+  ];
+  const visited = z => (ST.visited || []).includes(z) || chaptersDone() >= JOURNEY.find(j => j.z === z).need;
+  function markVisited(){ if (!Z || !JOURNEY.some(j => j.z === Z.id)) return; if (!(ST.visited || []).includes(Z.id)){ ST.visited = [...(ST.visited || []), Z.id]; saveST(); } }
+  function openJourney(){
+    const done = chaptersDone();
+    let svg = `<svg viewBox="0 0 720 240" width="100%" style="background:#efe2c4;border-radius:12px">`;
+    svg += `<path d="M10 220 Q 180 200 360 225 T 710 215" stroke="#d8c49a" stroke-width="18" fill="none" opacity=".5"/>`;
+    for (let i = 0; i < JOURNEY.length - 1; i++){ const a = JOURNEY[i], b = JOURNEY[i + 1], on = visited(a.z) && visited(b.z);
+      svg += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${on ? '#b9832a' : '#a89a80'}" stroke-width="${on ? 5 : 3}" stroke-dasharray="${on ? '0' : '8 7'}" stroke-linecap="round"/>`; }
+    for (const j of JOURNEY){ const on = visited(j.z);
+      svg += `<circle cx="${j.x}" cy="${j.y}" r="${on ? 15 : 11}" fill="${on ? '#d8a94a' : '#cbbd9f'}" stroke="#6a4a2a" stroke-width="2"/><text x="${j.x}" y="${j.y + 33}" text-anchor="middle" font-size="15" font-weight="700" fill="${on ? '#4a3018' : '#9a8a70'}">${on ? j.n : '???'}</text>`; }
+    svg += `</svg>`;
+    const list = JOURNEY.map(j => `<div class="keyline"><b>${visited(j.z) ? j.n : '???'}</b> — ${j.s.map(([c, t]) => done >= c ? t : '<span style="opacity:.45">(아직)</span>').join(' · ')}</div>`).join('');
+    document.getElementById('journey-body').innerHTML = svg + list + `<div style="font-size:12px;opacity:.7;margin-top:6px">이야기 순서를 보여 주는 지도예요. 실제 거리와 위치를 그대로 그린 역사 지도는 아니에요.</div>`;
+    openModal('journey-modal');
+  }
   function renderWeekly(msg){
     const W = ST.weekly, el = document.getElementById('weekly-list'), b = document.getElementById('weekly-claim');
     el.innerHTML = W.q.map(k => { const q = wqDef(k), v = W.p[k] || 0, done = v >= q.n;
@@ -8375,7 +8462,9 @@
     if (d.id === 'a_shop'){ openShop(); return; }
     if (d.id === 'a_bezalel'){ openCraft(); return; }
     if (d.id === 'library'){ openLibrary(); return; }
-    if (d.id === 'a_keeper' || d.id === 'memorial'){ openReplay(); return; }
+    if (d.id === 'a_keeper'){ openReplay(); return; }
+    if (d.id === 'memorial'){ openExhibit(); return; }
+    if (d.id === 'map'){ openJourney(); return; }
     { const q = curStep(); if (q && q.skillAt === d.id){ toast('🦯 오른쪽 아래 「✨ 스킬」을 누르고 「지팡이」를 골라 보세요!', 2600); return; } }
     simple(d.title, d.body || '…', d.model ? nearPoint : null);
   }
@@ -8709,6 +8798,7 @@
     { const sp = zoneSpawn(Z.spawn); player.position.set(sp[0], heightAt(sp[0], sp[1]), sp[1]); }
     const ld = document.getElementById('loading');
     window.__ready = true;
+    try { maybeRecap(); } catch (e){}
     animate();
     // 타이틀은 학생이 누를 때까지(그 터치로 배경음악도 시작). 자동 테스트(webdriver)는 바로 넘어감
     const begin = () => { ld.classList.add('done'); setTimeout(() => ld.style.display = 'none', 600); BGM.titleUntil = performance.now() + 48000; bgmStart(); if (!maybePickCharacter()) tutStart(); };
@@ -8722,7 +8812,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { starsLeft, spendStars, retryQuiz, openLibrary, renderLibrary, TITLES, SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { openRecap, openExhibit, openJourney, maybeRecap, get exhibit(){ return exhibitObj ? exhibitObj.children.length : 0; }, starsLeft, spendStars, retryQuiz, openLibrary, renderLibrary, TITLES, SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
