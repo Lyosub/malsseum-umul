@@ -544,6 +544,8 @@
   <div class="set-row"><span class="set-lbl">🖥 화질</span><span id="quality-now" class="set-now"></span></div>
   <div id="quality-opts"><button data-q="auto">자동</button><button data-q="low">저</button><button data-q="mid">중</button><button data-q="high">고</button></div>
   <div class="set-row"><span class="set-lbl">🎵 배경음악</span><button id="bgm-toggle" class="set-tg"></button></div>
+  <div class="set-row"><span class="set-lbl">☁️ 계정 저장</span><span id="cloud-now" class="set-now"></span></div>
+  <div id="cloud-btns" style="display:flex;gap:6px;margin:4px 0 10px"><button id="cloud-save" class="set-tg" style="flex:1">지금 저장</button><button id="cloud-load" class="set-tg" style="flex:1">계정 기록 불러오기</button></div>
   <div class="set-btns"><button id="btn-save-exit">💾 저장하고 나가기</button><button class="close">닫기</button></div></div></div>
 <div id="book-modal" class="modal hidden"><div class="sheet"><h3>📖 구절 수집첩</h3><div class="cards" id="book-cards"></div><button class="close">닫기</button></div></div>
 <div id="warp-modal" class="modal hidden"><div class="sheet" style="max-width:380px"><h3>🧭 어디로 갈까요?</h3><div id="warp-list"></div><button class="close">닫기</button></div></div>
@@ -772,7 +774,16 @@
   gltfLoader.setMeshoptDecoder(THREE.MeshoptDecoder);
   // 에셋 바이트 캐시 — 다음 마을 에셋을 출구 근처에서 미리 받아 두고(prefetch), 이동할 때 바로 parse
   const bytesCache = new Map();
-  const fetchBytes = name => { if (!bytesCache.has(name)) bytesCache.set(name, fetch(A(name)).then(r => { if (!r.ok) throw new Error(name + ' ' + r.status); return r.arrayBuffer(); })); return bytesCache.get(name); };
+  const fetchOnce = (name, ms) => { const ac = typeof AbortController !== 'undefined' ? new AbortController() : null, t = ac && setTimeout(() => ac.abort(), ms);
+    return fetch(A(name), ac ? { signal: ac.signal } : undefined).then(r => { clearTimeout(t); if (!r.ok) throw new Error(name + ' ' + r.status); return r.arrayBuffer(); }, e => { clearTimeout(t); throw e; }); };
+  const fetchBytes = name => {
+    if (!bytesCache.has(name)){
+      const p = (async () => { let err; for (let i = 0; i < 3; i++){ try { return await fetchOnce(name, 60000); } catch (e){ err = e; await new Promise(r => setTimeout(r, 900 * (i + 1))); } } throw err; })();
+      p.catch(() => { if (bytesCache.get(name) === p) bytesCache.delete(name); });   // 실패한 결과를 캐시에 남기지 않음 → 다음에 다시 받음
+      bytesCache.set(name, p);
+    }
+    return bytesCache.get(name);
+  };
   const loadGLB = name => fetchBytes(name).then(buf => new Promise((res, rej) => gltfLoader.parse(buf.slice(0), '', res, rej)));
   // 지금 마을의 모든 물체는 zoneRoot 아래에 — 마을을 떠나면 통째로 비운다
   const zoneRoot = new THREE.Group(); scene.add(zoneRoot);
@@ -2093,7 +2104,7 @@
     if (Z.room){ zoneRoot.children.forEach(o => { if (!roomObjs.includes(o) && inRoom(o.position.x, o.position.z) && !markers.some(m => m.mesh === o)) roomObjs.push(o); }); }
     buildNav(); buildPOIs();
     markers.forEach(m => { if (m.ai){ const [x, z] = nearestWalkable(m.mesh.position.x, m.mesh.position.z); m.mesh.position.set(x, heightAt(x, z), z); m.col.x = x; m.col.z = z; } });
-    renderQuestList(); spawnTasks(); spawnScrolls(); grantPastSkills(); friendsClear(); dailyInit(); weeklyInit(); homeLoad(); mannaSpoil(); mannaHello(); buildYardRope(); buildIdols(); applyGear(); spawnLostLamb(); hqRefresh(true);
+    renderQuestList(); spawnTasks(); spawnScrolls(); grantPastSkills(); friendsClear(); dailyInit(); weeklyInit(); homeLoad(); mannaSpoil(); mannaHello(); buildYardRope(); buildIdols(); applyGear(); spawnLostLamb(); hqRefresh(true); sideRefresh(true);
     renderer.compile(scene, camera);
     setTimeout(loadLazyNPCs, 300);
   }
@@ -4765,7 +4776,7 @@
   if (ST.replayBackup){ Object.assign(ST, ST.replayBackup); delete ST.replayBackup; }
   (ST.worshipCards || []).forEach(c => { VERSES[c.id] = { ref: c.ref, text: c.text }; });
   if (/[?&]reset(&|$)/.test(location.search)) { Object.assign(ST, { ch: 0, step: 0, rumor: [], straw: 0, water: 0, frogs: 0, verses: [], badges: [], stars: 0, quiz: {}, keys: [], cleared: false, log: [] }); }
-  const saveST = () => { try { localStorage.setItem(STORY_KEY, JSON.stringify({ ...ST, log: ST.log.slice(-80) })); } catch (e){} try { queueProgress(); } catch (e){} };
+  const saveST = () => { try { localStorage.setItem(STORY_KEY, JSON.stringify({ ...ST, log: ST.log.slice(-80) })); } catch (e){} try { queueProgress(); queueCloud(); } catch (e){} };
   if (ST.ch === 0 && ST.cleared){ ST.ch = 1; ST.step = 0; ST.cleared = false; }   // 예전 저장: 1장을 이미 끝냈으면 2장부터
   let STORY = CHAPTERS[ST.ch].steps;
   if (ST.cleared && ST.step < STORY.length) ST.cleared = false;
@@ -4818,6 +4829,7 @@
   }
   function advance(){
     const q = curStep(); if (!q) return;
+    try { logStep(q, stepT); } catch (e){}
     ST.step++; stepT = 0;
     if (ST.step >= STORY.length){ ST.cleared = true; }
     saveST(); renderQuestList(); refreshShow(); if (Z) spawnTasks();
@@ -5227,6 +5239,7 @@
     tut.on = false; tutEl.classList.add('hidden');
     document.querySelectorAll('.tut-glow').forEach(e => e.classList.remove('tut-glow'));
     try { localStorage.setItem(TUT_KEY, 'done'); } catch (e){}
+    try { if (msuOn()) MSU.client.rpc('log_odyssey_step', { p_ch: 0, p_step: 'tutorial', p_secs: Math.round(performance.now() / 1000), p_dev: DEV }).then(() => {}, () => {}); } catch (e){}
   }
   document.getElementById('tut-skip').onclick = () => { tutEnd(); toast('언제든 ⚙️ 설정에서 화질을 바꿀 수 있어요', 2200); };
   function updateTutorial(dt, running){
@@ -5259,7 +5272,8 @@
   const prefetchState = { total: 0, done: 0 };
   async function prefetchAll(){
     if (window.__ASSETS){ prefetchState.total = prefetchState.done = 1; return; }   // 파일 하나짜리 미리보기는 이미 다 들어 있음
-    const order = { alpha: ['midian', 'egypt', 'redsea'], midian: ['egypt', 'alpha', 'redsea'], egypt: ['redsea', 'midian', 'alpha'], redsea: ['egypt', 'alpha', 'midian'] }[Z.id] || [];
+    const SEQ = ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai'], si = SEQ.indexOf(Z.id), cq = curStep();
+    const order = [...new Set([cq && cq.zone, SEQ[si + 1], SEQ[si - 1], 'alpha'].filter(z => z && z !== Z.id && ZONES[z]))].slice(0, 3);   // 다음 퀘스트 마을부터
     const todo = order.filter(z => !prefetched.has(z)).map(z => { prefetched.add(z); const a = zoneAssets(z); return [...a.files, ...a.lazy]; });
     const files = [...new Set(todo.flat())].filter(f => !bytesCache.has(f));
     prefetchState.total = files.length;   // 전체 개수를 먼저 정해 두어 %가 거꾸로 가지 않게
@@ -5283,7 +5297,7 @@
   let shopCat = 'staff';
   const equip = (() => { try { return JSON.parse(localStorage.getItem('inodyssey-equip') || '{}'); } catch (e){ return {}; } })();
   let owned = new Set((() => { try { return JSON.parse(localStorage.getItem('inodyssey-owned') || '[]'); } catch (e){ return []; } })());
-  const saveLocal = () => { try { localStorage.setItem('inodyssey-equip', JSON.stringify(equip)); localStorage.setItem('inodyssey-owned', JSON.stringify([...owned])); } catch (e){} };
+  const saveLocal = () => { try { localStorage.setItem('inodyssey-equip', JSON.stringify(equip)); localStorage.setItem('inodyssey-owned', JSON.stringify([...owned])); } catch (e){} try { queueCloud(); } catch (e){} };
   const loadScript = src => new Promise((res, rej) => { const e = document.createElement('script'); e.src = src; e.onload = res; e.onerror = rej; document.head.appendChild(e); });
   async function msuInit(){
     if (SHOP_MOCK){ MSU.balance = +(localStorage.getItem('inodyssey-mockbal') || 200); return; }
@@ -5294,7 +5308,7 @@
       const opts = localStorage.getItem('msu_keep_logged_in') === '0' ? { auth: { storage: window.sessionStorage } } : {};
       MSU.client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, opts);
       MSU.session = (await MSU.client.auth.getSession()).data.session;
-      if (MSU.session){ await shopRefresh(); claimClearedChapters(); }
+      if (MSU.session){ await shopRefresh(); claimClearedChapters(); cloudInit(); }
     } catch (e){ console.warn('말씀우물 연결 실패', e); MSU.client = null; }
   }
   async function shopRefresh(){
@@ -5349,7 +5363,7 @@
   const HAIR_FREE = ['boy-default', 'girl-long'];   // 나머지는 40달란트(말씀우물 상점 game_key 'hair-…')
   const HAIRS = [['boy-default', '곱슬 짧은 머리', true], ['girl-long', '긴 생머리', true], ['boy-sports', '스포츠머리', false], ['boy-side', '옆가르마', false],
     ['boy-bangs', '덮머리', false], ['girl-ponytail', '포니테일', false], ['girl-bob', '단발', false], ['girl-braid', '땋은 머리', false]];
-  function saveChar(){ try { localStorage.setItem('inodyssey-char', JSON.stringify({ body: CHAR.body, hair: CHAR.hair })); } catch (e){} }
+  function saveChar(){ try { localStorage.setItem('inodyssey-char', JSON.stringify({ body: CHAR.body, hair: CHAR.hair })); } catch (e){} try { queueCloud(); } catch (e){} }
   function changeBody(b){   // 몸을 바꾸면 새로 불러와야 해서 잠깐 다시 시작(진행 상황은 저장돼 있음)
     CHAR.body = b; CHAR.hair = HAIR_DEFAULT[b]; saveChar();
     const u = new URL(location.href); u.searchParams.delete('body'); u.searchParams.delete('hair'); u.searchParams.delete('reset'); location.href = u.toString();
@@ -6409,6 +6423,163 @@
   }
   document.getElementById('btn-hq').onclick = () => { renderHQ(); openModal('hq-modal'); };
   Object.assign(BADGES, { hidden_all: { ico: '❔', name: '숨은 이야기를 찾은 사람' } });
+  // ══ 📜 곁 이야기(1~7장 추가 퀘스트, 기획 문서 「In Odyssey 1~6장 추가 퀘스트 기획」) ══
+  // 본 이야기 단계 번호를 바꾸지 않도록 따로 둔다(기존 저장과 겹치지 않음). 해당 장면을 지나면 열리고, 이름표에 📜.
+  // 대사 원칙: 성경 내용은 개역개정 원문 + 출처만. 게임 사례·게임 행동은 ▶ 안내로 구분.
+  const sideState = id => (ST.side || {})[id];
+  function sideSet(id, v){ ST.side = ST.side || {}; ST.side[id] = v; saveST(); }
+  const SIDE = [
+    { id: 'aaron_words', ch: 1, zone: 'midian', npc: 'aaron', name: '아론에게 전할 말씀', ok: () => passed(0, 's7'), give: { blue: 1 } },
+    { id: 'pharaoh_board', ch: 2, zone: 'egypt', npc: 'pharaoh_board', name: '바로의 약속 기록판', ok: () => chaptersDone() >= 2, give: { silver: 1 } },
+    { id: 'neighbor', ch: 3, zone: 'egypt', npc: 'hb_grandma', name: '이웃의 출발 돕기', ok: () => chaptersDone() >= 3, give: { scarlet: 1 } },
+    { id: 'cloud_place', ch: 4, zone: 'redsea', npc: 'lookout', name: '구름기둥이 선 자리', ok: () => chaptersDone() >= 4, give: { blue: 1 } },
+    { id: 'manna_share', ch: 5, zone: 'wild', npc: 'wd_greedy', name: '장막마다 만나 나누기', ok: () => chaptersDone() >= 5, give: { purple: 1 } },
+    { id: 'water_give', ch: 6, zone: 'rephidim', npc: 'rp_elder', name: '목마른 이웃에게 물', ok: () => chaptersDone() >= 6, give: { blue: 1, wool: 1 } },
+    { id: 'judges', ch: 7, zone: 'sinai', npc: 'captain10', name: '십부장의 재판', ok: () => chaptersDone() >= 7, give: { gold: 1 } },
+  ];
+  ZONES.egypt.points.push({ id: 'pharaoh_board', x: 21.5, z: -8.5, type: 'lore', title: '바로의 약속 기록판', body: '' });
+  ZONES.sinai.points.push({ id: 'captain10', x: -9, z: -5, type: 'villager', title: '십부장', model: 'he-grandpa', persona: 'rs_static', body: "그들이 때를 따라 백성을 재판하되 어려운 일은 모세에게 가져오고 모든 작은 일은 스스로 재판하더라 (출 18:26)" });
+  const NB_ITEMS = [{ id: 'nb_bowl', x: -6.5, z: -1, t: '반죽 그릇' }, { id: 'nb_shoes', x: -16.5, z: 8.5, t: '신' }, { id: 'nb_staff', x: 1, z: 7.5, t: '지팡이' }];
+  for (const it of NB_ITEMS) ZONES.egypt.points.push({ id: it.id, x: it.x, z: it.z, type: 'lore', title: '📦 ' + it.t, cond: 'nbItem', body: '' });
+  Object.assign(CONDS, { nbItem: d => sideState('neighbor') === 'active' && !((ST.sideItems || []).includes(d.id)) });
+  const SAYS = t => ({ n: t });
+  function sideDone(s){ sideSet(s.id, 'done'); addMat(s.give, `📜 곁 이야기 「${s.name}」 완료`);
+    if (SIDE.every(x => sideState(x.id) === 'done') && !ST.badges.includes('side_all')){ ST.badges.push('side_all'); saveST(); setTimeout(() => toast('📜 배지 획득: 곁을 살핀 사람', 2600), 3000); }
+    sideRefresh(true); }
+  // ── 1장: 아론에게 전할 말씀(출 4:14-16) ──
+  function aaronWordsGame(s){
+    const cards = [
+      { t: "내가 네 입과 그의 입에 함께 있어서 너희들이 행할 일을 가르치리라 (출 4:15)", ok: true },
+      { t: "그가 너를 대신하여 백성에게 말할 것이니 그는 네 입을 대신할 것이요 (출 4:16)", ok: true },
+      { t: '▶ (게임 보기) 모세 혼자 가서 모든 말을 하라', ok: false },
+    ].sort(() => Math.random() - 0.5);
+    mgOpen('📜 아론에게 전할 말씀', '모세가 여호와께 들은 말씀 가운데 <b>아론에게 전할 말씀 두 가지</b>를 골라요.<br><span style="opacity:.75">"레위 사람 네 형 아론이 있지 아니하냐 그가 말 잘 하는 것을 내가 아노라" (출애굽기 4:14)</span>');
+    let got = 0; const pick = new Set();
+    const draw = msg => { mgArea.innerHTML = `<div style="display:grid;gap:6px;padding:8px">${cards.map((c, i) => `<button data-card="${i}" style="padding:9px;border-radius:10px;text-align:left;font-size:12.5px;border:1px solid ${pick.has(i) ? '#9be58a' : 'rgba(255,255,255,.3)'};background:rgba(255,255,255,.08);color:#f5e9d0">${c.t}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px">${msg || ''}</div>`; };
+    draw(); mgAct.textContent = '아론에게 전하기'; mgAct.disabled = true;
+    mgArea.onclick = e => { const b = e.target.closest('[data-card]'); if (!b) return; const i = +b.dataset.card, c = cards[i];
+      if (!c.ok){ draw('그건 여호와께서 하신 말씀이 아니에요 — 출애굽기 4:14-16을 다시 보세요'); return; }
+      pick.add(i); got = pick.size; draw(got >= 2 ? '✓ 두 말씀을 골랐어요' : '✓ 하나 더!'); if (got >= 2) mgAct.disabled = false; };
+    mgAct.onclick = () => { if (pick.size < 2) return; mgArea.onclick = null; mgCloseAll();
+      runDialog([[NAR, "여호와께서 아론에게 이르시되 광야에 가서 모세를 맞으라 하시매 그가 가서 하나님의 산에서 모세를 만나 그에게 입맞추니 (출 4:27)"], [NAR, "모세가 여호와께서 자기에게 분부하여 보내신 모든 말씀과 여호와께서 자기에게 명령하신 모든 이적을 아론에게 알리니라 (출 4:28)"]], () => sideDone(s)); };
+    mg.onClose = () => { mgArea.onclick = null; };
+  }
+  // ── 2장: 바로의 약속 기록판(출 8:8-15, 8:25-32, 9:27-35) ──
+  const BOARD = [
+    { say: "여호와께 구하여 나와 내 백성에게서 개구리를 떠나게 하라 내가 이 백성을 보내리니 (출 8:8)", ref: '출 8:8', did: "그러나 바로가 숨을 쉴 수 있게 됨을 보았을 때에 그의 마음을 완강하게 하여 그들의 말을 듣지 아니하였으니 (출 8:15)", dref: '출 8:15' },
+    { say: "내가 너희를 보내리니 너희가 너희의 하나님 여호와께 광야에서 제사를 드릴 것이나 너무 멀리 가지는 말라 (출 8:28)", ref: '출 8:28', did: "그러나 바로가 이 때에도 그의 마음을 완강하게 하여 그 백성을 보내지 아니하였더라 (출 8:32)", dref: '출 8:32' },
+    { say: "이번은 내가 범죄하였노라 여호와는 의로우시고 나와 나의 백성은 악하도다 (출 9:27)", ref: '출 9:27', did: "바로가 비와 우박과 우렛소리가 그친 것을 보고 다시 범죄하여 마음을 완악하게 하니 그와 그의 신하가 꼭 같더라 (출 9:34)", dref: '출 9:34' },
+  ];
+  function boardGame(s){
+    mgOpen('📋 바로의 약속 기록판', '바로가 <b>한 말</b>과 <b>뒤이어 한 행동</b>을 짝지어요. 왼쪽을 누르고, 알맞은 오른쪽을 누르세요.');
+    const right = BOARD.map((b, i) => i).sort(() => Math.random() - 0.5); let sel = -1; const done = new Set();
+    const draw = msg => {
+      mgArea.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px;font-size:11.5px;max-height:48vh;overflow:auto"><div><b>바로가 한 말</b>${BOARD.map((b, i) => `<button data-l="${i}" style="display:block;width:100%;margin-top:5px;padding:7px;border-radius:9px;text-align:left;color:#f5e9d0;background:${done.has(i) ? 'rgba(155,229,138,.25)' : sel === i ? 'rgba(255,210,122,.3)' : 'rgba(255,255,255,.08)'};border:1px solid rgba(255,255,255,.25)">${b.say} (${b.ref})</button>`).join('')}</div>`
+        + `<div><b>뒤이어 한 행동</b>${right.map(i => `<button data-r="${i}" style="display:block;width:100%;margin-top:5px;padding:7px;border-radius:9px;text-align:left;color:#f5e9d0;background:${done.has(i) ? 'rgba(155,229,138,.25)' : 'rgba(255,255,255,.08)'};border:1px solid rgba(255,255,255,.25)">${BOARD[i].did} (${BOARD[i].dref})</button>`).join('')}</div></div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px">${msg || ''}</div>`;
+    };
+    draw(); mgAct.textContent = '기록 마치기'; mgAct.disabled = true;
+    mgArea.onclick = e => { const l = e.target.closest('[data-l]'), r = e.target.closest('[data-r]');
+      if (l){ sel = +l.dataset.l; draw(); return; }
+      if (r && sel >= 0){ if (+r.dataset.r === sel){ done.add(sel); sel = -1; draw(done.size >= 3 ? '✓ 세 번 모두 기록했어요' : '✓ 맞아요'); if (done.size >= 3) mgAct.disabled = false; } else draw('다시 살펴보세요'); } };
+    mgAct.onclick = () => { if (done.size < 3) return; mgArea.onclick = null; mgCloseAll(); runDialog([[NAR, "바로의 마음이 완악하여 이스라엘 자손을 내보내지 아니하였으니 여호와께서 모세에게 말씀하심과 같더라 (출 9:35)"]], () => sideDone(s)); };
+    mg.onClose = () => { mgArea.onclick = null; };
+  }
+  // ── 4장: 구름기둥이 선 자리(출 14:19-20) ──
+  function cloudGame(s){
+    mgOpen('☁️ 구름기둥이 선 자리', '밤이 되자 구름기둥이 어디로 옮겨 갔을까요? 알맞은 자리를 눌러요.<br><span style="opacity:.75">"이스라엘 진 앞에 가던 하나님의 사자가 그들의 뒤로 옮겨 가매 구름 기둥도 앞에서 그 뒤로 옮겨" (출애굽기 14:19)</span>');
+    const slots = ['🌊 바다', '⛺ 이스라엘 진', '❔', '🐎 애굽 진', '❔'];
+    const draw = msg => { mgArea.innerHTML = `<div style="display:flex;gap:4px;padding:14px 8px;justify-content:center">${slots.map((t, i) => t === '❔' ? `<button data-slot="${i}" style="flex:1;padding:14px 4px;border-radius:10px;border:2px dashed #ffd27a;background:rgba(255,210,122,.1);color:#ffd27a;font-size:20px">☁️?</button>` : `<div style="flex:1;padding:14px 4px;border-radius:10px;background:rgba(255,255,255,.08);text-align:center;font-size:12px">${t}</div>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px">${msg || ''}</div>`; };
+    draw(); mgAct.textContent = '확인'; mgAct.disabled = true;
+    mgArea.onclick = e => { const b = e.target.closest('[data-slot]'); if (!b) return;
+      if (+b.dataset.slot === 2){ slots[2] = '☁️ 구름기둥'; draw('✓ 애굽 진과 이스라엘 진 사이!'); mgAct.disabled = false; } else draw('다시 — 본문은 "애굽 진과 이스라엘 진 사이"라고 해요'); };
+    mgAct.onclick = () => { mgArea.onclick = null; mgCloseAll(); runDialog([[NAR, "애굽 진과 이스라엘 진 사이에 이르러 서니 저쪽에는 구름과 흑암이 있고 이쪽에는 밤이 밝으므로 밤새도록 저쪽이 이쪽에 가까이 못하였더라 (출 14:20)"]], () => sideDone(s)); };
+    mg.onClose = () => { mgArea.onclick = null; };
+  }
+  // ── 5장: 장막마다 만나 나누기(출 16:16, 16:22) ──
+  function mannaGame(s){
+    const tents = [{ n: '장막 가', p: 4 }, { n: '장막 나', p: 2 }, { n: '장막 다', p: 5 }]; let round = 1; const give = [0, 0, 0];
+    mgOpen('🍞 장막마다 만나 나누기', '장막에 있는 사람 수를 보고 알맞은 오멜을 나눠요.<br><span style="opacity:.75">"너희 사람 수효대로 한 사람에 한 오멜씩 거두되" (출애굽기 16:16)</span>');
+    const need = i => tents[i].p * round;
+    const draw = msg => { mgArea.innerHTML = `<div style="text-align:center;font-weight:800;color:#ffd27a;padding:6px">${round === 1 ? '평일 아침' : '여섯째 날 — "하나에 두 오멜씩" (출 16:22)'}</div><div style="display:flex;gap:6px;padding:4px 8px">${tents.map((t, i) => `<div style="flex:1;text-align:center;background:rgba(255,255,255,.07);border-radius:10px;padding:8px 4px;font-size:12.5px"><b>${t.n}</b><br>${'🧑'.repeat(t.p)}<br>${t.p}명<div style="font-size:18px;margin:6px 0">🍞 ${give[i]}</div><button data-add="${i}" style="padding:4px 10px">＋</button> <button data-sub="${i}" style="padding:4px 10px">－</button></div>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px">${msg || ''}</div>`; };
+    draw(); mgAct.textContent = '나누기 확인'; mgAct.disabled = false;
+    mgArea.onclick = e => { const a = e.target.closest('[data-add]'), b = e.target.closest('[data-sub]'); if (a) give[+a.dataset.add]++; if (b) give[+b.dataset.sub] = Math.max(0, give[+b.dataset.sub] - 1); if (a || b) draw(); };
+    mgAct.onclick = () => {
+      const ok = give.every((g, i) => g === need(i));
+      if (!ok){ draw('사람 수와 오멜 수를 다시 세어 봐요'); return; }
+      if (round === 1){ round = 2; give.fill(0); draw('✓ 맞아요! 이번엔 여섯째 날이에요'); return; }
+      mgArea.onclick = null; mgCloseAll(); runDialog([[NAR, "오멜로 되어 본즉 많이 거둔 자도 남음이 없고 적게 거둔 자도 부족함이 없이 각 사람은 먹을 만큼만 거두었더라 (출 16:18)"], [NAR, "여섯째 날에는 각 사람이 갑절의 식물 곧 하나에 두 오멜씩 거둔지라 (출 16:22)"]], () => sideDone(s));
+    };
+    mg.onClose = () => { mgArea.onclick = null; };
+  }
+  // ── 7장: 십부장의 재판(출 18:22, 18:26) — 사례는 게임 사례 ──
+  function judgeGame(s){
+    const cases = [{ t: '이웃과 양 한 마리 때문에 생긴 다툼', small: true }, { t: '물 긷는 순서를 두고 생긴 다툼', small: true }, { t: '지금까지 한 번도 없던 어려운 일', small: false }].sort(() => Math.random() - 0.5);
+    mgOpen('⚖️ 십부장의 재판', '▶ 아래 사례는 <b>게임 사례</b>예요. 작은 일은 십부장이, 어려운 일은 모세에게 가져가요.<br><span style="opacity:.75">"어려운 일은 모세에게 가져오고 모든 작은 일은 스스로 재판하더라" (출애굽기 18:26)</span>');
+    let i = 0, miss = 0;
+    const draw = msg => { mgArea.innerHTML = i < cases.length ? `<div style="padding:12px;text-align:center"><div style="font-size:14px;font-weight:800;margin-bottom:10px">사례 ${i + 1}: ${cases[i].t}</div><button data-j="small" style="padding:9px 12px;margin:4px;border-radius:10px">십부장이 재판</button><button data-j="hard" style="padding:9px 12px;margin:4px;border-radius:10px">모세에게 가져가기</button></div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px">${msg || ''}</div>` : `<div style="padding:14px;text-align:center;color:#9be58a;font-weight:800">✓ 기다리던 줄이 줄었어요</div>`; };
+    draw(); mgAct.textContent = '재판 마치기'; mgAct.disabled = true;
+    mgArea.onclick = e => { const b = e.target.closest('[data-j]'); if (!b) return; const small = b.dataset.j === 'small';
+      if (small === cases[i].small){ i++; draw('✓'); if (i >= cases.length){ mgAct.disabled = false; } } else { miss++; draw('다시 — 작은 일은 스스로, 어려운 일은 모세에게'); } };
+    mgAct.onclick = () => { if (i < cases.length) return; mgArea.onclick = null; mgCloseAll(); runDialog([[NAR, "그리하면 그들이 너와 함께 담당할 것인즉 일이 네게 쉬우리라 (출 18:22)"]], () => sideDone(s)); };
+    mg.onClose = () => { mgArea.onclick = null; };
+  }
+  // ── 곁 이야기 대화 ──
+  function sideTalk(m){
+    const id = m.data.id, zid = Z && Z.id;
+    // 3장: 이웃 물건 줍기
+    const it = NB_ITEMS.find(x => x.id === id);
+    if (it && zid === 'egypt' && sideState('neighbor') === 'active'){ ST.sideItems = [...(ST.sideItems || []), id]; saveST(); refreshShow(); toast(`📦 ${it.t}을(를) 챙겼어요 (${ST.sideItems.length}/3)`, 1800); return true; }
+    // 6장: 반석에서 물 뜨기 · 이웃에게 주기 · 다음 날 기억
+    if (zid === 'rephidim'){
+      if (id === 'horeb_rock' && sideState('water_give') === 'active' && !ST.sideWater){ ST.sideWater = 2; saveST(); runDialog([[NAR, "너는 그 반석을 치라 그것에서 물이 나오리니 백성이 마시리라 (출 17:6)"], [NAR, '▶ 물을 떴어요. 이스라엘 장로와 목마른 아버지에게 가져다주세요.']]); return true; }
+      if ((id === 'rp_elder' || id === 'rp_angry1') && sideState('water_give') === 'active'){
+        const g = ST.sideGiven || []; if (g.includes(id)) return false;
+        if (!ST.sideWater){ runDialog([[SAYS(m.data.title), '물통이 비었구나…'], [NAR, '▶ 먼저 호렙 반석에서 물을 떠 오세요.']], null, m); return true; }
+        ST.sideGiven = [...g, id]; ST.sideWater--; saveST();
+        runDialog([[SAYS(m.data.title), '고맙구나. 마실 물이다!', 'happy']], () => { if ((ST.sideGiven || []).length >= 2){ ST.sideMemory = kstDate(); sideDone(SIDE.find(x => x.id === 'water_give')); } }, m); return true;
+      }
+      if ((id === 'rp_elder' || id === 'rp_angry1') && sideState('water_give') === 'done' && ST.sideMemory){
+        runDialog([[SAYS(m.data.title), ST.sideMemory === kstDate() ? '아까 물을 가져다줘서 고마웠어.' : '지난번에 물을 가져다준 친구구나! 오늘은 물통이 가득해.', 'happy']], null, m); return true;
+      }
+    }
+    const s = SIDE.find(x => x.zone === zid && x.npc === id); if (!s || sideState(s.id) === 'done' || !s.ok()) return false;
+    const st = sideState(s.id);
+    if (s.id === 'aaron_words'){ aaronWordsGame(s); return true; }
+    if (s.id === 'pharaoh_board'){ boardGame(s); return true; }
+    if (s.id === 'cloud_place'){ cloudGame(s); return true; }
+    if (s.id === 'manna_share'){ mannaGame(s); return true; }
+    if (s.id === 'judges'){ judgeGame(s); return true; }
+    if (s.id === 'neighbor'){
+      if (!st){ runDialog([[SAYS(m.data.title), '떠날 준비를 하는데 짐을 다 못 챙겼구나…', 'worried'], [NAR, "너희는 그것을 이렇게 먹을지니 허리에 띠를 띠고 발에 신을 신고 손에 지팡이를 잡고 급히 먹으라 (출 12:11)"], [NAR, '▶ 이웃의 반죽 그릇·신·지팡이를 찾아 가져다주세요(마을에 📦 표시).']], () => { sideSet('neighbor', 'active'); ST.sideItems = []; saveST(); refreshShow(); sideRefresh(true); }, m); return true; }
+      if ((ST.sideItems || []).length < 3){ runDialog([[SAYS(m.data.title), `아직 ${3 - (ST.sideItems || []).length}개가 남았구나.`]], null, m); return true; }
+      runDialog([[SAYS(m.data.title), '고맙구나! 이제 우리도 함께 떠날 수 있겠다.', 'happy'], [NAR, "그 백성이 발교되지 못한 반죽 담은 그릇을 옷에 싸서 어깨에 메니라 (출 12:34)"]], () => sideDone(s), m); return true;
+    }
+    if (s.id === 'water_give'){
+      if (!st){ runDialog([[SAYS(m.data.title), '반석에서 물이 나왔다는데, 저쪽 사람들은 아직 물을 못 마셨다네.'], [NAR, '▶ 호렙 반석에서 물을 떠서 이스라엘 장로와 목마른 아버지에게 가져다주세요.']], () => { sideSet('water_give', 'active'); ST.sideGiven = []; ST.sideWater = 0; saveST(); sideRefresh(true); }, m); return true; }
+    }
+    return false;
+  }
+  // 이름표 📜
+  let sideT = 0;
+  function sideRefresh(force){
+    const now = performance.now(); if (!force && now - sideT < 2000) return; sideT = now; if (!Z) return;
+    for (const s of SIDE){ if (s.zone !== Z.id) continue; const m = markers.find(x => x.data.id === s.npc); if (!m || !m.tag) continue;
+      const avail = sideState(s.id) !== 'done' && s.ok(), base = m.data.title, cur = m.tag.userData.text;
+      const want = avail ? '📜 ' + base : base;
+      if (cur !== want){ m.tag.userData.text = want; m.tag.userData.mode = null; m.tag.userData.el.textContent = want; } }
+  }
+  const _renderHQ0 = renderHQ;
+  renderHQ = function(){
+    _renderHQ0();
+    const el = document.getElementById('hq-list');
+    el.innerHTML += `<h3 style="font-size:15px;margin:14px 0 4px">📜 곁 이야기</h3>` + SIDE.map(s => {
+      const st = sideState(s.id), where = `${ZONES[s.zone].name}`;
+      if (st === 'done') return `<div class="dq done"><span class="ck">✅</span><span class="tx"><b>${s.ch}장 · ${s.name}</b></span></div>`;
+      if (s.ok()) return `<div class="dq"><span class="ck">📜</span><span class="tx"><b>${s.ch}장 · ${s.name}</b> — ${where}에서 📜 표시를 찾아요${st === 'active' ? ' (진행 중)' : ''}</span></div>`;
+      return `<div class="dq" style="opacity:.6"><span class="ck">🔒</span><span class="tx"><b>${s.ch}장 · ${s.name}</b> — ${s.ch}장을 마치면 열려요</span></div>`;
+    }).join('');
+  };
+  Object.assign(BADGES, { side_all: { ico: '📜', name: '곁을 살핀 사람' } });
   function renderWeekly(msg){
     const W = ST.weekly, el = document.getElementById('weekly-list'), b = document.getElementById('weekly-claim');
     el.innerHTML = W.q.map(k => { const q = wqDef(k), v = W.p[k] || 0, done = v >= q.n;
@@ -6883,6 +7054,68 @@
       syncAchieve();
     }, 4000);
   }
+  // ══ ☁️ 계정별 저장·복구 · 막힘 기록 · 오류 기록 (말씀우물 로그인 + 시험 참여자) ══
+  // 저장: 진행(ST)·스킬·캐릭터·장착·튜토리얼 여부를 계정에 올림. 서버는 덜 진행한 기록으로 덮어쓰지 않고 직전 기록을 한 벌 더 보관.
+  const CLOUD_KEYS = [STORY_KEY, SAVE_KEY, 'inodyssey-char', 'inodyssey-equip', 'inodyssey-tutorial'];
+  const cloudScoreOf = st => (st.ch + (st.cleared ? 1 : 0)) * 1000 + (st.cleared ? 0 : st.step || 0) * 10;
+  const cloudScore = () => cloudScoreOf(ST.replayBackup || ST);
+  const CLOUD = { t: 0, ready: false, last: null, busy: false };
+  function cloudPack(){
+    const keys = {};
+    for (const k of CLOUD_KEYS){ let v = null; try { v = localStorage.getItem(k); } catch (e){}
+      if (k === STORY_KEY){ const o = JSON.parse(JSON.stringify({ ...ST, log: [] })); if (o.replayBackup){ Object.assign(o, o.replayBackup); delete o.replayBackup; } v = JSON.stringify(o); }   // 메모리의 최신 진행을 그대로
+      keys[k] = v; }
+    return { v: 1, at: Date.now(), keys };
+  }
+  async function cloudSave(force){
+    if (!msuOn() || !CLOUD.ready || CLOUD.busy) return null;
+    CLOUD.busy = true;
+    try { const { data, error } = await MSU.client.rpc('save_odyssey_state', { p_data: cloudPack(), p_score: cloudScore(), p_force: !!force }); if (error) throw error; if (data === 1) CLOUD.last = new Date(); return data; }
+    catch (e){ return null; } finally { CLOUD.busy = false; }
+  }
+  function queueCloud(){ if (!msuOn() || !CLOUD.ready) return; clearTimeout(CLOUD.t); CLOUD.t = setTimeout(() => cloudSave(false), 15000); }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && CLOUD.ready){ clearTimeout(CLOUD.t); cloudSave(false); } });
+  function cloudRestore(pack){
+    try { sessionStorage.setItem('odyssey-restored', String(pack.at || 1)); } catch (e){}
+    for (const k of CLOUD_KEYS){ const v = pack.keys && pack.keys[k]; try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e){} }
+    const u = new URL(location.href); ['reset', 'ch', 'zone', 'body', 'hair'].forEach(p => u.searchParams.delete(p)); location.href = u.toString();
+  }
+  const scoreText = sc => { const c = Math.floor(sc / 1000), s = Math.floor((sc % 1000) / 10); return c >= CHAPTERS.length ? `${CHAPTERS.length}장 모두 완료` : `${c + 1}장 ${s + 1}단계`; };
+  async function cloudInit(){
+    if (!msuOn() || SHOP_MOCK) return;
+    let row = null;
+    try { const { data, error } = await MSU.client.rpc('get_odyssey_state'); if (error) throw error; row = data && data[0]; } catch (e){ return; }   // 서버 준비 전이면 조용히 건너뜀
+    CLOUD.ready = true;
+    let restored = null; try { restored = sessionStorage.getItem('odyssey-restored'); } catch (e){}
+    const local = cloudScore(), fresh = local <= 10 && !(ST.verses || []).length;
+    if (row && row.data && row.score > local && String(row.data.at) !== restored){
+      if (fresh){ toast('☁️ 계정에 저장된 모험을 불러와요…', 2000); setTimeout(() => cloudRestore(row.data), 900); return; }
+      if (confirm(`☁️ 계정에 더 많이 진행한 기록이 있어요.\n\n계정: ${scoreText(row.score)}\n이 기기: ${scoreText(local)}\n\n계정 기록을 불러올까요? (취소하면 이 기기 기록으로 계속해요)`)){ cloudRestore(row.data); return; }
+      return;   // 이 기기 기록으로 계속 — 서버의 더 앞선 기록은 그대로 보관됨
+    }
+    cloudSave(false);
+  }
+  function renderCloud(msg){
+    const el = document.getElementById('cloud-now'); if (!el) return;
+    el.textContent = msg || (!msuOn() ? '말씀우물 로그인하면 계정에 저장돼요' : !CLOUD.ready ? '확인 중…' : CLOUD.last ? `마지막 저장 ${CLOUD.last.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}` : '자동 저장 켜짐');
+  }
+  document.getElementById('cloud-save').onclick = async () => { renderCloud('저장 중…'); const r = await cloudSave(false); renderCloud(r === 1 ? '☁️ 저장했어요' : r === 0 ? '계정에 더 앞선 기록이 있어 덮어쓰지 않았어요' : '저장하지 못했어요(로그인 확인)'); };
+  document.getElementById('cloud-load').onclick = async () => {
+    if (!msuOn()){ renderCloud('말씀우물 로그인이 필요해요'); return; }
+    try { const { data } = await MSU.client.rpc('get_odyssey_state'); const row = data && data[0]; if (!row){ renderCloud('계정에 저장된 기록이 없어요'); return; }
+      if (confirm(`계정 기록(${scoreText(row.score)})으로 바꿀까요? 이 기기의 지금 진행은 계정 기록으로 바뀌어요.`)) cloudRestore(row.data); } catch (e){ renderCloud('불러오지 못했어요'); }
+  };
+  document.getElementById('btn-set').addEventListener('click', () => setTimeout(() => renderCloud(), 50));
+  // 막힘 기록: 이야기 단계를 처음 마칠 때 걸린 시간(초)만 — 대화 내용·개인정보 없음
+  const DEV = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+  function logStep(q, secs){ if (!msuOn() || (typeof REPLAY !== 'undefined' && REPLAY)) return; MSU.client.rpc('log_odyssey_step', { p_ch: ST.ch + 1, p_step: q.id, p_secs: Math.round(secs), p_dev: DEV }).then(() => {}, () => {}); }
+  // 게임 오류를 말씀우물 오류 기록(client_errors)에 — 한 번 켤 때 최대 4건, 같은 메시지는 1번
+  (() => { let sent = 0; const seen = new Set();
+    const rep = (msg, stack) => { if (sent >= 4 || !msuOn()) return; const k = String(msg).slice(0, 200); if (seen.has(k) || /ResizeObserver/.test(k)) return; seen.add(k); sent++;
+      MSU.client.rpc('log_client_error', { p_page: '/odyssey/', p_message: String(msg || '').slice(0, 1000), p_stack: String(stack || '').slice(0, 4000), p_ua: navigator.userAgent }).then(() => {}, () => {}); };
+    window.addEventListener('error', e => rep(e.message || 'script error', (e.error && e.error.stack) || ''));
+    window.addEventListener('unhandledrejection', e => { const r = e.reason; rep('unhandledrejection: ' + (r && r.message ? r.message : String(r)), (r && r.stack) || ''); });
+  })();
   const RANK_TABS = [
     { k: 'progress', l: '📜 모험 진행', fmt: r => `${r.value}장 · 구절 ${String(r.extra || '').split('/')[0]}장` },
     { k: 'brick', l: '🧱 벽돌', fmt: r => r.value + '장' }, { k: 'frogs', l: '🐸 개구리', fmt: r => r.value + '마리' },
@@ -8058,6 +8291,7 @@
     if (d.help){ helpTired(nearPoint); return; }
     if (storyInteract(nearPoint)) return;
     if (hqTalk(nearPoint)) return;
+    if (sideTalk(nearPoint)) return;
     if (d.id === 'a_shop'){ openShop(); return; }
     if (d.id === 'a_bezalel'){ openCraft(); return; }
     if (d.id === 'a_keeper' || d.id === 'memorial'){ openReplay(); return; }
@@ -8313,7 +8547,7 @@
       const score = isTarget ? d - 100 : ((m.data.gather || m.data.challenge) && d < 2.2 ? d - 50 : d);   // 반짝이 바로 위면 옆을 지나는 사람보다 먼저
       if (d < range && score < closestDist){ closestDist = score; closest = m; }
     });
-    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updateHomeBtn(); updateReplayBar(); updatePools(dt); updateQuail(dt); updateManna(); updateHidden(); hqRefresh(); updateBattle(now); updateStorm(dt, now); updateCh910(dt, now); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
+    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updateHomeBtn(); updateReplayBar(); updatePools(dt); updateQuail(dt); updateManna(); updateHidden(); hqRefresh(); sideRefresh(); updateBattle(now); updateStorm(dt, now); updateCh910(dt, now); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
     if (closest !== nearPoint){
       nearPoint = closest;
       interactBtn.classList.toggle('hidden', !nearPoint);
@@ -8407,7 +8641,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
