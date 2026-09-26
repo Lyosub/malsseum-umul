@@ -5597,6 +5597,7 @@
   document.getElementById('mg-close').onclick = () => { if (mg.onClose) { const f = mg.onClose; mg.onClose = null; f(); } mgCloseAll(); };
   function startChallenge(kind){
     if (CRAFT_CH[kind]) return CRAFT_CH[kind]();
+    if (kind === 'course') return courseChallenge(ST.best && ST.best[courseKind()] !== undefined ? ` · 이번 주 내 최고 기록 ${ST.best[courseKind()]}초` : '');
     const best = ST.best && ST.best[kind] !== undefined ? ` · 내 최고 기록 ${ST.best[kind]}${CH_INFO[kind].unit}` : '';
     if (kind === 'brick') return brickGame(best);
     if (kind === 'rhythm') return rhythmGame(best);
@@ -5662,7 +5663,7 @@
   // 3D 도전 공통: 화면 위 알림판
   const hudCh = document.getElementById('hud-challenge');
   const live = { kind: null, t: 0, n: 0, hearts: 0, objs: [] };
-  function liveEnd(msg){ live.objs.forEach(o => o.parent && o.parent.remove(o)); live.objs.length = 0; live.kind = null; hudCh.classList.add('hidden'); if (msg) toast(msg, 3000); }
+  function liveEnd(msg){ if (live.kind === 'course') courseClear(); live.objs.forEach(o => o.parent && o.parent.remove(o)); live.objs.length = 0; live.kind = null; hudCh.classList.add('hidden'); if (msg) toast(msg, 3000); }
   // 개구리 몰기(출 8:3-6): 60초 동안 몇 마리 몰아낼까
   function frogChallenge(best){
     mgOpen('🐸 개구리 몰기 도전', `강가와 집 둘레에 개구리가 가득해요! <b>60초</b> 동안 개구리에게 다가가 나일 강 쪽으로 몰아내세요.${best}`);
@@ -5681,6 +5682,7 @@
   }
   function updateLive(dt){
     if (!live.kind) return;
+    if (updateCourseLive(dt)) return;
     if (updateCraftLive(dt)) return;
     if (dlgState || !Z || Z.id !== 'egypt'){ if (!Z || Z.id !== 'egypt') liveEnd(); return; }
     live.t -= dt;
@@ -7360,6 +7362,78 @@
     { k: 'oikos', l: '🤝 우리 오이코스' },
   ];
   let rankData = null, oikData = null, rankTab = 'progress';
+  // ══ 🏃 광야 조작 코스(두루마리마을 동남쪽 빈 땅): 빛 고리를 차례로 지나며 상자 오르기·담 넘기 연습. 코스는 주마다 바뀌어요 ══
+  const COURSE_O = [26, 12];   // 코스 기준점
+  // r: 땅 위 고리 · c: 상자(높이 h, 윗면에 고리가 있으면 ring:1) · w: 낮은 담(길이 len, 방향 rot)
+  const COURSES = [
+    { n: 'A', items: [['r', 3, 1], ['c', 7, 3, 0.9, 1], ['w', 10, 3, 3.2, 0], ['r', 13, 3], ['c', 16, 7, 1.4, 1], ['c', 14.6, 7, 0.8], ['w', 12, 10, 3.2, 1.5708], ['r', 12, 13], ['c', 7, 13, 1.1, 1], ['r', 2, 9]] },
+    { n: 'B', items: [['w', 3, 3, 3.2, 1.5708], ['r', 3, 6], ['c', 6, 10, 0.8], ['c', 7.4, 10, 1.5, 1], ['r', 11, 14], ['w', 14, 11, 3.2, 0], ['r', 17, 9], ['c', 15, 4, 1.2, 1], ['w', 11, 2, 3.2, 0], ['r', 7, 1], ['r', 1, 1]] },
+    { n: 'C', items: [['c', 3, 3, 1.0, 1], ['w', 6, 6, 3.2, 0.785], ['r', 9, 8], ['c', 12, 8, 0.8], ['c', 13.4, 8, 1.6, 1], ['r', 17, 12], ['w', 13, 13, 3.2, 1.5708], ['c', 9, 14, 1.2, 1], ['w', 5, 11, 3.2, 0], ['r', 2, 8]] },
+  ];
+  const weekNo = () => Math.floor((Math.floor((Date.now() + 9 * 3600e3) / 864e5) + 3) / 7);   // 한국 시간 월요일마다 바뀜
+  const courseIdx = () => weekNo() % COURSES.length, courseKind = () => 'rp_course' + (courseIdx() + 1);
+  COURSES.forEach((c, i) => { CH_INFO['rp_course' + (i + 1)] = { name: `광야 코스 ${c.n}`, unit: '초', high: false }; });
+  RANK_TABS.splice(RANK_TABS.length - 1, 0, { k: courseKind(), l: '🏃 광야 코스', fmt: r => r.value + '초' });
+  Object.assign(BADGES, { wild_runner: { ico: '🏃', name: '광야를 달린 사람' } });
+  ZONES.alpha.points.push({ id: 'course', x: 24, z: 10.5, type: 'lore', title: '🏃 광야 조작 코스', challenge: 'course', body: '' });
+  const course = { rings: [], boxes: [], i: 0, t: 0 };
+  function courseClear(){
+    course.boxes.forEach(b => { const k = boxes.indexOf(b); if (k >= 0) boxes.splice(k, 1); }); course.boxes = []; course.rings = [];
+  }
+  function buildCourse(){
+    courseClear();
+    const [ox, oz] = COURSE_O, C = COURSES[courseIdx()];
+    const wood = new THREE.MeshToonMaterial({ color: 0xa8773f, gradientMap: toonGradient }), brick = new THREE.MeshToonMaterial({ color: 0xc9a878, gradientMap: toonGradient });
+    const ringGeo = new THREE.TorusGeometry(0.85, 0.09, 8, 28);
+    for (const it of C.items){
+      const x = ox + it[1], z = oz + it[2], g = heightAt(x, z);
+      if (it[0] === 'c'){
+        const h = it[3], m = new THREE.Mesh(new THREE.BoxGeometry(1.4, h, 1.4), wood); m.position.set(x, g + h / 2, z); m.castShadow = m.receiveShadow = true; zoneRoot.add(m); live.objs.push(m);
+        const b = { x, z, rot: 0, hx: 0.7, hz: 0.7, top: g + h, stand: true }; boxes.push(b); course.boxes.push(b);
+        if (it[4]) course.rings.push({ x, z, y: g + h, top: true });
+      } else if (it[0] === 'w'){
+        const len = it[3], rot = it[4], m = new THREE.Mesh(new THREE.BoxGeometry(len, 0.8, 0.3), brick); m.position.set(x, g + 0.4, z); m.rotation.y = rot; m.castShadow = true; zoneRoot.add(m); live.objs.push(m);
+        const b = { x, z, rot, hx: len / 2, hz: 0.15, top: g + 0.8, stand: false }; boxes.push(b); course.boxes.push(b);
+      } else course.rings.push({ x, z, y: g, top: false });
+    }
+    course.rings.forEach((r, i) => {
+      const m = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.35 }));
+      m.position.set(r.x, r.y + 1.0, r.z); zoneRoot.add(m); live.objs.push(m); r.m = m;
+      const tag = makeNumTag(i + 1); tag.position.set(r.x, r.y + 2.2, r.z); zoneRoot.add(tag); live.objs.push(tag); r.tag = tag;
+    });
+  }
+  function makeNumTag(n){
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    x.fillStyle = 'rgba(40,28,14,.8)'; x.beginPath(); x.arc(32, 32, 28, 0, 7); x.fill(); x.fillStyle = '#ffd27a'; x.font = 'bold 34px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(n), 32, 34);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false, transparent: true })); s.scale.set(0.9, 0.9, 1); return s;
+  }
+  function courseChallenge(best){
+    const C = COURSES[courseIdx()];
+    mgOpen('🏃 광야 조작 코스', `이번 주 코스는 <b>${C.n}</b>예요(월요일마다 바뀌어요). 빛나는 <b>고리 1번부터 ${C.items.filter(i => i[0] === 'r' || (i[0] === 'c' && i[4])).length}번까지</b> 차례로 지나가요. 상자 위 고리는 <b>점프</b>로 올라서고, 낮은 담은 점프로 넘어가요. 빠를수록 좋아요!${best}`);
+    mgAct.onclick = () => { mgCloseAll(); liveEnd(); live.kind = 'course'; buildCourse(); course.i = 0; course.t = 0; courseMark(); hudCh.classList.remove('hidden'); toast('🏁 출발! 1번 고리로', 1400); };
+  }
+  function courseMark(){
+    course.rings.forEach((r, i) => { r.m.visible = i >= course.i; r.tag.visible = i >= course.i && i < course.i + 2; r.m.material.opacity = i === course.i ? 1 : 0.3; r.m.material.color.setHex(i === course.i ? 0xffe38a : 0xb8a070); });
+  }
+  function updateCourseLive(dt){
+    if (live.kind !== 'course') return false;
+    if (!Z || Z.id !== 'alpha'){ liveEnd(); return true; }
+    if (dlgState) return true;
+    course.t += dt; const P = player.position, r = course.rings[course.i], N = course.rings.length;
+    course.rings.forEach((q, i) => { if (i === course.i) q.m.rotation.y += dt * 2; });
+    if (r && Math.hypot(P.x - r.x, P.z - r.z) < 1.1 && P.y > r.y - (r.top ? 0.25 : 1)){
+      course.i++; courseMark(); 
+      if (course.i >= N){
+        const sec = Math.max(1, Math.round(course.t)), nb = recordBest(courseKind(), sec);
+        if (!ST.badges.includes('wild_runner')){ ST.badges.push('wild_runner'); saveST(); setTimeout(() => { toast('🏃 배지 획득: 광야를 달린 사람', 2400); try { syncAchieve(); } catch (e){} }, 1500); }
+        liveEnd(`🏁 코스 ${COURSES[courseIdx()].n} 완주! ${sec}초${nb ? ' 🏆 최고 기록!' : ''}`); return true;
+      }
+      toast(`✓ ${course.i}/${N}`, 700);
+    }
+    hudCh.textContent = `🏃 ${course.i}/${N} · ⏱ ${course.t.toFixed(1)}초`;
+    if (course.t > 300) liveEnd('⏱ 5분이 지나 코스를 멈췄어요. 다시 도전해 보세요!');
+    return true;
+  }
   const escH = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function renderRank(){
     document.getElementById('rank-tabs').innerHTML = RANK_TABS.map(t => `<button data-rt="${t.k}" class="${t.k === rankTab ? 'on' : ''}">${t.l}</button>`).join('');
@@ -8882,7 +8956,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { updateFollow, get followers(){ return markers.filter(m => m.follow).map(m => m.data.id + '@' + m.mesh.position.x.toFixed(1) + ',' + m.mesh.position.z.toFixed(1)).join(' '); }, openLinks, LINKS, get links(){ return ST.links || []; }, openRecap, openExhibit, openJourney, maybeRecap, get exhibit(){ return exhibitObj ? exhibitObj.children.length : 0; }, starsLeft, spendStars, retryQuiz, openLibrary, renderLibrary, TITLES, SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { get course(){ return { i: course.i, n: course.rings.length, t: course.t, rings: course.rings.map(r => [r.x, r.y, r.z]), kind: courseKind() }; }, buildCourse, COURSES, updateFollow, get followers(){ return markers.filter(m => m.follow).map(m => m.data.id + '@' + m.mesh.position.x.toFixed(1) + ',' + m.mesh.position.z.toFixed(1)).join(' '); }, openLinks, LINKS, get links(){ return ST.links || []; }, openRecap, openExhibit, openJourney, maybeRecap, get exhibit(){ return exhibitObj ? exhibitObj.children.length : 0; }, starsLeft, spendStars, retryQuiz, openLibrary, renderLibrary, TITLES, SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
