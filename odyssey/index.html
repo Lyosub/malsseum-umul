@@ -3759,7 +3759,29 @@
     raised_hands: { ico: '🙌', name: '붙들어 준 손' },
     true_leader:  { ico: '⚖️', name: '진실한 사람을 알아본 눈' },
     ten_words:    { ico: '🪨', name: '십계명' },
+    lords_side:   { ico: '🙋', name: '여호와의 편' },
+    willing:      { ico: '🎁', name: '자원하는 마음' },
+    as_commanded: { ico: '⛺', name: '명령하신 대로' },
   });
+  // ══ 9장 「금송아지」(출 24, 31–34장) · 10장 「성막」(출 35–40장) ══
+  const STORY9 = [
+    { id: 'c9s1', zone: 'sinai', obj: '모세의 말 듣기 — 모세가 산에 올라가요', where: '진영의 모세', npc: 'moses', dlg: 'c9_up', place: { moses: [-2, 4.5] } },
+    { id: 'c9s2', zone: 'sinai', obj: '모세를 기다리는 백성의 이야기 듣기', where: '진영의 사람들 — 머리 위에 이름이 보이는 사람', rumor: 3, rumorIds: ['gc_1', 'gc_2', 'gc_3'] },
+    { id: 'c9s3', zone: 'sinai', obj: '아론에게 가기', where: '진영 가운데의 아론', npc: 'aaron', dlg: 'c9_calf' },
+    { id: 'c9s4', zone: 'sinai', obj: '이튿날 — 송아지 앞에 가 보기', where: '진영 남쪽의 금송아지(빛나는 곳)', point: 'calf_spot', dlg: 'c9_feast' },
+    { id: 'c9s5', zone: 'sinai', obj: '산에서 내려오는 모세와 여호수아에게 가기', where: '산기슭', npc: 'joshua9', dlg: 'c9_down', place: { moses: [2, -21], joshua9: [4.5, -20] } },
+    { id: 'c9s6', zone: 'sinai', obj: '송아지 앞의 모세에게 가기', where: '금송아지 앞(빛나는 곳)', point: 'calf_spot', dlg: 'c9_burn', place: { moses: [-1.5, -2.5], aaron: [-6.5, -2.5] } },
+    { id: 'c9s7', zone: 'sinai', obj: '진 문에 선 모세에게 가기', where: '진영 북쪽 입구(빛나는 곳)', point: 'camp_gate', dlg: 'c9_side', place: { moses: [-8, 17] }, reward: { verse: 'ex32-26' } },
+    { id: 'c9s8', zone: 'sinai', obj: '진 밖의 회막으로 가기', where: '진영 서쪽 멀리 떨어진 장막', point: 'tent_meeting', dlg: 'c9_tent', place: { moses: [-26.5, -10.5] }, reward: { verse: 'ex33-11' } },
+    { id: 'c9s9', zone: 'sinai', obj: '모세와 함께 돌판 둘을 다듬기', where: '산기슭의 모세', npc: 'moses', game: 'hew', place: { moses: [0, -21] }, doneDlg: 'c9_new', reward: { verse: 'ex34-6', clear: true } },
+  ];
+  const STORY10 = [
+    { id: 'c10s1', zone: 'sinai', obj: '모세의 말 듣기 — 여호와께 드릴 예물', where: '진영의 모세', npc: 'moses', dlg: 'c10_offer', place: { moses: [-2, 4.5] } },
+    { id: 'c10s2', zone: 'sinai', obj: '예물을 가져오는 가족들의 이야기 듣기', where: '진영의 가족들 — 머리 위에 이름이 보이는 사람', rumor: 3, rumorIds: ['of_1', 'of_2', 'of_3'] },
+    { id: 'c10s3', zone: 'sinai', obj: '나도 예물 드리기(원하는 만큼)', where: '진영 동쪽 예물 두는 곳(빛나는 곳)', point: 'offer_spot', game: 'offering', doneDlg: 'c10_enough', reward: { verse: 'ex35-29' } },
+    { id: 'c10s4', zone: 'sinai', obj: '브살렐에게 가기', where: '진영 동쪽의 브살렐', npc: 'bezalel', dlg: 'c10_ark' },
+    { id: 'c10s5', zone: 'sinai', obj: '모세와 함께 성막 세우기', where: '진영 남쪽 빈터의 모세', npc: 'moses', game: 'erect', place: { moses: [15.5, -15] }, doneDlg: 'c10_glory', reward: { verse: 'ex40-34', clear: true } },
+  ];
   const CHAPTERS = [
     { title: '📜 모세와 함께 1장 — 부르심', clearTitle: '🎉 모세와 함께 1장 「부르심」 완료!', steps: STORY1, next: '2장: 열 가지 재앙' },
     { title: '📜 모세와 함께 2장 — 열 가지 재앙', clearTitle: '🎉 2장 「아홉 가지 재앙」 완료!', steps: STORY2, next: '3장: 유월절 밤' },
@@ -3768,7 +3790,9 @@
     { title: '📜 모세와 함께 5장 — 광야의 만나', clearTitle: '🎉 5장 「광야의 만나」 완료!', steps: STORY5, next: '6장: 반석의 물과 아말렉' },
     { title: '📜 모세와 함께 6장 — 반석의 물과 아말렉', clearTitle: '🎉 6장 「반석의 물과 아말렉」 완료!', steps: STORY6, next: '7장: 이드로의 방문' },
     { title: '📜 모세와 함께 7장 — 이드로의 방문', clearTitle: '🎉 7장 「이드로의 방문」 완료!', steps: STORY7, next: '8장: 시내산' },
-    { title: '📜 모세와 함께 8장 — 시내산', clearTitle: '🎉 8장 「시내산」 완료!', steps: STORY8, next: '9장: 준비 중' },
+    { title: '📜 모세와 함께 8장 — 시내산', clearTitle: '🎉 8장 「시내산」 완료!', steps: STORY8, next: '9장: 금송아지' },
+    { title: '📜 모세와 함께 9장 — 금송아지', clearTitle: '🎉 9장 「금송아지」 완료!', steps: STORY9, next: '10장: 성막' },
+    { title: '📜 모세와 함께 10장 — 성막', clearTitle: '🎉 10장 「성막」 완료! 첫 두루마리 「모세와 함께」를 마쳤어요', steps: STORY10, next: '다음 두루마리: 준비 중' },
   ];
 
   // 단서(소문): 미디안 마을 사람들에게 모세 소식을 물으면
@@ -4576,6 +4600,161 @@
   for (const [z, id, body, title] of [["midian", "moses", "모세가 그의 장인 미디안 제사장 이드로의 양 떼를 치더니 (출 3:1)", null], ["midian", "bush", "여호와의 사자가 떨기나무 가운데로부터 나오는 불꽃 안에서 그에게 나타나시니라 그가 보니 떨기나무에 불이 붙었으나 그 떨기나무가 사라지지 아니하는지라 (출 3:2)", null], ["midian", "aaron", "레위 사람 네 형 아론이 있지 아니하냐 그가 말 잘 하는 것을 내가 아노라 (출 4:14)", null], ["midian", "jethro", "모세가 그의 장인 미디안 제사장 이드로의 양 떼를 치더니 (출 3:1)", null], ["midian", "blacksmith", "\"뚝딱뚝딱! 오늘도 할 일이 많구먼.\"", null], ["midian", "merchant", "\"좋은 천이 들어왔어요. 한번 구경해 볼래요?\"", null], ["midian", "elder", "\"젊은이, 길을 잃었거든 이 늙은이에게 물어보게나.\"", null], ["egypt", "miriam", "그의 누이가 어떻게 되는지를 알려고 멀리 섰더니 (출 2:4)", null], ["egypt", "bricks", "너희는 백성에게 다시는 벽돌에 쓸 짚을 전과 같이 주지 말고 그들이 가서 스스로 짚을 줍게 하라 (출 5:7)\n또 그들이 전에 만든 벽돌 수효대로 그들에게 만들게 하고 감하지 말라 (출 5:8)", null], ["egypt", "door", "그 피를 양을 먹을 집 좌우 문설주와 인방에 바르고 (출 12:7)", null], ["egypt", "pharaoh", "여호와가 누구이기에 내가 그의 목소리를 듣고 이스라엘을 보내겠느냐 (출 5:2)", null], ["egypt", "worker1", "너희는 백성에게 다시는 벽돌에 쓸 짚을 전과 같이 주지 말고 그들이 가서 스스로 짚을 줍게 하라 (출 5:7)", null], ["egypt", "worker2", "너희는 짚이 있을 때와 같이 그 날의 일을 그 날에 마치라 (출 5:13)", null], ["egypt", "moses", "나는 여호와라 내가 애굽 사람의 무거운 짐 밑에서 너희를 빼내며 (출 6:6)", null], ["egypt", "aaron", "그가 너를 대신하여 백성에게 말할 것이니 (출 4:16)", null], ["egypt", "is_elder", "하나님이 그들의 고통 소리를 들으시고 하나님이 아브라함과 이삭과 야곱에게 세운 그의 언약을 기억하사 (출 2:24)", null], ["egypt", "hyssop", "우슬초 묶음을 가져다가 그릇에 담은 피에 적셔서 그 피를 문 인방과 좌우 설주에 뿌리고 (출 12:22)", null], ["egypt", "bundle", "그 백성이 발교되지 못한 반죽 담은 그릇을 옷에 싸서 어깨에 메니라 (출 12:34)", null], ["egypt", "hb_father", "요셉을 알지 못하는 새 왕이 일어나 애굽을 다스리더니 (출 1:8)", null], ["egypt", "hb_mother", "그러나 학대를 받을수록 더욱 번성하여 퍼져나가니 (출 1:12)", null], ["egypt", "hb_grandma", "이스라엘 자손은 고된 노동으로 말미암아 탄식하며 부르짖으니 (출 2:23)", null], ["egypt", "hb_boy", "\"우리 아빠는 매일 흙을 이기고 벽돌을 구워요.\"\n흙 이기기와 벽돌 굽기와 농사의 여러 가지 일이라 (출 1:14)", null], ["egypt", "hb_brickmaker", "짚은 너희에게 주지 않을지라도 벽돌은 너희가 수량대로 바칠지니라 (출 5:18)", null], ["egypt", "eg_noble", "이 백성 이스라엘 자손이 우리보다 많고 강하도다 (출 1:9)", null], ["egypt", "eg_farmer_m", "\"오늘도 밭일이 많구먼.\"", null], ["egypt", "eg_water", "\"매일 아침 강에 가서 물을 길어 와요.\"", null], ["egypt", "pal_servant_m", "바로가 그 날에 백성의 감독들과 기록원들에게 명령하여 이르되 (출 5:6)\n너희는 백성에게 다시는 벽돌에 쓸 짚을 전과 같이 주지 말고 그들이 가서 스스로 짚을 줍게 하라 (출 5:7)", null], ["egypt", "pal_servant_f", "\"궁전 안에서는 조용히 해야 해요.\"", null], ["egypt", "pal_magician1", "바로도 현인들과 마술사들을 부르매 그 애굽 요술사들도 그들의 요술로 그와 같이 행하되 (출 7:11)\n각 사람이 지팡이를 던지매 뱀이 되었으나 아론의 지팡이가 그들의 지팡이를 삼키니라 (출 7:12)", null], ["redsea", "miriam", "아론의 누이 선지자 미리암이 손에 소고를 잡으매 모든 여인도 그를 따라 나오며 소고를 잡고 춤추니 (출 15:20)", null], ["redsea", "joshua", "\"뒤쪽을 잘 살피고 있어요. 무슨 일이 있으면 알려 줄게요.\"", "망보는 청년"], ["redsea", "rs_builder", "돌이켜 바다와 믹돌 사이의 비하히롯 앞 곧 바알스본 맞은편 바닷가에 장막을 치게 하라 (출 14:2)", null], ["redsea", "rs_man", "\"애굽을 떠나다니, 아직도 꿈만 같아.\"", null], ["redsea", "rs_singer", "여호와께서 그들 앞에서 가시며 낮에는 구름 기둥으로 그들의 길을 인도하시고 (출 13:21)", null], ["redsea", "rs_elder", "모세가 요셉의 유골을 가졌으니 (출 13:19)", null], ["redsea", "rs_boy", "밤에는 불 기둥을 그들에게 비추사 (출 13:21)", null], ["wild", "wd_thirsty1", "그가 물에 던지니 물이 달게 되었더라 (출 15:25)", null], ["wild", "wd_thirsty2", "\"아이들이 이제 물을 마셔요.\"", null], ["wild", "wd_hungry1", "무리가 아침마다 각 사람은 먹을 만큼만 거두었고 (출 16:21)", null], ["wild", "wd_hungry2", "깟씨 같이 희고 맛은 꿀 섞은 과자 같았더라 (출 16:31)", null], ["wild", "wd_greedy", "많이 거둔 자도 남음이 없고 적게 거둔 자도 부족함이 없이 (출 16:18)", null], ["wild", "mara_tree", "여호와께서 그에게 한 나무를 가리키시니 그가 물에 던지니 물이 달게 되었더라 (출 15:25)", null], ["wild", "quail_spot", "저녁에는 메추라기가 와서 진에 덮이고 (출 16:13)", null], ["rephidim", "rp_elder", "모세가 이스라엘 장로들의 목전에서 그대로 행하니라 (출 17:6)", null], ["rephidim", "rp_angry1", "그가 그 곳 이름을 맛사 또는 므리바라 불렀으니 이는 이스라엘 자손이 다투었음이요 또는 그들이 여호와를 시험하여 이르기를 여호와께서 우리 중에 계신가 안 계신가 하였음이더라 (출 17:7)", null], ["rephidim", "rp_angry2", "\"아이들이 물을 실컷 마셨어요!\"", null], ["rephidim", "horeb_rock", "너는 그 반석을 치라 그것에서 물이 나오리니 백성이 마시리라 (출 17:6)", null], ["rephidim", "hands_spot", "모세와 아론과 훌은 산 꼭대기에 올라가서 (출 17:10)\n모세가 손을 들면 이스라엘이 이기고 손을 내리면 아말렉이 이기더니 (출 17:11)", null], ["rephidim", "altar_nissi", "모세가 제단을 쌓고 그 이름을 여호와 닛시라 하고 (출 17:15)\n「닛시」 — 개역개정 난외주: 나의 기", null], ["sinai", "zipporah", "모세의 장인 이드로가 모세가 돌려 보냈던 그의 아내 십보라와 (출 18:2)", null], ["sinai", "gershom", "그 하나의 이름은 게르솜이라 이는 모세가 이르기를 내가 이방에서 나그네가 되었다 함이요 (출 18:3)", null], ["sinai", "eliezer", "하나의 이름은 엘리에셀이라 이는 내 아버지의 하나님이 나를 도우사 바로의 칼에서 구원하셨다 함이더라 (출 18:4)", null], ["sinai", "sn_line1", "그들이 때를 따라 백성을 재판하되 어려운 일은 모세에게 가져오고 모든 작은 일은 스스로 재판하더라 (출 18:26)", null], ["sinai", "sn_line2", "\"이제는 줄이 금방 줄어요.\"", null], ["sinai", "sn_line3", "\"오늘은 해 지기 전에 집에 가요!\"", null], ["sinai", "sn_family1", "그들이 자기 옷을 빨더라 (출 19:14)", null], ["sinai", "sn_family2", "너희는 삼가 산에 오르거나 그 경계를 침범하지 말지니 (출 19:12)", null], ["sinai", "sn_family3", "\"경계 안으로는 절대 안 들어가요!\"", null], ["sinai", "boundary", "너는 백성을 위하여 주위에 경계를 정하고 이르기를 너희는 삼가 산에 오르거나 그 경계를 침범하지 말지니 (출 19:12)", null]]){
     const p = ZONES[z] && ZONES[z].points.find(p => p.id === id); if (!p) continue; p.body = body; if (title) p.title = title;
   }
+  // ══ 9장 「금송아지」 · 10장 「성막」 — 대사 원칙: 성경 인물·해설은 개역개정 원문(출처 표기)만 ══
+  const JOSHUA9 = { n: '여호수아' }, BEZALEL = { n: '브살렐' };
+  Object.assign(VERSES, {
+    "ex32-26": { ref: "출애굽기 32:26", text: "누구든지 여호와의 편에 있는 자는 내게로 나아오라" },
+    "ex33-11": { ref: "출애굽기 33:11", text: "사람이 자기의 친구와 이야기함 같이 여호와께서는 모세와 대면하여 말씀하시며" },
+    "ex34-6": { ref: "출애굽기 34:6", text: "여호와라 여호와라 자비롭고 은혜롭고 노하기를 더디하고 인자와 진실이 많은 하나님이라" },
+    "ex35-29": { ref: "출애굽기 35:29", text: "마음에 자원하는 남녀는 누구나 여호와께서 모세의 손을 빌어 명령하신 모든 것을 만들기 위하여 물품을 드렸으니 이것이 이스라엘 자손이 여호와께 자원하여 드린 예물이니라" },
+    "ex40-34": { ref: "출애굽기 40:34", text: "구름이 회막에 덮이고 여호와의 영광이 성막에 충만하매" },
+  });
+  Object.assign(DLG, {
+    c8_fear: [
+      [NAR, "모세에게 이르되 당신이 우리에게 말씀하소서 우리가 들으리이다 하나님이 우리에게 말씀하시지 말게 하소서 우리가 죽을까 하나이다 (출 20:19)"],
+      [ME, "저도 무서웠어요… 산이 흔들리고 불이 나고.", "worried"],
+      [MOSES, "두려워하지 말라 하나님이 임하심은 너희를 시험하고 너희로 경외하여 범죄하지 않게 하려 하심이니라"],
+      [NAR, "백성은 멀리 서 있고 모세는 하나님이 계신 흑암으로 가까이 가니라 (출 20:21)"],
+      [NAR, "▶ 이렇게 8장 「시내산」이 끝났어요. 다음 이야기: 9장 「금송아지」 — 모세에게 가 보세요."],
+    ],
+    c9_up: [
+      [NAR, "여호와께서 모세에게 이르시되 너는 산에 올라 내게로 와서 거기 있으라 네가 그들을 가르치도록 내가 율법과 계명을 친히 기록한 돌판을 네게 주리라 (출 24:12)"],
+      [NAR, "모세가 그의 부하 여호수아와 함께 일어나 모세가 하나님의 산으로 올라가며 (출 24:13)"],
+      [MOSES, "너희는 여기서 우리가 너희에게로 돌아오기까지 기다리라 아론과 훌이 너희와 함께 하리니 무릇 일이 있는 자는 그들에게로 나아갈지니라"],
+      {"event": "mosesUp"},
+      [NAR, "모세가 산에 오르매 구름이 산을 가리며 (출 24:15)"],
+      [NAR, "여호와의 영광이 시내 산 위에 머무르고 구름이 엿새 동안 산을 가리더니 일곱째 날에 여호와께서 구름 가운데서 모세를 부르시니라 (출 24:16)"],
+      [NAR, "산 위의 여호와의 영광이 이스라엘 자손의 눈에 맹렬한 불 같이 보였고 (출 24:17)"],
+      [NAR, "모세는 구름 속으로 들어가서 산 위에 올랐으며 모세가 사십 일 사십 야를 산에 있으니라 (출 24:18)"],
+      [NAR, "▶ 모세가 산에 있는 동안 진영 사람들의 이야기를 들어 보세요."],
+    ],
+    c9_calf: [
+      [NAR, "백성이 모세가 산에서 내려옴이 더딤을 보고 모여 백성이 아론에게 이르러 말하되 (출 32:1)"],
+      [AARON, "아론이 그들에게 이르되 너희의 아내와 자녀의 귀에서 금 고리를 빼어 내게로 가져오라"],
+      [NAR, "모든 백성이 그 귀에서 금 고리를 빼어 아론에게로 가져가매 (출 32:3)"],
+      {"event": "calf"},
+      [NAR, "아론이 그들의 손에서 금 고리를 받아 부어서 조각칼로 새겨 송아지 형상을 만드니 그들이 말하되 이스라엘아 이는 너희를 애굽 땅에서 인도하여 낸 너희의 신이로다 하는지라 (출 32:4)"],
+      [NAR, "아론이 보고 그 앞에 제단을 쌓고 (출 32:5)"],
+      [AARON, "내일은 여호와의 절일이니라"],
+      { choice: [
+        { l: "😨 이건 아닌 것 같아요…", say: [[NAR, "너를 위하여 새긴 우상을 만들지 말고 또 위로 하늘에 있는 것이나 아래로 땅에 있는 것이나 땅 아래 물 속에 있는 것의 어떤 형상도 만들지 말며 (출 20:4)"]] },
+        { l: "🤐 조용히 지켜본다", say: [[NAR, "너는 나 외에는 다른 신들을 네게 두지 말라 (출 20:3)"]] } ] },
+      [NAR, "▶ 이튿날 아침이에요. 송아지 앞으로 가 보세요."],
+    ],
+    c9_feast: [
+      [NAR, "이튿날에 그들이 일찍이 일어나 번제를 드리며 화목제를 드리고 백성이 앉아서 먹고 마시며 일어나서 뛰놀더라 (출 32:6)"],
+      [ME, "…", "worried"],
+      [NAR, "여호와께서 모세에게 이르시되 너는 내려가라 네가 애굽 땅에서 인도하여 낸 네 백성이 부패하였도다 (출 32:7)"],
+      [NAR, "그들이 내가 그들에게 명령한 길을 속히 떠나 자기를 위하여 송아지를 부어 만들고 그것을 예배하며 (출 32:8)"],
+      [NAR, "모세가 그의 하나님 여호와께 구하여 이르되 여호와여 어찌하여 그 큰 권능과 강한 손으로 애굽 땅에서 인도하여 내신 주의 백성에게 진노하시나이까 (출 32:11)"],
+      [NAR, "여호와께서 뜻을 돌이키사 말씀하신 화를 그 백성에게 내리지 아니하시니라 (출 32:14)"],
+      [NAR, "▶ 산기슭에서 누군가 내려오고 있어요. 가 보세요."],
+    ],
+    c9_down: [
+      [NAR, "여호와께서 시내 산 위에서 모세에게 이르시기를 마치신 때에 증거판 둘을 모세에게 주시니 이는 돌판이요 하나님이 친히 쓰신 것이더라 (출 31:18)"],
+      [NAR, "모세가 돌이켜 산에서 내려오는데 두 증거판이 그의 손에 있고 그 판의 양면 이쪽 저쪽에 글자가 있으니 (출 32:15)"],
+      [NAR, "그 판은 하나님이 만드신 것이요 글자는 하나님이 쓰셔서 판에 새기신 것이더라 (출 32:16)"],
+      [JOSHUA9, "진중에서 싸우는 소리가 나나이다", "worried"],
+      [MOSES, "이는 승전가도 아니요 패하여 부르짖는 소리도 아니라 내가 듣기에는 노래하는 소리로다"],
+      [NAR, "진에 가까이 이르러 그 송아지와 그 춤 추는 것들을 보고 크게 노하여 손에서 그 판들을 산 아래로 던져 깨뜨리니라 (출 32:19)"],
+      {"event": "breakTablets"},
+      [ME, "판이…!", "surprised"],
+      [NAR, "▶ 모세가 송아지 쪽으로 가요. 따라가 보세요."],
+    ],
+    c9_burn: [
+      {"event": "burnCalf"},
+      [NAR, "모세가 그들이 만든 송아지를 가져다가 불살라 부수어 가루를 만들어 물에 뿌려 이스라엘 자손에게 마시게 하니라 (출 32:20)"],
+      [MOSES, "이 백성이 당신에게 어떻게 하였기에 당신이 그들을 큰 죄에 빠지게 하였느냐"],
+      [AARON, "내 주여 노하지 마소서 이 백성의 악함을 당신이 아나이다", "worried"],
+      [AARON, "금이 있는 자는 빼내라 한즉 그들이 그것을 내게로 가져왔기로 내가 불에 던졌더니 이 송아지가 나왔나이다"],
+      [NAR, "▶ 모세가 진 문에 섰어요. 가 보세요."],
+    ],
+    c9_side: [
+      [MOSES, "누구든지 여호와의 편에 있는 자는 내게로 나아오라"],
+      { choice: [
+        { l: "🙋 모세에게 나아간다", reward: {"badge": "lords_side"}, say: [[NAR, "레위 자손이 다 모여 그에게로 가는지라 (출 32:26)"]] },
+        { l: "🤔 멀리서 지켜본다", say: [[NAR, "▶ 모세가 진 문에서 부르고 있어요."], [NAR, "레위 자손이 다 모여 그에게로 가는지라 (출 32:26)"]] } ] },
+      [MOSES, "너희가 큰 죄를 범하였도다 내가 이제 여호와께로 올라가노니 혹 너희를 위하여 속죄가 될까 하노라"],
+      [MOSES, "슬프도소이다 이 백성이 자기들을 위하여 금 신을 만들었사오니 큰 죄를 범하였나이다"],
+      [MOSES, "그러나 이제 그들의 죄를 사하시옵소서 그렇지 아니하시오면 원하건대 주께서 기록하신 책에서 내 이름을 지워 버려 주옵소서"],
+      [NAR, "이제 가서 내가 네게 말한 곳으로 백성을 인도하라 내 사자가 네 앞서 가리라 (출 32:34)"],
+      [NAR, "▶ 진 밖 서쪽의 회막으로 가 보세요."],
+    ],
+    c9_tent: [
+      [NAR, "모세가 항상 장막을 취하여 진 밖에 쳐서 진과 멀리 떠나게 하고 회막이라 이름하니 여호와를 앙모하는 자는 다 진 바깥 회막으로 나아가며 (출 33:7)"],
+      {"event": "cloudTent"},
+      [NAR, "모세가 회막에 들어갈 때에 구름 기둥이 내려 회막 문에 서며 여호와께서 모세와 말씀하시니 (출 33:9)"],
+      [NAR, "모든 백성이 회막 문에 구름 기둥이 서 있는 것을 보고 다 일어나 각기 장막 문에 서서 예배하며 (출 33:10)"],
+      [NAR, "사람이 자기의 친구와 이야기함 같이 여호와께서는 모세와 대면하여 말씀하시며 모세는 진으로 돌아오나 눈의 아들 젊은 수종자 여호수아는 회막을 떠나지 아니하니라 (출 33:11)"],
+      [NAR, "▶ 모세가 산기슭에서 돌판을 다듬고 있어요. 가 보세요."],
+    ],
+    c9_new: [
+      [NAR, "모세가 돌판 둘을 처음 것과 같이 깎아 만들고 아침에 일찍이 일어나 그 두 돌판을 손에 들고 여호와의 명령대로 시내 산에 올라가니 (출 34:4)"],
+      [NAR, "여호와께서 구름 가운데에 강림하사 그와 함께 거기 서서 여호와의 이름을 선포하실새 (출 34:5)"],
+      [NAR, "여호와께서 그의 앞으로 지나시며 선포하시되 여호와라 여호와라 자비롭고 은혜롭고 노하기를 더디하고 인자와 진실이 많은 하나님이라 (출 34:6)"],
+      [NAR, "인자를 천대까지 베풀며 악과 과실과 죄를 용서하리라 (출 34:7)"],
+      [NAR, "모세가 급히 땅에 엎드려 경배하며 (출 34:8)"],
+      [NAR, "모세가 여호와와 함께 사십 일 사십 야를 거기 있으면서 떡도 먹지 아니하였고 물도 마시지 아니하였으며 여호와께서는 언약의 말씀 곧 십계명을 그 판들에 기록하셨더라 (출 34:28)"],
+      {"event": "shine"},
+      [NAR, "모세가 그 증거의 두 판을 모세의 손에 들고 시내 산에서 내려오니 그 산에서 내려올 때에 모세는 자기가 여호와와 말하였음으로 말미암아 얼굴 피부에 광채가 나나 깨닫지 못하였더라 (출 34:29)"],
+      [NAR, "아론과 온 이스라엘 자손이 모세를 볼 때에 모세의 얼굴 피부에 광채가 남을 보고 그에게 가까이 하기를 두려워하더니 (출 34:30)"],
+      [ME, "모세님 얼굴이… 빛나요!", "surprised"],
+      [NAR, "모세가 그들을 부르매 아론과 회중의 모든 어른이 모세에게로 오고 모세가 그들과 말하니 (출 34:31)"],
+      [NAR, "모세가 그들에게 말하기를 마치고 수건으로 자기 얼굴을 가렸더라 (출 34:33)"],
+      [NAR, "▶ 이렇게 9장 「금송아지」가 끝났어요. 다음 이야기: 10장 「성막」 — 모세에게 가 보세요."],
+    ],
+    c10_offer: [
+      [MOSES, "여호와께서 명령하신 일이 이러하니라 이르시기를"],
+      [MOSES, "너희의 소유 중에서 너희는 여호와께 드릴 것을 택하되 마음에 원하는 자는 누구든지 그것을 가져다가 여호와께 드릴지니 곧 금과 은과 놋과"],
+      [NAR, "이스라엘 자손의 온 회중이 모세 앞에서 물러갔더니 (출 35:20)"],
+      [NAR, "마음이 감동된 모든 자와 자원하는 모든 자가 와서 회막을 짓기 위하여 그 속에서 쓸 모든 것을 위하여, 거룩한 옷을 위하여 예물을 가져다가 여호와께 드렸으니 (출 35:21)"],
+      [NAR, "▶ 가족들이 예물을 가져와요. 이야기를 들어 보세요."],
+    ],
+    c10_enough: [
+      [NAR, "모세가 브살렐과 오홀리압과 및 마음이 지혜로운 사람 곧 그 마음에 여호와께로부터 지혜를 얻고 와서 그 일을 하려고 마음에 원하는 모든 자를 부르매 (출 36:2)"],
+      [NAR, "그들이 이스라엘 자손의 성소의 모든 것을 만들기 위하여 가져온 예물을 모세에게서 받으니라 그러나 백성이 아침마다 자원하는 예물을 연하여 가져왔으므로 (출 36:3)"],
+      [BEZALEL, "백성이 너무 많이 가져오므로 여호와께서 명령하신 일에 쓰기에 남음이 있나이다"],
+      [NAR, "모세가 명령을 내리매 그들이 진중에 공포하여 이르되 남녀를 막론하고 성소에 드릴 예물을 다시 만들지 말라 하매 백성이 가져오기를 그치니 (출 36:6)"],
+      [NAR, "있는 재료가 모든 일을 하기에 넉넉하여 남음이 있었더라 (출 36:7)"],
+      [NAR, "▶ 브살렐에게 가 보세요."],
+    ],
+    c10_ark: [
+      [MOSES, "볼지어다 여호와께서 유다 지파 훌의 손자요 우리의 아들인 브살렐을 지명하여 부르시고"],
+      [NAR, "또 그와 단 지파 아히사막의 아들 오홀리압을 감동시키사 가르치게 하시며 (출 35:34)"],
+      [NAR, "브살렐이 조각목으로 궤를 만들었으니 길이가 두 규빗 반, 너비가 한 규빗 반, 높이가 한 규빗 반이며 (출 37:1)"],
+      {"event": "ark"},
+      [NAR, "여호와께서 모세에게 명령하신 대로 이스라엘 자손이 모든 역사를 마치매 (출 39:42)"],
+      [NAR, "모세가 그 마친 모든 것을 본즉 여호와께서 명령하신 대로 되었으므로 모세가 그들에게 축복하였더라 (출 39:43)"],
+      [NAR, "▶ 모세와 함께 성막을 세워요. 진영 남쪽 빈터의 모세에게 가세요."],
+    ],
+    c10_glory: [
+      {"event": "glory"},
+      [NAR, "구름이 회막에 덮이고 여호와의 영광이 성막에 충만하매 (출 40:34)"],
+      [NAR, "모세가 회막에 들어갈 수 없었으니 이는 구름이 회막 위에 덮이고 여호와의 영광이 성막에 충만함이었으며 (출 40:35)"],
+      [ME, "구름이… 성막을 덮었어요!", "surprised"],
+      [NAR, "구름이 성막 위에서 떠오를 때에는 이스라엘 자손이 그 모든 행진하는 길에 앞으로 나아갔고 (출 40:36)"],
+      [NAR, "구름이 떠오르지 않을 때에는 떠오르는 날까지 나아가지 아니하였으며 (출 40:37)"],
+      [NAR, "낮에는 여호와의 구름이 성막 위에 있고 밤에는 불이 그 구름 가운데에 있음을 이스라엘의 온 족속이 그 모든 행진하는 길에서 그들의 눈으로 보았더라 (출 40:38)"],
+      [NAR, "▶ 이렇게 10장 「성막」이 끝났어요. 첫 두루마리 「모세와 함께」의 출애굽 이야기가 여기까지예요."],
+    ],
+  });
+  Object.assign(KEYS, {
+    c9_side: { scene: "여호와의 편", t: "누구든지 여호와의 편에 있는 자는 내게로 나아오라" },
+    c9_tent: { scene: "회막", t: "사람이 자기의 친구와 이야기함 같이 여호와께서는 모세와 대면하여 말씀하시며" },
+    c9_new: { scene: "두 번째 돌판", t: "여호와라 여호와라 자비롭고 은혜롭고 노하기를 더디하고 인자와 진실이 많은 하나님이라" },
+    c10_enough: { scene: "넉넉한 예물", t: "있는 재료가 모든 일을 하기에 넉넉하여 남음이 있었더라" },
+    c10_glory: { scene: "여호와의 영광", t: "구름이 회막에 덮이고 여호와의 영광이 성막에 충만하매" },
+  });
+  Object.assign(QUIZ, {
+    c9_calf: { q: "백성이 아론에게 무엇을 만들라고 했나요?", a: "우리를 인도할 신", w: ["모세의 장막", "큰 배"] },
+    c9_down: { q: "진에 가까이 와서 송아지를 본 모세는 판들을 어떻게 했나요?", a: "산 아래로 던져 깨뜨렸다", w: ["아론에게 맡겼다", "궤 속에 넣었다"] },
+    c9_new: { q: "여호와께서 모세 앞으로 지나시며 선포하신 말씀은?", a: "자비롭고 은혜롭고 노하기를 더디하는 하나님", w: ["전쟁에 능한 왕", "가장 큰 나라의 왕"] },
+    c10_enough: { q: "백성이 예물을 너무 많이 가져오자 어떻게 했나요?", a: "다시 만들지 말라고 공포했다", w: ["더 가져오라고 했다", "예물을 돌려주었다"] },
+    c10_glory: { q: "성막을 세운 뒤 회막을 덮은 것은?", a: "구름", w: ["메뚜기 떼", "큰 바람"] },
+  });
+  Object.assign(RUMORS, {"gc_1": ["이 모세 곧 우리를 애굽 땅에서 인도하여 낸 사람은 어찌 되었는지 알지 못함이니라 (출 32:1)"], "gc_2": ["일어나라 우리를 위하여 우리를 인도할 신을 만들라 (출 32:1)"], "gc_3": ["모세가 아직도 내려오지 않았어…", "모세가 사십 일 사십 야를 산에 있으니라 (출 24:18)"], "of_1": ["금 예물을 가져왔어요.", "곧 마음에 원하는 남녀가 와서 팔찌와 귀고리와 가락지와 목걸이와 여러 가지 금품을 가져다가 사람마다 여호와께 금 예물을 드렸으며 (출 35:22)"], "of_2": ["염소 털로 실을 뽑았단다.", "마음에 감동을 받아 슬기로운 모든 여인은 염소 털로 실을 뽑았으며 (출 35:26)"], "of_3": ["조각목을 가져왔어요.", "섬기는 일에 소용되는 조각목이 있는 모든 자는 가져왔으며 (출 35:24)"]});
+  const ERECT = ["그 받침들을 놓고", "그 널판들을 세우고", "그 띠를 띠우고", "그 기둥들을 세우고", "성막 위에 막을 펴고", "그 위에 덮개를 덮으니", "증거판을 궤 속에 넣고", "그 궤를 성막에 들여놓고", "가리개 휘장을 늘어뜨려", "휘장 밖에 상을 놓고", "성막 남쪽에 등잔대를 놓아", "금 향단을 회막 안 휘장 앞에 두고", "성막 문에 휘장을 달고", "성막 문 앞에 번제단을 두고", "물두멍을 회막과 제단 사이에 두고", "성막과 제단 주위 뜰에 포장을 치고"];
+  const HEW_TEXT = "너는 돌판 둘을 처음 것과 같이 다듬어 만들라", OFFER_TEXT = ["마음에 원하는 자는 누구든지 그것을 가져다가 여호와께 드릴지니", "마음에 자원하는 남녀는 누구나 여호와께서 모세의 손을 빌어 명령하신 모든 것을 만들기 위하여 물품을 드렸으니 이것이 이스라엘 자손이 여호와께 자원하여 드린 예물이니라"];
   // 저장(버전 번호 + 새 필드는 기본값 — 데이터 마이그레이션 원칙)
   const STORY_KEY = 'inodyssey.proto.story';
   const ST = { v: 1, ch: 0, step: 0, rumor: [], straw: 0, water: 0, frogs: 0, herd: null, warned: 0, verses: [], badges: [], stars: 0, quiz: {}, keys: [], cleared: false, log: [] };
@@ -4787,6 +4966,8 @@
     { need: 6, t: '손을 들어 이긴 사람' },
     { need: 7, t: '함께 짐을 나눈 사람' },
     { need: 8, t: '시내산 언약의 사람' },
+    { need: 9, t: '여호와의 편에 선 사람' },
+    { need: 10, t: '자원하여 드린 사람' },
     { need: 'scroll', t: '말씀을 찾는 탐험가' },
   ];
   const chaptersDone = () => ST.ch + (ST.cleared ? 1 : 0);
@@ -4806,7 +4987,7 @@
     pray_start: '두루마리마을 기념 전시관 앞에서…', companion: '떨기나무 앞, 걱정하는 모세에게…', prayer: '바로 앞에 들어가기 전, 떨리는 모세와…',
     share: '짚을 모아 준 일꾼들과…', trust: '뱀이 된 지팡이 이야기를 들을 때…', true_heart: '우박이 그친 뒤 바로의 모습을 보고…',
     passover_lamb: '문설주에 피를 바른 뒤 궁금한 것을…', bold_step: '바다가 갈라진 순간…', together: '바다를 건널 때 주변을 잘 살펴보면…',
-    timbrel: '미리암과 함께 소고를 잘 두드리면…', daily_bread: '만나를 아침까지 남겨 둔 사람에게…', raised_hands: '산 꼭대기에서 손을 들고 난 뒤…', true_leader: '모세와 함께 지도자를 고를 때…', ten_words: '십계명을 한 번도 틀리지 않고…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면',
+    timbrel: '미리암과 함께 소고를 잘 두드리면…', daily_bread: '만나를 아침까지 남겨 둔 사람에게…', raised_hands: '산 꼭대기에서 손을 들고 난 뒤…', true_leader: '모세와 함께 지도자를 고를 때…', ten_words: '십계명을 한 번도 틀리지 않고…', lords_side: '모세가 진 문에서 부를 때…', willing: '마음에 원하는 만큼 예물을 드리면…', as_commanded: '성막을 거의 틀리지 않고 차례대로 세우면…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면',
   };
   function badgeBookHTML(){
     const all = Object.entries(BADGES), n = all.filter(([k]) => ST.badges.includes(k)).length;
@@ -4814,7 +4995,7 @@
       + all.map(([k, b]) => ST.badges.includes(k) ? `<div class="bdg"><b>${b.ico}</b>${b.name}</div>`
           : `<div class="bdg off"><b>❓</b>???<i>${BADGE_HINT[k] || '이야기 속 어딘가에서…'}</i></div>`).join('') + `</div></div>`;
   }
-  const TITLE_ICO = { '두루마리마을 새내기': '📜', '부르심에 응답한 사람': '🔥', '재앙 속에서 믿은 사람': '⚡', '어린양의 피 아래 선 사람': '🐑', '바다를 건넌 믿음의 사람': '🌊', '광야에서 만나를 먹은 사람': '🍞', '손을 들어 이긴 사람': '🙌', '함께 짐을 나눈 사람': '⚖️', '시내산 언약의 사람': '🪨', '말씀을 찾는 탐험가': '🧭' };
+  const TITLE_ICO = { '두루마리마을 새내기': '📜', '부르심에 응답한 사람': '🔥', '재앙 속에서 믿은 사람': '⚡', '어린양의 피 아래 선 사람': '🐑', '바다를 건넌 믿음의 사람': '🌊', '광야에서 만나를 먹은 사람': '🍞', '손을 들어 이긴 사람': '🙌', '함께 짐을 나눈 사람': '⚖️', '시내산 언약의 사람': '🪨', '여호와의 편에 선 사람': '🙋', '자원하여 드린 사람': '⛺', '말씀을 찾는 탐험가': '🧭' };
   // 칭호 전체: 얻은 칭호는 컬러 배지+이름(누르면 사용), 못 얻은 칭호는 흑백 ❓ · 이름 숨김(얻는 조건만 작게)
   function titleBookHTML(){
     const mine = myTitle(), n = TITLES.filter(titleOk).length;
@@ -5213,7 +5394,7 @@
     if (SHOP_MOCK || !MSU.client || !MSU.session) return 0;
     try { const { data, error } = await MSU.client.rpc('claim_odyssey_chapter', { p_ch: ch }); if (error) throw error; if (data > 0){ MSU.balance = (MSU.balance || 0) + data; toast(`💰 ${ch}장 완료 보상 ${data}달란트를 받았어요!`, 3000); } return data; } catch (e){ return 0; }
   }
-  async function claimClearedChapters(){ const n = ST.ch + (ST.cleared ? 1 : 0); for (let c = 1; c <= Math.min(n, 8); c++) await claimChapter(c); }
+  async function claimClearedChapters(){ const n = ST.ch + (ST.cleared ? 1 : 0); for (let c = 1; c <= Math.min(n, 10); c++) await claimChapter(c); }
 
   // 장착: 지팡이는 오른손에, 동물 친구는 뒤를 따라다님(마을을 옮겨도 함께)
   const equipObj = { staff: null, staffKey: null, pet: null, petKey: null, petT: 0 };
@@ -5881,7 +6062,7 @@
     mg.raf = requestAnimationFrame(loop);
     mgAct.onclick = () => {
       if (!playing){ if (mgAct.disabled) return; playing = true; hits = 0; speed = 0.95; t0 = performance.now(); mgAct.textContent = '누르기!'; newZone(); draw(); return; }
-      if (Math.abs(pos - zc) <= zw / 2){ hits++; speed = Math.min(1.8, speed + 0.15); newZone(); draw();
+      if (window.__mgCheat || Math.abs(pos - zc) <= zw / 2){ hits++; speed = Math.min(1.8, speed + 0.15); newZone(); draw();
         if (hits >= need){ playing = false; mgStat.textContent = '🎉 성공!'; onWin(); } }
       else { mgArea.style.background = 'rgba(210,60,40,0.35)'; setTimeout(() => mgArea.style.background = '', 150); }
     };
@@ -6878,7 +7059,7 @@
       if (ST.ch === 5 && !ST.cleared && ST.step >= stepIdx('c6s9')) armyPush = 1;
       buildAltar(ST.ch > 5 || (ST.ch === 5 && (ST.cleared || ST.step >= stepIdx('c6s10'))));
     }
-    if (Z.id === 'sinai') buildStorm(stormOn());
+    if (Z.id === 'sinai'){ buildStorm(stormOn()); buildCh910(); }
     if (Z.id === 'wild') spawnQuail(ST.ch === 4 && !ST.cleared && ST.step >= stepIdx('c5s10') && ST.step <= stepIdx('c5s11'));
     if (Z._water){
       const red = ST.ch === 1 && ST.step >= stepIdx('c2s3') && ST.step < stepIdx('c2s4');   // 이레 뒤(개구리부터)는 원래 물빛
@@ -6915,6 +7096,14 @@
     if (name === 'dawn'){ nightOn = false; }
     if (name === 'close'){ sea.target = 0; armyOn = false; spawnArmy(); cloudOn = false; spawnCloud(); }
     if (name === 'dance'){ startDance(); }
+    if (name === 'mosesUp'){ if (Z && Z.mountain) startCine('mosesUp', Z.mountain.x, heightAt(Z.mountain.x, Z.mountain.z) + 14, Z.mountain.z, { r: 42, h: 12, dur: 5, spin: 0.3 }); toast('⛰ 모세가 구름 속으로 들어가 산 위에 올랐어요', 2400); }
+    if (name === 'calf'){ buildCalf(true).then(() => { if (calfObj) startCine('calf', calfObj.position.x, calfObj.position.y + 1, calfObj.position.z, { r: 6, h: 2.5, dur: 4.5, spin: 0.8 }); }); }
+    if (name === 'breakTablets') breakTablets();
+    if (name === 'burnCalf'){ burnCalf(); toast('🔥 모세가 송아지를 불살랐어요', 2000); }
+    if (name === 'cloudTent'){ buildCloudTent(true); if (cloudTentObj) startCine('cloudTent', cloudTentObj.position.x, cloudTentObj.position.y + 5, cloudTentObj.position.z, { r: 14, h: 5, dur: 4.5, spin: 0.5 }); }
+    if (name === 'shine'){ setShine(true); }
+    if (name === 'ark'){ buildArkAt(...ARK_WORK, -0.6).then(() => { if (arkObj) startCine('ark', arkObj.position.x, arkObj.position.y + 0.6, arkObj.position.z, { r: 4.5, h: 1.8, dur: 4, spin: 0.9 }); }); toast('📦 브살렐이 조각목으로 궤를 만들었어요', 2200); }
+    if (name === 'glory'){ buildTabernacle(16); buildGlory(true); const cx = (TAB.x0 + TAB.x1) / 2; startCine('glory', cx, heightAt(cx, TAB.z) + 3, TAB.z, { r: 22, h: 9, dur: 6, spin: 0.5 }); toast('☁️ 구름이 회막에 덮였어요', 2400); }
     if (name === 'rockwater'){ buildRockWater(true); toast('💧 반석에서 물이 솟아나요!', 2200); }
     if (name === 'amalek'){ armyPush = 0.5; buildBattle(true); toast('⚔️ 아말렉이 쳐들어왔어요', 2200); }
     if (name === 'storm'){ buildStorm(true); if (Z.mountain) startCine('storm', Z.mountain.x, heightAt(Z.mountain.x, Z.mountain.z) + 12, Z.mountain.z, { r: 40, h: 14, dur: 6, spin: 0.4 }); toast('⚡ 우레와 번개, 나팔 소리!', 2200); }
@@ -7228,6 +7417,203 @@
   function startStoryGame(q){
     if (q.game === 'hands') handsGame(q);
     if (q.game === 'tablets') tabletsGame(q);
+    if (q.game === 'hew') hewGame(q);
+    if (q.game === 'offering') offeringGame(q);
+    if (q.game === 'erect') erectGame(q);
+  }
+  // ══ 9·10장 연출: 금송아지 · 깨진 돌판 · 회막의 구름 기둥 · 모세 얼굴의 광채 · 언약궤 · 성막(한 단계씩) · 여호와의 영광 ══
+  Object.assign(PROP_DEFS, {
+    'golden-calf': { h: 1.7, occ: false, shape: 'none', src: 'story3d/golden-calf.glb' },
+    'ark': { h: 0.95, occ: false, shape: 'none', src: 'story3d/ark.glb' },
+    'stone-tablets': { h: 0.8, occ: false, shape: 'none', src: 'story3d/stone-tablets.glb' },
+  });
+  const CALF = [-4, -4], ARK_WORK = [11, -7.5], TENT_MEET = [-28, -12];
+  const TAB = { x0: -10, x1: 0, z: -15, hw: 2, h: 3.2, court: [-13, 13, -21, -9] };   // 성막(서→동, 문은 동쪽) · 뜰
+  const ch9on = () => ST.ch === 8 && !ST.cleared, ch10on = () => ST.ch === 9 && !ST.cleared;
+  const calfOn = () => ch9on() && ST.step >= stepIdx('c9s4') && ST.step < stepIdx('c9s7');
+  const cloudTentOn = () => ST.ch === 8 && (ST.cleared || ST.step > stepIdx('c9s8'));
+  const tabFull = () => ST.ch > 9 || (ST.ch === 9 && ST.cleared);
+  const arkWorkOn = () => ch10on() && ST.step >= stepIdx('c10s5');
+  Object.assign(CONDS, {
+    mosesHere: () => !(ch9on() && ST.step >= stepIdx('c9s2') && ST.step < stepIdx('c9s5')),
+    before9: () => ST.ch < 8,
+    ch9people: () => ch9on() && ST.step <= stepIdx('c9s2'),
+    ch9gate: () => ch9on() && ST.step >= stepIdx('c9s7'),
+    ch9down: () => ch9on() && ST.step >= stepIdx('c9s5'),
+    calfSpot: () => calfOn(),
+    tentMeet: () => ST.ch >= 8,
+    ch10: () => ST.ch >= 9,
+  });
+  // 마을 사람·장소 더하기(시내산)
+  ZONES.sinai.layout.push(['tent-mid', -31, -15, faceTo(-31, -15, -28, -12)]);
+  ZONES.sinai.points.push(
+    { id: 'gc_1', x: -7, z: 9, type: 'villager', title: '기다리다 지친 사람', model: 'he-grandpa', persona: 'rs_static', cond: 'ch9people', body: '"모세가 아직도 내려오지 않았어…"' },
+    { id: 'gc_2', x: 6, z: 9.5, type: 'villager', title: '모여든 사람', model: 'ca-singer-f', persona: 'rs_static', cond: 'ch9people', body: '"아론에게 가 보자."' },
+    { id: 'gc_3', x: -10, z: 3, type: 'villager', title: '진영의 젊은이', model: 'he-boy-hb', persona: 'rs_static', cond: 'ch9people', body: '"산 위는 구름뿐이야."' },
+    { id: 'calf_spot', x: CALF[0] + 1.6, z: CALF[1] + 1.6, type: 'lore', title: '금송아지', cond: 'calfSpot', body: '' },
+    { id: 'joshua9', x: 4.5, z: -20, type: 'npc', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'ch9down' },
+    { id: 'camp_gate', x: -9.5, z: 18, type: 'lore', title: '진 문', cond: 'ch9gate', body: '' },
+    { id: 'tent_meeting', x: TENT_MEET[0], z: TENT_MEET[1], type: 'lore', title: '회막', cond: 'tentMeet', body: "모세가 항상 장막을 취하여 진 밖에 쳐서 진과 멀리 떠나게 하고 회막이라 이름하니 (출 33:7)" },
+    { id: 'of_1', x: 8, z: 9, type: 'villager', title: '예물을 가져온 어머니', model: 'he-mother', persona: 'rs_static', cond: 'ch10', body: "곧 마음에 원하는 남녀가 와서 팔찌와 귀고리와 가락지와 목걸이와 여러 가지 금품을 가져다가 사람마다 여호와께 금 예물을 드렸으며 (출 35:22)" },
+    { id: 'of_2', x: -8, z: 9.5, type: 'villager', title: '실을 뽑은 할머니', model: 'he-grandma', persona: 'rs_static', cond: 'ch10', body: "마음에 감동을 받아 슬기로운 모든 여인은 염소 털로 실을 뽑았으며 (출 35:26)" },
+    { id: 'of_3', x: 4, z: 13, type: 'villager', title: '조각목을 멘 아버지', model: 'he-father', persona: 'rs_static', cond: 'ch10', body: "섬기는 일에 소용되는 조각목이 있는 모든 자는 가져왔으며 (출 35:24)" },
+    { id: 'offer_spot', x: 9, z: -4, type: 'lore', title: '예물 두는 곳', cond: 'ch10', body: "있는 재료가 모든 일을 하기에 넉넉하여 남음이 있었더라 (출 36:7)" },
+    { id: 'bezalel', x: 12.5, z: -3, type: 'npc', title: '브살렐', model: 'ca-craftsman', persona: 'rs_static', cond: 'ch10', body: "유다 지파 훌의 손자요 우리의 아들인 브살렐을 (출 35:30)" },
+    { id: 'oholiab', x: 14.5, z: -5.5, type: 'villager', title: '오홀리압', model: 'ca-tent-builder', persona: 'rs_static', cond: 'ch10', body: "단 지파 아히사막의 아들 오홀리압을 감동시키사 가르치게 하시며 (출 35:34)" },
+  );
+  { const mp = ZONES.sinai.points.find(p => p.id === 'moses'); if (mp) mp.cond = 'mosesHere'; }
+  for (const id of ['sn_line1', 'sn_line2', 'sn_line3']){ const p = ZONES.sinai.points.find(p => p.id === id); if (p) p.cond = 'before9'; }
+
+  let calfObj = null, tabObj = null, tabStage = -1, cloudTentObj = null, shineObj = null, arkObj = null, gloryObj = null, fx910 = [];
+  const toonC = c => new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient });
+  const rm = o => { if (o && o.parent) o.parent.remove(o); return null; };
+  async function buildCalf(on){
+    calfObj = rm(calfObj); if (!on) return;
+    await loadProps(['golden-calf']); if (!Z || Z.id !== 'sinai' || calfObj) return;
+    const g = new THREE.Group(), [x, z] = CALF;
+    const o = propTemplates['golden-calf'].holder.clone(true); g.add(o);
+    const stoneM = toonC(0x9a8a72);
+    for (let i = 0; i < 5; i++){ const st = new THREE.Mesh(new THREE.DodecahedronGeometry(0.3, 0), stoneM); st.position.set(1.3 + (i % 2) * 0.4, 0.25 + Math.floor(i / 2) * 0.3, -0.5 + (i % 3) * 0.45); g.add(st); }   // 그 앞의 제단(출 32:5)
+    g.position.set(x, heightAt(x, z), z); g.rotation.y = faceTo(x, z, 0, 8); zoneRoot.add(g); calfObj = g;
+    obstacles.push({ x, z, r: 1.0 });
+  }
+  function burnCalf(){
+    if (!calfObj) return;
+    const p = calfObj.position.clone();
+    for (let i = 0; i < 14; i++){ const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xffa040, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.9 }));
+      sp.position.set(p.x + (Math.random() - 0.5) * 1.6, p.y + 0.4 + Math.random() * 1.4, p.z + (Math.random() - 0.5) * 1.6); sp.scale.set(0.9, 1.3, 1); zoneRoot.add(sp); fx910.push({ o: sp, t: 0, life: 2.6, kind: 'fire' }); }
+    setTimeout(() => { calfObj = rm(calfObj); }, 1400);
+  }
+  async function breakTablets(){
+    const m = markers.find(x => x.data.id === 'moses' && !x.hidden); if (!m) return;
+    await loadProps(['stone-tablets']);
+    const p = m.mesh.position, t = propTemplates['stone-tablets'].holder.clone(true);
+    t.position.set(p.x + 0.8, p.y + 1.2, p.z + 0.8); zoneRoot.add(t);
+    setTimeout(() => {
+      const q = t.position.clone(); rm(t);
+      const mat = toonC(0x8d8578);
+      for (let i = 0; i < 12; i++){ const s = new THREE.Mesh(new THREE.BoxGeometry(0.16 + Math.random() * 0.12, 0.05, 0.12 + Math.random() * 0.1), mat);
+        s.position.copy(q); zoneRoot.add(s); fx910.push({ o: s, t: 0, life: 4, kind: 'shard', v: new THREE.Vector3((Math.random() - 0.5) * 3.5, 2 + Math.random() * 2.5, (Math.random() - 0.5) * 3.5), gy: heightAt(q.x, q.z) + 0.03 }); }
+      toast('💥 판들이 산 아래에서 깨졌어요', 2000);
+    }, 900);
+  }
+  function buildCloudTent(on){
+    cloudTentObj = rm(cloudTentObj); if (!on) return;
+    const g = new THREE.Group(), [x, z] = [TENT_MEET[0] - 1.5, TENT_MEET[1] - 1.5];
+    for (let i = 0; i < 16; i++){ const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: 0xf4f6fa, transparent: true, opacity: 0.55, depthWrite: false }));
+      sp.position.set((Math.random() - 0.5) * 1.2, 1 + i * 0.75, (Math.random() - 0.5) * 1.2); const s = 2.2 + Math.random() * 1.2; sp.scale.set(s, s, 1); sp.userData.ph = Math.random() * 6; g.add(sp); }
+    g.position.set(x, heightAt(x, z), z); zoneRoot.add(g); cloudTentObj = g;
+  }
+  function setShine(on){
+    shineObj = rm(shineObj); if (!on) return;
+    const m = markers.find(x => x.data.id === 'moses'); if (!m) return;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff2b0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 }));
+    sp.scale.set(1.1, 1.1, 1); sp.position.set(0, 2.35, 0.1); m.mesh.add(sp); shineObj = sp;
+  }
+  async function buildArkAt(x, z, rot){
+    arkObj = rm(arkObj);
+    await loadProps(['ark']); if (!Z || Z.id !== 'sinai') return;
+    const o = propTemplates['ark'].holder.clone(true); o.position.set(x, heightAt(x, z), z); o.rotation.y = rot || 0; zoneRoot.add(o); arkObj = o;
+  }
+  // 성막: 단계(0~16)만큼 지어짐 — 출 40:18-33 순서
+  function buildTabernacle(stage){
+    if (stage === tabStage && tabObj) return;
+    tabObj = rm(tabObj); tabStage = stage; if (stage <= 0) return;
+    const g = new THREE.Group(), T = TAB, len = T.x1 - T.x0, cx = (T.x0 + T.x1) / 2, y0 = heightAt(cx, T.z);
+    const gold = toonC(0xd8b04a), silver = toonC(0xcfd4da), bronze = toonC(0xa8703a), linen = toonC(0xf4efe2);
+    const colors = new THREE.MeshToonMaterial({ color: 0x5a3f9a, gradientMap: toonGradient, side: THREE.DoubleSide });
+    const add = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; g.add(m); return m; };
+    const walls = [];   // [x, z] 외곽 점(북·남·서)
+    for (let x = T.x0; x <= T.x1 + 0.01; x += 1){ walls.push([x, T.z - T.hw], [x, T.z + T.hw]); }
+    for (let z = T.z - T.hw + 1; z < T.z + T.hw; z += 1) walls.push([T.x0, z]);
+    if (stage >= 1) for (const [x, z] of walls) add(new THREE.BoxGeometry(0.5, 0.3, 0.5), silver, x, y0 + 0.15, z);                 // 받침(은)
+    if (stage >= 2){ add(new THREE.BoxGeometry(len, T.h, 0.18), gold, cx, y0 + T.h / 2, T.z - T.hw); add(new THREE.BoxGeometry(len, T.h, 0.18), gold, cx, y0 + T.h / 2, T.z + T.hw); add(new THREE.BoxGeometry(0.18, T.h, T.hw * 2), gold, T.x0, y0 + T.h / 2, T.z); }   // 널판
+    if (stage >= 3) for (const hy of [0.8, 1.6, 2.4]){ add(new THREE.BoxGeometry(len, 0.08, 0.26), toonC(0xf0c860), cx, y0 + hy, T.z - T.hw - 0.02); add(new THREE.BoxGeometry(len, 0.08, 0.26), toonC(0xf0c860), cx, y0 + hy, T.z + T.hw + 0.02); }   // 띠
+    if (stage >= 4) for (let i = 0; i < 5; i++) add(new THREE.CylinderGeometry(0.1, 0.1, T.h, 8), gold, T.x1, y0 + T.h / 2, T.z - T.hw + i * T.hw / 2);   // 기둥(문)
+    if (stage >= 5) add(new THREE.BoxGeometry(len + 0.3, 0.06, T.hw * 2 + 0.3), colors, cx, y0 + T.h + 0.03, T.z);                        // 막(청색·자색·홍색)
+    if (stage >= 6){ const c = add(new THREE.BoxGeometry(len + 0.8, 0.12, T.hw * 2 + 0.9), toonC(0x6a3a26), cx, y0 + T.h + 0.14, T.z); const s1 = add(new THREE.BoxGeometry(len + 0.8, T.h * 0.55, 0.08), toonC(0x6a3a26), cx, y0 + T.h * 0.72, T.z - T.hw - 0.4); const s2 = s1.clone(); s2.position.z = T.z + T.hw + 0.4; g.add(s2); }   // 덮개
+    if (stage >= 9) add(new THREE.PlaneGeometry(T.hw * 2, T.h), colors, T.x0 + 2.6, y0 + T.h / 2, T.z, Math.PI / 2);                     // 가리개 휘장
+    if (stage >= 10) add(new THREE.BoxGeometry(0.9, 0.7, 0.5), gold, T.x0 + 5, y0 + 0.35, T.z - 1.2);                                    // 상
+    if (stage >= 11){ add(new THREE.CylinderGeometry(0.05, 0.12, 1.2, 8), gold, T.x0 + 5, y0 + 0.6, T.z + 1.2); add(new THREE.SphereGeometry(0.1, 8, 6), toonC(0xffd060), T.x0 + 5, y0 + 1.25, T.z + 1.2); }   // 등잔대
+    if (stage >= 12) add(new THREE.BoxGeometry(0.45, 0.8, 0.45), gold, T.x0 + 3.4, y0 + 0.4, T.z);                                      // 금 향단
+    if (stage >= 13) add(new THREE.PlaneGeometry(T.hw * 2, T.h), colors, T.x1 + 0.05, y0 + T.h / 2, T.z, Math.PI / 2);                  // 성막 문 휘장
+    if (stage >= 14){ add(new THREE.BoxGeometry(1.8, 1.0, 1.8), bronze, T.x1 + 6, y0 + 0.5, T.z); for (const [dx, dz] of [[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]]) add(new THREE.ConeGeometry(0.12, 0.3, 6), bronze, T.x1 + 6 + dx, y0 + 1.15, T.z + dz); }   // 번제단(뿔)
+    if (stage >= 15) add(new THREE.CylinderGeometry(0.55, 0.4, 0.6, 14), bronze, T.x1 + 3, y0 + 0.3, T.z);                            // 물두멍
+    if (stage >= 16){ const [a, b, c, d] = T.court, H = 1.7;
+      for (const [x, z, w, dz] of [[(a + b) / 2, c, b - a, 0], [(a + b) / 2, d, b - a, 0]]) add(new THREE.BoxGeometry(w, H, 0.06), linen, x, y0 + H / 2, z);
+      add(new THREE.BoxGeometry(0.06, H, d - c), linen, a, y0 + H / 2, (c + d) / 2);
+      add(new THREE.BoxGeometry(0.06, H, (d - c) / 2 - 2.5), linen, b, y0 + H / 2, c + ((d - c) / 2 - 2.5) / 2); add(new THREE.BoxGeometry(0.06, H, (d - c) / 2 - 2.5), linen, b, y0 + H / 2, d - ((d - c) / 2 - 2.5) / 2);
+      add(new THREE.BoxGeometry(0.06, H, 5), colors, b + 0.4, y0 + H / 2, (c + d) / 2);   // 뜰 문 휘장
+      for (let x = a; x <= b + 0.01; x += 2.6){ add(new THREE.CylinderGeometry(0.06, 0.06, H + 0.2, 6), bronze, x, y0 + (H + 0.2) / 2, c); add(new THREE.CylinderGeometry(0.06, 0.06, H + 0.2, 6), bronze, x, y0 + (H + 0.2) / 2, d); } }
+    zoneRoot.add(g); tabObj = g;
+    if (stage >= 2 && !g.userData.col){ g.userData.col = true; for (const [x, z] of walls) obstacles.push({ x, z, r: 0.55 }); }
+    if (stage >= 14) obstacles.push({ x: T.x1 + 6, z: T.z, r: 1.3 });
+  }
+  function buildGlory(on){
+    gloryObj = rm(gloryObj); if (!on) return;
+    const g = new THREE.Group(), cx = (TAB.x0 + TAB.x1) / 2;
+    for (let i = 0; i < 26; i++){ const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: 0xfdfbf2, transparent: true, opacity: 0.6, depthWrite: false }));
+      sp.position.set((Math.random() - 0.5) * 11, TAB.h + 1.2 + Math.random() * 2.2, (Math.random() - 0.5) * 5); const s = 2.4 + Math.random() * 2; sp.scale.set(s, s * 0.7, 1); sp.userData.ph = Math.random() * 6; g.add(sp); }
+    const L = new THREE.PointLight(0xfff0c0, 2.2, 16); L.position.set(0, TAB.h + 1, 0); g.add(L);
+    g.position.set(cx, heightAt(cx, TAB.z), TAB.z); zoneRoot.add(g); gloryObj = g;
+  }
+  function buildCh910(){
+    fx910.forEach(f => rm(f.o)); fx910 = [];
+    buildCalf(calfOn()); buildCloudTent(cloudTentOn()); setShine(ST.ch === 8 && ST.cleared);
+    tabStage = -1; buildTabernacle(tabFull() ? 16 : 0); buildGlory(tabFull());
+    if (tabFull()) buildArkAt(TAB.x0 + 1.2, TAB.z, Math.PI / 2); else if (arkWorkOn()) buildArkAt(...ARK_WORK, -0.6); else arkObj = rm(arkObj);
+  }
+  function updateCh910(dt, now){
+    if (!Z || Z.id !== 'sinai') return;
+    for (let i = fx910.length - 1; i >= 0; i--){ const f = fx910[i]; f.t += dt;
+      if (f.kind === 'fire'){ f.o.position.y += dt * 0.8; f.o.material.opacity = Math.max(0, 0.9 * (1 - f.t / f.life)); }
+      if (f.kind === 'shard'){ f.v.y -= 9 * dt; f.o.position.addScaledVector(f.v, dt); if (f.o.position.y < f.gy){ f.o.position.y = f.gy; f.v.set(0, 0, 0); } f.o.rotation.x += dt * 4; }
+      if (f.t >= f.life){ rm(f.o); fx910.splice(i, 1); } }
+    for (const G of [cloudTentObj, gloryObj]) if (G) G.children.forEach(sp => { if (sp.isSprite){ sp.material.opacity = 0.45 + Math.sin(now * 0.001 + sp.userData.ph) * 0.12; } });
+    if (shineObj) shineObj.material.opacity = 0.65 + Math.sin(now * 0.004) * 0.2;
+  }
+  // ── 9·10장 미니게임 ──
+  function hewGame(q){
+    mgOpen('🪨 돌판 둘 다듬기', `바늘이 <b>초록 칸</b>에 올 때 눌러 돌판을 다듬어요(4번).<br><span style="opacity:.75">"${HEW_TEXT}" (출애굽기 34:1)</span>`);
+    timingGame(4, () => setTimeout(() => { mgCloseAll(); completeTask(q); }, 700));
+  }
+  function offeringGame(q){
+    mgOpen('🎁 자원하는 예물', `공방 재료 가운데 <b>마음에 원하는 만큼</b> 예물로 드려요. 드리지 않아도 이야기는 이어져요.<br><span style="opacity:.75">"${OFFER_TEXT[0]}" (출애굽기 35:5)</span>`);
+    const given = {}; let total = 0;
+    const draw = () => {
+      const have = Object.entries(MATS).filter(([k]) => matN(k) > 0);
+      mgArea.innerHTML = have.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px">${have.map(([k, m]) => `<button data-offer="${k}" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(255,210,122,.45);background:rgba(255,255,255,.08);color:#f5e9d0;font-size:13px">${m.ico} ${m.n} <b>${matN(k)}</b>${given[k] ? ` · 드림 ${given[k]}` : ''}</button>`).join('')}</div>`
+        : `<div style="padding:14px;font-size:13px;opacity:.85">지금은 가진 재료가 없어요. 괜찮아요 — 이야기는 그대로 이어져요.</div>`;
+      mgStat.textContent = total ? `드린 예물 ${total}개` : '';
+    };
+    draw(); mgAct.textContent = '예물 드리기 마치기'; mgAct.disabled = false;
+    mgArea.onclick = e => { const b = e.target.closest('[data-offer]'); if (!b) return; const k = b.dataset.offer; if (matN(k) <= 0) return; ST.mat[k]--; given[k] = (given[k] || 0) + 1; total++; saveST(); draw(); };
+    mgAct.onclick = () => { mgArea.onclick = null; mgCloseAll();
+      if (total > 0){ toast(`🎁 예물 ${total}개를 드렸어요`, 2000); if (!ST.badges.includes('willing')){ ST.badges.push('willing'); saveST(); setTimeout(() => toast('🎁 배지 획득: 자원하는 마음', 2400), 900); } }
+      completeTask(q); };
+    mg.onClose = () => { mgArea.onclick = null; };
+  }
+  function erectGame(q){
+    mgOpen('⛺ 성막 세우기', `여호와께서 모세에게 명령하신 대로, <b>차례대로</b> 눌러 성막을 세워요.<br><span style="opacity:.75">"둘째 해 첫째 달 곧 그 달 초하루에 성막을 세우니라" (출애굽기 40:17)</span>`);
+    mgArea.style.height = 'auto';
+    const order = ERECT.map((t, i) => i).sort(() => Math.random() - 0.5);
+    let next = 0, miss = 0;
+    const draw = msg => {
+      mgArea.innerHTML = `<div style="text-align:center;font-weight:800;color:#ffd27a;font-size:13px;min-height:18px;padding:6px">${msg || (next < ERECT.length ? `${next + 1} / ${ERECT.length} — 무엇을 할 차례일까요?` : '')}</div>`
+        + `<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:4px 8px 10px;max-height:44vh;overflow:auto">${order.filter(i => i >= next).map(i => `<button data-er="${i}" style="padding:7px 6px;border-radius:9px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#f5e9d0;font-size:12px;text-align:left">${ERECT[i]}</button>`).join('')}</div>`;
+    };
+    draw(); mgAct.textContent = '다 세우면 계속'; mgAct.disabled = true;
+    mgArea.onclick = e => {
+      const b = e.target.closest('[data-er]'); if (!b) return;
+      const i = +b.dataset.er;
+      if (i === next){ next++; buildTabernacle(next);
+        if (next === 8) buildArkAt(TAB.x0 + 1.2, TAB.z, Math.PI / 2);
+        draw(next < ERECT.length ? `✓ ${ERECT[i]}` : '🎉 모세가 이같이 역사를 마치니 (출애굽기 40:33)');
+        if (next >= ERECT.length){ mgAct.disabled = false; if (miss <= 1 && !ST.badges.includes('as_commanded')){ ST.badges.push('as_commanded'); saveST(); setTimeout(() => toast('⛺ 배지 획득: 명령하신 대로', 2400), 600); } } }
+      else { miss++; b.style.background = 'rgba(224,115,90,.5)'; setTimeout(() => draw(`다시 생각해 봐요 — ${next + 1}번째는?`), 350); }
+    };
+    mgAct.onclick = () => { if (next < ERECT.length) return; mgArea.onclick = null; mgArea.style.height = ''; mgCloseAll(); completeTask(q); };
+    mg.onClose = () => { mgArea.onclick = null; mgArea.style.height = ''; };
   }
   // 손 들기(출 17:11-12): 누르고 있으면 이스라엘이 이기고 팔이 피곤해짐 → 한 번 지치면 돌 놓기 · 아론과 훌이 손 붙들기
   function handsGame(q){
@@ -7924,7 +8310,7 @@
       const score = isTarget ? d - 100 : ((m.data.gather || m.data.challenge) && d < 2.2 ? d - 50 : d);   // 반짝이 바로 위면 옆을 지나는 사람보다 먼저
       if (d < range && score < closestDist){ closestDist = score; closest = m; }
     });
-    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updateHomeBtn(); updateReplayBar(); updatePools(dt); updateQuail(dt); updateManna(); updateHidden(); hqRefresh(); updateBattle(now); updateStorm(dt, now); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
+    updateRoomVis(); updateLive(dt); updateScrolls(dt, now); updateSkillFx(dt); updateCineTriggers(); updateFriends(dt, now); updateBubbles(); updateHomeBtn(); updateReplayBar(); updatePools(dt); updateQuail(dt); updateManna(); updateHidden(); hqRefresh(); updateBattle(now); updateStorm(dt, now); updateCh910(dt, now); updatePillar(now); updateSea(dt, now); updateArmy(dt, now); updateCloud(now); updateDance(dt, now); updateBgm(dt); updateEquip(dt); updateFires(now); updateStraw(now); updateFrogs(dt); updateEvents(dt); updateFlies(dt, now); updateDust(dt); updateReach(); updateHerd(dt); updateHail(dt, now); updateLocusts(dt, now); updateDark(dt); updateWarn(dt); updateCompass(dt); updateSwirl(dt);
     if (closest !== nearPoint){
       nearPoint = closest;
       interactBtn.classList.toggle('hidden', !nearPoint);
@@ -7998,7 +8384,7 @@
   const loadingSub = document.getElementById('loading-sub');
   let loadedCount = 0; const bump = p => p.then(v => { loadedCount++; loadingSub.textContent = `불러오는 중... (${loadedCount}/3)`; return v; });
   // ?ch=2 : 2장부터 바로 시작(시연·확인용). 1장 스킬(지팡이)은 받은 것으로 처리
-  const JUMP_CH = +((location.search.match(/[?&]ch=(\d)/) || [])[1] || 0);
+  const JUMP_CH = +((location.search.match(/[?&]ch=(\d+)/) || [])[1] || 0);
   if (JUMP_CH >= 2 && CHAPTERS[JUMP_CH - 1] && ST.ch < JUMP_CH - 1){ ST.ch = JUMP_CH - 1; ST.step = 0; ST.cleared = false; STORY = CHAPTERS[ST.ch].steps; CHAPTER = CHAPTERS[ST.ch]; saveST(); if (!unlocked.has('staff')){ unlocked.add('staff'); try { localStorage.setItem(SAVE_KEY, JSON.stringify([...unlocked])); } catch (e){} renderSkills(); } }
   const START_ZONE = (location.search.match(/[?&]zone=(\w+)/) || [])[1] || (curStep() ? curStep().zone : 'egypt');
   Promise.all([bump(loadPlayer()), bump(loadZone(ZONES[START_ZONE] ? START_ZONE : 'alpha')), bump(Promise.resolve())]).then(() => {
@@ -8018,7 +8404,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
