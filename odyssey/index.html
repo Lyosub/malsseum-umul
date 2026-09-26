@@ -1981,7 +1981,7 @@
 
   function npcThink(m, dt, dPlayer){
     const A = m.ai, pos = m.mesh.position;
-    if (!A) return;
+    if (!A || m.follow) return;
     // 학생이 가까이 오거나 대화 중이면 멈추고 돌아봄
     if (talkingWith === m || dPlayer < 3.4){
       A.player = true;
@@ -2055,6 +2055,47 @@
         A.t -= dt; npcPlay(m, 'Idle', 0.4);
         if (A.t <= 0) decide(m);
     }
+  }
+
+  // ══ 🚶 함께 걷는 성경 인물: 이야기 단계에 follow가 있으면 그 인물들이 학생 뒤를 따라 걸어요 ══
+  let followKey = '';
+  function updateFollow(dt){
+    const q = curStep(), ids = (q && Z && q.zone === Z.id && q.follow) || [], key = ids.length ? q.id : '';
+    if (key !== followKey){
+      markers.forEach(m => { if (m.follow && !ids.includes(m.data.id)){ m.follow = false; const p = m.mesh.position;
+        if (m.ai){ m.ai.persona = { home: [p.x, p.z], range: 0, social: 0, like: {} }; m.ai.state = 'idle'; m.ai.path = []; m.ai.t = 1; } } });
+      if (ids.length){ const names = ids.map(id => (markers.find(m => m.data.id === id) || { data: {} }).data.title).filter(Boolean);
+        if (names.length) toast(`🚶 ${names.join('·')}${(() => { const c = names[names.length - 1].charCodeAt(names[names.length - 1].length - 1) - 0xac00; return c >= 0 && c < 11172 && c % 28 ? '이' : '가'; })()} 함께 걸어요`, 2400); }
+      followKey = key;
+    }
+    if (!ids.length) return;
+    const P = player.position, fx = Math.sin(heading), fz = -Math.cos(heading);
+    ids.forEach((id, k) => {
+      const m = markers.find(x => x.data.id === id); if (!m || m.hidden) return;
+      if (!m.follow){ m.follow = true; if (m.ai){ m.ai.state = 'idle'; m.ai.path = []; releasePOI(m); } }
+      const pos = m.mesh.position, back = 1.7 + (k ? 0.5 : 0), side = k === 0 ? 0 : (k === 1 ? -1.3 : 1.3);
+      const tx = P.x - fx * back - fz * side, tz = P.z - fz * back + fx * side;
+      const dx = tx - pos.x, dz = tz - pos.z, dist = Math.hypot(dx, dz), dP = Math.hypot(P.x - pos.x, P.z - pos.z);
+      if (dist > 16){ const [nx, nz] = NAV.walk ? nearestWalkable(tx, tz) : [tx, tz]; pos.set(nx, heightAt(nx, nz), nz); if (m.col){ m.col.x = nx; m.col.z = nz; } return; }
+      const acts = m.actions || {};
+      if (dlgState || dist < 0.45 || dP < 1.1){ npcPlay(m, talkingWith === m ? 'Talk' : 'Idle', 0.35); if (dP < 6) turnTo(m, angTo(m, P.x, P.z), dt, 5); return; }
+      // 길찾기: 0.7초마다 학생 뒤 자리까지 길을 다시 잡고, 그 길의 다음 지점으로 걸음
+      m.fpT = (m.fpT || 0) - dt;
+      if (m.fpT <= 0 || !m.fp || !m.fp.length){ m.fpT = 0.7; const [gx, gz] = NAV.walk && !walkable(tx, tz) ? nearestWalkable(tx, tz) : [tx, tz]; m.fp = findPath(pos.x, pos.z, gx, gz) || [[gx, gz]]; }
+      let wp = m.fp[0]; if (Math.hypot(wp[0] - pos.x, wp[1] - pos.z) < 0.3 && m.fp.length > 1){ m.fp.shift(); wp = m.fp[0]; }
+      const wx = wp[0] - pos.x, wz = wp[1] - pos.z, wd = Math.hypot(wx, wz) || 1e-3;
+      const run = dist > 4 && acts.Run, spd = run ? Math.min(6.5, 3 + dist * 0.5) : Math.min(3.4, 1.4 + dist * 0.8);
+      const step = Math.min(wd, spd * dt), nx = pos.x + wx / wd * step, nz = pos.z + wz / wd * step;
+      const ox = pos.x, oz = pos.z;
+      if (walkable(nx, nz) || !walkable(pos.x, pos.z)){ pos.x = nx; pos.z = nz; }
+      else { const t = { x: nx, z: nz }; resolveCollisions(t, pos.y); if (walkable(t.x, t.z)){ pos.x = t.x; pos.z = t.z; } }
+      // 오래 제자리면(좁은 틈 등) 학생 뒤로 옮겨 세움
+      m.fStuck = Math.hypot(pos.x - ox, pos.z - oz) < spd * dt * 0.2 ? (m.fStuck || 0) + dt : 0;
+      if (m.fStuck > 1.5){ m.fStuck = 0; const [sx, sz] = NAV.walk ? nearestWalkable(tx, tz) : [tx, tz]; pos.x = sx; pos.z = sz; m.fp = null; }
+      pos.y = heightAt(pos.x, pos.z); if (m.col){ m.col.x = pos.x; m.col.z = pos.z; }
+      npcPlay(m, run ? 'Run' : (acts.Walk ? 'Walk' : 'Idle'), 0.3);
+      turnTo(m, Math.atan2(wx, wz), dt, 7);
+    });
   }
 
   // ══ 마을 불러오기 / 비우기 / 이동 ══════════════════════════════════
@@ -3555,8 +3596,8 @@
     { id: 'c6s4',  zone: 'rephidim', obj: '모세에게 가기', where: '진영 가운데', npc: 'moses', dlg: 'c6_cry' },
     { id: 'c6s5',  zone: 'rephidim', obj: '장로들과 함께 호렙 반석으로 가서 「지팡이 들기」 쓰기', where: '진영 북서쪽의 큰 반석 — 오른쪽 ✨ 스킬 → 🦯 지팡이', skillAt: 'horeb_rock', doneDlg: 'c6_water', place: { moses: [-15, -9], rp_elder: [-12, -7] }, reward: { verse: 'ex17-6' } },
     { id: 'c6s6',  zone: 'rephidim', obj: '아말렉이 쳐들어왔어요 — 모세에게 가기', where: '반석 옆의 모세', npc: 'moses', dlg: 'c6_amalek' },
-    { id: 'c6s7',  zone: 'rephidim', obj: '모세·아론·훌과 함께 산 꼭대기로 올라가기', where: '진영 동쪽 바위 언덕 위', reach: { near: [26, -16], r: 5 }, doneDlg: 'c6_hilltop', place: { moses: [26, -17.5], aaron: [24, -16.5], hur: [28, -16.5] } },
-    { id: 'c6s8',  zone: 'rephidim', obj: '모세 곁에서 함께 손을 들기', where: '산 꼭대기의 모세 곁(빛나는 곳)', point: 'hands_spot', game: 'hands', doneDlg: 'c6_victory', reward: { verse: ['ex17-11', 'ex17-12'] } },
+    { id: 'c6s7',  zone: 'rephidim', obj: '모세·아론·훌과 함께 산 꼭대기로 올라가기', where: '진영 동쪽 바위 언덕 위', reach: { near: [26, -16], r: 5 }, doneDlg: 'c6_hilltop', follow: ['moses', 'aaron', 'hur'] },
+    { id: 'c6s8',  zone: 'rephidim', obj: '모세 곁에서 함께 손을 들기', where: '산 꼭대기의 모세 곁(빛나는 곳)', point: 'hands_spot', game: 'hands', doneDlg: 'c6_victory', place: { moses: [26, -17.5], aaron: [24, -16.5], hur: [28, -16.5] }, reward: { verse: ['ex17-11', 'ex17-12'] } },
     { id: 'c6s9',  zone: 'rephidim', obj: '여호수아에게 가기', where: '산 아래 싸움터', npc: 'joshua', dlg: 'c6_joshua', place: { joshua: [18, -4] } },
     { id: 'c6s10', zone: 'rephidim', obj: '모세가 쌓은 제단 앞에 서기 — 여호와 닛시', where: '산 아래의 돌 제단', point: 'altar_nissi', dlg: 'c6_nissi', reward: { verse: 'ex17-15', clear: true } },
   ];
@@ -3786,7 +3827,7 @@
     { id: 'c9s3', zone: 'sinai', obj: '아론에게 가기', where: '진영 가운데의 아론', npc: 'aaron', dlg: 'c9_calf' },
     { id: 'c9s4', zone: 'sinai', obj: '이튿날 — 송아지 앞에 가 보기', where: '진영 남쪽의 금송아지(빛나는 곳)', point: 'calf_spot', dlg: 'c9_feast' },
     { id: 'c9s5', zone: 'sinai', obj: '산에서 내려오는 모세와 여호수아에게 가기', where: '산기슭', npc: 'joshua9', dlg: 'c9_down', place: { moses: [2, -21], joshua9: [4.5, -20] } },
-    { id: 'c9s6', zone: 'sinai', obj: '송아지 앞의 모세에게 가기', where: '금송아지 앞(빛나는 곳)', point: 'calf_spot', dlg: 'c9_burn', place: { moses: [-1.5, -2.5], aaron: [-6.5, -2.5] } },
+    { id: 'c9s6', zone: 'sinai', obj: '송아지 앞의 모세에게 가기', where: '금송아지 앞(빛나는 곳)', point: 'calf_spot', dlg: 'c9_burn', follow: ['moses'], place: { aaron: [-6.5, -2.5] } },
     { id: 'c9s7', zone: 'sinai', obj: '진 문에 선 모세에게 가기', where: '진영 북쪽 입구(빛나는 곳)', point: 'camp_gate', dlg: 'c9_side', place: { moses: [-8, 17] }, reward: { verse: 'ex32-26' } },
     { id: 'c9s8', zone: 'sinai', obj: '진 밖의 회막으로 가기', where: '진영 서쪽 멀리 떨어진 장막', point: 'tent_meeting', dlg: 'c9_tent', place: { moses: [-26.5, -10.5] }, reward: { verse: 'ex33-11' } },
     { id: 'c9s9', zone: 'sinai', obj: '모세와 함께 돌판 둘을 다듬기', where: '산기슭의 모세', npc: 'moses', game: 'hew', place: { moses: [0, -21] }, doneDlg: 'c9_new', reward: { verse: 'ex34-6', clear: true } },
@@ -8697,6 +8738,7 @@
 
     // 근접 포인트 체크
     const now = performance.now();
+    try { updateFollow(dt); } catch (e){}
     let closest = null, closestDist = Infinity;
     camera.updateMatrixWorld(); _projM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse); _frustum.setFromProjectionMatrix(_projM);
     markers.forEach(m=>{
@@ -8840,7 +8882,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { openLinks, LINKS, get links(){ return ST.links || []; }, openRecap, openExhibit, openJourney, maybeRecap, get exhibit(){ return exhibitObj ? exhibitObj.children.length : 0; }, starsLeft, spendStars, retryQuiz, openLibrary, renderLibrary, TITLES, SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { updateFollow, get followers(){ return markers.filter(m => m.follow).map(m => m.data.id + '@' + m.mesh.position.x.toFixed(1) + ',' + m.mesh.position.z.toFixed(1)).join(' '); }, openLinks, LINKS, get links(){ return ST.links || []; }, openRecap, openExhibit, openJourney, maybeRecap, get exhibit(){ return exhibitObj ? exhibitObj.children.length : 0; }, starsLeft, spendStars, retryQuiz, openLibrary, renderLibrary, TITLES, SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
