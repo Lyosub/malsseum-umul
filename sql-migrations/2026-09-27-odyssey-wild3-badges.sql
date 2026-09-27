@@ -1,4 +1,4 @@
--- In Odyssey 2편 새 배지 2개 + 3편 배지 2개(젖과 꿀을 본 사람 · 갈렙과 함께 선 사람, 2026-09-27 추가): 거룩한 백성(밭 모퉁이 남기기를 한 번에) · 나팔 소리를 따르는 사람(은 나팔 신호를 한 번도 안 틀림)
+-- In Odyssey 2편 새 배지 2개 + 3편 배지 5개(젖과 꿀을 본 사람 · 갈렙과 함께 선 사람 · 쳐다본 사람 · 도피성에 닿은 사람 · 들으라 이스라엘, 2026-09-27 추가): 거룩한 백성(밭 모퉁이 남기기를 한 번에) · 나팔 소리를 따르는 사람(은 나팔 신호를 한 번도 안 틀림)
 -- 라이브 함수(29개 키)를 그대로 두고 끝에 두 개만 덧붙인다 — 기존 키의 순서(=ref_date)는 바뀌지 않는다. 여러 번 실행해도 같다.
 create or replace function public.claim_odyssey_achieve(p_key text)
 returns integer language plpgsql security definer set search_path = public as $$
@@ -13,7 +13,8 @@ declare v_idx int; v_pts int; v_n integer;
                        'badge-side_all',
                        'badge-links_all','badge-wild_runner',
                        'badge-holy_people','badge-trumpet_follow',
-                       'badge-grape_carry','badge-with_caleb'];
+                       'badge-grape_carry','badge-with_caleb',
+                       'badge-looked_up','badge-refuge_run','badge-hear_israel'];
 begin
   if auth.uid() is null or not public.can_see_odyssey() then return 0; end if;
   v_idx := array_position(keys, p_key);

@@ -1,4 +1,4 @@
-// 3편 「광야 40년」 — 민수기 10:29–36장 + 신명기. 지금은 1~5장(민 10:29–14:34, 바란 광야 가데스)까지.
+// 3편 「광야 40년」 — 민수기 10:29–36장 + 신명기. 1~10장은 바란 광야 가데스, 11~16장은 모압 평지(2026-09-27 전체 16장).
 // 대사 원칙: 성경 인물은 개역개정에 있는 자기 말만, 해설은 원문 + (출처). 2026-09-27 bskorea 원문 대조.
 // 표현: 2026-09-27 전도사님 "절제 안해도 될 것 같아" — 장면은 보여 주되 피·잔혹한 묘사는 넣지 않는다.
 // 새 인물(갈렙·호밥 등)은 GPT/Meshy 모델이 오기 전까지 이미 있는 모델을 쓴다.
@@ -13,7 +13,7 @@
   Object.assign(CONDS, {
     w3On: () => !!cur(), w3c0: at(0), w3c1: at(1), w3c3: at(3), w3c34: () => { const p = cur(); return !!p && (p.ch === 3 || p.ch === 4); },
     w3from3: from(3), w3joshua: from(1),
-    w3miriam: () => { const p = cur(); return !!p && !(p.ch === 2 && p.step >= 2 && p.step <= 3); },
+    w3miriam: () => { const p = cur(); return !!p && p.ch < 7 && !(p.ch === 2 && p.step >= 2 && p.step <= 3); },
     w3miriamOut: at(2, 2, 3), w3outside: at(2, 3, 3),
   });
   const Z3 = ZONES.kadesh.points;
@@ -29,6 +29,42 @@
   Z3.push({ id: 'kd_eshcol', x: ESHCOL[0], z: ESHCOL[1], type: 'lore', title: '에스골 골짜기로 가는 길', cond: 'w3c3', body: '' });
   Z3.push({ id: 'kd_meet', x: MEET[0], z: MEET[1], type: 'lore', title: '회중이 모인 곳', cond: 'w3c34', body: '' });
   Z3.push({ id: 'kd_caleb', x: 3.5, z: 1, type: 'villager', title: '갈렙', model: 'he-father', persona: 'rs_static', cond: 'w3from3', body: '' });
+  const KCRACK = [-24, 16], GRAVE = [-28, -18], ROCK = [-16, -30], HOR = [20, 28], ARAD = [-4, 30], EDOM = [34, -18], POLE = [6, -2];
+  Object.assign(CONDS, {
+    w3c5: at(5), w3c7: at(7), w3c8: at(8), w3c9: at(9), w3c10: at(10),
+    w3korah: () => { const p = cur(); return !!p && p.ch === 5 && p.step <= 1; },
+    w3aaron: () => { const p = cur(); return !p || !(p.ch > 7 || (p.ch === 7 && p.step >= 5)); },
+    w3eleazar: () => { const p = cur(); return !!p && (p.ch > 7 || (p.ch === 7 && p.step >= 5)); },
+  });
+  // 8장 호르 산 뒤로 아론은 보이지 않고, 엘르아살이 아론의 옷을 입고 선다(민 20:28)
+  const aaronPt = Z3.find(x => x.id === 'aaron'); if (aaronPt) aaronPt.cond = 'w3aaron';
+  Z3.push({ id: 'kd_korah', x: KCRACK[0] + 3, z: KCRACK[1] - 3, type: 'villager', title: '고라', model: 'he-levite', persona: 'rs_static', cond: 'w3korah', body: '' });
+  Z3.push({ id: 'kd_dathan', x: KCRACK[0] - 2.5, z: KCRACK[1] - 3.5, type: 'villager', title: '다단과 아비람', model: 'he-father', persona: 'rs_static', cond: 'w3korah', body: '' });
+  Z3.push({ id: 'kd_tents', x: KCRACK[0], z: KCRACK[1] - 1.5, type: 'lore', title: '고라와 다단과 아비람의 장막', cond: 'w3c5', body: '' });
+  Z3.push({ id: 'kd_grave', x: GRAVE[0], z: GRAVE[1], type: 'lore', title: '가데스', cond: 'w3c7', body: '' });
+  Z3.push({ id: 'kd_rock', x: ROCK[0] + 2.2, z: ROCK[1] + 2.2, type: 'lore', title: '반석', cond: 'w3c7', body: '' });
+  Z3.push({ id: 'kd_hor', x: HOR[0], z: HOR[1], type: 'lore', title: '호르 산', cond: 'w3c7', body: '' });
+  Z3.push({ id: 'kd_eleazar', x: 15, z: -18, type: 'villager', title: '대제사장 엘르아살', model: 'he-levite', persona: 'rs_static', cond: 'w3eleazar', body: '' });
+  Z3.push({ id: 'kd_arad', x: ARAD[0], z: ARAD[1], type: 'lore', title: '네겝으로 가는 길', cond: 'w3c8', body: '' });
+  Z3.push({ id: 'kd_edom', x: EDOM[0], z: EDOM[1], type: 'lore', title: '에돔 땅을 우회하는 길', cond: 'w3c9', body: '' });
+  Z3.push({ id: 'kd_pole', x: POLE[0], z: POLE[1], type: 'lore', title: '장대를 세울 곳', cond: 'w3c9', body: '' });
+  // 모압 평지(11~16장)
+  const ZM = ZONES.moab.points, MDOOR = [13.4, -15], REFUGE = [-28, 30], NEBO = [18, 27];
+  const mAt = (a, b = a) => () => { const p = cur(); return !!p && p.ch >= a && p.ch <= b; };
+  Object.assign(CONDS, { w3m10: mAt(10), w3m11: mAt(11), w3m12: mAt(12), w3m13: mAt(13), w3m14: mAt(14), w3m15: mAt(15), w3mAll: mAt(10, 15) });
+  ZM.push({ id: 'mb_door', x: MDOOR[0], z: MDOOR[1], type: 'lore', title: '회막 문', cond: 'w3mAll', body: '' });
+  ZM.push({ id: 'mb_joshua', x: 18.5, z: -10, type: 'villager', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'w3mAll', body: '' });
+  ZM.push({ id: 'mb_eleazar', x: 15, z: -18, type: 'villager', title: '대제사장 엘르아살', model: 'he-levite', persona: 'rs_static', cond: 'w3mAll', body: '' });
+  ZM.push({ id: 'mb_road', x: 30, z: 14, type: 'lore', title: '왕의 큰길', cond: 'w3m10', body: '' });
+  ZM.push({ id: 'mb_battle', x: 33, z: -26, type: 'lore', title: '야하스로 가는 길', cond: 'w3m10', body: '' });
+  ZM.push({ id: 'mb_balak', x: -20, z: 24, type: 'villager', title: '모압 왕 발락', model: 'eg-merchant-eg', persona: 'rs_static', cond: 'w3m11', body: '' });
+  ZM.push({ id: 'mb_balaam', x: -24, z: 26, type: 'villager', title: '발람', model: 'pal-magician-2', persona: 'rs_static', cond: 'w3m11', body: '' });
+  ZM.push({ id: 'mb_path', x: -26, z: -30, type: 'lore', title: '포도원 사이 좁은 길', cond: 'w3m11', body: '' });
+  ZM.push({ id: 'mb_high', x: -18, z: 29, type: 'lore', title: '이스라엘 진영이 내려다보이는 곳', cond: 'w3m11', body: '' });
+  ZM.push({ id: 'mb_daughters', x: 20, z: -7, type: 'villager', title: '슬로브핫의 딸들', model: 'he-girl-hb', persona: 'rs_static', cond: 'w3m12', body: '' });
+  ZM.push({ id: 'mb_refuge', x: REFUGE[0] + 3, z: REFUGE[1] - 3, type: 'lore', title: '도피성 성문', cond: 'w3m13', body: '' });
+  ZM.push({ id: 'mb_camp', x: 0, z: 4, type: 'lore', title: '온 이스라엘이 모인 곳', cond: 'w3m14', body: '' });
+  ZM.push({ id: 'mb_nebo', x: NEBO[0], z: NEBO[1], type: 'lore', title: '느보 산 오르는 길', cond: 'w3m15', body: '' });
   Z3.push({ id: 'kd_scouts', x: -4.5, z: 2.5, type: 'villager', title: '열 정탐꾼', model: 'ca-craftsman', persona: 'rs_static', cond: 'w3c34', body: '' });
 
   Object.assign(VERSES, {
@@ -39,6 +75,332 @@
     'nu14-9': { ref: '민수기 14:9', text: '다만 여호와를 거역하지는 말라 또 그 땅 백성을 두려워하지 말라 그들은 우리의 먹이라 그들의 보호자는 그들에게서 떠났고 여호와는 우리와 함께 하시느니라 그들을 두려워하지 말라 하나' },
   });
 
+  Object.assign(VERSES, {
+    'nu16-48': { ref: '민수기 16:48', text: '죽은 자와 산 자 사이에 섰을 때에 염병이 그치니라' },
+    'nu17-8': { ref: '민수기 17:8', text: '이튿날 모세가 증거의 장막에 들어가 본즉 레위 집을 위하여 낸 아론의 지팡이에 움이 돋고 순이 나고 꽃이 피어서 살구 열매가 열렸더라' },
+    'nu20-12': { ref: '민수기 20:12', text: '여호와께서 모세와 아론에게 이르시되 너희가 나를 믿지 아니하고 이스라엘 자손의 목전에서 내 거룩함을 나타내지 아니한 고로 너희는 이 회중을 내가 그들에게 준 땅으로 인도하여 들이지 못하리라 하시니라' },
+    'nu21-3': { ref: '민수기 21:3', text: '여호와께서 이스라엘의 목소리를 들으시고 가나안 사람을 그들의 손에 넘기시매 그들과 그들의 성읍을 다 멸하니라 그러므로 그 곳 이름을 호르마라 하였더라' },
+    'nu21-8': { ref: '민수기 21:8', text: '여호와께서 모세에게 이르시되 불뱀을 만들어 장대 위에 매달아라 물린 자마다 그것을 보면 살리라' },
+    'nu21-34': { ref: '민수기 21:34', text: '여호와께서 모세에게 이르시되 그를 두려워하지 말라 내가 그와 그의 백성과 그의 땅을 네 손에 넘겼나니 너는 헤스본에 거주하던 아모리인의 왕 시혼에게 행한 것 같이 그에게도 행할지니라' },
+    'nu23-19': { ref: '민수기 23:19', text: '하나님은 사람이 아니시니 거짓말을 하지 않으시고 인생이 아니시니 후회가 없으시도다 어찌 그 말씀하신 바를 행하지 않으시며 하신 말씀을 실행하지 않으시랴' },
+    'nu27-7': { ref: '민수기 27:7', text: '슬로브핫 딸들의 말이 옳으니 너는 반드시 그들의 아버지의 형제 중에서 그들에게 기업을 주어 받게 하되 그들의 아버지의 기업을 그들에게 돌릴지니라' },
+    'nu35-11': { ref: '민수기 35:11', text: '너희를 위하여 성읍을 도피성으로 정하여 부지중에 살인한 자가 그리로 피하게 하라' },
+    'de6-5': { ref: '신명기 6:5', text: '너는 마음을 다하고 뜻을 다하고 힘을 다하여 네 하나님 여호와를 사랑하라' },
+    'de8-3': { ref: '신명기 8:3', text: '너를 낮추시며 너를 주리게 하시며 또 너도 알지 못하며 네 조상들도 알지 못하던 만나를 네게 먹이신 것은 사람이 떡으로만 사는 것이 아니요 여호와의 입에서 나오는 모든 말씀으로 사는 줄을 네가 알게 하려 하심이니라' },
+    'de31-8': { ref: '신명기 31:8', text: '그리하면 여호와 그가 네 앞에서 가시며 너와 함께 하사 너를 떠나지 아니하시며 버리지 아니하시리니 너는 두려워하지 말라 놀라지 말라' },
+  });
+  const ISRAEL = { n: '이스라엘' }, ENVOY = { n: '이스라엘의 사신' }, BALAK = { n: '발락' }, BALAAM = { n: '발람' }, DONKEY = { n: '나귀' },
+    ANGEL = { n: '여호와의 사자' }, DAUGHTERS = { n: '슬로브핫의 딸들' };
+  Object.assign(DLG, {
+    // 6장
+    w3_korah: [
+      [NAR, '레위의 증손 고핫의 손자 이스할의 아들 고라와 르우벤 자손 엘리압의 아들 다단과 아비람과 벨렛의 아들 온이 당을 짓고 (민 16:1)'],
+      [NAR, '이스라엘 자손 총회에서 택함을 받은 자 곧 회중 가운데에서 이름 있는 지휘관 이백오십 명과 함께 일어나서 모세를 거스르니라 (민 16:2)'],
+      [NAR, '그들이 모여서 모세와 아론을 거슬러 그들에게 이르되 너희가 분수에 지나도다 회중이 다 각각 거룩하고 여호와께서도 그들 중에 계시거늘 너희가 어찌하여 여호와의 총회 위에 스스로 높이느냐 (민 16:3)'],
+      [NAR, '모세가 듣고 엎드렸다가 (민 16:4)'],
+      [NAR, '고라와 그의 모든 무리에게 말하여 이르되 (민 16:5)'],
+      [MOSES, '아침에 여호와께서 자기에게 속한 자가 누구인지, 거룩한 자가 누구인지 보이시고 그 사람을 자기에게 가까이 나아오게 하시되 곧 그가 택하신 자를 자기에게 가까이 나아오게 하시리니'],
+      [MOSES, '이렇게 하라 너 고라와 네 모든 무리는 향로를 가져다가'],
+      [MOSES, '내일 여호와 앞에서 그 향로에 불을 담고 그 위에 향을 두라 그 때에 여호와께서 택하신 자는 거룩하게 되리라 레위 자손들아 너희가 너무 분수에 지나치느니라'],
+      [NAR, '▶ 고라와 다단과 아비람의 장막 쪽으로 가요.'],
+    ],
+    w3_ground: [
+      [NAR, '모세가 이르되 (민 16:28)'],
+      [MOSES, '여호와께서 나를 보내사 이 모든 일을 행하게 하신 것이요 나의 임의로 함이 아닌 줄을 이 일로 말미암아 알리라'],
+      [MOSES, '곧 이 사람들의 죽음이 모든 사람과 같고 그들이 당하는 벌이 모든 사람이 당하는 벌과 같으면 여호와께서 나를 보내심이 아니거니와'],
+      [MOSES, '만일 여호와께서 새 일을 행하사 땅이 입을 열어 이 사람들과 그들의 모든 소유물을 삼켜 산 채로 스올에 빠지게 하시면 이 사람들이 과연 여호와를 멸시한 것인 줄을 너희가 알리라'],
+      [NAR, '그가 이 모든 말을 마치자마자 그들이 섰던 땅바닥이 갈라지니라 (민 16:31)'],
+      { event: 'earthSplit' },
+      [NAR, '땅이 그 입을 열어 그들과 그들의 집과 고라에게 속한 모든 사람과 그들의 재물을 삼키매 (민 16:32)'],
+      [NAR, '그들과 그의 모든 재물이 산 채로 스올에 빠지며 땅이 그 위에 덮이니 그들이 회중 가운데서 망하니라 (민 16:33)'],
+      [NAR, '그 주위에 있는 온 이스라엘이 그들의 부르짖음을 듣고 도망하며 이르되 땅이 우리도 삼킬까 두렵다 하였고 (민 16:34)'],
+      [NAR, '여호와께로부터 불이 나와서 분향하는 이백오십 명을 불살랐더라 (민 16:35)'],
+    ],
+    w3_plague: [
+      [NAR, '이튿날 이스라엘 자손의 온 회중이 모세와 아론을 원망하여 이르되 너희가 여호와의 백성을 죽였도다 하고 (민 16:41)'],
+      [NAR, '회중이 모여 모세와 아론을 칠 때에 회막을 바라본즉 구름이 회막을 덮었고 여호와의 영광이 나타났더라 (민 16:42)'],
+      [NAR, '모세와 아론이 회막 앞에 이르매 (민 16:43)'],
+      [NAR, '여호와께서 모세에게 말씀하여 이르시되 (민 16:44)'],
+      [NAR, '너희는 이 회중에게서 떠나라 내가 순식간에 그들을 멸하려 하노라 하시매 그 두 사람이 엎드리니라 (민 16:45)'],
+      [NAR, '이에 모세가 아론에게 이르되 (민 16:46)'],
+      [MOSES, '너는 향로를 가져다가 제단의 불을 그것에 담고 그 위에 향을 피워 가지고 급히 회중에게로 가서 그들을 위하여 속죄하라 여호와께서 진노하셨으므로 염병이 시작되었음이니라'],
+      [NAR, '▶ 향로를 든 아론이 달려갈 수 있게 함께 달려요.'],
+    ],
+    w3_between: [
+      [NAR, '아론이 모세의 명령을 따라 향로를 가지고 회중에게로 달려간즉 백성 중에 염병이 시작되었는지라 이에 백성을 위하여 속죄하고 (민 16:47)'],
+      [NAR, '죽은 자와 산 자 사이에 섰을 때에 염병이 그치니라 (민 16:48)'],
+      [NAR, '고라의 일로 죽은 자 외에 염병에 죽은 자가 만 사천칠백 명이었더라 (민 16:49)'],
+      [NAR, '염병이 그치매 아론이 회막 문 모세에게로 돌아오니라 (민 16:50)'],
+    ],
+    // 7장
+    w3_staffs: [
+      [NAR, '여호와께서 모세에게 말씀하여 이르시되 (민 17:1)'],
+      [NAR, '너는 이스라엘 자손에게 말하여 그들 중에서 각 조상의 가문을 따라 지팡이 하나씩을 취하되 곧 그들의 조상의 가문대로 그 모든 지휘관에게서 지팡이 열둘을 취하고 그 사람들의 이름을 각각 그 지팡이에 쓰되 (민 17:2)'],
+      [NAR, '레위의 지팡이에는 아론의 이름을 쓰라 이는 그들의 조상의 가문의 각 수령이 지팡이 하나씩 있어야 할 것임이니라 (민 17:3)'],
+      [NAR, '그 지팡이를 회막 안에서 내가 너희와 만나는 곳인 증거궤 앞에 두라 (민 17:4)'],
+      [NAR, '내가 택한 자의 지팡이에는 싹이 나리니 이것으로 이스라엘 자손이 너희에게 대하여 원망하는 말을 내 앞에서 그치게 하리라 (민 17:5)'],
+      [NAR, '모세가 이스라엘 자손에게 말하매 그들의 지휘관들이 각 지파대로 지팡이 하나씩을 그에게 주었으니 그 지팡이가 모두 열둘이라 그 중에 아론의 지팡이가 있었더라 (민 17:6)'],
+      [NAR, '모세가 그 지팡이들을 증거의 장막 안 여호와 앞에 두었더라 (민 17:7)'],
+      [NAR, '▶ 이튿날, 회막 문으로 가요.'],
+    ],
+    w3_budded: [
+      [NAR, '이튿날 모세가 증거의 장막에 들어가 본즉 레위 집을 위하여 낸 아론의 지팡이에 움이 돋고 순이 나고 꽃이 피어서 살구 열매가 열렸더라 (민 17:8)'],
+      [NAR, '모세가 그 지팡이 전부를 여호와 앞에서 이스라엘 모든 자손에게로 가져오매 그들이 보고 각각 자기 지팡이를 집어들었더라 (민 17:9)'],
+    ],
+    w3_keep: [
+      [NAR, '여호와께서 또 모세에게 이르시되 아론의 지팡이는 증거궤 앞으로 도로 가져다가 거기 간직하여 반역한 자에 대한 표징이 되게 하여 그들로 내게 대한 원망을 그치고 죽지 않게 할지니라 (민 17:10)'],
+      [NAR, '모세가 곧 그 같이 하되 여호와께서 자기에게 명령하신 대로 하였더라 (민 17:11)'],
+    ],
+    // 8장
+    w3_miriam_death: [
+      [NAR, '첫째 달에 이스라엘 자손 곧 온 회중이 신 광야에 이르러 백성이 가데스에 머물더니 미리암이 거기서 죽으매 거기에 장사되니라 (민 20:1)'],
+    ],
+    w3_nowater: [
+      [NAR, '회중이 물이 없으므로 모세와 아론에게로 모여드니라 (민 20:2)'],
+      [NAR, '백성이 모세와 다투어 말하여 이르되 (민 20:3)'],
+      [CROWD, '우리 형제들이 여호와 앞에서 죽을 때에 우리도 죽었더라면 좋을 뻔하였도다'],
+      [CROWD, '너희가 어찌하여 여호와의 회중을 이 광야로 인도하여 우리와 우리 짐승이 다 여기서 죽게 하느냐'],
+      [CROWD, '너희가 어찌하여 우리를 애굽에서 나오게 하여 이 나쁜 곳으로 인도하였느냐 이 곳에는 파종할 곳이 없고 무화과도 없고 포도도 없고 석류도 없고 마실 물도 없도다'],
+      [NAR, '모세와 아론이 회중 앞을 떠나 회막 문에 이르러 엎드리매 여호와의 영광이 그들에게 나타나며 (민 20:6)'],
+      [NAR, '여호와께서 모세에게 말씀하여 이르시되 (민 20:7)'],
+      [NAR, '지팡이를 가지고 네 형 아론과 함께 회중을 모으고 그들의 목전에서 너희는 반석에게 명령하여 물을 내라 하라 네가 그 반석이 물을 내게 하여 회중과 그들의 짐승에게 마시게 할지니라 (민 20:8)'],
+      [NAR, '모세가 그 명령대로 여호와 앞에서 지팡이를 잡으니라 (민 20:9)'],
+      [NAR, '▶ 진영 북쪽의 반석으로 가요.'],
+    ],
+    w3_strike: [
+      [NAR, '모세와 아론이 회중을 그 반석 앞에 모으고 모세가 그들에게 이르되 (민 20:10)'],
+      [MOSES, '반역한 너희여 들으라 우리가 너희를 위하여 이 반석에서 물을 내랴'],
+      { event: 'rockStrike' },
+      [NAR, '모세가 그의 손을 들어 그의 지팡이로 반석을 두 번 치니 물이 많이 솟아나오므로 회중과 그들의 짐승이 마시니라 (민 20:11)'],
+      [NAR, '여호와께서 모세와 아론에게 이르시되 너희가 나를 믿지 아니하고 이스라엘 자손의 목전에서 내 거룩함을 나타내지 아니한 고로 너희는 이 회중을 내가 그들에게 준 땅으로 인도하여 들이지 못하리라 하시니라 (민 20:12)'],
+      [NAR, '이스라엘 자손이 여호와와 다투었으므로 이를 므리바 물이라 하니라 여호와께서 그들 중에서 그 거룩함을 나타내셨더라 (민 20:13)'],
+    ],
+    w3_hor: [
+      [NAR, '모세가 가데스에서 에돔 왕에게 사신을 보내며 이르되 당신의 형제 이스라엘의 말에 우리가 당한 모든 고난을 당신도 아시거니와 (민 20:14)'],
+      [NAR, '청하건대 우리에게 당신의 땅을 지나가게 하소서 우리가 밭으로나 포도원으로 지나가지 아니하고 우물물도 마시지 아니하고 왕의 큰길로만 지나가고 당신의 지경에서 나가기까지 왼쪽으로나 오른쪽으로나 치우치지 아니하리이다 한다고 하라 하였더니 (민 20:17)'],
+      [NAR, '에돔 왕이 이같이 이스라엘이 그의 영토로 지나감을 용납하지 아니하므로 이스라엘이 그들에게서 돌이키니라 (민 20:21)'],
+      [NAR, '이스라엘 자손 곧 온 회중이 가데스를 떠나 호르 산에 이르렀더니 (민 20:22)'],
+      [NAR, '여호와께서 에돔 땅 변경 호르 산에서 모세와 아론에게 말씀하시니라 이르시되 (민 20:23)'],
+      [NAR, '아론은 그 조상들에게로 돌아가고 내가 이스라엘 자손에게 준 땅에는 들어가지 못하리니 이는 너희가 므리바 물에서 내 말을 거역한 까닭이니라 (민 20:24)'],
+      [NAR, '너는 아론과 그의 아들 엘르아살을 데리고 호르 산에 올라 (민 20:25)'],
+      [NAR, '아론의 옷을 벗겨 그의 아들 엘르아살에게 입히라 아론은 거기서 죽어 그 조상에게로 돌아가리라 (민 20:26)'],
+      [NAR, '모세가 여호와의 명령을 따라 그들과 함께 회중의 목전에서 호르 산에 오르니라 (민 20:27)'],
+      { event: 'horClimb' },
+      [NAR, '모세가 아론의 옷을 벗겨 그의 아들 엘르아살에게 입히매 아론이 그 산 꼭대기에서 죽으니라 모세와 엘르아살이 산에서 내려오니 (민 20:28)'],
+      [NAR, '온 회중 곧 이스라엘 온 족속이 아론이 죽은 것을 보고 그를 위하여 삼십 일 동안 애곡하였더라 (민 20:29)'],
+    ],
+    // 9장
+    w3_arad_news: [
+      [NAR, '네겝에 거주하는 가나안 사람 곧 아랏의 왕이 이스라엘이 아다림 길로 온다 함을 듣고 이스라엘을 쳐서 그 중 몇 사람을 사로잡은지라 (민 21:1)'],
+      [NAR, '▶ 진영 남쪽, 네겝으로 가는 길로 가요.'],
+    ],
+    w3_arad: [
+      [NAR, '이스라엘이 여호와께 서원하여 이르되 (민 21:2)'],
+      [ISRAEL, '주께서 만일 이 백성을 내 손에 넘기시면 내가 그들의 성읍을 다 멸하리이다'],
+      { event: 'battleFar' },
+      [NAR, '여호와께서 이스라엘의 목소리를 들으시고 가나안 사람을 그들의 손에 넘기시매 그들과 그들의 성읍을 다 멸하니라 그러므로 그 곳 이름을 호르마라 하였더라 (민 21:3)'],
+    ],
+    // 10장
+    w3_road: [
+      [NAR, '백성이 호르 산에서 출발하여 홍해 길을 따라 에돔 땅을 우회하려 하였다가 길로 말미암아 백성의 마음이 상하니라 (민 21:4)'],
+      [NAR, '백성이 하나님과 모세를 향하여 원망하되 (민 21:5)'],
+      [PEOPLE, '어찌하여 우리를 애굽에서 인도해 내어 이 광야에서 죽게 하는가 이 곳에는 먹을 것도 없고 물도 없도다 우리 마음이 이 하찮은 음식을 싫어하노라'],
+      { event: 'serpents' },
+      [NAR, '여호와께서 불뱀들을 백성 중에 보내어 백성을 물게 하시므로 이스라엘 백성 중에 죽은 자가 많은지라 (민 21:6)'],
+      [NAR, '▶ 모세에게 가요.'],
+    ],
+    w3_pray: [
+      [NAR, '백성이 모세에게 이르러 말하되 (민 21:7)'],
+      [PEOPLE, '우리가 여호와와 당신을 향하여 원망함으로 범죄하였사오니 여호와께 기도하여 이 뱀들을 우리에게서 떠나게 하소서'],
+      [NAR, '모세가 백성을 위하여 기도하매 (민 21:7)'],
+      [NAR, '여호와께서 모세에게 이르시되 불뱀을 만들어 장대 위에 매달아라 물린 자마다 그것을 보면 살리라 (민 21:8)'],
+      [NAR, '▶ 진영 가운데, 장대를 세울 곳으로 가요.'],
+    ],
+    w3_pole: [
+      { event: 'raisePole' },
+      [NAR, '▶ 뱀에게 물린 사람들에게 장대를 쳐다보라고 알려 주세요.'],
+    ],
+    w3_look_done: [
+      [NAR, '모세가 놋뱀을 만들어 장대 위에 다니 뱀에게 물린 자가 놋뱀을 쳐다본즉 모두 살더라 (민 21:9)'],
+    ],
+    // 11장
+    w3_well: [
+      [NAR, '이스라엘 자손이 그 곳을 떠나 오봇에 진을 쳤고 (민 21:10)'],
+      [NAR, '오봇을 떠나 모압 앞쪽 해 돋는 쪽 광야 이예아바림에 진을 쳤고 (민 21:11)'],
+      [NAR, '거기서 브엘에 이르니 브엘은 여호와께서 모세에게 명령하시기를 백성을 모으라 내가 그들에게 물을 주리라 하시던 우물이라 (민 21:16)'],
+      [NAR, '그 때에 이스라엘이 노래하여 이르되 (민 21:17)'],
+      [ISRAEL, '우물물아 솟아나라 너희는 그것을 노래하라'],
+      [ISRAEL, '이 우물은 지휘관들이 팠고 백성의 귀인들이 규와 지팡이로 판 것이로다'],
+      [NAR, '이스라엘이 아모리 왕 시혼에게 사신을 보내어 이르되 (민 21:21)'],
+      [ENVOY, '우리에게 당신의 땅을 지나가게 하소서 우리가 밭에든지 포도원에든지 들어가지 아니하며 우물물도 마시지 아니하고 당신의 지경에서 다 나가기까지 왕의 큰길로만 지나가리이다'],
+      [NAR, '▶ 동쪽의 왕의 큰길로 가요.'],
+    ],
+    w3_sihon: [
+      [NAR, '시혼이 이스라엘이 자기 영토로 지나감을 용납하지 아니하고 그의 백성을 다 모아 이스라엘을 치러 광야로 나와서 야하스에 이르러 이스라엘을 치므로 (민 21:23)'],
+      { event: 'battleFar' },
+      [NAR, '이스라엘이 칼날로 그들을 쳐서 무찌르고 그 땅을 아르논에서부터 얍복까지 점령하여 암몬 자손에게까지 미치니 암몬 자손의 경계는 견고하더라 (민 21:24)'],
+      [NAR, '그들이 돌이켜 바산 길로 올라가매 바산 왕 옥이 그의 백성을 다 거느리고 나와서 그들을 맞아 에드레이에서 싸우려 하는지라 (민 21:33)'],
+      [NAR, '여호와께서 모세에게 이르시되 그를 두려워하지 말라 내가 그와 그의 백성과 그의 땅을 네 손에 넘겼나니 너는 헤스본에 거주하던 아모리인의 왕 시혼에게 행한 것 같이 그에게도 행할지니라 (민 21:34)'],
+      [NAR, '이에 그와 그의 아들들과 그의 백성을 다 쳐서 한 사람도 남기지 아니하고 그의 땅을 점령하였더라 (민 21:35)'],
+    ],
+    // 12장
+    w3_balak: [
+      [NAR, '이스라엘 자손이 또 길을 떠나 모압 평지에 진을 쳤으니 요단 건너편 곧 여리고 맞은편이더라 (민 22:1)'],
+      [NAR, '십볼의 아들 발락이 이스라엘이 아모리인에게 행한 모든 일을 보았으므로 (민 22:2)'],
+      [NAR, '모압이 심히 두려워하였으니 이스라엘 백성이 많음으로 말미암아 모압이 이스라엘 자손 때문에 번민하더라 (민 22:3)'],
+      [NAR, '미디안 장로들에게 이르되 이제 이 무리가 소가 밭의 풀을 뜯어먹음 같이 우리 사방에 있는 것을 다 뜯어먹으리로다 하니 그 때에 십볼의 아들 발락이 모압 왕이었더라 (민 22:4)'],
+      [NAR, '그가 사신을 브올의 아들 발람의 고향인 강 가 브돌에 보내어 발람을 부르게 하여 이르되 보라 한 민족이 애굽에서 나왔는데 그들이 지면에 덮여서 우리 맞은편에 거주하였고 (민 22:5)'],
+      [NAR, '우리보다 강하니 청하건대 와서 나를 위하여 이 백성을 저주하라 내가 혹 그들을 쳐서 이겨 이 땅에서 몰아내리라 그대가 복을 비는 자는 복을 받고 저주하는 자는 저주를 받을 줄을 내가 앎이니라 (민 22:6)'],
+      [NAR, '▶ 진영 남서쪽, 포도원 사이 좁은 길로 가요.'],
+    ],
+    w3_donkey_intro: [
+      [NAR, '발람이 아침에 일어나서 자기 나귀에 안장을 지우고 모압 고관들과 함께 가니 (민 22:21)'],
+      [NAR, '그가 감으로 말미암아 하나님이 진노하시므로 여호와의 사자가 그를 막으려고 길에 서니라 발람은 자기 나귀를 탔고 그의 두 종은 그와 함께 있더니 (민 22:22)'],
+      [NAR, '▶ 나귀의 눈으로 길을 봐요. 길을 막은 여호와의 사자 앞에서 나귀는 어떻게 했을까요?'],
+    ],
+    w3_donkey_talk: [
+      [NAR, '나귀가 여호와의 사자를 보고 발람 밑에 엎드리니 발람이 노하여 자기 지팡이로 나귀를 때리는지라 (민 22:27)'],
+      [NAR, '여호와께서 나귀 입을 여시니 발람에게 이르되 (민 22:28)'],
+      [DONKEY, '내가 당신에게 무엇을 하였기에 나를 이같이 세 번을 때리느냐'],
+      [NAR, '발람이 나귀에게 말하되 (민 22:29)'],
+      [BALAAM, '네가 나를 거역하기 때문이니 내 손에 칼이 있었더면 곧 너를 죽였으리라'],
+      [NAR, '나귀가 발람에게 이르되 (민 22:30)'],
+      [DONKEY, '나는 당신이 오늘까지 당신의 일생 동안 탄 나귀가 아니냐 내가 언제 당신에게 이같이 하는 버릇이 있었더냐'],
+      [NAR, '그가 말하되 없었느니라 (민 22:30)'],
+      [NAR, '그 때에 여호와께서 발람의 눈을 밝히시매 여호와의 사자가 손에 칼을 빼들고 길에 선 것을 그가 보고 머리를 숙이고 엎드리니 (민 22:31)'],
+      [NAR, '여호와의 사자가 그에게 이르되 (민 22:32)'],
+      [ANGEL, '너는 어찌하여 네 나귀를 이같이 세 번 때렸느냐 보라 내 앞에서 네 길이 사악하므로 내가 너를 막으려고 나왔더니'],
+      [ANGEL, '나귀가 나를 보고 이같이 세 번을 돌이켜 내 앞에서 피하였느니라 나귀가 만일 돌이켜 나를 피하지 아니하였더면 내가 벌써 너를 죽이고 나귀는 살렸으리라'],
+      [NAR, '발람이 여호와의 사자에게 말하되 (민 22:34)'],
+      [BALAAM, '내가 범죄하였나이다 당신이 나를 막으려고 길에 서신 줄을 내가 알지 못하였나이다 당신이 이를 기뻐하지 아니하시면 나는 돌아가겠나이다'],
+      [NAR, '여호와의 사자가 발람에게 이르되 (민 22:35)'],
+      [ANGEL, '그 사람들과 함께 가라 내가 네게 이르는 말만 말할지니라'],
+      [NAR, '발람이 발락의 고관들과 함께 가니라 (민 22:35)'],
+    ],
+    w3_oracles: [
+      [NAR, '발락은 발람이 온다 함을 듣고 모압 변경의 끝 아르논 가에 있는 성읍까지 가서 그를 영접하고 (민 22:36)'],
+      [NAR, '발락은 발람에게 이르되 (민 22:37)'],
+      [BALAK, '내가 특별히 사람을 보내어 그대를 부르지 아니하였느냐 그대가 어찌 내게 오지 아니하였느냐 내가 어찌 그대를 높여 존귀하게 하지 못하겠느냐'],
+      [NAR, '발람이 발락에게 이르되 (민 22:38)'],
+      [BALAAM, '내가 오기는 하였으나 무엇을 말할 능력이 있으리이까 하나님이 내 입에 주시는 말씀 그것을 말할 뿐이니이다'],
+      [NAR, '▶ 첫 번째 예언'],
+      [NAR, '발람이 예언을 전하여 말하되 (민 23:7)'],
+      [BALAAM, '발락이 나를 아람에서, 모압 왕이 동쪽 산에서 데려다가 이르기를 와서 나를 위하여 야곱을 저주하라, 와서 이스라엘을 꾸짖으라 하도다'],
+      [BALAAM, '하나님이 저주하지 않으신 자를 내가 어찌 저주하며 여호와께서 꾸짖지 않으신 자를 내가 어찌 꾸짖으랴'],
+      [NAR, '발락이 발람에게 이르되 (민 23:11)'],
+      [BALAK, '그대가 어찌 내게 이같이 행하느냐 나의 원수를 저주하라고 그대를 데려왔거늘 그대가 오히려 축복하였도다'],
+      [NAR, '발람이 대답하여 이르되 (민 23:12)'],
+      [BALAAM, '여호와께서 내 입에 주신 말씀을 내가 어찌 말하지 아니할 수 있으리이까'],
+      [NAR, '▶ 두 번째 예언'],
+      [BALAAM, '하나님은 사람이 아니시니 거짓말을 하지 않으시고 인생이 아니시니 후회가 없으시도다 어찌 그 말씀하신 바를 행하지 않으시며 하신 말씀을 실행하지 않으시랴'],
+      [BALAAM, '내가 축복할 것을 받았으니 그가 주신 복을 내가 돌이키지 않으리라'],
+      [BALAAM, '야곱의 허물을 보지 아니하시며 이스라엘의 반역을 보지 아니하시는도다 여호와 그들의 하나님이 그들과 함께 계시니 왕을 부르는 소리가 그 중에 있도다'],
+      [NAR, '발락이 발람에게 이르되 (민 23:25)'],
+      [BALAK, '그들을 저주하지도 말고 축복하지도 말라'],
+      [NAR, '발람이 발락에게 대답하여 이르되 (민 23:26)'],
+      [BALAAM, '내가 당신에게 말하여 이르기를 여호와께서 말씀하신 것은 내가 그대로 하지 않을 수 없다고 하지 아니하더이까'],
+      [NAR, '▶ 세 번째 예언'],
+      [NAR, '발람이 자기가 이스라엘을 축복하는 것을 여호와께서 선히 여기심을 보고 전과 같이 점술을 쓰지 아니하고 그의 낯을 광야로 향하여 (민 24:1)'],
+      [NAR, '눈을 들어 이스라엘이 그 지파대로 천막 친 것을 보는데 그 때에 하나님의 영이 그 위에 임하신지라 (민 24:2)'],
+      [NAR, '그가 예언을 전하여 말하되 (민 24:3)'],
+      [BALAAM, '브올의 아들 발람이 말하며 눈을 감았던 자가 말하며'],
+      [BALAAM, '야곱이여 네 장막들이, 이스라엘이여 네 거처들이 어찌 그리 아름다운고'],
+      [BALAAM, '꿇어 앉고 누움이 수사자와 같고 암사자와도 같으니 일으킬 자 누구이랴 너를 축복하는 자마다 복을 받을 것이요 너를 저주하는 자마다 저주를 받을지로다'],
+      [NAR, '발락이 발람에게 노하여 손뼉을 치며 말하되 (민 24:10)'],
+      [BALAK, '내가 그대를 부른 것은 내 원수를 저주하라는 것이어늘 그대가 이같이 세 번 그들을 축복하였도다'],
+      [NAR, '발람이 발락에게 이르되 (민 24:12)'],
+      [BALAAM, '당신이 내게 보낸 사신들에게 내가 말하여 이르지 아니하였나이까'],
+      [BALAAM, '가령 발락이 그 집에 가득한 은금을 내게 줄지라도 나는 여호와의 말씀을 어기고 선악간에 내 마음대로 행하지 못하고 여호와께서 말씀하신 대로 말하리라 하지 아니하였나이까'],
+      [NAR, '▶ 네 번째 예언'],
+      [BALAAM, '내가 그를 보아도 이 때의 일이 아니며 내가 그를 바라보아도 가까운 일이 아니로다 한 별이 야곱에게서 나오며 한 규가 이스라엘에게서 일어나서 모압을 이쪽에서 저쪽까지 쳐서 무찌르고 또 셋의 자식들을 다 멸하리로다'],
+      [NAR, '발람이 일어나 자기 곳으로 돌아가고 발락도 자기 길로 갔더라 (민 24:25)'],
+    ],
+    // 13장
+    w3_daughters_intro: [
+      [NAR, '요셉의 아들 므낫세 종족들에게 므낫세의 현손 마길의 증손 길르앗의 손자 헤벨의 아들 슬로브핫의 딸들이 찾아왔으니 그의 딸들의 이름은 말라와 노아와 호글라와 밀가와 디르사라 (민 27:1)'],
+      [NAR, '▶ 다섯 딸의 이름을 성경에 적힌 차례대로 불러 모아요.'],
+    ],
+    w3_daughters_speak: [
+      [NAR, '그들이 회막 문에서 모세와 제사장 엘르아살과 지휘관들과 온 회중 앞에 서서 이르되 (민 27:2)'],
+      [DAUGHTERS, '우리 아버지가 광야에서 죽었으나 여호와를 거슬러 모인 고라의 무리에 들지 아니하고 자기 죄로 죽었고 아들이 없나이다'],
+      [DAUGHTERS, '어찌하여 아들이 없다고 우리 아버지의 이름이 그의 종족 중에서 삭제되리이까 우리 아버지의 형제 중에서 우리에게 기업을 주소서'],
+    ],
+    w3_verdict: [
+      [NAR, '모세가 그 사연을 여호와께 아뢰니라 (민 27:5)'],
+      [NAR, '여호와께서 모세에게 말씀하여 이르시되 (민 27:6)'],
+      [NAR, '슬로브핫 딸들의 말이 옳으니 너는 반드시 그들의 아버지의 형제 중에서 그들에게 기업을 주어 받게 하되 그들의 아버지의 기업을 그들에게 돌릴지니라 (민 27:7)'],
+      [NAR, '너는 이스라엘 자손에게 말하여 이르기를 사람이 죽고 아들이 없으면 그의 기업을 그의 딸에게 돌릴 것이요 (민 27:8)'],
+    ],
+    // 14장
+    w3_refuge: [
+      [NAR, '여호와께서 또 모세에게 말씀하여 이르시되 (민 35:9)'],
+      [NAR, '이스라엘 자손에게 말하여 그들에게 이르라 너희가 요단 강을 건너 가나안 땅에 들어가거든 (민 35:10)'],
+      [NAR, '너희를 위하여 성읍을 도피성으로 정하여 부지중에 살인한 자가 그리로 피하게 하라 (민 35:11)'],
+      [NAR, '이는 너희가 복수할 자에게서 도피하는 성을 삼아 살인자가 회중 앞에 서서 판결을 받기까지 죽지 않게 하기 위함이니라 (민 35:12)'],
+      [NAR, '너희가 줄 성읍 중에 여섯을 도피성이 되게 하되 (민 35:13)'],
+      [NAR, '세 성읍은 요단 이쪽에 두고 세 성읍은 가나안 땅에 두어 도피성이 되게 하라 (민 35:14)'],
+      [NAR, '▶ 서쪽 요단 강가의 도피성 성문까지 달려가요. 성문은 열려 있어요!'],
+    ],
+    w3_refuge_in: [
+      { event: 'refugeArrive' },
+      [NAR, '이 여섯 성읍은 이스라엘 자손과 타국인과 이스라엘 중에 거류하는 자의 도피성이 되리니 부지중에 살인한 모든 자가 그리로 도피할 수 있으리라 (민 35:15)'],
+    ],
+    // 15장
+    w3_deut: [
+      [NAR, '마흔째 해 열한째 달 그 달 첫째 날에 모세가 이스라엘 자손에게 여호와께서 그들을 위하여 자기에게 주신 명령을 다 알렸으니 (신 1:3)'],
+      [NAR, '모세가 요단 저쪽 모압 땅에서 이 율법을 설명하기 시작하였더라 일렀으되 (신 1:5)'],
+      [MOSES, '이스라엘아 듣고 삼가 그것을 행하라 그리하면 네가 복을 받고 네 조상들의 하나님 여호와께서 네게 허락하심 같이 젖과 꿀이 흐르는 땅에서 네가 크게 번성하리라'],
+      [MOSES, '이스라엘아 들으라 우리 하나님 여호와는 오직 유일한 여호와이시니'],
+      [MOSES, '너는 마음을 다하고 뜻을 다하고 힘을 다하여 네 하나님 여호와를 사랑하라'],
+      [NAR, '▶ 이 말씀을 새길 네 자리를 성경 순서대로 찾아요.'],
+    ],
+    w3_forty_years: [
+      [MOSES, '네 하나님 여호와께서 이 사십 년 동안에 네게 광야 길을 걷게 하신 것을 기억하라 이는 너를 낮추시며 너를 시험하사 네 마음이 어떠한지 그 명령을 지키는지 지키지 않는지 알려 하심이라'],
+      [MOSES, '너를 낮추시며 너를 주리게 하시며 또 너도 알지 못하며 네 조상들도 알지 못하던 만나를 네게 먹이신 것은 사람이 떡으로만 사는 것이 아니요 여호와의 입에서 나오는 모든 말씀으로 사는 줄을 네가 알게 하려 하심이니라'],
+      [MOSES, '이 사십 년 동안에 네 의복이 해어지지 아니하였고 네 발이 부르트지 아니하였느니라'],
+    ],
+    // 16장
+    w3_successor: [
+      [NAR, '여호와께서 모세에게 이르시되 너는 이 아바림 산에 올라가서 내가 이스라엘 자손에게 준 땅을 바라보라 (민 27:12)'],
+      [NAR, '본 후에는 네 형 아론이 돌아간 것 같이 너도 조상에게로 돌아가리니 (민 27:13)'],
+      [NAR, '모세가 여호와께 여짜와 이르되 (민 27:15)'],
+      [MOSES, '여호와, 모든 육체의 생명의 하나님이시여 원하건대 한 사람을 이 회중 위에 세워서'],
+      [MOSES, '그로 그들 앞에 출입하며 그들을 인도하여 출입하게 하사 여호와의 회중이 목자 없는 양과 같이 되지 않게 하옵소서'],
+      [NAR, '여호와께서 모세에게 이르시되 눈의 아들 여호수아는 그 안에 영이 머무는 자니 너는 데려다가 그에게 안수하고 (민 27:18)'],
+      [NAR, '모세가 여호와께서 자기에게 명령하신 대로 하여 여호수아를 데려다가 제사장 엘르아살과 온 회중 앞에 세우고 (민 27:22)'],
+      [NAR, '그에게 안수하여 위탁하되 여호와께서 모세에게 명령하신 대로 하였더라 (민 27:23)'],
+      [NAR, '▶ 여호수아에게 가요.'],
+    ],
+    w3_strong: [
+      [NAR, '또 모세가 가서 온 이스라엘에게 이 말씀을 전하여 (신 31:1)'],
+      [NAR, '그들에게 이르되 (신 31:2)'],
+      [MOSES, '이제 내 나이 백이십 세라 내가 더 이상 출입하지 못하겠고 여호와께서도 내게 이르시기를 너는 이 요단을 건너지 못하리라 하셨느니라'],
+      [MOSES, '너희는 강하고 담대하라 두려워하지 말라 그들 앞에서 떨지 말라 이는 네 하나님 여호와 그가 너와 함께 가시며 결코 너를 떠나지 아니하시며 버리지 아니하실 것임이라'],
+      [NAR, '모세가 여호수아를 불러 온 이스라엘의 목전에서 그에게 이르되 (신 31:7)'],
+      [MOSES, '너는 강하고 담대하라 너는 이 백성을 거느리고 여호와께서 그들의 조상에게 주리라고 맹세하신 땅에 들어가서 그들에게 그 땅을 차지하게 하라'],
+      [MOSES, '그리하면 여호와 그가 네 앞에서 가시며 너와 함께 하사 너를 떠나지 아니하시며 버리지 아니하시리니 너는 두려워하지 말라 놀라지 말라'],
+      [NAR, '여호와께서 또 눈의 아들 여호수아에게 명령하여 이르시되 너는 이스라엘 자손들을 인도하여 내가 그들에게 맹세한 땅으로 들어가게 하리니 강하고 담대하라 내가 너와 함께 하리라 하시니라 (신 31:23)'],
+      [NAR, '▶ 남동쪽, 느보 산 오르는 길로 가요.'],
+    ],
+    w3_nebo: [
+      [NAR, '바로 그 날에 여호와께서 모세에게 말씀하여 이르시되 (신 32:48)'],
+      [NAR, '너는 여리고 맞은편 모압 땅에 있는 아바림 산에 올라가 느보 산에 이르러 내가 이스라엘 자손에게 기업으로 주는 가나안 땅을 바라보라 (신 32:49)'],
+      [NAR, '모세가 모압 평지에서 느보 산에 올라가 여리고 맞은편 비스가 산꼭대기에 이르매 여호와께서 길르앗 온 땅을 단까지 보이시고 (신 34:1)'],
+      { event: 'neboView' },
+      [NAR, '또 온 납달리와 에브라임과 므낫세의 땅과 서해까지의 유다 온 땅과 (신 34:2)'],
+      [NAR, '네겝과 종려나무의 성읍 여리고 골짜기 평지를 소알까지 보이시고 (신 34:3)'],
+      [NAR, '여호와께서 그에게 이르시되 이는 내가 아브라함과 이삭과 야곱에게 맹세하여 그의 후손에게 주리라 한 땅이라 내가 네 눈으로 보게 하였거니와 너는 그리로 건너가지 못하리라 하시매 (신 34:4)'],
+      [NAR, '이에 여호와의 종 모세가 여호와의 말씀대로 모압 땅에서 죽어 (신 34:5)'],
+      [NAR, '벳브올 맞은편 모압 땅에 있는 골짜기에 장사되었고 오늘까지 그의 묻힌 곳을 아는 자가 없느니라 (신 34:6)'],
+      [NAR, '모세가 죽을 때 나이 백이십 세였으나 그의 눈이 흐리지 아니하였고 기력이 쇠하지 아니하였더라 (신 34:7)'],
+      [NAR, '이스라엘 자손이 모압 평지에서 모세를 위하여 애곡하는 기간이 끝나도록 모세를 위하여 삼십 일을 애곡하니라 (신 34:8)'],
+      [NAR, '모세가 눈의 아들 여호수아에게 안수하였으므로 그에게 지혜의 영이 충만하니 이스라엘 자손이 여호와께서 모세에게 명령하신 대로 여호수아의 말을 순종하였더라 (신 34:9)'],
+      [NAR, '그 후에는 이스라엘에 모세와 같은 선지자가 일어나지 못하였나니 모세는 여호와께서 대면하여 아시던 자요 (신 34:10)'],
+      [NAR, '여호와께서 그를 애굽 땅에 보내사 바로와 그의 모든 신하와 그의 온 땅에 모든 이적과 기사와 (신 34:11)'],
+      [NAR, '모든 큰 권능과 위엄을 행하게 하시매 온 이스라엘의 목전에서 그것을 행한 자이더라 (신 34:12)'],
+      { event: 'salmon' },
+    ],
+  });
   Object.assign(DLG, {
     // 1장
     w3_hobab: [
@@ -184,8 +546,8 @@
 
   const { mgOpen, mgCloseAll, completeTask } = api;
   const btnCss = 'padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#f5e9d0;font-size:13px';
-  // 🏅 3편 배지(SQL claim_odyssey_achieve 키 badge-grape_carry · badge-with_caleb)
-  Object.assign(api.BADGES, { grape_carry: { ico: '🍇', name: '젖과 꿀을 본 사람' }, with_caleb: { ico: '🙌', name: '갈렙과 함께 선 사람' } });
+  // 🏅 3편 배지(SQL claim_odyssey_achieve 키 badge-grape_carry · with_caleb · looked_up · refuge_run · hear_israel)
+  Object.assign(api.BADGES, { grape_carry: { ico: '🍇', name: '젖과 꿀을 본 사람' }, with_caleb: { ico: '🙌', name: '갈렙과 함께 선 사람' }, looked_up: { ico: '🐍', name: '쳐다본 사람' }, refuge_run: { ico: '🏃', name: '도피성에 닿은 사람' }, hear_israel: { ico: '👂', name: '들으라 이스라엘' } });
   function giveBadge(k){ const S = api.ST; if (S.badges.includes(k)) return; S.badges.push(k); api.saveST(); setTimeout(() => api.toast(`${api.BADGES[k].ico} 배지 획득: ${api.BADGES[k].name}`, 2600), 900); }
 
   // ☁ 구름 따라 행진(민 9:17, 10:34) — 떠오르면 걷고 머물면 멈춘다
@@ -265,6 +627,171 @@
     }, null, 'w3_night');
   }
 
+
+  // ── 6~16장 게임 ──
+  let actx = null;
+  function horn(){ try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const t0 = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(311, t0); o.frequency.linearRampToValueAtTime(349, t0 + 0.4);
+    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.08, t0 + 0.08); g.gain.setValueAtTime(0.08, t0 + 1.3); g.gain.linearRampToValueAtTime(0, t0 + 1.6); o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + 1.7); } catch (e){} }
+  // 🏃 향로를 든 아론과 함께 달리기(민 16:47 "달려간즉")
+  function runGame(q){
+    api.runDialog(DLG.w3_plague, () => {
+      let taps = 0, t0 = 0, done = false, timer = null; const NEED = 16, LIMIT = 6000;
+      mgOpen('🏃 회중에게로', '"아론이 모세의 명령을 따라 향로를 가지고 회중에게로 달려간즉" (민 16:47) — 6초 안에 16번 눌러 달려요.');
+      const draw = m => { api.mgArea.innerHTML = `<div style="margin:14px 18px;height:12px;border-radius:6px;background:rgba(255,255,255,.1)"><div style="width:${Math.min(100, taps / NEED * 100)}%;height:100%;border-radius:6px;background:#ffb35a"></div></div><div style="text-align:center;padding:4px"><button data-rn style="${btnCss};font-size:22px;padding:14px 30px">🏃 달려!</button></div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;margin-top:6px">${m || (done ? '✓ 죽은 자와 산 자 사이에 섰어요' : `${taps} / ${NEED}`)}</div>`;
+        api.mgAct.textContent = done ? '계속' : '다 달리면 계속'; api.mgAct.disabled = !done; };
+      draw();
+      api.mgArea.onclick = e => { if (!e.target.closest('[data-rn]') || done) return;
+        if (!taps){ t0 = performance.now(); timer = setTimeout(() => { if (!done){ taps = 0; draw('조금 더 빨리! 다시 달려요'); } }, LIMIT); }
+        taps++; if (taps >= NEED){ done = true; clearTimeout(timer); } draw(); };
+      api.mgAct.onclick = () => { if (!done) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+      api.mg.onClose = () => { api.mgArea.onclick = null; clearTimeout(timer); };
+    }, null, 'w3_plague');
+  }
+  // 🌸 열두 지팡이 가운데 싹 난 것 찾기(민 17:6-8)
+  function staffsGame(q){
+    const budded = Math.floor(Math.random() * 12), seen = new Set(); let found = false, msg = '';
+    mgOpen('🌸 열두 지팡이', '이튿날 아침, 증거의 장막 안 여호와 앞에 지팡이 열두 개가 놓여 있어요. 하나씩 살펴보세요.');
+    const draw = () => { api.mgArea.innerHTML = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:8px 10px">${[...Array(12).keys()].map(i => `<button data-sf="${i}" style="${btnCss};font-size:20px;${i === budded && found ? 'background:#f6d8e4;color:#2a1d10' : ''}">${i === budded && found ? '🌸' : seen.has(i) ? '🪵' : '🦯'}<br><span style="font-size:11px">${i === budded && found ? '아론의 지팡이' : seen.has(i) ? '그대로' : '지팡이 ' + (i + 1)}</span></button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:34px;padding:0 10px;font-size:12.5px">${msg}</div>`;
+      api.mgAct.textContent = found ? '계속' : '싹 난 지팡이를 찾으면 계속'; api.mgAct.disabled = !found; };
+    draw();
+    api.mgArea.onclick = e => { const b = e.target.closest('[data-sf]'); if (!b || found) return; const i = +b.dataset.sf;
+      if (i === budded){ found = true; msg = '"움이 돋고 순이 나고 꽃이 피어서 살구 열매가 열렸더라" (민 17:8) — 레위의 지팡이, 아론의 이름'; }
+      else { seen.add(i); msg = '마른 지팡이 그대로예요. "내가 택한 자의 지팡이에는 싹이 나리니" (민 17:5)'; }
+      draw(); };
+    api.mgAct.onclick = () => { if (!found) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; };
+  }
+  // ❓ 반석 앞에서 — 여호와께서 무엇이라 명하셨나(민 20:8)
+  function rockQuiz(q){
+    const OPT = [['반석을 치라', 0], ['반석에게 명령하여 물을 내라 하라', 1], ['반석 앞에서 기도하라', 0]].sort(() => Math.random() - 0.5); let ok = false, msg = '';
+    mgOpen('❓ 므리바 물', '여호와께서 모세에게 반석을 어떻게 하라고 하셨나요?');
+    const draw = () => { api.mgArea.innerHTML = `<div style="display:grid;gap:6px;padding:10px 12px">${OPT.map((o, i) => `<button data-rq="${i}" style="${btnCss};text-align:left">${o[0]}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:34px;padding:0 10px;font-size:12.5px">${msg}</div>`;
+      api.mgAct.textContent = ok ? '계속' : '맞히면 계속'; api.mgAct.disabled = !ok; };
+    draw();
+    api.mgArea.onclick = e => { const b = e.target.closest('[data-rq]'); if (!b || ok) return; const o = OPT[+b.dataset.rq];
+      if (o[1]){ ok = true; msg = '✓ "너희는 반석에게 명령하여 물을 내라 하라" (민 20:8)'; } else msg = '"지팡이를 가지고 네 형 아론과 함께 회중을 모으고 …" (민 20:8)을 다시 떠올려 봐요'; draw(); };
+    api.mgAct.onclick = () => { if (!ok) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; };
+  }
+  // 👀 "장대를 보세요!"(민 21:8-9)
+  function lookGame(q){
+    const N = 6, looked = new Array(N).fill(false);
+    mgOpen('👀 쳐다보면 살리라', '"물린 자마다 그것을 보면 살리라" (민 21:8) — 뱀에게 물린 사람들에게 장대를 보라고 알려 주세요.');
+    const draw = () => { const n = looked.filter(Boolean).length;
+      api.mgArea.innerHTML = `<div style="text-align:center;font-size:30px;padding:4px">🐍</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 10px">${looked.map((l, i) => `<button data-lk3="${i}" style="${btnCss};font-size:20px;${l ? 'background:#cfe8c0;color:#1d3a18' : ''}">${l ? '🙂' : '😣'}<br><span style="font-size:11px">${l ? '장대를 봤어요' : '"장대를 보세요!"'}</span></button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;margin-top:6px">${n < N ? `${n} / ${N}` : '✓ 쳐다본 사람이 모두 살았어요'}</div>`;
+      api.mgAct.textContent = n < N ? '모두 알려 주면 계속' : '계속'; api.mgAct.disabled = n < N; };
+    draw();
+    api.mgArea.onclick = e => { const b = e.target.closest('[data-lk3]'); if (!b) return; looked[+b.dataset.lk3] = true; draw(); };
+    api.mgAct.onclick = () => { if (looked.some(l => !l)) return; api.mgArea.onclick = null; mgCloseAll(); giveBadge('looked_up'); completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; };
+  }
+  // 🛤 왕의 큰길로만(민 21:22)
+  function roadGame(q){
+    const N = 6; let k = 0, msg = '';
+    const SIDE = [['🌾 밭으로', '"우리가 밭에든지 포도원에든지 들어가지 아니하며" (민 21:22)'], ['🍇 포도원으로', '"우리가 밭에든지 포도원에든지 들어가지 아니하며" (민 21:22)'], ['💧 우물가로', '"우물물도 마시지 아니하고" (민 21:22)']];
+    let opts = [];
+    const shuffle = () => { opts = [['🛤 왕의 큰길로', null], SIDE[Math.floor(Math.random() * 3)], SIDE[Math.floor(Math.random() * 3)]].sort(() => Math.random() - 0.5); };
+    shuffle();
+    mgOpen('🛤 왕의 큰길', '"당신의 지경에서 다 나가기까지 왕의 큰길로만 지나가리이다" (민 21:22)');
+    const draw = () => { api.mgArea.innerHTML = k < N ? `<div style="text-align:center;padding:6px;font-size:13px">갈림길 ${k + 1} / ${N}</div><div style="display:grid;gap:6px;padding:0 14px">${opts.map((o, i) => `<button data-rd="${i}" style="${btnCss};font-size:15px">${o[0]}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:34px;padding:6px 10px 0;font-size:12.5px">${msg}</div>`
+      : `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800">✓ 왕의 큰길로만 지나왔어요</div>`;
+      api.mgAct.textContent = k < N ? '다 지나면 계속' : '계속'; api.mgAct.disabled = k < N; };
+    draw();
+    api.mgArea.onclick = e => { const b = e.target.closest('[data-rd]'); if (!b || k >= N) return; const o = opts[+b.dataset.rd];
+      if (!o[1]){ k++; msg = ''; } else { k = 0; msg = o[1] + ' — 처음부터'; }
+      shuffle(); draw(); };
+    api.mgAct.onclick = () => { if (k < N) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; };
+  }
+  // 🫏 나귀가 본 길 — 세 번(민 22:23-27)
+  function donkeyGame(q){
+    api.runDialog(DLG.w3_donkey_intro, () => {
+      const SC = [['여호와의 사자가 칼을 빼어 손에 들고 길에 서 있어요.', 0, '"나귀가 … 길에서 벗어나 밭으로 들어간지라" (민 22:23)'],
+        ['포도원 사이 좁은 길, 좌우에는 담이 있어요. 여호와의 사자가 길에 서 있어요.', 1, '"나귀가 여호와의 사자를 보고 몸을 담에 대고" (민 22:25)'],
+        ['좌우로 피할 데 없는 좁은 곳에 여호와의 사자가 서 있어요.', 2, '"나귀가 여호와의 사자를 보고 발람 밑에 엎드리니" (민 22:27)']];
+      const ACT = ['🌾 길에서 벗어나 밭으로', '🧱 몸을 담에 대기', '🙇 엎드리기', '➡️ 그대로 지나가기'];
+      let k = 0, msg = '';
+      mgOpen('🫏 나귀가 본 길', '발람은 보지 못하지만, 나귀는 길을 막은 여호와의 사자를 봤어요. 나귀는 어떻게 했을까요?');
+      const draw = () => { const s = SC[k];
+        api.mgArea.innerHTML = s ? `<div style="padding:10px 12px;font-size:13.5px;line-height:1.5">✨ ${k + 1}번째 — ${s[0]}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px">${ACT.map((a, i) => `<button data-dk="${i}" style="${btnCss}">${a}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:34px;padding:6px 10px 0;font-size:12.5px">${msg}</div>`
+          : `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800">✓ 나귀는 세 번 피했어요</div>`;
+        api.mgAct.textContent = s ? '세 번 다 지나면 계속' : '계속'; api.mgAct.disabled = !!s; };
+      draw();
+      api.mgArea.onclick = e => { const b = e.target.closest('[data-dk]'); const s = SC[k]; if (!b || !s) return;
+        if (+b.dataset.dk === s[1]){ msg = '✓ ' + s[2]; k++; } else msg = '성경에서 나귀가 한 일을 떠올려 봐요'; draw(); };
+      api.mgAct.onclick = () => { if (k < 3) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+      api.mg.onClose = () => { api.mgArea.onclick = null; };
+    }, null, 'w3_donkey_intro');
+  }
+  // 👭 다섯 딸의 이름(민 27:1)
+  function daughtersGame(q){
+    api.runDialog(DLG.w3_daughters_intro, () => {
+      const ORDER = ['말라', '노아', '호글라', '밀가', '디르사'], shown = ORDER.map((_, i) => i).sort(() => Math.random() - 0.5); let next = 0, msg = '';
+      mgOpen('👭 슬로브핫의 딸들', '"그의 딸들의 이름은 말라와 노아와 호글라와 밀가와 디르사라" (민 27:1) — 차례대로 불러요.');
+      const draw = () => { api.mgArea.innerHTML = `<div style="padding:6px 12px;font-size:13px;min-height:20px">${ORDER.slice(0, next).join(' · ') || '—'}</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:0 10px">${shown.filter(i => i >= next).map(i => `<button data-dt="${i}" style="${btnCss};font-size:15px">${ORDER[i]}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;margin-top:6px">${msg || (next < 5 ? `${next + 1}번째 딸은?` : '✓ 다섯 딸이 모두 모였어요')}</div>`;
+        api.mgAct.textContent = next < 5 ? '다 모이면 계속' : '계속'; api.mgAct.disabled = next < 5; };
+      draw();
+      api.mgArea.onclick = e => { const b = e.target.closest('[data-dt]'); if (!b) return; if (+b.dataset.dt === next){ next++; msg = ''; } else msg = '성경에 적힌 차례를 다시 봐요'; draw(); };
+      api.mgAct.onclick = () => { if (next < 5) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+      api.mg.onClose = () => { api.mgArea.onclick = null; };
+    }, null, 'w3_daughters_intro');
+  }
+  // 📜 쉐마 — 말씀을 새길 네 자리(신 6:6-9)
+  function shemaGame(q){
+    const ORDER = [['💗 마음에', '오늘 내가 네게 명하는 이 말씀을 너는 마음에 새기고 (신 6:6)'], ['👨‍👧 자녀에게', '네 자녀에게 부지런히 가르치며 집에 앉았을 때에든지 길을 갈 때에든지 누워 있을 때에든지 일어날 때에든지 이 말씀을 강론할 것이며 (신 6:7)'],
+      ['✋ 손목과 미간에', '너는 또 그것을 네 손목에 매어 기호를 삼으며 네 미간에 붙여 표로 삼고 (신 6:8)'], ['🚪 문설주와 바깥 문에', '또 네 집 문설주와 바깥 문에 기록할지니라 (신 6:9)']];
+    const shown = ORDER.map((_, i) => i).sort(() => Math.random() - 0.5); let next = 0, msg = '';
+    mgOpen('📜 이스라엘아 들으라', '"이스라엘아 들으라 우리 하나님 여호와는 오직 유일한 여호와이시니" (신 6:4) — 말씀을 새길 자리를 성경 순서대로.');
+    const draw = () => { api.mgArea.innerHTML = `<div style="padding:6px 12px;font-size:12.5px;line-height:1.5;min-height:40px">${next ? '📜 ' + ORDER[next - 1][1] : '—'}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px">${shown.filter(i => i >= next).map(i => `<button data-sm="${i}" style="${btnCss}">${ORDER[i][0]}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;margin-top:6px">${msg || (next < 4 ? `${next + 1}번째 자리는?` : '✓ 네 자리에 모두 새겼어요')}</div>`;
+      api.mgAct.textContent = next < 4 ? '다 새기면 계속' : '계속'; api.mgAct.disabled = next < 4; };
+    draw();
+    api.mgArea.onclick = e => { const b = e.target.closest('[data-sm]'); if (!b) return; if (+b.dataset.sm === next){ next++; msg = ''; } else msg = '신명기 6장 6절부터 차례대로 떠올려 봐요'; draw(); };
+    api.mgAct.onclick = () => { if (next < 4) return; api.mgArea.onclick = null; mgCloseAll(); giveBadge('hear_israel'); completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; };
+  }
+  // ── 6~16장 연출 ──
+  function earthSplit(){
+    horn();
+    const fl = document.getElementById('flash'); if (fl){ fl.style.transition = 'none'; fl.style.background = '#3a2a1a'; fl.style.opacity = '0.5'; setTimeout(() => { fl.style.transition = 'opacity 1.6s'; fl.style.opacity = '0'; }, 200); setTimeout(() => { fl.style.background = ''; }, 2000); }
+    try { api.startCine('w3Earth', KCRACK[0], api.heightAt(KCRACK[0], KCRACK[1]) + 1, KCRACK[1], { r: 12, h: 6, dur: 4.5, spin: 0.4 }); } catch (e){}
+    splitT0 = performance.now(); setTimeout(() => { const p = cur(); if (p && api.Z && api.Z.id === 'kadesh') world('kadesh'); }, 50);
+    setTimeout(() => flames(KCRACK[0] + 4, KCRACK[1] + 4, 12, 6, 5000), 2200);
+  }
+  let splitT0 = 0;
+  function rockStrike(){
+    horn();
+    const [x, z] = ROCK; waterT0 = performance.now();
+    try { api.startCine('w3Rock', x, api.heightAt(x, z) + 1.5, z, { r: 9, h: 4, dur: 4, spin: 0.4 }); } catch (e){}
+    setTimeout(() => { if (api.Z && api.Z.id === 'kadesh') world('kadesh'); }, 60);
+  }
+  let waterT0 = 0;
+  function horClimb(){ try { api.startCine('w3Hor', HOR[0] + 8, api.heightAt(HOR[0] + 8, HOR[1] + 4) + 6, HOR[1] + 4, { r: 16, h: 8, dur: 5, spin: 0.3 }); } catch (e){} }
+  function battleFar(){
+    horn(); setTimeout(horn, 1900);
+    const p = cur(), inMoab = api.Z && api.Z.id === 'moab', [x, z] = inMoab ? [33, -30] : [ARAD[0], ARAD[1] + 6];
+    const g = new THREE.Group();
+    for (let i = 0; i < 18; i++){ const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: api.flameTex, color: 0xcdb48a, depthWrite: false, transparent: true, opacity: 0.55 }));
+      s.position.set(x + (Math.random() - 0.5) * 14, api.heightAt(x, z) + 1 + Math.random() * 3, z + (Math.random() - 0.5) * 8); s.scale.set(4 + Math.random() * 3, 3 + Math.random() * 2, 1); g.add(s); }
+    addFx(g); setTimeout(() => g.parent && g.parent.remove(g), 9000);
+    try { api.startCine('w3Battle' + (p ? p.ch : ''), x, api.heightAt(x, z) + 3, z, { r: 18, h: 7, dur: 4.5, spin: 0.3 }); } catch (e){}
+  }
+  let snakes = null;
+  function serpents(){
+    if (snakes && snakes.parent) snakes.parent.remove(snakes);
+    const g = new THREE.Group(), mat = new THREE.MeshToonMaterial({ color: 0xb5542a, gradientMap: api.toonGradient });
+    for (let i = 0; i < 16; i++){ const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 16, x = MEET[0] + Math.cos(a) * r, z = MEET[1] + Math.sin(a) * r;
+      const s = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.07, 6, 14, Math.PI * 1.4), mat); s.rotation.x = -Math.PI / 2; s.position.set(x, api.heightAt(x, z) + 0.08, z); s.userData = { a: Math.random() * 6, x, z }; g.add(s); }
+    api.zoneRoot.add(g); snakes = g;
+    const t0 = performance.now(); const slither = () => { if (!g.parent) return; const t = (performance.now() - t0) / 1000; g.children.forEach(s => { const u = s.userData; s.position.x = u.x + Math.sin(t * 0.8 + u.a) * 1.2; s.position.z = u.z + Math.cos(t * 0.6 + u.a) * 1.2; s.rotation.z = t + u.a; }); requestAnimationFrame(slither); };
+    slither();
+    try { api.startCine('w3Serpents', MEET[0], api.heightAt(MEET[0], MEET[1]) + 1.5, MEET[1], { r: 12, h: 5, dur: 4, spin: 0.5 }); } catch (e){}
+  }
+  function raisePole(){ poleUp = true; if (api.Z && api.Z.id === 'kadesh') world('kadesh'); try { api.startCine('w3Pole', POLE[0], api.heightAt(POLE[0], POLE[1]) + 3, POLE[1], { r: 8, h: 3, dur: 4, spin: 0.5 }); } catch (e){} }
+  let poleUp = false, refugeT0 = 0;
+  function refugeArrive(){ const sec = refugeT0 ? (performance.now() - refugeT0) / 1000 : 999; if (sec <= 60) giveBadge('refuge_run'); api.toast(`🏃 도피성까지 ${sec < 999 ? Math.round(sec) + '초' : '도착'}!`, 2200); }
+  function neboView(){ try { api.startCine('w3Nebo', -44, api.heightAt(-30, 0) + 10, 0, { r: 40, h: 16, dur: 6, spin: 0.25 }); } catch (e){} }
+  function salmon(){ api.addGeneal2('살몬'); setTimeout(() => api.toast('📜 족보 조각 「살몬」 — "나손은 살몬을 낳고" (마 1:4)', 3400), 600); }
+
   // ── 연출 ──
   const fx = [];
   const addFx = o => { api.zoneRoot.add(o); fx.push(o); return o; };
@@ -315,7 +842,43 @@
       for (let j = 0; j < 14; j++) put(new THREE.SphereGeometry(0.13, 6, 5), M(0x5b2d7a), MEET[0] + 1.5 + (Math.random() - 0.5) * 0.4, 0.2 - (j % 4) * 0.03, MEET[1] - 1.2 + (Math.random() - 0.5) * 0.3);
       for (let j = 0; j < 4; j++) put(new THREE.SphereGeometry(0.16, 8, 6), M(j % 2 ? 0xb8322a : 0x6a7a3a), MEET[0] - 0.6 + j * 0.35, 0.16, MEET[1] - 0.4);
     }
+    // 6장 고라의 장막 → 갈라진 땅
+    if (p.ch === 5){
+      if (p.step <= 1){ const tent = M(0x9a7a5a); [[-2, 0], [2, 0.5], [0, 2.5]].forEach(([dx, dz]) => { const t = put(new THREE.ConeGeometry(1.4, 1.8, 6), tent, KCRACK[0] + dx, 0.9, KCRACK[1] + dz); t.rotation.y = dx; }); }
+      else { const crack = new THREE.Mesh(new THREE.CircleGeometry(4.2, 12).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x1a120c })); crack.scale.set(1.3, 1, 0.55); crack.position.set(KCRACK[0], api.heightAt(KCRACK[0], KCRACK[1]) + 0.06, KCRACK[1] + 1); g.add(crack);
+        for (let i = 0; i < 10; i++){ const r = put(new THREE.DodecahedronGeometry(0.4 + Math.random() * 0.5), M(0x8a6a48), KCRACK[0] + (Math.random() - 0.5) * 11, 0.2, KCRACK[1] + 1 + (Math.random() - 0.5) * 6); r.rotation.set(Math.random(), Math.random(), 0); } }
+    }
+    // 반석(8장, 가데스에 늘 있음) · 반석에서 솟은 물 · 미리암의 무덤
+    { const rock = put(new THREE.DodecahedronGeometry(2.2, 0), M(0x9a8672), ROCK[0], 1.2, ROCK[1]); rock.scale.set(1.2, 0.9, 1); api.obstacles.push({ x: ROCK[0], z: ROCK[1], r: 2.2 }); }
+    if (p.ch > 7 || (p.ch === 7 && p.step >= 3)){ const w = new THREE.Mesh(new THREE.CircleGeometry(3.6, 24).rotateX(-Math.PI / 2), new THREE.MeshToonMaterial({ color: 0x4f9fb5, gradientMap: api.toonGradient, transparent: true, opacity: 0.85 }));
+      w.position.set(ROCK[0] + 3.4, api.heightAt(ROCK[0] + 3.4, ROCK[1] + 2.6) + 0.07, ROCK[1] + 2.6); g.add(w); }
+    if (p.ch > 7 || (p.ch === 7 && p.step >= 1)){ for (let i = 0; i < 9; i++) put(new THREE.DodecahedronGeometry(0.32 + (i < 4 ? 0.12 : 0)), M(0xb8a88e), GRAVE[0] + (Math.random() - 0.5) * 1.6, 0.25 + (i > 5 ? 0.35 : 0), GRAVE[1] + (Math.random() - 0.5) * 1.1); }
+    // 10장 놋뱀 장대(세운 뒤로 가데스에 남음)
+    if (p.ch > 9 || (p.ch === 9 && (p.step >= 3 || poleUp))){
+      const bronze = M(0xb07a3a); put(new THREE.CylinderGeometry(0.09, 0.11, 4.6, 8), M(0x7a5a3a), POLE[0], 2.3, POLE[1]);
+      const coil = put(new THREE.TorusGeometry(0.32, 0.09, 8, 20, Math.PI * 3.2), bronze, POLE[0], 4.2, POLE[1]); coil.rotation.x = Math.PI / 2;
+      put(new THREE.SphereGeometry(0.15, 8, 6), bronze, POLE[0] + 0.34, 4.65, POLE[1]);
+    }
+    if (p.ch === 9 && p.step >= 1 && p.step <= 3 && !(snakes && snakes.parent)) setTimeout(() => { const q = cur(); if (q && q.ch === 9 && api.Z && api.Z.id === 'kadesh' && !(snakes && snakes.parent)) serpents(); }, 400);
+    if (!(p.ch === 9 && p.step >= 1 && p.step <= 3) && snakes && snakes.parent){ snakes.parent.remove(snakes); snakes = null; }
     if (g.children.length){ api.zoneRoot.add(g); worldObj = g; }
+  }
+  // 모압 평지: 도피성 성문(요단 강가) · 발락의 높은 곳 제단 일곱(민 23:1은 대사에 안 씀 — 장면만)
+  let moabObj = null;
+  function worldMoab(zid){
+    if (moabObj && moabObj.parent) moabObj.parent.remove(moabObj); moabObj = null;
+    const p = cur(); if (zid !== 'moab' || !p) return;
+    const g = new THREE.Group(), M = c => new THREE.MeshToonMaterial({ color: c, gradientMap: api.toonGradient });
+    const put = (geo, mat, x, dy, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, api.heightAt(x, z) + dy, z); m.castShadow = true; g.add(m); return m; };
+    // 도피성: 돌 성벽 사이의 열린 성문
+    const stone = M(0xc8ad84), wood = M(0x7a5a3a);
+    put(new THREE.BoxGeometry(3.2, 3.6, 1.2), stone, REFUGE[0] - 3.2, 1.8, REFUGE[1]); put(new THREE.BoxGeometry(3.2, 3.6, 1.2), stone, REFUGE[0] + 3.2, 1.8, REFUGE[1]);
+    put(new THREE.BoxGeometry(9.6, 0.8, 1.3), stone, REFUGE[0], 3.9, REFUGE[1]);
+    const d1 = put(new THREE.BoxGeometry(1.5, 2.8, 0.15), wood, REFUGE[0] - 1.9, 1.4, REFUGE[1] - 0.9); d1.rotation.y = 1.1; const d2 = put(new THREE.BoxGeometry(1.5, 2.8, 0.15), wood, REFUGE[0] + 1.9, 1.4, REFUGE[1] - 0.9); d2.rotation.y = -1.1;
+    api.obstacles.push({ x: REFUGE[0] - 3.2, z: REFUGE[1], r: 1.6 }, { x: REFUGE[0] + 3.2, z: REFUGE[1], r: 1.6 });
+    if (p.ch === 13 && p.step === 1 && !refugeT0) refugeT0 = performance.now();
+    if (p.ch !== 13) refugeT0 = 0;
+    api.zoneRoot.add(g); moabObj = g;
   }
 
   const T = n => `📜 광야 40년 ${n}장`;
@@ -350,16 +913,83 @@
           { id: 'w4s2', zone: 'kadesh', obj: '에스골 포도송이를 둘이 메고 오기', where: '진영 동쪽 끝 — 정탐하러 가는 길(빛나는 곳)', point: 'kd_eshcol', game: 'grape' },
           { id: 'w4s3', zone: 'kadesh', obj: '온 회중 앞에서 보고 듣기', where: '진영 가운데 회중이 모인 곳(빛나는 곳)', point: 'kd_meet', dlg: 'w3_report', reward: { verse: 'nu13-27', clear: true } },
         ] },
-      { title: `${T(5)} — 갈렙과 여호수아, 그리고 40년`, clearTitle: '🎉 3편 5장 「갈렙과 여호수아, 그리고 40년」 완료! (6장부터는 준비 중이에요)', next: '6장: 고라의 무리 (준비 중)',
+      { title: `${T(5)} — 갈렙과 여호수아, 그리고 40년`, clearTitle: '🎉 3편 5장 「갈렙과 여호수아, 그리고 40년」 완료!', next: '6장: 고라의 무리',
         steps: [
           { id: 'w5s1', zone: 'kadesh', obj: '갈렙의 말 듣기', where: '회중이 모인 곳의 갈렙', npc: 'kd_caleb', dlg: 'w3_caleb', place: PL },
           { id: 'w5s2', zone: 'kadesh', obj: '밤새 우는 회중 — 누구 곁에 설까', where: '진영 가운데 회중이 모인 곳(빛나는 곳)', point: 'kd_meet', game: 'stand' },
           { id: 'w5s3', zone: 'kadesh', obj: '옷을 찢은 여호수아와 갈렙', where: '회막 앞의 여호수아', npc: 'kd_joshua', dlg: 'w3_jc' },
           { id: 'w5s4', zone: 'kadesh', obj: '모세에게 가기 — 사십 년', where: '회막 앞의 모세', npc: 'moses', dlg: 'w3_forty', reward: { verse: 'nu14-9', clear: true } },
         ] },
+      { title: `${T(6)} — 고라의 무리`, clearTitle: '🎉 3편 6장 「고라의 무리」 완료!', next: '7장: 아론의 싹 난 지팡이',
+        steps: [
+          { id: 'w6s1', zone: 'kadesh', obj: '모세를 거스르는 고라의 무리', where: '진영 서쪽 장막 앞의 고라', npc: 'kd_korah', dlg: 'w3_korah', place: PL },
+          { id: 'w6s2', zone: 'kadesh', obj: '고라와 다단과 아비람의 장막 앞에서', where: '진영 서쪽 장막(빛나는 곳)', point: 'kd_tents', dlg: 'w3_ground' },
+          { id: 'w6s3', zone: 'kadesh', obj: '향로를 든 아론과 함께 달리기', where: '회막 앞의 아론', npc: 'aaron', game: 'run', doneDlg: 'w3_between', reward: { verse: 'nu16-48', clear: true } },
+        ] },
+      { title: `${T(7)} — 아론의 싹 난 지팡이`, clearTitle: '🎉 3편 7장 「아론의 싹 난 지팡이」 완료!', next: '8장: 므리바와 호르 산',
+        steps: [
+          { id: 'w7s1', zone: 'kadesh', obj: '모세에게 가기 — 지팡이 열둘', where: '회막 앞의 모세', npc: 'moses', dlg: 'w3_staffs', place: PL },
+          { id: 'w7s2', zone: 'kadesh', obj: '이튿날 — 싹 난 지팡이 찾기', where: '성막 동쪽 문(빛나는 곳)', point: 'kd_door', game: 'staffs', doneDlg: 'w3_budded' },
+          { id: 'w7s3', zone: 'kadesh', obj: '아론에게 가기 — 증거궤 앞에', where: '회막 앞의 아론', npc: 'aaron', dlg: 'w3_keep', reward: { verse: 'nu17-8', clear: true } },
+        ] },
+      { title: `${T(8)} — 므리바와 호르 산`, clearTitle: '🎉 3편 8장 「므리바와 호르 산」 완료!', next: '9장: 아랏 왕과 호르마',
+        steps: [
+          { id: 'w8s1', zone: 'kadesh', obj: '가데스에서 — 미리암', where: '진영 서쪽의 돌무더기(빛나는 곳)', point: 'kd_grave', dlg: 'w3_miriam_death', place: PL },
+          { id: 'w8s2', zone: 'kadesh', obj: '물이 없어 다투는 회중', where: '회막 앞의 모세', npc: 'moses', dlg: 'w3_nowater' },
+          { id: 'w8s3', zone: 'kadesh', obj: '반석 앞으로', where: '진영 북쪽의 큰 반석(빛나는 곳)', point: 'kd_rock', dlg: 'w3_strike' },
+          { id: 'w8s4', zone: 'kadesh', obj: '여호와께서 무엇이라 하셨나', where: '큰 반석(빛나는 곳)', point: 'kd_rock', game: 'rockq' },
+          { id: 'w8s5', zone: 'kadesh', obj: '호르 산에 오르는 모세와 아론', where: '진영 북동쪽 호르 산 아래(빛나는 곳)', point: 'kd_hor', dlg: 'w3_hor', reward: { verse: 'nu20-12', clear: true } },
+        ] },
+      { title: `${T(9)} — 아랏 왕과 호르마`, clearTitle: '🎉 3편 9장 「아랏 왕과 호르마」 완료!', next: '10장: 놋뱀',
+        steps: [
+          { id: 'w9s1', zone: 'kadesh', obj: '모세에게 가기 — 아랏의 왕', where: '회막 앞의 모세', npc: 'moses', dlg: 'w3_arad_news', place: PL },
+          { id: 'w9s2', zone: 'kadesh', obj: '네겝으로 가는 길에서 서원하기', where: '진영 남쪽 끝(빛나는 곳)', point: 'kd_arad', dlg: 'w3_arad', reward: { verse: 'nu21-3', clear: true } },
+        ] },
+      { title: `${T(10)} — 놋뱀`, clearTitle: '🎉 3편 10장 「놋뱀」 완료!', next: '11장: 시혼과 옥 — 모압 평지로',
+        steps: [
+          { id: 'w10s1', zone: 'kadesh', obj: '에돔 땅을 우회하는 길', where: '진영 동쪽 끝(빛나는 곳)', point: 'kd_edom', dlg: 'w3_road', place: PL },
+          { id: 'w10s2', zone: 'kadesh', obj: '모세에게 — "기도하여 주소서"', where: '회막 앞의 모세', npc: 'moses', dlg: 'w3_pray' },
+          { id: 'w10s3', zone: 'kadesh', obj: '장대를 세우고, 쳐다보라고 알리기', where: '진영 가운데 장대를 세울 곳(빛나는 곳)', point: 'kd_pole', dlg: 'w3_pole' },
+          { id: 'w10s4', zone: 'kadesh', obj: '"장대를 보세요!"', where: '진영 가운데 놋뱀 장대(빛나는 곳)', point: 'kd_pole', game: 'look', doneDlg: 'w3_look_done', reward: { verse: 'nu21-8', clear: true } },
+        ] },
+      { title: `${T(11)} — 시혼과 옥`, clearTitle: '🎉 3편 11장 「시혼과 옥」 완료!', next: '12장: 발람과 나귀',
+        steps: [
+          { id: 'w11s1', zone: 'kadesh', obj: '모압 평지로 떠나기', where: '가데스 동쪽 끝의 초록 빛기둥', exit: 'to-moab' },
+          { id: 'w11s2', zone: 'moab', obj: '브엘의 우물 노래와 시혼에게 보낸 사신', where: '모압 평지 회막 앞의 모세', npc: 'moses', dlg: 'w3_well', place: PL },
+          { id: 'w11s3', zone: 'moab', obj: '왕의 큰길로만 지나가기', where: '동쪽의 왕의 큰길(빛나는 곳)', point: 'mb_road', game: 'road' },
+          { id: 'w11s4', zone: 'moab', obj: '야하스와 에드레이', where: '남동쪽 야하스로 가는 길(빛나는 곳)', point: 'mb_battle', dlg: 'w3_sihon', reward: { verse: 'nu21-34', clear: true } },
+        ] },
+      { title: `${T(12)} — 발람과 나귀`, clearTitle: '🎉 3편 12장 「발람과 나귀」 완료!', next: '13장: 슬로브핫의 딸들',
+        steps: [
+          { id: 'w12s1', zone: 'moab', obj: '두려워하는 모압 왕 발락', where: '진영 남서쪽 언덕의 발락', npc: 'mb_balak', dlg: 'w3_balak', place: PL },
+          { id: 'w12s2', zone: 'moab', obj: '나귀가 본 길', where: '진영 북서쪽 포도원 사이 좁은 길(빛나는 곳)', point: 'mb_path', game: 'donkey', doneDlg: 'w3_donkey_talk' },
+          { id: 'w12s3', zone: 'moab', obj: '진영이 내려다보이는 곳에서 — 발람의 예언', where: '남서쪽 언덕(빛나는 곳)', point: 'mb_high', dlg: 'w3_oracles', reward: { verse: 'nu23-19', clear: true } },
+        ] },
+      { title: `${T(13)} — 슬로브핫의 딸들`, clearTitle: '🎉 3편 13장 「슬로브핫의 딸들」 완료!', next: '14장: 도피성',
+        steps: [
+          { id: 'w13s1', zone: 'moab', obj: '다섯 딸을 회막 문으로', where: '회막 곁의 슬로브핫의 딸들', npc: 'mb_daughters', game: 'daughters', doneDlg: 'w3_daughters_speak', place: PL },
+          { id: 'w13s2', zone: 'moab', obj: '모세에게 — 여호와의 판결', where: '회막 앞의 모세', npc: 'moses', dlg: 'w3_verdict', reward: { verse: 'nu27-7', clear: true } },
+        ] },
+      { title: `${T(14)} — 도피성`, clearTitle: '🎉 3편 14장 「도피성」 완료!', next: '15장: 이스라엘아 들으라',
+        steps: [
+          { id: 'w14s1', zone: 'moab', obj: '모세에게 — 도피성 여섯', where: '회막 앞의 모세', npc: 'moses', dlg: 'w3_refuge', place: PL },
+          { id: 'w14s2', zone: 'moab', obj: '도피성 성문까지 달리기', where: '서쪽 요단 강가의 열린 성문(빛나는 곳)', point: 'mb_refuge', dlg: 'w3_refuge_in', reward: { verse: 'nu35-11', clear: true } },
+        ] },
+      { title: `${T(15)} — 이스라엘아 들으라`, clearTitle: '🎉 3편 15장 「이스라엘아 들으라」 완료!', next: '16장: 느보 산의 모세',
+        steps: [
+          { id: 'w15s1', zone: 'moab', obj: '모세의 마지막 가르침', where: '회막 앞의 모세', npc: 'moses', dlg: 'w3_deut', place: PL },
+          { id: 'w15s2', zone: 'moab', obj: '말씀을 새길 네 자리', where: '회막 앞의 모세', npc: 'moses', game: 'shema' },
+          { id: 'w15s3', zone: 'moab', obj: '광야 사십 년을 기억하라', where: '진영 가운데 온 이스라엘이 모인 곳(빛나는 곳)', point: 'mb_camp', dlg: 'w3_forty_years', reward: { verse: ['de6-5', 'de8-3'], clear: true } },
+        ] },
+      { title: `${T(16)} — 느보 산의 모세`, clearTitle: '🎉 3편 「광야 40년」을 모두 마쳤어요! 세 번째 받침대에 놋뱀 장대가 놓여요', next: '4편 「여호수아와 함께」 (준비 중)',
+        steps: [
+          { id: 'w16s1', zone: 'moab', obj: '"한 사람을 이 회중 위에 세워서"', where: '회막 앞의 모세', npc: 'moses', dlg: 'w3_successor', place: PL },
+          { id: 'w16s2', zone: 'moab', obj: '여호수아에게 — 강하고 담대하라', where: '회막 앞의 여호수아', npc: 'mb_joshua', dlg: 'w3_strong' },
+          { id: 'w16s3', zone: 'moab', obj: '느보 산 비스가 꼭대기', where: '남동쪽 느보 산 오르는 길(빛나는 곳)', point: 'mb_nebo', dlg: 'w3_nebo', reward: { verse: 'de31-8', clear: true } },
+        ] },
     ],
-    games: { march: marchGame, elders: eldersGame, wait: waitGame, grape: grapeGame, stand: standGame },
-    events: { taberah, fireOut, quail, cloudLeave, glory14 },
-    world,
+    games: { march: marchGame, elders: eldersGame, wait: waitGame, grape: grapeGame, stand: standGame, run: runGame, staffs: staffsGame, rockq: rockQuiz, look: lookGame, road: roadGame, donkey: donkeyGame, daughters: daughtersGame, shema: shemaGame },
+    events: { taberah, fireOut, quail, cloudLeave, glory14, earthSplit, rockStrike, horClimb, battleFar, serpents, raisePole, refugeArrive, neboView, salmon },
+    world: zid => { world(zid); worldMoab(zid); },
   };
 });

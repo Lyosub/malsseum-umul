@@ -232,6 +232,25 @@
    "props3d/tent-large.glb",
    "props3d/tent-mid.glb",
    "props3d/tent-small.glb"
+  ],
+  "moab": [
+   "buildings3d/camp-camp-firepit.glb",
+   "buildings3d/camp-tent-cluster.glb",
+   "buildings3d/camp-tribe-banner.glb",
+   "env3d/plants-acacia.glb",
+   "env3d/plants-date-palm.glb",
+   "env3d/rocks-strata.glb",
+   "npc3d/he-boy-hb.glb",
+   "npc3d/he-mother.glb",
+   "npc3d/moses.glb",
+   "props3d/crates-sacks.glb",
+   "props3d/dry-bush.glb",
+   "props3d/jars.glb",
+   "props3d/palm.glb",
+   "props3d/rock-group.glb",
+   "props3d/tent-large.glb",
+   "props3d/tent-mid.glb",
+   "props3d/tent-small.glb"
   ]
  }
 }
