@@ -598,7 +598,7 @@
 <div id="compass"><svg viewBox="0 0 46 46"><path id="compass-arrow" d="M23 7 L31 27 L23 22 L15 27 Z" fill="#ffd27a"/></svg></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "5d9f90a1"};</script>
+<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "0b25cd2d"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -6913,7 +6913,15 @@
       const [x, z] = PEDESTALS[0], t = propTemplates['stone-tablets'].holder.clone(true); t.position.set(x, heightAt(x, z) + 1.06, z); t.rotation.y = faceTo(x, z, 0, 0); exhibitObj.add(t);
       const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff0b0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 })); glow.scale.set(1.6, 1.6, 1); glow.position.set(x, heightAt(x, z) + 1.6, z); exhibitObj.add(glow);
     }
+    if (sinai2Done() && PEDESTALS[1]){   // 두 번째 받침대: 은 나팔 둘(민 10:2)
+      const [x, z] = PEDESTALS[1], y = heightAt(x, z) + 1.12, silver = new THREE.MeshToonMaterial({ color: 0xe4e8ee, gradientMap: toonGradient }), tg = new THREE.Group();
+      [-0.16, 0.16].forEach(dz => { const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.8, 8), silver); tube.rotation.z = Math.PI / 2; tube.position.set(0, 0.05, dz); tg.add(tube);
+        const bell = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.2, 12, 1, true), silver); bell.rotation.z = -Math.PI / 2; bell.position.set(0.48, 0.05, dz); tg.add(bell); });
+      tg.position.set(x, y, z); tg.rotation.y = faceTo(x, z, 0, 0); exhibitObj.add(tg);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xf0f4ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.3 })); glow.scale.set(1.4, 1.4, 1); glow.position.set(x, y + 0.4, z); exhibitObj.add(glow);
+    }
   }
+  const sinai2Done = () => { const p = ST.sp && ST.sp.sinai2; return !!(p && p.cleared && p.ch >= 9); };
   const CH_NAMES = CHAPTERS.map(c => (c.clearTitle.match(/「([^」]+)」/) || [])[1] || '');
   function openExhibit(){
     const done = chaptersDone(), el = document.getElementById('exhibit-body');
@@ -6926,7 +6934,8 @@
       const lib = LIB.find(x => x[0] === n), vs = lib ? ST.verses.filter(id => { const v = verseNum(id); return v >= lib[2] && v <= lib[3]; }) : [];
       return `<details style="margin:6px 0"><summary style="font-weight:800">📜 ${n}장 「${CH_NAMES[i]}」 · 장면 ${scenes.length} · 구절 ${vs.length}</summary>${scenes.map(k => `<div class="keyline"><b>${k.scene}</b> — ${k.t}</div>`).join('')}${vs.map(id => `<div class="keyline">📖 <b>${VERSES[id].ref}</b> — ${VERSES[id].text}</div>`).join('')}</details>`;
     }).join('');
-    el.innerHTML = head + rows + `<div style="margin-top:8px;font-size:12.5px;opacity:.75">두 번째·세 번째 받침대는 다음 두루마리를 기다리고 있어요.</div>`;
+    const head2 = sinai2Done() ? `<div class="keyline">🎺 <b>두 번째 받침대 — 「시내산의 마지막 한 달」의 은 나팔 둘</b><br><span style="opacity:.8">"은 나팔 둘을 만들되 두들겨 만들어서 그것으로 회중을 소집하며 진영을 출발하게 할 것이라" (민수기 10:2)</span></div>` : '';
+    el.innerHTML = head + rows + head2 + `<div style="margin-top:8px;font-size:12.5px;opacity:.75">${sinai2Done() ? '세 번째 받침대는 다음 두루마리를 기다리고 있어요.' : '두 번째 받침대는 2편 「시내산의 마지막 한 달」을 모두 마치면 채워져요.'}</div>`;
     openModal('exhibit-modal');
   }
   document.getElementById('exhibit-replay').onclick = () => { document.querySelectorAll('.modal:not(.hidden) .close').forEach(b => b.click()); setTimeout(openReplay, 250); };
