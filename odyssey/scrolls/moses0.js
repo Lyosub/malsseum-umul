@@ -138,6 +138,7 @@
         { id: 'pr9', zone: 'midian', obj: '딸들의 아버지 르우엘에게 가기', where: '마을의 이드로(르우엘)', npc: 'jethro', dlg: 'pr_reuel', reward: { clear: true } },
       ],
     }],
+    returnToMoses: true,
     games: { basket: basketGame, well: wellGame },
     world,
   };

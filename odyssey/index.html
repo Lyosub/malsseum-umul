@@ -598,7 +598,7 @@
 <div id="compass"><svg viewBox="0 0 46 46"><path id="compass-arrow" d="M23 7 L31 27 L23 22 L15 27 Z" fill="#ffd27a"/></svg></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c00f3a41"};</script>
+<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "5d9f90a1"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -3626,7 +3626,7 @@
     { id: 'c8s5', zone: 'sinai', obj: '셋째 날 아침 — 백성과 함께 산기슭에 서기', where: '산기슭 경계 앞', reach: { near: [0, -22], r: 6 }, doneDlg: 'c8_storm' },
     { id: 'c8s6', zone: 'sinai', obj: '모세가 전한 십계명을 차례대로 기억하기', where: '산기슭의 모세', npc: 'moses', game: 'tablets', place: { moses: [-2, -23] }, doneDlg: 'c8_tablets', reward: { verse: ['ex20-3', 'ex20-12'] } },
     { id: 'c8s7', zone: 'sinai', obj: '떨고 있는 백성에게 가기', where: '멀리 선 백성', npc: 'aaron', dlg: 'c8_fear', place: { aaron: [4, -8] }, reward: { verse: 'ex20-20' } },
-    { id: 'c8s8', zone: 'sinai', obj: '산 아래 제단 — 열두 기둥을 세우고 언약서 낭독 듣기', where: '진영 북동쪽, 산 아래의 제단(모세)', npc: 'moses', game: 'pillars', place: { moses: [14, -13.5] }, doneDlg: 'c8_blood', reward: { verse: 'ex24-7', clear: true } },
+    { id: 'c8s8', zone: 'sinai', obj: '산 아래 제단 — 열두 기둥을 세우고 언약서 낭독 듣기', where: '진영 북동쪽 산 아래(모세)', npc: 'moses', game: 'pillars', place: { moses: [21, -19.5] }, doneDlg: 'c8_blood', reward: { verse: 'ex24-7', clear: true } },
   ];
   Object.assign(VERSES, {
     'ex17-6':  { ref: '출애굽기 17:6',  text: '내가 호렙 산에 있는 그 반석 위 거기서 네 앞에 서리니 너는 그 반석을 치라 그것에서 물이 나오리니 백성이 마시리라' },
@@ -5046,7 +5046,7 @@
   const SCROLL_LIST = [
     { id: 'moses0', no: '1', title: '모세와 함께 · 첫머리 — 물에서 건져낸 아이', file: 'scrolls/moses0.js', num: 0 },
     { id: 'moses', no: '1', title: '모세와 함께', builtin: true, num: 1 },
-    { id: 'sinai2', no: '2', title: '시내산의 마지막 한 달', soon: true, num: 2, needMoses: true },
+    { id: 'sinai2', no: '2', title: '시내산의 마지막 한 달', file: 'scrolls/sinai2.js', num: 2, needMoses: true },
     { id: 'wild40', no: '3', title: '광야 40년', soon: true },
     { id: 'joshua', no: '4', title: '여호수아와 함께', soon: true },
     { id: 'judges', no: '5', title: '사사들과 함께', soon: true },
@@ -5067,7 +5067,7 @@
     startCine: (...a) => startCine(...a), mgOpen: (...a) => mgOpen(...a), mgCloseAll: () => mgCloseAll(), recordBest: (...a) => recordBest(...a),
     get Z(){ return Z; }, get zoneRoot(){ return zoneRoot; }, get markers(){ return markers; }, get player(){ return player; }, get propTemplates(){ return propTemplates; },
     get mgArea(){ return mgArea; }, get mgAct(){ return mgAct; }, get toonGradient(){ return toonGradient; },
-    get mg(){ return mg; }, completeTask: q => completeTask(q), addGeneal: n => addGeneal(n),
+    get mg(){ return mg; }, completeTask: q => completeTask(q), addGeneal: n => addGeneal(n), get flameTex(){ return flameTex; }, get obstacles(){ return obstacles; }, reachable: (x, z) => reachable(x, z),
   };
   const SCROLL_Q = window.__odyQ = window.__odyQ || [];
   function drainScrolls(){ while (SCROLL_Q.length){ const f = SCROLL_Q.shift(); try { const def = f(ODY_API); if (def && def.id) SCROLL_DEFS[def.id] = def; } catch (e){ console.error('두루마리 등록 실패', e); } } }
@@ -5113,7 +5113,7 @@
   function openScrollGate(){
     const rows = SCROLL_LIST.filter(s => !s.dev || DEV_SCROLL).map(s => {
       if (s.soon) return `<div class="dq" style="opacity:.55"><span class="ck">🔒</span><span class="tx">${s.no}. 「${s.title}」 — 준비 중</span></div>`;
-      const pr = scrollProgress(s.id), cur = ST.cur === s.id, lock = s.needMoses && chaptersDone() < CHAPTERS.length;
+      const pr = scrollProgress(s.id), cur = ST.cur === s.id, lock = s.needMoses && chaptersDone() < CHAPTERS.length && !DEV_SCROLL;
       const st = pr ? (pr.done >= pr.total ? '✅ 완료' : `${pr.done}/${pr.total}장`) : '처음';
       return `<div class="dq"><span class="ck">${cur ? '📖' : '📜'}</span><span class="tx">${s.no}. 「${s.title}」 · ${st}${cur ? ' · 지금 펼친 두루마리' : ''}</span>${cur || lock ? '' : `<button data-scroll="${s.id}" style="padding:5px 8px;border-radius:8px;border:none;background:#ffd27a;color:#2a1d10;font-weight:800">펼치기</button>`}</div>`;
     }).join('');
@@ -5839,7 +5839,7 @@
     if (ST.cur === 'moses') claimChapter(ST.ch + 1);
     else { const it = SCROLL_LIST.find(x => x.id === ST.cur); if (it && it.num !== undefined) claimScrollChapter(it.num, nextCh); }
     setTimeout(checkNewTitle, 100);
-    setTimeout(() => openModal('clear-modal', () => { if (C[nextCh]) startChapter(nextCh); else if (ST.cur !== 'moses') setTimeout(() => enterScroll('moses'), 400); }), 500);
+    setTimeout(() => openModal('clear-modal', () => { if (C[nextCh]) startChapter(nextCh); else if (ST.cur !== 'moses' && (SCROLL_DEFS[ST.cur] || {}).returnToMoses) setTimeout(() => enterScroll('moses'), 400); }), 500);
   }
   document.getElementById('btn-book').onclick = () => {
     checkNewTitle(); dq('verse');
@@ -7836,6 +7836,7 @@
   }
   let fliesOn = false;
   function runEvent(name){
+    { const sd = SCROLL_DEFS[ST.cur]; if (ST.cur !== 'moses' && sd && sd.events && sd.events[name]){ try { sd.events[name](); } catch (e){ console.error(e); } return; } }
     if (name === 'blood' && Z && Z._water){ bloodT = 0; toast('🩸 나일 강이 피로 변했어요', 2200); }
     if (name === 'dust'){ dustBurst(); toast('🦟 땅의 티끌이 이가 되었어요!', 2000); }
     if (name === 'flies'){ fliesOn = true; toast('🪰 파리 떼가 애굽 온 땅에 이르렀어요', 2200); }
@@ -8207,7 +8208,7 @@
       [NAR, '손을 거두리니 네가 내 등을 볼 것이요 얼굴은 보지 못하리라 (출 33:23)'],
     ],
   });
-  const COV_ALTAR = [16, -16], CLEFT = [-4, -24];
+  const COV_ALTAR = [24, -22], CLEFT = [-4, -24];   // 제단: 산 아래(출 24:4), 성막 뜰 문과 떨어진 곳
   ZONES.sinai.points.push({ id: 'rock_cleft', x: CLEFT[0], z: CLEFT[1], type: 'lore', title: '반석', cond: 'cleftOn', body: '' });
   CONDS.cleftOn = () => ST.ch === 8 && !ST.cleared && ST.step === stepIdx('c9s8b');
   // 열두 기둥 제단(출 24:4): 8장의 이 단계를 지나면 계속 남아 있음
