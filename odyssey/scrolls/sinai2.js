@@ -240,6 +240,9 @@
   });
 
   const { mgOpen, mgCloseAll, completeTask } = api;
+  // 🏅 2편 배지(SQL claim_odyssey_achieve 키 badge-holy_people · badge-trumpet_follow, 2026-09-27)
+  Object.assign(api.BADGES, { holy_people: { ico: '🌾', name: '거룩한 백성' }, trumpet_follow: { ico: '🎺', name: '나팔 소리를 따르는 사람' } });
+  function giveBadge(k){ const S = api.ST; if (S.badges.includes(k)) return; S.badges.push(k); api.saveST(); setTimeout(() => api.toast(`${api.BADGES[k].ico} 배지 획득: ${api.BADGES[k].name}`, 2600), 900); }
   const btnCss = 'padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#f5e9d0;font-size:13px';
   // 🐑 흠 없는 수컷 고르기(레 1:10, 22:22)
   function pickGame(q){
@@ -339,7 +342,7 @@
   function fieldGame(q){
     api.runDialog(DLG.lv_field_intro, () => {
       const N = 5, keep = new Set([0, 4, 20, 24]), fallen = new Set([7, 12, 18]);
-      let cut = new Set(), msg = '';
+      let cut = new Set(), msg = '', slip = false;
       const need = () => [...Array(N * N).keys()].filter(i => !keep.has(i) && !fallen.has(i));
       mgOpen('🌾 밭 모퉁이', '"밭 모퉁이까지 다 거두지 말고 네 떨어진 이삭도 줍지 말며" (레 19:9) — 곡식을 눌러 거둬요.');
       const draw = () => {
@@ -349,10 +352,10 @@
       };
       draw();
       api.mgArea.onclick = e => { const b = e.target.closest('[data-fd]'); if (!b) return; const i = +b.dataset.fd;
-        if (keep.has(i) || fallen.has(i)){ cut = new Set(); msg = '"가난한 사람과 거류민을 위하여 버려두라" (레 19:10) — 처음부터 다시 거둬요'; }
+        if (keep.has(i) || fallen.has(i)){ slip = true; cut = new Set(); msg = '"가난한 사람과 거류민을 위하여 버려두라" (레 19:10) — 처음부터 다시 거둬요'; }
         else { cut.add(i); msg = ''; }
         draw(); };
-      api.mgAct.onclick = () => { if (!need().every(i => cut.has(i))) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+      api.mgAct.onclick = () => { if (!need().every(i => cut.has(i))) return; api.mgArea.onclick = null; mgCloseAll(); if (!slip) giveBadge('holy_people'); completeTask(q); };
       api.mg.onClose = () => { api.mgArea.onclick = null; };
     }, null, 'lv_field_intro');
   }
@@ -437,7 +440,7 @@
         ['loud1', '📯 크게 불어요', 2, '너희가 그것을 크게 불 때에는 동쪽 진영들이 행진할 것이며 (민 10:5)'],
         ['loud2', '📯📯 두 번째로 크게 불어요', 3, '두 번째로 크게 불 때에는 남쪽 진영들이 행진할 것이라 (민 10:6)']].sort(() => Math.random() - 0.5);
       const WHO = ['온 회중이 회막 문 앞에 모임', '천부장 된 지휘관들이 모임', '동쪽 진영들이 행진', '남쪽 진영들이 행진'];
-      let k = 0, msg = '', wait = false;
+      let k = 0, msg = '', wait = false, miss = false;
       mgOpen('🎺 은 나팔 둘', '"그것으로 회중을 소집하며 진영을 출발하게 할 것이라" (민 10:2) — 소리를 듣고 누가 움직이는지 골라요.');
       const draw = () => { const r = R[k];
         api.mgArea.innerHTML = (r ? `<div style="text-align:center;padding:10px"><button data-tp="again" style="${btnCss};font-size:15px">${r[1]} · 🔊 다시 듣기</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px">${WHO.map((w, i) => `<button data-tw="${i}" style="${btnCss}">${w}</button>`).join('')}</div>` : `<div style="padding:16px;text-align:center;font-size:30px">🎺🎺</div>`)
@@ -451,8 +454,8 @@
         if (wait) return;
         const d = api.mgArea.querySelector('[data-tmsg]');
         if (+b.dataset.tw === r[2]){ wait = true; if (d) d.textContent = '✓ ' + r[3]; setTimeout(() => { wait = false; k++; draw(); }, 1800); }
-        else if (d) d.textContent = '소리를 다시 들어 보세요'; };
-      api.mgAct.onclick = () => { if (k < 4) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+        else { miss = true; if (d) d.textContent = '소리를 다시 들어 보세요'; } };
+      api.mgAct.onclick = () => { if (k < 4) return; api.mgArea.onclick = null; mgCloseAll(); if (!miss) giveBadge('trumpet_follow'); completeTask(q); };
       api.mg.onClose = () => { api.mgArea.onclick = null; };
     }, null, 'lv_trumpet_intro');
   }
