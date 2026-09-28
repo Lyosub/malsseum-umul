@@ -117,6 +117,16 @@
         "instagram/2026-09-27-cartoon.jpg"
       ],
       "note": "말씀카툰 #003 「당연한 게 아니었네」 — 9/27 설교 기준. 지호가 버스를 놓칠 뻔했다가 무사히 탄 하루를 '운'으로 넘기려다, 물방울의 한마디로 하나님께 감사기도. 전도사님 컨펌 2026-09-22."
+    },
+    {
+      "id": "2026-10-03-preview",
+      "type": "reels",
+      "publish_at": "2026-10-03 13:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-10-03-preview.txt",
+      "first_comment_file": "instagram/captions/2026-10-03-preview.tags.txt",
+      "video": "instagram/2026-10-03-preview.mp4",
+      "note": "설교 예고 숏츠 2회 — 10/4 설교 「견디어 낸 자」(약 1:2-12) 배경(흩어진 성도들 행 8:1·약 1:1, 받지 못한 삯 약 5:4, 야고보의 편지). 제미나이 3장면 + Claude 자막·엔딩·자작 BGM(bgm_1004.py) 합성, 18.9초. 전도사님 컨펌 2026-09-28. 설교 제목이 바뀌면 캡션·엔딩 자막도 고칠 것."
     }
   ]
 }
