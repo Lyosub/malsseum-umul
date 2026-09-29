@@ -89,7 +89,7 @@
       "id": "2026-09-27-verse",
       "type": "carousel",
       "publish_at": "2026-09-29 16:00",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-09-27-verse.txt",
       "first_comment_file": "instagram/captions/2026-09-27-verse.tags.txt",
       "images": [
@@ -104,7 +104,9 @@
         "instagram/2026-09-27-verse-09.jpg",
         "instagram/2026-09-27-verse-10.jpg"
       ],
-      "note": "말씀게시물 — 9/27 설교 「당연한 건 없다」(누가복음 17:11-19, 나병환자 열 명). 10장 캐러셀. 전도사님 컨펌 2026-09-22."
+      "note": "말씀게시물 — 9/27 설교 「당연한 건 없다」(누가복음 17:11-19, 나병환자 열 명). 10장 캐러셀. 전도사님 컨펌 2026-09-22.",
+      "media_id": "18129254056691310",
+      "posted_at": "2026-09-29 22:08"
     },
     {
       "id": "2026-09-27-cartoon",
