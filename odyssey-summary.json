@@ -1,15 +1,15 @@
 {
   "testers": 2,
   "players": 2,
-  "active_24h": 0,
+  "active_24h": 1,
   "saved_24h": 1,
-  "steps_24h": 0,
-  "active_7d": 0,
+  "steps_24h": 1,
+  "active_7d": 1,
   "chapters": {
     "4": 2
   },
   "stuck": [],
   "errors_24h": 0,
-  "generated_kst": "2026-09-29 20:33",
+  "generated_kst": "2026-09-30 03:14",
   "ok": true
 }
