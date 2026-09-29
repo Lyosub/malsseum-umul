@@ -127,6 +127,39 @@
       "first_comment_file": "instagram/captions/2026-10-03-preview.tags.txt",
       "video": "instagram/2026-10-03-preview.mp4",
       "note": "설교 예고 숏츠 2회 — 10/4 설교 「견디어 낸 자」(약 1:2-12) 배경(흩어진 성도들 행 8:1·약 1:1, 받지 못한 삯 약 5:4, 야고보의 편지). 제미나이 3장면 + Claude 자막·엔딩·자작 BGM(bgm_1004.py) 합성, 18.9초. 전도사님 컨펌 2026-09-28. 설교 제목이 바뀌면 캡션·엔딩 자막도 고칠 것."
+    },
+    {
+      "id": "2026-10-04-verse",
+      "type": "carousel",
+      "publish_at": "2026-10-06 16:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-10-04-verse.txt",
+      "first_comment_file": "instagram/captions/2026-10-04-verse.tags.txt",
+      "images": [
+        "instagram/2026-10-04-verse-01.jpg",
+        "instagram/2026-10-04-verse-02.jpg",
+        "instagram/2026-10-04-verse-03.jpg",
+        "instagram/2026-10-04-verse-04.jpg",
+        "instagram/2026-10-04-verse-05.jpg",
+        "instagram/2026-10-04-verse-06.jpg",
+        "instagram/2026-10-04-verse-07.jpg",
+        "instagram/2026-10-04-verse-08.jpg",
+        "instagram/2026-10-04-verse-09.jpg",
+        "instagram/2026-10-04-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 10/4 설교 「견디어 낸 자」(야고보서 1:2-12). 10장 캐러셀, 표지 「그릇은 불을 지나야 진짜가 됩니다」. 9장 기도문 뒤 10장에 이번 주 찬양(마커스워십 「거친 길 위를 걸어갈 때도」) 안내. 전도사님 컨펌 2026-09-29."
+    },
+    {
+      "id": "2026-10-04-cartoon",
+      "type": "image",
+      "publish_at": "2026-10-08 16:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-10-04-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-10-04-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-10-04-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #004 「혼자 참지 않아도 돼」 — 10/4 설교 두 번째 대지. 단톡방 나가기 버튼 앞에서 멈춘 지호가 물방울의 말에 지혜를 구하는 기도. 하단 띠 약 1:5. 전도사님 컨펌 2026-09-29."
     }
   ]
 }
