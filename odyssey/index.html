@@ -5507,7 +5507,7 @@
       const opts = localStorage.getItem('msu_keep_logged_in') === '0' ? { auth: { storage: window.sessionStorage } } : {};
       MSU.client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, opts);
       MSU.session = (await MSU.client.auth.getSession()).data.session;
-      if (MSU.session){ await shopRefresh(); claimClearedChapters(); cloudInit(); }
+      if (MSU.session){ await shopRefresh(); await cloudInit(); claimClearedChapters(); }
     } catch (e){ console.warn('말씀우물 연결 실패', e); MSU.client = null; }
   }
   async function shopRefresh(){
@@ -5608,14 +5608,16 @@
   // 장 완료 달란트(계정당 장마다 한 번) — 로그인 전에 깬 장도 로그인하면 받음
   async function claimChapter(ch){
     if (SHOP_MOCK || !MSU.client || !MSU.session) return 0;
-    try { const { data, error } = await MSU.client.rpc('claim_odyssey_chapter', { p_ch: ch }); if (error) throw error; if (data > 0){ MSU.balance = (MSU.balance || 0) + data; toast(`💰 ${ch}장 완료 보상 ${data}달란트를 받았어요!`, 3000); } return data; } catch (e){ return 0; }
+    try { await flushCloud(); const { data, error } = await MSU.client.rpc('claim_odyssey_chapter', { p_ch: ch }); if (error) throw error; if (data > 0){ MSU.balance = (MSU.balance || 0) + data; toast(`💰 ${ch}장 완료 보상 ${data}달란트를 받았어요!`, 3000); } return data > 0 ? data : 0; } catch (e){ return 0; }
   }
   async function claimScrollChapter(num, ch){
     if (SHOP_MOCK || !MSU.client || !MSU.session) return 0;
-    try { const { data, error } = await MSU.client.rpc('claim_odyssey_scroll_chapter', { p_scroll: num, p_ch: ch }); if (error) throw error;
+    try { await flushCloud(); const { data, error } = await MSU.client.rpc('claim_odyssey_scroll_chapter', { p_scroll: num, p_ch: ch }); if (error) throw error;
       if (data > 0){ MSU.balance = (MSU.balance || 0) + data; toast(`💰 두루마리 ${ch}장 완료 보상 ${data}달란트를 받았어요!`, 3000); }
-      return data || 0; } catch (e){ return 0; }
+      return data > 0 ? data : 0; } catch (e){ return 0; }
   }
+  // 서버가 저장된 진행 기록으로 보상을 확인하므로(2026-09-29), 청구 전에 진행을 먼저 저장해 둔다
+  async function flushCloud(){ if (!msuOn() || !CLOUD.ready) return; clearTimeout(CLOUD.t); for (let i = 0; i < 40 && CLOUD.busy; i++) await new Promise(r => setTimeout(r, 150)); await cloudSave(false); }
   // 로그인 때 놓친 보상도 다시 청구한다(서버가 장마다 한 번만 주므로 여러 번 불러도 안전). 2·3편은 로그인 전이나 통신 오류로 놓친 장 보상도 여기서 받는다
   async function claimClearedChapters(){ const n = ST.ch + (ST.cleared ? 1 : 0); for (let c = 1; c <= Math.min(n, 10); c++) await claimChapter(c);
     for (const s of SCROLL_LIST){ if (s.num === undefined) continue; const p = ST.sp && ST.sp[s.id]; if (!p) continue; const k = (p.ch || 0) + (p.cleared ? 1 : 0); for (let c = 1; c <= k; c++) await claimScrollChapter(s.num, c); } }
@@ -7139,8 +7141,9 @@
     if (!keys.length) return;
     achBusy = true;
     let got = 0;
+    await flushCloud();
     for (const k of keys){
-      try { const { data, error } = await MSU.client.rpc('claim_odyssey_achieve', { p_key: k }); if (error) break; ST.achDone.push(k); got += data || 0; } catch (e){ break; }
+      try { const { data, error } = await MSU.client.rpc('claim_odyssey_achieve', { p_key: k }); if (error) break; if (data < 0) continue; ST.achDone.push(k); got += data || 0; } catch (e){ break; }   // -1 = 서버 저장본에 아직 없음 — 완료로 표시하지 않고 다음에 다시
     }
     achBusy = false;
     if (got > 0){ try { localStorage.setItem(STORY_KEY, JSON.stringify({ ...ST, log: ST.log.slice(-80) })); } catch (e){} toast(`🏅 업적 보상 💰 ${got}달란트가 들어왔어요!`, 2400); }
