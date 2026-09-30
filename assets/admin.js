@@ -1402,27 +1402,68 @@ function initShopAdmin(userId) {
     pending: "확인 중", approved: "승인됨", delivered: "전달 완료", rejected: "거절됨"
   };
 
+  // 상품 목록: 「승인 대기(비활성)」와 「판매 중」으로 나누고, 각각 카테고리별로 묶어 보여 준다(2026-09-30).
+  // 카테고리는 shop_items.game_key 의 앞 글자로 정한다(get_shop_items 는 game_key 를 돌려주지 않아 따로 읽는다 — 로그인한 사람은 읽을 수 있다).
+  var SHOP_CAT_ORDER = ["교환권·상품권", "옷", "머리 모양", "펫", "지팡이", "집 꾸미기", "공방 물건", "오이코스 곳간", "기타 게임 상품"];
+  var SHOP_CAT_BY_PREFIX = { outfit: "옷", hair: "머리 모양", pet: "펫", staff: "지팡이", home: "집 꾸미기", craft: "공방 물건" };
+
+  function shopCategory(it, key) {
+    if (it.is_oikos) return "오이코스 곳간";
+    if (!key) return String(it.name || "").indexOf("[게임]") === 0 ? "기타 게임 상품" : "교환권·상품권";
+    return SHOP_CAT_BY_PREFIX[String(key).split("-")[0]] || "기타 게임 상품";
+  }
+
+  function shopItemHtml(it) {
+    return (
+      '<div class="note-item" data-item-id="' + it.id + '">' +
+        '<div class="content"><strong>' + escapeHtmlAdmin(it.name) + '</strong> · ' + it.cost + '달란트' +
+          (it.price_won ? ' · ' + wonLabel(it.price_won) + ' 상당' : '') +
+          (it.stock == null ? ' · 무제한' : ' · 수량 ' + it.stock) +
+          (it.is_oikos ? ' · <span style="color:var(--well);">오이코스 곳간용</span>' : '') +
+          (it.is_active ? '' : ' · <span style="color:#b3432c;">비활성</span>') + '</div>' +
+        (it.description ? '<div class="meta" style="margin-top:2px;">' + escapeHtmlAdmin(it.description) + '</div>' : '') +
+        '<div style="display:flex;gap:8px;margin-top:8px;">' +
+          '<button type="button" class="btn ghost" data-act="toggle" style="padding:6px 12px;font-size:12px;">' + (it.is_active ? '비활성화' : '활성화') + '</button>' +
+          '<button type="button" class="btn ghost" data-act="delete" style="padding:6px 12px;font-size:12px;">삭제</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  // 목록을 카테고리 순서대로 묶어 <details> 조각을 만든다. openAll 이 true 면 모두 펼친다.
+  function shopGroupsHtml(list, keyOf, openAll) {
+    var groups = {};
+    list.forEach(function (it) {
+      var c = shopCategory(it, keyOf[it.id]);
+      (groups[c] = groups[c] || []).push(it);
+    });
+    return SHOP_CAT_ORDER.filter(function (c) { return groups[c]; }).map(function (c) {
+      return '<details class="member-fold"' + (openAll ? ' open' : '') + '><summary>' + c + ' (' + groups[c].length + '개)</summary>' +
+        groups[c].map(shopItemHtml).join("") + '</details>';
+    }).join("");
+  }
+
   function loadItems() {
-    client.rpc("get_shop_items", { p_all: true }).then(function (res) {
+    Promise.all([
+      client.rpc("get_shop_items", { p_all: true }),
+      client.from("shop_items").select("id,game_key")
+    ]).then(function (results) {
+      var res = results[0], keyRes = results[1];
       if (res.error) { itemListEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
       var rows = res.data || [];
       if (!rows.length) { itemListEl.innerHTML = '<p class="msg">등록된 상품이 없어요.</p>'; return; }
-      itemListEl.innerHTML = rows.map(function (it) {
-        return (
-          '<div class="note-item" data-item-id="' + it.id + '">' +
-            '<div class="content"><strong>' + escapeHtmlAdmin(it.name) + '</strong> · ' + it.cost + '달란트' +
-              (it.price_won ? ' · ' + wonLabel(it.price_won) + ' 상당' : '') +
-              (it.stock == null ? ' · 무제한' : ' · 수량 ' + it.stock) +
-              (it.is_oikos ? ' · <span style="color:var(--well);">오이코스 곳간용</span>' : '') +
-              (it.is_active ? '' : ' · <span style="color:#b3432c;">비활성</span>') + '</div>' +
-            (it.description ? '<div class="meta" style="margin-top:2px;">' + escapeHtmlAdmin(it.description) + '</div>' : '') +
-            '<div style="display:flex;gap:8px;margin-top:8px;">' +
-              '<button type="button" class="btn ghost" data-act="toggle" style="padding:6px 12px;font-size:12px;">' + (it.is_active ? '비활성화' : '활성화') + '</button>' +
-              '<button type="button" class="btn ghost" data-act="delete" style="padding:6px 12px;font-size:12px;">삭제</button>' +
-            '</div>' +
-          '</div>'
-        );
-      }).join("");
+      var keyOf = {};
+      ((keyRes && keyRes.data) || []).forEach(function (r) { keyOf[r.id] = r.game_key; });
+      var pending = rows.filter(function (it) { return !it.is_active; });
+      var active = rows.filter(function (it) { return it.is_active; });
+
+      itemListEl.innerHTML =
+        '<h3 style="margin:4px 0 6px;">⏳ 승인 대기 (비활성) · ' + pending.length + '개</h3>' +
+        (pending.length
+          ? '<p class="meta" style="margin:0 0 6px;">활성화하면 바로 학생들에게 판매돼요. 게임 상품(옷·머리 등)은 3D 모델이 준비된 뒤에 켜세요.</p>' + shopGroupsHtml(pending, keyOf, true)
+          : '<p class="msg">승인을 기다리는 상품이 없어요.</p>') +
+        '<h3 style="margin:18px 0 6px;">✅ 판매 중 · ' + active.length + '개</h3>' +
+        (active.length ? shopGroupsHtml(active, keyOf, false) : '<p class="msg">판매 중인 상품이 없어요.</p>');
 
       itemListEl.querySelectorAll("[data-act]").forEach(function (btn) {
         btn.addEventListener("click", function () {

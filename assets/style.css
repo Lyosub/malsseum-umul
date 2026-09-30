@@ -825,6 +825,15 @@ textarea { min-height: 90px; resize: vertical; }
 .member-detail .member-fold .note-item { padding: 8px 0; }
 .member-detail .member-fold .note-item:first-of-type { padding-top: 2px; }
 
+/* 관리자 상점 상품 목록(승인 대기·판매 중)도 같은 접이식 그룹 모양을 쓴다(2026-09-30) */
+#shopItemList .member-fold { border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg); margin: 8px 0; padding: 0 12px; }
+#shopItemList .member-fold > summary { list-style: none; cursor: pointer; padding: 10px 0; font-weight: 800; font-size: 13px; color: var(--well-deep); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#shopItemList .member-fold > summary::-webkit-details-marker { display: none; }
+#shopItemList .member-fold > summary::after { content: "be"; color: var(--text-soft); font-size: 11px; }
+#shopItemList .member-fold[open] > summary::after { content: "b4"; }
+#shopItemList .member-fold[open] { padding-bottom: 10px; }
+#shopItemList .member-fold .note-item { padding: 8px 0; }
+
 .streak {
   text-align: center;
   padding: 20px;
