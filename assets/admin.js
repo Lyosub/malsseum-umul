@@ -1487,7 +1487,9 @@ function initShopAdmin(userId) {
       if (res.error) { orderListEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
       var rows = res.data || [];
       if (!rows.length) { orderListEl.innerHTML = '<p class="msg">교환 요청이 없어요.</p>'; return; }
-      orderListEl.innerHTML = rows.map(function (o) {
+      // 교환 요청을 「처리 필요 → 상품 교환 내역 → 게임 안 자동 구매」로 나눠 보여 준다(2026-09-30).
+      // 게임 안 자동 구매는 이미 전달이 끝난 기록이라 학생별로 접어 둔다.
+      function orderHtml(o) {
         var who = escapeHtmlAdmin(o.nickname || "?") + (o.real_name ? "(" + escapeHtmlAdmin(o.real_name) + ")" : "");
         var actions = "";
         if (o.status === "pending") {
@@ -1509,7 +1511,45 @@ function initShopAdmin(userId) {
             (actions ? '<div style="display:flex;gap:8px;margin-top:8px;">' + actions + '</div>' : '') +
           '</div>'
         );
-      }).join("");
+      }
+      function isAutoGameOrder(o) {
+        return o.status === "delivered" && String(o.item_name || "").indexOf("[게임]") === 0 && String(o.admin_note || "").indexOf("자동 전달") >= 0;
+      }
+      function orderFold(title, list, open) {
+        return '<details class="member-fold"' + (open ? ' open' : '') + '><summary>' + title + '</summary>' + list.map(orderHtml).join("") + '</details>';
+      }
+      var todo = rows.filter(function (o) { return o.status === "pending" || o.status === "approved"; });
+      todo.sort(function (a, b) { return (a.status === "pending" ? 0 : 1) - (b.status === "pending" ? 0 : 1); });   // 확인 중 → 전달 대기 순
+      var auto = rows.filter(isAutoGameOrder);
+      var done = rows.filter(function (o) { return !(o.status === "pending" || o.status === "approved" || isAutoGameOrder(o)); });
+
+      var byStudent = {};
+      auto.forEach(function (o) {
+        var k = (o.nickname || "?") + (o.real_name ? "(" + o.real_name + ")" : "");
+        (byStudent[k] = byStudent[k] || []).push(o);
+      });
+      var studentKeys = Object.keys(byStudent).sort(function (a, b) { return byStudent[b].length - byStudent[a].length; });
+      var doneDelivered = done.filter(function (o) { return o.status === "delivered"; });
+      var doneRejected = done.filter(function (o) { return o.status === "rejected"; });
+
+      orderListEl.innerHTML =
+        '<h3 style="margin:4px 0 6px;">🔔 처리 필요 · ' + todo.length + '건</h3>' +
+        (todo.length
+          ? '<p class="meta" style="margin:0 0 6px;">확인 중은 승인 또는 거절, 승인됨은 실제로 전달한 뒤 「전달 완료」를 눌러요.</p>' + todo.map(orderHtml).join("")
+          : '<p class="msg">처리할 교환 요청이 없어요 ✅</p>') +
+        '<h3 style="margin:18px 0 6px;">🎁 상품 교환 내역 · ' + done.length + '건</h3>' +
+        (done.length
+          ? (doneDelivered.length ? orderFold('전달 완료 (' + doneDelivered.length + '건)', doneDelivered, false) : '') +
+            (doneRejected.length ? orderFold('거절됨 (' + doneRejected.length + '건)', doneRejected, false) : '')
+          : '<p class="msg">아직 없어요.</p>') +
+        '<h3 style="margin:18px 0 6px;">🎮 게임 안 자동 구매 · ' + auto.length + '건</h3>' +
+        (auto.length
+          ? '<p class="meta" style="margin:0 0 6px;">In Odyssey 안에서 학생이 직접 산 기록이에요. 자동으로 전달돼서 처리할 일은 없어요.</p>' +
+            studentKeys.map(function (k) {
+              var list = byStudent[k], sum = list.reduce(function (a, o) { return a + (Number(o.cost_snapshot) || 0); }, 0);
+              return orderFold(escapeHtmlAdmin(k) + ' · ' + list.length + '건 · ' + sum + '달란트', list, false);
+            }).join("")
+          : '<p class="msg">아직 없어요.</p>');
 
       orderListEl.querySelectorAll("[data-act]").forEach(function (btn) {
         btn.addEventListener("click", function () {
@@ -1563,7 +1603,8 @@ function initShopAdmin(userId) {
       if (res.error) { suggestListEl.innerHTML = '<p class="msg">불러오지 못했어요.</p>'; return; }
       var rows = res.data || [];
       if (!rows.length) { suggestListEl.innerHTML = '<p class="msg">받은 추천이 없어요.</p>'; return; }
-      suggestListEl.innerHTML = rows.map(function (s) {
+      // 상품 추천을 「답변 대기(접수됨·검토 중) → 처리한 추천(추가함·반려)」으로 나눈다(2026-09-30).
+      function suggestHtml(s) {
         var who = escapeHtmlAdmin(s.nickname || "?");
         return (
           '<div class="note-item" data-suggest-id="' + s.id + '">' +
@@ -1577,7 +1618,20 @@ function initShopAdmin(userId) {
             '</div>' +
           '</div>'
         );
-      }).join("");
+      }
+      var waiting = rows.filter(function (s) { return s.status === "open" || s.status === "reviewing"; });
+      var handled = rows.filter(function (s) { return !(s.status === "open" || s.status === "reviewing"); });
+      var hAdded = handled.filter(function (s) { return s.status === "added"; });
+      var hDeclined = handled.filter(function (s) { return s.status === "declined"; });
+      var hOther = handled.filter(function (s) { return s.status !== "added" && s.status !== "declined"; });
+      function suggestFold(title, list) {
+        return list.length ? '<details class="member-fold"><summary>' + title + ' (' + list.length + '건)</summary>' + list.map(suggestHtml).join("") + '</details>' : '';
+      }
+      suggestListEl.innerHTML =
+        '<h3 style="margin:4px 0 6px;">🔔 답변 대기 (접수됨·검토 중) · ' + waiting.length + '건</h3>' +
+        (waiting.length ? waiting.map(suggestHtml).join("") : '<p class="msg">답할 추천이 없어요 ✅</p>') +
+        '<h3 style="margin:18px 0 6px;">📚 처리한 추천 · ' + handled.length + '건</h3>' +
+        (handled.length ? suggestFold("추가함", hAdded) + suggestFold("반려", hDeclined) + suggestFold("기타", hOther) : '<p class="msg">아직 없어요.</p>');
 
       suggestListEl.querySelectorAll("[data-sg]").forEach(function (btn) {
         btn.addEventListener("click", function () {
