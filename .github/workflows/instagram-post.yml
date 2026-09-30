@@ -33,10 +33,13 @@ on:
     - cron: "37 7 * * 2,4"   # 16:37
     - cron: "7 8 * * 2,4"    # 17:07
     - cron: "37 8 * * 2,4"   # 17:37
+    - cron: "7 10 * * 2,4"   # 19:07 (GitHub 예약이 몇 시간씩 밀리거나 빠지는 날을 위한 늦은 백업, 2026-09-29 추가)
+    - cron: "7 12 * * 2,4"   # 21:07
     - cron: "7 4 * * 6"      # 토 13:07 KST  (설교예고숏츠 13:00 예약분)
     - cron: "37 4 * * 6"     # 13:37
     - cron: "7 5 * * 6"      # 14:07
     - cron: "37 5 * * 6"     # 14:37
+    - cron: "7 8 * * 6"      # 17:07 (늦은 백업)
   workflow_dispatch:
     inputs:
       force_id:
@@ -175,7 +178,14 @@ jobs:
             if [ "${{ github.event_name }}" = "schedule" ]; then
               # 같은 날 앞선 실행이 이미 올렸다면(백업 크론이 여러 번 도는 구조) 정상이다.
               TODAY_KST=${NOW_KST:0:10}
-              DONE_TODAY=$(jq -r --arg d "$TODAY_KST" '[.posts[] | select(.status=="posted" and ((.posted_at // "") | startswith($d)))] | length' instagram/queue.json)
+              # GitHub 예약 실행이 몇 시간씩 밀리면 한국 시간 자정을 넘겨 실행된다(2026-09-29 밤 00:03 실행이 "오늘 올릴 게 없다"며 거짓 실패한 적 있음).
+              # 새벽 6시 전이면 전날 게시분도 "이미 올림"으로 센다.
+              if [ "$((10#${NOW_KST:11:2}))" -lt 6 ]; then
+                YESTERDAY_KST=$(TZ=Asia/Seoul date -d 'yesterday' '+%Y-%m-%d')
+                DONE_TODAY=$(jq -r --arg d "$TODAY_KST" --arg y "$YESTERDAY_KST" '[.posts[] | select(.status=="posted" and ((.posted_at // "") | (startswith($d) or startswith($y))))] | length' instagram/queue.json)
+              else
+                DONE_TODAY=$(jq -r --arg d "$TODAY_KST" '[.posts[] | select(.status=="posted" and ((.posted_at // "") | startswith($d)))] | length' instagram/queue.json)
+              fi
               if [ "${DONE_TODAY:-0}" -gt 0 ]; then
                 echo "오늘 이미 게시됨(${DONE_TODAY}건) — 백업 실행이므로 정상 종료"
                 echo "posted=0" >> "$GITHUB_OUTPUT"
