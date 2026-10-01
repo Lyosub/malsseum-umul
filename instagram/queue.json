@@ -112,13 +112,15 @@
       "id": "2026-09-27-cartoon",
       "type": "image",
       "publish_at": "2026-10-01 16:00",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-09-27-cartoon.txt",
       "first_comment_file": "instagram/captions/2026-09-27-cartoon.tags.txt",
       "images": [
         "instagram/2026-09-27-cartoon.jpg"
       ],
-      "note": "말씀카툰 #003 「당연한 게 아니었네」 — 9/27 설교 기준. 지호가 버스를 놓칠 뻔했다가 무사히 탄 하루를 '운'으로 넘기려다, 물방울의 한마디로 하나님께 감사기도. 전도사님 컨펌 2026-09-22."
+      "note": "말씀카툰 #003 「당연한 게 아니었네」 — 9/27 설교 기준. 지호가 버스를 놓칠 뻔했다가 무사히 탄 하루를 '운'으로 넘기려다, 물방울의 한마디로 하나님께 감사기도. 전도사님 컨펌 2026-09-22.",
+      "media_id": "17904832392579984",
+      "posted_at": "2026-10-01 16:02"
     },
     {
       "id": "2026-10-03-preview",
