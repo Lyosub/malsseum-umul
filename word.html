@@ -153,7 +153,7 @@
       setReadCtaLink(cta, getVerseFor("daily").ref);
     } catch (e) {}
   })();
-  // 성경 이어 읽기: 마지막으로 연 곳을 불러와 "이어 읽기" 버튼에 반영(대한성서공회 개역개정판으로 연결)
+  // 성경 이어 읽기: 최근 선택한 곳을 불러와 "이어 읽기" 버튼에 반영(대한성서공회 개역개정판으로 연결)
   (function () {
     if (typeof getClient !== "function") return;
     var client = getClient();
@@ -172,7 +172,7 @@
         if (t) t.textContent = "이어서 · " + label;
         if (s && row.updated_at) {
           var d = new Date(row.updated_at);
-          s.textContent = "마지막으로 연 날 " + d.getFullYear() + "." +
+          s.textContent = "최근 선택한 날 " + d.getFullYear() + "." +
             ("0" + (d.getMonth() + 1)).slice(-2) + "." + ("0" + d.getDate()).slice(-2);
         }
         if (b) {

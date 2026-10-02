@@ -39,11 +39,11 @@ function initBibleReader() {
     bookSelect.value = String(b.id);
     populateChapters();
     if (wantCh >= 1 && wantCh <= b.chapters) chapterSelect.value = String(wantCh);
-    showResult(false);
+    showResult(false, true);
   }
 
-  // 고른 책·장의 안내 카드를 보여 준다. record=true 면 "마지막으로 연 곳"으로 저장하고 새 창을 연다.
-  function showResult(record) {
+  // 고른 책·장의 안내 카드를 보여 준다. record=true 면 선택한 책·장을 저장하고 새 창을 시도한다.
+  function showResult(record, fromDeepLink) {
     var b = selectedBook();
     var chapter = parseInt(chapterSelect.value, 10) || 1;
     var url = b ? bibleReadUrl(b.id, chapter) : "";
@@ -55,7 +55,9 @@ function initBibleReader() {
     var next = chapter < b.chapters ? '<button type="button" class="btn ghost" data-step="1">다음 장 ▶</button>' : '<span></span>';
     resultEl.innerHTML =
       '<h3 style="margin-top:0;color:var(--well-deep);">' + b.name + ' ' + chapter + '장</h3>' +
-      '<p class="msg" style="margin:0 0 14px;">대한성서공회 성경 사이트(개역개정판)에서 이어서 읽어요. 새 창으로 열려요.</p>' +
+      '<p class="msg" style="margin:0 0 14px;">' +
+      (fromDeepLink ? '공유된 책·장을 선택했어요. 아래 버튼을 누르면 ' : '') +
+      '대한성서공회 성경 사이트(개역개정판)가 새 창으로 열려요. 새 창이 안 열리면 아래 링크를 다시 눌러 주세요.</p>' +
       '<a class="btn block" id="openBibleLink" href="' + url + '" target="_blank" rel="noopener">📖 개역개정 본문 읽기 ↗</a>' +
       '<div style="display:flex;justify-content:space-between;gap:10px;margin-top:12px;">' + prev + next + '</div>';
     var link = document.getElementById("openBibleLink");
@@ -68,8 +70,8 @@ function initBibleReader() {
       });
     }
     if (record) {
-      saveReadingProgress(b.id, b.name, chapter);
       window.open(url, "_blank", "noopener");
+      saveReadingProgress(b.id, b.name, chapter);
     }
   }
 
@@ -78,7 +80,7 @@ function initBibleReader() {
   readBtn.addEventListener("click", function () { showResult(true); });
 }
 
-// 사용자가 한 장을 열었을 때 "마지막으로 연 곳"을 저장한다(로그인 상태일 때만, 실패는 조용히 무시).
+// 사용자가 한 장의 열기를 선택했을 때 "최근 선택한 곳"을 저장한다(로그인 상태일 때만, 실패는 조용히 무시).
 // 말씀 탭(word.html)의 "이어 읽기"가 이 기록을 쓴다. 달란트와는 무관하다.
 function saveReadingProgress(bookId, bookName, chapter) {
   try {
