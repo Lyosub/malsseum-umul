@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
 <title>성경 읽기 | 말씀우물</title>
-<meta name="description" content="책과 장을 골라 성경 본문을 바로 읽어보세요.">
+<meta name="description" content="책과 장을 골라 개역개정 성경 본문을 대한성서공회 성경 사이트에서 읽어보세요.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="성경 읽기 | 말씀우물">
-<meta property="og:description" content="책과 장을 골라 성경 본문을 바로 읽어보세요.">
+<meta property="og:description" content="책과 장을 골라 개역개정 성경 본문을 대한성서공회 성경 사이트에서 읽어보세요.">
 <meta property="og:image" content="https://logoswell.kr/assets/og-image.jpg">
 <meta property="og:url" content="https://logoswell.kr/read.html">
 <meta name="twitter:card" content="summary_large_image">
@@ -30,7 +30,7 @@
 <div class="wrap">
   <div class="page-hd">
     <h1>성경 읽기</h1>
-    <p>책과 장을 골라 본문을 바로 읽어보세요</p>
+    <p>책과 장을 골라 개역개정 본문을 읽어보세요</p>
   </div>
 
   <div class="card">
@@ -42,12 +42,12 @@
       <label for="chapterSelect">장</label>
       <select id="chapterSelect" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);"></select>
     </div>
-    <button id="readBtn" class="btn block">본문 읽기</button>
+    <button id="readBtn" class="btn block">개역개정 본문 읽기 ↗</button>
   </div>
 
   <div id="chapterResult" class="card"></div>
 
-  <p class="msg" style="text-align:center;">성경 본문 제공: <a href="https://bolls.life" target="_blank" rel="noopener">Bolls Bible API</a> · 개역한글판(공개영역)</p>
+  <p class="msg" style="text-align:center;">성경 본문은 <a href="https://bible.bskorea.or.kr" target="_blank" rel="noopener">대한성서공회 성경 사이트</a>의 개역개정판으로 연결돼요. 이 사이트에는 성경 본문을 저장하지 않아요.</p>
 </div>
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
@@ -57,6 +57,7 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/auth.js"></script>
+<script src="assets/bible-books.js"></script>
 <script src="assets/bible-api.js"></script>
 <script>
   initBibleReader();

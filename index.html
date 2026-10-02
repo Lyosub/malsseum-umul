@@ -145,6 +145,7 @@
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/auth.js"></script>
 <script src="assets/post-media.js"></script>
+<script src="assets/bible-books.js"></script>
 <script src="assets/script.js"></script>
 <script src="assets/public-feed.js"></script>
 <script src="assets/new-badge.js"></script>
@@ -160,8 +161,7 @@
     var cta = document.getElementById("homeVerseCta");
     if (!cta || typeof getVerseFor !== "function" || typeof refToReadLink !== "function") return;
     try {
-      var link = refToReadLink(getVerseFor("daily").ref);
-      if (link) cta.href = link;
+      setReadCtaLink(cta, getVerseFor("daily").ref);
     } catch (e) {}
   })();
   // 홈의 "내 마음에 맞는 말씀" 한 줄 입력 → well.html 로 넘기며 바로 매칭

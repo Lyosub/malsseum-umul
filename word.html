@@ -138,6 +138,7 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/auth.js"></script>
+<script src="assets/bible-books.js"></script>
 <script src="assets/script.js"></script>
 <script src="assets/appshell.js"></script>
 <script>
@@ -149,11 +150,10 @@
     var cta = document.getElementById("homeVerseCta");
     if (!cta || typeof getVerseFor !== "function" || typeof refToReadLink !== "function") return;
     try {
-      var link = refToReadLink(getVerseFor("daily").ref);
-      if (link) cta.href = link;
+      setReadCtaLink(cta, getVerseFor("daily").ref);
     } catch (e) {}
   })();
-  // 성경 이어 읽기: 마지막으로 읽은 곳을 불러와 "이어 읽기" 버튼에 반영
+  // 성경 이어 읽기: 마지막으로 연 곳을 불러와 "이어 읽기" 버튼에 반영(대한성서공회 개역개정판으로 연결)
   (function () {
     if (typeof getClient !== "function") return;
     var client = getClient();
@@ -166,16 +166,20 @@
         var t = document.getElementById("rpTitle");
         var s = document.getElementById("rpSub");
         var b = document.getElementById("rpBtn");
-        var label = row.book_name + " " + row.chapter + "장";
+        var book = typeof findBibleBook === "function" ? (findBibleBook(row.book_id) || findBibleBook(row.book_name)) : null;
+        var bookName = book ? book.name : row.book_name;
+        var label = bookName + " " + row.chapter + "장";
         if (t) t.textContent = "이어서 · " + label;
         if (s && row.updated_at) {
           var d = new Date(row.updated_at);
-          s.textContent = "마지막으로 읽은 날 " + d.getFullYear() + "." +
+          s.textContent = "마지막으로 연 날 " + d.getFullYear() + "." +
             ("0" + (d.getMonth() + 1)).slice(-2) + "." + ("0" + d.getDate()).slice(-2);
         }
         if (b) {
           b.textContent = label + " 이어 읽기 ›";
-          b.href = "read.html?book=" + encodeURIComponent(row.book_name) + "&chapter=" + row.chapter;
+          var url = book && typeof bibleReadUrl === "function" ? bibleReadUrl(book.id, row.chapter) : "";
+          if (url) { b.href = url; b.target = "_blank"; b.rel = "noopener"; }
+          else b.href = "read.html?book=" + encodeURIComponent(bookName) + "&chapter=" + row.chapter;
         }
       }, function () {});
     });

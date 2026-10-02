@@ -487,11 +487,28 @@ function saveVerseCard() {
   });
 }
 
-// "빌립보서 4:6-7" → read.html?book=빌립보서&chapter=4  (앞뒤 맥락을 성경 읽기에서 바로 보게)
+// "빌립보서 4:6-7" → 대한성서공회 개역개정판 읽기 주소(assets/bible-books.js 가 있을 때). 책·장을 못 알아보면 read.html 로 보낸다.
 function refToReadLink(ref) {
   var m = /^(.+?)\s+(\d+)\s*:/.exec(ref || "");
   if (!m) return "";
+  if (typeof bibleReadUrl === "function") {
+    var u = bibleReadUrl(m[1].trim(), m[2]);
+    if (u) return u;
+  }
   return "read.html?book=" + encodeURIComponent(m[1].trim()) + "&chapter=" + m[2];
+}
+
+// 외부(대한성서공회) 주소면 새 창으로 열게 한다.
+function isExternalLink(href) {
+  return /^https?:\/\//.test(href || "");
+}
+
+// "오늘의 말씀 읽기" 같은 버튼에 오늘 말씀 본문 주소를 넣는다.
+function setReadCtaLink(cta, ref) {
+  var link = refToReadLink(ref);
+  if (!cta || !link) return;
+  cta.href = link;
+  if (isExternalLink(link)) { cta.target = "_blank"; cta.rel = "noopener"; }
 }
 
 function renderWellVerseInto(elId, verse) {
@@ -508,7 +525,7 @@ function renderWellVerseInto(elId, verse) {
       '<div class="well-label">오늘의 기도</div>' +
       '<p class="well-prayer-text">' + (verse.prayer || "") + '</p>' +
     '</div>' +
-    (readLink ? '<a href="' + readLink + '" class="btn ghost block" style="margin-top:14px;">📖 이 말씀의 앞뒤 내용 읽기</a>' : '');
+    (readLink ? '<a href="' + readLink + '"' + (isExternalLink(readLink) ? ' target="_blank" rel="noopener"' : '') + ' class="btn ghost block" style="margin-top:14px;">📖 이 말씀의 앞뒤 내용 읽기' + (isExternalLink(readLink) ? ' ↗' : '') + '</a>' : '');
 }
 
 function initWellForm() {
