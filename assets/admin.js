@@ -200,6 +200,7 @@ function loadMemberList() {
 
   client.rpc("get_member_list").then(function (res) {
     var members = res.data || [];
+    var memberBalances = Object.create(null);
     if (countEl) countEl.textContent = "총 " + members.length + "명";
 
     if (!members.length) {
@@ -212,6 +213,10 @@ function loadMemberList() {
       var lastNote = m.last_note_type
         ? ADMIN_NOTE_LABELS[m.last_note_type] + ' (' + formatDateTime(m.last_note_at) + ')'
         : "아직 없음";
+      var balanceInfo = memberBalances[m.user_id];
+      var talentText = balanceInfo
+        ? '적립 ' + m.total_points + ' · 사용 ' + balanceInfo.spent_points + ' · 잔액 ' + balanceInfo.balance
+        : m.total_points + '달란트';
       return (
         '<div class="note-item" data-user-id="' + m.user_id + '">' +
           '<div class="content" data-action="toggle-detail" style="cursor:pointer;">' +
@@ -219,7 +224,7 @@ function loadMemberList() {
             (m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">교역자</span>' : '') +
             (m.is_department_head && !m.is_admin ? ' <span style="color:var(--gold);font-size:12px;">부장</span>' : '') +
             (m.is_teacher && !m.is_admin ? ' <span style="color:var(--well);font-size:12px;">교사</span>' : '') +
-            ' <span style="color:var(--well);font-size:12px;font-weight:700;">' + m.total_points + '달란트</span>' +
+            ' <span style="color:var(--well);font-size:12px;font-weight:700;">' + escapeHtmlAdmin(talentText) + '</span>' +
             ' <span style="color:var(--text-soft);font-size:11px;">(눌러서 상세보기)</span>' +
             '<br>' + (m.real_name ? '본명: ' + escapeHtmlAdmin(m.real_name) + ' · ' : '') +
             (m.phone_number ? '☎ ' + escapeHtmlAdmin(m.phone_number) + ' · ' : '') + escapeHtmlAdmin(m.email) +
@@ -513,6 +518,17 @@ function loadMemberList() {
     }
 
     applyFilter();
+    // The extra RPC is optional for older/offline deployments: retain the earned-only list on failure.
+    try {
+      client.rpc("get_member_balances_admin").then(function (balanceRes) {
+        if (balanceRes.error || !Array.isArray(balanceRes.data)) return;
+        balanceRes.data.forEach(function (row) {
+          if (!row.user_id || !Number.isFinite(Number(row.spent_points)) || !Number.isFinite(Number(row.balance))) return;
+          memberBalances[row.user_id] = row;
+        });
+        applyFilter();
+      }, function () {});
+    } catch (e) {}
   }).catch(function () {
     listEl.innerHTML = '<p class="msg">회원 목록을 불러오지 못했어요.</p>';
   });
