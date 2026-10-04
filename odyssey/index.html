@@ -559,6 +559,7 @@
 <div id="book-modal" class="modal hidden"><div class="sheet"><h3>📖 구절 수집첩</h3><div class="cards" id="book-cards"></div><button class="close">닫기</button></div></div>
 <div id="warp-modal" class="modal hidden"><div class="sheet" style="max-width:380px"><h3>🧭 어디로 갈까요?</h3><div id="warp-list"></div><button class="close">닫기</button></div></div>
 <div id="worship-modal" class="modal hidden"><div class="sheet" style="max-width:400px;text-align:center"><h3>⛪ 예배 암호</h3><div id="worship-body"></div><button class="close">닫기</button></div></div>
+<div id="login-modal" class="modal hidden"><div class="sheet" style="max-width:400px;text-align:center"><h3>🔒 로그인이 필요해요</h3><div style="margin:10px 0 14px;line-height:1.7;font-size:14px">조작 연습까지는 로그인 없이 해 볼 수 있어요.<br>이야기를 이어서 모험하려면 말씀우물에 로그인해 주세요.<br><span style="opacity:.8;font-size:13px">로그인하면 진행 상황이 저장되고 달란트도 받아요.</span></div><a href="../login.html?next=/odyssey/" style="display:block;padding:11px;border-radius:10px;background:#ffd27a;color:#3a2400;font-weight:800;font-size:15px;text-decoration:none">로그인하기</a><a href="../signup.html" style="display:block;margin-top:8px;padding:10px;border-radius:10px;border:2px solid #ffd27a;color:#ffd27a;font-weight:800;font-size:14px;text-decoration:none">처음이에요 · 회원가입</a><button class="close">나중에 할게요</button></div></div>
 <div id="pet-modal" class="modal hidden"><div class="sheet" style="max-width:420px"><h3 id="pet-title">🐾 내 펫</h3><div id="pet-body"></div><button class="close">닫기</button></div></div>
 <div id="replay-modal" class="modal hidden"><div class="sheet"><h3>🎬 기념 전시관 — 다시 하기</h3><div id="replay-list"></div><button class="close">닫기</button></div></div>
 <div id="replay-bar" class="hidden"><span id="replay-t"></span><button id="replay-stop">그만두기</button></div>
@@ -5492,13 +5493,14 @@
   };
   const MSU_BASE = '../';   // 게임 위치: 말씀우물 사이트의 /odyssey/ 폴더
   const SHOP_MOCK = /[?&]shopmock(&|$)/.test(location.search);
-  const MSU = { client: null, session: null, balance: null, items: null };
+  const MSU = { client: null, session: null, balance: null, items: null, ready: false };
   let shopCat = 'staff';
   const equip = (() => { try { return JSON.parse(localStorage.getItem('inodyssey-equip') || '{}'); } catch (e){ return {}; } })();
   let owned = new Set((() => { try { return JSON.parse(localStorage.getItem('inodyssey-owned') || '[]'); } catch (e){ return []; } })());
   const saveLocal = () => { try { localStorage.setItem('inodyssey-equip', JSON.stringify(equip)); localStorage.setItem('inodyssey-owned', JSON.stringify([...owned])); } catch (e){} try { queueCloud(); } catch (e){} };
   const loadScript = src => new Promise((res, rej) => { const e = document.createElement('script'); e.src = src; e.onload = res; e.onerror = rej; document.head.appendChild(e); });
-  async function msuInit(){
+  async function msuInit(){ try { await msuInit0(); } finally { MSU.ready = true; } }   // 로그인 여부 확인이 끝났다는 표시(로그인 안내 창이 확인 전에 뜨지 않게)
+  async function msuInit0(){
     if (SHOP_MOCK){ MSU.balance = +(localStorage.getItem('inodyssey-mockbal') || 200); return; }
     if (window.__ASSETS || location.protocol === 'file:') return;           // 미리보기(파일 하나)에서는 연동 안 함
     try {
@@ -9019,9 +9021,12 @@
       setTimeout(() => { traveling = false; }, 340);
     }, 340);
   }
+  const GUEST_OK = new Set(['a_shop', 'map', 'links', 'memorial']);   // 로그인 없이도 둘러볼 수 있는 곳
   function openInfo(){
     if (!nearPoint || dlgState || !mg.el.classList.contains('hidden')) return;
     const d = nearPoint.data;
+    // 로그인하지 않은 사람은 조작 연습(걷기·상점 둘러보기 등)까지만 — 이야기를 시작하려고 하면 로그인 안내
+    if (MSU.client && MSU.ready && !MSU.session && !SHOP_MOCK && !GUEST_OK.has(d.id)){ openModal('login-modal'); return; }
     if (d.type === 'door'){ passDoor(d); return; }
     if (d.type === 'exit'){
       if (d.needStep && !ST.cleared && ST.step < stepIdx(d.needStep)){ toast(d.lockMsg || '아직 갈 수 없어요', 2000); return; }
