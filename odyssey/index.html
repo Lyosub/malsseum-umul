@@ -7607,7 +7607,7 @@
     return { v: 1, at: Date.now(), keys };
   }
   async function cloudSave(force){
-    if (!msuOn() || !CLOUD.ready || CLOUD.busy) return null;
+    if (!msuOn() || !CLOUD.ready || CLOUD.busy || CLOUD.leaving) return null;   // 불러오기·초기화로 새로고침하는 중엔 옛 기록을 올리지 않음
     CLOUD.busy = true;
     try { const { data, error } = await MSU.client.rpc('save_odyssey_state', { p_data: cloudPack(), p_score: cloudScore(), p_force: !!force }); if (error) throw error; if (data === 1) CLOUD.last = new Date(); return data; }
     catch (e){ return null; } finally { CLOUD.busy = false; }
@@ -7615,6 +7615,7 @@
   function queueCloud(){ if (!msuOn() || !CLOUD.ready) return; clearTimeout(CLOUD.t); CLOUD.t = setTimeout(() => cloudSave(false), 15000); }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && CLOUD.ready){ clearTimeout(CLOUD.t); cloudSave(false); } });
   function cloudRestore(pack){
+    CLOUD.leaving = true;
     try { sessionStorage.setItem('odyssey-restored', String(pack.at || 1)); } catch (e){}
     for (const k of CLOUD_KEYS){ const v = pack.keys && pack.keys[k]; try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e){} }
     const u = new URL(location.href); ['reset', 'ch', 'zone', 'body', 'hair'].forEach(p => u.searchParams.delete(p)); location.href = u.toString();
@@ -7630,6 +7631,9 @@
     let row = null;
     try { const { data, error } = await MSU.client.rpc('get_odyssey_state'); if (error) throw error; row = data && data[0]; } catch (e){ return; }   // 서버 준비 전이면 조용히 건너뜀
     CLOUD.ready = true;
+    // 관리자가 계정 기록을 초기화했으면(서버 저장본에 reset 표시) 이 기기 기록도 한 번 비우고 처음부터
+    if (row && row.data && row.data.reset){ let done = null; try { done = localStorage.getItem('inodyssey-reset-at'); } catch (e){}
+      if (String(row.data.at) !== done){ try { localStorage.setItem('inodyssey-reset-at', String(row.data.at)); localStorage.removeItem('inodyssey-owned'); } catch (e){} toast('☁️ 모험을 처음부터 시작해요…', 2000); setTimeout(() => cloudRestore(row.data), 900); CLOUD.leaving = true; return; } }
     let restored = null; try { restored = sessionStorage.getItem('odyssey-restored'); } catch (e){}
     const local = cloudScore();
     const fresh = (ST.ch + (ST.cleared ? 1 : 0)) * 1000 + (ST.cleared ? 0 : ST.step || 0) * 10 <= 10 && !(ST.verses || []).length && !Object.values(ST.sp || {}).some(p => p && ((p.ch || 0) || p.step || p.cleared));
