@@ -138,13 +138,17 @@
 <script src="assets/appshell.js"></script>
 <script>
   initHeaderAuthState();
-  // In Odyssey 카드: 관리자 + 시험 참여로 지정한 학생에게만 보여 준다(시험 공개 기간, DB 함수 can_see_odyssey)
+  // In Odyssey 카드: 2026-10-04 19:30(KST)부터 누구에게나 보여 준다(로그인하지 않으면 게임 안에서 조작 연습까지만).
+  // 그 전에는 관리자 + 시험 참여로 지정한 학생에게만(DB 함수 can_see_odyssey).
   (function () {
+    var card = document.getElementById("odysseyCard");
+    if (!card) return;
+    if (Date.now() >= new Date("2026-10-04T19:30:00+09:00").getTime()) { card.style.display = "flex"; return; }
     if (typeof getClient !== "function" || !getClient()) return;
     getSession().then(function (session) {
       if (!session) return;
       getClient().rpc("can_see_odyssey").then(function (res) {
-        if (res && res.data === true) { var c = document.getElementById("odysseyCard"); if (c) c.style.display = "flex"; }
+        if (res && res.data === true) card.style.display = "flex";
       });
     });
   })();
