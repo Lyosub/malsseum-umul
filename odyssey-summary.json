@@ -1,17 +1,25 @@
 {
   "testers": 2,
-  "players": 4,
+  "players": 5,
   "active_24h": 2,
-  "saved_24h": 3,
-  "steps_24h": 19,
+  "saved_24h": 4,
+  "steps_24h": 102,
   "active_7d": 2,
   "chapters": {
     "0": 2,
     "1": 1,
-    "4": 1
+    "4": 1,
+    "7": 1
   },
-  "stuck": [],
-  "errors_24h": 0,
-  "generated_kst": "2026-10-04 21:40",
+  "stuck": [
+    {
+      "chapter": 5,
+      "step": "c5s1",
+      "players": 1,
+      "median_secs": 241
+    }
+  ],
+  "errors_24h": 2,
+  "generated_kst": "2026-10-05 02:00",
   "ok": true
 }
