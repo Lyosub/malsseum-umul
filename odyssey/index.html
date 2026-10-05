@@ -305,7 +305,7 @@
   /* 미니게임 */
   #mg { position:fixed; inset:0; z-index:70; background:rgba(10,6,2,0.6); display:flex; align-items:center; justify-content:center; font-family:'Pretendard', sans-serif; }
   #mg.hidden { display:none; }
-  .mg-box { width:min(92vw, 520px); max-height:94vh; overflow:auto; background:#2a1d10; color:#f5e9d0; border:2px solid #ffd27a; border-radius:18px; padding:14px 16px; }
+  .mg-box { width:min(92vw, 520px); max-height:94vh; overflow:auto; touch-action:pan-y; overscroll-behavior:contain; background:#2a1d10; color:#f5e9d0; border:2px solid #ffd27a; border-radius:18px; padding:14px 16px; }
   .mg-top { display:flex; justify-content:space-between; align-items:center; font-size:15px; }
   .mg-top b { color:#ffd27a; }
   #mg-stat { font-size:13px; font-weight:800; }
@@ -5512,6 +5512,8 @@
       if (MSU.session){ await shopRefresh(); await cloudInit(); claimClearedChapters(); }
     } catch (e){ console.warn('말씀우물 연결 실패', e); MSU.client = null; }
   }
+  // 로그인한 사람이 게임에 들어올 때마다 하루 한 번(한국 시간 날짜별) 접속 기록 — 일일 점검의 「오늘 접속한 사람 수」용(서버가 같은 날 중복은 무시)
+  function logVisit(){ try { if (!MSU.client || !MSU.session) return; const k = new Date(Date.now() + 9 * 3600e3).toISOString().slice(2, 10).replace(/-/g, ''); MSU.client.rpc('log_odyssey_step', { p_ch: 0, p_step: 'v' + k, p_secs: 0, p_dev: DEV }).then(() => {}, () => {}); } catch (e){} }
   async function shopRefresh(){
     if (SHOP_MOCK){ return; }
     if (!MSU.client || !MSU.session) return;
@@ -8333,19 +8335,19 @@
   // 🏛 열두 지파대로 열두 기둥 세우기
   function pillarsGame(q){
     runDialog(DLG.c8_pillars, () => {
-      mgOpen('🏛 열두 기둥', '"이스라엘 열두 지파대로 열두 기둥을 세우고" (출 24:4) — 제단 둘레에 기둥 열둘을 세워요.');
+      mgOpen('🏛 열두 기둥', '"이스라엘 열두 지파대로 열두 기둥을 세우고" (출 24:4) — 제단 둘레에 기둥 열둘을 세워요.'); mgArea.style.height = 'auto';   // 기본 높이(120px)에 가려 아래쪽 기둥이 안 보여 못 누르던 문제(10/5 학생 제보)
       const set = new Set();
       const draw = () => {
         const cells = Array.from({ length: 12 }, (_, i) => { const a = i / 12 * Math.PI * 2 - Math.PI / 2, x = 50 + Math.cos(a) * 38, y = 50 + Math.sin(a) * 38;
           return `<button data-pil="${i}" style="position:absolute;left:${x}%;top:${y}%;transform:translate(-50%,-50%);width:30px;height:${set.has(i) ? 40 : 14}px;border-radius:6px;border:1px solid rgba(255,255,255,.4);background:${set.has(i) ? '#cdbb96' : 'rgba(255,255,255,.12)'};transition:height .2s"></button>`; }).join('');
-        mgArea.innerHTML = `<div style="position:relative;height:190px;margin:4px auto;max-width:260px"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46px;height:34px;border-radius:6px;background:#9a8a6a"></div>${cells}</div>`
+        mgArea.innerHTML = `<div style="position:relative;height:min(190px,38vh);margin:4px auto;max-width:260px"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46px;height:34px;border-radius:6px;background:#9a8a6a"></div>${cells}</div>`
           + `<div style="text-align:center;color:#ffd27a;font-weight:800">${set.size < 12 ? `기둥 ${set.size} / 12` : '✓ 열두 기둥을 모두 세웠어요'}</div>`;
         mgAct.textContent = set.size < 12 ? '열둘을 다 세우면 계속' : '계속'; mgAct.disabled = set.size < 12;
       };
       draw();
       mgArea.onclick = e => { const b = e.target.closest('[data-pil]'); if (!b) return; set.add(+b.dataset.pil); draw(); };
-      mgAct.onclick = () => { if (set.size < 12) return; mgArea.onclick = null; mgCloseAll(); completeTask(q); };
-      mg.onClose = () => { mgArea.onclick = null; };
+      mgAct.onclick = () => { if (set.size < 12) return; mgArea.onclick = null; mgArea.style.height = ''; mgCloseAll(); completeTask(q); };
+      mg.onClose = () => { mgArea.onclick = null; mgArea.style.height = ''; };
     }, null, 'c8_pillars');
   }
   // ⛰ 반석 틈 — 영광이 지나가는 동안 손을 떼지 말고 기다리기(출 33:21-23)
@@ -9390,7 +9392,7 @@
     if (navigator.webdriver) begin();
     else { ld.classList.add('ready'); ld.addEventListener('pointerdown', begin, { once: true }); }
     setTimeout(prefetchAll, 1500);
-    applyEquip(); msuInit().then(() => { friendsInit(); worshipHello(); }, () => {});
+    applyEquip(); msuInit().then(() => { logVisit(); friendsInit(); worshipHello(); }, () => {});
   }).catch(err => {
     document.getElementById('loading-sub').textContent = '캐릭터를 불러오지 못했어요: ' + (err && err.message || err);
     console.error(err);
