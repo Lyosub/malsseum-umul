@@ -8722,6 +8722,7 @@
   function updateStorm(dt, now){
     if (rockWater){ rockWater.userData.fall.material.opacity = 0.7 + Math.sin(now * 0.01) * 0.12; }
     if (!stormObj) return;
+    if (!Z || Z.id !== 'sinai' || !Z.mountain || !stormObj.parent){ stormObj = null; return; }   // 시내산을 떠난 뒤에도 남은 번개·연기가 매 프레임 오류를 내던 문제(10/5 학생 오류 2건)
     const g = stormObj, L = g.userData.light;
     stormFlashT -= dt; if (stormFlashT <= 0){ stormFlashT = 2 + Math.random() * 3; L.intensity = 9; stormShakeK = 0.5; const fl = document.getElementById('flash'); if (fl){ fl.style.transition = 'none'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.transition = 'opacity 0.5s'; fl.style.opacity = '0'; }, 70); } }
     L.intensity *= Math.pow(0.02, dt);
