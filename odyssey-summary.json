@@ -1,11 +1,11 @@
 {
   "testers": 2,
   "players": 6,
-  "active_24h": 2,
-  "saved_24h": 2,
+  "active_24h": 1,
+  "saved_24h": 1,
   "visitors_24h": 1,
   "new_24h": 1,
-  "steps_24h": 22,
+  "steps_24h": 7,
   "active_7d": 5,
   "chapters": {
     "1편 모세와 함께 (10장)": {
@@ -20,6 +20,6 @@
   "stuck": [],
   "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-06 21:40",
+  "generated_kst": "2026-10-07 03:35",
   "ok": true
 }
