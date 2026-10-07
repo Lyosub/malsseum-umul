@@ -168,6 +168,39 @@
         "instagram/2026-10-04-cartoon.jpg"
       ],
       "note": "말씀카툰 #004 「혼자 참지 않아도 돼」 — 10/4 설교 두 번째 대지. 단톡방 나가기 버튼 앞에서 멈춘 지호가 물방울의 말에 지혜를 구하는 기도. 하단 띠 약 1:5. 전도사님 컨펌 2026-09-29."
+    },
+    {
+      "id": "2026-10-11-verse",
+      "type": "carousel",
+      "publish_at": "2026-10-13 16:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-10-11-verse.txt",
+      "first_comment_file": "instagram/captions/2026-10-11-verse.tags.txt",
+      "images": [
+        "instagram/2026-10-11-verse-01.jpg",
+        "instagram/2026-10-11-verse-02.jpg",
+        "instagram/2026-10-11-verse-03.jpg",
+        "instagram/2026-10-11-verse-04.jpg",
+        "instagram/2026-10-11-verse-05.jpg",
+        "instagram/2026-10-11-verse-06.jpg",
+        "instagram/2026-10-11-verse-07.jpg",
+        "instagram/2026-10-11-verse-08.jpg",
+        "instagram/2026-10-11-verse-09.jpg",
+        "instagram/2026-10-11-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 10/11 설교 「긍휼을 행하는 자」(야고보서 2:1-13). 10장 캐러셀, 표지 「자리를 내어 주는 것이 긍휼입니다」, 6장 약 2:5 전문, 10장에 이번 주 찬양(마커스워십 「거친 길 위를 걸어갈 때도」). 컴팩트판(글자 34/28px). 전도사님 컨펌 2026-10-07."
+    },
+    {
+      "id": "2026-10-11-cartoon",
+      "type": "image",
+      "publish_at": "2026-10-15 16:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-10-11-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-10-11-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-10-11-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #005 「여기 앉아」 — 10/11 설교. 가방을 올려 둔 옆자리, 서 있는 새 친구에게 먼저 자리를 내어 주는 지호. 하단 띠 약 2:1. 전도사님 컨펌 2026-10-07."
     }
   ]
 }
