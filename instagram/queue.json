@@ -201,6 +201,16 @@
         "instagram/2026-10-11-cartoon.jpg"
       ],
       "note": "말씀카툰 #005 「여기 앉아」 — 10/11 설교. 가방을 올려 둔 옆자리, 서 있는 새 친구에게 먼저 자리를 내어 주는 지호. 하단 띠 약 2:1. 전도사님 컨펌 2026-10-07."
+    },
+    {
+      "id": "2026-10-10-preview",
+      "type": "reels",
+      "publish_at": "2026-10-10 13:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-10-10-preview.txt",
+      "first_comment_file": "instagram/captions/2026-10-10-preview.tags.txt",
+      "video": "instagram/2026-10-10-preview.mp4",
+      "note": "설교 예고 숏츠 3회 — 10/11 설교 「긍휼을 행하는 자」(약 2:1-13) 배경(초대교회 모임 공간, 금 가락지와 화려한 옷, 남루한 옷의 사람 약 2:2). 제미나이 API(Veo 3.1 fast) 3장면 + Claude 자막·엔딩·자작 BGM(하프·오르간·플루트, bgm_1011c.py) 합성, 19.9초. 전도사님 컨펌 2026-10-07."
     }
   ]
 }
