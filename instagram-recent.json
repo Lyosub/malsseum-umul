@@ -1,0 +1,54 @@
+{
+  "generated_kst": "2026-10-07 14:49",
+  "ok": true,
+  "posts": [
+    {
+      "id": "18030754556854723",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-10-07T05:43:51+0000",
+      "permalink": "https://www.instagram.com/reel/DeLoiBQN9Mr/",
+      "caption_first_line": "성경 속 연결고리"
+    },
+    {
+      "id": "18099622580076822",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-10-06T07:03:02+0000",
+      "permalink": "https://www.instagram.com/p/DeJM9GUlZwn/",
+      "caption_first_line": "그릇은 불을 지나야 진짜가 됩니다."
+    },
+    {
+      "id": "18092555111430695",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-10-04T10:30:00+0000",
+      "permalink": "https://www.instagram.com/p/DeEbH9dmlLL/",
+      "caption_first_line": "성경 이야기 속을 직접 걸어 본다면? 🌿"
+    },
+    {
+      "id": "18094898165650357",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-10-03T04:02:43+0000",
+      "permalink": "https://www.instagram.com/reel/DeBJ5t7DNrf/",
+      "caption_first_line": "흩어진 그들에게, 편지 한 통이 도착했습니다."
+    },
+    {
+      "id": "17904832392579984",
+      "type": "FEED",
+      "media_type": "IMAGE",
+      "timestamp_utc": "2026-10-01T07:02:25+0000",
+      "permalink": "https://www.instagram.com/p/Dd8U6MUFqBr/",
+      "caption_first_line": "점수는 내가 정할 수 없지만, 감사는 내가 정할 수 있습니다."
+    },
+    {
+      "id": "18129254056691310",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-09-29T13:09:41+0000",
+      "permalink": "https://www.instagram.com/p/Dd31XF6ID4d/",
+      "caption_first_line": "열 명이 나았다. 돌아온 건 한 명이었다."
+    }
+  ]
+}
