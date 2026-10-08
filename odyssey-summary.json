@@ -1,11 +1,11 @@
 {
   "testers": 2,
   "players": 8,
-  "active_24h": 4,
-  "saved_24h": 4,
-  "visitors_24h": 4,
-  "new_24h": 3,
-  "steps_24h": 71,
+  "active_24h": 2,
+  "saved_24h": 2,
+  "visitors_24h": 2,
+  "new_24h": 1,
+  "steps_24h": 67,
   "active_7d": 7,
   "chapters": {
     "1편 모세와 함께 (10장)": {
@@ -18,8 +18,8 @@
     "3편 광야 40년 (16장)": {}
   },
   "stuck": [],
-  "errors_24h": 1,
+  "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-08 21:40",
+  "generated_kst": "2026-10-09 03:59",
   "ok": true
 }
