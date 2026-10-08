@@ -1,15 +1,15 @@
 {
   "testers": 2,
-  "players": 7,
-  "active_24h": 3,
-  "saved_24h": 3,
-  "visitors_24h": 3,
-  "new_24h": 2,
-  "steps_24h": 67,
-  "active_7d": 6,
+  "players": 8,
+  "active_24h": 4,
+  "saved_24h": 4,
+  "visitors_24h": 4,
+  "new_24h": 3,
+  "steps_24h": 71,
+  "active_7d": 7,
   "chapters": {
     "1편 모세와 함께 (10장)": {
-      "0장 클리어": 3,
+      "0장 클리어": 4,
       "1장 클리어": 1,
       "4장 클리어": 2,
       "10장 클리어": 1
@@ -20,6 +20,6 @@
   "stuck": [],
   "errors_24h": 1,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-08 21:13",
+  "generated_kst": "2026-10-08 21:40",
   "ok": true
 }
