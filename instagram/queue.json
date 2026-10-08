@@ -161,13 +161,15 @@
       "id": "2026-10-04-cartoon",
       "type": "image",
       "publish_at": "2026-10-08 16:00",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-10-04-cartoon.txt",
       "first_comment_file": "instagram/captions/2026-10-04-cartoon.tags.txt",
       "images": [
         "instagram/2026-10-04-cartoon.jpg"
       ],
-      "note": "말씀카툰 #004 「혼자 참지 않아도 돼」 — 10/4 설교 두 번째 대지. 단톡방 나가기 버튼 앞에서 멈춘 지호가 물방울의 말에 지혜를 구하는 기도. 하단 띠 약 1:5. 전도사님 컨펌 2026-09-29."
+      "note": "말씀카툰 #004 「혼자 참지 않아도 돼」 — 10/4 설교 두 번째 대지. 단톡방 나가기 버튼 앞에서 멈춘 지호가 물방울의 말에 지혜를 구하는 기도. 하단 띠 약 1:5. 전도사님 컨펌 2026-09-29.",
+      "media_id": "17912061630521694",
+      "posted_at": "2026-10-08 16:02"
     },
     {
       "id": "2026-10-11-verse",
