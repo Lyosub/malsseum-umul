@@ -1,7 +1,7 @@
 name: 인스타 최근 게시물 확인
 
 # 읽기 전용. 수동 실행(workflow_dispatch)으로만 돈다.
-# 계정의 최근 게시물 6개(종류·시각·캡션 첫 줄·링크)만 읽어 `health` 브랜치의 instagram-recent.json 에 저장한다.
+# 계정의 팔로워·게시물 수와 최근 게시물 25개(종류·시각·캡션 첫 줄·링크·좋아요·댓글 수)만 읽어 `health` 브랜치의 instagram-recent.json 에 저장한다.
 # 게시·수정·삭제는 하지 않는다. 토큰은 GitHub 보안 저장소에서만 쓰고 파일·로그에 남기지 않는다.
 # 수동으로 올린 게시물(전도사님이 앱에서 직접 올린 것)이 실제로 올라갔는지 Claude가 확인할 때 쓴다.
 
@@ -31,11 +31,15 @@ jobs:
           API="https://graph.instagram.com/v21.0"
           KST=$(TZ=Asia/Seoul date +"%Y-%m-%d %H:%M")
           BODY=$(curl -s --max-time 30 -G "$API/$IG_USER_ID/media" \
-            --data-urlencode "fields=id,media_type,media_product_type,timestamp,permalink,caption" \
-            --data-urlencode "limit=6" \
+            --data-urlencode "fields=id,media_type,media_product_type,timestamp,permalink,caption,like_count,comments_count" \
+            --data-urlencode "limit=25" \
             --data-urlencode "access_token=$IG_TOKEN" || echo "")
+          ACCT=$(curl -s --max-time 30 -G "$API/$IG_USER_ID" \
+            --data-urlencode "fields=username,followers_count,follows_count,media_count" \
+            --data-urlencode "access_token=$IG_TOKEN" || echo "{}")
+          echo "$ACCT" | jq -e '.username' >/dev/null 2>&1 || ACCT='{}'
           if echo "$BODY" | jq -e '.data' >/dev/null 2>&1; then
-            echo "$BODY" | jq --arg t "$KST" '{generated_kst: $t, ok: true, posts: [.data[] | {id, type: .media_product_type, media_type, timestamp_utc: .timestamp, permalink, caption_first_line: ((.caption // "") | split("\n")[0] | .[0:80])}]}' > instagram-recent.json
+            echo "$BODY" | jq --arg t "$KST" --argjson acct "$ACCT" '{generated_kst: $t, ok: true, account: ($acct | {username, followers_count, follows_count, media_count}), posts: [.data[] | {id, type: .media_product_type, media_type, timestamp_utc: .timestamp, permalink, caption_first_line: ((.caption // "") | split("\n")[0] | .[0:80]), likes: .like_count, comments: .comments_count}]}' > instagram-recent.json
           else
             ERR=$(echo "$BODY" | jq -r '.error.message // "응답 없음"' 2>/dev/null || echo "응답 없음")
             jq -n --arg t "$KST" --arg e "$ERR" '{generated_kst: $t, ok: false, error: $e}' > instagram-recent.json
