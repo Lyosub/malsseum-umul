@@ -1,11 +1,15 @@
 name: 인스타 최근 게시물 확인
 
-# 읽기 전용. 수동 실행(workflow_dispatch)으로만 돈다.
+# 읽기 전용. 매일 07:20 KST(GitHub 예약, 몇 시간 늦을 수 있음)와 수동 실행(workflow_dispatch)으로 돈다.
+# 2026-10-10: 팔로워 수를 날마다 instagram-history.json 에 쌓고, 지난주(월~일) 게시물 반응·팔로워 증감을
+#   instagram-weekly.txt(순수 텍스트)로 만든다. 월요일 아침 일일 점검이 이 파일을 그대로 옮겨 적는다.
 # 계정의 팔로워·게시물 수와 최근 게시물 25개(종류·시각·캡션 첫 줄·링크·좋아요·댓글 수)만 읽어 `health` 브랜치의 instagram-recent.json 에 저장한다.
 # 게시·수정·삭제는 하지 않는다. 토큰은 GitHub 보안 저장소에서만 쓰고 파일·로그에 남기지 않는다.
 # 수동으로 올린 게시물(전도사님이 앱에서 직접 올린 것)이 실제로 올라갔는지 Claude가 확인할 때 쓴다.
 
 on:
+  schedule:
+    - cron: "20 22 * * *"
   workflow_dispatch:
 
 permissions:
@@ -45,10 +49,57 @@ jobs:
             jq -n --arg t "$KST" --arg e "$ERR" '{generated_kst: $t, ok: false, error: $e}' > instagram-recent.json
           fi
           cat instagram-recent.json
+      - name: 팔로워 기록과 지난주 요약
+        run: |
+          python3 - <<'EOF'
+          import json, datetime, os
+          NL = chr(10)
+          KST = datetime.timezone(datetime.timedelta(hours=9))
+          now = datetime.datetime.now(KST); today = now.date()
+          d = json.load(open("instagram-recent.json", encoding="utf-8"))
+          hist = json.load(open("instagram-history.json", encoding="utf-8")) if os.path.exists("instagram-history.json") else []
+          acct = d.get("account") or {}
+          if d.get("ok") and acct.get("followers_count") is not None:
+              hist = [h for h in hist if h["date"] != str(today)]
+              hist.append({"date": str(today), "followers": acct["followers_count"], "media_count": acct.get("media_count")})
+              hist = sorted(hist, key=lambda h: h["date"])[-400:]
+              json.dump(hist, open("instagram-history.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+          mon = today - datetime.timedelta(days=today.weekday())
+          start, end = mon - datetime.timedelta(days=7), mon - datetime.timedelta(days=1)
+          kind = {"REELS": "릴스", "FEED": "게시물", "STORY": "스토리"}
+          L = [f"지난주({start.month}/{start.day}~{end.month}/{end.day}) 인스타 반응 — {now:%m/%d %H:%M} 기준"]
+          if not d.get("ok"):
+              L.append("인스타 응답을 받지 못했습니다: " + str(d.get("error", "")))
+          else:
+              posts = []
+              for p in d.get("posts", []):
+                  t = datetime.datetime.strptime(p["timestamp_utc"][:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=datetime.timezone.utc).astimezone(KST)
+                  if start <= t.date() <= end: posts.append((t, p))
+              posts.sort(key=lambda x: x[0])
+              if not posts: L.append("지난주 게시물 없음")
+              for t, p in posts:
+                  cap = (p.get("caption_first_line") or "").strip()[:22]
+                  L.append(f"- {t.month}/{t.day} {t:%H:%M} {kind.get(p.get('type'), p.get('type'))}: 좋아요 {p.get('likes', 0)} · 댓글 {p.get('comments', 0)} ({cap})")
+              if posts:
+                  best = max(posts, key=lambda x: (x[1].get("likes") or 0) + 2 * (x[1].get("comments") or 0))
+                  avg = sum((p.get("likes") or 0) for _, p in posts) / len(posts)
+                  L.append(f"가장 반응 좋았던 것: {best[0].month}/{best[0].day} {(best[1].get('caption_first_line') or '')[:22]} · 평균 좋아요 {avg:.1f}")
+              f_now = acct.get("followers_count")
+              old = [h for h in hist if h["date"] <= str(today - datetime.timedelta(days=7))]
+              if f_now is None: L.append("팔로워 수를 읽지 못했습니다")
+              elif old:
+                  diff = f_now - old[-1]["followers"]
+                  L.append(f"팔로워 {f_now}명 ({old[-1]['date'][5:].replace('-', '/')} 대비 {'+' if diff >= 0 else ''}{diff})")
+              else:
+                  L.append(f"팔로워 {f_now}명 (비교할 지난 기록이 아직 없음 — 기록 시작 2026-10-10)")
+          open("instagram-weekly.txt", "w", encoding="utf-8").write(NL.join(L) + NL)
+          print(NL.join(L))
+          EOF
       - name: 기록
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add instagram-recent.json
+          git add instagram-recent.json instagram-weekly.txt
+          [ -f instagram-history.json ] && git add instagram-history.json
           git commit -m "인스타 최근 게시물 확인 $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M') KST" || exit 0
           git push origin HEAD:health
