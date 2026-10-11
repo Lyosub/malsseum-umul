@@ -548,6 +548,7 @@
 <div id="journey-modal" class="modal hidden"><div class="sheet" style="max-width:720px"><h3>🗺 걸어온 여정</h3><div id="journey-body" style="max-height:62vh;overflow:auto"></div><button class="close">닫기</button></div></div>
 <div id="links-modal" class="modal hidden"><div class="sheet" style="max-width:720px"><h3>🔗 본문 연결 두루마리</h3><div id="links-body" style="max-height:62vh;overflow:auto"></div><button class="close">닫기</button></div></div>
 <div id="album-modal" class="modal hidden"><div class="sheet" style="max-width:720px"><h3>📷 모험 사진첩</h3><div id="album-body" style="max-height:62vh;overflow:auto"></div><button class="close">닫기</button></div></div>
+<div id="next-scroll-modal" class="modal hidden"><div class="sheet" style="max-width:400px"><h3 id="ns-title"></h3><div id="ns-body" style="font-size:14px;line-height:1.75;white-space:pre-line"></div><button id="ns-go" style="width:100%;margin:10px 0 4px;padding:12px;border-radius:12px;border:none;background:#ffd27a;color:#2a1d10;font-weight:800;font-size:15px"></button><button class="close">나중에</button></div></div>
 <div id="scroll-gate-modal" class="modal hidden"><div class="sheet"><h3>📚 두루마리 문</h3><div id="scroll-gate-body" style="max-height:60vh;overflow:auto"></div><button class="close">닫기</button></div></div>
 <div id="set-modal" class="modal hidden"><div class="sheet set-sheet"><h3>⚙️ 설정</h3>
   <div class="set-row"><span class="set-lbl">🖥 화질</span><span id="quality-now" class="set-now"></span></div>
@@ -5912,7 +5913,7 @@
     if (ST.cur === 'moses') claimChapter(ST.ch + 1);
     else { const it = SCROLL_LIST.find(x => x.id === ST.cur); if (it && it.num !== undefined) claimScrollChapter(it.num, nextCh); }
     setTimeout(checkNewTitle, 100);
-    setTimeout(() => openModal('clear-modal', () => { if (C[nextCh]) startChapter(nextCh); else if (ST.cur !== 'moses' && (SCROLL_DEFS[ST.cur] || {}).returnToMoses) setTimeout(() => enterScroll('moses'), 400); }), 500);
+    setTimeout(() => openModal('clear-modal', () => { if (C[nextCh]) startChapter(nextCh); else if (ST.cur !== 'moses' && (SCROLL_DEFS[ST.cur] || {}).returnToMoses) setTimeout(() => enterScroll('moses'), 400); else setTimeout(() => nextScrollCeremony(), 400); }), 500);
   }
   document.getElementById('btn-book').onclick = () => {
     checkNewTitle(); dq('verse');
@@ -6967,6 +6968,39 @@
     if (chaptersDone() < 1 && ST.step < 3) return;                          // 막 시작한 학생에게는 띄우지 않음
     if (/[?&](notut|notype|reset)(&|$)/.test(location.search)) return;
     setTimeout(openRecap, 1800);
+  }
+  // ══ 📜 다음 두루마리 연출 (2026-10-11): 두루마리를 마치면 두루마리마을 기념 전시관으로 가서 받침대에 기념물이 놓이는 것을 보여 주고,
+  //    「다음 두루마리를 펼칠까요?」를 묻는다. 「나중에」를 누르면 다시 하는 방법을 알려 준다. 같은 두루마리는 한 번만 묻는다(ST.nextAsked) ══
+  const NEXT_SCROLL = {
+    moses: { to: 'sinai2', done: () => chaptersDone() >= 10, ped: 0, what: '두 돌판' },
+    sinai2: { to: 'wild3', done: () => sinai2Done(), ped: 1, what: '은 나팔 둘' },
+  };
+  let nsBusy = false;
+  async function nextScrollCeremony(opt = {}){
+    if (nsBusy || traveling || REPLAY) return;
+    const from = Object.keys(NEXT_SCROLL).find(k => NEXT_SCROLL[k].done() && !(ST.nextAsked || {})[k] && !(ST.sp && ST.sp[NEXT_SCROLL[k].to]));
+    if (!from) return;
+    if (from !== ST.cur && !opt.boot) return;
+    if (typeof msuOn === 'function' && !msuOn()) return;            // 로그인하지 않았으면 묻지 않음(저장이 안 되므로)
+    const N = NEXT_SCROLL[from]; nsBusy = true;
+    try {
+      ST.nextAsked = ST.nextAsked || {}; ST.nextAsked[from] = true; saveST();
+      if (!Z || Z.id !== 'alpha'){ await travelTo({ id: 'scroll-next', to: 'alpha', spawn: [5.5, -4.5] }); }
+      else { const sp = [5.5, -4.5]; player.position.set(sp[0], heightAt(sp[0], sp[1]), sp[1]); }
+      await new Promise(r => setTimeout(r, 1500));
+      const [x, z] = PEDESTALS[N.ped];
+      try { startCine('nscroll-' + from, x, heightAt(x, z) + 1.1, z, { dur: 5, r: 7, h: 3 }); } catch (e){}
+      toast(`📜 받침대 위에 「${N.what}」이 놓였어요`, 3800);
+      await new Promise(r => setTimeout(r, 4200));
+      const nx = SCROLL_LIST.find(s => s.id === N.to);
+      document.getElementById('ns-title').textContent = `📜 「${scrollTitle(from)}」를 마쳤어요!`;
+      document.getElementById('ns-body').textContent = `${N.ped + 1}번째 받침대에 「${N.what}」이 놓였어요.\n\n다음 두루마리 「${nx.title}」(${nx.no}편)을 펼칠까요?`;
+      const go = document.getElementById('ns-go'); go.textContent = `📖 ${nx.no}편 펼치기`;
+      const hint = () => toast(`나중에 하고 싶을 땐 🧭 「길 떠나기」 스킬로 두루마리마을에 가서 「📚 두루마리 문」을 누르세요. ${nx.no}편의 「펼치기」 버튼이 있어요.`, 6500);
+      let picked = false;
+      go.onclick = () => { picked = true; document.querySelector('#next-scroll-modal .close').click(); enterScroll(N.to); };
+      openModal('next-scroll-modal', () => { if (!picked) hint(); });
+    } finally { nsBusy = false; }
   }
   // ── 1. 기념 전시관: 모세 편(10장)을 마치면 첫 받침대에 두 돌판 ──
   const PEDESTALS = [[7.2, -8.8], [8.4, -6.6], [9.9, -4.7]];
@@ -9402,6 +9436,7 @@
     window.__ready = true;
     try { maybeRecap(); } catch (e){}
     animate();
+    { let n = 0; const iv = setInterval(() => { if (++n > 120){ clearInterval(iv); return; } if (ld.style.display !== 'none' || dlgState || traveling) return; clearInterval(iv); setTimeout(() => { try { nextScrollCeremony({ boot: true }); } catch (e){} }, 2500); }, 1000); }   // 이미 1편을 마친 학생: 타이틀을 넘긴 뒤 한 번만 묻는다
     // 타이틀은 학생이 누를 때까지(그 터치로 배경음악도 시작). 자동 테스트(webdriver)는 바로 넘어감
     const begin = () => { ld.classList.add('done'); setTimeout(() => ld.style.display = 'none', 600); BGM.titleUntil = performance.now() + 48000; bgmStart(); if (!maybePickCharacter()) tutStart(); };
     if (navigator.webdriver) begin();
