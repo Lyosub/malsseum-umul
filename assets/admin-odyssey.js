@@ -66,7 +66,7 @@
   function detailHtml(r) {
     var h = "";
     // 진행
-    h += '<div class="meta" style="margin:8px 0 2px;"><strong>📍 진행</strong> · 마지막 저장 ' + fmt(r.saved_at) + '</div>';
+    h += '<div class="meta" style="margin:8px 0 2px;"><strong>📍 진행</strong> · 마지막 저장 ' + fmt(r.saved_at) + (r.last_seen ? ' · 마지막 접속 ' + fmt(Number(r.last_seen)) : '') + '</div>';
     var any = false;
     SCROLLS.forEach(function (s) {
       var p = prog(r, s.id);
@@ -108,6 +108,7 @@
     var badges = (r.badges || []).map(function (b) { return esc(BADGE_LABELS[b] || b); });
     h += '<div class="content" style="font-size:13px;">배지 ' + badges.length + '개' + (badges.length ? ': ' + badges.join(" · ") : '') + '</div>';
     h += '<div class="content" style="font-size:13px;">구절 카드 ' + (r.verses_n || 0) + '장 · ⭐ 지혜 별 ' + (r.stars || 0) + '</div>';
+    h += '<div class="content" style="font-size:13px;">⛪ 예배 암호 구절 카드 ' + (r.worship_n || 0) + '장 · 🍞 만나 ' + (r.manna || 0) + '개' + (r.title ? ' · 🏷 칭호 「' + esc(r.title) + '」' : '') + '</div>';
     var pets = Object.keys(r.pets || {});
     if (pets.length) {
       h += '<div class="content" style="font-size:13px;">펫: ' + pets.map(function (k) {

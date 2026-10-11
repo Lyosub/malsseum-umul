@@ -2,7 +2,8 @@
 -- * 읽기 전용 함수 1개만 추가한다. 기존 표·함수는 건드리지 않는다. 재실행해도 안전(create or replace).
 -- * 관리자·부장만 호출할 수 있다(get_shop_orders_admin과 같은 확인). 실명은 관리자에게만 내려간다(부장은 null).
 -- * 학생이 직접 쓴 글(두루마리 속 메모·기도 등)은 꺼내지 않는다. 저장 데이터에서는 아래 항목만 읽는다:
---   진행(ch·step·cleared·sp), 재료(mat), 배지(badges), 구절 카드 수(verses), 지혜 별(stars), 펫 친밀도(petAff).
+--   진행(ch·step·cleared·sp), 재료(mat), 배지(badges), 구절 카드 수(verses), 지혜 별(stars), 펫 친밀도(petAff),
+--   칭호(title), 만나 개수(manna), 마지막 접속 시각(lastSeen), 예배 암호 구절 카드 수(worshipCards).
 -- * 달란트 얻음 = points_ledger 중 action_type 이 'odyssey_' 로 시작하는 것(업적·장 완료·오늘의/이번 주 퀘스트·예배 암호 등).
 --   달란트 씀 = shop_orders 중 item_name 이 '[게임]' 으로 시작하는 것(거절된 것은 제외, 환불되므로).
 
@@ -65,6 +66,10 @@ as $$
       'stars', coalesce(st.story->'stars', '0'::jsonb),
       'pets', coalesce(st.story->'petAff', '{}'::jsonb),
       'pet_v', st.story->'petAffV',
+      'title', st.story->>'title',
+      'manna', coalesce(st.story->'manna', '0'::jsonb),
+      'last_seen', st.story->'lastSeen',
+      'worship_n', coalesce(jsonb_array_length(case when jsonb_typeof(st.story->'worshipCards') = 'array' then st.story->'worshipCards' end), 0),
       'earned', coalesce(ea.by_type, '[]'::jsonb),
       'earned_total', coalesce(ea.total, 0),
       'spent_total', coalesce(bo.spent, 0),
