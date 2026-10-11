@@ -244,19 +244,35 @@
   Object.assign(api.BADGES, { holy_people: { ico: '🌾', name: '거룩한 백성' }, trumpet_follow: { ico: '🎺', name: '나팔 소리를 따르는 사람' } });
   function giveBadge(k){ const S = api.ST; if (S.badges.includes(k)) return; S.badges.push(k); api.saveST(); setTimeout(() => api.toast(`${api.BADGES[k].ico} 배지 획득: ${api.BADGES[k].name}`, 2600), 900); }
   const btnCss = 'padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#f5e9d0;font-size:13px';
-  // 🐑 흠 없는 수컷 고르기(레 1:10, 22:22)
+  // ❤️ 목숨 3개(2026-10-11 난이도 상향): 틀리면 하나씩 줄고, 다 쓰면 그 게임을 처음부터 다시
+  const LIVES = 3, hearts = n => '❤️'.repeat(Math.max(0, n)) + '🤍'.repeat(Math.max(0, LIVES - n));
+  const OUT = '❤️을 다 썼어요 — 처음부터 다시';
+  // 🐑 흠 없는 예물 고르기(레 1:3, 1:10, 3:6, 22:20-22) — 2026-10-11 3라운드 · 목숨 3개(화목제는 암컷도 됨)
   function pickGame(q){
-    const opts = [['🐏', '흠 없는 숫양', true], ['🐑', '눈 먼 숫양'], ['🐐', '다리가 상한 숫염소'], ['🐑', '흠 없는 암양'], ['🐏', '종기 있는 숫양'], ['🐐', '지체에 베임을 당한 숫염소']].sort(() => Math.random() - 0.5);
-    mgOpen('🐑 흠 없는 수컷', '"만일 그 예물이 가축 떼의 양이나 염소의 번제이면 흠 없는 수컷으로 드릴지니" (레 1:10)');
-    let msg = '';
-    const draw = () => { api.mgArea.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px">${opts.map((o, i) => `<button data-pk="${i}" style="${btnCss}"><span style="font-size:26px">${o[0]}</span><br>${o[1]}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;padding:0 8px;font-size:12.5px">${msg}</div>`; };
-    draw(); api.mgAct.textContent = '고르면 계속'; api.mgAct.disabled = true;
-    let ok = false;
-    api.mgArea.onclick = e => { const b = e.target.closest('[data-pk]'); if (!b || ok) return; const o = opts[+b.dataset.pk];
-      if (o[2]){ ok = true; msg = '✓ 흠 없는 수컷이에요'; api.mgAct.disabled = false; api.mgAct.textContent = '회막 문으로'; }
+    const ROUNDS = [
+      { t: '번제 — 양이나 염소', v: '"만일 그 예물이 가축 떼의 양이나 염소의 번제이면 흠 없는 수컷으로 드릴지니" (레 1:10)',
+        o: [['🐏', '흠 없는 숫양', true], ['🐑', '흠 없는 암양'], ['🐏', '눈 먼 숫양'], ['🐐', '종기 있는 숫염소'], ['🐏', '습진 있는 숫양'], ['🐐', '비루먹은 숫염소']] },
+      { t: '번제 — 소', v: '"그 예물이 소의 번제이면 흠 없는 수컷으로 회막 문에서 여호와 앞에 기쁘게 받으시도록 드릴지니라" (레 1:3)',
+        o: [['🐂', '흠 없는 수소', true], ['🐄', '흠 없는 암소'], ['🐂', '상한 수소'], ['🐂', '지체에 베임을 당한 수소'], ['🐂', '눈 먼 수소'], ['🐄', '종기 있는 암소']] },
+      { t: '화목제 — 양', v: '"만일 여호와께 예물로 드리는 화목제의 제물이 양이면 수컷이나 암컷이나 흠 없는 것으로 드릴지며" (레 3:6)',
+        o: [['🐑', '흠 없는 암양', true], ['🐏', '눈 먼 숫양'], ['🐑', '습진 있는 암양'], ['🐏', '상한 숫양'], ['🐑', '비루먹은 암양'], ['🐏', '종기 있는 숫양']] },
+    ];
+    let r = 0, life = LIVES, msg = '', wait = false, opts = [];
+    const deal = () => { opts = ROUNDS[r] ? ROUNDS[r].o.slice().sort(() => Math.random() - 0.5) : []; };
+    deal();
+    mgOpen('🐑 흠 없는 예물', '세 가지 예물마다 성경에 맞는 것을 골라요. 틀리면 ❤️이 하나 줄어요.');
+    const draw = () => { const R = ROUNDS[r];
+      api.mgArea.innerHTML = R
+        ? `<div style="padding:6px 10px 0;font-size:12.5px;line-height:1.45"><b style="color:#ffd27a">${r + 1} / 3 · ${R.t}</b> ${hearts(life)}<br>${R.v}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px">${opts.map((o, i) => `<button data-pk="${i}" style="${btnCss}"><span style="font-size:26px">${o[0]}</span><br>${o[1]}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;padding:0 8px;font-size:12.5px">${msg}</div>`
+        : `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800">✓ 세 가지 예물을 모두 바르게 골랐어요</div>`;
+      api.mgAct.textContent = R ? '다 고르면 계속' : '회막 문으로'; api.mgAct.disabled = !!R; };
+    draw();
+    api.mgArea.onclick = e => { const b = e.target.closest('[data-pk]'); if (!b || wait || !ROUNDS[r]) return; const o = opts[+b.dataset.pk];
+      if (o[2]){ wait = true; msg = '✓ ' + o[1]; draw(); setTimeout(() => { wait = false; r++; msg = ''; deal(); draw(); }, 900); return; }
+      if (--life <= 0){ r = 0; life = LIVES; msg = OUT; deal(); }
       else msg = '"흠 있는 것은 무엇이나 너희가 드리지 말 것은 그것이 기쁘게 받으심이 되지 못할 것임이니라" (레 22:20)';
       draw(); };
-    api.mgAct.onclick = () => { if (!ok) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+    api.mgAct.onclick = () => { if (ROUNDS[r]) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
     api.mg.onClose = () => { api.mgArea.onclick = null; };
   }
   // 🗂 예물 나누기(레 1–5장, 7:37)
@@ -269,17 +285,17 @@
       ['흠 없는 암염소를 끌고 와서 그 범한 죄로 말미암아 그것을 예물로 삼아 (레 4:28)', '속죄제'],
       ['성소의 세겔로 몇 세겔 은에 상당한 흠 없는 숫양을 양 떼 중에서 끌어다가 (레 5:15)', '속건제'],
     ].sort(() => Math.random() - 0.5);
-    let i = 0, msg = '';
+    let i = 0, msg = '', life = LIVES;
     mgOpen('🗂 여러 가지 예물', '예물 설명을 읽고 어떤 제사인지 골라요. "이는 번제와 소제와 속죄제와 속건제와 위임식과 화목제의 규례라" (레 7:37)');
     const draw = () => {
       api.mgArea.innerHTML = i < CARDS.length
-        ? `<div style="padding:10px 12px;font-size:13.5px;line-height:1.5;min-height:60px">📜 ${CARDS[i][0]}</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:0 8px">${KINDS.map(k => `<button data-kd="${k}" style="${btnCss}">${k}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;margin-top:6px">${msg || `${i + 1} / ${CARDS.length}`}</div>`
+        ? `<div style="padding:10px 12px;font-size:13.5px;line-height:1.5;min-height:60px">📜 ${CARDS[i][0]}</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:0 8px">${KINDS.map(k => `<button data-kd="${k}" style="${btnCss}">${k}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;margin-top:6px">${msg || `${i + 1} / ${CARDS.length} · ${hearts(life)}`}</div>`
         : `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800">✓ 다섯 가지 예물을 모두 나눴어요</div>`;
       api.mgAct.textContent = i < CARDS.length ? '다 나누면 계속' : '계속'; api.mgAct.disabled = i < CARDS.length;
     };
     draw();
     api.mgArea.onclick = e => { const b = e.target.closest('[data-kd]'); if (!b || i >= CARDS.length) return;
-      if (b.dataset.kd === CARDS[i][1]){ i++; msg = '✓ 맞아요'; } else msg = '다시 읽어 보세요'; draw(); setTimeout(() => { msg = ''; if (api.mgArea.querySelector('[data-kd]')) draw(); }, 700); };
+      if (b.dataset.kd === CARDS[i][1]){ i++; msg = '✓ 맞아요'; } else if (--life <= 0){ i = 0; life = LIVES; CARDS.sort(() => Math.random() - 0.5); msg = OUT; } else msg = `다시 읽어 보세요 ${hearts(life)}`; draw(); setTimeout(() => { msg = ''; if (api.mgArea.querySelector('[data-kd]')) draw(); }, 1100); };
     api.mgAct.onclick = () => { if (i < CARDS.length) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
     api.mg.onClose = () => { api.mgArea.onclick = null; };
   }
@@ -287,16 +303,16 @@
   function robeGame(q){
     const ORDER = ['속옷', '띠', '겉옷', '에봇', '에봇의 장식 띠', '흉패', '관', '금 패'];
     const shown = ORDER.map((t, i) => i).sort(() => Math.random() - 0.5);
-    let next = 0, msg = '';
+    let next = 0, msg = '', life = LIVES;
     api.runDialog(DLG.lv_robe_intro, () => {
       mgOpen('👘 아론의 옷', '"아론에게 속옷을 입히며 …" (레 8:7-9) — 입히는 순서대로 눌러요.');
       const draw = () => {
-        api.mgArea.innerHTML = `<div style="padding:8px 12px;font-size:13px;min-height:22px">입힌 것: ${ORDER.slice(0, next).join(' → ') || '—'}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px">${shown.filter(i => i >= next).map(i => `<button data-rb="${i}" style="${btnCss}">${ORDER[i]}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;margin-top:6px">${msg || (next < ORDER.length ? `${next + 1}번째는?` : '✓ 모두 입혔어요')}</div>`;
+        api.mgArea.innerHTML = `<div style="padding:8px 12px;font-size:13px;min-height:22px">입힌 것: ${ORDER.slice(0, next).join(' → ') || '—'}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px">${shown.filter(i => i >= next).map(i => `<button data-rb="${i}" style="${btnCss}">${ORDER[i]}</button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;margin-top:6px">${msg || (next < ORDER.length ? `${next + 1}번째는? ${hearts(life)}` : '✓ 모두 입혔어요')}</div>`;
         api.mgAct.textContent = next < ORDER.length ? '다 입히면 계속' : '계속'; api.mgAct.disabled = next < ORDER.length;
       };
       draw();
       api.mgArea.onclick = e => { const b = e.target.closest('[data-rb]'); if (!b) return; const i = +b.dataset.rb;
-        if (i === next){ next++; msg = ''; } else msg = '성경에 적힌 순서를 떠올려 봐요'; draw(); };
+        if (i === next){ next++; msg = ''; } else if (--life <= 0){ next = 0; life = LIVES; shown.sort(() => Math.random() - 0.5); msg = OUT; } else msg = `성경에 적힌 순서를 떠올려 봐요 ${hearts(life)}`; draw(); };
       api.mgAct.onclick = () => { if (next < ORDER.length) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
       api.mg.onClose = () => { api.mgArea.onclick = null; };
     }, null, 'lv_robe_intro');
@@ -381,15 +397,15 @@
     const ORDER = [['유월절', '첫째 달 열나흗날 저녁 (23:5)'], ['무교절', '이 달 열닷샛날 (23:6)'], ['첫 이삭 한 단', '곡물의 첫 이삭 한 단 (23:10)'], ['새 소제', '오십 일을 계수하여 (23:16)'],
       ['나팔을 불어 기념할 날', '일곱째 달 첫 날 (23:24)'], ['속죄일', '일곱째 달 열흘날 (23:27)'], ['초막절', '일곱째 달 열닷샛날 (23:34)']];
     const shown = ORDER.map((t, i) => i).sort(() => Math.random() - 0.5);
-    let next = 0, msg = '';
+    let next = 0, msg = '', life = LIVES;
     mgOpen('🗓 여호와의 절기', '"이것이 너희가 그 정한 때에 성회로 공포할 여호와의 절기들이니라" (레 23:4) — 한 해의 차례대로 눌러요.');
     const draw = () => {
-      api.mgArea.innerHTML = `<div style="padding:6px 12px;font-size:12.5px;min-height:20px">${ORDER.slice(0, next).map(o => o[0]).join(' → ') || '—'}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px">${shown.filter(i => i >= next).map(i => `<button data-cl="${i}" style="${btnCss}"><b>${ORDER[i][0]}</b><br><span style="font-size:11px;opacity:.8">${ORDER[i][1]}</span></button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;margin-top:6px">${msg || (next < ORDER.length ? `${next + 1}번째 절기는?` : '✓ 한 해의 절기를 모두 놓았어요')}</div>`;
+      api.mgArea.innerHTML = `<div style="padding:6px 12px;font-size:12.5px;min-height:20px">${ORDER.slice(0, next).map(o => o[0]).join(' → ') || '—'}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px">${shown.filter(i => i >= next).map(i => `<button data-cl="${i}" style="${btnCss}"><b>${ORDER[i][0]}</b><br><span style="font-size:11px;opacity:.8">${ORDER[i][1]}</span></button>`).join('')}</div><div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;margin-top:6px">${msg || (next < ORDER.length ? `${next + 1}번째 절기는? ${hearts(life)}` : '✓ 한 해의 절기를 모두 놓았어요')}</div>`;
       api.mgAct.textContent = next < ORDER.length ? '다 놓으면 계속' : '계속'; api.mgAct.disabled = next < ORDER.length;
     };
     draw();
     api.mgArea.onclick = e => { const b = e.target.closest('[data-cl]'); if (!b) return; const i = +b.dataset.cl;
-      if (i === next){ next++; msg = ''; } else msg = '달과 날짜를 다시 읽어 보세요'; draw(); };
+      if (i === next){ next++; msg = ''; } else if (--life <= 0){ next = 0; life = LIVES; shown.sort(() => Math.random() - 0.5); msg = OUT; } else msg = `달과 날짜를 다시 읽어 보세요 ${hearts(life)}`; draw(); };
     api.mgAct.onclick = () => { if (next < ORDER.length) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
     api.mg.onClose = () => { api.mgArea.onclick = null; };
   }
@@ -402,20 +418,21 @@
   function campGame(q){
     api.runDialog(DLG.lv_camp_intro, () => {
       const order = TRIBES.map((t, i) => i).sort(() => Math.random() - 0.5);
-      let k = 0, msg = ''; const placed = { '동': [], '남': [], '서': [], '북': [] };
+      let k = 0, msg = '', life = LIVES; const placed = { '동': [], '남': [], '서': [], '북': [] };
       mgOpen('🏕 열두 지파의 진', '"회막을 향하여 사방으로 치라" (민 2:2) — 지파마다 어느 쪽에 진을 치는지 골라요.');
       const box = d => `<div style="padding:4px;border-radius:8px;background:rgba(255,255,255,.06);font-size:11.5px;min-height:34px"><b>${d}쪽</b><br>${placed[d].join(' · ')}</div>`;
       const draw = () => {
         const t = TRIBES[order[k]];
         api.mgArea.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:6px 10px;text-align:center"><div></div>${box('북')}<div></div>${box('서')}<div style="padding:6px;border-radius:8px;background:rgba(255,210,122,.18);font-size:11.5px">⛺ 회막<br>레위인</div>${box('동')}<div></div>${box('남')}<div></div></div>`
           + (t ? `<div style="text-align:center;font-weight:800;margin:4px 0">🚩 ${t[0]} 지파</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:0 10px">${['동', '서', '남', '북'].map(d => `<button data-cp="${d}" style="${btnCss}">${d}쪽</button>`).join('')}</div>` : '')
-          + `<div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;padding:4px 8px;font-size:12px">${msg || (t ? `${k + 1} / 12` : '✓ 열두 지파가 회막 사방에 진을 쳤어요')}</div>`;
+          + `<div style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;padding:4px 8px;font-size:12px">${msg || (t ? `${k + 1} / 12 · ${hearts(life)}` : '✓ 열두 지파가 회막 사방에 진을 쳤어요')}</div>`;
         api.mgAct.textContent = t ? '다 세우면 계속' : '계속'; api.mgAct.disabled = !!t;
       };
       draw();
       api.mgArea.onclick = e => { const b = e.target.closest('[data-cp]'); if (!b || k >= 12) return; const t = TRIBES[order[k]];
         if (b.dataset.cp === t[1]){ placed[t[1]].push(t[0]); k++; msg = ''; }
-        else msg = t[0] === GROUP[t[1]] ? HEAD[t[1]] : `${t[0]} 지파는 ${GROUP[t[1]]} 진영 곁에 진을 쳐요 (민 ${t[2]})`;
+        else if (--life <= 0){ k = 0; life = LIVES; for (const d in placed) placed[d] = []; order.sort(() => Math.random() - 0.5); msg = OUT; }
+        else msg = (t[0] === GROUP[t[1]] ? HEAD[t[1]] : `${t[0]} 지파는 ${GROUP[t[1]]} 진영 곁에 진을 쳐요 (민 ${t[2]})`) + ` ${hearts(life)}`;
         draw(); };
       api.mgAct.onclick = () => { if (k < 12) return; api.mgArea.onclick = null; mgCloseAll();
         api.addGeneal('나손'); api.toast('📜 족보 조각 「나손」 — "유다 자손의 지휘관은 암미나답의 아들 나손이요" (민 2:3)', 3200); completeTask(q); };
@@ -440,11 +457,11 @@
         ['loud1', '📯 크게 불어요', 2, '너희가 그것을 크게 불 때에는 동쪽 진영들이 행진할 것이며 (민 10:5)'],
         ['loud2', '📯📯 두 번째로 크게 불어요', 3, '두 번째로 크게 불 때에는 남쪽 진영들이 행진할 것이라 (민 10:6)']].sort(() => Math.random() - 0.5);
       const WHO = ['온 회중이 회막 문 앞에 모임', '천부장 된 지휘관들이 모임', '동쪽 진영들이 행진', '남쪽 진영들이 행진'];
-      let k = 0, msg = '', wait = false, miss = false;
+      let k = 0, msg = '', wait = false, miss = false, life = LIVES;
       mgOpen('🎺 은 나팔 둘', '"그것으로 회중을 소집하며 진영을 출발하게 할 것이라" (민 10:2) — 소리를 듣고 누가 움직이는지 골라요.');
       const draw = () => { const r = R[k];
         api.mgArea.innerHTML = (r ? `<div style="text-align:center;padding:10px"><button data-tp="again" style="${btnCss};font-size:15px">${r[1]} · 🔊 다시 듣기</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px">${WHO.map((w, i) => `<button data-tw="${i}" style="${btnCss}">${w}</button>`).join('')}</div>` : `<div style="padding:16px;text-align:center;font-size:30px">🎺🎺</div>`)
-          + `<div data-tmsg style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;padding:6px 10px;font-size:12px">${msg || (r ? `${k + 1} / 4` : '✓ 나팔 소리를 모두 알아들었어요')}</div>`;
+          + `<div data-tmsg style="text-align:center;color:#ffd27a;font-weight:800;min-height:18px;padding:6px 10px;font-size:12px">${msg || (r ? `${k + 1} / 4 · ${hearts(life)}` : '✓ 나팔 소리를 모두 알아들었어요')}</div>`;
         api.mgAct.textContent = r ? '다 맞히면 계속' : '계속'; api.mgAct.disabled = !!r;
         if (r) blast(r[0]); };
       draw();
@@ -454,7 +471,7 @@
         if (wait) return;
         const d = api.mgArea.querySelector('[data-tmsg]');
         if (+b.dataset.tw === r[2]){ wait = true; if (d) d.textContent = '✓ ' + r[3]; setTimeout(() => { wait = false; k++; draw(); }, 1800); }
-        else { miss = true; if (d) d.textContent = '소리를 다시 들어 보세요'; } };
+        else { miss = true; if (--life <= 0){ k = 0; life = LIVES; R.sort(() => Math.random() - 0.5); msg = OUT; draw(); msg = ''; } else if (d) d.textContent = `소리를 다시 들어 보세요 ${hearts(life)}`; } };
       api.mgAct.onclick = () => { if (k < 4) return; api.mgArea.onclick = null; mgCloseAll(); if (!miss) giveBadge('trumpet_follow'); completeTask(q); };
       api.mg.onClose = () => { api.mgArea.onclick = null; };
     }, null, 'lv_trumpet_intro');
