@@ -407,7 +407,7 @@
   #emo-bar.hidden { display:none; }
   #mg .hidden, #btn-emo.hidden, #btn-pet.hidden { display:none !important; }
   #emo-bar button { width:40px; height:40px; border-radius:10px; border:none; background:rgba(255,255,255,.1); font-size:22px; }
-  #friend-pill { position:fixed; top:56px; left:50%; transform:translateX(-50%); z-index:9; background:rgba(28,19,10,.78); color:#fff; border:1px solid rgba(143,224,255,.6); border-radius:12px; padding:3px 10px; font:700 12px 'Pretendard', sans-serif; pointer-events:none; }
+  #friend-pill { position:fixed; top:104px; left:16px; z-index:9; background:rgba(28,19,10,.78); color:#fff; border:1px solid rgba(143,224,255,.6); border-radius:12px; padding:3px 10px; font:700 12px 'Pretendard', sans-serif; pointer-events:none; }
   #friend-pill.hidden { display:none; }
   .emo-bub { position:fixed; z-index:7; font-size:30px; pointer-events:none; transform:translate(-50%, -100%); filter:drop-shadow(0 2px 3px rgba(0,0,0,.4)); transition:opacity .4s; }
   #rank-tabs { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px; }
@@ -7507,7 +7507,16 @@
     const here = [...FR.list.values()].length, el = document.getElementById('friend-pill');
     el.classList.toggle('hidden', !FR.online);
     el.textContent = `👥 접속한 친구 ${FR.online}명${here ? ` · 이 마을 ${here}명` : ''}`;
+    placeFriendPill();
   }
+  // 2026-10-11 왼쪽 위 퀘스트 목록 바로 아래에 둔다(위 가운데에 있으면 문 위 글자를 가림). 퀘스트 패널 크기·위치가 바뀌면 따라간다.
+  function placeFriendPill(){
+    const q = document.getElementById('quest-panel'), el = document.getElementById('friend-pill'); if (!q || !el) return;
+    const r = q.getBoundingClientRect(); if (r.height < 4) return;
+    el.style.top = Math.round(r.bottom + 6) + 'px'; el.style.left = Math.round(r.left) + 'px';
+  }
+  try { new ResizeObserver(placeFriendPill).observe(document.getElementById('quest-panel')); } catch (e){}
+  addEventListener('resize', placeFriendPill);
   function sendMyPos(force){
     if (!FR.ch || !Z) return;
     const P = player.position, a = moveSpeed < 0.35 ? 'Idle' : moveSpeed > (WALK_SPEED + RUN_SPEED) / 2 ? 'Run' : 'Walk';
