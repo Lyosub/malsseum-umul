@@ -5384,7 +5384,7 @@
   let bgmTick = 0;
   function updateBgm(dt){ bgmTick += dt; if (bgmTick < 0.5) return; bgmTick = 0; if (BGM.on && BGM.ctx && BGM.cur !== bgmWanted()) bgmStart(); }
   ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, () => bgmStart(), { passive: true }));
-  document.addEventListener('visibilitychange', () => { if (!BGM.ctx) return; if (document.hidden) BGM.ctx.suspend(); else if (BGM.on) BGM.ctx.resume(); });
+  document.addEventListener('visibilitychange', () => { if (!BGM.ctx) return; if (document.hidden) BGM.ctx.suspend().catch(() => {}); else if (BGM.on) BGM.ctx.resume().catch(() => {}); });   // 아이폰에서 소리 장치를 못 켜면 그냥 넘어감(10/11 오류)
   function setQuality(level, mode){
     const prevShadow = Q.shadow, prevSoft = Q.soft;
     qLevel = level; qMode = mode; Q = QUALITY[level];
@@ -5418,7 +5418,7 @@
   }
   document.getElementById('btn-landscape').addEventListener('click', async () => {
     const ok = await goLandscape();
-    if (!ok || isPortraitPhone()) setTimeout(() => { if (isPortraitPhone()) document.getElementById('btn-landscape').outerHTML = '<div style="font-size:13px;opacity:.85;line-height:1.6;max-width:300px">이 기기에서는 자동으로 돌릴 수 없어요.<br>인터넷 앱(크롬·사파리)에서 <b>logoswell.kr/odyssey</b> 를 열고<br>화면 자동 회전을 켠 뒤 폰을 돌려 주세요.</div>'; }, 1600);
+    if (!ok || isPortraitPhone()) setTimeout(() => { const b = document.getElementById('btn-landscape'); if (b && isPortraitPhone()) b.outerHTML = '<div style="font-size:13px;opacity:.85;line-height:1.6;max-width:300px">이 기기에서는 자동으로 돌릴 수 없어요.<br>인터넷 앱(크롬·사파리)에서 <b>logoswell.kr/odyssey</b> 를 열고<br>화면 자동 회전을 켠 뒤 폰을 돌려 주세요.</div>'; }, 1600);
   });
   window.addEventListener('pointerdown', () => { if (isPortraitPhone()) goLandscape(); }, { capture: true });
   function leaveLandscape(){ try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); if (document.fullscreenElement) document.exitFullscreen(); } catch (e){} }
