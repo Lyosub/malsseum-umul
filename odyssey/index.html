@@ -310,7 +310,8 @@
   .mg-top b { color:#ffd27a; }
   #mg-stat { font-size:13px; font-weight:800; }
   #mg-info { font-size:13px; line-height:1.55; opacity:.9; margin:6px 0 8px; }
-  #mg-area { position:relative; height:120px; border-radius:12px; background:rgba(255,255,255,0.06); overflow:hidden; }
+  #mg-area { position:relative; height:auto; min-height:120px; border-radius:12px; background:rgba(255,255,255,0.06); overflow:hidden; }   /* 2026-10-11 고르기 칸이 120px에 잘려 아랫줄이 안 보이던 문제(학생 제보) — 내용만큼 늘어나고, 움직이는 게임은 최소 120px 유지 */
+  @media (max-height:430px){ .mg-box { padding:8px 12px; } #mg-info { margin:2px 0 6px; } .mg-btns { margin-top:6px; } .mg-btns button { padding:8px 0; } }   /* 가로 휴대폰: 창이 화면에 들어오게 여백을 줄임 */
   .mg-btns { display:flex; gap:8px; margin-top:10px; }
   .mg-btns button { flex:1; padding:12px 0; border-radius:12px; border:none; font-weight:800; font-size:16px; }
   #mg-act { background:#ffd27a; color:#2a1d10; }
