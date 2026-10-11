@@ -4881,6 +4881,11 @@
   try { Object.assign(ST, JSON.parse(localStorage.getItem(STORY_KEY) || '{}')); } catch (e){}
   if (ST.replayBackup){ Object.assign(ST, ST.replayBackup); delete ST.replayBackup; }
   if (ST.replayCur){ ST.cur = ST.replayCur; delete ST.replayCur; }   // 다시 하기 도중에 닫았으면 펼쳐 두었던 두루마리로
+  if (!ST.petAffV){   // 2026-10-11 펫 친밀도 기준 변경(Lv 20/50/85 → 40/120/250): 예전 값을 같은 레벨 구간으로 옮김, 한 번만
+    const old = ST.petAff || {}, conv = a => a >= 85 ? 250 : a >= 50 ? Math.round(120 + (a - 50) * 130 / 35) : a >= 20 ? Math.round(40 + (a - 20) * 80 / 30) : Math.round(a * 2);
+    for (const k of Object.keys(old)) old[k] = Math.min(250, conv(old[k] || 0));
+    ST.petAffV = 2;
+  }
   (ST.worshipCards || []).forEach(c => { VERSES[c.id] = { ref: c.ref, text: c.text }; });
   if (/[?&]reset(&|$)/.test(location.search)) { Object.assign(ST, { ch: 0, step: 0, rumor: [], straw: 0, water: 0, frogs: 0, verses: [], badges: [], stars: 0, quiz: {}, keys: [], cleared: false, log: [], cur: 'moses', sp: {} }); }
   const saveST = () => { try { localStorage.setItem(STORY_KEY, JSON.stringify({ ...ST, log: ST.log.slice(-80) })); } catch (e){} try { queueProgress(); queueCloud(); } catch (e){} };
@@ -5651,19 +5656,20 @@
       if (equip.pet && owned.has(equip.pet)){ const o = await loadShopModel(equip.pet); if (equipObj.petKey === equip.pet){ equipObj.pet = o; o.position.copy(player.position); scene.add(o); equipObj.petWings = SHOP[equip.pet].fly ? addWings(o, SHOP[equip.pet].h * WPM) : null; equipObj.petGait = SHOP[equip.pet].fly ? null : addGait(o, equip.pet === 'pet-donkey' ? 0.45 : 0.38); } }
     }
   }
-  // ══ 🐾 펫 친밀도: 쓰다듬기(하루 5번 +2) · 만나 먹이기(+6) → 레벨마다 새 행동 ══
+  // ══ 🐾 펫 친밀도: 쓰다듬기(하루 5번 +1) · 만나 먹이기(+1) → 레벨마다 새 행동 (2026-10-11 만렙을 어렵게: 100→250, 한 번에 오르는 양 +2/+6→+1/+1, 약 4주) ══
+  const PET_MAX = 250, PAT_GAIN = 1, FEED_GAIN = 1;
   const PET_LV = [
     { need: 0,  n: 'Lv.1 처음 만난 사이', unlock: '' },
-    { need: 20, n: 'Lv.2 친한 사이', unlock: '🪑 앉기 — 멈춰 서 있으면 옆에 앉아요' },
-    { need: 50, n: 'Lv.3 단짝', unlock: '🎪 재주 부리기 — 빙글 돌며 뛰어올라요' },
-    { need: 85, n: 'Lv.4 가장 좋은 친구', unlock: '🏃 따라 뛰기 — 달리면 신나게 따라 뛰어요' },
+    { need: 40, n: 'Lv.2 친한 사이', unlock: '🪑 앉기 — 멈춰 서 있으면 옆에 앉아요' },
+    { need: 120, n: 'Lv.3 단짝', unlock: '🎪 재주 부리기 — 빙글 돌며 뛰어올라요' },
+    { need: 250, n: 'Lv.4 가장 좋은 친구', unlock: '🏃 따라 뛰기 — 달리면 신나게 따라 뛰어요' },
   ];
   const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 ? a : b); };
   const petAff = k => (ST.petAff && ST.petAff[k]) || 0;
   const petLv = k => PET_LV.filter(l => petAff(k) >= l.need).length;   // 1~4
   function addAff(k, n){
     ST.petAff = ST.petAff || {}; const before = petLv(k);
-    ST.petAff[k] = Math.min(100, petAff(k) + n); saveST();
+    ST.petAff[k] = Math.min(PET_MAX, petAff(k) + n); saveST();
     const after = petLv(k);
     if (after > before) setTimeout(() => toast(`🎉 ${josa(SHOP[k].name, '과', '와')} ${PET_LV[after - 1].n}이 됐어요! ${PET_LV[after - 1].unlock}`, 3400), 700);
   }
@@ -5681,10 +5687,10 @@
     const aff = petAff(k), lv = petLv(k), next = PET_LV[lv], today = kstDate();
     ST.petDay = ST.petDay || {}; const pd = ST.petDay[k] && ST.petDay[k].d === today ? ST.petDay[k] : { d: today, n: 0 };
     document.getElementById('pet-title').textContent = `🐾 ${it.name} · ${PET_LV[lv - 1].n}`;
-    document.getElementById('pet-body').innerHTML = `<div style="font-size:13px">친밀도 ${aff} / 100${next ? ` · 다음 레벨까지 ${next.need - aff}` : ' · 최고 레벨!'}</div>`
-      + `<div class="pet-bar"><i style="width:${aff}%"></i></div>`
-      + `<div class="pet-acts"><button data-pa="pat" ${pd.n >= 5 ? 'disabled' : ''}>🤚 쓰다듬기<small>오늘 ${pd.n}/5 · +2</small></button>`
-      + `<button data-pa="feed" ${(ST.manna || 0) > 0 ? '' : 'disabled'}>🍞 만나 먹이기<small>만나 ${ST.manna || 0}개 · +6</small></button>`
+    document.getElementById('pet-body').innerHTML = `<div style="font-size:13px">친밀도 ${aff} / ${PET_MAX}${next ? ` · 다음 레벨까지 ${next.need - aff}` : ' · 최고 레벨!'}</div>`
+      + `<div class="pet-bar"><i style="width:${Math.min(100, aff / PET_MAX * 100)}%"></i></div>`
+      + `<div class="pet-acts"><button data-pa="pat" ${pd.n >= 5 ? 'disabled' : ''}>🤚 쓰다듬기<small>오늘 ${pd.n}/5 · +${PAT_GAIN}</small></button>`
+      + `<button data-pa="feed" ${(ST.manna || 0) > 0 ? '' : 'disabled'}>🍞 만나 먹이기<small>만나 ${ST.manna || 0}개 · +${FEED_GAIN}</small></button>`
       + `<button data-pa="trick" ${lv >= 3 ? '' : 'disabled'}>🎪 재주<small>${lv >= 3 ? '보여 줘!' : 'Lv.3부터'}</small></button></div>`
       + `<div class="pet-lv">${PET_LV.slice(1).map((l, i) => `${lv >= i + 2 ? '✅' : '🔒'} ${l.unlock} <span style="opacity:.6">(${l.need})</span>`).join('<br>')}</div>`
       + `<div style="font-size:12px;opacity:.75;margin-top:8px">${msg || '🍞 만나는 오늘의 퀘스트를 다 하면 2개씩 받아요.'}</div>`;
@@ -5693,8 +5699,8 @@
   document.getElementById('pet-body').addEventListener('click', e => {
     const b = e.target.closest('[data-pa]'); if (!b || b.disabled) return;
     const k = equipObj.petKey, today = kstDate();
-    if (b.dataset.pa === 'pat'){ ST.petDay = ST.petDay || {}; if (!ST.petDay[k] || ST.petDay[k].d !== today) ST.petDay[k] = { d: today, n: 0 }; ST.petDay[k].n++; addAff(k, 2); petHearts(); renderPet(`${josa(SHOP[k].name, '이', '가')} 기분 좋아해요!`); }
-    if (b.dataset.pa === 'feed'){ ST.manna = (ST.manna || 0) - 1; addAff(k, 6); petHearts(); renderPet(`냠냠! ${josa(SHOP[k].name, '이', '가')} 만나를 맛있게 먹었어요`); }
+    if (b.dataset.pa === 'pat'){ ST.petDay = ST.petDay || {}; if (!ST.petDay[k] || ST.petDay[k].d !== today) ST.petDay[k] = { d: today, n: 0 }; ST.petDay[k].n++; addAff(k, PAT_GAIN); petHearts(); renderPet(`${josa(SHOP[k].name, '이', '가')} 기분 좋아해요!`); }
+    if (b.dataset.pa === 'feed'){ ST.manna = (ST.manna || 0) - 1; addAff(k, FEED_GAIN); petHearts(); renderPet(`냠냠! ${josa(SHOP[k].name, '이', '가')} 만나를 맛있게 먹었어요`); }
     if (b.dataset.pa === 'trick'){ equipObj.trickT = 1.2; document.querySelector('#pet-modal .close').click(); }
   });
   let playerIdleT = 0;
@@ -6870,7 +6876,7 @@
   Object.assign(TITLE_ICO, { '말씀을 묵상하는 사람': '⭐', '말씀을 새긴 사람': '🌟', '지혜로운 마음의 사람': '✨' });
   // ① 히든 퀘스트 힌트 자세히(⭐1)
   const HQ_DETAIL = {
-    lost_lamb: '동물 친구 하나를 Lv.2(친밀도 20)까지 키운 뒤, 미디안 마을의 「목동 소년」에게 말을 걸어요. 잃은 양은 마을 밖 먼 곳에 있어요.',
+    lost_lamb: '동물 친구 하나를 Lv.2(친밀도 40)까지 키운 뒤, 미디안 마을의 「목동 소년」에게 말을 걸어요. 잃은 양은 마을 밖 먼 곳에 있어요.',
     night_brick: '한국 시간 밤 8시~새벽 5시에 애굽 벽돌 작업장 옆 「벽돌공」에게 → 벽돌 굽기 도전에서 8장 이상.',
     manna_week: '5장을 마친 뒤 신 광야 들판의 만나를 안식일(토)만 빼고 6일 연속 거둔 다음, 「배고픈 아이」에게.',
     rephidim_work: '르비딤의 조각목 베기·구리 광석 캐기를 합쳐 10번 한 뒤, 「걱정하는 어머니」에게.',
