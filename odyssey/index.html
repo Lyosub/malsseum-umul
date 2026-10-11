@@ -4910,10 +4910,18 @@
   let questLastKey = null, questTimer = null;
   function questPeek(){ questPanel.classList.remove('compact'); clearTimeout(questTimer); questTimer = setTimeout(() => { questPanel.classList.add('compact'); renderQuestList(); }, 6000); }
   questPanel.addEventListener('click', () => { if (typeof tut !== 'undefined') tut.questTapped = true; clearTimeout(questTimer); questPanel.classList.toggle('compact'); renderQuestList(); });
+  // 다음 두루마리를 아직 안 펼쳤으면 그 안내 문구(퀘스트 목록·지난 이야기에 계속 보임). 해당 없으면 ''
+  function nextScrollHint(){
+    try {
+      const from = Object.keys(NEXT_SCROLL).find(k => NEXT_SCROLL[k].done() && !(ST.sp && ST.sp[NEXT_SCROLL[k].to])); if (!from) return '';
+      const nx = SCROLL_LIST.find(s => s.id === NEXT_SCROLL[from].to);
+      return `완료! 다음: ${nx.no}편 「${nx.title}」 — 🧭 길 떠나기 → 두루마리마을 → 📚 두루마리 문에서 펼치기`;
+    } catch (e){ return ''; }
+  }
   function renderQuestList(){
     const q = curStep(), panel = document.getElementById('quest-panel');
     panel.querySelector('h4').textContent = CHAPTER.title;
-    let obj = q ? q.obj : `완료! 다음: ${CHAPTER.next}`;
+    let obj = q ? q.obj : (nextScrollHint() || `완료! 다음: ${CHAPTER.next}`);
     if (q && q.rumor) obj += ` (${Math.min(rumorCount(q), q.rumor)}/${q.rumor})`;
     if (q && q.manna) obj += ` (${Math.min(ST.mannaGot || 0, q.manna)}/${q.manna})`;
     if (q && q.collect) obj += ` (${Math.min(ST.straw, q.collect)}/${q.collect})`;
@@ -6954,7 +6962,7 @@
   function recapHTML(){
     const keys = (ST.keys || []).slice(-3), q = curStep();
     let now;
-    if (!q) now = `<div class="keyline">🎉 「모세와 함께」 ${chaptersDone()}장까지 마쳤어요. 📜 곁 이야기 · ❔ 히든 퀘스트 · 📚 도서관을 둘러보세요.</div>`;
+    if (!q) now = `${nextScrollHint() ? `<div class="keyline">▶ ${nextScrollHint().replace('완료! 다음: ', '다음 할 일: ')}</div>` : ''}<div class="keyline">🎉 「모세와 함께」 ${chaptersDone()}장까지 마쳤어요. 📜 곁 이야기 · ❔ 히든 퀘스트 · 📚 도서관을 둘러보세요.</div>`;
     else { const who = q.npc ? pointTitle(q.zone, q.npc) : q.point ? pointTitle(q.zone, q.point) : '';
       now = `<div class="keyline"><b>${CHAPTER.title}</b></div><div class="keyline">▶ 지금 할 일: <b>${q.obj}</b></div><div class="keyline">📍 ${zoneName(q.zone)} — ${q.where || ''}</div>${who ? `<div class="keyline">🙋 다음에 만날 사람·장소: <b>${who}</b></div>` : ''}`; }
     const past = keys.length ? keys.map(k => `<div class="keyline"><b>${k.scene}</b> — ${k.t}</div>`).join('') : '<div class="keyline" style="opacity:.7">아직 기억할 장면이 없어요.</div>';
