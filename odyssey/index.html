@@ -601,7 +601,7 @@
 <div id="compass"><svg viewBox="0 0 46 46"><path id="compass-arrow" d="M23 7 L31 27 L23 22 L15 27 Z" fill="#ffd27a"/></svg></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "2a902b0d", "wild3": "e16beec3"};</script>
+<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "2a902b0d", "wild3": "b4590c52", "joshua": "c47bf3e4"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -1266,6 +1266,26 @@
         { id: 'to-kadesh2', x: 39.5, z: 0, type: 'exit', title: "가데스로", to: 'kadesh', spawn: [34, -4] },
       ],
     },
+    // ══ 4편 「여호수아와 함께」 — 요단 서쪽 길갈과 여리고(수 4:19 "여리고 동쪽 경계 길갈"). 동쪽에 요단 강, 서쪽에 여리고 성, 북서쪽에 산지(수 2:16).
+    //    성벽·라합의 집·길갈의 장막과 열두 돌은 두루마리(scrolls/joshua4.js)가 이야기 진행에 맞춰 세운다 ══
+    gilgal: {
+      name: '길갈과 여리고', questTitle: '📜 퀘스트 — 여호수아와 함께',
+      env: { top: 0x5a8fcc, bottom: 0xe6dcb4, fog: 0xdfd4ae, fogD: 0.011, sun: 0xfff3d6, sunDir: [0.5, 0.45, -0.55], cloud: 0.3, cloudCol: 0xffffff, stars: 0, far: 'far-mountains' },
+      center: [0, 0], spawn: [34, 0],
+      mountain: { x: -26, z: -54, r: 15, h: 22 },
+      water: { x0: 38.5, x1: 45, z0: -48, z1: 48 },
+      layout: [
+        ['env-date-palm', -4, 30, 0.4], ['env-date-palm', -12, 28, 1.6], ['env-date-palm', 2, 34, 2.3], ['palm', -34, 22, 0.8], ['env-date-palm', -36, -6, 1.2], ['palm', -30, -16, 2.6],
+        ['env-date-palm', 30, 26, 0.9], ['env-date-palm', 33, -24, 2.0], ['palm', 31, 34, 1.4], ['env-acacia', 10, -34, 1.1], ['env-acacia', -6, -28, 2.2],
+        ['env-rocks-strata', -38, -36, 1.2], ['env-rock-hill', 26, -38, 2.0], ['dry-bush', 4, -6, 0], ['dry-bush', -2, 10, 0],
+      ],
+      scatter: [['dry-bush', 8, 20, 50], ['rock-group', 8, 22, 50]],
+      clear: [[-22, 6, 14], [34, 0, 6], [14, 4, 9], [-26, -34, 6], [-26, -54, 17], [16, 0, 16]],
+      fires: [],
+      points: [
+        { id: 'to-moab4', x: 36, z: 7, type: 'exit', title: "요단 건너편 모압 평지로", to: 'moab', spawn: [-34, 2] },
+      ],
+    },
   };
   let Z = null;                       // 지금 마을
   const CLEAR_ZONES = [];
@@ -1510,7 +1530,7 @@
       const water = new THREE.Mesh(geo, new THREE.MeshToonMaterial({ color: 0x4f9fb5, gradientMap: toonGradient, transparent: true, opacity: 0.88 }));
       water.position.set((w.x0 + w.x1) / 2, 0, (w.z0 + w.z1) / 2); water.receiveShadow = true;
       zoneRoot.add(water); Z._water = water;
-      boxes.push({ x: (w.x0 + w.x1) / 2, z: (w.z0 + w.z1) / 2, rot: 0, hx: (w.x1 - w.x0) / 2, hz: (w.z1 - w.z0) / 2, top: 99, stand: false });
+      Z._waterBox = { x: (w.x0 + w.x1) / 2, z: (w.z0 + w.z1) / 2, rot: 0, hx: (w.x1 - w.x0) / 2, hz: (w.z1 - w.z0) / 2, top: 99, stand: false }; boxes.push(Z._waterBox);
     }
     // 마을 밖 흩어 놓기
     (Z.scatter || []).forEach(([name, count, rMin, rMax]) => {
@@ -5116,7 +5136,7 @@
     { id: 'moses', no: '1', title: '모세와 함께', builtin: true, num: 1 },
     { id: 'sinai2', no: '2', title: '시내산의 마지막 한 달', file: 'scrolls/sinai2.js', num: 2, needMoses: true },
     { id: 'wild3', no: '3', title: '광야 40년', file: 'scrolls/wild3.js', num: 3, needScroll: 'sinai2' },
-    { id: 'joshua', no: '4', title: '여호수아와 함께', soon: true },
+    { id: 'joshua', no: '4', title: '여호수아와 함께', file: 'scrolls/joshua4.js', num: 4, needScroll: 'wild3' },
     { id: 'judges', no: '5', title: '사사들과 함께', soon: true },
     { id: 'ruth', no: '6', title: '룻과 사무엘', soon: true },
     { id: 'devtest', no: 'T', title: '시험 두루마리', file: 'scrolls/devtest.js', dev: true },
@@ -5136,10 +5156,12 @@
     get Z(){ return Z; }, get zoneRoot(){ return zoneRoot; }, get markers(){ return markers; }, get player(){ return player; }, get propTemplates(){ return propTemplates; },
     get mgArea(){ return mgArea; }, get mgAct(){ return mgAct; }, get toonGradient(){ return toonGradient; },
     setGlory: on => { kadeshNoGlory = !on; if (Z && Z.id === 'kadesh') buildGlory(on); }, addGeneal2: n => addGeneal(n), get TAB(){ return TAB; },
+    setRiver: dry => { if (!Z || !Z._water || !Z._waterBox) return; Z._water.visible = !dry; const i = boxes.indexOf(Z._waterBox); if (dry && i >= 0) boxes.splice(i, 1); else if (!dry && i < 0) boxes.push(Z._waterBox); },
     get mg(){ return mg; }, completeTask: q => completeTask(q), addGeneal: n => addGeneal(n), get flameTex(){ return flameTex; }, get obstacles(){ return obstacles; }, reachable: (x, z) => reachable(x, z),
   };
   CONDS.moabOpen = () => { const p = ST.sp && ST.sp.wild3; return !!((p && (p.ch >= 10 || p.cleared && p.ch >= 9)) || DEV_SCROLL); };
   CONDS.moabMoses = () => { const p = ST.sp && ST.sp.wild3; return !(p && p.ch >= 15 && p.cleared); };   // 신 34:5 뒤로는 모세가 보이지 않음
+  CONDS.gilgalOpen = () => !!((ST.sp && ST.sp.joshua) || DEV_SCROLL);
   CONDS.kadeshOpen = () => !!((ST.sp && ST.sp.sinai2 && ST.sp.sinai2.cleared) || ST.cur === 'wild3' || DEV_SCROLL);
   const SCROLL_Q = window.__odyQ = window.__odyQ || [];
   function drainScrolls(){ while (SCROLL_Q.length){ const f = SCROLL_Q.shift(); try { const def = f(ODY_API); if (def && def.id) SCROLL_DEFS[def.id] = def; } catch (e){ console.error('두루마리 등록 실패', e); } } }
@@ -5166,6 +5188,7 @@
     const fresh = id !== 'moses' && !SCROLL_DEFS[id];
     if (id !== 'moses' && !(await loadScrollBundle(id))){ if (!opt.boot) toast('📚 두루마리를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 해 보세요', 2800); return false; }
     ST.cur = id; if (id !== 'moses' && !ST.sp[id]) ST.sp[id] = { ch: 0, step: 0, cleared: false, rumor: [] };
+    { const P = ST.sp[id], C = id !== 'moses' && SCROLL_DEFS[id] && SCROLL_DEFS[id].chapters; if (P && C && P.cleared && C[P.ch + 1]){ P.ch++; P.step = 0; P.cleared = false; P.rumor = []; } }
     syncStory(); saveST();
     if (opt.boot) return true;
     reachDone = null; renderQuestList(); refreshShow();
@@ -5215,7 +5238,7 @@
     pray_start: '두루마리마을 기념 전시관 앞에서…', companion: '떨기나무 앞, 걱정하는 모세에게…', prayer: '바로 앞에 들어가기 전, 떨리는 모세와…',
     share: '짚을 모아 준 일꾼들과…', trust: '뱀이 된 지팡이 이야기를 들을 때…', true_heart: '우박이 그친 뒤 바로의 모습을 보고…',
     passover_lamb: '문설주에 피를 바른 뒤 궁금한 것을…', bold_step: '바다가 갈라진 순간…', together: '바다를 건널 때 주변을 잘 살펴보면…',
-    timbrel: '미리암과 함께 소고를 잘 두드리면…', daily_bread: '만나를 아침까지 남겨 둔 사람에게…', raised_hands: '산 꼭대기에서 손을 들고 난 뒤…', true_leader: '모세와 함께 지도자를 고를 때…', ten_words: '십계명을 한 번도 틀리지 않고…', lords_side: '모세가 진 문에서 부를 때…', willing: '마음에 원하는 만큼 예물을 드리면…', as_commanded: '성막을 거의 틀리지 않고 차례대로 세우면…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면', holy_people: '2편, 밭 모퉁이를 한 번에 남기면…', trumpet_follow: '2편, 은 나팔 소리를 한 번도 틀리지 않으면…', grape_carry: '3편, 포도송이 막대를 한 번도 기울이지 않으면…', with_caleb: '3편, 두 목소리 앞에서 처음부터…', looked_up: '3편, 장대를 쳐다보라고 모두에게 알리면…', refuge_run: '3편, 도피성 성문까지 1분 안에…', hear_israel: '3편, 쉐마를 새길 자리를 찾으면…',
+    timbrel: '미리암과 함께 소고를 잘 두드리면…', daily_bread: '만나를 아침까지 남겨 둔 사람에게…', raised_hands: '산 꼭대기에서 손을 들고 난 뒤…', true_leader: '모세와 함께 지도자를 고를 때…', ten_words: '십계명을 한 번도 틀리지 않고…', lords_side: '모세가 진 문에서 부를 때…', willing: '마음에 원하는 만큼 예물을 드리면…', as_commanded: '성막을 거의 틀리지 않고 차례대로 세우면…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면', holy_people: '2편, 밭 모퉁이를 한 번에 남기면…', trumpet_follow: '2편, 은 나팔 소리를 한 번도 틀리지 않으면…', grape_carry: '3편, 포도송이 막대를 한 번도 기울이지 않으면…', with_caleb: '3편, 두 목소리 앞에서 처음부터…', looked_up: '3편, 장대를 쳐다보라고 모두에게 알리면…', refuge_run: '3편, 도피성 성문까지 1분 안에…', hear_israel: '3편, 쉐마를 새길 자리를 찾으면…', red_cord: '4편, 지붕의 삼대를 한 번도 틀리지 않고 덮으면…', twelve_stones: '4편, 기념 돌 열둘을 한 번에 차례대로 놓으면…',
   };
   function badgeBookHTML(){
     const all = Object.entries(BADGES), n = all.filter(([k]) => ST.badges.includes(k)).length;
@@ -5264,12 +5287,13 @@
   function warpTargets(){
     const q = curStep(), done = chaptersDone(), out = [];
     const exitTo = q && q.exit ? ((ZONES[q.zone].points.find(p => p.id === q.exit) || {}).to) : null;
-    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5, rephidim: 6, sinai: 8, kadesh: 99, moab: 99 };
-    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab']){
+    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5, rephidim: 6, sinai: 8, kadesh: 99, moab: 99, gilgal: 99 };
+    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab', 'gilgal']){
       const story = q && (q.zone === z || exitTo === z);
       if (z === 'kadesh' && !story && !CONDS.kadeshOpen()) continue;
       if (z === 'moab' && !story && !CONDS.moabOpen()) continue;   // 3편 마을은 2편을 마친 뒤부터 목록에 보임
-      const ok = z === 'alpha' || done >= need[z] || story || (z === 'kadesh' && CONDS.kadeshOpen()) || (z === 'moab' && CONDS.moabOpen());
+      if (z === 'gilgal' && !story && !CONDS.gilgalOpen()) continue;   // 4편 마을은 4편을 펼친 뒤부터
+      const ok = z === 'alpha' || done >= need[z] || story || (z === 'kadesh' && CONDS.kadeshOpen()) || (z === 'moab' && CONDS.moabOpen()) || (z === 'gilgal' && CONDS.gilgalOpen());
       out.push({ z, ok, story, here: Z && Z.id === z, note: z === 'alpha' ? '언제든 갈 수 있어요 · 내 장막' : story ? '📜 지금 이야기가 있는 곳' : ok ? '이야기를 마친 곳' : `🔒 ${need[z]}장을 마치면` });
     }
     return out;
@@ -5351,7 +5375,7 @@
   const cardHTML = (id, locked) => { const v = VERSES[id]; return `<div class="vcard${locked ? ' locked' : ''}" style="background-image:url('${A('ui/game/verse-card.jpg')}')"><div class="ref">${v.ref}</div><div>${locked ? '아직 모으지 못한 구절' : v.text}</div><div class="chk">개역개정</div></div>`; };
   // 곡: title(처음 테마) · village(두루마리마을) · midian(미디안 광야) · egypt(애굽 고센) · palace(바로의 궁전 알현실)
   const BGM = { on: (() => { try { return localStorage.getItem('inodyssey-bgm') !== 'off'; } catch (e){ return true; } })(), ctx: null, src: null, gain: null, bufs: {}, cur: null, want: 'title', starting: false, titleUntil: 0 };
-  const ZONE_BGM = { alpha: 'village', midian: 'midian', egypt: 'egypt', redsea: 'redsea', wild: 'midian', rephidim: 'midian', sinai: 'midian', kadesh: 'midian', moab: 'midian' };
+  const ZONE_BGM = { alpha: 'village', midian: 'midian', egypt: 'egypt', redsea: 'redsea', wild: 'midian', rephidim: 'midian', sinai: 'midian', kadesh: 'midian', moab: 'midian', gilgal: 'midian' };
   function bgmWanted(){
     if (performance.now() < BGM.titleUntil) return 'title';                      // 시작할 때 테마를 한 바퀴
     if (Z && Z.room && inRoom(player.position.x, player.position.z)) return 'palace';
@@ -5518,7 +5542,7 @@
   const prefetchState = { total: 0, done: 0 };
   async function prefetchAll(){
     if (window.__ASSETS){ prefetchState.total = prefetchState.done = 1; return; }   // 파일 하나짜리 미리보기는 이미 다 들어 있음
-    const SEQ = ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab'], si = SEQ.indexOf(Z.id), cq = curStep();
+    const SEQ = ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab', 'gilgal'], si = SEQ.indexOf(Z.id), cq = curStep();
     const order = [...new Set([cq && cq.zone, SEQ[si + 1], SEQ[si - 1], 'alpha'].filter(z => z && z !== Z.id && ZONES[z]))].slice(0, 3);   // 다음 퀘스트 마을부터
     const todo = order.filter(z => !prefetched.has(z)).map(z => { prefetched.add(z); const a = zoneAssets(z); return [...a.files, ...a.lazy]; });
     const files = [...new Set(todo.flat())].filter(f => !bytesCache.has(f));
@@ -7014,6 +7038,7 @@
   const NEXT_SCROLL = {
     moses: { to: 'sinai2', done: () => chaptersDone() >= 10, ped: 0, what: '두 돌판' },
     sinai2: { to: 'wild3', done: () => sinai2Done(), ped: 1, what: '은 나팔 둘' },
+    wild3: { to: 'joshua', done: () => wild3Done(), ped: 2, what: '놋뱀 장대' },
   };
   let nsBusy = false;
   async function nextScrollCeremony(opt = {}){
@@ -9053,6 +9078,8 @@
   // 가데스(3편)는 시내 산 동쪽 출구로만 이어진다
   ROUTE.kadesh = {}; Object.keys(ROUTE).forEach(z => { if (z === 'kadesh') return; ROUTE.kadesh[z] = 'to-sinai3'; ROUTE[z].kadesh = z === 'sinai' ? 'to-kadesh' : ROUTE[z].sinai; });
   ROUTE.moab = {}; Object.keys(ROUTE).forEach(z => { if (z === 'moab') return; ROUTE.moab[z] = 'to-kadesh2'; ROUTE[z].moab = z === 'kadesh' ? 'to-moab' : ROUTE[z].kadesh; });
+  // 길갈과 여리고(4편)는 모압 평지에서 요단을 건너야 이어진다
+  ROUTE.gilgal = {}; Object.keys(ROUTE).forEach(z => { if (z === 'gilgal') return; ROUTE.gilgal[z] = 'to-moab4'; ROUTE[z].gilgal = z === 'moab' ? 'to-gilgal' : ROUTE[z].moab; });
   ROUTE.redsea.rephidim = 'to-wild'; ROUTE.redsea.sinai = 'to-wild';
   let doorTarget = null;
   function targetPos(){

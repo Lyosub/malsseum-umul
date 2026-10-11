@@ -991,7 +991,7 @@
           { id: 'w15s2', zone: 'moab', obj: '말씀을 새길 네 자리', where: '회막 앞의 모세', npc: 'moses', game: 'shema' },
           { id: 'w15s3', zone: 'moab', obj: '광야 사십 년을 기억하라', where: '진영 가운데 온 이스라엘이 모인 곳(빛나는 곳)', point: 'mb_camp', dlg: 'w3_forty_years', reward: { verse: ['de6-5', 'de8-3'], clear: true } },
         ] },
-      { title: `${T(16)} — 느보 산의 모세`, clearTitle: '🎉 3편 「광야 40년」을 모두 마쳤어요! 세 번째 받침대에 놋뱀 장대가 놓여요', next: '4편 「여호수아와 함께」 (준비 중)',
+      { title: `${T(16)} — 느보 산의 모세`, clearTitle: '🎉 3편 「광야 40년」을 모두 마쳤어요! 세 번째 받침대에 놋뱀 장대가 놓여요', next: '4편 「여호수아와 함께」',
         steps: [
           { id: 'w16s1', zone: 'moab', obj: '"한 사람을 이 회중 위에 세워서"', where: '회막 앞의 모세', npc: 'moses', dlg: 'w3_successor', place: PL },
           { id: 'w16s2', zone: 'moab', obj: '여호수아에게 — 강하고 담대하라', where: '회막 앞의 여호수아', npc: 'mb_joshua', dlg: 'w3_strong' },
