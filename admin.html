@@ -26,7 +26,7 @@
 <div class="wrap">
   <div class="page-hd">
     <h1>관리자</h1>
-    <p>회원 · 콘텐츠 · 오이코스 · 통계 · 승인함</p>
+    <p>회원 · 콘텐츠 · 오이코스 · 통계 · 오디세이 · 승인함</p>
   </div>
 
   <div class="auth-gate" id="adminGate"></div>
@@ -37,6 +37,7 @@
       <button type="button" data-panel="content">📝 콘텐츠</button>
       <button type="button" data-panel="oikos">🤝 오이코스</button>
       <button type="button" data-panel="stats">📊 통계</button>
+      <button type="button" data-panel="odyssey">🗺 오디세이</button>
       <button type="button" data-panel="inbox">📥 승인함</button>
     </div>
 
@@ -277,6 +278,15 @@
       </div>
     </section>
 
+    <!-- ===== 오디세이 ===== -->
+    <section class="admin-panel" data-panel="odyssey" hidden>
+      <div class="card">
+        <h3 style="margin-top:0;">🗺 In Odyssey 학생별 현황</h3>
+        <p class="msg" style="margin-top:0;">학생이 뭘 샀고, 달란트를 어디서 얼마 얻었고, 지금 몇 편 몇 장인지 볼 수 있어요. 학생이 직접 쓴 글은 보이지 않아요.</p>
+        <div id="odysseyAdminBody"><p class="msg">탭을 열면 불러와요.</p></div>
+      </div>
+    </section>
+
     <!-- ===== 승인함 ===== -->
     <section class="admin-panel" data-panel="inbox" hidden>
       <div class="card">
@@ -324,6 +334,7 @@
 <script src="assets/post-media.js"></script>
 <script src="assets/admin.js"></script>
 <script src="assets/group-rankings.js"></script>
+<script src="assets/admin-odyssey.js"></script>
 <script>
   initAdminPage();
   // 관리자 셸: 상단 탭으로 패널 전환 (마지막 선택 탭 기억)
@@ -337,6 +348,7 @@
         b.classList.toggle("on", b.getAttribute("data-panel") === name);
       });
       try { localStorage.setItem("msu-admin-tab", name); } catch (e) {}
+      if (name === "odyssey" && window.initAdminOdyssey) window.initAdminOdyssey();
     }
     tabs.addEventListener("click", function (e) {
       var b = e.target.closest("button[data-panel]");
