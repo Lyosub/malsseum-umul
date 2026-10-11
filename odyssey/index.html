@@ -7430,7 +7430,7 @@
     if (!(typeof msuOn === 'function' && msuOn())){ el.innerHTML = `<div class="logline">말씀우물에 로그인하면 친구를 맺을 수 있어요. <a href="${MSU_BASE}login.html?next=/odyssey/">로그인하기</a></div>`; return; }
     if (!PEOPLE_L){ el.innerHTML = '<div class="logline">불러오는 중…</div>'; return; }
     const myYard = !VISIT && inYard() && FR.ch;
-    const row = (p, btns) => `<div class="prow"><span class="nm">${escH(p.nickname || '친구')}${online(p.user_id) ? '<span class="dot" title="접속 중"></span>' : ''}${p.title ? `<small>🏷 ${escH(p.title)}${p.likes ? ` · 장막 ❤️ ${p.likes}` : ''}</small>` : p.likes ? `<small>장막 ❤️ ${p.likes}</small>` : ''}</span>${btns}</div>`;
+    const row = (p, btns) => `<div class="prow"><span class="nm">${escH(p.nickname || '친구')}${online(p.user_id) ? '<span class="dot" title="접속 중"></span>' : ''}${p.title ? `<small>🏷 ${escH(p.title)}${p.likes ? ` · 장막 ❤️ ${p.likes}` : ''}</small>` : p.likes ? `<small>장막 ❤️ ${p.likes}</small>` : ''}${p.prog ? `<small>📖 ${escH(p.prog)}</small>` : ''}</span>${btns}</div>`;
     let rows = [];
     if (peopleTab === 'friend') rows = L.filter(p => p.rel === 'friend').map(p => row(p,
       (myYard && online(p.user_id) ? `<button class="go" data-inv="${p.user_id}">📨 초대</button>` : '') + `<button class="go" data-visit="${p.user_id}">🏠 놀러 가기</button><button data-unf="${p.user_id}">✕</button>`));
@@ -7517,6 +7517,7 @@
       const uid = MSU.session.user.id, { data: nick } = await MSU.client.rpc('get_my_odyssey_name');
       if (!nick) return;
       FR.me = { id: uid, nick };
+      try { FR.myTag = makeTag(nick); FR.myTag.position.y = 2.75; player.add(FR.myTag); setTagTitle(FR.myTag, { nick, title: typeof myTitle === 'function' ? myTitle() : '' }); } catch (e){}   // 내 이름표(2026-10-11)
       try { MSU.client.realtime.setAuth(MSU.session.access_token); } catch (e){}
       const ch = MSU.client.channel('odyssey-world', { config: { private: true, presence: { key: uid }, broadcast: { self: false } } });
       ch.on('broadcast', { event: 'pos' }, ({ payload }) => onFriendPos(payload))
@@ -7541,10 +7542,12 @@
   }
   function setTagTitle(tag, meta){
     const el = tag.userData.el, esc = t => String(t || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-    el.innerHTML = esc(meta.nick || '친구') + (meta.title ? `<small>🏷 ${esc(meta.title)}</small>` : '');
+    const cs = [...String(meta.nick || '친구')], nk = cs.length > 5 ? cs.slice(0, 5).join('') + '…' : cs.join('');   // 긴 닉네임은 5글자까지(2026-10-11)
+    el.innerHTML = esc(nk) + (meta.title ? `<small>🏷 ${esc(meta.title)}</small>` : '');
   }
   // 내 칭호가 바뀌면 친구들 화면의 내 이름표도 바뀌게 다시 알림
-  function retrackTitle(){ if (FR.ch && FR.me) FR.ch.track({ nick: FR.me.nick, body: CHAR.body || 'boy', hair: CHAR.body ? (CHAR.hair || HAIR_DEFAULT[CHAR.body]) : null, title: myTitle() }).catch(() => {}); }
+  function retrackTitle(){ if (FR.myTag && FR.me) try { setTagTitle(FR.myTag, { nick: FR.me.nick, title: myTitle() }); } catch (e){}
+    if (FR.ch && FR.me) FR.ch.track({ nick: FR.me.nick, body: CHAR.body || 'boy', hair: CHAR.body ? (CHAR.hair || HAIR_DEFAULT[CHAR.body]) : null, title: myTitle() }).catch(() => {}); }
   function friendPill(){
     const here = [...FR.list.values()].length, el = document.getElementById('friend-pill');
     el.classList.toggle('hidden', !FR.online);
