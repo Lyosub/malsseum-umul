@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-10-11 10:03",
+  "generated_kst": "2026-10-12 10:25",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
-    "followers_count": 138,
+    "followers_count": 139,
     "follows_count": 112,
-    "media_count": 146
+    "media_count": 147
   },
   "posts": [
+    {
+      "id": "17870868735644117",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-10-11T02:01:23+0000",
+      "permalink": "https://www.instagram.com/reel/DeViYIVkdKr/",
+      "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「긍휼을 행하는 자」 (야고보서 2장 1-13절)",
+      "likes": 4,
+      "comments": 1
+    },
     {
       "id": "18103640885373508",
       "type": "REELS",
@@ -35,7 +45,7 @@
       "timestamp_utc": "2026-10-07T05:43:51+0000",
       "permalink": "https://www.instagram.com/reel/DeLoiBQN9Mr/",
       "caption_first_line": "성경 속 연결고리",
-      "likes": 11,
+      "likes": 12,
       "comments": 1
     },
     {
@@ -247,16 +257,6 @@
       "caption_first_line": "👑JESUS+ 왕과 사는 우리",
       "likes": 27,
       "comments": 4
-    },
-    {
-      "id": "18576594070012361",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-03-28T02:00:07+0000",
-      "permalink": "https://www.instagram.com/p/DWaRvIwAV69/",
-      "caption_first_line": "LENT",
-      "likes": 12,
-      "comments": 0
     }
   ]
 }
