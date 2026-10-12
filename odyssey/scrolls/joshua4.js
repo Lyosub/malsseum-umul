@@ -1,10 +1,13 @@
-// 4편 「여호수아와 함께」 — 여호수아 1–24장, 13장. 2026-10-12 1부(1~4장: 강하고 담대하라 · 라합과 붉은 줄 · 요단이 멈춤 · 기념 돌 열둘) 먼저.
-// 대사 원칙: 성경 인물은 개역개정에 있는 자기 말만, 해설은 원문 + (출처). 2026-10-12 bskorea 개역개정(GAE) 수 1–4장 원문 대조.
-// 무대: 1~3장은 모압 평지(수 2:1·3:1 "싯딤"), 2장 여리고와 4장 길갈은 요단 서쪽 「길갈과 여리고」 마을.
+// 4편 「여호수아와 함께」 — 여호수아 1–24장, 13장. 2026-10-12 1부(1~4장: 강하고 담대하라 · 라합과 붉은 줄 · 요단이 멈춤 · 기념 돌 열둘),
+// 같은 날 2부(5~8장: 여호와의 군대 대장 · 여리고 · 아이 성 첫 패배와 아간 · 아이 성 매복).
+// 대사 원칙: 성경 인물은 개역개정에 있는 자기 말만, 해설은 원문 + (출처). 2026-10-12 bskorea 개역개정(GAE) 수 1–8장 원문 대조.
+// 무대: 1~3장은 모압 평지(수 2:1·3:1 "싯딤"), 2장 여리고와 4~6장 길갈은 요단 서쪽 「길갈과 여리고」 마을, 7·8장은 「아이와 에발 산」.
+// 심판 장면(수 6:21 · 7:24-26 · 8:22-29)은 본문을 지우지 않고 해설로 읽되, 버튼·보상으로 만들지 않고 사건 뒤의 원경(돌무더기)만 보인다.
 // 새 인물(라합·두 정탐꾼·동편 지파 대표)은 GPT/Meshy 모델이 오기 전까지 이미 있는 모델을 쓴다.
 (window.__odyQ = window.__odyQ || []).push(api => {
   const { DLG, ZONES, CONDS, VERSES, THREE, SPEAKERS: { NAR } } = api;
   const JOSHUA = { n: '여호수아' }, EAST = { n: '르우벤·갓·므낫세 반 지파' }, SPIES = { n: '두 정탐꾼' }, RAHAB = { n: '라합' }, OFFICERS = { n: '관리들' };
+  const CAPTAIN = { n: '여호와의 군대 대장' }, SCOUTS = { n: '아이를 정탐한 사람들' }, ACHAN = { n: '아간' };
   const cur = () => api.ST.cur === 'joshua' && api.ST.sp.joshua ? api.ST.sp.joshua : null;
   const at = (ch, a = 0, b = 99) => () => { const p = cur(); return !!p && p.ch === ch && !p.cleared && p.step >= a && p.step <= b; };
   const from = (ch, s = 0) => () => { const p = cur(); return !!p && (p.ch > ch || (p.ch === ch && (p.cleared || p.step >= s))); };
@@ -16,13 +19,27 @@
   // 길갈과 여리고: 요단은 동쪽(x 38.5 ~ 45), 여리고 성은 서쪽, 산지는 북서쪽
   const JC = [-22, 6], JR = 10, HOUSE_A = 0.45, GBED = [41.7, 0], GBANK = [35, 0], GJOSH = [28, -6], MEMO = [14, 4], HILLS = [-26, -34];
   const HOUSE = [JC[0] + Math.cos(HOUSE_A) * (JR + 1.6), JC[1] + Math.sin(HOUSE_A) * (JR + 1.6)];   // 성벽 바깥, 라합의 창문 아래
+  // 2부 길갈: 할례 산 · 진영 가운데 · 여리고 가까이(칼을 든 사람) · 성문 앞 · 진영 밖(라합) · 궤 · 아간의 장막 · 아골 골짜기(남쪽 원경)
+  const HILL5 = [22, -31], CAMP5 = [8, 10], MAN = [-4, -4], GATE6 = [-7, 7], RAHAB_OUT = [-8, -20], ARK_G = [18, -8], ACHAN_T = [4, -9.6], ACHOR = [12, 40];
+  // 아이와 에발 산: 아이 성(가운데 서쪽) · 벧엘(더 서쪽) · 북쪽 진 · 북쪽 두 산 사이의 궤 · 에발 산 제단
+  const AI = [-8, 6], AIR = 6, AIGATE = [2, 6], BETHEL = [-38, 6], AMBUSH = [-24, 6], CAMP8 = [-8, -12], ARK_E = [0, -33], ALTAR = [12, -30];
 
   // 단계 번호(장 index · step index)
   // 0장: 0 여호수아 · 1 관리들 · 2 동편 지파
   // 1장: 0 정탐꾼을 보냄 · 1 요단을 건너 여리고로 · 2 삼대에 숨기기 · 3 라합의 고백 · 4 줄로 달아 내리기 · 5 산에서 사흘 · 6 요단을 건너 돌아가기 · 7 여호수아에게 보고
   // 2장: 0 싯딤에서 떠남 · 1 강가에서 말씀 · 2 이천 규빗 · 3 물이 멈춤 · 4 요단 가운데 마른 땅
   // 3장: 0 마른 땅으로 건너기 · 1 열두 사람 · 2 돌 열둘 · 3 백성이 다 건넘 · 4 제사장들이 올라옴 · 5 길갈의 열두 돌
-  let stopped = false;   // 3:16 물이 그친 순간(대사 도중)부터 마른 땅
+  // 4장: 0 부싯돌 칼 · 1 할례 산 · 2 길갈의 날들(순서) · 3 칼을 든 사람
+  // 5장: 0 성을 돌라 · 1 엿새와 일곱째 날 · 2 정탐한 두 사람에게 · 3 라합의 집 · 4 진영 밖의 라합
+  // 6장: 0 아이로 보냄 · 1 아이로 올라감 · 2 성문 앞의 패배 · 3 길갈로 내려옴 · 4 궤 앞의 기도 · 5 지파대로 · 6 아간의 장막 · 7 아골 골짜기
+  // 7장: 0 다시 아이로 · 1 아이로 올라감 · 2 매복과 신호 · 3 에발 산 제단
+  let stopped = false;
+  // doneDlg는 completeTask(단계 넘어감) 뒤에 읽히므로, 대사의 그 절에 이르기 전까지 장면을 붙잡아 둔다
+  const hold = { walls: false, ai: false, altar: false };
+  let achorShow = false;
+  const wallsDown = () => from(5, 2)() && !hold.walls;
+  const jerichoBurnt = () => from(5, 5)() || burnShow;
+  let burnShow = false;   // 3:16 물이 그친 순간(대사 도중)부터 마른 땅
   const dryMoab = () => { const p = cur(); return !!p && ((p.ch === 2 && (p.cleared || p.step >= 4 || (stopped && p.step === 3))) || (p.ch === 3 && p.step === 0 && !p.cleared)); };
   const dryGilgal = () => { const p = cur(); return !!p && p.ch === 3 && !p.cleared && p.step <= 4; };
   const cordTied = from(1, 5);
@@ -32,7 +49,10 @@
     j4c0: at(0), j4c1: at(1), j4east: () => { const p = cur(); return !!p && p.ch === 0; },
     j4bank: () => !!cur() && !dryMoab(),   // 강가 나루(요단이 마른 동안에는 강 가운데 길로)
     j4back: () => { const p = cur(); return !!p && p.ch === 1 && p.step >= 5; },
-    j4spiesHouse: at(1, 2, 4), j4spiesHills: at(1, 5, 5), j4rahab: from(1, 2), j4hills: at(1, 5, 5), j4house: at(1, 2, 4),
+    j4spiesHouse: at(1, 2, 4), j4spiesHills: at(1, 5, 5), j4hills: at(1, 5, 5),
+    j4rahab: () => from(1, 2)() && before(5, 4)(), j4house: () => at(1, 2, 4)() || at(5, 3, 3)(),
+    j5hill: at(4, 1, 1), j5camp: at(4, 2, 2), j5man: at(4, 3, 3), j6gate: at(5, 1, 1), j6rahabOut: from(5, 4),
+    j7gate: at(6, 2, 2), j7ark: at(6, 4, 5), j7tent: at(6, 6, 6), j8camp: at(7, 2, 2), j8altar: at(7, 3, 3),
     j4c2: at(2), j4dryM: dryMoab, j4bed: () => { const p = cur(); return !!p && p.ch === 2 && !p.cleared && p.step >= 4; },
     j4cross: () => { const p = cur(); return !!p && ((p.ch === 2 && p.cleared) || (p.ch === 3 && p.step === 0)); },
     j4gilgal: from(3), j4dryG: dryGilgal, j4gbed: at(3, 2, 4), j4memo: from(3, 5),
@@ -54,6 +74,18 @@
   ZG.push({ id: 'j4_gbed', x: GBED[0], z: GBED[1] + 2.5, type: 'lore', title: '요단 가운데 — 제사장들의 발이 선 곳', cond: 'j4gbed', body: '' });
   ZG.push({ id: 'j4_gpriests', x: GBED[0], z: GBED[1] - 2.5, type: 'villager', title: '언약궤를 멘 제사장들', model: 'he-levite', persona: 'rs_static', cond: 'j4dryG', body: '' });
   ZG.push({ id: 'j4_memo', x: MEMO[0], z: MEMO[1], type: 'lore', title: '길갈 — 오늘밤 유숙할 곳', cond: 'j4memo', body: '' });
+  // 2부
+  ZG.push({ id: 'j5_hill', x: HILL5[0], z: HILL5[1], type: 'lore', title: '할례 산', cond: 'j5hill', body: '' });
+  ZG.push({ id: 'j5_camp', x: CAMP5[0], z: CAMP5[1], type: 'lore', title: '길갈 진영 — 여리고 평지', cond: 'j5camp', body: '' });
+  ZG.push({ id: 'j5_man', x: MAN[0], z: MAN[1], type: 'lore', title: '칼을 빼어 손에 든 한 사람', cond: 'j5man', body: '' });   // 수 5:13 — 얼굴·모습은 만들지 않고 빛으로만
+  ZG.push({ id: 'j6_gate', x: GATE6[0], z: GATE6[1], type: 'lore', title: '굳게 닫힌 여리고 성문 앞', cond: 'j6gate', body: '' });
+  ZG.push({ id: 'j6_rahab_out', x: RAHAB_OUT[0], z: RAHAB_OUT[1], type: 'villager', title: '진영 밖의 라합과 가족', model: 'he-mother', persona: 'rs_static', cond: 'j6rahabOut', body: '' });
+  ZG.push({ id: 'j7_ark', x: ARK_G[0], z: ARK_G[1] + 2.6, type: 'lore', title: '여호와의 궤 앞', cond: 'j7ark', body: '' });
+  ZG.push({ id: 'j7_tent', x: ACHAN_T[0], z: ACHAN_T[1], type: 'lore', title: '아간의 장막', cond: 'j7tent', body: '' });
+  const ZA = ZONES.ai.points;
+  ZA.push({ id: 'j7_aigate', x: AIGATE[0], z: AIGATE[1], type: 'lore', title: '아이 성문 앞', cond: 'j7gate', body: '' });
+  ZA.push({ id: 'j8_camp', x: CAMP8[0], z: CAMP8[1], type: 'lore', title: '아이 북쪽 — 골짜기 건너편 진', cond: 'j8camp', body: '' });
+  ZA.push({ id: 'j8_altar', x: ALTAR[0], z: ALTAR[1], type: 'lore', title: '에발 산 — 제단 쌓을 곳', cond: 'j8altar', body: '' });
 
   // ── 구절 카드(개역개정 원문) ──
   Object.assign(VERSES, {
@@ -61,6 +93,10 @@
     'jos2-11': { ref: '여호수아 2:11', text: '우리가 듣자 곧 마음이 녹았고 너희로 말미암아 사람이 정신을 잃었나니 너희의 하나님 여호와는 위로는 하늘에서도 아래로는 땅에서도 하나님이시니라' },
     'jos3-17': { ref: '여호수아 3:17', text: '여호와의 언약궤를 멘 제사장들은 요단 가운데 마른 땅에 굳게 섰고 그 모든 백성이 요단을 건너기를 마칠 때까지 모든 이스라엘은 그 마른 땅으로 건너갔더라' },
     'jos4-24': { ref: '여호수아 4:24', text: '이는 땅의 모든 백성에게 여호와의 손이 강하신 것을 알게 하며 너희가 너희의 하나님 여호와를 항상 경외하게 하려 하심이라 하라' },
+    'jos5-15': { ref: '여호수아 5:15', text: '여호와의 군대 대장이 여호수아에게 이르되 네 발에서 신을 벗으라 네가 선 곳은 거룩하니라 하니 여호수아가 그대로 행하니라' },
+    'jos6-20': { ref: '여호수아 6:20', text: '이에 백성은 외치고 제사장들은 나팔을 불매 백성이 나팔 소리를 들을 때에 크게 소리 질러 외치니 성벽이 무너져 내린지라 백성이 각기 앞으로 나아가 그 성에 들어가서 그 성을 점령하고' },
+    'jos7-20': { ref: '여호수아 7:20', text: '아간이 여호수아에게 대답하여 이르되 참으로 나는 이스라엘의 하나님 여호와께 범죄하여 이러이러하게 행하였나이다' },
+    'jos8-35': { ref: '여호수아 8:35', text: '모세가 명령한 것은 여호수아가 이스라엘 온 회중과 여자들과 아이와 그들 중에 동행하는 거류민들 앞에서 낭독하지 아니한 말이 하나도 없었더라' },
   });
 
   // ── 대사(개역개정 원문) ──
@@ -227,6 +263,196 @@
       [JOSHUA, '너희의 하나님 여호와께서 요단 물을 너희 앞에서 마르게 하사 너희를 건너게 하신 것이 너희의 하나님 여호와께서 우리 앞에 홍해를 말리시고 우리를 건너게 하심과 같았나니'],
       [JOSHUA, '이는 땅의 모든 백성에게 여호와의 손이 강하신 것을 알게 하며 너희가 너희의 하나님 여호와를 항상 경외하게 하려 하심이라 하라'],
     ],
+    // 5장 「여호와의 군대 대장」 — 수 5장
+    j5_flint: [
+      [NAR, '요단 서쪽의 아모리 사람의 모든 왕들과 해변의 가나안 사람의 모든 왕들이 여호와께서 요단 물을 이스라엘 자손들 앞에서 말리시고 우리를 건너게 하셨음을 듣고 마음이 녹았고 이스라엘 자손들 때문에 정신을 잃었더라 (수 5:1)'],
+      [NAR, '그 때에 여호와께서 여호수아에게 이르시되 너는 부싯돌로 칼을 만들어 이스라엘 자손들에게 다시 할례를 행하라 하시매 (수 5:2)'],
+      [NAR, '여호수아가 부싯돌로 칼을 만들어 할례 산에서 이스라엘 자손들에게 할례를 행하니라 (수 5:3)'],
+      [NAR, '▶ 진영 북쪽의 할례 산으로 가요.'],
+    ],
+    j5_why: [
+      [NAR, '여호수아가 할례를 시행한 까닭은 이것이니 애굽에서 나온 모든 백성 중 남자 곧 모든 군사는 애굽에서 나온 후 광야 길에서 죽었는데 (수 5:4)'],
+      [NAR, '그 나온 백성은 다 할례를 받았으나 다만 애굽에서 나온 후 광야 길에서 난 자는 할례를 받지 못하였음이라 (수 5:5)'],
+      [NAR, '이스라엘 자손들이 여호와의 음성을 청종하지 아니하므로 여호와께서 그들에게 대하여 맹세하사 그들의 조상들에게 맹세하여 우리에게 주리라고 하신 땅 곧 젖과 꿀이 흐르는 땅을 그들이 보지 못하게 하리라 하시매 애굽에서 나온 족속 곧 군사들이 다 멸절하기까지 사십 년 동안을 광야에서 헤매었더니 (수 5:6)'],
+      [NAR, '그들의 대를 잇게 하신 이 자손에게 여호수아가 할례를 행하였으니 길에서는 그들에게 할례를 행하지 못하였으므로 할례 없는 자가 되었음이었더라 (수 5:7)'],
+      [NAR, '또 그 모든 백성에게 할례 행하기를 마치매 백성이 진중 각 처소에 머물며 낫기를 기다릴 때에 (수 5:8)'],
+      [NAR, '여호와께서 여호수아에게 이르시되 내가 오늘 애굽의 수치를 너희에게서 떠나가게 하였다 하셨으므로 그 곳 이름을 오늘까지 길갈이라 하느니라 (수 5:9)'],
+      [NAR, '▶ 길갈 진영 가운데로 가요.'],
+    ],
+    j5_manna: [
+      [NAR, '또 이스라엘 자손들이 길갈에 진 쳤고 그 달 십사일 저녁에는 여리고 평지에서 유월절을 지켰으며 (수 5:10)'],
+      [NAR, '유월절 이튿날에 그 땅의 소산물을 먹되 그 날에 무교병과 볶은 곡식을 먹었더라 (수 5:11)'],
+      [NAR, '또 그 땅의 소산물을 먹은 다음 날에 만나가 그쳤으니 이스라엘 사람들이 다시는 만나를 얻지 못하였고 그 해에 가나안 땅의 소출을 먹었더라 (수 5:12)'],
+      [NAR, '▶ 서쪽, 여리고 가까이로 가요.'],
+    ],
+    j5_man: [
+      [NAR, '여호수아가 여리고에 가까이 이르렀을 때에 눈을 들어 본즉 한 사람이 칼을 빼어 손에 들고 마주 서 있는지라 여호수아가 나아가서 그에게 묻되 (수 5:13)'],
+      [JOSHUA, '너는 우리를 위하느냐 우리의 적들을 위하느냐'],
+    ],
+    j5_holy: [
+      [NAR, '그가 이르되 (수 5:14)'],
+      [CAPTAIN, '아니라 나는 여호와의 군대 대장으로 지금 왔느니라'],
+      [NAR, '하는지라 여호수아가 얼굴을 땅에 대고 엎드려 절하고 그에게 이르되 (수 5:14)'],
+      [JOSHUA, '내 주여 종에게 무슨 말씀을 하려 하시나이까'],
+      [NAR, '여호와의 군대 대장이 여호수아에게 이르되 (수 5:15)'],
+      [CAPTAIN, '네 발에서 신을 벗으라 네가 선 곳은 거룩하니라'],
+      [NAR, '하니 여호수아가 그대로 행하니라 (수 5:15)'],
+    ],
+    // 6장 「여리고」 — 수 6장
+    j6_word: [
+      [NAR, '이스라엘 자손들로 말미암아 여리고는 굳게 닫혔고 출입하는 자가 없더라 (수 6:1)'],
+      [NAR, '여호와께서 여호수아에게 이르시되 보라 내가 여리고와 그 왕과 용사들을 네 손에 넘겨 주었으니 (수 6:2)'],
+      [NAR, '너희 모든 군사는 그 성을 둘러 성 주위를 매일 한 번씩 돌되 엿새 동안을 그리하라 (수 6:3)'],
+      [NAR, '제사장 일곱은 일곱 양각 나팔을 잡고 언약궤 앞에서 나아갈 것이요 일곱째 날에는 그 성을 일곱 번 돌며 그 제사장들은 나팔을 불 것이며 (수 6:4)'],
+      [NAR, '제사장들이 양각 나팔을 길게 불어 그 나팔 소리가 너희에게 들릴 때에는 백성은 다 큰 소리로 외쳐 부를 것이라 그리하면 그 성벽이 무너져 내리리니 백성은 각기 앞으로 올라갈지니라 하시매 (수 6:5)'],
+      [NAR, '눈의 아들 여호수아가 제사장들을 불러 그들에게 이르되 (수 6:6)'],
+      [JOSHUA, '너희는 언약궤를 메고 제사장 일곱은 양각 나팔 일곱을 잡고 여호와의 궤 앞에서 나아가라'],
+      [NAR, '또 백성에게 이르되 (수 6:7)'],
+      [JOSHUA, '나아가서 그 성을 돌되 무장한 자들이 여호와의 궤 앞에서 나아갈지니라'],
+      [NAR, '▶ 굳게 닫힌 여리고 성문 앞으로 가요.'],
+    ],
+    j6_march: [
+      [NAR, '여호수아가 백성에게 이르기를 마치매 제사장 일곱은 양각 나팔 일곱을 잡고 여호와 앞에서 나아가며 나팔을 불고 여호와의 언약궤는 그 뒤를 따르며 (수 6:8)'],
+      [NAR, '그 무장한 자들은 나팔 부는 제사장들 앞에서 행진하며 후군은 궤 뒤를 따르고 제사장들은 나팔을 불며 행진하더라 (수 6:9)'],
+      [NAR, '여호수아가 백성에게 명령하여 이르되 (수 6:10)'],
+      [JOSHUA, '너희는 외치지 말며 너희 음성을 들리게 하지 말며 너희 입에서 아무 말도 내지 말라 그리하다가 내가 너희에게 명령하여 외치라 하는 날에 외칠지니라'],
+      [NAR, '여호와의 궤가 그 성을 한 번 돌게 하고 그들이 진영으로 들어와서 진영에서 자니라 (수 6:11)'],
+      [NAR, '또 여호수아가 아침에 일찍이 일어나니 제사장들이 여호와의 궤를 메고 (수 6:12)'],
+      [NAR, '제사장 일곱은 양각 나팔 일곱을 잡고 여호와의 궤 앞에서 계속 행진하며 나팔을 불고 무장한 자들은 그 앞에 행진하며 후군은 여호와의 궤 뒤를 따르고 제사장들은 나팔을 불며 행진하니라 (수 6:13)'],
+      [NAR, '그 둘째 날에도 그 성을 한 번 돌고 진영으로 돌아오니라 엿새 동안을 이같이 행하니라 (수 6:14)'],
+    ],
+    j6_fall: [
+      [NAR, '일곱째 날 새벽에 그들이 일찍이 일어나서 전과 같은 방식으로 그 성을 일곱 번 도니 그 성을 일곱 번 돌기는 그 날뿐이었더라 (수 6:15)'],
+      [NAR, '일곱 번째에 제사장들이 나팔을 불 때에 여호수아가 백성에게 이르되 (수 6:16)'],
+      [JOSHUA, '외치라 여호와께서 너희에게 이 성을 주셨느니라'],
+      [JOSHUA, '이 성과 그 가운데에 있는 모든 것은 여호와께 온전히 바치되 기생 라합과 그 집에 동거하는 자는 모두 살려 주라 이는 우리가 보낸 사자들을 그가 숨겨 주었음이니라'],
+      [JOSHUA, '너희는 온전히 바치고 그 바친 것 중에서 어떤 것이든지 취하여 너희가 이스라엘 진영으로 바치는 것이 되게 하여 고통을 당하게 되지 아니하도록 오직 너희는 그 바친 물건에 손대지 말라'],
+      [JOSHUA, '은금과 동철 기구들은 다 여호와께 구별될 것이니 그것을 여호와의 곳간에 들일지니라'],
+      [NAR, '이에 백성은 외치고 제사장들은 나팔을 불매 백성이 나팔 소리를 들을 때에 크게 소리 질러 외치니 성벽이 무너져 내린지라 백성이 각기 앞으로 나아가 그 성에 들어가서 그 성을 점령하고 (수 6:20)'],
+      { event: 'wallsFall' },
+      [NAR, '그 성 안에 있는 모든 것을 온전히 바치되 남녀 노소와 소와 양과 나귀를 칼날로 멸하니라 (수 6:21)'],
+      [NAR, '▶ 진영의 여호수아에게 가요.'],
+    ],
+    j6_spies: [
+      [NAR, '여호수아가 그 땅을 정탐한 두 사람에게 이르되 (수 6:22)'],
+      [JOSHUA, '그 기생의 집에 들어가서 너희가 그 여인에게 맹세한 대로 그와 그에게 속한 모든 것을 이끌어 내라'],
+      [NAR, '▶ 창문에 붉은 줄이 매인 라합의 집으로 가요.'],
+    ],
+    j6_rescue: [
+      [NAR, '정탐한 젊은이들이 들어가서 라합과 그의 부모와 그의 형제와 그에게 속한 모든 것을 이끌어 내고 또 그의 친족도 다 이끌어 내어 그들을 이스라엘의 진영 밖에 두고 (수 6:23)'],
+      [NAR, '▶ 진영 밖의 라합에게 가요.'],
+    ],
+    j6_end: [
+      [NAR, '무리가 그 성과 그 가운데에 있는 모든 것을 불로 사르고 은금과 동철 기구는 여호와의 집 곳간에 두었더라 (수 6:24)'],
+      { event: 'jerichoBurn' },
+      [NAR, '여호수아가 기생 라합과 그의 아버지의 가족과 그에게 속한 모든 것을 살렸으므로 그가 오늘까지 이스라엘 중에 거주하였으니 이는 여호수아가 여리고를 정탐하려고 보낸 사자들을 숨겼음이었더라 (수 6:25)'],
+      [NAR, '여호수아가 그 때에 맹세하게 하여 이르되 (수 6:26)'],
+      [JOSHUA, '누구든지 일어나서 이 여리고 성을 건축하는 자는 여호와 앞에서 저주를 받을 것이라 그 기초를 쌓을 때에 그의 맏아들을 잃을 것이요 그 문을 세울 때에 그의 막내아들을 잃으리라'],
+      [NAR, '여호와께서 여호수아와 함께 하시니 여호수아의 소문이 그 온 땅에 퍼지니라 (수 6:27)'],
+    ],
+    // 7장 「아이 성 첫 패배와 아간」 — 수 7장
+    j7_send: [
+      [NAR, '이스라엘 자손들이 온전히 바친 물건으로 말미암아 범죄하였으니 이는 유다 지파 세라의 증손 삽디의 손자 갈미의 아들 아간이 온전히 바친 물건을 가졌음이라 여호와께서 이스라엘 자손들에게 진노하시니라 (수 7:1)'],
+      [NAR, '여호수아가 여리고에서 사람을 벧엘 동쪽 벧아웬 곁에 있는 아이로 보내며 그들에게 말하여 이르되 (수 7:2)'],
+      [JOSHUA, '올라가서 그 땅을 정탐하라'],
+      [NAR, '하매 그 사람들이 올라가서 아이를 정탐하고 (수 7:2)'],
+      [NAR, '여호수아에게로 돌아와 그에게 이르되 (수 7:3)'],
+      [SCOUTS, '백성을 다 올라가게 하지 말고 이삼천 명만 올라가서 아이를 치게 하소서 그들은 소수이니 모든 백성을 그리로 보내어 수고롭게 하지 마소서'],
+      [NAR, '▶ 서쪽 길로 아이에 올라가요.'],
+    ],
+    j7_defeat: [
+      [NAR, '백성 중 삼천 명쯤 그리로 올라갔다가 아이 사람 앞에서 도망하니 (수 7:4)'],
+      [NAR, '아이 사람이 그들을 삼십육 명쯤 쳐죽이고 성문 앞에서부터 스바림까지 쫓아가 내려가는 비탈에서 쳤으므로 백성의 마음이 녹아 물 같이 된지라 (수 7:5)'],
+      [NAR, '▶ 동쪽 길로 길갈에 내려가요.'],
+    ],
+    j7_pray: [
+      [NAR, '여호수아가 옷을 찢고 이스라엘 장로들과 함께 여호와의 궤 앞에서 땅에 엎드려 머리에 티끌을 뒤집어쓰고 저물도록 있다가 (수 7:6)'],
+      [NAR, '이르되 (수 7:7)'],
+      [JOSHUA, '슬프도소이다 주 여호와여 어찌하여 이 백성을 인도하여 요단을 건너게 하시고 우리를 아모리 사람의 손에 넘겨 멸망시키려 하셨나이까 우리가 요단 저쪽을 만족하게 여겨 거주하였더면 좋을 뻔하였나이다'],
+      [JOSHUA, '주여 이스라엘이 그의 원수들 앞에서 돌아섰으니 내가 무슨 말을 하오리이까'],
+      [JOSHUA, '가나안 사람과 이 땅의 모든 사람들이 듣고 우리를 둘러싸고 우리 이름을 세상에서 끊으리니 주의 크신 이름을 위하여 어떻게 하시려 하나이까'],
+      [NAR, '여호와께서 여호수아에게 이르시되 일어나라 어찌하여 이렇게 엎드렸느냐 (수 7:10)'],
+      [NAR, '이스라엘이 범죄하여 내가 그들에게 명령한 나의 언약을 어겼으며 또한 그들이 온전히 바친 물건을 가져가고 도둑질하며 속이고 그것을 그들의 물건들 가운데에 두었느니라 (수 7:11)'],
+      [NAR, '그러므로 이스라엘 자손들이 그들의 원수 앞에 능히 맞서지 못하고 그 앞에서 돌아섰나니 이는 그들도 온전히 바친 것이 됨이라 그 온전히 바친 물건을 너희 중에서 멸하지 아니하면 내가 다시는 너희와 함께 있지 아니하리라 (수 7:12)'],
+      [NAR, '너는 일어나서 백성을 거룩하게 하여 이르기를 너희는 내일을 위하여 스스로 거룩하게 하라 이스라엘의 하나님 여호와의 말씀에 이스라엘아 너희 가운데에 온전히 바친 물건이 있나니 너희가 그 온전히 바친 물건을 너희 가운데에서 제하기까지는 네 원수들 앞에 능히 맞서지 못하리라 (수 7:13)'],
+      [NAR, '너희는 아침에 너희의 지파대로 가까이 나아오라 여호와께 뽑히는 그 지파는 그 족속대로 가까이 나아올 것이요 여호와께 뽑히는 족속은 그 가족대로 가까이 나아올 것이요 여호와께 뽑히는 그 가족은 그 남자들이 가까이 나아올 것이며 (수 7:14)'],
+      [NAR, '온전히 바친 물건을 가진 자로 뽑힌 자를 불사르되 그와 그의 모든 소유를 그리하라 이는 여호와의 언약을 어기고 이스라엘 가운데에서 망령된 일을 행하였음이라 하셨다 하라 (수 7:15)'],
+    ],
+    j7_confess: [
+      [NAR, '이에 여호수아가 아침 일찍이 일어나서 이스라엘을 그의 지파대로 가까이 나아오게 하였더니 유다 지파가 뽑혔고 (수 7:16)'],
+      [NAR, '유다 족속을 가까이 나아오게 하였더니 세라 족속이 뽑혔고 세라 족속의 각 남자를 가까이 나아오게 하였더니 삽디가 뽑혔고 (수 7:17)'],
+      [NAR, '삽디의 가족 각 남자를 가까이 나아오게 하였더니 유다 지파 세라의 증손이요 삽디의 손자요 갈미의 아들인 아간이 뽑혔더라 (수 7:18)'],
+      [NAR, '그러므로 여호수아가 아간에게 이르되 (수 7:19)'],
+      [JOSHUA, '내 아들아 청하노니 이스라엘의 하나님 여호와께 영광을 돌려 그 앞에 자복하고 네가 행한 일을 내게 알게 하라 그 일을 내게 숨기지 말라'],
+      [NAR, '아간이 여호수아에게 대답하여 이르되 (수 7:20)'],
+      [ACHAN, '참으로 나는 이스라엘의 하나님 여호와께 범죄하여 이러이러하게 행하였나이다'],
+      [ACHAN, '내가 노략한 물건 중에 시날 산의 아름다운 외투 한 벌과 은 이백 세겔과 그 무게가 오십 세겔 되는 금덩이 하나를 보고 탐내어 가졌나이다 보소서 이제 그 물건들을 내 장막 가운데 땅 속에 감추었는데 은은 그 밑에 있나이다'],
+      [NAR, '▶ 진영 안의 아간의 장막으로 가요.'],
+    ],
+    j7_found: [
+      [NAR, '이에 여호수아가 사자들을 보내매 그의 장막에 달려가 본즉 물건이 그의 장막 안에 감추어져 있는데 은은 그 밑에 있는지라 (수 7:22)'],
+      [NAR, '그들이 그것을 장막 가운데서 취하여 여호수아와 이스라엘 모든 자손에게 가지고 오매 그들이 그것을 여호와 앞에 쏟아 놓으니라 (수 7:23)'],
+      [NAR, '▶ 여호수아에게 가요.'],
+    ],
+    j7_achor: [
+      [NAR, '여호수아가 이스라엘 모든 사람과 더불어 세라의 아들 아간을 잡고 그 은과 그 외투와 그 금덩이와 그의 아들들과 그의 딸들과 그의 소들과 그의 나귀들과 그의 양들과 그의 장막과 그에게 속한 모든 것을 이끌고 아골 골짜기로 가서 (수 7:24)'],
+      [NAR, '여호수아가 이르되 (수 7:25)'],
+      [JOSHUA, '네가 어찌하여 우리를 괴롭게 하였느냐 여호와께서 오늘 너를 괴롭게 하시리라'],
+      [NAR, '하니 온 이스라엘이 그를 돌로 치고 물건들도 돌로 치고 불사르고 (수 7:25)'],
+      { event: 'achorPile' },
+      [NAR, '그 위에 돌 무더기를 크게 쌓았더니 오늘까지 있더라 여호와께서 그의 맹렬한 진노를 그치시니 그러므로 그 곳 이름을 오늘까지 아골 골짜기라 부르더라 (수 7:26)'],
+    ],
+    // 8장 「아이 성 매복」 — 수 8장
+    j8_word: [
+      [NAR, '여호와께서 여호수아에게 이르시되 두려워하지 말라 놀라지 말라 군사를 다 거느리고 일어나 아이로 올라가라 보라 내가 아이 왕과 그의 백성과 그의 성읍과 그의 땅을 다 네 손에 넘겨 주었으니 (수 8:1)'],
+      [NAR, '너는 여리고와 그 왕에게 행한 것 같이 아이와 그 왕에게 행하되 오직 거기서 탈취할 물건과 가축은 스스로 가지라 너는 아이 성 뒤에 복병을 둘지니라 하시니 (수 8:2)'],
+      [NAR, '이에 여호수아가 일어나서 군사와 함께 아이로 올라가려 하여 용사 삼만 명을 뽑아 밤에 보내며 (수 8:3)'],
+      [NAR, '그들에게 명령하여 이르되 (수 8:4)'],
+      [JOSHUA, '너희는 성읍 뒤로 가서 성읍을 향하여 매복하되 그 성읍에서 너무 멀리 하지 말고 다 스스로 준비하라'],
+      [JOSHUA, '나와 나를 따르는 모든 백성은 다 성읍으로 가까이 가리니 그들이 처음과 같이 우리에게로 쳐 올라올 것이라 그리 할 때에 우리가 그들 앞에서 도망하면'],
+      [JOSHUA, '그들이 나와서 우리를 추격하며 이르기를 그들이 처음과 같이 우리 앞에서 도망한다 하고 우리의 유인을 받아 그 성읍에서 멀리 떠날 것이라 우리가 그들 앞에서 도망하거든'],
+      [JOSHUA, '너희는 매복한 곳에서 일어나 그 성읍을 점령하라 너희 하나님 여호와께서 그 성읍을 너희 손에 주시리라'],
+      [JOSHUA, '너희가 그 성읍을 취하거든 그것을 불살라 여호와의 말씀대로 행하라 보라 내가 너희에게 명령하였느니라'],
+      [NAR, '▶ 서쪽 길로 아이에 올라가요.'],
+    ],
+    j8_night: [
+      [NAR, '그들을 보내매 그들이 매복할 곳으로 가서 아이 서쪽 벧엘과 아이 사이에 매복하였고 여호수아는 그 밤에 백성 가운데에서 잤더라 (수 8:9)'],
+      [NAR, '여호수아가 아침에 일찍이 일어나 백성을 점호하고 이스라엘 장로들과 더불어 백성에 앞서 아이로 올라가매 (수 8:10)'],
+      [NAR, '그와 함께 한 군사가 다 올라가서 그 성읍 앞에 가까이 이르러 아이 북쪽에 진 치니 그와 아이 사이에는 한 골짜기가 있더라 (수 8:11)'],
+    ],
+    j8_fall: [
+      [NAR, '그가 약 오천 명을 택하여 성읍 서쪽 벧엘과 아이 사이에 매복시키니 (수 8:12)'],
+      [NAR, '이와 같이 성읍 북쪽에는 온 군대가 있고 성읍 서쪽에는 복병이 있었더라 여호수아가 그 밤에 골짜기 가운데로 들어가니 (수 8:13)'],
+      [NAR, '아이 왕이 이를 보고 그 성읍 백성과 함께 일찍이 일어나 급히 나가 아라바 앞에 이르러 정한 때에 이스라엘과 싸우려 하나 성읍 뒤에 복병이 있는 줄은 알지 못하였더라 (수 8:14)'],
+      [NAR, '여호수아와 온 이스라엘이 그들 앞에서 거짓으로 패한 척하여 광야 길로 도망하매 (수 8:15)'],
+      [NAR, '그 성읍에 있는 모든 백성이 그들을 추격하려고 모여 여호수아를 추격하며 유인함을 받아 아이 성읍을 멀리 떠나니 (수 8:16)'],
+      [NAR, '아이와 벧엘에 이스라엘을 따라가지 아니한 자가 하나도 없으며 성문을 열어 놓고 이스라엘을 추격하였더라 (수 8:17)'],
+      [NAR, '여호와께서 여호수아에게 이르시되 네 손에 잡은 단창을 들어 아이를 가리키라 내가 이 성읍을 네 손에 넘겨 주리라 여호수아가 그의 손에 잡은 단창을 들어 그 성읍을 가리키니 (수 8:18)'],
+      [NAR, '그의 손을 드는 순간에 복병이 그들의 자리에서 급히 일어나 성읍으로 달려 들어가서 점령하고 곧 성읍에 불을 놓았더라 (수 8:19)'],
+      { event: 'aiBurn' },
+      [NAR, '아이 사람이 뒤를 돌아본즉 그 성읍에 연기가 하늘에 닿은 것이 보이니 이 길로도 저 길로도 도망할 수 없이 되었고 광야로 도망하던 이스라엘 백성은 그 추격하던 자에게로 돌아섰더라 (수 8:20)'],
+      [NAR, '여호수아와 온 이스라엘이 그 복병이 성읍을 점령함과 성읍에 연기가 오름을 보고 다시 돌이켜 아이 사람들을 쳐죽이고 (수 8:21)'],
+      [NAR, '복병도 성읍에서 나와 그들을 치매 그들이 이스라엘 중간에 든지라 어떤 사람들은 이쪽에서 어떤 사람들은 저쪽에서 쳐죽여서 한 사람도 남거나 도망하지 못하게 하였고 (수 8:22)'],
+      [NAR, '아이 왕을 사로잡아 여호수아 앞으로 끌어 왔더라 (수 8:23)'],
+      [NAR, '이스라엘이 자기들을 광야로 추격하던 모든 아이 주민을 들에서 죽이되 그들을 다 칼날에 엎드러지게 하여 진멸하기를 마치고 온 이스라엘이 아이로 돌아와서 칼날로 죽이매 (수 8:24)'],
+      [NAR, '그 날에 엎드러진 아이 사람들은 남녀가 모두 만 이천 명이라 (수 8:25)'],
+      [NAR, '아이 주민들을 진멸하여 바치기까지 여호수아가 단창을 잡아 든 손을 거두지 아니하였고 (수 8:26)'],
+      [NAR, '오직 그 성읍의 가축과 노략한 것은 여호와께서 여호수아에게 명령하신 대로 이스라엘이 탈취하였더라 (수 8:27)'],
+      [NAR, '이에 여호수아가 아이를 불살라 그것으로 영원한 무더기를 만들었더니 오늘까지 황폐하였으며 (수 8:28)'],
+      [NAR, '그가 또 아이 왕을 저녁 때까지 나무에 달았다가 해 질 때에 명령하여 그의 시체를 나무에서 내려 그 성문 어귀에 던지고 그 위에 돌로 큰 무더기를 쌓았더니 그것이 오늘까지 있더라 (수 8:29)'],
+      [NAR, '▶ 북쪽 에발 산으로 가요.'],
+    ],
+    j8_altar: [
+      [NAR, '그 때에 여호수아가 이스라엘의 하나님 여호와를 위하여 에발 산에 한 제단을 쌓았으니 (수 8:30)'],
+      [NAR, '이는 여호와의 종 모세가 이스라엘 자손에게 명령한 것과 모세의 율법책에 기록된 대로 쇠 연장으로 다듬지 아니한 새 돌로 만든 제단이라 무리가 여호와께 번제물과 화목제물을 그 위에 드렸으며 (수 8:31)'],
+    ],
+    j8_ebal: [
+      { event: 'altarUp' },
+      [NAR, '여호수아가 거기서 모세가 기록한 율법을 이스라엘 자손의 목전에서 그 돌에 기록하매 (수 8:32)'],
+      [NAR, '온 이스라엘과 그 장로들과 관리들과 재판장들과 본토인뿐 아니라 이방인까지 여호와의 언약궤를 멘 레위 사람 제사장들 앞에서 궤의 좌우에 서되 절반은 그리심 산 앞에, 절반은 에발 산 앞에 섰으니 이는 전에 여호와의 종 모세가 이스라엘 백성에게 축복하라고 명령한 대로 함이라 (수 8:33)'],
+      [NAR, '그 후에 여호수아가 율법책에 기록된 모든 것 대로 축복과 저주하는 율법의 모든 말씀을 낭독하였으니 (수 8:34)'],
+      [NAR, '모세가 명령한 것은 여호수아가 이스라엘 온 회중과 여자들과 아이와 그들 중에 동행하는 거류민들 앞에서 낭독하지 아니한 말이 하나도 없었더라 (수 8:35)'],
+    ],
   });
 
   const { mgOpen, mgCloseAll, completeTask } = api;
@@ -234,7 +460,7 @@
   const LIVES = 3, hearts = n => '❤️'.repeat(Math.max(0, n)) + '🤍'.repeat(Math.max(0, LIVES - n));
   const OUT = '❤️을 다 썼어요 — 처음부터 다시';
   // 🏅 4편 배지(SQL claim_odyssey_achieve 키 badge-red_cord · twelve_stones)
-  Object.assign(api.BADGES, { red_cord: { ico: '🧵', name: '붉은 줄을 지킨 사람' }, twelve_stones: { ico: '🪨', name: '열두 돌을 세운 사람' } });
+  Object.assign(api.BADGES, { red_cord: { ico: '🧵', name: '붉은 줄을 지킨 사람' }, twelve_stones: { ico: '🪨', name: '열두 돌을 세운 사람' }, seventh_day: { ico: '📯', name: '일곱째 날까지 걸은 사람' } });
   function giveBadge(k){ const S = api.ST; if (S.badges.includes(k)) return; S.badges.push(k); api.saveST(); setTimeout(() => api.toast(`${api.BADGES[k].ico} 배지 획득: ${api.BADGES[k].name}`, 2600), 900); }
   const msgBox = m => `<div style="text-align:center;color:#ffd27a;font-weight:800;min-height:34px;padding:6px 10px 0;font-size:12.5px">${m}</div>`;
 
@@ -353,6 +579,172 @@
     api.mg.onClose = () => { api.mgArea.onclick = null; };
   }
 
+  // ── 2부 미니게임 ──
+  // 차례 맞추기 공용 틀: 카드를 본문의 차례대로 누른다. 틀리면 ❤️
+  function orderPlay(q, title, info, cards, hint, doneMsg, onDone){
+    const shown = cards.map((c, i) => i).sort(() => Math.random() - 0.5); let next = 0, life = LIVES, msg = '', perfect = true;
+    mgOpen(title, info);
+    const draw = () => {
+      api.mgArea.innerHTML = `<div style="padding:6px 12px;font-size:12.5px;line-height:1.7;min-height:30px">${cards.slice(0, next).map((c, i) => `${i + 1}. ${c[0]} <span style="opacity:.6">${c[1] || ''}</span>`).join('<br>') || '—'}</div>`
+        + (next < cards.length ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px 10px">${shown.filter(i => i >= next).map(i => `<button data-od="${i}" style="${btnCss}">${cards[i][0]}</button>`).join('')}</div>` : '')
+        + msgBox(msg || (next < cards.length ? `${next + 1}번째는? · ${hearts(life)}` : doneMsg));
+      api.mgAct.textContent = next < cards.length ? '차례대로 놓으면 계속' : '계속'; api.mgAct.disabled = next < cards.length; };
+    draw();
+    api.mgArea.onclick = e => { const b = e.target.closest('[data-od]'); if (!b || next >= cards.length) return;
+      if (+b.dataset.od === next){ next++; msg = ''; }
+      else if (--life <= 0){ next = 0; life = LIVES; perfect = false; shown.sort(() => Math.random() - 0.5); msg = OUT; }
+      else { perfect = false; msg = `${hint} ${hearts(life)}`; }
+      draw(); };
+    api.mgAct.onclick = () => { if (next < cards.length) return; api.mgArea.onclick = null; mgCloseAll(); if (onDone) onDone(perfect); completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; };
+  }
+  // 📅 길갈의 날들(수 5:3-12) — 할례에서 만나가 그칠 때까지, 본문에 나온 차례대로
+  function calendarGame(q){
+    orderPlay(q, '📅 길갈의 날들', '할례 산에서 만나가 그친 날까지 — 수 5:3-12에 나온 차례대로 놓아요.', [
+      ['🔪 부싯돌 칼로 할례를 행함', '(5:3)'], ['⛺ 각 처소에 머물며 낫기를 기다림', '(5:8)'], ['📛 그 곳 이름을 길갈이라 함', '(5:9)'],
+      ['🐑 십사일 저녁에 유월절을 지킴', '(5:10)'], ['🌾 이튿날 무교병과 볶은 곡식을 먹음', '(5:11)'], ['🍞 다음 날 만나가 그침', '(5:12)'],
+    ], '수 5장을 다시 떠올려 봐요', '✓ 길갈에서 지낸 날들을 차례대로 놓았어요');
+  }
+  // 👣 "네 발에서 신을 벗으라"(수 5:13-15) — 칼을 든 사람 앞에서 여호수아가 한 일을 본문대로 고른다(싸우지 않는다)
+  function holyGame(q){ api.runDialog(DLG.j5_man, () => holyPlay(q), null, 'j5_man'); }
+  function holyPlay(q){
+    const ROUNDS = [
+      { say: '"아니라 나는 여호와의 군대 대장으로 지금 왔느니라" (5:14)', ok: '🙇 얼굴을 땅에 대고 엎드려 절한다', no: ['⚔ 칼을 빼어 든다', '⛺ 진영으로 돌아간다'] },
+      { say: '"네 발에서 신을 벗으라 네가 선 곳은 거룩하니라" (5:15)', ok: '👣 발에서 신을 벗는다', no: ['🧍 신을 신은 채 서 있는다', '🚶 성 쪽으로 걸어간다'] },
+    ];
+    let r = 0, life = LIVES, msg = '', opts = [];
+    const shuffle = () => { const R = ROUNDS[r]; opts = R ? [R.ok, ...R.no].sort(() => Math.random() - 0.5) : []; };
+    mgOpen('👣 거룩한 곳', '여호수아가 들은 말 앞에서 여호수아가 한 일을 본문(수 5:14-15)대로 골라요. 이 사람과 싸우지 않아요.');
+    const draw = () => { const R = ROUNDS[r];
+      api.mgArea.innerHTML = R ? `<div style="text-align:center;padding:10px 10px 6px;font-size:28px">✨</div><div style="text-align:center;padding:0 12px 8px;font-size:13.5px;line-height:1.6">${R.say}</div><div style="display:grid;gap:6px;padding:0 14px">${opts.map((o, i) => `<button data-hy="${i}" style="${btnCss};font-size:14px">${o}</button>`).join('')}</div>${msgBox(msg || hearts(life))}`
+        : `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800">✓ 여호수아가 그대로 행하였어요 (5:15)</div>`;
+      api.mgAct.textContent = R ? '골라야 계속' : '계속'; api.mgAct.disabled = !!R; };
+    shuffle(); draw();
+    api.mgArea.onclick = e => { const b = e.target.closest('[data-hy]'); const R = ROUNDS[r]; if (!b || !R) return;
+      if (opts[+b.dataset.hy] === R.ok){ r++; msg = ''; shuffle(); }
+      else if (--life <= 0){ r = 0; life = LIVES; msg = OUT; shuffle(); }
+      else msg = `본문을 다시 봐요 ${hearts(life)}`;
+      draw(); };
+    api.mgAct.onclick = () => { if (ROUNDS[r]) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; };
+  }
+  // 📯 여리고를 도는 이레(수 6:3-16) — ① 행렬 차례(6:9) ② 엿새는 매일 한 번, 일곱째 날은 일곱 번 ③ 나팔 뒤에만 외친다(6:10, 16)
+  function marchGame(q){ api.runDialog(DLG.j6_march, () => marchPlay(q), null, 'j6_march'); }
+  function marchPlay(q){
+    const ROW = [['🛡 무장한 자들', '맨 앞'], ['📯 나팔 부는 제사장 일곱', ''], ['📦 여호와의 언약궤', ''], ['🚶 후군', '맨 뒤']];
+    const shown = ROW.map((c, i) => i).sort(() => Math.random() - 0.5);
+    let set = 0, day = 1, laps = 0, blown = false, life = LIVES, msg = '', perfect = true, done = false, tmr = null;
+    mgOpen('📯 여리고를 도는 이레', '"너희 모든 군사는 그 성을 둘러 성 주위를 매일 한 번씩 돌되 엿새 동안을 그리하라 … 일곱째 날에는 그 성을 일곱 번 돌며" (수 6:3-4) — 먼저 행렬을 세우고(6:9), 날마다 말씀대로 돌아요.');
+    const lose = m => { perfect = false; if (--life <= 0){ day = 1; laps = 0; blown = false; life = LIVES; msg = OUT; } else msg = `${m} ${hearts(life)}`; };
+    const draw = () => {
+      if (done){ api.mgArea.innerHTML = `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800">✓ 백성이 크게 소리 질러 외쳤어요</div>`; api.mgAct.textContent = '계속'; api.mgAct.disabled = false; return; }
+      if (set < ROW.length){
+        api.mgArea.innerHTML = `<div style="padding:6px 12px;font-size:13px;line-height:1.7">행렬(앞 → 뒤): ${ROW.slice(0, set).map(c => c[0]).join(' → ') || '—'}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px 10px">${shown.filter(i => i >= set).map(i => `<button data-mr="${i}" style="${btnCss}">${ROW[i][0]}</button>`).join('')}</div>${msgBox(msg || `${set === 0 ? '맨 앞에' : '다음에'} 설 무리는? (6:9) · ${hearts(life)}`)}`;
+      } else {
+        const need = day < 7 ? 1 : 7;
+        api.mgArea.innerHTML = `<div style="display:flex;gap:3px;justify-content:center;padding:8px 4px">${[1, 2, 3, 4, 5, 6, 7].map(d => `<div style="width:34px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;${d < day ? 'background:#ffd27a;color:#2a1d10' : d === day ? 'border:2px solid #ffd27a' : 'background:rgba(255,255,255,.08)'}">${d}일</div>`).join('')}</div>`
+          + `<div style="text-align:center;font-size:13px;padding:2px">${day === 7 ? '☀ 일곱째 날 새벽' : `☀ ${day}째 날`} · 돈 바퀴 ${'🔄'.repeat(laps)}${'▫️'.repeat(Math.max(0, need - laps))} · ${hearts(life)}</div>`
+          + `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px 10px 0"><button data-mv="lap" style="${btnCss};font-size:13.5px">🔄 성을 한 바퀴</button><button data-mv="camp" style="${btnCss};font-size:13.5px">⛺ 진영으로</button><button data-mv="shout" style="${btnCss};font-size:13.5px">📣 외치기</button></div>${msgBox(msg)}`;
+      }
+      api.mgAct.textContent = '외치면 계속'; api.mgAct.disabled = true; };
+    draw();
+    api.mgArea.onclick = e => {
+      if (done) return;
+      const o = e.target.closest('[data-mr]');
+      if (o){ if (+o.dataset.mr === set){ set++; msg = set === ROW.length ? '✓ 행렬이 섰어요 — 이제 성을 돌아요' : ''; } else { perfect = false; if (--life <= 0){ set = 0; life = LIVES; msg = OUT; } else msg = `수 6:9을 다시 봐요 ${hearts(life)}`; } draw(); return; }
+      const b = e.target.closest('[data-mv]'); if (!b) return; const mv = b.dataset.mv, need = day < 7 ? 1 : 7;
+      if (mv === 'lap'){
+        if (laps >= need) lose(day < 7 ? '"매일 한 번씩" (6:3)' : '"일곱 번" (6:4)');
+        else { laps++; msg = '📯 나팔 소리 … 백성은 아무 말도 내지 않아요'; if (day === 7 && laps === 7){ msg = '…'; clearTimeout(tmr); tmr = setTimeout(() => { blown = true; horn(); msg = '📯 일곱 번째에 제사장들이 나팔을 불어요 — "외치라" (6:16)'; draw(); }, 700); } }
+      } else if (mv === 'camp'){
+        if (day === 7) lose('일곱째 날에는 일곱 번 돌아요 (6:15)');
+        else if (laps < need) lose('아직 성을 돌지 않았어요');
+        else { day++; laps = 0; msg = day === 7 ? '🌅 일곱째 날 새벽 — 오늘은 일곱 번 (6:15)' : `🌙 진영에서 자고 ${day}째 날 아침이에요`; }
+      } else if (mv === 'shout'){
+        if (day === 7 && blown){ done = true; clearTimeout(tmr); }
+        else lose('"너희는 외치지 말며 … 외치라 하는 날에 외칠지니라" (6:10)');
+      }
+      draw(); };
+    api.mgAct.onclick = () => { if (!done) return; api.mgArea.onclick = null; mgCloseAll(); if (perfect) giveBadge('seventh_day'); hold.walls = true; completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; clearTimeout(tmr); };
+  }
+  // 🎲 지파대로 가까이 나아오라(수 7:14) — 누구인지 짐작해 찍지 않고, 말씀이 정한 차례대로 불러낸다
+  function lotsGame(q){
+    const LV = [['🏳 지파대로 나아오게', '→ 유다 지파가 뽑혔고 (7:16)'], ['👪 족속대로 나아오게', '→ 세라 족속이 뽑혔고 (7:17)'], ['🏠 가족대로 나아오게', '→ 삽디가 뽑혔고 (7:17)'], ['🧍 그 남자들이 나아오게', '→ 갈미의 아들 아간이 뽑혔더라 (7:18)']];
+    orderPlay(q, '🎲 지파대로 가까이', '"너희는 아침에 너희의 지파대로 가까이 나아오라 여호와께 뽑히는 그 지파는 그 족속대로 … 족속은 그 가족대로 … 가족은 그 남자들이 가까이 나아올 것이며" (수 7:14) — 누구인지 짐작하지 말고, 말씀이 정한 차례대로 불러요.',
+      LV.map(([a, b]) => [a, b]), '수 7:14의 차례를 다시 봐요', '✓ 여호와께서 가려내셨어요');
+  }
+  // ⛏ 장막 가운데 땅 속(수 7:21-22) — 아간이 말한 자리를 판다. 외투와 금덩이, 그리고 "은은 그 밑에"
+  function tentGame(q){
+    let depth = 0, life = LIVES, msg = '';
+    const FOUND1 = 3, FOUND2 = 5;   // 세 번 파면 외투와 금덩이, 두 번 더 파면 그 밑의 은
+    mgOpen('⛏ 아간의 장막', '"보소서 이제 그 물건들을 내 장막 가운데 땅 속에 감추었는데 은은 그 밑에 있나이다" (수 7:21) — 사자들처럼 아간이 말한 자리를 파요.');
+    const draw = () => { const ok = depth >= FOUND2;
+      api.mgArea.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:8px 22px">${[...Array(9).keys()].map(i => `<button data-tn="${i}" style="${btnCss};height:46px;font-size:${i === 4 && depth ? 13 : 20}px">${i === 4 && depth ? (depth >= FOUND2 ? '🧥🟨🪙' : depth >= FOUND1 ? '🧥🟨' : '🕳'.repeat(Math.min(depth, 2))) : '🟫'}</button>`).join('')}</div>`
+        + msgBox(msg || (ok ? '✓ 외투 · 금덩이 · 그 밑의 은 이백 세겔' : depth >= FOUND1 ? '🧥 외투와 🟨 금덩이 — 은은 어디에? · ' + hearts(life) : `장막 바닥 · ${hearts(life)}`));
+      api.mgAct.textContent = ok ? '계속' : '다 찾으면 계속'; api.mgAct.disabled = !ok; };
+    draw();
+    api.mgArea.onclick = e => { const b = e.target.closest('[data-tn]'); if (!b || depth >= FOUND2) return;
+      if (+b.dataset.tn === 4){ depth++; msg = depth === FOUND1 ? '🧥 시날 산의 아름다운 외투와 🟨 금덩이가 나왔어요 — "은은 그 밑에"' : depth === FOUND2 ? '🪙 은은 그 밑에 있었어요 (7:22)' : ''; }
+      else if (--life <= 0){ depth = 0; life = LIVES; msg = OUT; }
+      else msg = `여기는 아니에요 — "내 장막 가운데" (7:21) ${hearts(life)}`;
+      draw(); };
+    api.mgAct.onclick = () => { if (depth < FOUND2) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; };
+  }
+  // 🗺 아이 성 매복(수 8:4-19) — ① 복병과 온 군대의 자리 ② 거짓으로 도망해 성 사람들을 멀리 끌어내기 ③ 여호와의 말씀이 있을 때 단창을 든다
+  function ambushGame(q){ api.runDialog(DLG.j8_night, () => ambushPlay(q), null, 'j8_night'); }
+  function ambushPlay(q){
+    const ASK = [
+      { t: '복병 오천 명은 어디에? (8:12)', ok: '⬅ 성읍 서쪽 — 벧엘과 아이 사이', no: ['➡ 성읍 동쪽 — 광야 길', '⬆ 성읍 북쪽 — 골짜기 건너편'] },
+      { t: '여호수아와 온 군대는 어디에? (8:11, 13)', ok: '⬆ 성읍 북쪽 — 골짜기 건너편', no: ['⬅ 성읍 서쪽 — 벧엘과 아이 사이', '⬇ 성읍 남쪽 — 먼 들'] },
+    ];
+    let a = 0, opts = [], inCity = 10, life = LIVES, msg = '', last = 0, tick = null, word = false, done = false;
+    const shuffle = () => { const A = ASK[a]; opts = A ? [A.ok, ...A.no].sort(() => Math.random() - 0.5) : []; };
+    mgOpen('🗺 아이 성 매복', '"너희는 성읍 뒤로 가서 성읍을 향하여 매복하되 그 성읍에서 너무 멀리 하지 말고" (수 8:4) — 자리를 정하고, 거짓으로 도망해 성 사람들을 끌어낸 뒤, 여호와의 말씀이 있을 때 단창을 들어요.');
+    const lose = m => { if (--life <= 0){ inCity = 10; word = false; life = LIVES; msg = OUT; } else msg = `${m} ${hearts(life)}`; };
+    const draw = () => {
+      if (done){ api.mgArea.innerHTML = `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800">🔥 복병이 급히 일어나 성읍에 불을 놓았어요 (8:19)</div>`; api.mgAct.textContent = '계속'; api.mgAct.disabled = false; return; }
+      const A = ASK[a];
+      if (A){ api.mgArea.innerHTML = `<div style="text-align:center;padding:10px 8px 6px;font-size:14px;font-weight:800">${A.t}</div><div style="display:grid;gap:6px;padding:0 14px">${opts.map((o, i) => `<button data-am="${i}" style="${btnCss};font-size:13.5px">${o}</button>`).join('')}</div>${msgBox(msg || hearts(life))}`; }
+      else {
+        api.mgArea.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px 4px;font-size:13px"><span>🏯 아이 성 안 ${'🧍'.repeat(inCity)}${inCity ? '' : ' (텅 빔 · 성문이 열렸어요)'}</span></div>`
+          + `<div style="text-align:center;font-size:12.5px;padding:2px 10px;min-height:36px;color:${word ? '#ffd27a' : 'inherit'}">${word ? '"네 손에 잡은 단창을 들어 아이를 가리키라 내가 이 성읍을 네 손에 넘겨 주리라" (8:18)' : '복병은 성읍 서쪽에 숨어 있어요 — 성 사람들이 다 따라 나올 때까지'}</div>`
+          + `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 12px 0"><button data-am="flee" style="${btnCss};font-size:14px">🏃 광야 길로 도망하는 척</button><button data-am="spear" style="${btnCss};font-size:14px">🔱 단창을 들기</button></div>${msgBox(msg || hearts(life))}`;
+      }
+      api.mgAct.textContent = '성읍을 점령하면 계속'; api.mgAct.disabled = true; };
+    shuffle(); draw();
+    tick = setInterval(() => { if (done || ASK[a] || word) return; if (performance.now() - last > 1400 && inCity < 10){ inCity++; msg = '성 사람들이 성으로 돌아가요 — 계속 도망하는 척!'; draw(); } }, 800);
+    api.mgArea.onclick = e => { const b = e.target.closest('[data-am]'); if (!b || done) return; const v = b.dataset.am;
+      if (ASK[a]){ if (opts[+v] === ASK[a].ok){ a++; msg = a === ASK.length ? '✓ 자리를 잡았어요 — 이제 아이 왕이 나와요 (8:14)' : ''; shuffle(); } else { if (--life <= 0){ a = 0; life = LIVES; msg = OUT; shuffle(); } else msg = `본문을 다시 봐요 ${hearts(life)}`; } draw(); return; }
+      if (v === 'flee'){ last = performance.now(); if (!word){ inCity = Math.max(0, inCity - 1); msg = inCity ? '아이 사람들이 쫓아 나와요 (8:16)' : '"아이와 벧엘에 이스라엘을 따라가지 아니한 자가 하나도 없으며" (8:17)'; if (!inCity) word = true; } }
+      else if (v === 'spear'){ if (word) done = true; else lose('아직이에요 — 여호와께서 말씀하실 때 (8:18)'); }
+      draw(); };
+    api.mgAct.onclick = () => { if (!done) return; api.mgArea.onclick = null; clearInterval(tick); mgCloseAll(); hold.ai = true; completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; clearInterval(tick); };
+  }
+  // 🪨 쇠 연장으로 다듬지 아니한 새 돌(수 8:30-35) — 제단 돌을 고르고, 낭독을 들을 온 회중을 궤 앞에 모은다
+  function altarGame(q){ api.runDialog(DLG.j8_altar, () => altarPlay(q), null, 'j8_altar'); }
+  function altarPlay(q){
+    const STONES = [...Array(10).keys()].map(i => i < 6).sort(() => Math.random() - 0.5);   // true = 다듬지 않은 새 돌
+    const PEOPLE = ['장로들', '관리들', '재판장들', '본토인', '이방인', '여자들', '아이', '거류민'];
+    const took = new Set(), came = new Set(); let life = LIVES, msg = '';
+    mgOpen('🪨 에발 산 제단', '"쇠 연장으로 다듬지 아니한 새 돌로 만든 제단이라" (수 8:31) — 다듬지 않은 돌 여섯을 골라 제단을 쌓고, 율법 낭독을 들을 사람들을 궤 앞으로 모아요.');
+    const built = () => took.size >= 6, all = () => came.size >= PEOPLE.length;
+    const draw = () => {
+      api.mgArea.innerHTML = !built()
+        ? `<div style="text-align:center;font-size:13px;padding:6px">제단 ${'🪨'.repeat(took.size)}${'▫️'.repeat(6 - took.size)} · ${hearts(life)}</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:4px 10px">${STONES.map((raw, i) => took.has(i) ? `<div></div>` : `<button data-al="${i}" style="${btnCss};font-size:12px;height:48px">${raw ? '🪨<br>거친 돌' : '🔨<br>다듬은 돌'}</button>`).join('')}</div>${msgBox(msg)}`
+        : `<div style="text-align:center;font-size:13px;padding:6px">🔥 제단이 섰어요 · 궤 앞에 모인 사람 ${came.size} / ${PEOPLE.length}</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:4px 10px">${PEOPLE.map((p, i) => `<button data-pp="${i}" style="${btnCss};font-size:12.5px;${came.has(i) ? 'background:rgba(255,210,122,.35)' : ''}">${came.has(i) ? '✓ ' : ''}${p}</button>`).join('')}</div>${msgBox(all() ? '✓ 낭독하지 아니한 말이 하나도 없었어요 (8:35)' : '"본토인뿐 아니라 이방인까지" (8:33) — 한 사람도 빠지지 않게')}`;
+      api.mgAct.textContent = built() && all() ? '계속' : '다 모이면 계속'; api.mgAct.disabled = !(built() && all()); };
+    draw();
+    api.mgArea.onclick = e => {
+      const s = e.target.closest('[data-al]');
+      if (s && !built()){ const i = +s.dataset.al; if (STONES[i]){ took.add(i); msg = ''; } else if (--life <= 0){ took.clear(); life = LIVES; msg = OUT; } else msg = `"쇠 연장으로 다듬지 아니한" (8:31) ${hearts(life)}`; draw(); return; }
+      const p = e.target.closest('[data-pp]'); if (p && built()){ came.add(+p.dataset.pp); draw(); } };
+    api.mgAct.onclick = () => { if (!(built() && all())) return; api.mgArea.onclick = null; mgCloseAll(); hold.altar = true; completeTask(q); };
+    api.mg.onClose = () => { api.mgArea.onclick = null; };
+  }
+
   // ── 연출 ──
   let actx = null;
   function horn(){ try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const t0 = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(311, t0); o.frequency.linearRampToValueAtTime(349, t0 + 0.4);
@@ -364,6 +756,12 @@
   function jordanBack(){ horn(); refresh('gilgal', true); try { api.startCine('j4Back', GBED[0], api.heightAt(GBED[0], GBED[1]) + 1, GBED[1], { r: 14, h: 6, dur: 4.5, spin: 0.4 }); } catch (e){} api.toast('🌊 요단 물이 본 곳으로 도로 흘렀어요', 2400); }
   function stonesUp(){ stonesShow = true; refresh('gilgal'); try { api.startCine('j4Stones', MEMO[0], api.heightAt(MEMO[0], MEMO[1]) + 1.5, MEMO[1], { r: 8, h: 3, dur: 4.5, spin: 0.6 }); } catch (e){} }
   let stonesShow = false;
+  // 2부 연출
+  function wallsFall(){ hold.walls = false; horn(); flash('#f3e2bc', 0.5); refresh('gilgal'); try { api.startCine('j6Fall', JC[0], api.heightAt(JC[0], JC[1]) + 3, JC[1], { r: 24, h: 9, dur: 5.5, spin: 0.35 }); } catch (e){} api.toast('🧱 성벽이 무너져 내렸어요', 2600); }
+  function jerichoBurn(){ burnShow = true; flash('#ffb36a', 0.35); refresh('gilgal'); try { api.startCine('j6Burn', JC[0], api.heightAt(JC[0], JC[1]) + 3, JC[1], { r: 26, h: 10, dur: 4.5, spin: 0.3 }); } catch (e){} }
+  function achorPile(){ achorShow = true; refresh('gilgal'); try { api.startCine('j7Achor', ACHOR[0], api.heightAt(ACHOR[0], ACHOR[1]) + 1.5, ACHOR[1], { r: 22, h: 9, dur: 5, spin: 0.15 }); } catch (e){} }
+  function aiBurn(){ hold.ai = false; flash('#ffb36a', 0.4); refresh('ai'); try { api.startCine('j8Burn', AI[0], api.heightAt(AI[0], AI[1]) + 3, AI[1], { r: 22, h: 9, dur: 5, spin: 0.3 }); } catch (e){} api.toast('🔥 성읍에 연기가 하늘에 닿았어요', 2400); }
+  function altarUp(){ hold.altar = false; refresh('ai'); try { api.startCine('j8Altar', ALTAR[0], api.heightAt(ALTAR[0], ALTAR[1]) + 1.5, ALTAR[1], { r: 12, h: 5, dur: 4.5, spin: 0.4 }); } catch (e){} }
   const refresh = (zid, wet) => { if (api.Z && api.Z.id === zid) world(zid, wet); };
 
   // 마을에 놓이는 것: 여리고 성벽과 라합의 집(붉은 줄) · 요단 가운데 언약궤 · 길갈의 장막과 열두 돌
@@ -371,6 +769,8 @@
   function world(zid, forceWet){
     if (worldObj && worldObj.parent) worldObj.parent.remove(worldObj); worldObj = null;
     const p = cur(); if (!p) return;
+    if (p.ch !== 5) hold.walls = false;
+    if (p.ch !== 7){ hold.ai = false; hold.altar = false; }
     const g = new THREE.Group(), M = c => new THREE.MeshToonMaterial({ color: c, gradientMap: api.toonGradient });
     const put = (geo, mat, x, dy, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, api.heightAt(x, z) + dy, z); m.castShadow = true; g.add(m); return m; };
     const arkAt = (x, z) => api.loadProps(['ark']).then(() => { const T = api.propTemplates.ark; if (!T || !g.parent) return; const o = T.holder.clone(true); o.position.set(x, api.heightAt(x, z) + 0.05, z); o.rotation.y = Math.PI / 2; g.add(o); }).catch(() => {});
@@ -382,19 +782,30 @@
       const dry = !forceWet && dryGilgal(); if (api.setRiver) api.setRiver(dry);
       if (dry) arkAt(GBED[0], GBED[1]);
       // 여리고 성벽(수 2:15 "그의 집이 성벽 위에 있으므로")
-      const stone = M(0xcdb48e), dark = M(0xa8916c), N = 22;
+      // 수 6:20 뒤로는 무너진 돌더미(6:24 불탄 뒤엔 검게). 라합의 집이 선 성벽 한 칸은 라합을 이끌어 낼 때까지 남는다(6:22-23)
+      const down = wallsDown(), burnt = jerichoBurnt();
+      const stone = M(burnt ? 0x6a5a48 : 0xcdb48e), dark = M(burnt ? 0x4a3e32 : 0xa8916c), N = 22;
+      const houseSeg = i => Math.abs(i / N * Math.PI * 2 - HOUSE_A) < 0.2;
       for (let i = 0; i < N; i++){ const a = i / N * Math.PI * 2; if (Math.abs(a - Math.PI * 0.02) < 0.12) continue;   // 동쪽 성문 자리
-        const x = JC[0] + Math.cos(a) * JR, z = JC[1] + Math.sin(a) * JR, w = put(new THREE.BoxGeometry(3.1, 5, 1.4), i % 2 ? stone : dark, x, 2.5, z); w.rotation.y = -a + Math.PI / 2;
-        if (i % 4 === 0){ const t = put(new THREE.BoxGeometry(2, 6.4, 2), stone, x, 3.2, z); t.rotation.y = -a; } }
-      { const x = JC[0] + JR, z = JC[1]; const d = put(new THREE.BoxGeometry(0.4, 4, 3.2), M(0x7a5a3a), x + 0.2, 2, z); }   // 닫힌 성문(2:7)
+        const x = JC[0] + Math.cos(a) * JR, z = JC[1] + Math.sin(a) * JR;
+        if (!down || (houseSeg(i) && !burnt)){ const w = put(new THREE.BoxGeometry(3.1, 5, 1.4), i % 2 ? stone : dark, x, 2.5, z); w.rotation.y = -a + Math.PI / 2;
+          if (i % 4 === 0 && !down){ const t = put(new THREE.BoxGeometry(2, 6.4, 2), stone, x, 3.2, z); t.rotation.y = -a; } }
+        else for (let k = 0; k < 4; k++){ const r = put(new THREE.DodecahedronGeometry(0.5 + Math.random() * 0.5, 0), i % 2 ? stone : dark, x + (Math.random() - 0.5) * 3, 0.3, z + (Math.random() - 0.5) * 2.4); r.rotation.set(Math.random() * 3, Math.random() * 3, 0); } }
+      if (!down){ const x = JC[0] + JR, z = JC[1]; put(new THREE.BoxGeometry(0.4, 4, 3.2), M(0x7a5a3a), x + 0.2, 2, z); }   // 닫힌 성문(2:7 · 6:1)
       if (!api.obstacles.some(o => o.j4)){ for (let i = 0; i < 40; i++){ const a = i / 40 * Math.PI * 2; api.obstacles.push({ x: JC[0] + Math.cos(a) * JR, z: JC[1] + Math.sin(a) * JR, r: 1.3, j4: true }); } }
-      // 라합의 집: 성벽 위, 창문(줄은 2:21 뒤부터 붉게)
+      // 라합의 집: 성벽 위, 창문(줄은 2:21 뒤부터 붉게) — 6:24 성을 불사른 뒤로는 없다
       const hx = JC[0] + Math.cos(HOUSE_A) * JR, hz = JC[1] + Math.sin(HOUSE_A) * JR;
-      const hs = put(new THREE.BoxGeometry(3.2, 2.4, 2.6), M(0xd9c29a), hx, 6.2, hz); hs.rotation.y = -HOUSE_A + Math.PI / 2;
-      for (let k = 0; k < 6; k++){ const f = put(new THREE.CylinderGeometry(0.05, 0.05, 1.6, 4), M(0xc9b46a), hx + (Math.random() - 0.5) * 2, 7.5, hz + (Math.random() - 0.5) * 1.6); f.rotation.z = Math.PI / 2; f.rotation.y = Math.random() * 3; }   // 지붕의 삼대(2:6)
-      const wx = JC[0] + Math.cos(HOUSE_A) * (JR + 1.35), wz = JC[1] + Math.sin(HOUSE_A) * (JR + 1.35);
-      const win = put(new THREE.BoxGeometry(0.9, 0.8, 0.12), M(0x3a2a1a), wx, 6.3, wz); win.rotation.y = -HOUSE_A + Math.PI / 2;
-      if (cordShow || cordTied()){ const c = put(new THREE.CylinderGeometry(0.06, 0.06, 5.6, 6), M(0xc0201a), wx + Math.cos(HOUSE_A) * 0.1, 3.3, wz + Math.sin(HOUSE_A) * 0.1); }
+      if (!burnt){
+        const hs = put(new THREE.BoxGeometry(3.2, 2.4, 2.6), M(0xd9c29a), hx, 6.2, hz); hs.rotation.y = -HOUSE_A + Math.PI / 2;
+        for (let k = 0; k < 6; k++){ const f = put(new THREE.CylinderGeometry(0.05, 0.05, 1.6, 4), M(0xc9b46a), hx + (Math.random() - 0.5) * 2, 7.5, hz + (Math.random() - 0.5) * 1.6); f.rotation.z = Math.PI / 2; f.rotation.y = Math.random() * 3; }   // 지붕의 삼대(2:6)
+        const wx = JC[0] + Math.cos(HOUSE_A) * (JR + 1.35), wz = JC[1] + Math.sin(HOUSE_A) * (JR + 1.35);
+        const win = put(new THREE.BoxGeometry(0.9, 0.8, 0.12), M(0x3a2a1a), wx, 6.3, wz); win.rotation.y = -HOUSE_A + Math.PI / 2;
+        if (cordShow || cordTied()){ const c = put(new THREE.CylinderGeometry(0.06, 0.06, 5.6, 6), M(0xc0201a), wx + Math.cos(HOUSE_A) * 0.1, 3.3, wz + Math.sin(HOUSE_A) * 0.1); }
+      }
+      // 5장부터 진영의 언약궤(7:6 "여호와의 궤 앞에서")
+      if (p.ch >= 4) arkAt(ARK_G[0], ARK_G[1]);
+      // 아골 골짜기의 큰 돌 무더기(7:26) — 남쪽 원경
+      if (achorShow || from(6, 8)()){ for (let i = 0; i < 26; i++){ const a = Math.random() * Math.PI * 2, r = Math.random() * 2.6, s = put(new THREE.DodecahedronGeometry(0.45 + Math.random() * 0.35, 0), M(i % 3 ? 0x8f8270 : 0x7a6e5e), ACHOR[0] + Math.cos(a) * r, 0.3 + (2.6 - r) * 0.7, ACHOR[1] + Math.sin(a) * r); s.rotation.set(Math.random() * 3, Math.random() * 3, 0); } }
       // 길갈: 장막과 열두 돌(4장부터)
       if (p.ch >= 3){
         api.loadProps(['tent-mid', 'tent-small', 'tent-cluster']).then(() => { if (!g.parent) return;
@@ -405,7 +816,36 @@
         }
       }
     }
-    if (g.children.length || zid === 'moab' || zid === 'gilgal'){ api.zoneRoot.add(g); worldObj = g; }
+    if (zid === 'ai'){
+      // 벧엘(서쪽) 집들
+      [[0, 0], [3.4, 2], [-2.6, 3], [2, -3.2], [-3, -2.4]].forEach(([dx, dz], i) => { const h = put(new THREE.BoxGeometry(2.6, 2.2, 2.4), M(i % 2 ? 0xd2bf98 : 0xc4ae86), BETHEL[0] + dx, 1.1, BETHEL[1] + dz); h.rotation.y = i * 0.5; });
+      // 아이 성: 8:19 불을 놓기 전까지는 작은 성벽과 집들, 그 뒤로는 "영원한 무더기"(8:28)와 성문 어귀의 돌 무더기(8:29)
+      const burnt = from(7, 3)() && !hold.ai;
+      if (!burnt){
+        const st = M(0xc8b08a), dk = M(0xa58e6a), N = 14;
+        for (let i = 0; i < N; i++){ const a = i / N * Math.PI * 2; if (Math.abs(a) < 0.25 || Math.abs(a - Math.PI * 2) < 0.25) continue;   // 동쪽 성문
+          const w = put(new THREE.BoxGeometry(2.8, 3.4, 1.2), i % 2 ? st : dk, AI[0] + Math.cos(a) * AIR, 1.7, AI[1] + Math.sin(a) * AIR); w.rotation.y = -a + Math.PI / 2; }
+        [[-1.5, -1], [1.6, 1.4], [-1.2, 2.2]].forEach(([dx, dz]) => put(new THREE.BoxGeometry(2, 1.8, 2), M(0xd6c39c), AI[0] + dx, 0.9, AI[1] + dz));
+        // 8장 성문이 열려 있음(8:17) — 7장에는 닫힌 문
+        if (p.ch < 7 || (p.ch === 7 && p.step < 2)) put(new THREE.BoxGeometry(0.4, 3, 2.6), M(0x7a5a3a), AI[0] + AIR + 0.2, 1.5, AI[1]);
+      } else {
+        const heap = put(new THREE.ConeGeometry(AIR + 1, 4.2, 9), M(0x5e5246), AI[0], 1.6, AI[1]); heap.castShadow = false;
+        for (let i = 0; i < 14; i++){ const a = Math.random() * Math.PI * 2, s = put(new THREE.DodecahedronGeometry(0.4 + Math.random() * 0.3, 0), M(0x7a6e5e), AI[0] + AIR + 1.6 + Math.cos(a) * Math.random() * 1.3, 0.35, AI[1] + Math.sin(a) * Math.random() * 1.3); s.rotation.set(Math.random() * 3, Math.random() * 3, 0); }
+        if (p.ch === 7 && !p.cleared && p.step === 3){ const sm = new THREE.MeshBasicMaterial({ color: 0x55504a, transparent: true, opacity: 0.35, depthWrite: false });   // 연기(8:20)
+          for (let i = 0; i < 6; i++){ const s = new THREE.Mesh(new THREE.SphereGeometry(1.6 + i * 0.5, 10, 8), sm); s.position.set(AI[0] + (Math.random() - 0.5) * 3, api.heightAt(AI[0], AI[1]) + 4 + i * 2.6, AI[1] + (Math.random() - 0.5) * 3); g.add(s); } }
+      }
+      if (!api.obstacles.some(o => o.j4ai)){ for (let i = 0; i < 22; i++){ const a = i / 22 * Math.PI * 2; if (Math.abs(a) < 0.25 || Math.abs(a - Math.PI * 2) < 0.25) continue; api.obstacles.push({ x: AI[0] + Math.cos(a) * AIR, z: AI[1] + Math.sin(a) * AIR, r: 1.2, j4ai: true }); } }
+      // 8장: 북쪽 진(8:11)
+      if (p.ch === 7) api.loadProps(['tent-mid', 'tent-small']).then(() => { if (!g.parent) return;
+        [['tent-mid', CAMP8[0] - 5, CAMP8[1] - 4], ['tent-small', CAMP8[0] + 4, CAMP8[1] - 5], ['tent-mid', CAMP8[0] + 9, CAMP8[1] - 2]].forEach(([n, x, z]) => { const T = api.propTemplates[n]; if (!T) return; const o = T.holder.clone(true); o.position.set(x, api.heightAt(x, z), z); o.rotation.y = Math.atan2(AI[0] - x, AI[1] - z); g.add(o); }); }).catch(() => {});
+      // 에발 산과 그리심 산 사이의 궤(8:33), 쇠 연장으로 다듬지 않은 돌 제단(8:31)
+      if (from(7, 3)()) arkAt(ARK_E[0], ARK_E[1]);
+      if (from(7, 4)() && !hold.altar){
+        for (let y = 0; y < 3; y++) for (let i = 0; i < 7 - y * 2; i++){ const a = i / (7 - y * 2) * Math.PI * 2, r = 1.4 - y * 0.45, s = put(new THREE.DodecahedronGeometry(0.5, 0), M(i % 2 ? 0xb3a284 : 0x9c8c72), ALTAR[0] + Math.cos(a) * r, 0.4 + y * 0.75, ALTAR[1] + Math.sin(a) * r); s.rotation.set(Math.random() * 3, Math.random() * 3, 0); }
+        const fire = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.3, 8), new THREE.MeshBasicMaterial({ color: 0xff9a3a, transparent: true, opacity: 0.85 })); fire.position.set(ALTAR[0], api.heightAt(ALTAR[0], ALTAR[1]) + 2.6, ALTAR[1]); g.add(fire);
+      }
+    }
+    if (g.children.length || zid === 'moab' || zid === 'gilgal' || zid === 'ai'){ api.zoneRoot.add(g); worldObj = g; }
   }
 
   const T = n => `📜 여호수아와 함께 ${n}장`;
@@ -437,7 +877,7 @@
           { id: 'j3s4', zone: 'moab', obj: '제사장들의 발이 물 가에 잠기자', where: '서쪽 요단 강가(빛나는 곳)', point: 'j4_bank', dlg: 'j4_stop' },
           { id: 'j3s5', zone: 'moab', obj: '요단 가운데 마른 땅', where: '요단 강 한가운데(빛나는 곳)', point: 'j4_mbed', dlg: 'j4_dry', reward: { verse: 'jos3-17', clear: true } },
         ] },
-      { title: `${T(4)} — 기념 돌 열둘`, clearTitle: '🎉 4편 4장 「기념 돌 열둘」 완료!', next: '5장: 여호와의 군대 대장 (준비 중)',
+      { title: `${T(4)} — 기념 돌 열둘`, clearTitle: '🎉 4편 4장 「기념 돌 열둘」 완료!', next: '5장: 여호와의 군대 대장',
         steps: [
           { id: 'j4s1', zone: 'moab', obj: '마른 땅으로 요단을 건너기', where: '요단 강 한가운데 서쪽의 초록 빛기둥', exit: 'to-gilgal2' },
           { id: 'j4s2', zone: 'gilgal', obj: '여호수아에게 — 열두 사람', where: '요단 서쪽 강가의 여호수아', npc: 'j4_joshua_g', dlg: 'j4_twelve' },
@@ -446,9 +886,43 @@
           { id: 'j4s5', zone: 'gilgal', obj: '"요단에서 올라오라"', where: '요단 서쪽 강가의 여호수아', npc: 'j4_joshua_g', dlg: 'j4_up' },
           { id: 'j4s6', zone: 'gilgal', obj: '길갈에 세운 열두 돌', where: '길갈 진영 가운데(빛나는 곳)', point: 'j4_memo', dlg: 'j4_gilgal', reward: { verse: 'jos4-24', clear: true } },
         ] },
+      { title: `${T(5)} — 여호와의 군대 대장`, clearTitle: '🎉 4편 5장 「여호와의 군대 대장」 완료!', next: '6장: 여리고',
+        steps: [
+          { id: 'j5s1', zone: 'gilgal', obj: '여호수아에게 — 부싯돌로 칼을 만들어', where: '길갈 진영 동쪽의 여호수아', npc: 'j4_joshua_g', dlg: 'j5_flint' },
+          { id: 'j5s2', zone: 'gilgal', obj: '할례 산 — 할례를 시행한 까닭', where: '진영 북쪽의 할례 산(빛나는 곳)', point: 'j5_hill', dlg: 'j5_why' },
+          { id: 'j5s3', zone: 'gilgal', obj: '길갈의 날들 — 유월절과 만나', where: '길갈 진영 가운데(빛나는 곳)', point: 'j5_camp', game: 'calendar', doneDlg: 'j5_manna' },
+          { id: 'j5s4', zone: 'gilgal', obj: '여리고 가까이 — 칼을 빼어 든 한 사람', where: '여리고 성 동쪽 들(빛나는 곳)', point: 'j5_man', game: 'holy', doneDlg: 'j5_holy', reward: { verse: 'jos5-15', clear: true } },
+        ] },
+      { title: `${T(6)} — 여리고`, clearTitle: '🎉 4편 6장 「여리고」 완료!', next: '7장: 아이 성 첫 패배와 아간',
+        steps: [
+          { id: 'j6s1', zone: 'gilgal', obj: '여호수아에게 — 성을 돌라', where: '길갈 진영 동쪽의 여호수아', npc: 'j4_joshua_g', dlg: 'j6_word' },
+          { id: 'j6s2', zone: 'gilgal', obj: '엿새 동안, 그리고 일곱째 날', where: '굳게 닫힌 여리고 성문 앞(빛나는 곳)', point: 'j6_gate', game: 'march', doneDlg: 'j6_fall' },
+          { id: 'j6s3', zone: 'gilgal', obj: '여호수아에게 — 맹세한 대로', where: '길갈 진영 동쪽의 여호수아', npc: 'j4_joshua_g', dlg: 'j6_spies' },
+          { id: 'j6s4', zone: 'gilgal', obj: '붉은 줄이 매인 라합의 집', where: '무너진 성벽 동북쪽, 라합의 집(빛나는 곳)', point: 'j4_house', dlg: 'j6_rescue' },
+          { id: 'j6s5', zone: 'gilgal', obj: '진영 밖의 라합', where: '진영 북서쪽 밖의 라합', npc: 'j6_rahab_out', dlg: 'j6_end', reward: { verse: 'jos6-20', clear: true } },
+        ] },
+      { title: `${T(7)} — 아이 성 첫 패배와 아간`, clearTitle: '🎉 4편 7장 「아이 성 첫 패배와 아간」 완료!', next: '8장: 아이 성 매복',
+        steps: [
+          { id: 'j7s1', zone: 'gilgal', obj: '여호수아에게 — 아이를 정탐하라', where: '길갈 진영 동쪽의 여호수아', npc: 'j4_joshua_g', dlg: 'j7_send' },
+          { id: 'j7s2', zone: 'gilgal', obj: '아이로 올라가기', where: '서쪽 길의 초록 빛기둥(여리고 북서쪽)', exit: 'to-ai' },
+          { id: 'j7s3', zone: 'ai', obj: '아이 성문 앞 — 삼천 명쯤', where: '아이 성 동쪽 성문 앞(빛나는 곳)', point: 'j7_aigate', dlg: 'j7_defeat' },
+          { id: 'j7s4', zone: 'ai', obj: '길갈로 내려가기', where: '동쪽 길의 초록 빛기둥', exit: 'to-gilgal3' },
+          { id: 'j7s5', zone: 'gilgal', obj: '여호와의 궤 앞 — 여호수아의 기도', where: '진영의 여호와의 궤 앞(빛나는 곳)', point: 'j7_ark', dlg: 'j7_pray' },
+          { id: 'j7s6', zone: 'gilgal', obj: '아침에 지파대로 가까이', where: '진영의 여호와의 궤 앞(빛나는 곳)', point: 'j7_ark', game: 'lots', doneDlg: 'j7_confess' },
+          { id: 'j7s7', zone: 'gilgal', obj: '아간의 장막 — 장막 가운데 땅 속', where: '진영 안 아간의 장막(빛나는 곳)', point: 'j7_tent', game: 'tent', doneDlg: 'j7_found' },
+          { id: 'j7s8', zone: 'gilgal', obj: '아골 골짜기', where: '길갈 진영 동쪽의 여호수아', npc: 'j4_joshua_g', dlg: 'j7_achor', reward: { verse: 'jos7-20', clear: true } },
+        ] },
+      { title: `${T(8)} — 아이 성 매복`, clearTitle: '🎉 4편 8장 「아이 성 매복」 완료!', next: '9장: 기브온의 속임 (준비 중)',
+        steps: [
+          { id: 'j8s1', zone: 'gilgal', obj: '여호수아에게 — 두려워하지 말라', where: '길갈 진영 동쪽의 여호수아', npc: 'j4_joshua_g', dlg: 'j8_word' },
+          { id: 'j8s2', zone: 'gilgal', obj: '다시 아이로 올라가기', where: '서쪽 길의 초록 빛기둥(여리고 북서쪽)', exit: 'to-ai' },
+          { id: 'j8s3', zone: 'ai', obj: '매복과 단창', where: '아이 북쪽, 골짜기 건너편 진(빛나는 곳)', point: 'j8_camp', game: 'ambush', doneDlg: 'j8_fall' },
+          { id: 'j8s4', zone: 'ai', obj: '에발 산 제단과 율법 낭독', where: '북쪽 두 산 사이, 오른쪽 에발 산 아래(빛나는 곳)', point: 'j8_altar', game: 'altar', doneDlg: 'j8_ebal', reward: { verse: 'jos8-35', clear: true } },
+        ] },
     ],
-    games: { stay: stayGame, hide: hideGame, cord: cordGame, hills: hillsGame, follow: followGame, stones: stonesGame },
-    events: { redCord, jordanStop, jordanBack, stonesUp },
+    games: { stay: stayGame, hide: hideGame, cord: cordGame, hills: hillsGame, follow: followGame, stones: stonesGame,
+      calendar: calendarGame, holy: holyGame, march: marchGame, lots: lotsGame, tent: tentGame, ambush: ambushGame, altar: altarGame },
+    events: { redCord, jordanStop, jordanBack, stonesUp, wallsFall, jerichoBurn, achorPile, aiBurn, altarUp },
     world: zid => world(zid),
   };
 });

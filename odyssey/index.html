@@ -601,7 +601,7 @@
 <div id="compass"><svg viewBox="0 0 46 46"><path id="compass-arrow" d="M23 7 L31 27 L23 22 L15 27 Z" fill="#ffd27a"/></svg></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "2a902b0d", "wild3": "b4590c52", "joshua": "c47bf3e4"};</script>
+<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "2a902b0d", "wild3": "b4590c52", "joshua": "ea59ccf8"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -1280,10 +1280,30 @@
         ['env-rocks-strata', -38, -36, 1.2], ['env-rock-hill', 26, -38, 2.0], ['dry-bush', 4, -6, 0], ['dry-bush', -2, 10, 0],
       ],
       scatter: [['dry-bush', 8, 20, 50], ['rock-group', 8, 22, 50]],
-      clear: [[-22, 6, 14], [34, 0, 6], [14, 4, 9], [-26, -34, 6], [-26, -54, 17], [16, 0, 16]],
+      clear: [[-22, 6, 14], [34, 0, 6], [14, 4, 9], [-26, -34, 6], [-26, -54, 17], [16, 0, 16], [-42, 24, 5], [12, 40, 7]],
       fires: [],
       points: [
         { id: 'to-moab4', x: 36, z: 7, type: 'exit', title: "요단 건너편 모압 평지로", to: 'moab', spawn: [-34, 2] },
+        { id: 'to-ai', x: -42, z: 24, type: 'exit', title: "서쪽 길로 아이에 올라가기", to: 'ai', spawn: [34, 0], cond: 'aiOpen' },
+      ],
+    },
+    // ══ 4편 7·8장 — 아이와 에발 산(수 7:2 "벧엘 동쪽 벧아웬 곁에 있는 아이", 8:30·33 에발 산과 그리심 산).
+    //    아이 성·벧엘·제단은 두루마리가 세운다. 북쪽 두 산(오른쪽 에발 · 왼쪽 그리심) 사이에 궤가 선다 ══
+    ai: {
+      name: '아이와 에발 산', questTitle: '📜 퀘스트 — 여호수아와 함께',
+      env: { top: 0x5a8fcc, bottom: 0xdcd6b0, fog: 0xd8d0aa, fogD: 0.011, sun: 0xfff3d6, sunDir: [0.5, 0.45, -0.55], cloud: 0.35, cloudCol: 0xffffff, stars: 0, far: 'far-mountains' },
+      center: [0, 0], spawn: [34, 0],
+      mountain: { x: 18, z: -54, r: 14, h: 24 },
+      mountain2: { x: -18, z: -54, r: 13, h: 21 },
+      layout: [
+        ['env-acacia', 22, 20, 0.4], ['env-acacia', -30, 24, 1.6], ['env-acacia', 6, -22, 2.3], ['env-rock-hill', -40, -24, 0.4], ['env-rock-hill', 30, 34, 2.0],
+        ['env-rocks-strata', -36, 34, 1.2], ['env-rocks-strata', 36, -30, 2.4], ['dry-bush', 14, 4, 0], ['dry-bush', -18, -6, 0], ['dry-bush', 24, -12, 0],
+      ],
+      scatter: [['dry-bush', 8, 20, 55], ['rock-group', 12, 20, 55]],
+      clear: [[-8, 6, 10], [-8, -14, 6], [-24, 6, 5], [-38, 6, 7], [34, 0, 6], [0, -33, 8], [12, -30, 5], [18, -54, 15], [-18, -54, 14], [14, 10, 8]],
+      fires: [],
+      points: [
+        { id: 'to-gilgal3', x: 39.5, z: 0, type: 'exit', title: "동쪽 길로 길갈에 내려가기", to: 'gilgal', spawn: [-38, 22] },
       ],
     },
   };
@@ -5162,6 +5182,7 @@
   CONDS.moabOpen = () => { const p = ST.sp && ST.sp.wild3; return !!((p && (p.ch >= 10 || p.cleared && p.ch >= 9)) || DEV_SCROLL); };
   CONDS.moabMoses = () => { const p = ST.sp && ST.sp.wild3; return !(p && p.ch >= 15 && p.cleared); };   // 신 34:5 뒤로는 모세가 보이지 않음
   CONDS.gilgalOpen = () => !!((ST.sp && ST.sp.joshua) || DEV_SCROLL);
+  CONDS.aiOpen = () => { const p = ST.sp && ST.sp.joshua; return !!((p && p.ch >= 6) || DEV_SCROLL); };   // 4편 7장(수 7:2)부터
   CONDS.kadeshOpen = () => !!((ST.sp && ST.sp.sinai2 && ST.sp.sinai2.cleared) || ST.cur === 'wild3' || DEV_SCROLL);
   const SCROLL_Q = window.__odyQ = window.__odyQ || [];
   function drainScrolls(){ while (SCROLL_Q.length){ const f = SCROLL_Q.shift(); try { const def = f(ODY_API); if (def && def.id) SCROLL_DEFS[def.id] = def; } catch (e){ console.error('두루마리 등록 실패', e); } } }
@@ -5238,7 +5259,7 @@
     pray_start: '두루마리마을 기념 전시관 앞에서…', companion: '떨기나무 앞, 걱정하는 모세에게…', prayer: '바로 앞에 들어가기 전, 떨리는 모세와…',
     share: '짚을 모아 준 일꾼들과…', trust: '뱀이 된 지팡이 이야기를 들을 때…', true_heart: '우박이 그친 뒤 바로의 모습을 보고…',
     passover_lamb: '문설주에 피를 바른 뒤 궁금한 것을…', bold_step: '바다가 갈라진 순간…', together: '바다를 건널 때 주변을 잘 살펴보면…',
-    timbrel: '미리암과 함께 소고를 잘 두드리면…', daily_bread: '만나를 아침까지 남겨 둔 사람에게…', raised_hands: '산 꼭대기에서 손을 들고 난 뒤…', true_leader: '모세와 함께 지도자를 고를 때…', ten_words: '십계명을 한 번도 틀리지 않고…', lords_side: '모세가 진 문에서 부를 때…', willing: '마음에 원하는 만큼 예물을 드리면…', as_commanded: '성막을 거의 틀리지 않고 차례대로 세우면…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면', holy_people: '2편, 밭 모퉁이를 한 번에 남기면…', trumpet_follow: '2편, 은 나팔 소리를 한 번도 틀리지 않으면…', grape_carry: '3편, 포도송이 막대를 한 번도 기울이지 않으면…', with_caleb: '3편, 두 목소리 앞에서 처음부터…', looked_up: '3편, 장대를 쳐다보라고 모두에게 알리면…', refuge_run: '3편, 도피성 성문까지 1분 안에…', hear_israel: '3편, 쉐마를 새길 자리를 찾으면…', red_cord: '4편, 지붕의 삼대를 한 번도 틀리지 않고 덮으면…', twelve_stones: '4편, 기념 돌 열둘을 한 번에 차례대로 놓으면…',
+    timbrel: '미리암과 함께 소고를 잘 두드리면…', daily_bread: '만나를 아침까지 남겨 둔 사람에게…', raised_hands: '산 꼭대기에서 손을 들고 난 뒤…', true_leader: '모세와 함께 지도자를 고를 때…', ten_words: '십계명을 한 번도 틀리지 않고…', lords_side: '모세가 진 문에서 부를 때…', willing: '마음에 원하는 만큼 예물을 드리면…', as_commanded: '성막을 거의 틀리지 않고 차례대로 세우면…', wise: '확인 퀴즈를 처음에 모두 맞히면', scroll_all: '숨은 두루마리 20개를 모두 모으면', holy_people: '2편, 밭 모퉁이를 한 번에 남기면…', trumpet_follow: '2편, 은 나팔 소리를 한 번도 틀리지 않으면…', grape_carry: '3편, 포도송이 막대를 한 번도 기울이지 않으면…', with_caleb: '3편, 두 목소리 앞에서 처음부터…', looked_up: '3편, 장대를 쳐다보라고 모두에게 알리면…', refuge_run: '3편, 도피성 성문까지 1분 안에…', hear_israel: '3편, 쉐마를 새길 자리를 찾으면…', red_cord: '4편, 지붕의 삼대를 한 번도 틀리지 않고 덮으면…', twelve_stones: '4편, 기념 돌 열둘을 한 번에 차례대로 놓으면…', seventh_day: '4편, 여리고를 도는 이레 동안 한 번도 틀리지 않으면…',
   };
   function badgeBookHTML(){
     const all = Object.entries(BADGES), n = all.filter(([k]) => ST.badges.includes(k)).length;
@@ -5287,13 +5308,14 @@
   function warpTargets(){
     const q = curStep(), done = chaptersDone(), out = [];
     const exitTo = q && q.exit ? ((ZONES[q.zone].points.find(p => p.id === q.exit) || {}).to) : null;
-    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5, rephidim: 6, sinai: 8, kadesh: 99, moab: 99, gilgal: 99 };
-    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab', 'gilgal']){
+    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5, rephidim: 6, sinai: 8, kadesh: 99, moab: 99, gilgal: 99, ai: 99 };
+    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab', 'gilgal', 'ai']){
       const story = q && (q.zone === z || exitTo === z);
       if (z === 'kadesh' && !story && !CONDS.kadeshOpen()) continue;
       if (z === 'moab' && !story && !CONDS.moabOpen()) continue;   // 3편 마을은 2편을 마친 뒤부터 목록에 보임
       if (z === 'gilgal' && !story && !CONDS.gilgalOpen()) continue;   // 4편 마을은 4편을 펼친 뒤부터
-      const ok = z === 'alpha' || done >= need[z] || story || (z === 'kadesh' && CONDS.kadeshOpen()) || (z === 'moab' && CONDS.moabOpen()) || (z === 'gilgal' && CONDS.gilgalOpen());
+      if (z === 'ai' && !story && !CONDS.aiOpen()) continue;   // 아이와 에발 산은 4편 7장부터
+      const ok = z === 'alpha' || done >= need[z] || story || (z === 'kadesh' && CONDS.kadeshOpen()) || (z === 'moab' && CONDS.moabOpen()) || (z === 'gilgal' && CONDS.gilgalOpen()) || (z === 'ai' && CONDS.aiOpen());
       out.push({ z, ok, story, here: Z && Z.id === z, note: z === 'alpha' ? '언제든 갈 수 있어요 · 내 장막' : story ? '📜 지금 이야기가 있는 곳' : ok ? '이야기를 마친 곳' : `🔒 ${need[z]}장을 마치면` });
     }
     return out;
@@ -5375,7 +5397,7 @@
   const cardHTML = (id, locked) => { const v = VERSES[id]; return `<div class="vcard${locked ? ' locked' : ''}" style="background-image:url('${A('ui/game/verse-card.jpg')}')"><div class="ref">${v.ref}</div><div>${locked ? '아직 모으지 못한 구절' : v.text}</div><div class="chk">개역개정</div></div>`; };
   // 곡: title(처음 테마) · village(두루마리마을) · midian(미디안 광야) · egypt(애굽 고센) · palace(바로의 궁전 알현실)
   const BGM = { on: (() => { try { return localStorage.getItem('inodyssey-bgm') !== 'off'; } catch (e){ return true; } })(), ctx: null, src: null, gain: null, bufs: {}, cur: null, want: 'title', starting: false, titleUntil: 0 };
-  const ZONE_BGM = { alpha: 'village', midian: 'midian', egypt: 'egypt', redsea: 'redsea', wild: 'midian', rephidim: 'midian', sinai: 'midian', kadesh: 'midian', moab: 'midian', gilgal: 'midian' };
+  const ZONE_BGM = { alpha: 'village', midian: 'midian', egypt: 'egypt', redsea: 'redsea', wild: 'midian', rephidim: 'midian', sinai: 'midian', kadesh: 'midian', moab: 'midian', gilgal: 'midian', ai: 'midian' };
   function bgmWanted(){
     if (performance.now() < BGM.titleUntil) return 'title';                      // 시작할 때 테마를 한 바퀴
     if (Z && Z.room && inRoom(player.position.x, player.position.z)) return 'palace';
@@ -5542,7 +5564,7 @@
   const prefetchState = { total: 0, done: 0 };
   async function prefetchAll(){
     if (window.__ASSETS){ prefetchState.total = prefetchState.done = 1; return; }   // 파일 하나짜리 미리보기는 이미 다 들어 있음
-    const SEQ = ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab', 'gilgal'], si = SEQ.indexOf(Z.id), cq = curStep();
+    const SEQ = ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab', 'gilgal', 'ai'], si = SEQ.indexOf(Z.id), cq = curStep();
     const order = [...new Set([cq && cq.zone, SEQ[si + 1], SEQ[si - 1], 'alpha'].filter(z => z && z !== Z.id && ZONES[z]))].slice(0, 3);   // 다음 퀘스트 마을부터
     const todo = order.filter(z => !prefetched.has(z)).map(z => { prefetched.add(z); const a = zoneAssets(z); return [...a.files, ...a.lazy]; });
     const files = [...new Set(todo.flat())].filter(f => !bytesCache.has(f));
@@ -8811,6 +8833,8 @@
     mountainObj = peak(M.r, M.h, 0, 0, 1.3);
     peak(M.r * 0.72, M.h * 0.62, -M.r * 0.85, 4, 4.1);
     peak(M.r * 0.66, M.h * 0.55, M.r * 0.9, 5, 7.7);
+    // 둘째 산(4편 아이와 에발 산의 그리심 산)
+    if (Z.mountain2){ const M2 = Z.mountain2; peak(M2.r, M2.h, M2.x - M.x, M2.z - M.z, 2.2); peak(M2.r * 0.7, M2.h * 0.6, M2.x - M.x - M2.r * 0.8, M2.z - M.z + 4, 5.3); }
     // 경계: 산기슭 둘레 말뚝과 줄(시내 산만 — 출 19:12)
     if (Z.id !== 'sinai') return;
     const R = M.r + 4, postM = new THREE.MeshToonMaterial({ color: 0x6a4a2a, gradientMap: toonGradient }), pts = [];
@@ -9080,6 +9104,8 @@
   ROUTE.moab = {}; Object.keys(ROUTE).forEach(z => { if (z === 'moab') return; ROUTE.moab[z] = 'to-kadesh2'; ROUTE[z].moab = z === 'kadesh' ? 'to-moab' : ROUTE[z].kadesh; });
   // 길갈과 여리고(4편)는 모압 평지에서 요단을 건너야 이어진다
   ROUTE.gilgal = {}; Object.keys(ROUTE).forEach(z => { if (z === 'gilgal') return; ROUTE.gilgal[z] = 'to-moab4'; ROUTE[z].gilgal = z === 'moab' ? 'to-gilgal' : ROUTE[z].moab; });
+  // 아이와 에발 산(4편 7·8장)은 길갈 서쪽 길로만 이어진다
+  ROUTE.ai = {}; Object.keys(ROUTE).forEach(z => { if (z === 'ai') return; ROUTE.ai[z] = 'to-gilgal3'; ROUTE[z].ai = z === 'gilgal' ? 'to-ai' : ROUTE[z].gilgal; });
   ROUTE.redsea.rephidim = 'to-wild'; ROUTE.redsea.sinai = 'to-wild';
   let doorTarget = null;
   function targetPos(){
