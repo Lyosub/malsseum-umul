@@ -1,11 +1,11 @@
 {
   "testers": 2,
   "players": 12,
-  "active_24h": 1,
-  "saved_24h": 1,
-  "visitors_24h": 1,
+  "active_24h": 2,
+  "saved_24h": 2,
+  "visitors_24h": 2,
   "new_24h": 0,
-  "steps_24h": 43,
+  "steps_24h": 88,
   "active_7d": 9,
   "chapters": {
     "1편 모세와 함께 (10장)": {
@@ -15,15 +15,23 @@
       "10장 클리어": 3
     },
     "2편 시내산의 마지막 한 달 (10장)": {
-      "10장 클리어": 2
+      "10장 클리어": 3
     },
     "3편 광야 40년 (16장)": {
+      "1장 클리어": 1,
       "16장 클리어": 2
     }
   },
-  "stuck": [],
+  "stuck": [
+    {
+      "chapter": 9,
+      "step": "sinai2/lv9s2",
+      "players": 2,
+      "median_secs": 379
+    }
+  ],
   "errors_24h": 1,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-13 14:40",
+  "generated_kst": "2026-10-13 21:40",
   "ok": true
 }
