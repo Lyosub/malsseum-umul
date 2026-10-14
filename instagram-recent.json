@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-10-13 12:04",
+  "generated_kst": "2026-10-14 10:17",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 139,
     "follows_count": 112,
-    "media_count": 147
+    "media_count": 148
   },
   "posts": [
+    {
+      "id": "18117784391077050",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-10-13T10:33:05+0000",
+      "permalink": "https://www.instagram.com/p/DebmjxZFT_0/",
+      "caption_first_line": "자리를 내어 주는 것, 그것이 긍휼입니다.",
+      "likes": 7,
+      "comments": 1
+    },
     {
       "id": "17870868735644117",
       "type": "REELS",
@@ -45,7 +55,7 @@
       "timestamp_utc": "2026-10-07T05:43:51+0000",
       "permalink": "https://www.instagram.com/reel/DeLoiBQN9Mr/",
       "caption_first_line": "성경 속 연결고리",
-      "likes": 12,
+      "likes": 13,
       "comments": 1
     },
     {
@@ -247,16 +257,6 @@
       "caption_first_line": "JESUS+ 왕과 사는 우리 ☆D-14☆",
       "likes": 39,
       "comments": 2
-    },
-    {
-      "id": "18333788683217691",
-      "type": "FEED",
-      "media_type": "IMAGE",
-      "timestamp_utc": "2026-04-21T06:57:00+0000",
-      "permalink": "https://www.instagram.com/p/DXYmum3DeAJ/",
-      "caption_first_line": "👑JESUS+ 왕과 사는 우리",
-      "likes": 27,
-      "comments": 4
     }
   ]
 }
