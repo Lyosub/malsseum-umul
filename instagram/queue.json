@@ -229,6 +229,16 @@
       "note": "주일 설교 요약 릴스 1회 — 10/11 「긍휼을 행하는 자」(약 2:1-13). 제미나이 영상 3개(전도사님 생성) + Claude 글자(설교문 마무리 대지 3문장·약 2:13 원문) + 제미나이 BGM 「Sunlight on the Floorboards」 22초 지점부터 29초. 전도사님 컨펌 2026-10-10.",
       "media_id": "17870868735644117",
       "posted_at": "2026-10-11 11:00"
+    },
+    {
+      "id": "2026-10-18-recap",
+      "type": "reels",
+      "publish_at": "2026-10-18 12:10",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-10-18-recap.txt",
+      "first_comment_file": "instagram/captions/2026-10-18-recap.tags.txt",
+      "video": "instagram/2026-10-18-recap.mp4",
+      "note": "주일 설교 요약 릴스 2회 — 10/18 「행함으로 믿음을 보이는 자」(약 2:14-26). 제미나이 영상 3개(꽃·폭포 위 줄·손, 전도사님 생성) + Claude 글자(대지 3문장·약 2:26 원문·마지막 문구는 전도사님 지정) + BGM 「다짐 3」. 전도사님 컨펌 2026-10-14, 게시 12:10(전도사님 지정)."
     }
   ]
 }
