@@ -1,11 +1,11 @@
 {
   "testers": 2,
   "players": 12,
-  "active_24h": 1,
-  "saved_24h": 1,
-  "visitors_24h": 1,
+  "active_24h": 2,
+  "saved_24h": 2,
+  "visitors_24h": 2,
   "new_24h": 0,
-  "steps_24h": 0,
+  "steps_24h": 53,
   "active_7d": 9,
   "chapters": {
     "1편 모세와 함께 (10장)": {
@@ -18,8 +18,7 @@
       "10장 클리어": 3
     },
     "3편 광야 40년 (16장)": {
-      "1장 클리어": 1,
-      "16장 클리어": 2
+      "16장 클리어": 3
     }
   },
   "stuck": [
@@ -28,10 +27,16 @@
       "step": "sinai2/lv9s2",
       "players": 2,
       "median_secs": 379
+    },
+    {
+      "chapter": 3,
+      "step": "wild3/w3s1",
+      "players": 2,
+      "median_secs": 284
     }
   ],
   "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-15 19:16",
+  "generated_kst": "2026-10-15 21:40",
   "ok": true
 }
