@@ -198,13 +198,15 @@
       "id": "2026-10-11-cartoon",
       "type": "image",
       "publish_at": "2026-10-15 19:30",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-10-11-cartoon.txt",
       "first_comment_file": "instagram/captions/2026-10-11-cartoon.tags.txt",
       "images": [
         "instagram/2026-10-11-cartoon.jpg"
       ],
-      "note": "말씀카툰 #005 「여기 앉아」 — 10/11 설교. 가방을 올려 둔 옆자리, 서 있는 새 친구에게 먼저 자리를 내어 주는 지호. 하단 띠 약 2:1. 전도사님 컨펌 2026-10-07."
+      "note": "말씀카툰 #005 「여기 앉아」 — 10/11 설교. 가방을 올려 둔 옆자리, 서 있는 새 친구에게 먼저 자리를 내어 주는 지호. 하단 띠 약 2:1. 전도사님 컨펌 2026-10-07.",
+      "media_id": "18145974115592881",
+      "posted_at": "2026-10-15 19:32"
     },
     {
       "id": "2026-10-10-preview",
