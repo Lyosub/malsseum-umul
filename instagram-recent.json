@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-10-15 09:35",
+  "generated_kst": "2026-10-16 09:28",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 138,
     "follows_count": 111,
-    "media_count": 148
+    "media_count": 149
   },
   "posts": [
+    {
+      "id": "18145974115592881",
+      "type": "FEED",
+      "media_type": "IMAGE",
+      "timestamp_utc": "2026-10-15T10:32:29+0000",
+      "permalink": "https://www.instagram.com/p/DegwFDgoHfE/",
+      "caption_first_line": "먼저 자리를 내어 주는 것, 시작은 작습니다.",
+      "likes": 5,
+      "comments": 1
+    },
     {
       "id": "18117784391077050",
       "type": "FEED",
@@ -246,16 +256,6 @@
       "permalink": "https://www.instagram.com/p/DYRjCxBgYAf/",
       "caption_first_line": "끝까지 필독 안 하면 무조건 후회함! 👉👉",
       "likes": 23,
-      "comments": 2
-    },
-    {
-      "id": "18031234823645997",
-      "type": "FEED",
-      "media_type": "IMAGE",
-      "timestamp_utc": "2026-05-03T02:00:52+0000",
-      "permalink": "https://www.instagram.com/p/DX2-U7vAW5R/",
-      "caption_first_line": "JESUS+ 왕과 사는 우리 ☆D-14☆",
-      "likes": 39,
       "comments": 2
     }
   ]
