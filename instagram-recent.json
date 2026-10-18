@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-10-17 09:35",
+  "generated_kst": "2026-10-18 09:06",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
-    "followers_count": 138,
+    "followers_count": 139,
     "follows_count": 111,
-    "media_count": 149
+    "media_count": 150
   },
   "posts": [
+    {
+      "id": "18115347548127155",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-10-17T04:03:05+0000",
+      "permalink": "https://www.instagram.com/reel/DelNE1qjxkV/",
+      "caption_first_line": "날마다 \"하나님은 한 분이시다\"를 외우던 성도들에게",
+      "likes": 8,
+      "comments": 1
+    },
     {
       "id": "18145974115592881",
       "type": "FEED",
@@ -225,7 +235,7 @@
       "timestamp_utc": "2026-05-16T04:00:25+0000",
       "permalink": "https://www.instagram.com/reel/DYYqcdLBDJ3/",
       "caption_first_line": "[드디어 D-1] 같이 VIP FESTIVAL 가자!! 🏃‍♂️🏃‍♀️💨 🚨",
-      "likes": 38,
+      "likes": 37,
       "comments": 5
     },
     {
@@ -235,7 +245,7 @@
       "timestamp_utc": "2026-05-15T07:00:44+0000",
       "permalink": "https://www.instagram.com/p/DYWaLbSAZgb/",
       "caption_first_line": "🚨 [필독 공지 3탄] 대망의 VIP 환영 선물 & 역대급 특별 이벤트 공개! 🚨",
-      "likes": 11,
+      "likes": 10,
       "comments": 0
     },
     {
@@ -245,17 +255,7 @@
       "timestamp_utc": "2026-05-14T07:00:15+0000",
       "permalink": "https://www.instagram.com/p/DYT1XIegRU8/",
       "caption_first_line": "🚨 [필독 공지 2탄] VIP FESTIVAL 경품 라인업 대공개! 🚨",
-      "likes": 21,
-      "comments": 2
-    },
-    {
-      "id": "18090765401091196",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-05-13T09:41:27+0000",
-      "permalink": "https://www.instagram.com/p/DYRjCxBgYAf/",
-      "caption_first_line": "끝까지 필독 안 하면 무조건 후회함! 👉👉",
-      "likes": 23,
+      "likes": 20,
       "comments": 2
     }
   ]
