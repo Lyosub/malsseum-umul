@@ -5,8 +5,8 @@
   "saved_24h": 2,
   "visitors_24h": 2,
   "new_24h": 0,
-  "steps_24h": 3,
-  "active_7d": 4,
+  "steps_24h": 1,
+  "active_7d": 5,
   "chapters": {
     "1편 모세와 함께 (10장)": {
       "0장 클리어": 6,
@@ -37,6 +37,6 @@
   ],
   "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-19 20:13",
+  "generated_kst": "2026-10-19 21:40",
   "ok": true
 }
