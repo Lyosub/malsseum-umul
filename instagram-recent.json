@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-10-18 09:06",
+  "generated_kst": "2026-10-19 09:15",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
-    "followers_count": 139,
-    "follows_count": 111,
-    "media_count": 150
+    "followers_count": 140,
+    "follows_count": 110,
+    "media_count": 151
   },
   "posts": [
+    {
+      "id": "18073763201770410",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-10-18T03:33:38+0000",
+      "permalink": "https://www.instagram.com/reel/DenugU6jVBD/",
+      "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「행함으로 믿음을 보이는 자」 (야고보서 2장 14-26절)",
+      "likes": 4,
+      "comments": 1
+    },
     {
       "id": "18115347548127155",
       "type": "REELS",
@@ -15,7 +25,7 @@
       "timestamp_utc": "2026-10-17T04:03:05+0000",
       "permalink": "https://www.instagram.com/reel/DelNE1qjxkV/",
       "caption_first_line": "날마다 \"하나님은 한 분이시다\"를 외우던 성도들에게",
-      "likes": 8,
+      "likes": 9,
       "comments": 1
     },
     {
@@ -75,7 +85,7 @@
       "timestamp_utc": "2026-10-07T05:43:51+0000",
       "permalink": "https://www.instagram.com/reel/DeLoiBQN9Mr/",
       "caption_first_line": "성경 속 연결고리",
-      "likes": 13,
+      "likes": 14,
       "comments": 1
     },
     {
@@ -235,7 +245,7 @@
       "timestamp_utc": "2026-05-16T04:00:25+0000",
       "permalink": "https://www.instagram.com/reel/DYYqcdLBDJ3/",
       "caption_first_line": "[드디어 D-1] 같이 VIP FESTIVAL 가자!! 🏃‍♂️🏃‍♀️💨 🚨",
-      "likes": 37,
+      "likes": 38,
       "comments": 5
     },
     {
@@ -245,18 +255,8 @@
       "timestamp_utc": "2026-05-15T07:00:44+0000",
       "permalink": "https://www.instagram.com/p/DYWaLbSAZgb/",
       "caption_first_line": "🚨 [필독 공지 3탄] 대망의 VIP 환영 선물 & 역대급 특별 이벤트 공개! 🚨",
-      "likes": 10,
+      "likes": 11,
       "comments": 0
-    },
-    {
-      "id": "18130906891572546",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-05-14T07:00:15+0000",
-      "permalink": "https://www.instagram.com/p/DYT1XIegRU8/",
-      "caption_first_line": "🚨 [필독 공지 2탄] VIP FESTIVAL 경품 라인업 대공개! 🚨",
-      "likes": 20,
-      "comments": 2
     }
   ]
 }
