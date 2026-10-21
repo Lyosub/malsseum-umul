@@ -1,9 +1,9 @@
 {
   "testers": 2,
   "players": 12,
-  "active_24h": 1,
-  "saved_24h": 1,
-  "visitors_24h": 1,
+  "active_24h": 0,
+  "saved_24h": 0,
+  "visitors_24h": 0,
   "new_24h": 0,
   "steps_24h": 0,
   "active_7d": 4,
@@ -37,6 +37,6 @@
   ],
   "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-21 21:40",
+  "generated_kst": "2026-10-22 02:37",
   "ok": true
 }
