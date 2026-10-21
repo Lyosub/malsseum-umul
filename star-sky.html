@@ -125,15 +125,27 @@
 
   // ---------- 캔버스 ----------
   var cv = $('sky'), cx = cv.getContext('2d'), W = 0, H = 0, DPR = 1;
+  // 성능: 큰 LED 화면에서는 고해상도(레티나) 배율이 필요 없으므로 1배로 그린다.
+  // 배경(색·지평선·작은 별)은 미리 한 장으로 그려 두고, 별·문구도 미리 그린 그림을 찍어 쓴다.
+  var bg = document.createElement('canvas'), labelVer = 0;
   function resize() {
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
-    W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    DPR = 1;
+    W = innerWidth; H = innerHeight; cv.width = W; cv.height = H; cx.setTransform(1, 0, 0, 1, 0, 0);
+    bg.width = W; bg.height = H; var b = bg.getContext('2d');
+    b.fillStyle = '#03050d'; b.fillRect(0, 0, W, H);
+    var hz = b.createLinearGradient(0, H * .55, 0, H); hz.addColorStop(0, 'rgba(37,64,140,0)'); hz.addColorStop(1, 'rgba(37,64,140,.10)');
+    b.fillStyle = hz; b.fillRect(0, 0, W, H);
+    if (window.dust) dust.forEach(function (d) { b.fillStyle = 'rgba(220,226,255,.55)'; b.fillRect(d.x * W, d.y * H, d.r, d.r); });
+    labelVer++;
   }
   addEventListener('resize', resize); resize();
 
   // 배경의 작은 별(장식)
-  var dust = [];
+  var dust = window.dust = [];
   for (var i = 0; i < 260; i++) dust.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.5 + .6, p: Math.random() * 6.28 });
+  var twinkle = dust.slice(0, 50);   // 반짝임은 50개만 매번 그린다
+  resize();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { labelVer++; });
 
   var stars = [];          // 켜진 별
   var byId = {};
@@ -198,26 +210,46 @@
     if (lines.length > 2) { lines = lines.slice(0, 2); lines[1] = lines[1].slice(0, -1) + '…'; }
     return lines;
   }
+  function makeLabel(s) {
+    // 문구는 한 번만 그림으로 만들어 두고(그림자 포함), 매 장면에서는 그 그림만 찍는다
+    var fs = Math.max(13, Math.min(22, W / 92)), maxW = labelBox().bw * W * .94;
+    var c = document.createElement('canvas'), g = c.getContext('2d');
+    g.font = '700 ' + fs + 'px "Gowun Batang", serif';
+    var saved = cx; cx = g; var lines = wrap(s.body, maxW); cx = saved;
+    c.width = Math.ceil(maxW + 24); c.height = Math.ceil(lines.length * fs * 1.3 + fs * .78 + 22);
+    g = c.getContext('2d'); g.textAlign = 'center'; g.textBaseline = 'top';
+    g.shadowColor = 'rgba(0,0,0,.85)'; g.shadowBlur = 8;
+    g.font = '700 ' + fs + 'px "Gowun Batang", serif'; g.fillStyle = 'rgb(238,240,251)';
+    lines.forEach(function (ln, i) { g.fillText(ln, c.width / 2, 6 + i * fs * 1.3); });
+    g.font = '500 ' + fs * .78 + 'px -apple-system, "Apple SD Gothic Neo", sans-serif'; g.fillStyle = 'rgb(245,210,122)';
+    g.fillText(s.who, c.width / 2, 8 + lines.length * fs * 1.3);
+    s.lab = c; s.labVer = labelVer;
+  }
   function drawLabel(s, a, big) {
-    var fs = Math.max(13, Math.min(22, W / 92)) * (big ? 1.15 : 1);
-    var maxW = labelBox().bw * W * .94;
-    cx.textAlign = 'center'; cx.textBaseline = 'top';
-    cx.font = '700 ' + fs + 'px "Gowun Batang", serif';
-    var lines = wrap(s.body, maxW), y = s.y + s.r * 3 + 6;
-    cx.shadowColor = 'rgba(0,0,0,.85)'; cx.shadowBlur = 8;
-    cx.fillStyle = 'rgba(238,240,251,' + a + ')';
-    lines.forEach(function (ln, i) { cx.fillText(ln, s.x, y + i * fs * 1.3); });
-    cx.font = '500 ' + fs * .78 + 'px Pretendard, sans-serif';
-    cx.fillStyle = 'rgba(245,210,122,' + a * .95 + ')';
-    cx.fillText(s.who, s.x, y + lines.length * fs * 1.3 + 2);
-    cx.shadowBlur = 0;
+    if (!s.lab || s.labVer !== labelVer) makeLabel(s);
+    var c = s.lab, k = big ? 1.12 : 1, w = c.width * k, h = c.height * k;
+    cx.globalAlpha = Math.max(0, Math.min(1, a)); cx.drawImage(c, s.x - w / 2, s.y + s.r * 3, w, h); cx.globalAlpha = 1;
   }
   function removeStar(id) {
     if (!byId[id]) { queue = queue.filter(function (q) { return q.id !== id; }); return; }
     stars = stars.filter(function (s) { return s.id !== id; }); delete byId[id];
   }
 
+  var sprite = document.createElement('canvas'); sprite.width = sprite.height = 160;
+  (function () {
+    var g2 = sprite.getContext('2d'), x = 80, y = 80, r = 12, glow = 6;
+    var g = g2.createRadialGradient(x, y, 0, x, y, r * glow);
+    g.addColorStop(0, 'rgba(255,244,214,1)'); g.addColorStop(.25, 'rgba(245,210,122,.55)'); g.addColorStop(1, 'rgba(245,210,122,0)');
+    g2.fillStyle = g; g2.beginPath(); g2.arc(x, y, r * glow, 0, 6.283); g2.fill();
+    g2.strokeStyle = 'rgba(255,248,226,.8)'; g2.lineWidth = r * .18;
+    g2.beginPath(); g2.moveTo(x - r * 2.6, y); g2.lineTo(x + r * 2.6, y); g2.moveTo(x, y - r * 2.6); g2.lineTo(x, y + r * 2.6); g2.stroke();
+    g2.fillStyle = 'rgba(255,252,240,1)'; g2.beginPath(); g2.arc(x, y, r * .55, 0, 6.283); g2.fill();
+  })();
   function drawStar(x, y, r, a, glow) {
+    var k = r / 12 * Math.sqrt(glow / 5), sz = 160 * k;
+    cx.globalAlpha = Math.max(0, Math.min(1, a)); cx.drawImage(sprite, x - sz / 2, y - sz / 2, sz, sz); cx.globalAlpha = 1;
+  }
+  function drawStarSlow(x, y, r, a, glow) {
     var g = cx.createRadialGradient(x, y, 0, x, y, r * glow);
     g.addColorStop(0, 'rgba(255,244,214,' + a + ')');
     g.addColorStop(.25, 'rgba(245,210,122,' + a * .55 + ')');
@@ -242,15 +274,17 @@
   }
   function ease(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
+  var lastFrame = 0;
   function frame() {
     var now = performance.now();
-    cx.fillStyle = '#03050d'; cx.fillRect(0, 0, W, H);
-    var hz = cx.createLinearGradient(0, H * .55, 0, H); hz.addColorStop(0, 'rgba(37,64,140,0)'); hz.addColorStop(1, 'rgba(37,64,140,.10)');
-    cx.fillStyle = hz; cx.fillRect(0, 0, W, H);
+    if (now - lastFrame < 31) { requestAnimationFrame(frame); return; }   // 초당 30장이면 충분하다
+    lastFrame = now;
     var dim = state === 'stage' ? .25 : 1;
-    for (var i = 0; i < dust.length; i++) {
-      var d = dust[i], a = (.5 + .35 * Math.sin(now / 900 + d.p)) * dim;
-      cx.fillStyle = 'rgba(220,226,255,' + a + ')'; cx.fillRect(d.x * W, d.y * H, d.r, d.r);
+    cx.drawImage(bg, 0, 0);
+    if (dim < 1) { cx.fillStyle = 'rgba(3,5,13,.7)'; cx.fillRect(0, 0, W, H); }
+    for (var i = 0; i < twinkle.length; i++) {
+      var d = twinkle[i], a = (.45 + .45 * Math.sin(now / 900 + d.p)) * dim;
+      cx.fillStyle = 'rgba(235,240,255,' + a + ')'; cx.fillRect(d.x * W, d.y * H, d.r + .6, d.r + .6);
     }
     var CX = W / 2, CY = H * .42;
     var gp = 0;
