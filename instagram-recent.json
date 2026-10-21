@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-10-20 10:06",
+  "generated_kst": "2026-10-21 09:41",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 140,
     "follows_count": 110,
-    "media_count": 151
+    "media_count": 152
   },
   "posts": [
+    {
+      "id": "18270002710305268",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-10-20T10:33:06+0000",
+      "permalink": "https://www.instagram.com/p/DetoH8JFQ59/",
+      "caption_first_line": "살아 있는 믿음은 움직입니다.",
+      "likes": 8,
+      "comments": 1
+    },
     {
       "id": "18073763201770410",
       "type": "REELS",
@@ -247,16 +257,6 @@
       "caption_first_line": "[드디어 D-1] 같이 VIP FESTIVAL 가자!! 🏃‍♂️🏃‍♀️💨 🚨",
       "likes": 38,
       "comments": 5
-    },
-    {
-      "id": "17980625336843083",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-05-15T07:00:44+0000",
-      "permalink": "https://www.instagram.com/p/DYWaLbSAZgb/",
-      "caption_first_line": "🚨 [필독 공지 3탄] 대망의 VIP 환영 선물 & 역대급 특별 이벤트 공개! 🚨",
-      "likes": 11,
-      "comments": 0
     }
   ]
 }
