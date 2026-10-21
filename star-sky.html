@@ -6,15 +6,16 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="dark">
 <title>별 밝히기 | 하늘 화면</title>
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<!-- 프로프리젠터 안에서도 빨리 뜨도록: 글꼴은 화면을 막지 않고 나중에 불러온다, 무거운 라이브러리는 쓰지 않는다 -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" media="print" onload="this.media='all'">
 <style>
   [hidden] { display: none !important; }
   /* 본당 큰 화면용: 화면 전체가 밤하늘, 글씨는 아래쪽 띠와 가운데에만 둔다 */
   :root {
     --night: #03050d; --ink: #eef0fb; --dim: #9aa1c7; --gold: #f5d27a; --gold2: #e9b949;
     --serif: "Gowun Batang", "Nanum Myeongjo", serif;
-    --sans: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    --sans: -apple-system, "Apple SD Gothic Neo", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   }
   html, body { margin: 0; height: 100%; overflow: hidden; background: var(--night); color: var(--ink); font-family: var(--sans); }
   canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
@@ -99,12 +100,17 @@
 <button id="fs" type="button">전체 화면</button>
 
 <script src="assets/supabase-config.js"></script>
-<script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/vendor/qrcode.min.js"></script>
 <script>
 (function () {
   var ROOM = (location.hash || '').replace('#', '') || 'demo';
-  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  function rpc(fn, args) {
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+      method: 'POST', cache: 'no-store',
+      headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args)
+    }).then(function (r) { return r.json().then(function (j) { return r.ok ? { data: j } : { error: j }; }); });
+  }
   var $ = function (id) { return document.getElementById(id); };
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -127,7 +133,7 @@
 
   // 배경의 작은 별(장식)
   var dust = [];
-  for (var i = 0; i < 260; i++) dust.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.1 + .2, p: Math.random() * 6.28 });
+  for (var i = 0; i < 260; i++) dust.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.5 + .6, p: Math.random() * 6.28 });
 
   var stars = [];          // 켜진 별
   var byId = {};
@@ -243,7 +249,7 @@
     cx.fillStyle = hz; cx.fillRect(0, 0, W, H);
     var dim = state === 'stage' ? .25 : 1;
     for (var i = 0; i < dust.length; i++) {
-      var d = dust[i], a = (.35 + .35 * Math.sin(now / 900 + d.p)) * dim;
+      var d = dust[i], a = (.5 + .35 * Math.sin(now / 900 + d.p)) * dim;
       cx.fillStyle = 'rgba(220,226,255,' + a + ')'; cx.fillRect(d.x * W, d.y * H, d.r, d.r);
     }
     var CX = W / 2, CY = H * .42;
@@ -354,7 +360,7 @@
   // ---------- 서버에서 가져오기 ----------
   var first = true;
   function poll() {
-    sb.rpc('star_sky', { p_room: ROOM, p_after: lastSeq }).then(function (res) {
+    rpc('star_sky', { p_room: ROOM, p_after: lastSeq }).then(function (res) {
       var d = res.data;
       if (res.error || !d) { $('stateName').textContent = res.error ? '연결 다시 시도 중' : '방을 찾을 수 없음'; return; }
       (d.hidden || []).forEach(removeStar);
@@ -370,6 +376,7 @@
     }).catch(function () { $('stateName').textContent = '연결 다시 시도 중'; })
       .then(function () { setTimeout(poll, 1500); });
   }
+  enter('empty', '', false);   // 서버 응답 전에도 빈 하늘과 QR을 바로 보여 준다
   poll();
   try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(function () {}); } catch (e) {}
 })();
