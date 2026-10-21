@@ -12,7 +12,7 @@
   [hidden] { display: none !important; }
   /* 본당 큰 화면용: 화면 전체가 밤하늘, 글씨는 아래쪽 띠와 가운데에만 둔다 */
   :root {
-    --night: #070b1d; --ink: #eef0fb; --dim: #9aa1c7; --gold: #f5d27a; --gold2: #e9b949;
+    --night: #03050d; --ink: #eef0fb; --dim: #9aa1c7; --gold: #f5d27a; --gold2: #e9b949;
     --serif: "Gowun Batang", "Nanum Myeongjo", serif;
     --sans: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   }
@@ -47,6 +47,9 @@
   #verse .ref { color: var(--dim); font-size: clamp(12px, 1.3vw, 20px); margin-top: .4em; }
   #verse .total { color: var(--gold); font-size: clamp(16px, 2vw, 32px); margin-top: .8em; font-weight: 700; }
   #fs { position: fixed; left: 2.4vw; bottom: 2.4vh; pointer-events: auto; font: inherit; font-size: 13px; color: var(--dim); background: transparent; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 6px 10px; cursor: pointer; opacity: .5; }
+  /* 본당 화면에는 조작 버튼·상태 글씨를 숨기고, 마우스를 움직일 때만 잠깐 보인다 */
+  #fs, #top { transition: opacity .4s; }
+  body.quiet #fs, body.quiet #top { opacity: 0; pointer-events: none; }
   #fs:hover { opacity: 1; }
   .fade { animation: fade 1.2s ease both; }
   @keyframes fade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
@@ -109,6 +112,9 @@
   var sendUrl = location.origin + location.pathname.replace(/star-sky\.html$/, 'star.html') + (ROOM === 'demo' ? '' : '#' + ROOM);
   try { var q = qrcode(0, 'M'); q.addData(sendUrl); q.make(); $('qr').src = q.createDataURL(8, 2); } catch (e) {}
 
+  var quietT = 0;
+  function wake() { document.body.classList.remove('quiet'); clearTimeout(quietT); quietT = setTimeout(function () { document.body.classList.add('quiet'); }, 4000); }
+  addEventListener('mousemove', wake); addEventListener('keydown', wake); wake();
   $('fs').onclick = function () { var el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen().catch(function () {}); };
 
   // ---------- 캔버스 ----------
@@ -232,8 +238,8 @@
 
   function frame() {
     var now = performance.now();
-    cx.fillStyle = '#070b1d'; cx.fillRect(0, 0, W, H);
-    var hz = cx.createLinearGradient(0, H * .55, 0, H); hz.addColorStop(0, 'rgba(37,64,140,0)'); hz.addColorStop(1, 'rgba(37,64,140,.22)');
+    cx.fillStyle = '#03050d'; cx.fillRect(0, 0, W, H);
+    var hz = cx.createLinearGradient(0, H * .55, 0, H); hz.addColorStop(0, 'rgba(37,64,140,0)'); hz.addColorStop(1, 'rgba(37,64,140,.10)');
     cx.fillStyle = hz; cx.fillRect(0, 0, W, H);
     var dim = state === 'stage' ? .25 : 1;
     for (var i = 0; i < dust.length; i++) {
