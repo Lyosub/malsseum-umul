@@ -130,36 +130,43 @@
   var state = '', stateLabel = '', stateSeq = -1, drawSeq = -1;
   var gatherT = 0, gatherStart = 0, drawStart = 0, winId = null, spinning = false;
 
-  // 별과 그 아래 문구가 겹치지 않도록, 하늘을 칸으로 나눠 칸마다 별 하나를 둔다
-  var cells = null;
-  function buildCells() {
-    var cols = Math.max(3, Math.floor(W / 250)), rows = Math.max(3, Math.floor(H * .8 / 140));
-    cells = [];
-    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
-      var x = (c + .5) / cols, y = .1 + (r + .4) * (.74 / rows);
-      if (x > .76 && y > .6) continue;          // 오른쪽 아래 QR 자리
-      if (x > .76 && y < .1) continue;          // 오른쪽 위 타이머 자리
-      cells.push({ x: x, y: y, cw: 1 / cols, owner: null });
-    }
+  // 별을 자유롭게 흩뿌리되, 별 아래 문구 자리(상자)끼리는 겹치지 않게 놓는다
+  function labelBox() {
+    var lw = Math.max(190, Math.min(290, W * .14)), lh = Math.max(92, Math.min(130, H * .11));
+    return { bw: lw / W, bh: lh / H };
   }
-  function takeCell() {
-    if (!cells) buildCells();
-    var free = cells.filter(function (c) { return !c.owner; });
-    if (free.length) return free[Math.floor(Math.random() * free.length)];
-    // 칸이 다 차면 가장 오래된 별의 문구를 내리고 그 칸을 새 별에게 준다(오래된 별은 작은 별로 남는다)
+  function blocked(x, y, bw, bh) {
+    if (x - bw / 2 < .015 || x + bw / 2 > .985 || y < .07 || y + bh > .95) return true;
+    if (x + bw / 2 > .76 && y + bh > .62) return true;      // 오른쪽 아래 QR 자리
+    if (x + bw / 2 > .78 && y < .1) return true;            // 오른쪽 위 타이머 자리
+    for (var i = 0; i < stars.length; i++) {
+      var o = stars[i]; if (!o.labeled) continue;
+      if (Math.abs(o.hx - x) < (bw + .012) && y < o.hy + bh + .012 && o.hy < y + bh + .012) return true;
+    }
+    return false;
+  }
+  function findSpot() {
+    var b = labelBox();
+    for (var k = 0; k < 400; k++) {
+      var x = .02 + Math.random() * .96, y = .07 + Math.random() * .86;
+      if (!blocked(x, y, b.bw, b.bh)) return { x: x, y: y, labeled: true };
+    }
+    // 자리가 없으면 가장 오래된 별의 문구를 내리고 그 근처에 새 별을 둔다(오래된 별은 작은 별로 남는다)
     var oldest = null;
-    cells.forEach(function (c) { if (!oldest || c.owner.order < oldest.owner.order) oldest = c; });
-    oldest.owner.cell = null; oldest.owner.hx += (Math.random() - .5) * oldest.cw * .6; oldest.owner.hy += .03;
-    return oldest;
+    stars.forEach(function (o) { if (o.labeled && (!oldest || o.order < oldest.order)) oldest = o; });
+    if (!oldest) return { x: .05 + Math.random() * .7, y: .1 + Math.random() * .5, labeled: false };
+    oldest.labeled = false;
+    var spot = { x: oldest.hx, y: oldest.hy, labeled: true };
+    oldest.hx += (Math.random() < .5 ? -1 : 1) * b.bw * (.3 + Math.random() * .2); oldest.hy += (Math.random() - .5) * .03;
+    return spot;
   }
   var order = 0;
   function addStar(m, silent) {
     if (byId[m.id]) return;
-    var c = takeCell();
-    var s = { id: m.id, body: m.body, who: m.who, cell: c, order: order++,
-              hx: c.x + (Math.random() - .5) * c.cw * .12, hy: c.y - .03 + (Math.random() - .5) * .008,
-              r: 3.2 + Math.random() * 2.4, p: Math.random() * 6.28, born: silent ? 0 : performance.now(), hi: 0 };
-    s.x = s.hx; s.y = s.hy; c.owner = s;
+    var sp = findSpot();
+    var s = { id: m.id, body: m.body, who: m.who, labeled: sp.labeled, order: order++, hx: sp.x, hy: sp.y,
+              r: 2.6 + Math.pow(Math.random(), 1.6) * 4.4, p: Math.random() * 6.28, born: silent ? 0 : performance.now(), hi: 0 };
+    s.x = s.hx; s.y = s.hy;
     stars.push(s); byId[m.id] = s;
   }
   function wrap(text, maxW) {
@@ -181,7 +188,7 @@
   }
   function drawLabel(s, a, big) {
     var fs = Math.max(13, Math.min(22, W / 92)) * (big ? 1.15 : 1);
-    var maxW = (s.cell ? s.cell.cw * W : 220) * .86;
+    var maxW = labelBox().bw * W * .94;
     cx.textAlign = 'center'; cx.textBaseline = 'top';
     cx.font = '700 ' + fs + 'px "Gowun Batang", serif';
     var lines = wrap(s.body, maxW), y = s.y + s.r * 3 + 6;
@@ -195,7 +202,6 @@
   }
   function removeStar(id) {
     if (!byId[id]) { queue = queue.filter(function (q) { return q.id !== id; }); return; }
-    if (byId[id].cell) byId[id].cell.owner = null;
     stars = stars.filter(function (s) { return s.id !== id; }); delete byId[id];
   }
 
@@ -264,7 +270,7 @@
       if (state === 'draw' && spinT >= 1 && !isWin) alpha *= .35;
       var lit = state === 'cheer' && s.hi && now - s.hi < 3200 ? 1 - (now - s.hi) / 3200 : 0;
       drawStar(x, y, s.r * (1 + (1 - grow) * 2.5) * (isWin ? 3 : 1 + lit * 1.6), Math.min(1, alpha + lit), isWin ? 9 : 5 + lit * 4);
-      if (state === 'cheer' && s.cell) drawLabel(s, Math.min(1, grow * (.82 + lit * .18)), lit > .3);
+      if (state === 'cheer' && s.labeled) drawLabel(s, Math.min(1, grow * (.82 + lit * .18)), lit > .3);
     }
     if (state === 'gather' && gp > .6) {
       var k = (gp - .6) / .4, pulse = 1 + .04 * Math.sin(now / 400);
@@ -348,7 +354,7 @@
       (d.hidden || []).forEach(removeStar);
       // 시연 초기화 등으로 개수가 줄면 처음부터 다시 받는다
       if (d.total < stars.length + queue.length && !d.messages.length) {
-        stars = []; byId = {}; queue = []; cells = null; lastSeq = 0; first = true; total = 0; return;
+        stars = []; byId = {}; queue = []; lastSeq = 0; first = true; total = 0; return;
       }
       total = d.total;
       d.messages.forEach(function (m) { lastSeq = Math.max(lastSeq, m.seq); if (!byId[m.id] && !queue.some(function (q) { return q.id === m.id; })) queue.push(m); });
