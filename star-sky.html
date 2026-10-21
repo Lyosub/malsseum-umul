@@ -213,7 +213,8 @@
       var alpha = tw * grow * dim * (state === 'gather' ? 1 - gp * .85 : 1);
       var isWin = state === 'draw' && spinT >= 1 && s.id === winId;
       if (state === 'draw' && spinT >= 1 && !isWin) alpha *= .35;
-      drawStar(x, y, s.r * (1 + (1 - grow) * 2.5) * (isWin ? 3 : 1), alpha, isWin ? 9 : 5);
+      var lit = state === 'cheer' && s.hi && now - s.hi < 3200 ? 1 - (now - s.hi) / 3200 : 0;
+      drawStar(x, y, s.r * (1 + (1 - grow) * 2.5) * (isWin ? 3 : 1 + lit * 1.6), Math.min(1, alpha + lit), isWin ? 9 : 5 + lit * 4);
     }
     if (state === 'gather' && gp > .6) {
       var k = (gp - .6) / .4, pulse = 1 + .04 * Math.sin(now / 400);
@@ -224,7 +225,7 @@
   requestAnimationFrame(frame);
 
   // ---------- 응원의 시간: 큐에서 하나씩 켜기 ----------
-  var cardTimer = 0, cheerTimer = 0, cheerEnd = 0;
+  var cardTimer = 0, cheerTimer = 0, cheerEnd = 0, lastPick = null;
   function showCard(m) {
     $('cardBody').textContent = '「' + m.body + '」'; $('cardWho').textContent = m.who;
     var c = $('card'); c.hidden = false; c.classList.remove('fade'); void c.offsetWidth; c.classList.add('fade');
@@ -233,10 +234,18 @@
   function lightNext() {
     if (state !== 'cheer') return;
     if (queue.length) {
-      var m = queue.shift(); addStar(m, false); showCard(m);
+      var m = queue.shift(); addStar(m, false); showCard(m); byId[m.id].hi = performance.now();
+      var gap = queue.length > 30 ? 450 : queue.length > 10 ? 900 : 1800;
+      cheerTimer = setTimeout(lightNext, gap);
+      return;
     }
-    var gap = queue.length > 30 ? 450 : queue.length > 10 ? 900 : 1800;
-    cheerTimer = setTimeout(lightNext, queue.length ? gap : 700);
+    // 새로 켤 별이 없으면, 이미 켜진 별의 응원을 하나씩 다시 비춰 준다
+    if (stars.length) {
+      var pick = stars[Math.floor(Math.random() * stars.length)];
+      if (stars.length > 1 && pick.id === lastPick) pick = stars[(stars.indexOf(pick) + 1) % stars.length];
+      lastPick = pick.id; pick.hi = performance.now(); showCard(pick);
+    }
+    cheerTimer = setTimeout(lightNext, 3600);
   }
   function tickTimer() {
     if (state !== 'cheer') { $('timer').hidden = true; return; }
