@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark">
+<title>별 밝히기 | 하늘 화면</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<style>
+  [hidden] { display: none !important; }
+  /* 본당 큰 화면용: 화면 전체가 밤하늘, 글씨는 아래쪽 띠와 가운데에만 둔다 */
+  :root {
+    --night: #070b1d; --ink: #eef0fb; --dim: #9aa1c7; --gold: #f5d27a; --gold2: #e9b949;
+    --serif: "Gowun Batang", "Nanum Myeongjo", serif;
+    --sans: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--night); color: var(--ink); font-family: var(--sans); }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .layer { position: fixed; inset: 0; pointer-events: none; display: grid; }
+  .center { place-items: center; text-align: center; }
+  .title { font-family: var(--serif); font-weight: 700; font-size: clamp(28px, 5vw, 72px); text-shadow: 0 0 30px rgba(245,210,122,.35); margin: 0; text-wrap: balance; }
+  .sub { font-size: clamp(14px, 1.8vw, 26px); color: var(--dim); margin: .6em 0 0; }
+  .label { font-size: clamp(12px, 1.2vw, 18px); letter-spacing: .16em; color: var(--gold); margin: 0 0 .5em; }
+  #top { position: fixed; top: 2.2vh; left: 2.4vw; font-size: clamp(12px, 1.3vw, 20px); color: var(--dim); letter-spacing: .08em; }
+  #top b { color: var(--gold); font-weight: 600; }
+  #timer { position: fixed; top: 2.2vh; right: 2.4vw; font-size: clamp(16px, 2vw, 34px); color: var(--gold); font-variant-numeric: tabular-nums; }
+  #qrbox { position: fixed; right: 2.4vw; bottom: 3vh; background: #fff; border-radius: 14px; padding: 12px; text-align: center; color: #10162f; box-shadow: 0 0 40px rgba(245,210,122,.25); }
+  #qrbox img { display: block; width: clamp(110px, 13vw, 220px); height: auto; image-rendering: pixelated; }
+  #qrbox div { font-size: clamp(11px, 1.1vw, 17px); font-weight: 700; margin-top: 6px; }
+  #qrbox.big { right: 50%; bottom: 7vh; transform: translateX(50%); }
+  #qrbox.big img { width: clamp(160px, 20vw, 320px); }
+  #card {
+    position: fixed; left: 50%; bottom: 6vh; transform: translateX(-50%); max-width: min(70vw, 1100px);
+    text-align: center; transition: opacity .5s;
+  }
+  #card .body { font-family: var(--serif); font-weight: 700; font-size: clamp(22px, 3.6vw, 60px); text-shadow: 0 2px 24px rgba(0,0,0,.6); }
+  #card .who { font-size: clamp(14px, 1.7vw, 28px); color: var(--gold); margin-top: .35em; }
+  #win { position: fixed; left: 50%; top: 60%; transform: translate(-50%, -50%); text-align: center; width: min(86vw, 1200px); }
+  #win .label { font-size: clamp(14px, 1.6vw, 26px); }
+  #win .body { font-family: var(--serif); font-weight: 700; font-size: clamp(26px, 4.4vw, 76px); margin: .2em 0; text-shadow: 0 0 30px rgba(0,0,0,.8); }
+  #win .who { font-size: clamp(18px, 2.4vw, 40px); color: var(--gold); }
+  #win .prize { display: inline-block; margin-top: .8em; padding: .35em 1em; border-radius: 999px; background: linear-gradient(180deg, var(--gold), var(--gold2)); color: #241a02; font-weight: 800; font-size: clamp(18px, 2.2vw, 36px); }
+  #verse { position: fixed; left: 50%; bottom: 7vh; transform: translateX(-50%); width: min(82vw, 1300px); text-align: center; }
+  #verse .v { font-family: var(--serif); font-size: clamp(16px, 2.2vw, 36px); line-height: 1.6; }
+  #verse .ref { color: var(--dim); font-size: clamp(12px, 1.3vw, 20px); margin-top: .4em; }
+  #verse .total { color: var(--gold); font-size: clamp(16px, 2vw, 32px); margin-top: .8em; font-weight: 700; }
+  #fs { position: fixed; left: 2.4vw; bottom: 2.4vh; pointer-events: auto; font: inherit; font-size: 13px; color: var(--dim); background: transparent; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 6px 10px; cursor: pointer; opacity: .5; }
+  #fs:hover { opacity: 1; }
+  .fade { animation: fade 1.2s ease both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  #win.fade, #verse.fade, #card.fade { animation-name: fadec; }
+  @keyframes fadec { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+
+<div id="top">별 밝히기 · <b id="stateName">연결 중</b></div>
+<div id="timer" hidden></div>
+
+<div class="layer center" id="emptyLayer" hidden>
+  <div style="transform: translateY(-20vh)">
+    <p class="label">2026 교회학교 성탄발표회</p>
+    <h1 class="title">오늘 밤, 이 하늘을 함께 밝혀 주세요</h1>
+    <p class="sub">QR을 찍고 교회학교 학생들에게 응원 한 줄을 보내 주세요</p>
+  </div>
+</div>
+
+<div class="layer center" id="stageLayer" hidden>
+  <div>
+    <p class="label">지금 무대</p>
+    <h1 class="title" id="stageName">부서 발표</h1>
+    <p class="sub">공연 중에는 박수로 응원해 주세요. 보낸 응원은 발표가 끝나면 별로 켜집니다.</p>
+    <p class="sub" style="font-size:clamp(11px,1.2vw,16px);opacity:.7">(실제 행사에서는 이 화면 대신 부서 소개 영상과 무대 배경이 나갑니다)</p>
+  </div>
+</div>
+
+<div id="card" hidden><div class="body" id="cardBody"></div><div class="who" id="cardWho"></div></div>
+
+<div id="verse" hidden>
+  <div class="v">천사가 이르되 무서워하지 말라 보라 내가 온 백성에게 미칠 큰 기쁨의 좋은 소식을 너희에게 전하노라<br>오늘 다윗의 동네에 너희를 위하여 구주가 나셨으니 곧 그리스도 주시니라</div>
+  <div class="ref">누가복음 2:10-11</div>
+  <div class="total" id="total"></div>
+</div>
+
+<div id="win" hidden>
+  <p class="label" id="winLabel">별 추첨</p>
+  <div class="body" id="winBody"></div>
+  <div class="who" id="winWho"></div>
+  <div class="prize" id="winPrize"></div>
+</div>
+
+<div id="qrbox" hidden><img id="qr" alt="응원 보내기 QR 코드"><div>응원 보내기</div></div>
+<button id="fs" type="button">전체 화면</button>
+
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/vendor/qrcode.min.js"></script>
+<script>
+(function () {
+  var ROOM = (location.hash || '').replace('#', '') || 'demo';
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var $ = function (id) { return document.getElementById(id); };
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // QR: 이 화면과 같은 주소의 star.html
+  var sendUrl = location.origin + location.pathname.replace(/star-sky\.html$/, 'star.html') + (ROOM === 'demo' ? '' : '#' + ROOM);
+  try { var q = qrcode(0, 'M'); q.addData(sendUrl); q.make(); $('qr').src = q.createDataURL(8, 2); } catch (e) {}
+
+  $('fs').onclick = function () { var el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen().catch(function () {}); };
+
+  // ---------- 캔버스 ----------
+  var cv = $('sky'), cx = cv.getContext('2d'), W = 0, H = 0, DPR = 1;
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  addEventListener('resize', resize); resize();
+
+  // 배경의 작은 별(장식)
+  var dust = [];
+  for (var i = 0; i < 260; i++) dust.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.1 + .2, p: Math.random() * 6.28 });
+
+  var stars = [];          // 켜진 별
+  var byId = {};
+  var queue = [];          // 승인됐지만 아직 안 켜진 응원
+  var lastSeq = 0, total = 0;
+  var state = '', stateLabel = '', stateSeq = -1, drawSeq = -1;
+  var gatherT = 0, gatherStart = 0, drawStart = 0, winId = null, spinning = false;
+
+  function homeSpot() {
+    // 위쪽 제목·아래쪽 글 띠·오른쪽 아래 QR 자리를 조금 피해서 흩뿌린다
+    for (var k = 0; k < 20; k++) {
+      var x = .05 + Math.random() * .9, y = .08 + Math.random() * .7;
+      if (x > .8 && y > .62) continue;
+      return { x: x, y: y };
+    }
+    return { x: Math.random(), y: Math.random() * .7 + .08 };
+  }
+  function addStar(m, silent) {
+    if (byId[m.id]) return;
+    var h = homeSpot();
+    var s = { id: m.id, body: m.body, who: m.who, hx: h.x, hy: h.y, x: h.x, y: h.y, r: 3.2 + Math.random() * 3, p: Math.random() * 6.28, born: silent ? 0 : performance.now(), hi: 0 };
+    stars.push(s); byId[m.id] = s;
+  }
+  function removeStar(id) {
+    if (!byId[id]) { queue = queue.filter(function (q) { return q.id !== id; }); return; }
+    stars = stars.filter(function (s) { return s.id !== id; }); delete byId[id];
+  }
+
+  function drawStar(x, y, r, a, glow) {
+    var g = cx.createRadialGradient(x, y, 0, x, y, r * glow);
+    g.addColorStop(0, 'rgba(255,244,214,' + a + ')');
+    g.addColorStop(.25, 'rgba(245,210,122,' + a * .55 + ')');
+    g.addColorStop(1, 'rgba(245,210,122,0)');
+    cx.fillStyle = g; cx.beginPath(); cx.arc(x, y, r * glow, 0, 6.283); cx.fill();
+    cx.strokeStyle = 'rgba(255,248,226,' + a * .8 + ')'; cx.lineWidth = Math.max(.6, r * .18);
+    cx.beginPath(); cx.moveTo(x - r * 2.6, y); cx.lineTo(x + r * 2.6, y); cx.moveTo(x, y - r * 2.6); cx.lineTo(x, y + r * 2.6); cx.stroke();
+    cx.fillStyle = 'rgba(255,252,240,' + a + ')'; cx.beginPath(); cx.arc(x, y, r * .55, 0, 6.283); cx.fill();
+  }
+  function bigStar(x, y, s, a) {
+    // 베들레헴의 별: 8갈래 빛
+    var g = cx.createRadialGradient(x, y, 0, x, y, s * 2.2);
+    g.addColorStop(0, 'rgba(255,248,220,' + a + ')'); g.addColorStop(.18, 'rgba(245,210,122,' + a * .7 + ')'); g.addColorStop(1, 'rgba(245,210,122,0)');
+    cx.fillStyle = g; cx.beginPath(); cx.arc(x, y, s * 2.2, 0, 6.283); cx.fill();
+    cx.fillStyle = 'rgba(255,250,232,' + a + ')';
+    for (var k = 0; k < 8; k++) {
+      var len = k % 2 === 0 ? s * (k === 4 ? 2.4 : 1.6) : s * .7, ang = k * Math.PI / 4 - Math.PI / 2;
+      cx.beginPath(); cx.moveTo(x + Math.cos(ang) * len, y + Math.sin(ang) * len);
+      cx.lineTo(x + Math.cos(ang + .5) * s * .12, y + Math.sin(ang + .5) * s * .12);
+      cx.lineTo(x + Math.cos(ang - .5) * s * .12, y + Math.sin(ang - .5) * s * .12); cx.fill();
+    }
+  }
+  function ease(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+  function frame() {
+    var now = performance.now();
+    cx.fillStyle = '#070b1d'; cx.fillRect(0, 0, W, H);
+    var hz = cx.createLinearGradient(0, H * .55, 0, H); hz.addColorStop(0, 'rgba(37,64,140,0)'); hz.addColorStop(1, 'rgba(37,64,140,.22)');
+    cx.fillStyle = hz; cx.fillRect(0, 0, W, H);
+    var dim = state === 'stage' ? .25 : 1;
+    for (var i = 0; i < dust.length; i++) {
+      var d = dust[i], a = (.35 + .35 * Math.sin(now / 900 + d.p)) * dim;
+      cx.fillStyle = 'rgba(220,226,255,' + a + ')'; cx.fillRect(d.x * W, d.y * H, d.r, d.r);
+    }
+    var CX = W / 2, CY = H * .42;
+    var gp = 0;
+    if (state === 'gather') gp = ease(Math.max(0, Math.min(1, (now - gatherStart) / 6000)));
+    if (state === 'draw' && !spinning) gp = 0;
+    var spinT = state === 'draw' ? Math.max(0, Math.min(1, (now - drawStart) / 5200)) : 1;
+    var post = state === 'draw' ? ease(Math.max(0, Math.min(1, (now - drawStart - 5200) / 1200))) : 0;
+    var spinAng = state === 'draw' ? (1 - Math.pow(1 - spinT, 3)) * 16 : 0;
+    for (var j = 0; j < stars.length; j++) {
+      var s = stars[j], x = s.hx * W, y = s.hy * H;
+      if (state === 'gather') {
+        var sw = (1 - gp) * 1.2;
+        var tx = CX + (x - CX) * (1 - gp), ty = CY + (y - CY) * (1 - gp);
+        var ang = Math.atan2(ty - CY, tx - CX) + sw * .6 * gp, rr = Math.hypot(tx - CX, ty - CY);
+        x = CX + Math.cos(ang) * rr; y = CY + Math.sin(ang) * rr;
+      } else if (state === 'draw') {
+        var ring = Math.min(W, H) * (.16 + (j % 4) * .07), a0 = j * 2.39996;
+        var pr = Math.max(0, Math.min(1, (now - drawStart) / 900));
+        if (s.id === winId) ring = ring * (1 - post);
+        else ring = ring * (1 + post * 1.3);
+        var ox = CX + Math.cos(a0 + spinAng) * ring, oy = (s.id === winId ? CY - post * H * .2 : CY) + Math.sin(a0 + spinAng) * ring * .8;
+        x = x + (ox - x) * ease(pr); y = y + (oy - y) * ease(pr);
+      }
+      s.x = x; s.y = y;
+      var tw = .7 + .3 * Math.sin(now / 600 + s.p);
+      var grow = s.born ? Math.min(1, (now - s.born) / 900) : 1;
+      var alpha = tw * grow * dim * (state === 'gather' ? 1 - gp * .85 : 1);
+      var isWin = state === 'draw' && spinT >= 1 && s.id === winId;
+      if (state === 'draw' && spinT >= 1 && !isWin) alpha *= .35;
+      drawStar(x, y, s.r * (1 + (1 - grow) * 2.5) * (isWin ? 3 : 1), alpha, isWin ? 9 : 5);
+    }
+    if (state === 'gather' && gp > .6) {
+      var k = (gp - .6) / .4, pulse = 1 + .04 * Math.sin(now / 400);
+      bigStar(CX, CY, Math.min(W, H) * .09 * k * pulse, Math.min(1, k * 1.2));
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // ---------- 응원의 시간: 큐에서 하나씩 켜기 ----------
+  var cardTimer = 0, cheerTimer = 0, cheerEnd = 0;
+  function showCard(m) {
+    $('cardBody').textContent = '「' + m.body + '」'; $('cardWho').textContent = m.who;
+    var c = $('card'); c.hidden = false; c.classList.remove('fade'); void c.offsetWidth; c.classList.add('fade');
+    clearTimeout(cardTimer); cardTimer = setTimeout(function () { c.hidden = true; }, 3200);
+  }
+  function lightNext() {
+    if (state !== 'cheer') return;
+    if (queue.length) {
+      var m = queue.shift(); addStar(m, false); showCard(m);
+    }
+    var gap = queue.length > 30 ? 450 : queue.length > 10 ? 900 : 1800;
+    cheerTimer = setTimeout(lightNext, queue.length ? gap : 700);
+  }
+  function tickTimer() {
+    if (state !== 'cheer') { $('timer').hidden = true; return; }
+    var left = Math.max(0, Math.ceil((cheerEnd - Date.now()) / 1000));
+    $('timer').hidden = false; $('timer').textContent = '응원의 시간 ' + left + '초';
+    setTimeout(tickTimer, 250);
+  }
+
+  // ---------- 상태 바꾸기 ----------
+  var names = { empty: '빈 하늘', stage: '무대', cheer: '응원의 시간', gather: '별이 모이는 시간', draw: '별 추첨' };
+  function show(id, on) { $(id).hidden = !on; }
+  function enter(st, label, first) {
+    state = st; stateLabel = label;
+    $('stateName').textContent = names[st] || st;
+    show('emptyLayer', st === 'empty'); show('stageLayer', st === 'stage');
+    $('stageName').textContent = label || '부서 발표';
+    show('verse', false); show('win', false); $('card').hidden = true;
+    var qb = $('qrbox'); qb.hidden = !(st === 'empty' || st === 'cheer' || st === 'stage'); qb.classList.toggle('big', st === 'empty');
+    clearTimeout(cheerTimer);
+    if (st === 'cheer') { cheerEnd = Date.now() + 60000; tickTimer(); lightNext(); }
+    if (st === 'gather') {
+      while (queue.length) addStar(queue.shift(), true);
+      gatherStart = performance.now();
+      setTimeout(function () { if (state === 'gather') { $('total').textContent = '오늘 밤 ' + total + '개의 응원'; var v = $('verse'); v.hidden = false; v.classList.add('fade'); } }, reduce ? 0 : 6500);
+    }
+    if (st === 'draw') { $('qrbox').hidden = true; }
+    if (first && st !== 'empty') while (queue.length) addStar(queue.shift(), true);
+  }
+  function runDraw(d) {
+    show('win', false);
+    if (!d) { winId = null; drawStart = performance.now(); return; }
+    if (!byId[d.id]) addStar({ id: d.id, body: d.body, who: d.name }, true);
+    winId = d.id; spinning = true; drawStart = performance.now();
+    setTimeout(function () {
+      if (winId !== d.id) return;
+      $('winLabel').textContent = '별 추첨 · 당첨';
+      $('winBody').textContent = '「' + d.body + '」';
+      $('winWho').textContent = d.name + ' · ' + d.dept;
+      $('winPrize').textContent = d.dept + ' 경품 당첨!';
+      var w = $('win'); w.hidden = false; w.classList.remove('fade'); void w.offsetWidth; w.classList.add('fade');
+    }, reduce ? 300 : 5600);
+  }
+
+  // ---------- 서버에서 가져오기 ----------
+  var first = true;
+  function poll() {
+    sb.rpc('star_sky', { p_room: ROOM, p_after: lastSeq }).then(function (res) {
+      var d = res.data;
+      if (res.error || !d) { $('stateName').textContent = res.error ? '연결 다시 시도 중' : '방을 찾을 수 없음'; return; }
+      (d.hidden || []).forEach(removeStar);
+      // 시연 초기화 등으로 개수가 줄면 처음부터 다시 받는다
+      if (d.total < stars.length + queue.length && !d.messages.length) {
+        stars = []; byId = {}; queue = []; lastSeq = 0; first = true; total = 0; return;
+      }
+      total = d.total;
+      d.messages.forEach(function (m) { lastSeq = Math.max(lastSeq, m.seq); if (!byId[m.id] && !queue.some(function (q) { return q.id === m.id; })) queue.push(m); });
+      if (d.state_seq !== stateSeq) { stateSeq = d.state_seq; enter(d.state, d.stage_label, first); }
+      if (d.draw_seq !== drawSeq) { var was = drawSeq; drawSeq = d.draw_seq; if (d.state === 'draw' && (was !== -1 || first)) runDraw(d.draw); }
+      first = false;
+    }).catch(function () { $('stateName').textContent = '연결 다시 시도 중'; })
+      .then(function () { setTimeout(poll, 1500); });
+  }
+  poll();
+  try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(function () {}); } catch (e) {}
+})();
+</script>
+</body>
+</html>
