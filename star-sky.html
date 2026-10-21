@@ -129,14 +129,18 @@
   // 배경(색·지평선·작은 별)은 미리 한 장으로 그려 두고, 별·문구도 미리 그린 그림을 찍어 쓴다.
   var bg = document.createElement('canvas'), labelVer = 0;
   function resize() {
-    DPR = 1;
-    W = innerWidth; H = innerHeight; cv.width = W; cv.height = H; cx.setTransform(1, 0, 0, 1, 0, 0);
-    bg.width = W; bg.height = H; var b = bg.getContext('2d');
+    // 기본은 출력 화면의 화소 그대로(1:1) 그린다. 프로프리젠터 웹 객체는 출력 해상도로 그려지므로 이것이 본당 화면에서 가장 선명하면서 가볍다.
+    // 주소에 ?hd 를 붙이면 2배로 더 매끄럽게 그린다(약 600만 화소 한도, 더 무겁다).
+    W = innerWidth; H = innerHeight;
+    DPR = /[?&]hd/.test(location.search) ? Math.min(window.devicePixelRatio || 2, 2) : 1;
+    while (DPR > 1 && W * H * DPR * DPR > 6e6) DPR -= .25;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    bg.width = cv.width; bg.height = cv.height; var b = bg.getContext('2d'); b.setTransform(DPR, 0, 0, DPR, 0, 0);
     b.fillStyle = '#03050d'; b.fillRect(0, 0, W, H);
     var hz = b.createLinearGradient(0, H * .55, 0, H); hz.addColorStop(0, 'rgba(37,64,140,0)'); hz.addColorStop(1, 'rgba(37,64,140,.10)');
     b.fillStyle = hz; b.fillRect(0, 0, W, H);
     if (window.dust) dust.forEach(function (d) { b.fillStyle = 'rgba(220,226,255,.55)'; b.fillRect(d.x * W, d.y * H, d.r, d.r); });
-    labelVer++;
+    labelVer++; stillDirty = true;
   }
   addEventListener('resize', resize); resize();
 
@@ -145,7 +149,7 @@
   for (var i = 0; i < 260; i++) dust.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.5 + .6, p: Math.random() * 6.28 });
   var twinkle = dust.slice(0, 50);   // 반짝임은 50개만 매번 그린다
   resize();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { labelVer++; });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { labelVer++; stillDirty = true; });
 
   var stars = [];          // 켜진 별
   var byId = {};
@@ -191,7 +195,7 @@
     var s = { id: m.id, body: m.body, who: m.who, labeled: sp.labeled, order: order++, hx: sp.x, hy: sp.y,
               r: 2.6 + Math.pow(Math.random(), 1.6) * 4.4, p: Math.random() * 6.28, born: silent ? 0 : performance.now(), hi: 0 };
     s.x = s.hx; s.y = s.hy;
-    stars.push(s); byId[m.id] = s;
+    stars.push(s); byId[m.id] = s; stillDirty = true;
   }
   function wrap(text, maxW) {
     // 띄어쓰기 단위로 줄을 바꾸고, 한 단어가 너무 길 때만 글자 단위로 자른다
@@ -216,28 +220,29 @@
     var c = document.createElement('canvas'), g = c.getContext('2d');
     g.font = '700 ' + fs + 'px "Gowun Batang", serif';
     var saved = cx; cx = g; var lines = wrap(s.body, maxW); cx = saved;
-    c.width = Math.ceil(maxW + 24); c.height = Math.ceil(lines.length * fs * 1.3 + fs * .78 + 22);
-    g = c.getContext('2d'); g.textAlign = 'center'; g.textBaseline = 'top';
+    var lw = Math.ceil(maxW + 24), lh = Math.ceil(lines.length * fs * 1.3 + fs * .78 + 22);
+    c.width = Math.ceil(lw * DPR); c.height = Math.ceil(lh * DPR); c.lw = lw; c.lh = lh;
+    g = c.getContext('2d'); g.scale(DPR, DPR); g.textAlign = 'center'; g.textBaseline = 'top';
     g.shadowColor = 'rgba(0,0,0,.85)'; g.shadowBlur = 8;
     g.font = '700 ' + fs + 'px "Gowun Batang", serif'; g.fillStyle = 'rgb(238,240,251)';
-    lines.forEach(function (ln, i) { g.fillText(ln, c.width / 2, 6 + i * fs * 1.3); });
+    lines.forEach(function (ln, i) { g.fillText(ln, lw / 2, 6 + i * fs * 1.3); });
     g.font = '500 ' + fs * .78 + 'px -apple-system, "Apple SD Gothic Neo", sans-serif'; g.fillStyle = 'rgb(245,210,122)';
-    g.fillText(s.who, c.width / 2, 8 + lines.length * fs * 1.3);
+    g.fillText(s.who, lw / 2, 8 + lines.length * fs * 1.3);
     s.lab = c; s.labVer = labelVer;
   }
   function drawLabel(s, a, big) {
     if (!s.lab || s.labVer !== labelVer) makeLabel(s);
-    var c = s.lab, k = big ? 1.12 : 1, w = c.width * k, h = c.height * k;
+    var c = s.lab, k = big ? 1.12 : 1, w = c.lw * k, h = c.lh * k;
     cx.globalAlpha = Math.max(0, Math.min(1, a)); cx.drawImage(c, s.x - w / 2, s.y + s.r * 3, w, h); cx.globalAlpha = 1;
   }
   function removeStar(id) {
     if (!byId[id]) { queue = queue.filter(function (q) { return q.id !== id; }); return; }
-    stars = stars.filter(function (s) { return s.id !== id; }); delete byId[id];
+    stars = stars.filter(function (s) { return s.id !== id; }); delete byId[id]; stillDirty = true;
   }
 
-  var sprite = document.createElement('canvas'); sprite.width = sprite.height = 160;
+  var sprite = document.createElement('canvas'); sprite.width = sprite.height = 320;
   (function () {
-    var g2 = sprite.getContext('2d'), x = 80, y = 80, r = 12, glow = 6;
+    var g2 = sprite.getContext('2d'); g2.scale(2, 2); var x = 80, y = 80, r = 12, glow = 6;
     var g = g2.createRadialGradient(x, y, 0, x, y, r * glow);
     g.addColorStop(0, 'rgba(255,244,214,1)'); g.addColorStop(.25, 'rgba(245,210,122,.55)'); g.addColorStop(1, 'rgba(245,210,122,0)');
     g2.fillStyle = g; g2.beginPath(); g2.arc(x, y, r * glow, 0, 6.283); g2.fill();
@@ -274,18 +279,56 @@
   }
   function ease(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
-  var lastFrame = 0;
+  // ---------- 그리기 ----------
+  // 고화질은 유지하고 가볍게: 움직이지 않는 하늘(배경·자리 잡은 별·문구)은 「정지 그림」 한 장에 모아 두고
+  // 바뀔 때만 다시 그린다. 매 장면에서는 그 한 장을 붙이고, 반짝이는 작은 별·막 켜지는 별·빛나는 별만 위에 그린다.
+  var still = document.createElement('canvas'), sx = still.getContext('2d'), stillDirty = true, stillKey = '';
+  function markDirty() { stillDirty = true; }
+  function isLive(s, now) { return (s.born && now - s.born < 900) || (state === 'cheer' && s.hi && now - s.hi < 3200); }
+  function rebuildStill(now) {
+    if (still.width !== cv.width || still.height !== cv.height) { still.width = cv.width; still.height = cv.height; }
+    sx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    var keep = cx; cx = sx;
+    cx.setTransform(1, 0, 0, 1, 0, 0); cx.drawImage(bg, 0, 0); cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    var dim = state === 'stage' ? .25 : 1;
+    if (dim < 1) { cx.fillStyle = 'rgba(3,5,13,.7)'; cx.fillRect(0, 0, W, H); }
+    for (var j = 0; j < stars.length; j++) {
+      var st = stars[j]; if (isLive(st, now)) continue;
+      st.x = st.hx * W; st.y = st.hy * H;
+      drawStar(st.x, st.y, st.r, .85 * dim, 5);
+      if (state === 'cheer' && st.labeled) drawLabel(st, .82, false);
+    }
+    cx = keep; stillDirty = false;
+  }
+  function drawLiveStar(s, now, dim) {
+    s.x = s.hx * W; s.y = s.hy * H;
+    var grow = s.born ? Math.min(1, (now - s.born) / 900) : 1;
+    var lit = state === 'cheer' && s.hi && now - s.hi < 3200 ? 1 - (now - s.hi) / 3200 : 0;
+    var tw = .85 + .15 * Math.sin(now / 300 + s.p);
+    drawStar(s.x, s.y, s.r * (1 + (1 - grow) * 2.5) * (1 + lit * 1.6), Math.min(1, tw * grow * dim + lit), 5 + lit * 4);
+    if (state === 'cheer' && s.labeled) drawLabel(s, Math.min(1, grow * (.82 + lit * .18)), lit > .3);
+  }
+  var lastFrame = 0, liveIds = '';
   function frame() {
     var now = performance.now();
-    if (now - lastFrame < 31) { requestAnimationFrame(frame); return; }   // 초당 30장이면 충분하다
+    var moving = state === 'gather' || state === 'draw';
+    // 별이 움직이는 장면(모이기·추첨)은 초당 30장, 나머지는 초당 20장
+    if (now - lastFrame < (moving ? 31 : 48)) { requestAnimationFrame(frame); return; }
     lastFrame = now;
     var dim = state === 'stage' ? .25 : 1;
-    cx.drawImage(bg, 0, 0);
-    if (dim < 1) { cx.fillStyle = 'rgba(3,5,13,.7)'; cx.fillRect(0, 0, W, H); }
-    for (var i = 0; i < twinkle.length; i++) {
-      var d = twinkle[i], a = (.45 + .45 * Math.sin(now / 900 + d.p)) * dim;
-      cx.fillStyle = 'rgba(235,240,255,' + a + ')'; cx.fillRect(d.x * W, d.y * H, d.r + .6, d.r + .6);
+    if (!moving) {
+      var ids = stars.filter(function (s) { return isLive(s, now); }).map(function (s) { return s.id; }).join(',');
+      if (ids !== liveIds) { liveIds = ids; stillDirty = true; }   // 빛나던 별이 자리 잡으면 정지 그림에 넣는다
+      if (stillDirty) rebuildStill(now);
+      cx.setTransform(1, 0, 0, 1, 0, 0); cx.drawImage(still, 0, 0); cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      for (var i = 0; i < twinkle.length; i++) {
+        var d = twinkle[i], a = (.45 + .45 * Math.sin(now / 900 + d.p)) * dim;
+        cx.fillStyle = 'rgba(235,240,255,' + a + ')'; cx.fillRect(d.x * W, d.y * H, d.r + .6, d.r + .6);
+      }
+      for (var q = 0; q < stars.length; q++) if (isLive(stars[q], now)) drawLiveStar(stars[q], now, dim);
+      requestAnimationFrame(frame); return;
     }
+    cx.setTransform(1, 0, 0, 1, 0, 0); cx.drawImage(bg, 0, 0); cx.setTransform(DPR, 0, 0, DPR, 0, 0);
     var CX = W / 2, CY = H * .42;
     var gp = 0;
     if (state === 'gather') gp = ease(Math.max(0, Math.min(1, (now - gatherStart) / 6000)));
@@ -360,6 +403,7 @@
   var names = { empty: '빈 하늘', stage: '무대', cheer: '응원의 시간', gather: '별이 모이는 시간', draw: '별 추첨' };
   function show(id, on) { $(id).hidden = !on; }
   function enter(st, label, first) {
+    stillDirty = true;
     state = st; stateLabel = label;
     $('stateName').textContent = names[st] || st;
     show('emptyLayer', st === 'empty'); show('stageLayer', st === 'stage');
