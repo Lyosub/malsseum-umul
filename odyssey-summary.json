@@ -1,17 +1,18 @@
 {
   "testers": 2,
   "players": 12,
-  "active_24h": 0,
-  "saved_24h": 0,
-  "visitors_24h": 0,
+  "active_24h": 1,
+  "saved_24h": 1,
+  "visitors_24h": 1,
   "new_24h": 0,
-  "steps_24h": 0,
+  "steps_24h": 72,
   "active_7d": 3,
   "chapters": {
     "1편 모세와 함께 (10장)": {
       "0장 클리어": 6,
-      "1장 클리어": 2,
+      "1장 클리어": 1,
       "4장 클리어": 1,
+      "7장 클리어": 1,
       "10장 클리어": 3
     },
     "2편 시내산의 마지막 한 달 (10장)": {
@@ -37,6 +38,6 @@
   ],
   "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-22 21:40",
+  "generated_kst": "2026-10-23 02:36",
   "ok": true
 }
