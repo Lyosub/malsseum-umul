@@ -196,6 +196,30 @@ end;
 $$;
 
 -- 3) 제출 --------------------------------------------------------------------------
+-- 두 글자열이 몇 글자 다른지(편집 거리). 말씀은 길어야 100자 안팎이라 가볍다.
+create or replace function public.picnic_editdist(x text, y text) returns int
+language plpgsql immutable
+set search_path = public
+as $$
+declare
+  n int := char_length(x); m int := char_length(y);
+  prev int[]; cur int[]; i int; j int; c int;
+begin
+  if n = 0 then return m; end if;
+  if m = 0 then return n; end if;
+  prev := array(select generate_series(0, m));
+  for i in 1..n loop
+    cur := array[i];
+    for j in 1..m loop
+      c := case when substr(x, i, 1) = substr(y, j, 1) then 0 else 1 end;
+      cur := cur || least(prev[j + 1] + 1, cur[j] + 1, prev[j] + c);
+    end loop;
+    prev := cur;
+  end loop;
+  return prev[m + 1];
+end;
+$$;
+
 create or replace function public.picnic_submit(p_code text, p_member int, p_kind text, p_q int, p_text text, p_photo text)
 returns jsonb
 language plpgsql
@@ -211,6 +235,7 @@ declare
   w text;
   v_status text;
   v_points int := 0;
+  v_diff int;
   v_prefix text := 'https://qaxwxbaqduxqzjqoahcb.supabase.co/storage/v1/object/public/picnic-photos/';
 begin
   select * into t from public.picnic_teams where code = upper(btrim(coalesce(p_code, '')));
@@ -266,14 +291,19 @@ begin
       return jsonb_build_object('ok', false, 'error', '말씀을 끝까지 적어 주세요.');
     end if;
     v_ok := v_in = public.picnic_norm(a.verse);
-    -- 다르면 검토 대기(이미 검토 대기 중인 글은 새 글로 바꾼다)
-    if not v_ok then
+    -- 2026-10-23 변경: 다르면 선생님 대기로 보내지 않고 「다른 글자 N개」만 알려 준다(어느 글자인지는 알려 주지 않음).
+    -- 학생이 「선생님께 확인 요청」을 누를 때만 대기로 간다(picnic_verse_ask).
+    if v_ok then
       update public.picnic_subs set status = 'rejected', reviewed_at = now()
       where team_id = t.id and kind = 'verse' and q = p_q and status = 'pending';
+      insert into public.picnic_subs(team_id, member_id, kind, q, text_val, status, points)
+      values (t.id, p_member, 'verse', p_q, btrim(p_text), 'ok', 2);
+      return jsonb_build_object('ok', true, 'correct', true);
     end if;
-    insert into public.picnic_subs(team_id, member_id, kind, q, text_val, status, points)
-    values (t.id, p_member, 'verse', p_q, btrim(p_text), case when v_ok then 'ok' else 'pending' end, case when v_ok then 2 else 0 end);
-    return jsonb_build_object('ok', true, 'correct', v_ok);
+    v_diff := public.picnic_editdist(v_in, public.picnic_norm(a.verse));
+    insert into public.picnic_subs(team_id, member_id, kind, q, text_val, status, points, note)
+    values (t.id, p_member, 'verse', p_q, btrim(p_text), 'wrong', 0, v_diff::text);
+    return jsonb_build_object('ok', true, 'correct', false, 'diff', v_diff);
 
   else
     if p_photo is null or left(p_photo, char_length(v_prefix)) <> v_prefix or p_photo ~ '\.\.' or char_length(p_photo) > 300 then
@@ -518,3 +548,33 @@ begin
 end;
 $$;
 grant execute on function public.picnic_register(text, text) to anon, authenticated;
+
+-- 학생이 「선생님께 확인 요청」을 누르면 그 문제의 가장 최근 틀린 말씀을 선생님 대기로 보낸다(2026-10-23).
+create or replace function public.picnic_verse_ask(p_code text, p_member int, p_q int) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  t public.picnic_teams;
+  v_id bigint;
+begin
+  select * into t from public.picnic_teams where code = upper(btrim(coalesce(p_code, '')));
+  if not found then return jsonb_build_object('ok', false, 'error', '팀 코드를 다시 확인해 주세요.'); end if;
+  if not exists (select 1 from public.picnic_members where id = p_member and team_id = t.id) then
+    return jsonb_build_object('ok', false, 'error', '내 이름을 다시 적어 주세요.');
+  end if;
+  if (select results_open from public.picnic_events where event = t.event) then
+    return jsonb_build_object('ok', false, 'error', '미션이 끝났어요. 결과를 확인해 보세요!');
+  end if;
+  if exists (select 1 from public.picnic_subs where team_id = t.id and kind = 'verse' and q = p_q and status in ('ok', 'pending')) then
+    return jsonb_build_object('ok', false, 'error', '이미 통과했거나 선생님이 확인하고 있어요.');
+  end if;
+  select id into v_id from public.picnic_subs where team_id = t.id and kind = 'verse' and q = p_q and status = 'wrong'
+    order by created_at desc limit 1;
+  if v_id is null then return jsonb_build_object('ok', false, 'error', '먼저 말씀을 적어 내 주세요.'); end if;
+  update public.picnic_subs set status = 'pending', note = null where id = v_id;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+grant execute on function public.picnic_verse_ask(text, int, int) to anon, authenticated;
