@@ -44,6 +44,17 @@
   td.num { font-weight: 900; font-size: 17px; color: var(--rust); font-variant-numeric: tabular-nums; }
   .pm { display: inline-flex; align-items: center; gap: 4px; }
   .pm button { padding: 4px 9px; }
+  .ts { border-top: 1px solid var(--line); padding: 12px 0; }
+  .ts:first-child { border-top: 0; }
+  .ts .hd { display: flex; align-items: center; gap: 8px; }
+  .ts .nm { flex: 1 1 auto; min-width: 0; font-weight: 800; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ts .sc { flex: none; font-weight: 900; font-size: 24px; color: var(--rust); font-variant-numeric: tabular-nums; }
+  .ts .sc small { font-size: 13px; font-weight: 700; color: var(--soft); margin-left: 2px; }
+  .ts .adj { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .ts .adj > div { background: #f7f2ea; border-radius: 10px; padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .ts .adj .lb { white-space: nowrap; font-size: 12px; color: var(--soft); font-weight: 700; }
+  .ts .adj .pm b { min-width: 22px; text-align: center; font-variant-numeric: tabular-nums; }
+  .ts .who { margin-top: 6px; font-size: 12.5px; color: var(--soft); }
   .chip { display: inline-flex; align-items: center; gap: 4px; background: #f1e9db; border-radius: 99px; padding: 3px 4px 3px 10px; margin: 3px 3px 0 0; font-size: 13px; }
   .chip button { background: transparent; color: var(--soft); padding: 0 6px; font-weight: 400; }
   .code { font-family: ui-monospace, Consolas, monospace; font-weight: 800; background: #fff6dc; border-radius: 8px; padding: 2px 8px; }
@@ -83,8 +94,9 @@
     </section>
 
     <section class="card">
-      <h2>🏆 팀 점수 <span class="muted" style="font-weight:400;">(학생에게는 「결과 공개」 전까지 안 보여요)</span></h2>
-      <table><thead><tr><th>팀</th><th>점수</th><th>감점(늦음)</th><th>특별상 가산</th><th>참여(인원별 제출 수)</th></tr></thead><tbody id="scoreBody"></tbody></table>
+      <h2>🏆 팀 점수</h2>
+      <p class="muted" style="margin:-4px 0 6px;">학생에게는 「결과 공개」 전까지 안 보여요.</p>
+      <div id="scoreBody"></div>
     </section>
 
     <section class="card">
@@ -228,14 +240,15 @@
     }).join("") || '<p class="muted">확인할 제출이 없어요.</p>';
 
     // 점수
-    $("scoreBody").innerHTML = D.teams.map(function (t) {
-      return '<tr><td>' + esc(t.emoji) + " " + esc(t.name) + '</td><td class="num">' + t.score + '</td>' +
-        '<td><span class="pm"><button type="button" class="ghost" data-adj="' + t.id + '" data-f="penalty" data-v="' + Math.max(0, t.penalty - 5) + '">−</button> ' + t.penalty +
-        ' <button type="button" class="ghost" data-adj="' + t.id + '" data-f="penalty" data-v="' + (t.penalty + 5) + '">+5</button></span></td>' +
-        '<td><span class="pm"><button type="button" class="ghost" data-adj="' + t.id + '" data-f="bonus" data-v="' + Math.max(0, t.bonus - 5) + '">−</button> ' + t.bonus +
-        ' <button type="button" class="ghost" data-adj="' + t.id + '" data-f="bonus" data-v="' + (t.bonus + 5) + '">+5</button></span></td>' +
-        '<td class="muted">' + t.members.map(function (m) { return esc(m.name) + " " + m.count; }).join(" · ") + '</td></tr>';
-    }).join("") || '<tr><td colspan="5" class="muted">팀을 먼저 추가해 주세요.</td></tr>';
+    function pm(t, f, v) {
+      return '<span class="pm"><button type="button" class="ghost" data-adj="' + t.id + '" data-f="' + f + '" data-v="' + Math.max(0, v - 5) + '">−</button><b>' + v + '</b>' +
+        '<button type="button" class="ghost" data-adj="' + t.id + '" data-f="' + f + '" data-v="' + (v + 5) + '">+5</button></span>';
+    }
+    $("scoreBody").innerHTML = D.teams.slice().sort(function (a, b) { return b.score - a.score; }).map(function (t) {
+      return '<div class="ts"><div class="hd"><span class="nm">' + esc(t.emoji) + " " + esc(t.name) + '</span><span class="sc">' + t.score + '<small>점</small></span></div>' +
+        '<div class="adj"><div><span class="lb">늦음 감점</span>' + pm(t, "penalty", t.penalty) + '</div><div><span class="lb">특별상</span>' + pm(t, "bonus", t.bonus) + '</div></div>' +
+        '<div class="who">참여 · ' + (t.members.length ? t.members.map(function (m) { return esc(m.name) + " " + m.count; }).join(" · ") : "아직 들어온 사람이 없어요") + '</div></div>';
+    }).join("") || '<p class="muted">팀을 먼저 추가해 주세요.</p>';
 
     // 설정 (처음 한 번만 채운다 — 쓰는 중인 글을 덮지 않게)
     if (!settingsLoaded) {
