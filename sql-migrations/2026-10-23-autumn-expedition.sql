@@ -484,6 +484,25 @@ begin
       where m.id = (p_args->>'member')::int and t.id = m.team_id and t.event = p_event;
     return jsonb_build_object('ok', true);
 
+  elsif p_action = 'signups' then  -- 온라인 참가 신청 목록
+    return jsonb_build_object('ok', true, 'until', e.signup_until,
+      'list', coalesce((select jsonb_agg(jsonb_build_object('id', x.id, 'name', x.name, 'grade', x.grade, 'class', x.class_name,
+                 'going', x.going, 'parent_ok', x.parent_ok, 'paper', x.paper, 'at', x.updated_at) order by x.grade, x.name)
+               from public.picnic_signups x where x.event = p_event), '[]'::jsonb));
+
+  elsif p_action = 'signup_paper' then  -- 종이 신청서 냈는지 체크
+    update public.picnic_signups set paper = coalesce((p_args->>'paper')::boolean, not paper)
+      where id = (p_args->>'id')::bigint and event = p_event;
+    return jsonb_build_object('ok', true);
+
+  elsif p_action = 'signup_delete' then
+    delete from public.picnic_signups where id = (p_args->>'id')::bigint and event = p_event;
+    return jsonb_build_object('ok', true);
+
+  elsif p_action = 'signup_until' then
+    update public.picnic_events set signup_until = (p_args->>'until')::timestamptz where event = p_event;
+    return jsonb_build_object('ok', true);
+
   elsif p_action = 'reset_subs' then  -- 시험 기록 지우기 (팀·명단은 남김)
     delete from public.picnic_subs x using public.picnic_teams t where t.id = x.team_id and t.event = p_event;
     update public.picnic_teams set penalty = 0, bonus = 0 where event = p_event;
@@ -578,3 +597,60 @@ begin
 end;
 $$;
 grant execute on function public.picnic_verse_ask(text, int, int) to anon, authenticated;
+
+-- 야유회 참가 신청(온라인, 2026-10-23). 보호자 서명은 종이 신청서로 따로 받는다.
+alter table public.picnic_events add column if not exists signup_until timestamptz not null default '2026-10-25 21:00+09';
+create table if not exists public.picnic_signups (
+  id         bigserial primary key,
+  event      text not null references public.picnic_events(event) on delete cascade,
+  name       text not null,
+  grade      int  not null check (grade between 1 and 3),
+  class_name text,
+  going      boolean not null,
+  parent_ok  boolean not null default false,
+  paper      boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists picnic_signups_uniq on public.picnic_signups(event, grade, (replace(name, ' ', '')));
+alter table public.picnic_signups enable row level security;
+revoke all on public.picnic_signups from anon, authenticated;
+
+create or replace function public.picnic_signup(p_event text, p_name text, p_grade int, p_class text, p_going boolean, p_parent_ok boolean)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  e public.picnic_events;
+  v_name text := regexp_replace(btrim(coalesce(p_name, '')), '\s+', ' ', 'g');
+  v_class text := nullif(left(btrim(coalesce(p_class, '')), 12), '');
+begin
+  select * into e from public.picnic_events where event = p_event;
+  if not found then return jsonb_build_object('ok', false, 'error', '없는 행사예요.'); end if;
+  if now() > e.signup_until then return jsonb_build_object('ok', false, 'error', '온라인 신청이 마감됐어요. 전도사님께 직접 말씀드려 주세요.'); end if;
+  if char_length(v_name) < 2 or char_length(v_name) > 10 or v_name !~ '^[가-힣A-Za-z ]+$' then
+    return jsonb_build_object('ok', false, 'error', '이름을 2~10글자 한글(또는 영문)로 적어 주세요.');
+  end if;
+  if p_grade is null or p_grade not between 1 and 3 then return jsonb_build_object('ok', false, 'error', '학년을 골라 주세요.'); end if;
+  if p_going is null then return jsonb_build_object('ok', false, 'error', '갈 수 있는지 골라 주세요.'); end if;
+  if (select count(*) from public.picnic_signups where event = p_event and created_at > now() - interval '1 minute') > 40 then
+    return jsonb_build_object('ok', false, 'error', '잠깐만요! 조금 뒤에 다시 눌러 주세요.');
+  end if;
+  insert into public.picnic_signups(event, name, grade, class_name, going, parent_ok)
+  values (p_event, v_name, p_grade, v_class, p_going, coalesce(p_parent_ok, false))
+  on conflict (event, grade, (replace(name, ' ', ''))) do update
+    set class_name = excluded.class_name, going = excluded.going, parent_ok = excluded.parent_ok, updated_at = now();
+  return jsonb_build_object('ok', true, 'until', e.signup_until);
+end;
+$$;
+grant execute on function public.picnic_signup(text, text, int, text, boolean, boolean) to anon, authenticated;
+
+-- 신청 마감 시각만 공개로 알려 준다
+create or replace function public.picnic_signup_info(p_event text) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select coalesce((select jsonb_build_object('ok', true, 'until', signup_until, 'open', now() <= signup_until) from public.picnic_events where event = p_event),
+                  jsonb_build_object('ok', false));
+$$;
+grant execute on function public.picnic_signup_info(text) to anon, authenticated;

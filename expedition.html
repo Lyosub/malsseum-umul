@@ -150,6 +150,16 @@
   @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
   .shake { animation: shake .3s 2; }
 
+  /* 참가 신청 */
+  .signup { border: 2px solid var(--orange); }
+  .signup .lb { display: block; font-size: 13px; font-weight: 800; color: var(--soft); margin: 12px 0 6px; }
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+  .seg button { border: 1.5px solid var(--line); background: #fff; border-radius: 12px; padding: 11px 4px; font-weight: 800; color: var(--ink); }
+  .seg button.on { background: var(--rust); border-color: var(--rust); color: #fff; }
+  .chk { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-weight: 700; font-size: 14px; }
+  .chk input { width: 20px; height: 20px; accent-color: var(--rust); }
+  .su-done { background: #f0f7f1; border: 1px solid #cfe5d6; border-radius: 14px; padding: 14px; font-size: 14.5px; }
+
   /* 당일 전 안내 */
   .guide > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; font-size: 18px; font-weight: 800; }
   .guide > summary::-webkit-details-marker { display: none; }
@@ -180,6 +190,27 @@
     <h1>🍁 가을 원정대</h1>
     <p>우리 팀과 함께 하나님이 지으신 것들을 찾아 떠나요!</p>
   </header>
+
+  <!-- 0. 야유회 참가 신청 (온라인 마감 전까지만) -->
+  <section class="card signup" id="signupCard" hidden>
+    <h2>🙋 가을 야유회 참가 신청</h2>
+    <p class="muted" style="margin:0 0 12px;" id="suNote">11월 8일(주일) 서울대공원 · 온라인 신청 마감 <b id="suUntil">10/25(주일) 밤 9시</b></p>
+    <form id="suForm">
+      <label class="lb">이름(실명)</label>
+      <input type="text" id="suName" maxlength="10" autocomplete="name" placeholder="예: 김하은">
+      <label class="lb">학년</label>
+      <div class="seg" data-seg="grade"><button type="button" data-v="1">1학년</button><button type="button" data-v="2">2학년</button><button type="button" data-v="3">3학년</button></div>
+      <label class="lb">반 (선택)</label>
+      <input type="text" id="suClass" maxlength="12" placeholder="예: 3반 또는 담당 선생님 이름">
+      <label class="lb">야유회에</label>
+      <div class="seg" data-seg="going"><button type="button" data-v="1">🙌 갈래요</button><button type="button" data-v="0">😢 못 가요</button></div>
+      <label class="chk"><input type="checkbox" id="suParent"> 부모님께 허락받았어요</label>
+      <button class="btn block" type="submit" style="margin-top:12px;">신청하기</button>
+      <p class="msg err" id="suMsg" role="alert"></p>
+    </form>
+    <div id="suDone" hidden></div>
+    <p class="muted" style="margin:10px 0 0;">📄 부모님 서명이 있는 <b>종이 신청서</b>는 11월 1일(주일)까지 꼭 내 주세요. 같은 이름·학년으로 다시 신청하면 내용이 바뀌어요.</p>
+  </section>
 
   <!-- 1. 팀 코드 -->
   <section class="card" id="joinCard" hidden>
@@ -693,6 +724,59 @@
       img.src = url;
     });
   }
+
+  // 야유회 참가 신청: 서버가 「아직 받는 중」이라고 할 때만 보인다
+  (function () {
+    var KEY_SU = "msu_picnic_signup_" + EVENT, su = {};
+    try { su = JSON.parse(localStorage.getItem(KEY_SU) || "{}") || {}; } catch (e) {}
+    var pick = { grade: null, going: null };
+    function seg(name, v) {
+      pick[name] = v;
+      document.querySelectorAll('[data-seg="' + name + '"] button').forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-v") === String(v)); });
+    }
+    document.querySelectorAll("[data-seg] button").forEach(function (b) {
+      b.onclick = function () { seg(b.parentNode.getAttribute("data-seg"), b.getAttribute("data-v")); };
+    });
+    function done(d) {
+      $("suForm").hidden = true; var el = $("suDone"); el.hidden = false;
+      el.innerHTML = '<div class="su-done">' + (d.going === "1" ? "🙌 <b>" + esc(d.name) + "</b>(" + d.grade + "학년) 신청됐어요! 11월 8일에 만나요." : "<b>" + esc(d.name) + "</b>(" + d.grade + "학년) 「못 가요」로 알려 줬어요. 알려 줘서 고마워요!") +
+        '</div><button class="btn ghost block" type="button" id="suEdit" style="margin-top:10px;">내용 고치기</button>';
+      $("suEdit").onclick = function () { $("suForm").hidden = false; el.hidden = true; };
+    }
+    if (!sb) return;
+    sb.rpc("picnic_signup_info", { p_event: EVENT }).then(function (r) {
+      var d = r && r.data;
+      if (!d || !d.ok || !d.open) return;
+      var u = new Date(d.until);
+      var k = new Date(u.getTime() + 9 * 3600e3), hh = k.getUTCHours(), mm = k.getUTCMinutes();
+      $("suUntil").textContent = (k.getUTCMonth() + 1) + "/" + k.getUTCDate() + "(" + "일월화수목금토"[k.getUTCDay()] + ") " +
+        (hh < 12 ? "오전 " : hh < 18 ? "오후 " : "밤 ") + (hh % 12 || 12) + "시" + (mm ? " " + mm + "분" : "");
+      $("signupCard").hidden = false;
+      if (su.name) {
+        $("suName").value = su.name; $("suClass").value = su.cls || ""; $("suParent").checked = !!su.parent;
+        seg("grade", su.grade); seg("going", su.going); done(su);
+      }
+      if (location.hash === "#signup") setTimeout(function () { $("signupCard").scrollIntoView({ behavior: "smooth", block: "start" }); }, 200);
+    }, function () {});
+    $("suForm").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var name = $("suName").value.trim();
+      if (name.length < 2) { $("suMsg").textContent = "이름(실명)을 적어 주세요."; return; }
+      if (!pick.grade) { $("suMsg").textContent = "학년을 골라 주세요."; return; }
+      if (pick.going === null) { $("suMsg").textContent = "갈 수 있는지 골라 주세요."; return; }
+      if (pick.going === "1" && !$("suParent").checked) { $("suMsg").textContent = "부모님께 허락받고 체크해 주세요."; return; }
+      $("suMsg").textContent = "";
+      var btn = this.querySelector('button[type="submit"]'); btn.disabled = true;
+      sb.rpc("picnic_signup", { p_event: EVENT, p_name: name, p_grade: Number(pick.grade), p_class: $("suClass").value.trim(), p_going: pick.going === "1", p_parent_ok: $("suParent").checked }).then(function (r) {
+        btn.disabled = false;
+        var d = r && r.data;
+        if (!d || !d.ok) { $("suMsg").textContent = (d && d.error) || "연결이 원활하지 않아요. 다시 눌러 주세요."; return; }
+        su = { name: name, grade: pick.grade, going: pick.going, cls: $("suClass").value.trim(), parent: $("suParent").checked };
+        try { localStorage.setItem(KEY_SU, JSON.stringify(su)); } catch (e) {}
+        buzz(); done(su);
+      }, function () { btn.disabled = false; $("suMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
+    });
+  })();
 
   // 당일 전 안내: 11/8 전에는 펼치고 D-day를 보여 준다
   (function () {
