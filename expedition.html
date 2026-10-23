@@ -499,7 +499,7 @@
       else {
         html += '<form data-form="verse" data-q="' + q + '"><textarea maxlength="300" placeholder="' + esc(r.ref) + ' 말씀을 띄어쓰기까지 그대로" data-draft="v' + q + '">' + esc(drafts["v" + q] || "") + '</textarea>' +
           '<button class="btn block" type="submit" style="margin-top:8px;">말씀 제출</button></form>' + stateLine(v, "");
-        if (v && v.status === "pending") html += '<p class="muted" style="margin:4px 0 0;">한 글자라도 다르면 선생님이 직접 확인해요. 고쳐서 다시 내도 돼요.</p>';
+        if (v && v.status === "pending") html += '<p class="muted" style="margin:4px 0 0;">낸 말씀: ' + esc(v.text) + '</p><p class="muted" style="margin:4px 0 0;">한 글자라도 다르면 선생님이 직접 확인해요. 고쳐서 다시 내도 돼요.</p>';
       }
       html += '</div></div></details>';
       return html;
@@ -561,7 +561,7 @@
     var el = $("countdown");
     if (!el || !S || S.hidden_open) return;
     var left = new Date(S.hidden_open_at).getTime() - (Date.now() + clockOffset);
-    if (left <= 0) { el.textContent = "곧 열려요!"; refresh(); return; }
+    if (left <= 0) { el.textContent = "곧 열려요!"; if (!tickCountdown._t) tickCountdown._t = setTimeout(function () { tickCountdown._t = null; refresh(); }, 2000); return; }
     var s = Math.floor(left / 1000), hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
     el.textContent = (hh ? hh + ":" + String(mm).padStart(2, "0") : mm) + ":" + String(ss).padStart(2, "0");
     if (hh > 24) el.textContent = Math.floor(hh / 24) + "일 남음";
