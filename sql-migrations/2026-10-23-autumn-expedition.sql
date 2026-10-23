@@ -27,6 +27,9 @@ create table if not exists public.picnic_events (
   meet_place       text not null default '',             -- 말씀 조각 단체 사진 지정 장소
   updated_at       timestamptz not null default now()
 );
+-- 현장 마감·릴스 마감 (2026-10-23)
+alter table public.picnic_events add column if not exists close_at timestamptz not null default '2026-11-08 14:00+09';
+alter table public.picnic_events add column if not exists reel_until timestamptz not null default '2026-11-09 23:59+09';
 
 create table if not exists public.picnic_teams (
   id        serial primary key,
@@ -190,6 +193,7 @@ begin
       from (select distinct q from public.picnic_subs where team_id = t.id and kind = 'hint') s), '{}'::jsonb),
     'board', public.picnic_board(t.event),
     'results_open', e.results_open,
+    'close_at', e.close_at, 'closed', now() > e.close_at, 'reel_until', e.reel_until,
     'my_score', case when e.results_open then public.picnic_team_score(t.id) end
   );
 end;
@@ -245,6 +249,13 @@ begin
   end if;
   select * into e from public.picnic_events where event = t.event;
   if e.results_open then return jsonb_build_object('ok', false, 'error', '미션이 끝났어요. 결과를 확인해 보세요!'); end if;
+  -- 현장 미션은 close_at(11/8 14:00)에 마감, 릴스(히든 3)만 reel_until(11/9)까지 (2026-10-23)
+  if p_kind <> 'hidden3' and now() > e.close_at then
+    return jsonb_build_object('ok', false, 'error', '현장 미션은 끝났어요. 🎬 릴스만 11월 9일(월)까지 보낼 수 있어요!');
+  end if;
+  if p_kind = 'hidden3' and now() > e.reel_until then
+    return jsonb_build_object('ok', false, 'error', '릴스 제출 기한이 지났어요.');
+  end if;
   if exists (select 1 from public.picnic_subs where team_id = t.id and member_id = p_member and created_at > now() - interval '3 seconds') then
     return jsonb_build_object('ok', false, 'error', '잠깐만요! 3초 뒤에 다시 눌러 주세요.');
   end if;
@@ -345,6 +356,7 @@ begin
   end if;
   select * into e from public.picnic_events where event = t.event;
   if now() < e.hint_unlock_at then return jsonb_build_object('ok', false, 'error', '힌트는 1시 30분부터 받을 수 있어요.'); end if;
+  if now() > e.close_at then return jsonb_build_object('ok', false, 'error', '현장 미션은 끝났어요.'); end if;
   if p_place < 1 or p_place > 8 then return jsonb_build_object('ok', false, 'error', '없는 장소예요.'); end if;
   if not exists (select 1 from public.picnic_subs where team_id = t.id and kind = 'hint' and q = p_place) then
     insert into public.picnic_subs(team_id, member_id, kind, q, status, points) values (t.id, p_member, 'hint', p_place, 'ok', 0);
@@ -380,7 +392,7 @@ begin
     return jsonb_build_object('ok', true, 'now', now(),
       'event', jsonb_build_object('title', e.title, 'hidden_open_at', e.hidden_open_at, 'hint_unlock_at', e.hint_unlock_at,
         'hidden_force', e.hidden_force, 'results_open', e.results_open, 'card_clues', e.card_clues,
-        'place_hints', e.place_hints, 'meet_place', e.meet_place),
+        'place_hints', e.place_hints, 'meet_place', e.meet_place, 'close_at', e.close_at, 'reel_until', e.reel_until),
       'teams', coalesce((select jsonb_agg(jsonb_build_object(
           'id', t.id, 'name', t.name, 'emoji', t.emoji, 'code', t.code, 'penalty', t.penalty, 'bonus', t.bonus,
           'score', public.picnic_team_score(t.id),
@@ -445,6 +457,8 @@ begin
       results_open  = coalesce((p_args->>'results_open')::boolean, results_open),
       hidden_open_at = coalesce((p_args->>'hidden_open_at')::timestamptz, hidden_open_at),
       hint_unlock_at = coalesce((p_args->>'hint_unlock_at')::timestamptz, hint_unlock_at),
+      close_at       = coalesce((p_args->>'close_at')::timestamptz, close_at),
+      reel_until     = coalesce((p_args->>'reel_until')::timestamptz, reel_until),
       card_clues    = coalesce(p_args->'card_clues', card_clues),
       place_hints   = coalesce(p_args->'place_hints', place_hints),
       meet_place    = coalesce(p_args->>'meet_place', meet_place),
@@ -594,8 +608,8 @@ begin
   if not exists (select 1 from public.picnic_members where id = p_member and team_id = t.id) then
     return jsonb_build_object('ok', false, 'error', '내 이름을 다시 적어 주세요.');
   end if;
-  if (select results_open from public.picnic_events where event = t.event) then
-    return jsonb_build_object('ok', false, 'error', '미션이 끝났어요. 결과를 확인해 보세요!');
+  if (select results_open or now() > close_at from public.picnic_events where event = t.event) then
+    return jsonb_build_object('ok', false, 'error', '현장 미션은 끝났어요.');
   end if;
   if exists (select 1 from public.picnic_subs where team_id = t.id and kind = 'verse' and q = p_q and status in ('ok', 'pending')) then
     return jsonb_build_object('ok', false, 'error', '이미 통과했거나 선생님이 확인하고 있어요.');

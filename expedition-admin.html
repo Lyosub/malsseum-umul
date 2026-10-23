@@ -151,6 +151,10 @@
             <label style="flex:1 1 200px;">히든 미션 여는 시각<input type="datetime-local" id="openAtIn"></label>
             <label style="flex:1 1 200px;">사진 힌트 받기 시작<input type="datetime-local" id="hintAtIn"></label>
           </div>
+          <div class="row">
+            <label style="flex:1 1 200px;">현장 미션 마감<input type="datetime-local" id="closeAtIn"></label>
+            <label style="flex:1 1 200px;">릴스(히든 3) 마감<input type="datetime-local" id="reelAtIn"></label>
+          </div>
           <button type="button" id="saveSettings">저장</button>
         </div>
       </details>
@@ -285,7 +289,8 @@
     $("statusBox").innerHTML =
       '<div class="box">히든 미션<b class="' + (openNow ? "ok" : "") + '">' + (openNow ? "🔓 열림" : "🔒 " + kst(e.hidden_open_at) + "에 열림") + '</b>' +
       '<button type="button" class="' + (e.hidden_force ? "ghost" : "gold") + '" id="forceBtn" style="margin-top:8px;">' + (e.hidden_force ? "강제 열기 끄기" : "지금 바로 열기") + '</button></div>' +
-      '<div class="box">결과(점수·순위)<b class="' + (e.results_open ? "ok" : "") + '">' + (e.results_open ? "📢 공개 중" : "🙈 숨김") + '</b>' +
+      '<div class="box">마감<b class="' + (new Date(D.now) > new Date(e.close_at) ? "ok" : "") + '" style="font-size:14px;">현장 ' + kst(e.close_at) + '<br>릴스 ' + kst(e.reel_until) + '</b></div>' +
+      '<div class="box">결과(점수·순위) · 11/15 시상<b class="' + (e.results_open ? "ok" : "") + '">' + (e.results_open ? "📢 공개 중" : "🙈 숨김") + '</b>' +
       '<button type="button" class="' + (e.results_open ? "ghost" : "") + '" id="resultBtn" style="margin-top:8px;">' + (e.results_open ? "결과 다시 숨기기" : "결과 공개 (시상)") + '</button></div>';
     $("forceBtn").onclick = function () { setting({ hidden_force: !e.hidden_force }); };
     $("resultBtn").onclick = function () {
@@ -356,6 +361,8 @@
       $("hintEdit").innerHTML = h;
       $("openAtIn").value = toLocalInput(e.hidden_open_at);
       $("hintAtIn").value = toLocalInput(e.hint_unlock_at);
+      $("closeAtIn").value = toLocalInput(e.close_at);
+      $("reelAtIn").value = toLocalInput(e.reel_until);
     }
 
     // 팀·명단
@@ -487,7 +494,8 @@
     var hints = {};
     document.querySelectorAll(".hintText").forEach(function (el) { if (el.value.trim()) hints[el.dataset.q] = el.value.trim(); });
     setting({ meet_place: $("meetIn").value.trim(), card_clues: clues, place_hints: hints,
-      hidden_open_at: fromLocalInput($("openAtIn").value), hint_unlock_at: fromLocalInput($("hintAtIn").value) });
+      hidden_open_at: fromLocalInput($("openAtIn").value), hint_unlock_at: fromLocalInput($("hintAtIn").value),
+      close_at: fromLocalInput($("closeAtIn").value), reel_until: fromLocalInput($("reelAtIn").value) });
   };
 
   $("resetBtn").onclick = function () {

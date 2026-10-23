@@ -153,6 +153,8 @@
 
   /* 참가 신청 */
   .signup { border: 2px solid var(--orange); }
+  .closed-note { border: 2px solid var(--leaf); background: #f0f7f1; }
+  #mainArea.closed .qbody form, #mainArea.closed [data-photo], #mainArea.closed [data-hint], #mainArea.closed [data-ask] { display: none !important; }
   .signup .lb { display: block; font-size: 13px; font-weight: 800; color: var(--soft); margin: 12px 0 6px; }
   .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
   .seg button { border: 1.5px solid var(--line); background: #fff; border-radius: 12px; padding: 11px 4px; font-weight: 800; color: var(--ink); }
@@ -253,13 +255,18 @@
       </div>
     </div>
 
+    <section class="card closed-note" id="closedCard" hidden>
+      <h2>🏁 현장 미션이 끝났어요!</h2>
+      <p style="margin:0;">🎬 <b>릴스(히든 3)</b>는 <b id="reelUntil">11월 9일(월)</b>까지 전도사님께 카톡으로 보내고 「보냈어요」를 눌러 주세요.<br>🏆 릴스까지 합친 <b>최종 결과와 시상은 11월 15일(주일)</b>에 발표해요.</p>
+    </section>
+
     <section class="card result" id="resultCard" hidden>
       <h2>🏆 가을 원정대 결과</h2>
       <div id="resultList"></div>
     </section>
 
     <section class="card board" id="boardCard">
-      <h2 style="display:flex;justify-content:space-between;align-items:baseline;">모든 팀 진행판 <span class="muted" style="font-weight:500;font-size:12px;">점수는 시상 때 공개!</span></h2>
+      <h2 style="display:flex;justify-content:space-between;align-items:baseline;">모든 팀 진행판 <span class="muted" style="font-weight:500;font-size:12px;">점수는 11/15 시상 때 공개!</span></h2>
       <div id="boardList"></div>
     </section>
 
@@ -289,7 +296,8 @@
     <dl class="when">
       <dt>언제</dt><dd>11월 8일(주일) 오전 10시 30분 출발</dd>
       <dt>어디</dt><dd>서울대공원</dd>
-      <dt>끝나면</dt><dd>2시 집합·시상 뒤 교회로 · 더 구경하고 싶으면 부모님 허락하에 남을 수 있어요</dd>
+      <dt>끝나면</dt><dd>2시 집합(나눔·기도) 뒤 교회로 · 더 구경하고 싶으면 부모님 허락하에 남을 수 있어요</dd>
+      <dt>시상</dt><dd>릴스까지 합쳐 11월 15일(주일)</dd>
       <dt>누구랑</dt><dd>학년별로 나눈 우리 팀</dd>
     </dl>
     <p style="margin:10px 0 0;font-size:14px;">팀이 함께 서울대공원을 돌며 <b>하나님이 지으신 것들</b>을 찾는 미션이에요. 팀원 모두가 <b>각자 휴대폰</b>으로 들어와서 함께 채워요.</p>
@@ -304,7 +312,7 @@
       <li>당일 아침, 선생님이 <b>우리 팀 코드</b>를 알려 줘요.</li>
       <li>이 화면에 코드를 넣고 <b>내 이름(실명)</b>을 적어요.</li>
       <li>미션을 하면 바로바로 올려요. <b>모든 팀이 얼마나 했는지</b> 진행판으로 함께 보여요.</li>
-      <li>점수는 비밀이었다가 <b>시상 때</b> 한꺼번에 공개돼요.</li>
+      <li>점수는 비밀! 릴스(11/9까지)까지 합쳐 <b>11월 15일(주일)</b>에 시상해요.</li>
     </ol>
 
     <h3>꼭 챙겨요</h3>
@@ -489,6 +497,9 @@
   }
 
   function render() {
+    var closed = !!S.closed && !S.results_open;
+    $("closedCard").hidden = !closed;
+    $("mainArea").classList.toggle("closed", closed);
     renderBoard();
     renderResult();
     if (typing() || busy) return; // 글을 쓰는 중에는 미션 카드를 다시 그리지 않는다
@@ -612,8 +623,8 @@
       '</div>' +
       '<div class="mission m3"><div class="tag">HIDDEN MISSION 3</div><h3>🎬 우리 팀 원정 릴스</h3>' +
       '<p>팀원 <b>모두</b>가 나오는 <b>15~30초 세로 영상</b>을 찍어 올려요. 오늘 찾은 「하나님의 작품」 하나를 소개하고, 마지막에 다 같이 「주께서 지으신 것들이 땅에 가득하니이다!」를 외치면 성공!</p>' +
-      '<p>찍은 영상은 <b>전도사님께 카톡으로</b> 보내고, 아래 버튼을 눌러 알려 주세요. 전도사님이 영상을 보고 통과시켜 줘요.</p>' +
-      '<p style="font-size:12.5px;opacity:.85;">잘 나온 영상은 중등부 인스타에 올릴 수도 있어요.</p>' +
+      '<p>찍은 영상은 <b>11월 9일(월)까지 전도사님께 카톡으로</b> 보내고, 아래 버튼을 눌러 알려 주세요. 전도사님이 영상을 보고 통과시켜 줘요.</p>' +
+      '<p style="font-size:12.5px;opacity:.85;">보내 준 영상은 편집해서 중등부 인스타에 올려요.</p>' +
       (h3 && h3.status === "pending" ? '<div class="state wait">⏳ 전도사님이 영상을 확인하고 있어요 · ' + esc(h3.who || "") + '</div>' : stateLine(h3, "미션 성공!")) +
       (!h3 || (h3.status !== "ok" && h3.status !== "pending") ? '<button class="btn gold block" type="button" data-sent="hidden3" style="margin-top:10px;">📨 전도사님께 카톡으로 보냈어요</button>' : "") +
       '</div>';
