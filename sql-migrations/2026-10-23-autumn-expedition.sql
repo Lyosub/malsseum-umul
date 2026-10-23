@@ -354,6 +354,7 @@ begin
           'who', m.name, 'at', x.created_at,
           'answer', case when x.kind = 'verse' then (select a.verse from public.picnic_answers a where a.q = x.q) end,
           'ref', case when x.kind in ('verse','animal_photo') then (select a.ref from public.picnic_answers a where a.q = x.q) end,
+          'animals', case when x.kind = 'animal_photo' then (select to_jsonb(a.animals) from public.picnic_answers a where a.q = x.q) end,
           'hint_used', x.kind = 'place' and exists (select 1 from public.picnic_subs h where h.team_id = x.team_id and h.kind = 'hint' and h.q = x.q)
         ) order by x.created_at) from public.picnic_subs x join public.picnic_teams t on t.id = x.team_id
           left join public.picnic_members m on m.id = x.member_id

@@ -48,6 +48,17 @@
   .tf button { background: #f1e9db; color: var(--ink); padding: 6px 12px; border-radius: 99px; font-size: 13px; }
   .tf button.on { background: var(--leaf); color: #fff; }
   .tf button i { font-style: normal; opacity: .75; margin-left: 3px; }
+  .tf.part { margin-top: -4px; }
+  .tf.part button { background: transparent; border: 1.5px solid var(--line); color: var(--soft); padding: 4px 10px; font-size: 12.5px; }
+  .tf.part button.on { background: var(--rust); border-color: var(--rust); color: #fff; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: #ddd; }
+  .pair figure { margin: 0; position: relative; background: #efe6d6; min-height: 120px; }
+  .pair figure.ref { display: flex; align-items: center; justify-content: center; text-align: center; color: var(--soft); font-size: 12px; padding: 8px; }
+  .pair figure.ref img { position: absolute; inset: 0; height: 100%; }
+  .pair figcaption { position: absolute; left: 6px; top: 6px; z-index: 1; background: rgba(0,0,0,.62); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .pair figure.ref figcaption { background: var(--leaf); }
+  .crit { background: #eef6f0; border: 1px solid #cfe5d6; border-radius: 8px; padding: 6px 8px; margin-top: 6px; font-size: 12.5px; color: #1f4d36; }
+  .sub .meta .crit b { display: inline; font-size: 12.5px; }
   .rej { grid-column: 1 / -1; background: #fff6f3; border: 1px solid #f1c9bd; border-radius: 10px; padding: 8px; display: grid; gap: 6px; }
   .rej .chips { display: flex; flex-wrap: wrap; gap: 5px; }
   .rej .chips button { background: #fff; color: var(--bad); border: 1px solid #f1c9bd; padding: 4px 9px; font-size: 12.5px; font-weight: 700; border-radius: 99px; }
@@ -100,6 +111,7 @@
     <section class="card">
       <h2>📮 확인 대기 <span class="n" id="pendN">0</span></h2>
       <div class="tf" id="pendFilter"></div>
+      <div class="tf part" id="pendPart"></div>
       <div class="grid" id="pendList"></div>
     </section>
 
@@ -146,6 +158,7 @@
       <details>
         <summary>🖼️ 통과한 사진 모아 보기</summary>
         <div class="tf" id="photoFilter" style="margin-top:12px;"></div>
+        <div class="tf part" id="photoPart"></div>
         <div class="grid" id="photoList"></div>
       </details>
     </section>
@@ -242,22 +255,34 @@
     $("pendN").textContent = D.pending.length;
     $("pendFilter").innerHTML = filterBar(D.pending);
     $("photoFilter").innerHTML = filterBar(D.photos);
-    $("pendList").innerHTML = D.pending.filter(byTeam).map(function (p) {
+    $("pendPart").innerHTML = partBar(D.pending);
+    $("photoPart").innerHTML = partBar(D.photos);
+    $("pendList").innerHTML = D.pending.filter(byTeam).filter(byPart).map(function (p) {
       var title = KIND[p.kind] + (p.kind === "place" ? " " + p.q + "번" : p.q ? " " + p.q + "번" : "");
       var pts = p.kind === "place" && p.hint_used ? 3 : PTS[p.kind];
       var body = p.photo ? '<img src="' + esc(p.photo) + '" data-zoom="' + esc(p.photo) + '" alt="">' : "";
+      // 기준(무엇이면 통과인지): 숨은 풍경은 기준 사진과 나란히
+      var crit = "";
+      if (p.kind === "place") {
+        var ref = "assets/picnic/place-" + p.q + ".jpg";
+        body = '<div class="pair"><figure><figcaption>팀 사진</figcaption>' + body + '</figure>' +
+          '<figure class="ref"><figcaption>기준 사진</figcaption>기준 사진은 답사 뒤 들어가요<img src="' + ref + '" data-zoom="' + ref + '" alt="" onerror="this.remove()"></figure></div>';
+        crit = "같은 장소·비슷한 구도 + 팀원 3명 이상";
+      } else if (p.kind === "animal_photo") crit = "「" + esc((p.animals || []).join(" / ")) + "」 (안 보이면 우리·안내판도 OK) + 팀원 3명 이상";
+      else if (p.kind === "hidden1") crit = "말씀 조각 4장이 모두 보이게 + 지정 장소(" + esc(D.event.meet_place || "미정") + ")";
+      else if (p.kind === "hidden2") crit = "서로 다른 색(빨·주·노·갈·초) 떨어진 잎 5장";
       var meta = '<b>' + title + '</b>' + esc(p.emoji) + " " + esc(p.team) + " · " + esc(p.who || "") + " · " + kst(p.at) +
         (p.ref ? '<div class="muted">' + esc(p.ref) + '</div>' : "") +
         (p.kind === "place" && p.hint_used ? '<div class="muted">💡 힌트 받은 장소 → 3점</div>' : "");
       if (p.kind === "verse") meta += '<div class="vtext">' + diff(p.text, p.answer) + '</div><div class="vtext ans">정답: ' + esc(p.answer) + '</div>';
-      if (p.kind === "place") meta += '<img src="assets/picnic/place-' + p.q + '.jpg" alt="" style="width:64px;height:84px;object-fit:cover;border-radius:6px;margin-top:6px;" onerror="this.remove()">';
+      if (crit) meta += '<div class="crit">🎯 <b>통과 기준</b> · ' + crit + '</div>';
       var act = rejOpen === p.id
         ? '<div class="rej"><div class="chips">' + (REASONS[p.kind] || []).concat(REASONS.common).map(function (r) { return '<button type="button" data-reason="' + esc(r) + '">' + esc(r) + '</button>'; }).join("") + '</div>' +
           '<input type="text" id="rejText" maxlength="100" placeholder="돌려보내는 이유 (학생 화면에 그대로 보여요)" value="' + esc(rejDraft) + '">' +
           '<div class="act" style="padding:0;"><button type="button" class="red" data-rejsend="' + p.id + '">↩️ 돌려보내기</button><button type="button" class="ghost" data-rejcancel="1">취소</button></div></div>'
         : '<button type="button" data-ok="' + p.id + '">✅ 통과 +' + pts + '</button><button type="button" class="ghost" data-no="' + p.id + '">↩️ 다시</button>';
       return '<div class="sub">' + body + '<div class="meta">' + meta + '</div><div class="act">' + act + '</div></div>';
-    }).join("") || '<p class="muted">' + (teamF ? "이 팀은 확인할 제출이 없어요." : "확인할 제출이 없어요.") + '</p>';
+    }).join("") || '<p class="muted">' + (teamF || partF ? "고른 팀·파트에는 확인할 제출이 없어요." : "확인할 제출이 없어요.") + '</p>';
 
     // 점수
     function pm(t, f, v) {
@@ -298,7 +323,7 @@
     }).join("");
 
     // 사진첩
-    $("photoList").innerHTML = D.photos.filter(byTeam).map(function (p) {
+    $("photoList").innerHTML = D.photos.filter(byTeam).filter(byPart).map(function (p) {
       return '<div class="sub"><img src="' + esc(p.photo) + '" data-zoom="' + esc(p.photo) + '" alt=""><div class="meta"><b>' + KIND[p.kind] + (p.q ? " " + p.q + "번" : "") + '</b>' +
         esc(p.emoji) + " " + esc(p.team) + " · " + esc(p.who || "") + ' · +' + p.points + '<div class="row" style="margin-top:6px;"><a href="' + esc(p.photo) + '" target="_blank" rel="noopener">원본</a>' +
         '<button type="button" class="ghost" data-undo="' + p.id + '" style="padding:3px 8px;">대기로 되돌리기</button></div></div></div>';
@@ -308,6 +333,18 @@
   // 팀별로 나눠 보기 (확인 대기·사진첩 같이 쓴다)
   var teamF = Number(sessionStorage.getItem("msu_expedition_teamf") || 0);
   function byTeam(p) { return !teamF || p.team_id === teamF; }
+  // 파트별(도감 사진·말씀·숨은 풍경·히든)로도 나눠 보기
+  var partF = sessionStorage.getItem("msu_expedition_partf") || "";
+  var PARTS = [["animal_photo", "🦁 도감 사진"], ["verse", "📖 도감 말씀"], ["place", "🏞️ 숨은 풍경"], ["hidden1", "🧩 히든1"], ["hidden2", "🍁 히든2"]];
+  function byPart(p) { return !partF || p.kind === partF; }
+  function partBar(list) {
+    list = list.filter(byTeam);
+    var cnt = function (k) { return list.filter(function (p) { return !k || p.kind === k; }).length; };
+    return '<button type="button" data-pf="" class="' + (partF ? "" : "on") + '">모든 파트<i>' + cnt("") + '</i></button>' +
+      PARTS.filter(function (x) { return cnt(x[0]) || partF === x[0]; }).map(function (x) {
+        return '<button type="button" data-pf="' + x[0] + '" class="' + (partF === x[0] ? "on" : "") + '">' + x[1] + '<i>' + cnt(x[0]) + '</i></button>';
+      }).join("");
+  }
   function filterBar(list) {
     var cnt = function (id) { return list.filter(function (p) { return !id || p.team_id === id; }).length; };
     return '<button type="button" data-tf="0" class="' + (teamF ? "" : "on") + '">전체<i>' + cnt(0) + '</i></button>' +
@@ -343,6 +380,9 @@
     var b = ev.target.closest("button, img[data-zoom]");
     if (!b) return;
     if (b.dataset.zoom) { $("zoomImg").src = b.dataset.zoom; fitView($("zoom"), "zoom"); $("zoom").hidden = false; return; }
+    if (b.dataset.pf !== undefined) {
+      partF = b.dataset.pf; sessionStorage.setItem("msu_expedition_partf", partF); render(); return;
+    }
     if (b.dataset.tf !== undefined) {
       teamF = Number(b.dataset.tf); sessionStorage.setItem("msu_expedition_teamf", teamF); render(); return;
     }
