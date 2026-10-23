@@ -329,7 +329,9 @@ declare
   i int := 0;
 begin
   select * into e from public.picnic_events where event = p_event;
-  if not found or e.admin_code <> coalesce(p_code, '') then
+  -- 관리 코드가 맞거나, 말씀우물 관리자 계정으로 로그인한 경우(관리자 페이지 「원정대」 탭)
+  if not found or (e.admin_code <> coalesce(p_code, '')
+      and not exists (select 1 from profiles p where p.user_id = auth.uid() and coalesce(p.is_admin, false))) then
     return jsonb_build_object('ok', false, 'error', '관리 코드가 맞지 않습니다.');
   end if;
 

@@ -55,6 +55,10 @@
   .zoom img { max-width: 100%; max-height: 100%; border-radius: 8px; }
   .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 12px; font-weight: 700; z-index: 60; }
   details > summary { cursor: pointer; font-weight: 800; }
+  .embed body { background: transparent; padding-bottom: 0; }
+  .embed main { padding: 0; max-width: none; }
+  .embed main > h1, .embed main > h1 + p { display: none; }
+  .embed .card:first-of-type { margin-top: 0; }
 </style>
 </head>
 <body>
@@ -134,11 +138,16 @@
 
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
 <script>
 (function () {
   "use strict";
   var EVENT = "autumn2026";
-  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // 로그인한 세션을 같이 쓰는 클라이언트(관리자 계정이면 관리 코드 없이도 열린다)
+  var sb = (typeof getClient === "function" && getClient()) || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // 관리자 페이지 「원정대」 탭 안에 들어갈 때(?embed=1): 제목 줄을 숨긴다
+  var EMBED = /[?&]embed=1/.test(location.search);
+  if (EMBED) document.documentElement.classList.add("embed");
   var $ = function (id) { return document.getElementById(id); };
   var code = sessionStorage.getItem("msu_expedition_admin") || "";
   var D = null, timer = null, settingsLoaded = false;
@@ -146,7 +155,17 @@
   var PTS = { animal_photo: 2, verse: 2, place: 5, hidden1: 10, hidden2: 10 };
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
-  function toast(t) { var el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function () { el.hidden = true; }, 2200); }
+  // 관리자 페이지 탭 안(iframe)에서는 iframe이 길게 늘어나 있으므로, 지금 보이는 부분에 맞춰 띄운다
+  function fitView(el, mode) {
+    if (!EMBED || !window.frameElement) return;
+    try {
+      var r = window.frameElement.getBoundingClientRect(), vh = window.parent.innerHeight;
+      var top = Math.max(0, -r.top), bottom = Math.min(r.height, vh - r.top);
+      if (mode === "toast") { el.style.top = (bottom - 70) + "px"; el.style.bottom = "auto"; }
+      else { el.style.top = top + "px"; el.style.height = (bottom - top) + "px"; el.style.bottom = "auto"; }
+    } catch (e) {}
+  }
+  function toast(t) { var el = $("toast"); el.textContent = t; fitView(el, "toast"); el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function () { el.hidden = true; }, 2200); }
   function kst(t) { return new Date(t).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Seoul" }); }
   function toLocalInput(t) { var d = new Date(new Date(t).getTime() + 9 * 3600000); return d.toISOString().slice(0, 16); }
   function fromLocalInput(v) { return v ? v + ":00+09:00" : null; }
@@ -162,6 +181,7 @@
 
   $("loginForm").addEventListener("submit", function (ev) { ev.preventDefault(); code = $("codeIn").value.trim(); load(true); });
   if (code) load(true);
+  else call("overview").then(function () { load(true); }, function () {});  // 관리자 계정 로그인 상태면 바로 들어간다
 
   function load(first) {
     return call("overview").then(function (d) {
@@ -265,7 +285,7 @@
   document.addEventListener("click", function (ev) {
     var b = ev.target.closest("button, img[data-zoom]");
     if (!b) return;
-    if (b.dataset.zoom) { $("zoomImg").src = b.dataset.zoom; $("zoom").hidden = false; return; }
+    if (b.dataset.zoom) { $("zoomImg").src = b.dataset.zoom; fitView($("zoom"), "zoom"); $("zoom").hidden = false; return; }
     if (b.dataset.ok || b.dataset.no) {
       b.disabled = true;
       call("review", { id: Number(b.dataset.ok || b.dataset.no), ok: !!b.dataset.ok }).then(function () { load(false); }).catch(function (e) { toast(e.message); b.disabled = false; });
