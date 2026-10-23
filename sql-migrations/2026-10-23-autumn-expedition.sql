@@ -66,6 +66,8 @@ create table if not exists public.picnic_subs (
   created_at  timestamptz not null default now(),
   reviewed_at timestamptz
 );
+-- 돌려보낸 이유(2026-10-23 추가)
+alter table public.picnic_subs add column if not exists note text;
 create index if not exists picnic_subs_team on public.picnic_subs(team_id, kind, q);
 create index if not exists picnic_subs_status on public.picnic_subs(status, created_at);
 
@@ -180,7 +182,7 @@ begin
       select jsonb_agg(jsonb_build_object(
         'id', s.id, 'kind', s.kind, 'q', s.q, 'status', s.status, 'points', s.points,
         'text', case when s.kind in ('animal','verse') then s.text_val end,
-        'photo', s.photo_url, 'who', m.name, 'at', s.created_at) order by s.created_at)
+        'photo', s.photo_url, 'who', m.name, 'at', s.created_at, 'note', s.note) order by s.created_at)
       from public.picnic_subs s left join public.picnic_members m on m.id = s.member_id
       where s.team_id = t.id), '[]'::jsonb),
     'hints', coalesce((
@@ -348,7 +350,7 @@ begin
                        order by m.sort, m.name) from public.picnic_members m where m.team_id = t.id), '[]'::jsonb)
         ) order by t.sort, t.id) from public.picnic_teams t where t.event = p_event), '[]'::jsonb),
       'pending', coalesce((select jsonb_agg(jsonb_build_object(
-          'id', x.id, 'team', t.name, 'emoji', t.emoji, 'kind', x.kind, 'q', x.q, 'text', x.text_val, 'photo', x.photo_url,
+          'id', x.id, 'team_id', t.id, 'team', t.name, 'emoji', t.emoji, 'kind', x.kind, 'q', x.q, 'text', x.text_val, 'photo', x.photo_url,
           'who', m.name, 'at', x.created_at,
           'answer', case when x.kind = 'verse' then (select a.verse from public.picnic_answers a where a.q = x.q) end,
           'ref', case when x.kind in ('verse','animal_photo') then (select a.ref from public.picnic_answers a where a.q = x.q) end,
@@ -357,7 +359,7 @@ begin
           left join public.picnic_members m on m.id = x.member_id
           where t.event = p_event and x.status = 'pending'), '[]'::jsonb),
       'photos', coalesce((select jsonb_agg(jsonb_build_object(
-          'id', x.id, 'team', t.name, 'emoji', t.emoji, 'kind', x.kind, 'q', x.q, 'photo', x.photo_url, 'who', m.name, 'points', x.points)
+          'id', x.id, 'team_id', t.id, 'team', t.name, 'emoji', t.emoji, 'kind', x.kind, 'q', x.q, 'photo', x.photo_url, 'who', m.name, 'points', x.points)
           order by x.created_at desc) from public.picnic_subs x join public.picnic_teams t on t.id = x.team_id
           left join public.picnic_members m on m.id = x.member_id
           where t.event = p_event and x.status = 'ok' and x.photo_url is not null), '[]'::jsonb)
@@ -380,7 +382,8 @@ begin
       update public.picnic_subs set status = 'rejected', reviewed_at = now()
         where team_id = s.team_id and kind = s.kind and q = s.q and status = 'pending' and id <> s.id;
     else
-      update public.picnic_subs set status = 'rejected', points = 0, reviewed_at = now() where id = s.id;
+      update public.picnic_subs set status = 'rejected', points = 0, reviewed_at = now(),
+        note = nullif(left(btrim(coalesce(p_args->>'reason', '')), 100), '') where id = s.id;
     end if;
     return jsonb_build_object('ok', true);
 

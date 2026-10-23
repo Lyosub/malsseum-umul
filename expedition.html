@@ -433,7 +433,7 @@
     var who = s.who ? " · " + esc(s.who) : "";
     if (s.status === "ok") return '<div class="state ok">✅ ' + okText + who + '</div>';
     if (s.status === "pending") return '<div class="state wait">⏳ 선생님이 확인하고 있어요' + who + '</div>';
-    if (s.status === "rejected") return '<div class="state bad">↩️ 다시 해 볼까요? (선생님이 돌려보냈어요)</div>';
+    if (s.status === "rejected") return '<div class="state bad">↩️ 다시 해 볼까요? ' + (s.note ? '선생님: 「' + esc(s.note) + '」' : '(선생님이 돌려보냈어요)') + '</div>';
     if (s.status === "wrong") return '<div class="state bad">🤔 「' + esc(s.text) + '」는 아니에요. 구절을 다시 읽어 봐요!</div>';
     return "";
   }
@@ -497,7 +497,7 @@
       else html += '<form class="row" data-form="animal" data-q="' + q + '"><input type="text" maxlength="20" placeholder="동물 이름" data-draft="a' + q + '" value="' + esc(drafts["a" + q] || "") + '"><button class="btn" type="submit">확인</button></form>' + stateLine(a, "");
       html += '</div>';
       // ② 사진
-      html += '<div class="step"><h3>② 그 동물 앞에서 단체 사진 (팀원 3명 이상)</h3>';
+      html += '<div class="step"><h3>② 그 동물 앞에서 단체 사진 (팀원 3명 이상)</h3><p class="muted" style="margin:-4px 0 6px;">동물이 안 보이면 우리·안내판 앞에서 찍어도 돼요.</p>';
       if (ph && ph.photo) html += '<img class="thumb" loading="lazy" src="' + esc(ph.photo) + '" alt="">';
       html += stateLine(ph, "통과!");
       if (!ph || ph.status !== "ok") html += '<button class="btn gold block" type="button" data-photo="animal_photo" data-q="' + q + '" style="margin-top:8px;">📷 ' + (ph ? "사진 다시 올리기" : "사진 올리기") + '</button>';

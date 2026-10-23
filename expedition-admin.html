@@ -44,6 +44,13 @@
   td.num { font-weight: 900; font-size: 17px; color: var(--rust); font-variant-numeric: tabular-nums; }
   .pm { display: inline-flex; align-items: center; gap: 4px; }
   .pm button { padding: 4px 9px; }
+  .tf { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+  .tf button { background: #f1e9db; color: var(--ink); padding: 6px 12px; border-radius: 99px; font-size: 13px; }
+  .tf button.on { background: var(--leaf); color: #fff; }
+  .tf button i { font-style: normal; opacity: .75; margin-left: 3px; }
+  .rej { grid-column: 1 / -1; background: #fff6f3; border: 1px solid #f1c9bd; border-radius: 10px; padding: 8px; display: grid; gap: 6px; }
+  .rej .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .rej .chips button { background: #fff; color: var(--bad); border: 1px solid #f1c9bd; padding: 4px 9px; font-size: 12.5px; font-weight: 700; border-radius: 99px; }
   .ts { border-top: 1px solid var(--line); padding: 12px 0; }
   .ts:first-child { border-top: 0; }
   .ts .hd { display: flex; align-items: center; gap: 8px; }
@@ -92,6 +99,7 @@
 
     <section class="card">
       <h2>📮 확인 대기 <span class="n" id="pendN">0</span></h2>
+      <div class="tf" id="pendFilter"></div>
       <div class="grid" id="pendList"></div>
     </section>
 
@@ -135,7 +143,8 @@
     <section class="card">
       <details>
         <summary>🖼️ 통과한 사진 모아 보기</summary>
-        <div class="grid" id="photoList" style="margin-top:12px;"></div>
+        <div class="tf" id="photoFilter" style="margin-top:12px;"></div>
+        <div class="grid" id="photoList"></div>
       </details>
     </section>
 
@@ -209,7 +218,8 @@
       if (first) { $("loginMsg").textContent = e.message; sessionStorage.removeItem("msu_expedition_admin"); }
     });
   }
-  function editing() { var a = document.activeElement; return a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA"); }
+  function editing() { var a = document.activeElement; return rejOpen !== null || (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA")); }
+  document.addEventListener("input", function (ev) { if (ev.target.id === "rejText") rejDraft = ev.target.value; });
 
   function render() {
     var e = D.event;
@@ -228,7 +238,9 @@
 
     // 대기
     $("pendN").textContent = D.pending.length;
-    $("pendList").innerHTML = D.pending.map(function (p) {
+    $("pendFilter").innerHTML = filterBar(D.pending);
+    $("photoFilter").innerHTML = filterBar(D.photos);
+    $("pendList").innerHTML = D.pending.filter(byTeam).map(function (p) {
       var title = KIND[p.kind] + (p.kind === "place" ? " " + p.q + "번" : p.q ? " " + p.q + "번" : "");
       var pts = p.kind === "place" && p.hint_used ? 3 : PTS[p.kind];
       var body = p.photo ? '<img src="' + esc(p.photo) + '" data-zoom="' + esc(p.photo) + '" alt="">' : "";
@@ -237,9 +249,13 @@
         (p.kind === "place" && p.hint_used ? '<div class="muted">💡 힌트 받은 장소 → 3점</div>' : "");
       if (p.kind === "verse") meta += '<div class="vtext">' + diff(p.text, p.answer) + '</div><div class="vtext ans">정답: ' + esc(p.answer) + '</div>';
       if (p.kind === "place") meta += '<img src="assets/picnic/place-' + p.q + '.jpg" alt="" style="width:64px;height:84px;object-fit:cover;border-radius:6px;margin-top:6px;" onerror="this.remove()">';
-      return '<div class="sub">' + body + '<div class="meta">' + meta + '</div><div class="act">' +
-        '<button type="button" data-ok="' + p.id + '">✅ 통과 +' + pts + '</button><button type="button" class="ghost" data-no="' + p.id + '">↩️ 다시</button></div></div>';
-    }).join("") || '<p class="muted">확인할 제출이 없어요.</p>';
+      var act = rejOpen === p.id
+        ? '<div class="rej"><div class="chips">' + (REASONS[p.kind] || []).concat(REASONS.common).map(function (r) { return '<button type="button" data-reason="' + esc(r) + '">' + esc(r) + '</button>'; }).join("") + '</div>' +
+          '<input type="text" id="rejText" maxlength="100" placeholder="돌려보내는 이유 (학생 화면에 그대로 보여요)" value="' + esc(rejDraft) + '">' +
+          '<div class="act" style="padding:0;"><button type="button" class="red" data-rejsend="' + p.id + '">↩️ 돌려보내기</button><button type="button" class="ghost" data-rejcancel="1">취소</button></div></div>'
+        : '<button type="button" data-ok="' + p.id + '">✅ 통과 +' + pts + '</button><button type="button" class="ghost" data-no="' + p.id + '">↩️ 다시</button>';
+      return '<div class="sub">' + body + '<div class="meta">' + meta + '</div><div class="act">' + act + '</div></div>';
+    }).join("") || '<p class="muted">' + (teamF ? "이 팀은 확인할 제출이 없어요." : "확인할 제출이 없어요.") + '</p>';
 
     // 점수
     function pm(t, f, v) {
@@ -278,12 +294,31 @@
     }).join("");
 
     // 사진첩
-    $("photoList").innerHTML = D.photos.map(function (p) {
+    $("photoList").innerHTML = D.photos.filter(byTeam).map(function (p) {
       return '<div class="sub"><img src="' + esc(p.photo) + '" data-zoom="' + esc(p.photo) + '" alt=""><div class="meta"><b>' + KIND[p.kind] + (p.q ? " " + p.q + "번" : "") + '</b>' +
         esc(p.emoji) + " " + esc(p.team) + " · " + esc(p.who || "") + ' · +' + p.points + '<div class="row" style="margin-top:6px;"><a href="' + esc(p.photo) + '" target="_blank" rel="noopener">원본</a>' +
         '<button type="button" class="ghost" data-undo="' + p.id + '" style="padding:3px 8px;">대기로 되돌리기</button></div></div></div>';
     }).join("") || '<p class="muted">아직 없어요.</p>';
   }
+
+  // 팀별로 나눠 보기 (확인 대기·사진첩 같이 쓴다)
+  var teamF = Number(sessionStorage.getItem("msu_expedition_teamf") || 0);
+  function byTeam(p) { return !teamF || p.team_id === teamF; }
+  function filterBar(list) {
+    var cnt = function (id) { return list.filter(function (p) { return !id || p.team_id === id; }).length; };
+    return '<button type="button" data-tf="0" class="' + (teamF ? "" : "on") + '">전체<i>' + cnt(0) + '</i></button>' +
+      D.teams.map(function (t) { return '<button type="button" data-tf="' + t.id + '" class="' + (teamF === t.id ? "on" : "") + '">' + esc(t.emoji) + " " + esc(t.name) + '<i>' + cnt(t.id) + '</i></button>'; }).join("");
+  }
+  // 돌려보낼 때 고르는 이유(직접 적을 수도 있다)
+  var REASONS = {
+    animal_photo: ["동물(우리·안내판)이 안 보여요"],
+    place: ["장소나 구도가 달라요"],
+    verse: ["빨간 글자를 고쳐 주세요", "빠진 부분이 있어요"],
+    hidden1: ["말씀 조각 4장이 다 안 보여요", "지정 장소가 아니에요"],
+    hidden2: ["서로 다른 색 잎 5장이 아니에요", "꺾은 잎은 안 돼요"],
+    common: ["팀원이 3명 이상 나와야 해요", "사진이 흐리거나 어두워요"]
+  };
+  var rejOpen = null, rejDraft = "";
 
   function diff(a, b) { // 학생 글에서 정답과 다른 글자를 표시(띄어쓰기·문장부호 무시)
     var norm = function (s) { return String(s || "").replace(/[^가-힣0-9A-Za-z]/g, ""); };
@@ -302,9 +337,24 @@
     var b = ev.target.closest("button, img[data-zoom]");
     if (!b) return;
     if (b.dataset.zoom) { $("zoomImg").src = b.dataset.zoom; fitView($("zoom"), "zoom"); $("zoom").hidden = false; return; }
-    if (b.dataset.ok || b.dataset.no) {
+    if (b.dataset.tf !== undefined) {
+      teamF = Number(b.dataset.tf); sessionStorage.setItem("msu_expedition_teamf", teamF); render(); return;
+    }
+    if (b.dataset.no) { rejOpen = Number(b.dataset.no); rejDraft = ""; render(); var ti = $("rejText"); if (ti) ti.focus(); return; }
+    if (b.dataset.rejcancel) { rejOpen = null; rejDraft = ""; render(); return; }
+    if (b.dataset.reason) {
+      var inp = $("rejText"); inp.value = inp.value ? inp.value.replace(/\s*$/, "") + " / " + b.dataset.reason : b.dataset.reason;
+      rejDraft = inp.value; inp.focus(); return;
+    }
+    if (b.dataset.rejsend) {
       b.disabled = true;
-      call("review", { id: Number(b.dataset.ok || b.dataset.no), ok: !!b.dataset.ok }).then(function () { load(false); }).catch(function (e) { toast(e.message); b.disabled = false; });
+      var why = ($("rejText") || {}).value || "";
+      call("review", { id: Number(b.dataset.rejsend), ok: false, reason: why.trim() }).then(function () { rejOpen = null; rejDraft = ""; toast("돌려보냈어요"); load(false); }).catch(function (e) { toast(e.message); b.disabled = false; });
+      return;
+    }
+    if (b.dataset.ok) {
+      b.disabled = true;
+      call("review", { id: Number(b.dataset.ok), ok: true }).then(function () { load(false); }).catch(function (e) { toast(e.message); b.disabled = false; });
     } else if (b.dataset.adj) {
       var a = { team: Number(b.dataset.adj) }; a[b.dataset.f] = Number(b.dataset.v);
       call("adjust", a).then(function () { load(false); }).catch(function (e) { toast(e.message); });
