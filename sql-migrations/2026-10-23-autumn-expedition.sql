@@ -28,7 +28,7 @@ create table if not exists public.picnic_events (
   updated_at       timestamptz not null default now()
 );
 -- 현장 마감·릴스 마감 (2026-10-23)
-alter table public.picnic_events add column if not exists close_at timestamptz not null default '2026-11-08 14:00+09';
+alter table public.picnic_events add column if not exists close_at timestamptz not null default '2026-11-08 14:30+09';  -- 10/23 전도사님: 14:30 마감
 alter table public.picnic_events add column if not exists reel_until timestamptz not null default '2026-11-09 23:59+09';
 
 create table if not exists public.picnic_teams (
