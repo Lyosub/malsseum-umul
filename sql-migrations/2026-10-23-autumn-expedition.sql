@@ -475,3 +475,8 @@ drop policy if exists "picnic photos upload" on storage.objects;
 create policy "picnic photos upload" on storage.objects
   for insert to anon, authenticated
   with check (bucket_id = 'picnic-photos' and name ~ '^autumn2026/[0-9a-f-]{36}\.jpg$');
+create or replace function public.can_see_expedition() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from profiles p where p.user_id = auth.uid() and coalesce(p.is_admin, false));
+$$;
+grant execute on function public.can_see_expedition() to anon, authenticated;
