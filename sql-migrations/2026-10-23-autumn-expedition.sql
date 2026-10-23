@@ -487,7 +487,7 @@ begin
   elsif p_action = 'signups' then  -- 온라인 참가 신청 목록
     return jsonb_build_object('ok', true, 'until', e.signup_until,
       'list', coalesce((select jsonb_agg(jsonb_build_object('id', x.id, 'name', x.name, 'grade', x.grade, 'class', x.class_name,
-                 'teacher', x.teacher, 'friend', x.new_friend,
+                 'teacher', x.teacher, 'friend', x.new_friend, 'stay', x.stay_after,
                  'going', x.going, 'parent_ok', x.parent_ok, 'paper', x.paper, 'at', x.updated_at) order by x.grade, x.name)
                from public.picnic_signups x where x.event = p_event), '[]'::jsonb));
 
@@ -693,3 +693,38 @@ begin
 end;
 $$;
 grant execute on function public.picnic_signup(text, text, int, text, text, text, boolean, boolean) to anon, authenticated;
+
+-- 14시 이후 더 남아서 구경(부모님 허락하에) 표시 (2026-10-23)
+alter table public.picnic_signups add column if not exists stay_after boolean not null default false;
+
+create or replace function public.picnic_signup(p_event text, p_name text, p_grade int, p_class text, p_teacher text, p_friend text, p_going boolean, p_parent_ok boolean, p_stay boolean)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  e public.picnic_events;
+  v_name text := regexp_replace(btrim(coalesce(p_name, '')), '\s+', ' ', 'g');
+begin
+  select * into e from public.picnic_events where event = p_event;
+  if not found then return jsonb_build_object('ok', false, 'error', '없는 행사예요.'); end if;
+  if now() > e.signup_until then return jsonb_build_object('ok', false, 'error', '온라인 신청이 마감됐어요. 전도사님께 직접 말씀드려 주세요.'); end if;
+  if char_length(v_name) < 2 or char_length(v_name) > 10 or v_name !~ '^[가-힣A-Za-z ]+$' then
+    return jsonb_build_object('ok', false, 'error', '이름을 2~10글자 한글(또는 영문)로 적어 주세요.');
+  end if;
+  if p_grade is null or p_grade not between 1 and 3 then return jsonb_build_object('ok', false, 'error', '학년을 골라 주세요.'); end if;
+  if p_going is null then return jsonb_build_object('ok', false, 'error', '갈 수 있는지 골라 주세요.'); end if;
+  if (select count(*) from public.picnic_signups where event = p_event and created_at > now() - interval '1 minute') > 40 then
+    return jsonb_build_object('ok', false, 'error', '잠깐만요! 조금 뒤에 다시 눌러 주세요.');
+  end if;
+  insert into public.picnic_signups(event, name, grade, class_name, teacher, new_friend, going, parent_ok, stay_after)
+  values (p_event, v_name, p_grade, nullif(left(btrim(coalesce(p_class, '')), 12), ''), nullif(left(btrim(coalesce(p_teacher, '')), 12), ''),
+          nullif(left(btrim(coalesce(p_friend, '')), 40), ''), p_going, coalesce(p_parent_ok, false), coalesce(p_stay, false) and p_going)
+  on conflict (event, grade, (replace(name, ' ', ''))) do update
+    set class_name = excluded.class_name, teacher = excluded.teacher, new_friend = excluded.new_friend,
+        going = excluded.going, parent_ok = excluded.parent_ok, stay_after = excluded.stay_after, updated_at = now();
+  return jsonb_build_object('ok', true, 'until', e.signup_until);
+end;
+$$;
+grant execute on function public.picnic_signup(text, text, int, text, text, text, boolean, boolean, boolean) to anon, authenticated;

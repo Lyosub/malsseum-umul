@@ -211,6 +211,7 @@
       <label class="lb">야유회에</label>
       <div class="seg" data-seg="going"><button type="button" data-v="1">🙌 갈래요</button><button type="button" data-v="0">😢 못 가요</button></div>
       <label class="chk"><input type="checkbox" id="suParent"> 부모님께 허락받았어요</label>
+      <label class="chk"><input type="checkbox" id="suStay"> 2시 이후에도 남아서 더 구경할래요 (부모님 허락)</label>
       <button class="btn block" type="submit" style="margin-top:12px;">신청하기</button>
       <p class="msg err" id="suMsg" role="alert"></p>
     </form>
@@ -287,6 +288,7 @@
     <dl class="when">
       <dt>언제</dt><dd>11월 8일(주일) 오전 10시 30분 출발</dd>
       <dt>어디</dt><dd>서울대공원</dd>
+      <dt>끝나면</dt><dd>2시 집합·시상 뒤 교회로 · 더 구경하고 싶으면 부모님 허락하에 남을 수 있어요</dd>
       <dt>누구랑</dt><dd>학년별로 나눈 우리 팀</dd>
     </dl>
     <p style="margin:10px 0 0;font-size:14px;">팀이 함께 서울대공원을 돌며 <b>하나님이 지으신 것들</b>을 찾는 미션이에요. 팀원 모두가 <b>각자 휴대폰</b>으로 들어와서 함께 채워요.</p>
@@ -759,7 +761,7 @@
         (hh < 12 ? "오전 " : hh < 18 ? "오후 " : "밤 ") + (hh % 12 || 12) + "시" + (mm ? " " + mm + "분" : "");
       $("signupCard").hidden = false;
       if (su.name) {
-        $("suName").value = su.name; $("suClass").value = su.cls || ""; $("suTeacher").value = su.teacher || ""; $("suFriend").value = su.friend || ""; $("suParent").checked = !!su.parent;
+        $("suName").value = su.name; $("suClass").value = su.cls || ""; $("suTeacher").value = su.teacher || ""; $("suFriend").value = su.friend || ""; $("suParent").checked = !!su.parent; $("suStay").checked = !!su.stay;
         seg("grade", su.grade); seg("going", su.going); done(su);
       }
       if (location.hash === "#signup") setTimeout(function () { $("signupCard").scrollIntoView({ behavior: "smooth", block: "start" }); }, 200);
@@ -774,11 +776,11 @@
       $("suMsg").textContent = "";
       var btn = this.querySelector('button[type="submit"]'); btn.disabled = true;
       sb.rpc("picnic_signup", { p_event: EVENT, p_name: name, p_grade: Number(pick.grade), p_class: $("suClass").value.trim(), p_teacher: $("suTeacher").value.trim(),
-        p_friend: $("suFriend").value.trim(), p_going: pick.going === "1", p_parent_ok: $("suParent").checked }).then(function (r) {
+        p_friend: $("suFriend").value.trim(), p_going: pick.going === "1", p_parent_ok: $("suParent").checked, p_stay: $("suStay").checked }).then(function (r) {
         btn.disabled = false;
         var d = r && r.data;
         if (!d || !d.ok) { $("suMsg").textContent = (d && d.error) || "연결이 원활하지 않아요. 다시 눌러 주세요."; return; }
-        su = { name: name, grade: pick.grade, going: pick.going, cls: $("suClass").value.trim(), teacher: $("suTeacher").value.trim(), friend: $("suFriend").value.trim(), parent: $("suParent").checked };
+        su = { name: name, grade: pick.grade, going: pick.going, cls: $("suClass").value.trim(), teacher: $("suTeacher").value.trim(), friend: $("suFriend").value.trim(), parent: $("suParent").checked, stay: $("suStay").checked };
         try { localStorage.setItem(KEY_SU, JSON.stringify(su)); } catch (e) {}
         buzz(); done(su);
       }, function () { btn.disabled = false; $("suMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
