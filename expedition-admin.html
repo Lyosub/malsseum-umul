@@ -338,11 +338,17 @@
       return '<span class="pm"><button type="button" class="ghost" data-adj="' + t.id + '" data-f="' + f + '" data-v="' + Math.max(0, v - 5) + '">−</button><b>' + v + '</b>' +
         '<button type="button" class="ghost" data-adj="' + t.id + '" data-f="' + f + '" data-v="' + (v + 5) + '">+5</button></span>';
     }
-    var top = D.teams.slice().sort(function (a, b) { return b.score - a.score; })[0];
+    function rankCmp(a, b) { // 학생 결과 화면과 같은 순서
+      var x = a.tb || {}, y = b.tb || {};
+      return ((b.score || 0) - (a.score || 0)) || ((y.h1 ? 1 : 0) - (x.h1 ? 1 : 0)) || ((y.verses || 0) - (x.verses || 0)) ||
+        ((x.hints || 0) - (y.hints || 0)) || ((x.last ? Date.parse(x.last) : Infinity) - (y.last ? Date.parse(y.last) : Infinity) || 0);
+    }
+    var top = D.teams.slice().sort(rankCmp)[0];
     $("scoreSum").textContent = top && top.score > 0 ? "· 1위 " + top.emoji + " " + top.name + " " + top.score + "점" : "· 아직 모두 0점";
-    $("scoreBody").innerHTML = D.teams.slice().sort(function (a, b) { return b.score - a.score; }).map(function (t) {
+    $("scoreBody").innerHTML = D.teams.slice().sort(rankCmp).map(function (t) {
       return '<div class="ts"><div class="hd"><span class="nm">' + esc(t.emoji) + " " + esc(t.name) + '</span><span class="sc">' + t.score + '<small>점</small></span></div>' +
         '<div class="adj"><div><span class="lb">늦음 감점</span>' + pm(t, "penalty", t.penalty) + '</div><div><span class="lb">특별상</span>' + pm(t, "bonus", t.bonus) + '</div></div>' +
+        '<div class="who">동점 기준 · 말씀 조각 ' + (t.tb && t.tb.h1 ? "성공" : "—") + ' · 도감 말씀 ' + ((t.tb && t.tb.verses) || 0) + ' · 힌트 ' + ((t.tb && t.tb.hints) || 0) + '</div>' +
         '<div class="who">참여 · ' + (t.members.length ? t.members.map(function (m) { return esc(m.name) + " " + m.count; }).join(" · ") : "아직 들어온 사람이 없어요") + '</div></div>';
     }).join("") || '<p class="muted">팀을 먼저 추가해 주세요.</p>';
 

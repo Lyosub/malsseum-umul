@@ -116,6 +116,18 @@ as $$
 $$;
 
 -- 공용: 모든 팀 진행판 ------------------------------------------------------------
+-- 동점일 때 따질 것(2026-10-23): ① 말씀 조각(히든1) 성공 ② 도감 말씀 맞힌 수 ③ 힌트 받은 수(적을수록) ④ 현장 미션 마지막 통과 시각(빠를수록)
+create or replace function public.picnic_tiebreak(p_team int) returns jsonb
+language sql stable
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'h1', exists (select 1 from public.picnic_subs where team_id = p_team and kind = 'hidden1' and status = 'ok'),
+    'verses', (select count(distinct q) from public.picnic_subs where team_id = p_team and kind = 'verse' and status = 'ok'),
+    'hints', (select count(distinct q) from public.picnic_subs where team_id = p_team and kind = 'hint'),
+    'last', (select max(created_at) from public.picnic_subs where team_id = p_team and status = 'ok' and kind not in ('hint', 'hidden3')));
+$$;
+
 create or replace function public.picnic_board(p_event text) returns jsonb
 language sql stable
 set search_path = public
@@ -128,7 +140,8 @@ as $$
               where s.team_id = t.id and s.kind = 'place' and s.status in ('ok','pending')),
     'hidden', (select count(distinct s.kind) from public.picnic_subs s
                where s.team_id = t.id and s.kind in ('hidden1','hidden2','hidden3') and s.status in ('ok','pending')),
-    'score', case when e.results_open then public.picnic_team_score(t.id) end
+    'score', case when e.results_open then public.picnic_team_score(t.id) end,
+    'tb', case when e.results_open then public.picnic_tiebreak(t.id) end
   ) order by t.sort, t.id), '[]'::jsonb)
   from public.picnic_teams t join public.picnic_events e on e.event = t.event
   where t.event = p_event
@@ -395,7 +408,7 @@ begin
         'place_hints', e.place_hints, 'meet_place', e.meet_place, 'close_at', e.close_at, 'reel_until', e.reel_until),
       'teams', coalesce((select jsonb_agg(jsonb_build_object(
           'id', t.id, 'name', t.name, 'emoji', t.emoji, 'code', t.code, 'penalty', t.penalty, 'bonus', t.bonus,
-          'score', public.picnic_team_score(t.id),
+          'score', public.picnic_team_score(t.id), 'tb', public.picnic_tiebreak(t.id),
           'members', coalesce((select jsonb_agg(jsonb_build_object('id', m.id, 'name', m.name,
                        'count', (select count(*) from public.picnic_subs x where x.member_id = m.id and x.status in ('ok','pending') and x.kind <> 'hint'))
                        order by m.sort, m.name) from public.picnic_members m where m.team_id = t.id), '[]'::jsonb)

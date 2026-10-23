@@ -519,15 +519,22 @@
     }).join("") || '<p class="muted">아직 팀이 없어요.</p>';
   }
 
+  // 순위: 점수 → 말씀 조각 성공 → 도감 말씀 수 → 힌트 적게 → 현장 미션 먼저 끝낸 팀 → 그래도 같으면 공동
+  function rankCmp(a, b) {
+    var x = a.tb || {}, y = b.tb || {};
+    return ((b.score || 0) - (a.score || 0)) || ((y.h1 ? 1 : 0) - (x.h1 ? 1 : 0)) || ((y.verses || 0) - (x.verses || 0)) ||
+      ((x.hints || 0) - (y.hints || 0)) || ((x.last ? Date.parse(x.last) : Infinity) - (y.last ? Date.parse(y.last) : Infinity) || 0);
+  }
+
   function renderResult() {
     var box = $("resultCard");
     if (!S.results_open) { box.hidden = true; return; }
     box.hidden = false;
-    var list = S.board.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+    var list = S.board.slice().sort(rankCmp);
     var medals = ["🥇", "🥈", "🥉"];
-    var rank = 0, prev = null;
+    var rank = 0;
     $("resultList").innerHTML = list.map(function (t, i) {
-      if (t.score !== prev) { rank = i; prev = t.score; }
+      if (i > 0 && rankCmp(list[i - 1], t) !== 0) rank = i;
       return '<div class="rk' + (t.id === team.id ? " mine" : "") + '"><span class="md">' + (medals[rank] || (rank + 1)) + '</span><span class="nm">' + esc(t.emoji) + " " + esc(t.name) +
         '</span><span class="sc">' + (t.score || 0) + '점</span></div>';
     }).join("");
