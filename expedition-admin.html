@@ -314,7 +314,7 @@
       } else if (p.kind === "animal_photo") crit = "「" + esc((p.animals || []).join(" / ")) + "」 (안 보이면 우리·안내판도 OK) + 팀원 3명 이상";
       else if (p.kind === "hidden1") crit = "말씀 조각 4장이 모두 보이게 + 지정 장소(" + esc(D.event.meet_place || "미정") + ")";
       else if (p.kind === "hidden2") crit = "서로 다른 색(빨·주·노·갈·초) 떨어진 잎 5장";
-      else if (p.kind === "hidden3") crit = "팀원 모두 등장 · 15~30초 · 「하나님의 작품」 소개 + 시편 104:24 외치기";
+      else if (p.kind === "hidden3") crit = "<b>영상은 전도사님 카톡으로 받아요</b> — 팀원 모두 등장 · 15~30초 · 「하나님의 작품」 소개 + 시편 104:24 외치기";
       var meta = '<b>' + title + '</b>' + esc(p.emoji) + " " + esc(p.team) + " · " + esc(p.who || "") + " · " + kst(p.at) +
         (p.ref ? '<div class="muted">' + esc(p.ref) + '</div>' : "") +
         (p.kind === "place" && p.hint_used ? '<div class="muted">💡 힌트 받은 장소 → 3점</div>' : "");
@@ -401,7 +401,7 @@
     verse: ["빨간 글자를 고쳐 주세요", "빠진 부분이 있어요"],
     hidden1: ["말씀 조각 4장이 다 안 보여요", "지정 장소가 아니에요"],
     hidden2: ["서로 다른 색 잎 5장이 아니에요", "꺾은 잎은 안 돼요"],
-    hidden3: ["팀원이 모두 나와야 해요", "마지막에 말씀 외치기가 빠졌어요", "소리가 안 들려요"],
+    hidden3: ["아직 카톡으로 영상이 안 왔어요", "팀원이 모두 나와야 해요", "마지막에 말씀 외치기가 빠졌어요"],
     common: ["팀원이 3명 이상 나와야 해요", "사진이 흐리거나 어두워요"]
   };
   var rejOpen = null, rejDraft = "";

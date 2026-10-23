@@ -305,6 +305,15 @@ begin
     values (t.id, p_member, 'verse', p_q, btrim(p_text), 'wrong', 0, v_diff::text);
     return jsonb_build_object('ok', true, 'correct', false, 'diff', v_diff);
 
+  elsif p_kind = 'hidden3' then
+    -- 릴스 영상은 앱에 올리지 않고 전도사님께 카톡으로 보낸다(2026-10-23). 앱에는 「보냈어요」만 남긴다.
+    if exists (select 1 from public.picnic_subs where team_id = t.id and kind = 'hidden3' and status = 'pending') then
+      return jsonb_build_object('ok', false, 'error', '전도사님이 확인하고 있어요. 조금만 기다려 주세요!');
+    end if;
+    insert into public.picnic_subs(team_id, member_id, kind, q, text_val, status, points)
+    values (t.id, p_member, 'hidden3', 0, '전도사님께 카톡으로 보냄', 'pending', 0);
+    return jsonb_build_object('ok', true);
+
   else
     if p_photo is null or left(p_photo, char_length(v_prefix)) <> v_prefix or p_photo ~ '\.\.' or char_length(p_photo) > 300 then
       return jsonb_build_object('ok', false, 'error', '사진을 다시 올려 주세요.');
@@ -736,3 +745,10 @@ drop policy if exists "picnic photos upload" on storage.objects;
 create policy "picnic photos upload" on storage.objects
   for insert to anon, authenticated
   with check (bucket_id = 'picnic-photos' and name ~ '^autumn2026/[0-9a-f-]{36}\.(jpg|mp4|mov|webm)$');
+
+-- 릴스를 카톡으로 받기로 바꿔서 저장소는 다시 사진(jpg, 3MB)만 받는다 (2026-10-23)
+update storage.buckets set file_size_limit = 3145728, allowed_mime_types = array['image/jpeg'] where id = 'picnic-photos';
+drop policy if exists "picnic photos upload" on storage.objects;
+create policy "picnic photos upload" on storage.objects
+  for insert to anon, authenticated
+  with check (bucket_id = 'picnic-photos' and name ~ '^autumn2026/[0-9a-f-]{36}\.jpg$');
