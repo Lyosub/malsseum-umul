@@ -216,7 +216,7 @@
       <p class="msg err" id="suMsg" role="alert"></p>
     </form>
     <div id="suDone" hidden></div>
-    <p class="muted" style="margin:10px 0 0;">📄 부모님 서명이 있는 <b>종이 신청서</b>는 11월 1일(주일)까지 꼭 내 주세요. 같은 이름·학년으로 다시 신청하면 내용이 바뀌어요.</p>
+    <p class="muted" style="margin:10px 0 0;">📄 부모님 서명이 있는 <b>종이 신청서</b>는 11월 1일(주일)까지 꼭 내 주세요. <b>함께 오는 새친구도</b> 종이 신청서(부모님 서명)를 따로 내야 해요. 같은 이름·학년으로 다시 신청하면 내용이 바뀌어요.</p>
   </section>
 
   <!-- 1. 팀 코드 -->
@@ -747,7 +747,7 @@
     });
     function done(d) {
       $("suForm").hidden = true; var el = $("suDone"); el.hidden = false;
-      el.innerHTML = '<div class="su-done">' + (d.going === "1" ? "🙌 <b>" + esc(d.name) + "</b>(" + d.grade + "학년) 신청됐어요!" + (d.friend ? " 새친구 " + esc(d.friend) + "도 함께요." : "") + " 11월 8일에 만나요." : "<b>" + esc(d.name) + "</b>(" + d.grade + "학년) 「못 가요」로 알려 줬어요. 알려 줘서 고마워요!") +
+      el.innerHTML = '<div class="su-done">' + (d.going === "1" ? "🙌 <b>" + esc(d.name) + "</b>(" + d.grade + "학년) 신청됐어요!" + (d.friend ? " 새친구 " + esc(d.friend) + "도 함께요. (새친구도 부모님 서명 신청서를 11/1까지 내야 해요)" : "") + " 11월 8일에 만나요." : "<b>" + esc(d.name) + "</b>(" + d.grade + "학년) 「못 가요」로 알려 줬어요. 알려 줘서 고마워요!") +
         '</div><button class="btn ghost block" type="button" id="suEdit" style="margin-top:10px;">내용 고치기</button>';
       $("suEdit").onclick = function () { $("suForm").hidden = false; el.hidden = true; };
     }
