@@ -212,7 +212,7 @@
   var code = sessionStorage.getItem("msu_expedition_admin") || "";
   var D = null, timer = null, settingsLoaded = false;
   var KIND = { animal_photo: "🦁 도감 사진", verse: "📖 도감 말씀", place: "🏞️ 숨은 풍경", hidden1: "🧩 히든1 말씀 조각", hidden2: "🍁 히든2 단풍잎", hidden3: "🎬 히든3 릴스" };
-  var PTS = { animal_photo: 2, verse: 2, place: 5, hidden1: 10, hidden2: 10, hidden3: 10 };
+  var PTS = { animal_photo: 2, verse: 2, place: 5, hidden1: 15, hidden2: 5, hidden3: 10 };
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   // 관리자 페이지 탭 안(iframe)에서는 iframe이 길게 늘어나 있으므로, 지금 보이는 부분에 맞춰 띄운다

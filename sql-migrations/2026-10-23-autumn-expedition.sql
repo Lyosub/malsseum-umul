@@ -426,8 +426,8 @@ begin
         when 'animal_photo' then 2
         when 'verse' then 2
         when 'place' then case when exists (select 1 from public.picnic_subs h where h.team_id = s.team_id and h.kind = 'hint' and h.q = s.q) then 3 else 5 end
-        when 'hidden1' then 10
-        when 'hidden2' then 10
+        when 'hidden1' then 15   -- 2026-10-23 조정: 말씀 조각(가장 어려움) 15점, 단풍잎 5점
+        when 'hidden2' then 5
         when 'hidden3' then 10
         else 0 end;
       update public.picnic_subs set status = 'ok', points = v_pts, reviewed_at = now() where id = s.id;
