@@ -482,3 +482,35 @@ language sql stable security definer set search_path = public as $$
   select exists (select 1 from profiles p where p.user_id = auth.uid() and coalesce(p.is_admin, false));
 $$;
 grant execute on function public.can_see_expedition() to anon, authenticated;
+
+-- 학생이 실명을 직접 적어 들어온다(2026-10-23). 같은 팀에 같은 이름이 있으면 그 사람으로 이어진다.
+create or replace function public.picnic_register(p_code text, p_name text) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  t public.picnic_teams;
+  v_name text := regexp_replace(btrim(coalesce(p_name, '')), '\s+', ' ', 'g');
+  v_id int;
+  v_old text;
+begin
+  select * into t from public.picnic_teams where code = upper(btrim(coalesce(p_code, '')));
+  if not found then return jsonb_build_object('ok', false, 'error', '팀 코드를 다시 확인해 주세요.'); end if;
+  if char_length(v_name) < 2 or char_length(v_name) > 10 or v_name !~ '^[가-힣A-Za-z ]+$' then
+    return jsonb_build_object('ok', false, 'error', '이름을 2~10글자 한글(또는 영문)로 적어 주세요.');
+  end if;
+  select id, name into v_id, v_old from public.picnic_members where team_id = t.id and replace(name, ' ', '') = replace(v_name, ' ', '') limit 1;
+  if v_id is not null then v_name := v_old; end if;
+  if v_id is null then
+    if (select count(*) from public.picnic_members where team_id = t.id) >= 30 then
+      return jsonb_build_object('ok', false, 'error', '이 팀 인원이 너무 많아요. 선생님께 말씀드려 주세요.');
+    end if;
+    insert into public.picnic_members(team_id, name, sort)
+      values (t.id, v_name, coalesce((select max(sort) + 1 from public.picnic_members where team_id = t.id), 0))
+      returning id into v_id;
+  end if;
+  return jsonb_build_object('ok', true, 'member', jsonb_build_object('id', v_id, 'name', v_name));
+end;
+$$;
+grant execute on function public.picnic_register(text, text) to anon, authenticated;

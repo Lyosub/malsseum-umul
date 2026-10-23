@@ -194,9 +194,13 @@
 
   <!-- 2. 내 이름 -->
   <section class="card" id="nameCard" hidden>
-    <h2 id="nameTitle">내 이름을 골라 주세요</h2>
-    <p class="muted" style="margin:0;">내가 한 미션에 내 이름이 남아요.</p>
-    <div class="names" id="nameList"></div>
+    <h2 id="nameTitle">내 이름을 적어 주세요</h2>
+    <p class="muted" style="margin:0 0 10px;">실명으로 적어요. 내가 한 미션에 내 이름이 남아요. (다시 들어올 때도 같은 이름을 적으면 이어져요)</p>
+    <form class="row" id="nameForm">
+      <input type="text" id="nameInput" autocomplete="name" maxlength="10" placeholder="예: 김하은">
+      <button class="btn" type="submit">출발</button>
+    </form>
+    <p class="msg err" id="nameMsg" role="alert"></p>
     <button class="btn ghost block" type="button" id="otherTeam" style="margin-top:14px;">다른 팀 코드 넣기</button>
   </section>
 
@@ -258,7 +262,7 @@
     <h3>이렇게 해요</h3>
     <ol>
       <li>당일 아침, 선생님이 <b>우리 팀 코드</b>를 알려 줘요.</li>
-      <li>이 화면에 코드를 넣고 <b>내 이름</b>을 골라요.</li>
+      <li>이 화면에 코드를 넣고 <b>내 이름(실명)</b>을 적어요.</li>
       <li>미션을 하면 바로바로 올려요. <b>모든 팀이 얼마나 했는지</b> 진행판으로 함께 보여요.</li>
       <li>점수는 비밀이었다가 <b>시상 때</b> 한꺼번에 공개돼요.</li>
     </ol>
@@ -344,17 +348,22 @@
 
   function pickName() {
     show("name");
-    $("nameTitle").textContent = team.emoji + " " + team.name + " — 내 이름을 골라 주세요";
-    var box = $("nameList");
-    if (!members.length) { box.innerHTML = '<p class="muted">아직 명단이 없어요. 선생님께 말씀드려 주세요.</p>'; return; }
-    box.innerHTML = members.map(function (m) { return '<button type="button" data-id="' + m.id + '">' + esc(m.name) + '</button>'; }).join("");
-    box.querySelectorAll("button").forEach(function (b) {
-      b.onclick = function () {
-        saved.member = Number(b.getAttribute("data-id"));
-        saved.name = b.textContent; save(); enterMain();
-      };
-    });
+    $("nameTitle").textContent = team.emoji + " " + team.name + " — 내 이름을 적어 주세요";
+    $("nameMsg").textContent = "";
+    $("nameInput").value = saved.name || "";
   }
+  $("nameForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var nm = $("nameInput").value.trim();
+    if (nm.length < 2) { $("nameMsg").textContent = "이름을 2글자 이상 적어 주세요."; return; }
+    var btn = this.querySelector("button"); btn.disabled = true;
+    sb.rpc("picnic_register", { p_code: saved.code, p_name: nm }).then(function (r) {
+      btn.disabled = false;
+      var d = r && r.data;
+      if (!d || !d.ok) { $("nameMsg").textContent = (d && d.error) || "연결이 원활하지 않아요. 다시 눌러 주세요."; return; }
+      saved.member = d.member.id; saved.name = d.member.name; save(); enterMain();
+    }, function () { btn.disabled = false; $("nameMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
+  });
   $("otherTeam").onclick = function () { saved = { tab: tab }; save(); team = null; show("join"); $("codeInput").value = ""; };
   $("changeMe").onclick = function () { stopPoll(); pickName(); };
 
