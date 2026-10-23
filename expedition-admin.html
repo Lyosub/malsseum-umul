@@ -258,13 +258,15 @@
   function renderSignups() {
     if (!SU) return;
     var go = SU.list.filter(function (x) { return x.going; }), no = SU.list.length - go.length;
+    var friends = go.filter(function (x) { return x.friend; }).reduce(function (n, x) { return n + x.friend.split(/[,，、]/).filter(function (v) { return v.trim(); }).length; }, 0);
     var paper = go.filter(function (x) { return x.paper; }).length;
     var until = new Date(SU.until), open = Date.now() <= until.getTime();
-    $("suSum").textContent = "· 간다 " + go.length + "명 (종이 " + paper + "/" + go.length + ")" + (no ? " · 못 감 " + no : "");
-    var g = [1, 2, 3].map(function (n) { return '<div>' + n + '학년<b>' + go.filter(function (x) { return x.grade === n; }).length + '</b></div>'; }).join("");
+    $("suSum").textContent = "· 간다 " + go.length + "명" + (friends ? " + 새친구 " + friends : "") + " (종이 " + paper + "/" + go.length + ")" + (no ? " · 못 감 " + no : "");
+    var g = [1, 2, 3].map(function (n) { return '<div>' + n + '학년<b>' + go.filter(function (x) { return x.grade === n; }).length + '</b></div>'; }).join("") +
+      (friends ? '<div style="grid-column:1/-1">🌱 함께 오는 새친구 <b style="display:inline;font-size:16px;">' + friends + '명</b></div>' : "");
     var rows = SU.list.map(function (x) {
       return '<div class="su-row"><span class="nm' + (x.going ? "" : " no") + '">' + x.grade + '학년 <b style="display:inline">' + esc(x.name) + '</b>' +
-        '<small>' + esc(x.class || "") + (x.going ? "" : " · 못 가요") + (x.going && !x.parent_ok ? " · 부모님 허락 체크 안 함" : "") + '</small></span>' +
+        '<small>' + esc([x.class, x.teacher].filter(Boolean).join(" · ")) + (x.friend ? " · 🌱 새친구 " + esc(x.friend) : "") + (x.going ? "" : " · 못 가요") + (x.going && !x.parent_ok ? " · 부모님 허락 체크 안 함" : "") + '</small></span>' +
         (x.going ? '<button type="button" class="' + (x.paper ? "paper-on" : "ghost") + '" data-supaper="' + x.id + '">' + (x.paper ? "📄 종이 받음" : "종이 아직") + '</button>' : "") +
         '<button type="button" class="ghost" data-sudel="' + x.id + '" aria-label="지우기">✕</button></div>';
     }).join("") || '<p class="muted">아직 온라인 신청이 없어요.</p>';
