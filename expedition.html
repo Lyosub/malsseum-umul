@@ -123,6 +123,7 @@
   .lock .cd { font-size: 34px; font-weight: 900; color: var(--rust); font-variant-numeric: tabular-nums; margin: 6px 0; }
   .mission { border-radius: 18px; padding: 18px 16px; margin-top: 12px; color: #fff; background: linear-gradient(150deg, #2f6b4f, #173b2c); }
   .mission.m2 { background: linear-gradient(150deg, #e0812a, #b8481f); }
+  .mission.m3 { background: linear-gradient(150deg, #5b3a8c, #2d1d4f); }
   .mission .tag { font-size: 11px; font-weight: 900; letter-spacing: .06em; color: var(--gold); }
   .mission h3 { margin: 4px 0 8px; font-size: 20px; }
   .mission p { margin: 0 0 10px; font-size: 14px; opacity: .95; }
@@ -296,7 +297,7 @@
     <h3>미션은 세 가지</h3>
     <div class="ms"><div class="i">🦁</div><div><b>성경 동물 도감 · 10문제</b><span>성경 구절을 찾아 읽고 어떤 동물인지 맞혀요. 그 동물 앞에서 팀 사진을 찍고, 말씀도 그대로 적어요.</span></div></div>
     <div class="ms"><div class="i">🏞️</div><div><b>숨은 풍경 찾기 · 8곳</b><span>사진 속 장소를 찾아가 똑같은 구도로 팀 사진을 찍어요.</span></div></div>
-    <div class="ms secret"><div class="i">❓</div><div><b>히든 미션 · 2개</b><span>무엇인지는 비밀! 당일 정해진 시각에 모든 팀 휴대폰에서 한꺼번에 열려요.</span></div></div>
+    <div class="ms secret"><div class="i">❓</div><div><b>히든 미션 · 3개</b><span>무엇인지는 비밀! 당일 정해진 시각에 모든 팀 휴대폰에서 한꺼번에 열려요.</span></div></div>
 
     <h3>이렇게 해요</h3>
     <ol>
@@ -315,6 +316,7 @@
 </main>
 
 <input type="file" id="filePick" accept="image/*" hidden>
+<input type="file" id="videoPick" accept="video/*" hidden>
 <div class="toast" id="toast" hidden></div>
 <div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
 
@@ -444,7 +446,7 @@
   function notifyChanges() {
     if (lastHiddenOpen === false && S.hidden_open) {
       buzz();
-      modal('<div class="ic">🔓</div><h3>히든 미션이 열렸어요!</h3><p class="muted">❓ 히든 탭에서 미션 두 개를 확인하세요.</p>');
+      modal('<div class="ic">🔓</div><h3>히든 미션이 열렸어요!</h3><p class="muted">❓ 히든 탭에서 미션 세 개를 확인하세요.</p>');
       if (tab !== "hidden") $("hiddenTab").innerHTML = '❓ 히든<span class="dot"></span>';
     }
     if (lastClueCount !== null && S.clues.length > lastClueCount) {
@@ -495,14 +497,14 @@
     renderDogam(); renderPlace(); renderHidden();
   }
 
-  function pct(t) { return Math.round(((t.dogam / 30) * 50 + (t.place / 8) * 40 + (t.hidden / 2) * 20) / 110 * 100); }
+  function pct(t) { return Math.round(((t.dogam / 30) * 50 + (t.place / 8) * 40 + (t.hidden / 3) * 30) / 120 * 100); }
 
   function renderBoard() {
     var list = S.board.slice();
     $("boardList").innerHTML = list.map(function (t) {
       var p = pct(t);
       return '<div class="team' + (t.id === team.id ? " mine" : "") + '"><div class="top"><span class="nm">' + esc(t.emoji) + " " + esc(t.name) + (t.id === team.id ? " (우리 팀)" : "") +
-        '</span><span class="cnt">도감 ' + t.dogam + '/30 · 풍경 ' + t.place + '/8 · 히든 ' + t.hidden + '/2</span></div>' +
+        '</span><span class="cnt">도감 ' + t.dogam + '/30 · 풍경 ' + t.place + '/8 · 히든 ' + t.hidden + '/3</span></div>' +
         '<div class="bar"><i style="width:' + p + '%"></i></div></div>';
     }).join("") || '<p class="muted">아직 팀이 없어요.</p>';
   }
@@ -593,7 +595,7 @@
       tickCountdown();
       return;
     }
-    var h1 = best("hidden1", 0), h2 = best("hidden2", 0);
+    var h1 = best("hidden1", 0), h2 = best("hidden2", 0), h3 = best("hidden3", 0);
     var clues = S.clues.map(function (c) { return '<div class="clue"><b>' + kst(c.at) + '</b>' + esc(c.text) + '</div>'; }).join("") ||
       '<div class="clue">단서는 곧 이곳에 올라와요. 기다리는 동안 숨은 풍경 장소 근처를 잘 살펴보세요!</div>';
     box.innerHTML =
@@ -608,6 +610,12 @@
       '<p>빨강 · 주황 · 노랑 · 갈색 · 초록, 서로 다른 색의 <b>떨어진 잎</b> 5장을 모아 한 장에 나란히 놓고 찍어 올려요. 꽃과 나뭇가지는 꺾지 않아요.</p>' +
       (h2 && h2.photo ? '<img class="thumb" src="' + esc(h2.photo) + '" alt="">' : "") + stateLine(h2, "미션 성공!") +
       (!h2 || h2.status !== "ok" ? '<button class="btn block" type="button" data-photo="hidden2" data-q="0" style="margin-top:10px;background:#fff;color:var(--rust);">📷 단풍잎 사진 올리기</button>' : "") +
+      '</div>' +
+      '<div class="mission m3"><div class="tag">HIDDEN MISSION 3</div><h3>🎬 우리 팀 원정 릴스</h3>' +
+      '<p>팀원 <b>모두</b>가 나오는 <b>15~30초 세로 영상</b>을 찍어 올려요. 오늘 찾은 「하나님의 작품」 하나를 소개하고, 마지막에 다 같이 「주께서 지으신 것들이 땅에 가득하니이다!」를 외치면 성공!</p>' +
+      '<p style="font-size:12.5px;opacity:.85;">잘 나온 영상은 중등부 인스타에 올릴 수도 있어요. 50MB까지 올릴 수 있어요(30초 안쪽이면 충분해요).</p>' +
+      (h3 && h3.photo ? '<video class="thumb" src="' + esc(h3.photo) + '" controls playsinline preload="metadata"></video>' : "") + stateLine(h3, "미션 성공!") +
+      (!h3 || h3.status !== "ok" ? '<button class="btn gold block" type="button" data-video="hidden3" data-q="0" style="margin-top:10px;">🎬 릴스 영상 올리기</button>' : "") +
       '</div>';
     bindForms(box);
   }
@@ -633,6 +641,9 @@
         if (!text) { field.focus(); return; }
         submit(kind, q, text, null, f);
       });
+    });
+    root.querySelectorAll("[data-video]").forEach(function (b) {
+      b.onclick = function () { pendingV = { kind: b.getAttribute("data-video"), q: Number(b.getAttribute("data-q")), btn: b }; $("videoPick").value = ""; $("videoPick").click(); };
     });
     root.querySelectorAll("[data-photo]").forEach(function (b) {
       b.onclick = function () { pickPhoto(b.getAttribute("data-photo"), Number(b.getAttribute("data-q")), b); };
@@ -707,6 +718,29 @@
     }).catch(function () {
       busy = false; p.btn.disabled = false; p.btn.textContent = label;
       toast("사진을 올리지 못했어요. 다시 해 주세요.");
+    });
+  });
+
+  // 히든 3 · 릴스 영상: 줄이지 않고 그대로 올린다(50MB까지)
+  var pendingV = null;
+  $("videoPick").addEventListener("change", function () {
+    var file = this.files && this.files[0];
+    if (!file || !pendingV) return;
+    var p = pendingV; pendingV = null;
+    if (file.size > 50 * 1024 * 1024) { toast("영상이 너무 커요(50MB까지). 30초 안쪽으로 다시 찍어 주세요."); return; }
+    var t = (file.type || "").toLowerCase(), ext = /quicktime|mov/.test(t) || /\.mov$/i.test(file.name) ? "mov" : /webm/.test(t) ? "webm" : "mp4";
+    var ctype = ext === "mov" ? "video/quicktime" : ext === "webm" ? "video/webm" : "video/mp4";
+    var label = p.btn.textContent;
+    p.btn.disabled = true; p.btn.textContent = "영상 올리는 중... (1분쯤 걸릴 수 있어요)";
+    busy = true;
+    var path = EVENT + "/" + uuid() + "." + ext;
+    sb.storage.from(BUCKET).upload(path, file, { contentType: ctype, upsert: false }).then(function (res) {
+      if (res.error) throw res.error;
+      busy = false;
+      submit(p.kind, p.q, null, SUPABASE_URL + "/storage/v1/object/public/" + BUCKET + "/" + path, null);
+    }).catch(function () {
+      busy = false; p.btn.disabled = false; p.btn.textContent = label;
+      toast("영상을 올리지 못했어요. 연결이 좋은 곳에서 다시 해 주세요.");
     });
   });
 

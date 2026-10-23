@@ -57,7 +57,7 @@ create table if not exists public.picnic_subs (
   id          bigserial primary key,
   team_id     int not null references public.picnic_teams(id) on delete cascade,
   member_id   int references public.picnic_members(id) on delete set null,
-  kind        text not null,             -- animal | animal_photo | verse | place | hint | hidden1 | hidden2
+  kind        text not null,             -- animal | animal_photo | verse | place | hint | hidden1 | hidden2 | hidden3(팀 릴스 영상)
   q           int  not null default 0,
   text_val    text,
   photo_url   text,
@@ -124,7 +124,7 @@ as $$
     'place', (select count(distinct s.q) from public.picnic_subs s
               where s.team_id = t.id and s.kind = 'place' and s.status in ('ok','pending')),
     'hidden', (select count(distinct s.kind) from public.picnic_subs s
-               where s.team_id = t.id and s.kind in ('hidden1','hidden2') and s.status in ('ok','pending')),
+               where s.team_id = t.id and s.kind in ('hidden1','hidden2','hidden3') and s.status in ('ok','pending')),
     'score', case when e.results_open then public.picnic_team_score(t.id) end
   ) order by t.sort, t.id), '[]'::jsonb)
   from public.picnic_teams t join public.picnic_events e on e.event = t.event
@@ -254,7 +254,7 @@ begin
     if not found then return jsonb_build_object('ok', false, 'error', '없는 문제예요.'); end if;
   elsif p_kind = 'place' then
     if p_q < 1 or p_q > 8 then return jsonb_build_object('ok', false, 'error', '없는 장소예요.'); end if;
-  elsif p_kind in ('hidden1', 'hidden2') then
+  elsif p_kind in ('hidden1', 'hidden2', 'hidden3') then
     if not (e.hidden_force or now() >= e.hidden_open_at) then
       return jsonb_build_object('ok', false, 'error', '히든 미션은 아직 열리지 않았어요.');
     end if;
@@ -407,6 +407,7 @@ begin
         when 'place' then case when exists (select 1 from public.picnic_subs h where h.team_id = s.team_id and h.kind = 'hint' and h.q = s.q) then 3 else 5 end
         when 'hidden1' then 10
         when 'hidden2' then 10
+        when 'hidden3' then 10
         else 0 end;
       update public.picnic_subs set status = 'ok', points = v_pts, reviewed_at = now() where id = s.id;
       -- 같은 항목의 다른 대기 제출은 정리
@@ -728,3 +729,10 @@ begin
 end;
 $$;
 grant execute on function public.picnic_signup(text, text, int, text, text, text, boolean, boolean, boolean) to anon, authenticated;
+
+-- 히든 미션 3 · 팀 릴스(영상) 추가 (2026-10-23): 저장소가 영상도 받게, 파일 한 개 50MB까지
+update storage.buckets set file_size_limit = 52428800, allowed_mime_types = array['image/jpeg','video/mp4','video/quicktime','video/webm'] where id = 'picnic-photos';
+drop policy if exists "picnic photos upload" on storage.objects;
+create policy "picnic photos upload" on storage.objects
+  for insert to anon, authenticated
+  with check (bucket_id = 'picnic-photos' and name ~ '^autumn2026/[0-9a-f-]{36}\.(jpg|mp4|mov|webm)$');
