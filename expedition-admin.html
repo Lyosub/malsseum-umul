@@ -50,7 +50,8 @@
   .ts .nm { flex: 1 1 auto; min-width: 0; font-weight: 800; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ts .sc { flex: none; font-weight: 900; font-size: 24px; color: var(--rust); font-variant-numeric: tabular-nums; }
   .ts .sc small { font-size: 13px; font-weight: 700; color: var(--soft); margin-left: 2px; }
-  .ts .adj { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .ts .adj { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 8px; }
+  .ts .adj > div, .ts .pm { min-width: 0; }
   .ts .adj > div { background: #f7f2ea; border-radius: 10px; padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
   .ts .adj .lb { white-space: nowrap; font-size: 12px; color: var(--soft); font-weight: 700; }
   .ts .adj .pm b { min-width: 22px; text-align: center; font-variant-numeric: tabular-nums; }
@@ -66,6 +67,7 @@
   .zoom img { max-width: 100%; max-height: 100%; border-radius: 8px; }
   .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 12px; font-weight: 700; z-index: 60; }
   details > summary { cursor: pointer; font-weight: 800; }
+  .embed, .embed body { overflow-x: hidden; }
   .embed body { background: transparent; padding-bottom: 0; }
   .embed main { padding: 0; max-width: none; }
   .embed main > h1, .embed main > h1 + p { display: none; }
