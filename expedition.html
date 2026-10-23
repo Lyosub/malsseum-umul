@@ -222,7 +222,7 @@
 
     <nav class="tabs" role="tablist">
       <button type="button" role="tab" data-tab="dogam" class="on">🦁 동물 도감</button>
-      <button type="button" role="tab" data-tab="place">📸 사진 찾기</button>
+      <button type="button" role="tab" data-tab="place">🏞️ 숨은 풍경</button>
       <button type="button" role="tab" data-tab="hidden" id="hiddenTab">❓ 히든</button>
     </nav>
 
@@ -252,7 +252,7 @@
 
     <h3>미션은 세 가지</h3>
     <div class="ms"><div class="i">🦁</div><div><b>성경 동물 도감 · 10문제</b><span>성경 구절을 찾아 읽고 어떤 동물인지 맞혀요. 그 동물 앞에서 팀 사진을 찍고, 말씀도 그대로 적어요.</span></div></div>
-    <div class="ms"><div class="i">📸</div><div><b>사진 찾기 · 8곳</b><span>사진 속 장소를 찾아가 똑같은 구도로 팀 사진을 찍어요.</span></div></div>
+    <div class="ms"><div class="i">🏞️</div><div><b>숨은 풍경 찾기 · 8곳</b><span>사진 속 장소를 찾아가 똑같은 구도로 팀 사진을 찍어요.</span></div></div>
     <div class="ms secret"><div class="i">❓</div><div><b>히든 미션 · 2개</b><span>무엇인지는 비밀! 당일 정해진 시각에 모든 팀 휴대폰에서 한꺼번에 열려요.</span></div></div>
 
     <h3>이렇게 해요</h3>
@@ -454,7 +454,7 @@
     $("boardList").innerHTML = list.map(function (t) {
       var p = pct(t);
       return '<div class="team' + (t.id === team.id ? " mine" : "") + '"><div class="top"><span class="nm">' + esc(t.emoji) + " " + esc(t.name) + (t.id === team.id ? " (우리 팀)" : "") +
-        '</span><span class="cnt">도감 ' + t.dogam + '/30 · 사진 ' + t.place + '/8 · 히든 ' + t.hidden + '/2</span></div>' +
+        '</span><span class="cnt">도감 ' + t.dogam + '/30 · 풍경 ' + t.place + '/8 · 히든 ' + t.hidden + '/2</span></div>' +
         '<div class="bar"><i style="width:' + p + '%"></i></div></div>';
     }).join("") || '<p class="muted">아직 팀이 없어요.</p>';
   }
@@ -534,16 +534,16 @@
     var box = $("hiddenArea");
     if (!S.hidden_open) {
       box.innerHTML = '<div class="card lock"><div class="ic">🔒</div><h2>히든 미션</h2><div class="cd" id="countdown">--:--</div>' +
-        '<p class="muted" style="margin:0;">' + kst(S.hidden_open_at) + '에 모든 팀에게 동시에 열려요.<br>그 전에 도감과 사진 찾기를 먼저 해 볼까요?</p></div>';
+        '<p class="muted" style="margin:0;">' + kst(S.hidden_open_at) + '에 모든 팀에게 동시에 열려요.<br>그 전에 도감과 숨은 풍경 찾기를 먼저 해 볼까요?</p></div>';
       tickCountdown();
       return;
     }
     var h1 = best("hidden1", 0), h2 = best("hidden2", 0);
     var clues = S.clues.map(function (c) { return '<div class="clue"><b>' + kst(c.at) + '</b>' + esc(c.text) + '</div>'; }).join("") ||
-      '<div class="clue">단서는 곧 이곳에 올라와요. 기다리는 동안 사진 찾기 장소 근처를 잘 살펴보세요!</div>';
+      '<div class="clue">단서는 곧 이곳에 올라와요. 기다리는 동안 숨은 풍경 장소 근처를 잘 살펴보세요!</div>';
     box.innerHTML =
       '<div class="mission"><div class="tag">HIDDEN MISSION 1</div><h3>🧩 말씀 조각을 찾아라</h3>' +
-      '<p>사진 찾기 장소 8곳 중 4곳 근처에 우리 팀 말씀 조각 4장이 숨어 있어요. 4장을 모두 찾아 맞추면 하나의 말씀이 돼요!</p>' +
+      '<p>숨은 풍경 장소 8곳 중 4곳 근처에 우리 팀 말씀 조각 4장이 숨어 있어요. 4장을 모두 찾아 맞추면 하나의 말씀이 돼요!</p>' +
       '<p>찾았으면 <b>' + (S.meet_place ? esc(S.meet_place) : "지정 장소") + '</b>에서 4장을 맞춰 들고 단체 사진을 올려요.</p>' + clues +
       (h1 && h1.photo ? '<img class="thumb" src="' + esc(h1.photo) + '" alt="">' : "") + stateLine(h1, "미션 성공!") +
       (!h1 || h1.status !== "ok" ? '<button class="btn gold block" type="button" data-photo="hidden1" data-q="0" style="margin-top:10px;">📷 말씀 조각 단체 사진 올리기</button>' : "") +

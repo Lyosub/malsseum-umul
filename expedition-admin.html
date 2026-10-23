@@ -85,7 +85,7 @@
 
     <section class="card">
       <details>
-        <summary>🧩 히든 미션 단서 · 지정 장소 · 사진 찾기 힌트</summary>
+        <summary>🧩 히든 미션 단서 · 지정 장소 · 숨은 풍경 힌트</summary>
         <div style="display:grid;gap:10px;margin-top:12px;">
           <label>말씀 조각 단체 사진 지정 장소<input id="meetIn" placeholder="예: 테마가든 입구 큰 단풍나무 앞"></label>
           <div id="clueEdit"></div>
@@ -142,7 +142,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var code = sessionStorage.getItem("msu_expedition_admin") || "";
   var D = null, timer = null, settingsLoaded = false;
-  var KIND = { animal_photo: "🦁 도감 사진", verse: "📖 도감 말씀", place: "📸 사진 찾기", hidden1: "🧩 히든1 말씀 조각", hidden2: "🍁 히든2 단풍잎" };
+  var KIND = { animal_photo: "🦁 도감 사진", verse: "📖 도감 말씀", place: "🏞️ 숨은 풍경", hidden1: "🧩 히든1 말씀 조각", hidden2: "🍁 히든2 단풍잎" };
   var PTS = { animal_photo: 2, verse: 2, place: 5, hidden1: 10, hidden2: 10 };
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -226,7 +226,7 @@
         return '<div class="row" style="margin-top:6px;"><input type="datetime-local" class="clueAt" value="' + toLocalInput(c.at) + '" style="flex:0 0 210px;"><input class="clueText" value="' + esc(c.text) + '" placeholder="단서 ' + (i + 1) + '" style="flex:1 1 200px;"></div>';
       }).join("");
       var hints = e.place_hints || {};
-      var h = '<div class="muted" style="margin:6px 0 4px;">사진 찾기 장소 힌트 (1시 30분 이후 학생이 「힌트 받기」를 누르면 보여요)</div>';
+      var h = '<div class="muted" style="margin:6px 0 4px;">숨은 풍경 장소 힌트 (1시 30분 이후 학생이 「힌트 받기」를 누르면 보여요)</div>';
       for (var q = 1; q <= 8; q++) h += '<div class="row" style="margin-top:6px;"><span style="width:52px;flex:none;">장소 ' + q + '</span><input class="hintText" data-q="' + q + '" value="' + esc(hints[String(q)] || "") + '" style="flex:1 1 200px;"></div>';
       $("hintEdit").innerHTML = h;
       $("openAtIn").value = toLocalInput(e.hidden_open_at);
