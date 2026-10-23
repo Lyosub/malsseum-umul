@@ -601,7 +601,7 @@
 <div id="compass"><svg viewBox="0 0 46 46"><path id="compass-arrow" d="M23 7 L31 27 L23 22 L15 27 Z" fill="#ffd27a"/></svg></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "2a902b0d", "wild3": "b4590c52", "joshua": "ea59ccf8"};</script>
+<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "2a902b0d", "wild3": "b4590c52", "joshua": "ef78b784"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -1280,11 +1280,14 @@
         ['env-rocks-strata', -38, -36, 1.2], ['env-rock-hill', 26, -38, 2.0], ['dry-bush', 4, -6, 0], ['dry-bush', -2, 10, 0],
       ],
       scatter: [['dry-bush', 8, 20, 50], ['rock-group', 8, 22, 50]],
-      clear: [[-22, 6, 14], [34, 0, 6], [14, 4, 9], [-26, -34, 6], [-26, -54, 17], [16, 0, 16], [-42, 24, 5], [12, 40, 7]],
+      clear: [[-22, 6, 14], [34, 0, 6], [14, 4, 9], [-26, -34, 6], [-26, -54, 17], [16, 0, 16], [-42, 24, 5], [12, 40, 7], [-42, -12, 5], [-14, 44, 5], [8, -44, 5]],
       fires: [],
       points: [
         { id: 'to-moab4', x: 36, z: 7, type: 'exit', title: "요단 건너편 모압 평지로", to: 'moab', spawn: [-34, 2] },
         { id: 'to-ai', x: -42, z: 24, type: 'exit', title: "서쪽 길로 아이에 올라가기", to: 'ai', spawn: [34, 0], cond: 'aiOpen' },
+        { id: 'to-gibeon', x: -42, z: -12, type: 'exit', title: "서쪽 길로 기브온에 올라가기", to: 'gibeon', spawn: [34, 0], cond: 'gibeonOpen' },
+        { id: 'to-hebron', x: -14, z: 44, type: 'exit', title: "남쪽 길로 헤브론 산지에 올라가기", to: 'hebron', spawn: [0, -36], cond: 'hebronOpen' },
+        { id: 'to-shiloh', x: 8, z: -44, type: 'exit', title: "북쪽 길로 실로에 올라가기", to: 'shiloh', spawn: [-34, 0], cond: 'shilohOpen' },
       ],
     },
     // ══ 4편 7·8장 — 아이와 에발 산(수 7:2 "벧엘 동쪽 벧아웬 곁에 있는 아이", 8:30·33 에발 산과 그리심 산).
@@ -1304,6 +1307,61 @@
       fires: [],
       points: [
         { id: 'to-gilgal3', x: 39.5, z: 0, type: 'exit', title: "동쪽 길로 길갈에 내려가기", to: 'gilgal', spawn: [-38, 22] },
+      ],
+    },
+    // ══ 4편 9·10장 — 기브온과 아얄론(수 9:17 기브온 · 10:10 벧호론 비탈 · 10:12 아얄론 골짜기 · 10:16 막게다의 굴).
+    //    기브온 성·다섯 왕의 진·해와 달·굴은 두루마리가 세운다 ══
+    gibeon: {
+      name: '기브온과 아얄론', questTitle: '📜 퀘스트 — 여호수아와 함께',
+      env: { top: 0x5a8fcc, bottom: 0xddd6ae, fog: 0xd8d0aa, fogD: 0.011, sun: 0xfff3d6, sunDir: [0.5, 0.45, -0.55], cloud: 0.3, cloudCol: 0xffffff, stars: 0, far: 'far-mountains' },
+      center: [0, 0], spawn: [34, 0],
+      mountain: { x: -6, z: -54, r: 15, h: 20 },
+      layout: [
+        ['env-acacia', 20, 22, 0.4], ['env-acacia', -20, 30, 1.6], ['env-acacia', 16, -24, 2.3], ['env-rock-hill', -42, -26, 0.4], ['env-rock-hill', 34, 32, 2.0],
+        ['env-rocks-strata', 30, -34, 1.2], ['dry-bush', 12, 6, 0], ['dry-bush', -14, 18, 0], ['dry-bush', 24, -10, 0],
+      ],
+      scatter: [['dry-bush', 8, 20, 55], ['rock-group', 12, 20, 55]],
+      clear: [[-4, -4, 11], [-30, 6, 8], [-40, 18, 6], [-18, 20, 6], [10, 32, 8], [34, 0, 6], [-6, -54, 16], [18, 6, 6]],
+      fires: [],
+      points: [
+        { id: 'to-gilgal4', x: 39.5, z: 0, type: 'exit', title: "동쪽 길로 길갈에 내려가기", to: 'gilgal', spawn: [-38, -12] },
+      ],
+    },
+    // ══ 4편 11장 — 헤브론 산지(수 14:12 "이 산지를 지금 내게 주소서" · 14:15 헤브론의 옛 이름은 기럇 아르바) ══
+    hebron: {
+      name: '헤브론 산지', questTitle: '📜 퀘스트 — 여호수아와 함께',
+      env: { top: 0x5a8fcc, bottom: 0xd6d2aa, fog: 0xd2cca6, fogD: 0.012, sun: 0xfff3d6, sunDir: [0.5, 0.45, -0.55], cloud: 0.35, cloudCol: 0xffffff, stars: 0, far: 'far-mountains' },
+      center: [0, 0], spawn: [0, -36],
+      mountain: { x: -24, z: 30, r: 16, h: 26 },
+      mountain2: { x: 22, z: 34, r: 13, h: 20 },
+      layout: [
+        ['env-acacia', 18, -18, 0.4], ['env-acacia', -22, -22, 1.6], ['env-acacia', 26, 4, 2.3], ['env-rock-hill', -38, -6, 0.4], ['env-rock-hill', 38, -26, 2.0],
+        ['env-rocks-strata', -30, 8, 1.2], ['env-rocks-strata', 30, 18, 2.4], ['dry-bush', 6, -8, 0], ['dry-bush', -8, 4, 0], ['dry-bush', 12, 14, 0],
+      ],
+      scatter: [['dry-bush', 8, 20, 55], ['rock-group', 14, 20, 55]],
+      clear: [[0, -36, 6], [-4, 14, 10], [0, -14, 5], [0, -2, 4], [-24, 30, 17], [22, 34, 14]],
+      fires: [],
+      points: [
+        { id: 'to-gilgal5', x: 0, z: -42, type: 'exit', title: "북쪽 길로 길갈에 내려가기", to: 'gilgal', spawn: [-14, 38] },
+      ],
+    },
+    // ══ 4편 12·13장 — 실로와 세겜(수 18:1 실로의 회막 · 22:10 요단 언덕 가의 큰 제단 · 24:1, 26 세겜 · 성소 곁 상수리나무).
+    //    회막은 엔진이(2·3편과 같은 모양), 제단·상수리나무·큰 돌은 두루마리가 세운다. 요단은 동쪽 ══
+    shiloh: {
+      name: '실로와 세겜', questTitle: '📜 퀘스트 — 여호수아와 함께',
+      env: { top: 0x5a8fcc, bottom: 0xdcd8b2, fog: 0xd6d0aa, fogD: 0.011, sun: 0xfff3d6, sunDir: [0.5, 0.45, -0.55], cloud: 0.3, cloudCol: 0xffffff, stars: 0, far: 'far-mountains' },
+      center: [0, 0], spawn: [-34, 0],
+      mountain: { x: 10, z: -56, r: 14, h: 22 },
+      water: { x0: 40, x1: 46, z0: -48, z1: 48 },
+      layout: [
+        ['env-acacia', -24, 22, 0.4], ['env-acacia', -30, -24, 1.6], ['env-date-palm', 16, 28, 2.3], ['env-rock-hill', -42, 30, 0.4], ['env-rocks-strata', -40, -34, 2.0],
+        ['tent-mid', -26, -8, 0.6], ['tent-small', -22, 10, 2.2], ['tent-mid', 4, 12, 1.4], ['dry-bush', 10, -2, 0], ['dry-bush', -16, -30, 0],
+      ],
+      scatter: [['dry-bush', 8, 20, 50], ['rock-group', 10, 22, 50]],
+      clear: [[-34, 0, 6], [-5, -15, 16], [26, 16, 10], [34, -24, 6], [10, -56, 15], [20, 30, 5], [-14, 2, 4], [30, -20, 4], [18, -6, 6]],
+      fires: [],
+      points: [
+        { id: 'to-gilgal6', x: -39.5, z: 0, type: 'exit', title: "서쪽 길로 길갈에 내려가기", to: 'gilgal', spawn: [8, -38] },
       ],
     },
   };
@@ -4956,6 +5014,7 @@
     try {
       const from = Object.keys(NEXT_SCROLL).find(k => NEXT_SCROLL[k].done() && !(ST.sp && ST.sp[NEXT_SCROLL[k].to])); if (!from) return '';
       const nx = SCROLL_LIST.find(s => s.id === NEXT_SCROLL[from].to);
+      if (!nx) return '완료! 다음 두루마리는 지금 준비하고 있어요';
       return `완료! 다음: ${nx.no}편 「${nx.title}」 — 🧭 길 떠나기 → 두루마리마을 → 📚 두루마리 문에서 펼치기`;
     } catch (e){ return ''; }
   }
@@ -5183,6 +5242,9 @@
   CONDS.moabMoses = () => { const p = ST.sp && ST.sp.wild3; return !(p && p.ch >= 15 && p.cleared); };   // 신 34:5 뒤로는 모세가 보이지 않음
   CONDS.gilgalOpen = () => !!((ST.sp && ST.sp.joshua) || DEV_SCROLL);
   CONDS.aiOpen = () => { const p = ST.sp && ST.sp.joshua; return !!((p && p.ch >= 6) || DEV_SCROLL); };   // 4편 7장(수 7:2)부터
+  CONDS.gibeonOpen = () => { const p = ST.sp && ST.sp.joshua; return !!((p && p.ch >= 8) || DEV_SCROLL); };   // 4편 9장(수 9:17)부터
+  CONDS.hebronOpen = () => { const p = ST.sp && ST.sp.joshua; return !!((p && p.ch >= 10) || DEV_SCROLL); };   // 4편 11장(수 14:13)부터
+  CONDS.shilohOpen = () => { const p = ST.sp && ST.sp.joshua; return !!((p && p.ch >= 11) || DEV_SCROLL); };   // 4편 12장(수 18:1)부터
   CONDS.kadeshOpen = () => !!((ST.sp && ST.sp.sinai2 && ST.sp.sinai2.cleared) || ST.cur === 'wild3' || DEV_SCROLL);
   const SCROLL_Q = window.__odyQ = window.__odyQ || [];
   function drainScrolls(){ while (SCROLL_Q.length){ const f = SCROLL_Q.shift(); try { const def = f(ODY_API); if (def && def.id) SCROLL_DEFS[def.id] = def; } catch (e){ console.error('두루마리 등록 실패', e); } } }
@@ -5308,14 +5370,17 @@
   function warpTargets(){
     const q = curStep(), done = chaptersDone(), out = [];
     const exitTo = q && q.exit ? ((ZONES[q.zone].points.find(p => p.id === q.exit) || {}).to) : null;
-    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5, rephidim: 6, sinai: 8, kadesh: 99, moab: 99, gilgal: 99, ai: 99 };
-    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab', 'gilgal', 'ai']){
+    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5, rephidim: 6, sinai: 8, kadesh: 99, moab: 99, gilgal: 99, ai: 99, gibeon: 99, hebron: 99, shiloh: 99 };
+    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab', 'gilgal', 'ai', 'gibeon', 'hebron', 'shiloh']){
       const story = q && (q.zone === z || exitTo === z);
       if (z === 'kadesh' && !story && !CONDS.kadeshOpen()) continue;
       if (z === 'moab' && !story && !CONDS.moabOpen()) continue;   // 3편 마을은 2편을 마친 뒤부터 목록에 보임
       if (z === 'gilgal' && !story && !CONDS.gilgalOpen()) continue;   // 4편 마을은 4편을 펼친 뒤부터
       if (z === 'ai' && !story && !CONDS.aiOpen()) continue;   // 아이와 에발 산은 4편 7장부터
-      const ok = z === 'alpha' || done >= need[z] || story || (z === 'kadesh' && CONDS.kadeshOpen()) || (z === 'moab' && CONDS.moabOpen()) || (z === 'gilgal' && CONDS.gilgalOpen()) || (z === 'ai' && CONDS.aiOpen());
+      if (z === 'gibeon' && !story && !CONDS.gibeonOpen()) continue;   // 기브온은 4편 9장부터
+      if (z === 'hebron' && !story && !CONDS.hebronOpen()) continue;   // 헤브론 산지는 4편 11장부터
+      if (z === 'shiloh' && !story && !CONDS.shilohOpen()) continue;   // 실로와 세겜은 4편 12장부터
+      const ok = z === 'alpha' || done >= need[z] || story || (z === 'kadesh' && CONDS.kadeshOpen()) || (z === 'moab' && CONDS.moabOpen()) || (z === 'gilgal' && CONDS.gilgalOpen()) || (z === 'ai' && CONDS.aiOpen()) || (z === 'gibeon' && CONDS.gibeonOpen()) || (z === 'hebron' && CONDS.hebronOpen()) || (z === 'shiloh' && CONDS.shilohOpen());
       out.push({ z, ok, story, here: Z && Z.id === z, note: z === 'alpha' ? '언제든 갈 수 있어요 · 내 장막' : story ? '📜 지금 이야기가 있는 곳' : ok ? '이야기를 마친 곳' : `🔒 ${need[z]}장을 마치면` });
     }
     return out;
@@ -7061,6 +7126,7 @@
     moses: { to: 'sinai2', done: () => chaptersDone() >= 10, ped: 0, what: '두 돌판' },
     sinai2: { to: 'wild3', done: () => sinai2Done(), ped: 1, what: '은 나팔 둘' },
     wild3: { to: 'joshua', done: () => wild3Done(), ped: 2, what: '놋뱀 장대' },
+    joshua: { to: null, done: () => joshuaDone(), ped: 3, what: '길갈의 열두 돌' },   // 5편은 준비 중 — 받침대만 보여 준다
   };
   let nsBusy = false;
   async function nextScrollCeremony(opt = {}){
@@ -7079,8 +7145,13 @@
       try { startCine('nscroll-' + from, x, heightAt(x, z) + 1.1, z, { dur: 5, r: 7, h: 3 }); } catch (e){}
       toast(`📜 받침대 위에 「${N.what}」이 놓였어요`, 3800);
       await new Promise(r => setTimeout(r, 4200));
-      const nx = SCROLL_LIST.find(s => s.id === N.to);
+      const nx = N.to && SCROLL_LIST.find(s => s.id === N.to);
       document.getElementById('ns-title').textContent = `📜 「${scrollTitle(from)}」를 마쳤어요!`;
+      if (!nx){   // 다음 두루마리가 아직 없을 때: 받침대만 보여 주고 닫는다
+        document.getElementById('ns-body').textContent = `${N.ped + 1}번째 받침대에 「${N.what}」이 놓였어요.\n\n다음 두루마리는 지금 준비하고 있어요. 열리면 알려 줄게요!`;
+        const go0 = document.getElementById('ns-go'); go0.textContent = '확인'; go0.onclick = () => document.querySelector('#next-scroll-modal .close').click();
+        openModal('next-scroll-modal'); return;
+      }
       document.getElementById('ns-body').textContent = `${N.ped + 1}번째 받침대에 「${N.what}」이 놓였어요.\n\n다음 두루마리 「${nx.title}」(${nx.no}편)을 펼칠까요?`;
       const go = document.getElementById('ns-go'); go.textContent = `📖 ${nx.no}편 펼치기`;
       const hint = () => toast(`나중에 하고 싶을 땐 🧭 「길 떠나기」 스킬로 두루마리마을에 가서 「📚 두루마리 문」을 누르세요. ${nx.no}편의 「펼치기」 버튼이 있어요.`, 6500);
@@ -7090,7 +7161,7 @@
     } finally { nsBusy = false; }
   }
   // ── 1. 기념 전시관: 모세 편(10장)을 마치면 첫 받침대에 두 돌판 ──
-  const PEDESTALS = [[7.2, -8.8], [8.4, -6.6], [9.9, -4.7]];
+  const PEDESTALS = [[7.2, -8.8], [8.4, -6.6], [9.9, -4.7], [11.6, -3.0]];
   let exhibitObj = null;
   async function buildExhibit(){
     if (exhibitObj){ exhibitObj.parent && exhibitObj.parent.remove(exhibitObj); exhibitObj = null; }
@@ -7108,6 +7179,13 @@
       const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff0b0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 })); glow.scale.set(1.6, 1.6, 1); glow.position.set(x, heightAt(x, z) + 1.6, z); exhibitObj.add(glow);
     }
     exhibitSerpent();   // 세 번째 받침대: 놋뱀 장대(민 21:9)
+    if (joshuaDone() && PEDESTALS[3]){   // 네 번째 받침대: 길갈의 열두 돌(수 4:20)
+      const [x, z] = PEDESTALS[3], y = heightAt(x, z) + 1.06, sg = new THREE.Group(), cols = [0xd8cdb6, 0xc9b896, 0xe0d4ba];
+      for (let i = 0; i < 12; i++){ const a = i / 12 * Math.PI * 2, r = i < 8 ? 0.3 : 0.13, st = new THREE.Mesh(new THREE.DodecahedronGeometry(0.09, 0), new THREE.MeshToonMaterial({ color: cols[i % 3], gradientMap: toonGradient }));
+        st.position.set(Math.cos(a * (i < 8 ? 1 : 2)) * r, i < 8 ? 0.06 : 0.17, Math.sin(a * (i < 8 ? 1 : 2)) * r); st.rotation.set(i, i * 2, 0); sg.add(st); }
+      sg.position.set(x, y, z); exhibitObj.add(sg);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff0d0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.3 })); glow.scale.set(1.2, 1.2, 1); glow.position.set(x, y + 0.4, z); exhibitObj.add(glow);
+    }
     if (sinai2Done() && PEDESTALS[1]){   // 두 번째 받침대: 은 나팔 둘(민 10:2)
       const [x, z] = PEDESTALS[1], y = heightAt(x, z) + 1.12, silver = new THREE.MeshToonMaterial({ color: 0xe4e8ee, gradientMap: toonGradient }), tg = new THREE.Group();
       [-0.16, 0.16].forEach(dz => { const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.8, 8), silver); tube.rotation.z = Math.PI / 2; tube.position.set(0, 0.05, dz); tg.add(tube);
@@ -7127,6 +7205,7 @@
   }
   const sinai2Done = () => { const p = ST.sp && ST.sp.sinai2; return !!(p && p.cleared && p.ch >= 9); };
   const wild3Done = () => { const p = ST.sp && ST.sp.wild3; return !!(p && p.cleared && p.ch >= 15); };
+  const joshuaDone = () => { const p = ST.sp && ST.sp.joshua; return !!(p && p.cleared && p.ch >= 12); };
   const CH_NAMES = CHAPTERS.map(c => (c.clearTitle.match(/「([^」]+)」/) || [])[1] || '');
   function openExhibit(){
     const done = chaptersDone(), el = document.getElementById('exhibit-body');
@@ -7141,7 +7220,8 @@
     }).join('');
     const head2 = sinai2Done() ? `<div class="keyline">🎺 <b>두 번째 받침대 — 「시내산의 마지막 한 달」의 은 나팔 둘</b><br><span style="opacity:.8">"은 나팔 둘을 만들되 두들겨 만들어서 그것으로 회중을 소집하며 진영을 출발하게 할 것이라" (민수기 10:2)</span></div>` : '';
     const head3 = wild3Done() ? `<div class="keyline">🐍 <b>세 번째 받침대 — 「광야 40년」의 놋뱀 장대</b><br><span style="opacity:.8">"모세가 놋뱀을 만들어 장대 위에 다니 뱀에게 물린 자가 놋뱀을 쳐다본즉 모두 살더라" (민수기 21:9)</span></div>` : '';
-    el.innerHTML = head + rows + head2 + head3 + `<div style="margin-top:8px;font-size:12.5px;opacity:.75">${wild3Done() ? '세 받침대가 모두 채워졌어요. 다음 두루마리의 기념물은 새 받침대에 놓여요.' : sinai2Done() ? '세 번째 받침대는 3편 「광야 40년」을 모두 마치면 채워져요.' : '두 번째 받침대는 2편 「시내산의 마지막 한 달」을 모두 마치면 채워져요.'}</div>`;
+    const head4 = joshuaDone() ? `<div class="keyline">🪨 <b>네 번째 받침대 — 「여호수아와 함께」의 길갈의 열두 돌</b><br><span style="opacity:.8">"여호수아가 요단에서 가져온 그 열두 돌을 길갈에 세우고" (여호수아 4:20)</span></div>` : '';
+    el.innerHTML = head + rows + head2 + head3 + head4 + `<div style="margin-top:8px;font-size:12.5px;opacity:.75">${joshuaDone() ? '네 받침대가 채워졌어요. 다음 두루마리는 준비하고 있어요.' : wild3Done() ? '네 번째 받침대는 4편 「여호수아와 함께」를 모두 마치면 채워져요.' : sinai2Done() ? '세 번째 받침대는 3편 「광야 40년」을 모두 마치면 채워져요.' : '두 번째 받침대는 2편 「시내산의 마지막 한 달」을 모두 마치면 채워져요.'}</div>`;
     openModal('exhibit-modal');
   }
   document.getElementById('exhibit-replay').onclick = () => { document.querySelectorAll('.modal:not(.hidden) .close').forEach(b => b.click()); setTimeout(openReplay, 250); };
@@ -8062,7 +8142,7 @@
       buildAltar(ST.ch > 5 || (ST.ch === 5 && (ST.cleared || ST.step >= stepIdx('c6s10'))));
     }
     if (Z.id === 'sinai'){ buildStorm(stormOn()); buildCh910(); }
-    if (Z.id === 'kadesh' || Z.id === 'moab'){ tabStage = -1; buildTabernacle(16); buildGlory(Z.id === 'moab' || !kadeshNoGlory); buildArkAt(TAB.x0 + 1.2, TAB.z, Math.PI / 2); }
+    if (Z.id === 'kadesh' || Z.id === 'moab' || Z.id === 'shiloh'){ tabStage = -1; buildTabernacle(16); buildGlory(Z.id !== 'kadesh' || !kadeshNoGlory); buildArkAt(TAB.x0 + 1.2, TAB.z, Math.PI / 2); }   // 수 18:1 실로에 회막
     buildCovenantAltar();
     if (Z.id === 'wild') spawnQuail(ST.ch === 4 && !ST.cleared && ST.step >= stepIdx('c5s10') && ST.step <= stepIdx('c5s11'));
     if (Z._water){
@@ -9106,6 +9186,9 @@
   ROUTE.gilgal = {}; Object.keys(ROUTE).forEach(z => { if (z === 'gilgal') return; ROUTE.gilgal[z] = 'to-moab4'; ROUTE[z].gilgal = z === 'moab' ? 'to-gilgal' : ROUTE[z].moab; });
   // 아이와 에발 산(4편 7·8장)은 길갈 서쪽 길로만 이어진다
   ROUTE.ai = {}; Object.keys(ROUTE).forEach(z => { if (z === 'ai') return; ROUTE.ai[z] = 'to-gilgal3'; ROUTE[z].ai = z === 'gilgal' ? 'to-ai' : ROUTE[z].gilgal; });
+  // 4편 3부: 기브온(서쪽 길) · 헤브론 산지(남쪽 길) · 실로와 세겜(북쪽 길) — 모두 길갈에서만 이어진다
+  [['gibeon', 'to-gilgal4', 'to-gibeon'], ['hebron', 'to-gilgal5', 'to-hebron'], ['shiloh', 'to-gilgal6', 'to-shiloh']].forEach(([nz, back, go]) => {
+    ROUTE[nz] = {}; Object.keys(ROUTE).forEach(z => { if (z === nz) return; ROUTE[nz][z] = back; ROUTE[z][nz] = z === 'gilgal' ? go : ROUTE[z].gilgal; }); });
   ROUTE.redsea.rephidim = 'to-wild'; ROUTE.redsea.sinai = 'to-wild';
   let doorTarget = null;
   function targetPos(){
