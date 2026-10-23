@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-10-22 09:44",
+  "generated_kst": "2026-10-23 09:43",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 141,
     "follows_count": 111,
-    "media_count": 152
+    "media_count": 153
   },
   "posts": [
+    {
+      "id": "17914495491471594",
+      "type": "FEED",
+      "media_type": "IMAGE",
+      "timestamp_utc": "2026-10-22T10:32:38+0000",
+      "permalink": "https://www.instagram.com/p/DeyxqJRm0fS/",
+      "caption_first_line": "\"힘내\" 다음에 할 수 있는 한 걸음.",
+      "likes": 6,
+      "comments": 1
+    },
     {
       "id": "18270002710305268",
       "type": "FEED",
@@ -247,16 +257,6 @@
       "caption_first_line": "하루에 딱 1분, 말씀 한 구절 길어 올려본 적 있나요? 🪣",
       "likes": 21,
       "comments": 1
-    },
-    {
-      "id": "18050731730757691",
-      "type": "REELS",
-      "media_type": "VIDEO",
-      "timestamp_utc": "2026-05-16T04:00:25+0000",
-      "permalink": "https://www.instagram.com/reel/DYYqcdLBDJ3/",
-      "caption_first_line": "[드디어 D-1] 같이 VIP FESTIVAL 가자!! 🏃‍♂️🏃‍♀️💨 🚨",
-      "likes": 38,
-      "comments": 5
     }
   ]
 }
