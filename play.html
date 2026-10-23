@@ -31,6 +31,15 @@
     <div class="hand-note">놀면서 자라는<br>믿음의 하루!</div>
   </div>
 
+  <!-- 가을 원정대 (11/8 중등부 가을 야유회 미션) — 11/1~11/15에만 보인다. 그 전에는 팀 코드로 들어와 본 휴대폰에만 -->
+  <div class="feature-card" id="expeditionCard" style="display:none;background-image:linear-gradient(150deg,#e0812a 0%,#b8481f 60%,#6e2a10 100%);box-shadow:0 14px 30px rgba(184,72,31,.28);margin-bottom:16px;">
+    <img class="fc-art" src="assets/picnic/card.png" alt="" onerror="this.remove()">
+    <p class="fc-kicker" style="color:#f2b544;opacity:1;">HIDDEN MISSION · 11/8 서울대공원</p>
+    <h2>🍁 가을 원정대</h2>
+    <p>팀 코드로 들어와서<br>우리 팀 미션을 함께 해요!</p>
+    <a href="expedition.html" class="pill-lime" style="background:#f2b544;color:#3a1d07;">원정 떠나기 ›</a>
+  </div>
+
   <!-- 놀이터 랭킹 -->
   <a href="rank.html" class="card" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
     <span class="ico-circle">🏆</span>
@@ -138,6 +147,13 @@
 <script src="assets/appshell.js"></script>
 <script>
   initHeaderAuthState();
+  (function () {
+    var card = document.getElementById("expeditionCard");
+    if (!card) return;
+    var now = Date.now(), joined = false;
+    try { joined = !!(JSON.parse(localStorage.getItem("msu_expedition_autumn2026") || "{}") || {}).code; } catch (e) {}
+    if (joined || (now >= new Date("2026-11-01T00:00:00+09:00").getTime() && now < new Date("2026-11-16T00:00:00+09:00").getTime())) card.style.display = "block";
+  })();
   // In Odyssey 카드: 2026-10-04 19:30(KST)부터 누구에게나 보여 준다(로그인하지 않으면 게임 안에서 조작 연습까지만).
   // 그 전에는 관리자 + 시험 참여로 지정한 학생에게만(DB 함수 can_see_odyssey).
   (function () {

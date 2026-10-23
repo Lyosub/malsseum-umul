@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light">
+<title>가을 원정대 | 말씀우물</title>
+<meta name="description" content="11/8 중등부 가을 야유회 미션 — 팀 코드로 들어와 우리 팀 미션을 함께 해요!">
+<meta property="og:type" content="website">
+<meta property="og:title" content="🍁 가을 원정대 | 말씀우물">
+<meta property="og:description" content="11/8 서울대공원 · 팀 코드로 들어와 우리 팀 미션을 함께 해요!">
+<meta property="og:image" content="https://logoswell.kr/assets/picnic/og.jpg">
+<meta property="og:url" content="https://logoswell.kr/expedition.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<meta name="theme-color" content="#b8481f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<style>
+  [hidden] { display: none !important; }
+  :root {
+    --bg: #fbf4e6; --card: #fffdf8; --ink: #2b2118; --soft: #7a6a5a; --line: #ecdcc4;
+    --rust: #b8481f; --orange: #e0812a; --gold: #f2b544; --leaf: #2f6b4f; --forest: #173b2c;
+    --ok: #2f8f4e; --wait: #c98a12; --bad: #c2271d;
+    --sans: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+    padding-bottom: max(24px, env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent; }
+  main { max-width: 520px; margin: 0 auto; padding: 0 16px; }
+  main > * { min-width: 0; }
+  button { font: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+  .hero { position: relative; margin: 0 -16px; padding: max(28px, env(safe-area-inset-top)) 22px 30px; color: #fff; overflow: hidden;
+    background: linear-gradient(160deg, #e0812a 0%, #b8481f 55%, #6e2a10 100%); }
+  .hero.has-art { background-size: cover; background-position: center; }
+  .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(40,15,5,.15), rgba(40,15,5,.55)); }
+  .hero.has-art::after { background: linear-gradient(100deg, rgba(50,18,4,.78) 0%, rgba(50,18,4,.5) 55%, rgba(50,18,4,.15) 100%), linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(40,15,5,.45)); }
+  .hero .kicker, .hero p, .hero .back { text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+  .hero > * { position: relative; z-index: 1; }
+  .hero .back { color: #fff; opacity: .85; text-decoration: none; font-size: 13px; }
+  .hero .kicker { margin-top: 18px; font-size: 12px; font-weight: 800; letter-spacing: .16em; color: var(--gold); }
+  .hero h1 { margin: 2px 0 4px; font-size: 38px; font-weight: 900; letter-spacing: .02em; text-shadow: 0 2px 10px rgba(0,0,0,.3); }
+  .hero p { margin: 0; font-size: 14px; opacity: .92; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 16px; margin-top: 16px;
+    box-shadow: 0 6px 18px rgba(120, 70, 20, .07); }
+  .card h2 { margin: 0 0 10px; font-size: 18px; font-weight: 800; }
+  .muted { color: var(--soft); font-size: 13px; }
+  .msg { min-height: 1.3em; font-size: 13.5px; margin: 8px 0 0; }
+  .msg.err { color: var(--bad); }
+  input[type=text], textarea { width: 100%; font: inherit; color: var(--ink); background: #fff; border: 1.5px solid var(--line);
+    border-radius: 12px; padding: 12px; outline: none; }
+  input[type=text]:focus, textarea:focus { border-color: var(--orange); }
+  textarea { resize: vertical; min-height: 92px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 999px;
+    padding: 12px 18px; font-weight: 800; background: var(--rust); color: #fff; }
+  .btn.block { width: 100%; }
+  .btn.ghost { background: transparent; color: var(--rust); border: 1.5px solid var(--rust); }
+  .btn.gold { background: var(--gold); color: #3a1d07; }
+  .btn:disabled { opacity: .5; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > input { flex: 1 1 0; width: auto; min-width: 0; }
+  .row > .btn { flex: none; }
+
+  .names { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-top: 10px; }
+  .names button { border: 1.5px solid var(--line); background: #fff; border-radius: 12px; padding: 12px 6px; font-weight: 700; }
+  .names button:hover { border-color: var(--orange); }
+
+  .me { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .me .badge { font-size: 30px; }
+  .me .tn { font-weight: 900; font-size: 18px; }
+  .me .who { font-size: 13px; color: var(--soft); }
+  .me .who button { border: 0; background: none; color: var(--rust); text-decoration: underline; padding: 0 2px; font-size: 13px; }
+
+  /* 진행판 */
+  .board .team { padding: 10px 0; border-top: 1px dashed var(--line); }
+  .board .team:first-of-type { border-top: 0; }
+  .board .team.mine .nm { color: var(--rust); }
+  .board .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .board .nm { font-weight: 800; }
+  .board .cnt { font-size: 12px; color: var(--soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .bar { height: 10px; border-radius: 99px; background: #f1e4cf; overflow: hidden; margin-top: 6px; }
+  .bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--gold), var(--orange), var(--rust)); transition: width .6s ease; }
+  .board .score { font-weight: 900; color: var(--rust); font-size: 16px; }
+
+  /* 탭 */
+  .tabs { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 16px -16px 0; padding: 10px 16px;
+    background: rgba(251, 244, 230, .94); backdrop-filter: blur(6px); }
+  .tabs button { border: 0; border-radius: 12px; padding: 10px 4px; font-weight: 800; font-size: 14px; background: #f1e4cf; color: var(--soft); }
+  .tabs button.on { background: var(--rust); color: #fff; }
+  .tabs .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); margin-left: 4px; vertical-align: middle; }
+
+  /* 미션 카드 */
+  details.q { background: var(--card); border: 1px solid var(--line); border-radius: 16px; margin-top: 10px; overflow: hidden; }
+  details.q > summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 14px; cursor: pointer; }
+  details.q > summary::-webkit-details-marker { display: none; }
+  .qn { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--orange); color: #fff; font-weight: 900;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .qt { flex: 1 1 auto; min-width: 0; font-weight: 800; }
+  .qt small { display: block; font-weight: 500; color: var(--soft); font-size: 12px; }
+  .ticks { flex: none; display: flex; gap: 4px; }
+  .tick { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;
+    background: #f1e4cf; color: #b9a58c; }
+  .tick.ok { background: var(--ok); color: #fff; }
+  .tick.wait { background: var(--wait); color: #fff; }
+  .qbody { padding: 0 14px 14px; display: grid; gap: 14px; }
+  .step { border-top: 1px dashed var(--line); padding-top: 12px; }
+  .step h3 { margin: 0 0 8px; font-size: 14px; }
+  .state { font-size: 13.5px; font-weight: 700; margin-top: 6px; }
+  .state.ok { color: var(--ok); } .state.wait { color: var(--wait); } .state.bad { color: var(--bad); }
+  .thumb { display: block; width: 100%; max-height: 260px; object-fit: cover; border-radius: 12px; margin-top: 8px; background: #eee; }
+  .place-img { position: relative; width: 100%; aspect-ratio: 3 / 4; border-radius: 12px; overflow: hidden; background: #efe2cc;
+    display: flex; align-items: center; justify-content: center; color: var(--soft); font-size: 13px; text-align: center; }
+  .place-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .hint { background: #fff6dc; border: 1px solid #f3dc9b; border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+
+  .lock { text-align: center; padding: 30px 16px; }
+  .lock .ic { font-size: 54px; }
+  .lock .cd { font-size: 34px; font-weight: 900; color: var(--rust); font-variant-numeric: tabular-nums; margin: 6px 0; }
+  .mission { border-radius: 18px; padding: 18px 16px; margin-top: 12px; color: #fff; background: linear-gradient(150deg, #2f6b4f, #173b2c); }
+  .mission.m2 { background: linear-gradient(150deg, #e0812a, #b8481f); }
+  .mission .tag { font-size: 11px; font-weight: 900; letter-spacing: .16em; color: var(--gold); }
+  .mission h3 { margin: 4px 0 8px; font-size: 20px; }
+  .mission p { margin: 0 0 10px; font-size: 14px; opacity: .95; }
+  .mission .clue { background: rgba(255,255,255,.14); border-radius: 12px; padding: 10px 12px; margin-top: 8px; font-size: 14px; }
+  .mission .clue b { color: var(--gold); margin-right: 6px; }
+  .mission .state.ok { color: #b8f5c8; } .mission .state.wait { color: #ffe29a; } .mission .state.bad { color: #ffc2b8; }
+  .leaves { display: flex; gap: 6px; margin: 4px 0 10px; }
+  .leaves span { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255,255,255,.7); }
+
+  .result { text-align: center; }
+  .result .rk { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; margin-top: 8px; background: #fff; border: 1px solid var(--line); text-align: left; }
+  .result .rk .md { font-size: 28px; width: 36px; text-align: center; }
+  .result .rk .nm { flex: 1 1 auto; font-weight: 800; }
+  .result .rk .sc { font-weight: 900; color: var(--rust); font-size: 20px; }
+  .result .rk.mine { border-color: var(--rust); box-shadow: 0 0 0 2px rgba(184, 72, 31, .2); }
+
+  .toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 30;
+    max-width: calc(100% - 32px); background: #2b2118; color: #fff; padding: 12px 16px; border-radius: 14px; font-size: 14px; font-weight: 700;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .modal { position: fixed; inset: 0; z-index: 40; background: rgba(30, 12, 4, .6); display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal .box { background: var(--card); border-radius: 22px; padding: 26px 20px; max-width: 360px; width: 100%; text-align: center; }
+  .modal .box .ic { font-size: 56px; }
+  .modal .box h3 { margin: 6px 0; font-size: 22px; }
+  .verse-foot { text-align: center; color: var(--soft); font-size: 12.5px; margin: 26px 0 0; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .shake { animation: shake .3s 2; }
+
+  /* 당일 전 안내 */
+  .guide > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; font-size: 18px; font-weight: 800; }
+  .guide > summary::-webkit-details-marker { display: none; }
+  .guide > summary::after { content: "펼치기 ▾"; font-size: 12px; font-weight: 700; color: var(--soft); white-space: nowrap; }
+  .guide[open] > summary::after { content: "접기 ▴"; }
+  .guide .dday { display: inline-block; margin-left: 6px; padding: 2px 9px; border-radius: 99px; background: var(--rust); color: #fff; font-size: 12px; font-weight: 900; vertical-align: 2px; }
+  .guide .when { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 12px 0 4px; font-size: 14px; }
+  .guide .when dt { color: var(--soft); font-weight: 700; }
+  .guide .when dd { margin: 0; font-weight: 700; }
+  .guide h3 { margin: 18px 0 8px; font-size: 15px; }
+  .guide .ms { display: flex; gap: 10px; padding: 10px 12px; border-radius: 14px; background: #fff; border: 1px solid var(--line); margin-top: 8px; }
+  .guide .ms .i { flex: none; font-size: 26px; line-height: 1.2; }
+  .guide .ms b { display: block; }
+  .guide .ms span { font-size: 13.5px; color: var(--soft); }
+  .guide .ms.secret { background: linear-gradient(150deg, #2f6b4f, #173b2c); border: 0; color: #fff; }
+  .guide .ms.secret span { color: rgba(255,255,255,.85); }
+  .guide ol { margin: 0; padding-left: 20px; font-size: 14px; }
+  .guide ol li { margin: 4px 0; }
+  .guide .bring { display: flex; flex-wrap: wrap; gap: 6px; }
+  .guide .bring span { background: #f1e4cf; border-radius: 99px; padding: 5px 11px; font-size: 13px; font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+  <header class="hero" id="hero">
+    <a class="back" href="play.html">‹ 말씀놀이터</a>
+    <div class="kicker">HIDDEN MISSION · 11/8 서울대공원</div>
+    <h1>🍁 가을 원정대</h1>
+    <p>우리 팀과 함께 하나님이 지으신 것들을 찾아 떠나요!</p>
+  </header>
+
+  <!-- 1. 팀 코드 -->
+  <section class="card" id="joinCard" hidden>
+    <h2>팀 코드를 넣어 주세요</h2>
+    <p class="muted" style="margin:0 0 10px;" id="joinNote">선생님께 받은 우리 팀 코드예요. (예: 단풍-1234)</p>
+    <form class="row" id="joinForm">
+      <input type="text" id="codeInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="팀 코드" maxlength="20">
+      <button class="btn" type="submit">입장</button>
+    </form>
+    <p class="msg err" id="joinMsg" role="alert"></p>
+  </section>
+
+  <!-- 2. 내 이름 -->
+  <section class="card" id="nameCard" hidden>
+    <h2 id="nameTitle">내 이름을 골라 주세요</h2>
+    <p class="muted" style="margin:0;">내가 한 미션에 내 이름이 남아요.</p>
+    <div class="names" id="nameList"></div>
+    <button class="btn ghost block" type="button" id="otherTeam" style="margin-top:14px;">다른 팀 코드 넣기</button>
+  </section>
+
+  <!-- 3. 미션 -->
+  <div id="mainArea" hidden>
+    <div class="me">
+      <span class="badge" id="meEmoji">🍁</span>
+      <div style="min-width:0;">
+        <div class="tn" id="meTeam"></div>
+        <div class="who">나: <b id="meName"></b> <button type="button" id="changeMe">바꾸기</button></div>
+      </div>
+    </div>
+
+    <section class="card result" id="resultCard" hidden>
+      <h2>🏆 가을 원정대 결과</h2>
+      <div id="resultList"></div>
+    </section>
+
+    <section class="card board" id="boardCard">
+      <h2 style="display:flex;justify-content:space-between;align-items:baseline;">모든 팀 진행판 <span class="muted" style="font-weight:500;font-size:12px;">점수는 시상 때 공개!</span></h2>
+      <div id="boardList"></div>
+    </section>
+
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="dogam" class="on">🦁 동물 도감</button>
+      <button type="button" role="tab" data-tab="place">📸 사진 찾기</button>
+      <button type="button" role="tab" data-tab="hidden" id="hiddenTab">❓ 히든</button>
+    </nav>
+
+    <section id="tab-dogam">
+      <p class="muted" style="margin:12px 2px 0;">성경 구절을 찾아 읽고 ① 동물 맞히기 → ② 그 동물 앞에서 단체 사진 → ③ 말씀 그대로 적기! (개역개정)</p>
+      <div id="dogamList"></div>
+    </section>
+    <section id="tab-place" hidden>
+      <p class="muted" style="margin:12px 2px 0;">사진 속 장소를 찾아가 <b>똑같은 구도로</b> 팀 사진을 찍어 올려요. 1시 30분부터는 힌트를 받을 수 있어요(힌트를 받은 장소는 점수가 조금 줄어요).</p>
+      <div id="placeList"></div>
+    </section>
+    <section id="tab-hidden" hidden>
+      <div id="hiddenArea"></div>
+    </section>
+
+  </div>
+
+  <!-- 당일 전 안내: 11/8 전에는 펼쳐 두고, 당일부터는 접어 둔다 -->
+  <details class="card guide" id="guide">
+    <summary><span>가을 원정대가 뭐예요?<span class="dday" id="dday" hidden></span></span></summary>
+    <dl class="when">
+      <dt>언제</dt><dd>11월 8일(주일) 오전 10시 30분 출발</dd>
+      <dt>어디</dt><dd>서울대공원</dd>
+      <dt>누구랑</dt><dd>학년별로 나눈 우리 팀</dd>
+    </dl>
+    <p style="margin:10px 0 0;font-size:14px;">팀이 함께 서울대공원을 돌며 <b>하나님이 지으신 것들</b>을 찾는 미션이에요. 팀원 모두가 <b>각자 휴대폰</b>으로 들어와서 함께 채워요.</p>
+
+    <h3>미션은 세 가지</h3>
+    <div class="ms"><div class="i">🦁</div><div><b>성경 동물 도감 · 10문제</b><span>성경 구절을 찾아 읽고 어떤 동물인지 맞혀요. 그 동물 앞에서 팀 사진을 찍고, 말씀도 그대로 적어요.</span></div></div>
+    <div class="ms"><div class="i">📸</div><div><b>사진 찾기 · 8곳</b><span>사진 속 장소를 찾아가 똑같은 구도로 팀 사진을 찍어요.</span></div></div>
+    <div class="ms secret"><div class="i">❓</div><div><b>히든 미션 · 2개</b><span>무엇인지는 비밀! 당일 정해진 시각에 모든 팀 휴대폰에서 한꺼번에 열려요.</span></div></div>
+
+    <h3>이렇게 해요</h3>
+    <ol>
+      <li>당일 아침, 선생님이 <b>우리 팀 코드</b>를 알려 줘요.</li>
+      <li>이 화면에 코드를 넣고 <b>내 이름</b>을 골라요.</li>
+      <li>미션을 하면 바로바로 올려요. <b>모든 팀이 얼마나 했는지</b> 진행판으로 함께 보여요.</li>
+      <li>점수는 비밀이었다가 <b>시상 때</b> 한꺼번에 공개돼요.</li>
+    </ol>
+
+    <h3>꼭 챙겨요</h3>
+    <div class="bring"><span>🔋 휴대폰 충전 100%</span><span>📖 성경 앱(개역개정)</span><span>👟 편한 운동화</span><span>🧥 따뜻한 겉옷</span><span>💧 개인 물병</span></div>
+    <p class="muted" style="margin:12px 0 0;">팀은 끝까지 같이 다녀요. 동물원 규칙을 지키고, 집합 시간에 늦으면 감점이 있어요.</p>
+  </details>
+
+  <p class="verse-foot">"주께서 지으신 것들이 땅에 가득하니이다" (시편 104:24)</p>
+</main>
+
+<input type="file" id="filePick" accept="image/*" hidden>
+<div class="toast" id="toast" hidden></div>
+<div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
+
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script>
+(function () {
+  "use strict";
+  var EVENT = "autumn2026";
+  var KEY = "msu_expedition_" + EVENT;
+  var BUCKET = "picnic-photos";
+  var POLL_MS = 12000;
+  var sb = (window.supabase && typeof SUPABASE_URL !== "undefined") ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
+
+  var S = null;          // 마지막 상태
+  var team = null;       // {id,name,emoji}
+  var members = [];
+  var tab = saved.tab || "dogam";
+  var openQ = {};        // 펼쳐 둔 카드
+  var drafts = {};       // 입력 중인 글
+  var clockOffset = 0;   // 서버 시각 - 내 시각
+  var lastHiddenOpen = null, lastClueCount = null, lastResults = null;
+  var busy = false, pollTimer = null;
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function toast(t) { var el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function () { el.hidden = true; }, 2600); }
+  function modal(html) { $("modalBox").innerHTML = html + '<button class="btn block" type="button" id="modalOk" style="margin-top:16px;">확인</button>'; $("modal").hidden = false; $("modalOk").onclick = function () { $("modal").hidden = true; }; }
+  function buzz() { try { if (navigator.vibrate) navigator.vibrate([120, 60, 120]); } catch (e) {} }
+  function kst(t) { var d = new Date(t); return d.toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Seoul" }); }
+
+  // 히어로 그림(있을 때만)
+  (function () { var img = new Image(); img.onload = function () { var h = $("hero"); h.style.backgroundImage = "url('assets/picnic/hero.jpg')"; h.classList.add("has-art"); }; img.src = "assets/picnic/hero.jpg"; })();
+
+  // ---------- 화면 전환 ----------
+  function show(which) {
+    $("joinCard").hidden = which !== "join";
+    $("nameCard").hidden = which !== "name";
+    $("mainArea").hidden = which !== "main";
+  }
+
+  function start() {
+    if (!sb) { show("join"); $("joinMsg").textContent = "연결을 준비하지 못했어요. 새로고침해 주세요."; return; }
+    if (saved.code) { join(saved.code, true); } else { show("join"); }
+  }
+
+  $("joinForm").addEventListener("submit", function (ev) { ev.preventDefault(); join($("codeInput").value, false); });
+
+  function join(code, silent) {
+    code = String(code || "").trim().toUpperCase();
+    if (!code) { $("joinMsg").textContent = "팀 코드를 넣어 주세요."; return; }
+    $("joinMsg").textContent = "";
+    sb.rpc("picnic_join", { p_code: code }).then(function (r) {
+      var d = r && r.data;
+      if (!d || !d.ok) {
+        saved = { tab: tab }; save(); show("join");
+        if (!silent || code) $("joinMsg").textContent = (d && d.error) || "연결이 원활하지 않아요. 다시 눌러 주세요.";
+        return;
+      }
+      team = d.team; members = d.members || [];
+      saved.code = code; save();
+      var me = members.filter(function (m) { return m.id === saved.member; })[0];
+      if (me) { saved.name = me.name; save(); enterMain(); } else { pickName(); }
+    }, function () { show("join"); $("joinMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
+  }
+
+  function pickName() {
+    show("name");
+    $("nameTitle").textContent = team.emoji + " " + team.name + " — 내 이름을 골라 주세요";
+    var box = $("nameList");
+    if (!members.length) { box.innerHTML = '<p class="muted">아직 명단이 없어요. 선생님께 말씀드려 주세요.</p>'; return; }
+    box.innerHTML = members.map(function (m) { return '<button type="button" data-id="' + m.id + '">' + esc(m.name) + '</button>'; }).join("");
+    box.querySelectorAll("button").forEach(function (b) {
+      b.onclick = function () {
+        saved.member = Number(b.getAttribute("data-id"));
+        saved.name = b.textContent; save(); enterMain();
+      };
+    });
+  }
+  $("otherTeam").onclick = function () { saved = { tab: tab }; save(); team = null; show("join"); $("codeInput").value = ""; };
+  $("changeMe").onclick = function () { stopPoll(); pickName(); };
+
+  function enterMain() {
+    show("main");
+    $("meEmoji").textContent = team.emoji; $("meTeam").textContent = team.name; $("meName").textContent = saved.name;
+    setTab(tab);
+    refresh();
+    startPoll();
+  }
+
+  // ---------- 탭 ----------
+  document.querySelectorAll(".tabs button").forEach(function (b) { b.onclick = function () { setTab(b.getAttribute("data-tab")); }; });
+  function setTab(t) {
+    tab = t; saved.tab = t; save();
+    document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-tab") === t); });
+    ["dogam", "place", "hidden"].forEach(function (k) { $("tab-" + k).hidden = k !== t; });
+    if (t === "hidden") $("hiddenTab").innerHTML = "❓ 히든";
+  }
+
+  // ---------- 상태 불러오기 ----------
+  function startPoll() { stopPoll(); pollTimer = setInterval(function () { if (!document.hidden) refresh(); }, POLL_MS); }
+  function stopPoll() { if (pollTimer) clearInterval(pollTimer); pollTimer = null; }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && team && !$("mainArea").hidden) refresh(); });
+
+  function refresh() {
+    if (!saved.code) return;
+    return sb.rpc("picnic_state", { p_code: saved.code }).then(function (r) {
+      var d = r && r.data;
+      if (!d) return;
+      if (!d.ok) { stopPoll(); saved = { tab: tab }; save(); show("join"); $("joinMsg").textContent = d.error; return; }
+      clockOffset = new Date(d.now).getTime() - Date.now();
+      S = d;
+      notifyChanges();
+      render();
+    }, function () {});
+  }
+
+  function notifyChanges() {
+    if (lastHiddenOpen === false && S.hidden_open) {
+      buzz();
+      modal('<div class="ic">🔓</div><h3>히든 미션이 열렸어요!</h3><p class="muted">❓ 히든 탭에서 미션 두 개를 확인하세요.</p>');
+      if (tab !== "hidden") $("hiddenTab").innerHTML = '❓ 히든<span class="dot"></span>';
+    }
+    if (lastClueCount !== null && S.clues.length > lastClueCount) {
+      buzz(); toast("🧩 말씀 조각 단서가 새로 올라왔어요!");
+      if (tab !== "hidden") $("hiddenTab").innerHTML = '❓ 히든<span class="dot"></span>';
+    }
+    if (lastResults === false && S.results_open) { buzz(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    lastHiddenOpen = S.hidden_open; lastClueCount = S.clues.length; lastResults = S.results_open;
+  }
+
+  // ---------- 제출 정리 ----------
+  function subsOf(kind, q) { return S.subs.filter(function (s) { return s.kind === kind && s.q === q; }); }
+  function best(kind, q) {
+    var list = subsOf(kind, q);
+    var ok = list.filter(function (s) { return s.status === "ok"; })[0];
+    if (ok) return ok;
+    var pend = list.filter(function (s) { return s.status === "pending"; });
+    if (pend.length) return pend[pend.length - 1];
+    return list[list.length - 1] || null;
+  }
+  function tickOf(s) { return !s ? "" : s.status === "ok" ? "ok" : s.status === "pending" ? "wait" : ""; }
+
+  function stateLine(s, okText) {
+    if (!s) return "";
+    var who = s.who ? " · " + esc(s.who) : "";
+    if (s.status === "ok") return '<div class="state ok">✅ ' + okText + who + '</div>';
+    if (s.status === "pending") return '<div class="state wait">⏳ 선생님이 확인하고 있어요' + who + '</div>';
+    if (s.status === "rejected") return '<div class="state bad">↩️ 다시 해 볼까요? (선생님이 돌려보냈어요)</div>';
+    if (s.status === "wrong") return '<div class="state bad">🤔 「' + esc(s.text) + '」는 아니에요. 구절을 다시 읽어 봐요!</div>';
+    return "";
+  }
+
+  // ---------- 그리기 ----------
+  function keepDrafts() {
+    document.querySelectorAll("[data-draft]").forEach(function (el) { drafts[el.getAttribute("data-draft")] = el.value; });
+    document.querySelectorAll("details.q").forEach(function (d) { openQ[d.getAttribute("data-key")] = d.open; });
+  }
+  function typing() {
+    var a = document.activeElement;
+    return a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA") && a.closest("#mainArea");
+  }
+
+  function render() {
+    renderBoard();
+    renderResult();
+    if (typing() || busy) return; // 글을 쓰는 중에는 미션 카드를 다시 그리지 않는다
+    keepDrafts();
+    renderDogam(); renderPlace(); renderHidden();
+  }
+
+  function pct(t) { return Math.round(((t.dogam / 30) * 50 + (t.place / 8) * 40 + (t.hidden / 2) * 20) / 110 * 100); }
+
+  function renderBoard() {
+    var list = S.board.slice();
+    $("boardList").innerHTML = list.map(function (t) {
+      var p = pct(t);
+      return '<div class="team' + (t.id === team.id ? " mine" : "") + '"><div class="top"><span class="nm">' + esc(t.emoji) + " " + esc(t.name) + (t.id === team.id ? " (우리 팀)" : "") +
+        '</span><span class="cnt">도감 ' + t.dogam + '/30 · 사진 ' + t.place + '/8 · 히든 ' + t.hidden + '/2</span></div>' +
+        '<div class="bar"><i style="width:' + p + '%"></i></div></div>';
+    }).join("") || '<p class="muted">아직 팀이 없어요.</p>';
+  }
+
+  function renderResult() {
+    var box = $("resultCard");
+    if (!S.results_open) { box.hidden = true; return; }
+    box.hidden = false;
+    var list = S.board.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+    var medals = ["🥇", "🥈", "🥉"];
+    var rank = 0, prev = null;
+    $("resultList").innerHTML = list.map(function (t, i) {
+      if (t.score !== prev) { rank = i; prev = t.score; }
+      return '<div class="rk' + (t.id === team.id ? " mine" : "") + '"><span class="md">' + (medals[rank] || (rank + 1)) + '</span><span class="nm">' + esc(t.emoji) + " " + esc(t.name) +
+        '</span><span class="sc">' + (t.score || 0) + '점</span></div>';
+    }).join("");
+  }
+
+  function renderDogam() {
+    $("dogamList").innerHTML = S.refs.map(function (r) {
+      var q = r.q, key = "d" + q;
+      var a = best("animal", q), ph = best("animal_photo", q), v = best("verse", q);
+      var aOk = a && a.status === "ok";
+      var open = openQ[key] === undefined ? false : openQ[key];
+      var html = '<details class="q" data-key="' + key + '"' + (open ? " open" : "") + '><summary>' +
+        '<span class="qn">' + q + '</span><span class="qt">' + esc(r.ref) + '<small>' + (aOk ? "🐾 " + esc(a.text) : "어떤 동물이 나올까요?") + '</small></span>' +
+        '<span class="ticks"><span class="tick ' + tickOf(a) + '">①</span><span class="tick ' + tickOf(ph) + '">②</span><span class="tick ' + tickOf(v) + '">③</span></span></summary><div class="qbody">';
+      // ① 동물
+      html += '<div class="step"><h3>① 이 구절에 나오는 동물은?</h3>';
+      if (aOk) html += stateLine(a, "정답! 「" + esc(a.text) + "」");
+      else html += '<form class="row" data-form="animal" data-q="' + q + '"><input type="text" maxlength="20" placeholder="동물 이름" data-draft="a' + q + '" value="' + esc(drafts["a" + q] || "") + '"><button class="btn" type="submit">확인</button></form>' + stateLine(a, "");
+      html += '</div>';
+      // ② 사진
+      html += '<div class="step"><h3>② 그 동물 앞에서 단체 사진 (팀원 3명 이상)</h3>';
+      if (ph && ph.photo) html += '<img class="thumb" loading="lazy" src="' + esc(ph.photo) + '" alt="">';
+      html += stateLine(ph, "통과!");
+      if (!ph || ph.status !== "ok") html += '<button class="btn gold block" type="button" data-photo="animal_photo" data-q="' + q + '" style="margin-top:8px;">📷 ' + (ph ? "사진 다시 올리기" : "사진 올리기") + '</button>';
+      html += '</div>';
+      // ③ 말씀
+      html += '<div class="step"><h3>③ 말씀을 그대로 적어요</h3>';
+      if (v && v.status === "ok") html += stateLine(v, "완벽해요!") + '<p class="muted" style="margin:6px 0 0;">' + esc(v.text) + '</p>';
+      else {
+        html += '<form data-form="verse" data-q="' + q + '"><textarea maxlength="300" placeholder="' + esc(r.ref) + ' 말씀을 띄어쓰기까지 그대로" data-draft="v' + q + '">' + esc(drafts["v" + q] || "") + '</textarea>' +
+          '<button class="btn block" type="submit" style="margin-top:8px;">말씀 제출</button></form>' + stateLine(v, "");
+        if (v && v.status === "pending") html += '<p class="muted" style="margin:4px 0 0;">한 글자라도 다르면 선생님이 직접 확인해요. 고쳐서 다시 내도 돼요.</p>';
+      }
+      html += '</div></div></details>';
+      return html;
+    }).join("");
+    bindForms($("dogamList"));
+  }
+
+  function renderPlace() {
+    var html = "";
+    for (var q = 1; q <= 8; q++) {
+      var key = "p" + q, p = best("place", q), hint = S.hints[String(q)];
+      var open = openQ[key] === undefined ? false : openQ[key];
+      html += '<details class="q" data-key="' + key + '"' + (open ? " open" : "") + '><summary><span class="qn" style="background:var(--leaf);">' + q + '</span>' +
+        '<span class="qt">장소 ' + q + '<small>' + (p && p.status === "ok" ? "찾았어요!" : p && p.status === "pending" ? "선생님 확인 중" : "어디일까요?") + '</small></span>' +
+        '<span class="ticks"><span class="tick ' + tickOf(p) + '">📸</span></span></summary><div class="qbody">' +
+        '<div class="place-img">답사 뒤 사진이 들어가요<img src="assets/picnic/place-' + q + '.jpg" alt="장소 ' + q + ' 사진" onerror="this.remove()"></div>';
+      if (hint) html += '<div class="hint">💡 힌트: ' + esc(hint) + '</div>';
+      if (p && p.photo) html += '<img class="thumb" loading="lazy" src="' + esc(p.photo) + '" alt="">';
+      html += stateLine(p, "찾았어요!");
+      if (!p || p.status !== "ok") {
+        html += '<button class="btn gold block" type="button" data-photo="place" data-q="' + q + '">📷 ' + (p ? "사진 다시 올리기" : "똑같이 찍어서 올리기") + '</button>';
+        if (!hint) html += '<button class="btn ghost block" type="button" data-hint="' + q + '"' + (S.hint_unlock ? "" : " disabled") + '>' +
+          (S.hint_unlock ? "💡 힌트 받기 (이 장소는 3점이 돼요)" : "💡 힌트는 " + kst(S.hint_unlock_at) + "부터") + '</button>';
+      }
+      html += '</div></details>';
+    }
+    $("placeList").innerHTML = html;
+    bindForms($("placeList"));
+  }
+
+  function renderHidden() {
+    var box = $("hiddenArea");
+    if (!S.hidden_open) {
+      box.innerHTML = '<div class="card lock"><div class="ic">🔒</div><h2>히든 미션</h2><div class="cd" id="countdown">--:--</div>' +
+        '<p class="muted" style="margin:0;">' + kst(S.hidden_open_at) + '에 모든 팀에게 동시에 열려요.<br>그 전에 도감과 사진 찾기를 먼저 해 볼까요?</p></div>';
+      tickCountdown();
+      return;
+    }
+    var h1 = best("hidden1", 0), h2 = best("hidden2", 0);
+    var clues = S.clues.map(function (c) { return '<div class="clue"><b>' + kst(c.at) + '</b>' + esc(c.text) + '</div>'; }).join("") ||
+      '<div class="clue">단서는 곧 이곳에 올라와요. 기다리는 동안 사진 찾기 장소 근처를 잘 살펴보세요!</div>';
+    box.innerHTML =
+      '<div class="mission"><div class="tag">HIDDEN MISSION 1</div><h3>🧩 말씀 조각을 찾아라</h3>' +
+      '<p>사진 찾기 장소 8곳 중 4곳 근처에 우리 팀 말씀 조각 4장이 숨어 있어요. 4장을 모두 찾아 맞추면 하나의 말씀이 돼요!</p>' +
+      '<p>찾았으면 <b>' + (S.meet_place ? esc(S.meet_place) : "지정 장소") + '</b>에서 4장을 맞춰 들고 단체 사진을 올려요.</p>' + clues +
+      (h1 && h1.photo ? '<img class="thumb" src="' + esc(h1.photo) + '" alt="">' : "") + stateLine(h1, "미션 성공!") +
+      (!h1 || h1.status !== "ok" ? '<button class="btn gold block" type="button" data-photo="hidden1" data-q="0" style="margin-top:10px;">📷 말씀 조각 단체 사진 올리기</button>' : "") +
+      '</div>' +
+      '<div class="mission m2"><div class="tag">HIDDEN MISSION 2</div><h3>🍁 다섯 빛깔 단풍잎</h3>' +
+      '<div class="leaves"><span style="background:#d7362b"></span><span style="background:#ef8a25"></span><span style="background:#f4c430"></span><span style="background:#8a5a2b"></span><span style="background:#4f9a3e"></span></div>' +
+      '<p>빨강 · 주황 · 노랑 · 갈색 · 초록, 서로 다른 색의 <b>떨어진 잎</b> 5장을 모아 한 장에 나란히 놓고 찍어 올려요. 꽃과 나뭇가지는 꺾지 않아요.</p>' +
+      (h2 && h2.photo ? '<img class="thumb" src="' + esc(h2.photo) + '" alt="">' : "") + stateLine(h2, "미션 성공!") +
+      (!h2 || h2.status !== "ok" ? '<button class="btn block" type="button" data-photo="hidden2" data-q="0" style="margin-top:10px;background:#fff;color:var(--rust);">📷 단풍잎 사진 올리기</button>' : "") +
+      '</div>';
+    bindForms(box);
+  }
+
+  function tickCountdown() {
+    var el = $("countdown");
+    if (!el || !S || S.hidden_open) return;
+    var left = new Date(S.hidden_open_at).getTime() - (Date.now() + clockOffset);
+    if (left <= 0) { el.textContent = "곧 열려요!"; refresh(); return; }
+    var s = Math.floor(left / 1000), hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
+    el.textContent = (hh ? hh + ":" + String(mm).padStart(2, "0") : mm) + ":" + String(ss).padStart(2, "0");
+    if (hh > 24) el.textContent = Math.floor(hh / 24) + "일 남음";
+    setTimeout(tickCountdown, 1000);
+  }
+
+  // ---------- 동작 ----------
+  function bindForms(root) {
+    root.querySelectorAll("form[data-form]").forEach(function (f) {
+      f.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        var kind = f.getAttribute("data-form"), q = Number(f.getAttribute("data-q"));
+        var field = f.querySelector("input,textarea"), text = field.value.trim();
+        if (!text) { field.focus(); return; }
+        submit(kind, q, text, null, f);
+      });
+    });
+    root.querySelectorAll("[data-photo]").forEach(function (b) {
+      b.onclick = function () { pickPhoto(b.getAttribute("data-photo"), Number(b.getAttribute("data-q")), b); };
+    });
+    root.querySelectorAll("[data-hint]").forEach(function (b) {
+      b.onclick = function () {
+        if (!confirm("힌트를 받으면 이 장소는 5점 대신 3점이 돼요. 받을까요?")) return;
+        b.disabled = true;
+        sb.rpc("picnic_hint", { p_code: saved.code, p_member: saved.member, p_place: Number(b.getAttribute("data-hint")) }).then(function (r) {
+          var d = r && r.data;
+          if (!d || !d.ok) { toast((d && d.error) || "다시 눌러 주세요."); b.disabled = false; return; }
+          refresh();
+        }, function () { toast("연결이 원활하지 않아요."); b.disabled = false; });
+      };
+    });
+  }
+
+  function submit(kind, q, text, photo, formEl) {
+    if (busy) return;
+    busy = true;
+    var btn = formEl && formEl.querySelector("button");
+    if (btn) btn.disabled = true;
+    sb.rpc("picnic_submit", { p_code: saved.code, p_member: saved.member, p_kind: kind, p_q: q, p_text: text, p_photo: photo }).then(function (r) {
+      busy = false;
+      var d = r && r.data;
+      if (btn) btn.disabled = false;
+      if (!d || !d.ok) { toast((d && d.error) || "다시 눌러 주세요."); return; }
+      if (kind === "animal") {
+        if (d.correct) { delete drafts["a" + q]; buzz(); toast("🎉 정답! 이제 그 동물을 찾아가 사진을 찍어요"); }
+        else { if (formEl) { formEl.classList.remove("shake"); void formEl.offsetWidth; formEl.classList.add("shake"); } toast("🤔 아니에요. 구절을 다시 읽어 봐요!"); }
+      } else if (kind === "verse") {
+        delete drafts["v" + q];
+        toast(d.correct ? "📖 완벽해요! 말씀 그대로예요" : "⏳ 선생님이 확인할게요");
+      } else {
+        toast("📮 올렸어요! 선생님이 확인하면 ✅로 바뀌어요");
+      }
+      if (document.activeElement) document.activeElement.blur();
+      refresh();
+    }, function () { busy = false; if (btn) btn.disabled = false; toast("연결이 원활하지 않아요. 다시 눌러 주세요."); });
+  }
+
+  var pending = null;
+  function pickPhoto(kind, q, btn) { pending = { kind: kind, q: q, btn: btn }; $("filePick").value = ""; $("filePick").click(); }
+  $("filePick").addEventListener("change", function () {
+    var file = this.files && this.files[0];
+    if (!file || !pending) return;
+    var p = pending; pending = null;
+    var label = p.btn.textContent;
+    p.btn.disabled = true; p.btn.textContent = "올리는 중...";
+    busy = true;
+    compress(file).then(function (blob) {
+      var path = EVENT + "/" + uuid() + ".jpg";
+      return sb.storage.from(BUCKET).upload(path, blob, { contentType: "image/jpeg", upsert: false }).then(function (res) {
+        if (res.error) throw res.error;
+        return SUPABASE_URL + "/storage/v1/object/public/" + BUCKET + "/" + path;
+      });
+    }).then(function (url) {
+      busy = false;
+      submit(p.kind, p.q, null, url, null);
+    }).catch(function () {
+      busy = false; p.btn.disabled = false; p.btn.textContent = label;
+      toast("사진을 올리지 못했어요. 다시 해 주세요.");
+    });
+  });
+
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    var b = new Uint8Array(16); crypto.getRandomValues(b); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+    var h = Array.prototype.map.call(b, function (x) { return (x + 256).toString(16).slice(1); }).join("");
+    return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20);
+  }
+
+  function compress(file) {
+    return new Promise(function (resolve, reject) {
+      if (!/^image\//.test(file.type || "image/")) { reject(new Error("not image")); return; }
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var max = 1280, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, max / Math.max(w, h));
+        var c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+        var x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { b ? resolve(b) : reject(new Error("blob")); }, "image/jpeg", 0.82);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("load")); };
+      img.src = url;
+    });
+  }
+
+  // 당일 전 안내: 11/8 전에는 펼치고 D-day를 보여 준다
+  (function () {
+    var today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+    var days = Math.round((Date.parse("2026-11-08") - Date.parse(today)) / 864e5);
+    if (days > 0) {
+      $("guide").open = true;
+      $("dday").textContent = "D-" + days; $("dday").hidden = false;
+      $("joinNote").textContent = "팀 코드는 11월 8일 당일 아침에 선생님이 알려 줘요. (예: 단풍-1234)";
+    }
+  })();
+
+  start();
+})();
+</script>
+</body>
+</html>

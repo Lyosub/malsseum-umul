@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light">
+<title>가을 원정대 관리 | 말씀우물</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<meta name="theme-color" content="#173b2c">
+<style>
+  [hidden] { display: none !important; }
+  :root { --bg: #f5f1ea; --card: #fff; --ink: #222; --soft: #6b625a; --line: #e5dccd; --rust: #b8481f; --leaf: #2f6b4f; --gold: #f2b544; --ok: #2f8f4e; --bad: #c2271d;
+    --sans: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14.5px; line-height: 1.5; padding-bottom: 40px; }
+  main { max-width: 760px; margin: 0 auto; padding: 16px; }
+  main > * { min-width: 0; }
+  h1 { font-size: 22px; margin: 6px 0 4px; }
+  h2 { font-size: 16px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+  h2 .n { background: var(--rust); color: #fff; border-radius: 99px; padding: 0 9px; font-size: 13px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 14px; }
+  .muted { color: var(--soft); font-size: 12.5px; }
+  input, textarea, select { font: inherit; border: 1.5px solid var(--line); border-radius: 10px; padding: 9px 10px; background: #fff; color: var(--ink); width: 100%; }
+  textarea { min-height: 80px; resize: vertical; }
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 10px; padding: 9px 14px; font-weight: 800; background: var(--leaf); color: #fff; }
+  button.ghost { background: transparent; color: var(--leaf); border: 1.5px solid var(--leaf); }
+  button.red { background: var(--bad); }
+  button.gold { background: var(--gold); color: #3a1d07; }
+  button:disabled { opacity: .5; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .sub { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fffdf8; display: flex; flex-direction: column; }
+  .sub img { width: 100%; aspect-ratio: 3/4; object-fit: cover; background: #eee; cursor: zoom-in; }
+  .sub .meta { padding: 10px; font-size: 13px; flex: 1 1 auto; }
+  .sub .meta b { display: block; font-size: 14px; }
+  .sub .act { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 10px 10px; }
+  .vtext { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px; margin-top: 6px; font-size: 13.5px; }
+  .vtext.ans { background: #f0f7f1; }
+  .diff { background: #ffd8d2; border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 8px 6px; border-top: 1px solid var(--line); text-align: left; vertical-align: middle; }
+  th { font-size: 12px; color: var(--soft); border-top: 0; }
+  td.num { font-weight: 900; font-size: 17px; color: var(--rust); font-variant-numeric: tabular-nums; }
+  .pm { display: inline-flex; align-items: center; gap: 4px; }
+  .pm button { padding: 4px 9px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; background: #f1e9db; border-radius: 99px; padding: 3px 4px 3px 10px; margin: 3px 3px 0 0; font-size: 13px; }
+  .chip button { background: transparent; color: var(--soft); padding: 0 6px; font-weight: 400; }
+  .code { font-family: ui-monospace, Consolas, monospace; font-weight: 800; background: #fff6dc; border-radius: 8px; padding: 2px 8px; }
+  .status { display: flex; gap: 10px; flex-wrap: wrap; }
+  .status .box { flex: 1 1 200px; border-radius: 14px; padding: 12px; background: #f6efe2; }
+  .status .box b { display: block; font-size: 16px; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+  .zoom { position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 10px; }
+  .zoom img { max-width: 100%; max-height: 100%; border-radius: 8px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 12px; font-weight: 700; z-index: 60; }
+  details > summary { cursor: pointer; font-weight: 800; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🍁 가을 원정대 · 관리</h1>
+  <p class="muted" style="margin:0;">학생 화면: logoswell.kr/expedition.html · 이 화면은 8초마다 새로 고쳐져요.</p>
+
+  <section class="card" id="loginCard">
+    <h2>관리 코드</h2>
+    <form class="row" id="loginForm"><input type="password" id="codeIn" autocomplete="off" style="flex:1 1 200px;"><button type="submit">들어가기</button></form>
+    <p class="muted bad" id="loginMsg"></p>
+  </section>
+
+  <div id="app" hidden>
+    <section class="card">
+      <div class="status" id="statusBox"></div>
+    </section>
+
+    <section class="card">
+      <h2>📮 확인 대기 <span class="n" id="pendN">0</span></h2>
+      <div class="grid" id="pendList"></div>
+    </section>
+
+    <section class="card">
+      <h2>🏆 팀 점수 <span class="muted" style="font-weight:400;">(학생에게는 「결과 공개」 전까지 안 보여요)</span></h2>
+      <table><thead><tr><th>팀</th><th>점수</th><th>감점(늦음)</th><th>특별상 가산</th><th>참여(인원별 제출 수)</th></tr></thead><tbody id="scoreBody"></tbody></table>
+    </section>
+
+    <section class="card">
+      <details>
+        <summary>🧩 히든 미션 단서 · 지정 장소 · 사진 찾기 힌트</summary>
+        <div style="display:grid;gap:10px;margin-top:12px;">
+          <label>말씀 조각 단체 사진 지정 장소<input id="meetIn" placeholder="예: 테마가든 입구 큰 단풍나무 앞"></label>
+          <div id="clueEdit"></div>
+          <div id="hintEdit"></div>
+          <div class="row">
+            <label style="flex:1 1 200px;">히든 미션 여는 시각<input type="datetime-local" id="openAtIn"></label>
+            <label style="flex:1 1 200px;">사진 힌트 받기 시작<input type="datetime-local" id="hintAtIn"></label>
+          </div>
+          <button type="button" id="saveSettings">저장</button>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <details id="teamFold">
+        <summary>👥 팀 · 명단 · 코드</summary>
+        <div style="margin-top:12px;">
+          <form class="row" id="addTeamForm">
+            <input id="tEmoji" placeholder="🦁" style="width:64px;flex:none;text-align:center;">
+            <input id="tName" placeholder="팀 이름 (예: 1학년 A팀)" style="flex:1 1 180px;">
+            <button type="submit">팀 추가</button>
+          </form>
+          <div id="teamEdit"></div>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <details>
+        <summary>🖼️ 통과한 사진 모아 보기</summary>
+        <div class="grid" id="photoList" style="margin-top:12px;"></div>
+      </details>
+    </section>
+
+    <section class="card">
+      <details>
+        <summary>⚠️ 시험 기록 지우기</summary>
+        <p class="muted">시험해 본 제출·사진 기록과 감점·가산을 모두 지우고, 히든 미션과 결과 공개를 닫아요. 팀과 명단은 남아요.</p>
+        <button type="button" class="red" id="resetBtn">시험 기록 지우기</button>
+      </details>
+    </section>
+  </div>
+</main>
+<div class="zoom" id="zoom" hidden><img id="zoomImg" alt=""></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script>
+(function () {
+  "use strict";
+  var EVENT = "autumn2026";
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var $ = function (id) { return document.getElementById(id); };
+  var code = sessionStorage.getItem("msu_expedition_admin") || "";
+  var D = null, timer = null, settingsLoaded = false;
+  var KIND = { animal_photo: "🦁 도감 사진", verse: "📖 도감 말씀", place: "📸 사진 찾기", hidden1: "🧩 히든1 말씀 조각", hidden2: "🍁 히든2 단풍잎" };
+  var PTS = { animal_photo: 2, verse: 2, place: 5, hidden1: 10, hidden2: 10 };
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function toast(t) { var el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function () { el.hidden = true; }, 2200); }
+  function kst(t) { return new Date(t).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Seoul" }); }
+  function toLocalInput(t) { var d = new Date(new Date(t).getTime() + 9 * 3600000); return d.toISOString().slice(0, 16); }
+  function fromLocalInput(v) { return v ? v + ":00+09:00" : null; }
+
+  function call(action, args) {
+    return sb.rpc("picnic_admin", { p_event: EVENT, p_code: code, p_action: action, p_args: args || {} }).then(function (r) {
+      var d = r && r.data;
+      if (!d) throw new Error((r && r.error && r.error.message) || "연결 오류");
+      if (!d.ok) throw new Error(d.error);
+      return d;
+    });
+  }
+
+  $("loginForm").addEventListener("submit", function (ev) { ev.preventDefault(); code = $("codeIn").value.trim(); load(true); });
+  if (code) load(true);
+
+  function load(first) {
+    return call("overview").then(function (d) {
+      D = d;
+      sessionStorage.setItem("msu_expedition_admin", code);
+      $("loginCard").hidden = true; $("app").hidden = false;
+      render();
+      if (first) { if (timer) clearInterval(timer); timer = setInterval(function () { if (!document.hidden && !editing()) load(false); }, 8000); }
+    }).catch(function (e) {
+      if (first) { $("loginMsg").textContent = e.message; sessionStorage.removeItem("msu_expedition_admin"); }
+    });
+  }
+  function editing() { var a = document.activeElement; return a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA"); }
+
+  function render() {
+    var e = D.event;
+    var openNow = e.hidden_force || new Date(D.now) >= new Date(e.hidden_open_at);
+    $("statusBox").innerHTML =
+      '<div class="box">히든 미션<b class="' + (openNow ? "ok" : "") + '">' + (openNow ? "🔓 열림" : "🔒 " + kst(e.hidden_open_at) + "에 열림") + '</b>' +
+      '<button type="button" class="' + (e.hidden_force ? "ghost" : "gold") + '" id="forceBtn" style="margin-top:8px;">' + (e.hidden_force ? "강제 열기 끄기" : "지금 바로 열기") + '</button></div>' +
+      '<div class="box">결과(점수·순위)<b class="' + (e.results_open ? "ok" : "") + '">' + (e.results_open ? "📢 공개 중" : "🙈 숨김") + '</b>' +
+      '<button type="button" class="' + (e.results_open ? "ghost" : "") + '" id="resultBtn" style="margin-top:8px;">' + (e.results_open ? "결과 다시 숨기기" : "결과 공개 (시상)") + '</button></div>';
+    $("forceBtn").onclick = function () { setting({ hidden_force: !e.hidden_force }); };
+    $("resultBtn").onclick = function () {
+      if (!e.results_open && D.pending.length && !confirm("아직 확인 안 한 제출이 " + D.pending.length + "개 있어요. 그래도 공개할까요?")) return;
+      if (!e.results_open && !confirm("모든 학생 화면에 점수와 순위가 보여요. 공개할까요? (공개하면 더 제출할 수 없어요)")) return;
+      setting({ results_open: !e.results_open });
+    };
+
+    // 대기
+    $("pendN").textContent = D.pending.length;
+    $("pendList").innerHTML = D.pending.map(function (p) {
+      var title = KIND[p.kind] + (p.kind === "place" ? " " + p.q + "번" : p.q ? " " + p.q + "번" : "");
+      var pts = p.kind === "place" && p.hint_used ? 3 : PTS[p.kind];
+      var body = p.photo ? '<img src="' + esc(p.photo) + '" data-zoom="' + esc(p.photo) + '" alt="">' : "";
+      var meta = '<b>' + title + '</b>' + esc(p.emoji) + " " + esc(p.team) + " · " + esc(p.who || "") + " · " + kst(p.at) +
+        (p.ref ? '<div class="muted">' + esc(p.ref) + '</div>' : "") +
+        (p.kind === "place" && p.hint_used ? '<div class="muted">💡 힌트 받은 장소 → 3점</div>' : "");
+      if (p.kind === "verse") meta += '<div class="vtext">' + diff(p.text, p.answer) + '</div><div class="vtext ans">정답: ' + esc(p.answer) + '</div>';
+      if (p.kind === "place") meta += '<img src="assets/picnic/place-' + p.q + '.jpg" alt="" style="width:64px;height:84px;object-fit:cover;border-radius:6px;margin-top:6px;" onerror="this.remove()">';
+      return '<div class="sub">' + body + '<div class="meta">' + meta + '</div><div class="act">' +
+        '<button type="button" data-ok="' + p.id + '">✅ 통과 +' + pts + '</button><button type="button" class="ghost" data-no="' + p.id + '">↩️ 다시</button></div></div>';
+    }).join("") || '<p class="muted">확인할 제출이 없어요.</p>';
+
+    // 점수
+    $("scoreBody").innerHTML = D.teams.map(function (t) {
+      return '<tr><td>' + esc(t.emoji) + " " + esc(t.name) + '</td><td class="num">' + t.score + '</td>' +
+        '<td><span class="pm"><button type="button" class="ghost" data-adj="' + t.id + '" data-f="penalty" data-v="' + Math.max(0, t.penalty - 5) + '">−</button> ' + t.penalty +
+        ' <button type="button" class="ghost" data-adj="' + t.id + '" data-f="penalty" data-v="' + (t.penalty + 5) + '">+5</button></span></td>' +
+        '<td><span class="pm"><button type="button" class="ghost" data-adj="' + t.id + '" data-f="bonus" data-v="' + Math.max(0, t.bonus - 5) + '">−</button> ' + t.bonus +
+        ' <button type="button" class="ghost" data-adj="' + t.id + '" data-f="bonus" data-v="' + (t.bonus + 5) + '">+5</button></span></td>' +
+        '<td class="muted">' + t.members.map(function (m) { return esc(m.name) + " " + m.count; }).join(" · ") + '</td></tr>';
+    }).join("") || '<tr><td colspan="5" class="muted">팀을 먼저 추가해 주세요.</td></tr>';
+
+    // 설정 (처음 한 번만 채운다 — 쓰는 중인 글을 덮지 않게)
+    if (!settingsLoaded) {
+      settingsLoaded = true;
+      $("meetIn").value = e.meet_place || "";
+      var clues = e.card_clues && e.card_clues.length ? e.card_clues : [
+        { at: "2026-11-08T12:00:00+09:00", text: "" }, { at: "2026-11-08T12:30:00+09:00", text: "" }, { at: "2026-11-08T13:10:00+09:00", text: "" }];
+      $("clueEdit").innerHTML = '<div class="muted" style="margin-bottom:4px;">말씀 조각 단서 (그 시각이 되면 학생 화면에 자동으로 떠요)</div>' + clues.map(function (c, i) {
+        return '<div class="row" style="margin-top:6px;"><input type="datetime-local" class="clueAt" value="' + toLocalInput(c.at) + '" style="flex:0 0 210px;"><input class="clueText" value="' + esc(c.text) + '" placeholder="단서 ' + (i + 1) + '" style="flex:1 1 200px;"></div>';
+      }).join("");
+      var hints = e.place_hints || {};
+      var h = '<div class="muted" style="margin:6px 0 4px;">사진 찾기 장소 힌트 (1시 30분 이후 학생이 「힌트 받기」를 누르면 보여요)</div>';
+      for (var q = 1; q <= 8; q++) h += '<div class="row" style="margin-top:6px;"><span style="width:52px;flex:none;">장소 ' + q + '</span><input class="hintText" data-q="' + q + '" value="' + esc(hints[String(q)] || "") + '" style="flex:1 1 200px;"></div>';
+      $("hintEdit").innerHTML = h;
+      $("openAtIn").value = toLocalInput(e.hidden_open_at);
+      $("hintAtIn").value = toLocalInput(e.hint_unlock_at);
+    }
+
+    // 팀·명단
+    if (!editing()) $("teamEdit").innerHTML = D.teams.map(function (t) {
+      return '<div class="card" style="margin-top:10px;"><div class="row" style="justify-content:space-between;"><b>' + esc(t.emoji) + " " + esc(t.name) + '</b><span>코드 <span class="code">' + esc(t.code) + '</span></span></div>' +
+        '<div style="margin-top:6px;">' + (t.members.map(function (m) { return '<span class="chip">' + esc(m.name) + '<button type="button" data-delm="' + m.id + '" aria-label="' + esc(m.name) + ' 빼기">×</button></span>'; }).join("") || '<span class="muted">명단 없음</span>') + '</div>' +
+        '<div class="row" style="margin-top:8px;"><input data-names="' + t.id + '" placeholder="이름을 쉼표나 줄바꿈으로 (예: 김민수, 이서연)" style="flex:1 1 220px;"><button type="button" data-addm="' + t.id + '">명단 추가</button>' +
+        '<button type="button" class="ghost red" style="color:var(--bad);border-color:var(--bad);background:transparent;" data-delt="' + t.id + '">팀 삭제</button></div></div>';
+    }).join("");
+
+    // 사진첩
+    $("photoList").innerHTML = D.photos.map(function (p) {
+      return '<div class="sub"><img src="' + esc(p.photo) + '" data-zoom="' + esc(p.photo) + '" alt=""><div class="meta"><b>' + KIND[p.kind] + (p.q ? " " + p.q + "번" : "") + '</b>' +
+        esc(p.emoji) + " " + esc(p.team) + " · " + esc(p.who || "") + ' · +' + p.points + '<div class="row" style="margin-top:6px;"><a href="' + esc(p.photo) + '" target="_blank" rel="noopener">원본</a>' +
+        '<button type="button" class="ghost" data-undo="' + p.id + '" style="padding:3px 8px;">대기로 되돌리기</button></div></div></div>';
+    }).join("") || '<p class="muted">아직 없어요.</p>';
+  }
+
+  function diff(a, b) { // 학생 글에서 정답과 다른 글자를 표시(띄어쓰기·문장부호 무시)
+    var norm = function (s) { return String(s || "").replace(/[^가-힣0-9A-Za-z]/g, ""); };
+    var nb = norm(b), i = 0, out = "";
+    String(a || "").split("").forEach(function (ch) {
+      if (!/[가-힣0-9A-Za-z]/.test(ch)) { out += esc(ch); return; }
+      if (nb[i] === ch) { out += esc(ch); i++; } else { out += '<span class="diff">' + esc(ch) + '</span>'; i++; }
+    });
+    if (i < nb.length) out += ' <span class="diff">…(' + (nb.length - i) + '자 빠짐)</span>';
+    return out;
+  }
+
+  function setting(args) { return call("settings", args).then(function () { toast("바꿨어요"); load(false); }).catch(function (e) { toast(e.message); }); }
+
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest("button, img[data-zoom]");
+    if (!b) return;
+    if (b.dataset.zoom) { $("zoomImg").src = b.dataset.zoom; $("zoom").hidden = false; return; }
+    if (b.dataset.ok || b.dataset.no) {
+      b.disabled = true;
+      call("review", { id: Number(b.dataset.ok || b.dataset.no), ok: !!b.dataset.ok }).then(function () { load(false); }).catch(function (e) { toast(e.message); b.disabled = false; });
+    } else if (b.dataset.adj) {
+      var a = { team: Number(b.dataset.adj) }; a[b.dataset.f] = Number(b.dataset.v);
+      call("adjust", a).then(function () { load(false); }).catch(function (e) { toast(e.message); });
+    } else if (b.dataset.undo) {
+      call("undo", { id: Number(b.dataset.undo) }).then(function () { load(false); }).catch(function (e) { toast(e.message); });
+    } else if (b.dataset.delm) {
+      if (!confirm("이 학생을 명단에서 뺄까요? (이 학생이 한 기록은 이름 없이 남아요)")) return;
+      call("delete_member", { member: Number(b.dataset.delm) }).then(function () { load(false); }).catch(function (e) { toast(e.message); });
+    } else if (b.dataset.addm) {
+      var inp = document.querySelector('[data-names="' + b.dataset.addm + '"]');
+      var names = inp.value.split(/[,\n]/).map(function (s) { return s.trim(); }).filter(Boolean);
+      if (!names.length) return;
+      call("add_members", { team: Number(b.dataset.addm), names: names }).then(function (d) { inp.value = ""; inp.blur(); toast(d.added + "명 추가"); load(false); }).catch(function (e) { toast(e.message); });
+    } else if (b.dataset.delt) {
+      if (!confirm("팀을 삭제하면 그 팀의 명단과 기록이 모두 지워져요. 삭제할까요?")) return;
+      call("delete_team", { team: Number(b.dataset.delt) }).then(function () { load(false); }).catch(function (e) { toast(e.message); });
+    }
+  });
+  $("zoom").onclick = function () { $("zoom").hidden = true; };
+
+  $("addTeamForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    call("add_team", { name: $("tName").value, emoji: $("tEmoji").value }).then(function (d) {
+      $("tName").value = ""; $("tEmoji").value = ""; document.activeElement.blur(); toast("팀 코드: " + d.code); load(false);
+    }).catch(function (e) { toast(e.message); });
+  });
+
+  $("saveSettings").onclick = function () {
+    var ats = document.querySelectorAll(".clueAt"), txts = document.querySelectorAll(".clueText"), clues = [];
+    for (var i = 0; i < ats.length; i++) if (txts[i].value.trim()) clues.push({ at: fromLocalInput(ats[i].value), text: txts[i].value.trim() });
+    var hints = {};
+    document.querySelectorAll(".hintText").forEach(function (el) { if (el.value.trim()) hints[el.dataset.q] = el.value.trim(); });
+    setting({ meet_place: $("meetIn").value.trim(), card_clues: clues, place_hints: hints,
+      hidden_open_at: fromLocalInput($("openAtIn").value), hint_unlock_at: fromLocalInput($("hintAtIn").value) });
+  };
+
+  $("resetBtn").onclick = function () {
+    if (!confirm("시험 기록을 모두 지울까요?")) return;
+    if (!confirm("정말 지울까요? 되돌릴 수 없어요.")) return;
+    call("reset_subs").then(function () { toast("지웠어요"); load(false); }).catch(function (e) { toast(e.message); });
+  };
+})();
+</script>
+</body>
+</html>
