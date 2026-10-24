@@ -204,6 +204,11 @@
     <p>우리 팀과 함께 하나님이 지으신 것들을 찾아 떠나요!</p>
   </header>
 
+  <!-- 관리자 계정에만 보이는 줄: 학생 화면 ↔ 관리 화면 -->
+  <div id="adminBar" hidden style="gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;border-radius:14px;background:#2f6b4f;color:#fff;font-size:14px;font-weight:800;">
+    <span>👀 관리자 · <span id="adminBarNow">학생 화면</span></span>
+    <span style="display:flex;gap:8px;"><button type="button" id="adminBarTeams" class="btn" style="padding:7px 12px;font-size:13px;background:#fff;color:#2f6b4f;">팀 바꾸기</button><a href="expedition-admin.html" class="btn" style="padding:7px 12px;font-size:13px;background:#f2b544;color:#3a1d07;text-decoration:none;">🛠 관리 화면</a></span>
+  </div>
   <!-- 최종 모임 장소: 당일 11/8 13:30부터 맨 위에 보인다(관리자 보기는 늘 보임) -->
   <details class="card meetcard" id="meetCard" open hidden>
     <summary style="font-weight:800;font-size:16px;cursor:pointer;">🏁 최종 모임 장소 — 호랑이 조형물 앞 (2시)</summary>
@@ -427,6 +432,9 @@
       return sb.rpc("picnic_admin", { p_event: EVENT, p_code: "", p_action: "overview", p_args: {} }).then(function (r) {
         var d = r && r.data, teams = d && d.teams;
         if (!teams || !teams.length) return;
+        $("adminBar").hidden = false; $("adminBar").style.display = "flex";
+        $("adminBarNow").textContent = team && saved.viewer ? "학생 화면 · " + team.emoji + " " + team.name : "학생 화면";
+        $("adminBarTeams").onclick = function () { saved = { tab: tab }; save(); team = null; show("join"); meetCheck(); var jc = $("joinCard"); jc.open = true; jc.scrollIntoView({ behavior: "smooth", block: "start" }); };
         $("adminPeekList").innerHTML = teams.map(function (t) {
           return '<button type="button" class="btn ghost" data-peek="' + esc(t.code) + '" style="padding:8px 12px;font-size:14px;">' + esc(t.emoji) + " " + esc(t.name) + '</button>';
         }).join("");
@@ -484,6 +492,7 @@
   function enterMain() {
     show("main");
     $("meEmoji").textContent = team.emoji; $("meTeam").textContent = team.name; $("meName").textContent = saved.name;
+    $("adminBarNow").textContent = saved.viewer ? "학생 화면 · " + team.emoji + " " + team.name : "학생 화면";
     setTab(tab);
     refresh();
     startPoll();
