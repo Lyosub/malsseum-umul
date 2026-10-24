@@ -241,6 +241,11 @@
       <button class="btn" type="submit">입장</button>
     </form>
     <p class="msg err" id="joinMsg" role="alert"></p>
+    <!-- 말씀우물 관리자 계정으로 로그인했으면 팀 코드 없이 팀 화면을 볼 수 있다(보기만) -->
+    <div id="adminPeek" hidden style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);">
+      <div style="font-weight:800;margin-bottom:8px;">👀 관리자 보기 — 팀을 골라 그 팀 화면을 봐요</div>
+      <div id="adminPeekList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    </div>
   </section>
 
   <!-- 2. 내 이름 -->
@@ -382,6 +387,27 @@
   function start() {
     if (!sb) { show("join"); $("joinMsg").textContent = "연결을 준비하지 못했어요. 새로고침해 주세요."; return; }
     if (saved.code) { join(saved.code, true); } else { show("join"); }
+    adminPeek();
+  }
+
+  // 관리자 계정: 팀 코드·이름 입력 없이 팀 화면 보기(제출은 하지 않음)
+  function adminPeek() {
+    if (!sb || !sb.auth) return;
+    sb.auth.getSession().then(function (res) {
+      if (!res || !res.data || !res.data.session) return;
+      return sb.rpc("picnic_admin", { p_event: EVENT, p_code: "", p_action: "overview", p_args: {} }).then(function (r) {
+        var d = r && r.data, teams = d && d.teams;
+        if (!teams || !teams.length) return;
+        $("adminPeekList").innerHTML = teams.map(function (t) {
+          return '<button type="button" class="btn ghost" data-peek="' + esc(t.code) + '" style="padding:8px 12px;font-size:14px;">' + esc(t.emoji) + " " + esc(t.name) + '</button>';
+        }).join("");
+        $("adminPeek").hidden = false;
+        $("adminPeekList").onclick = function (ev) {
+          var b = ev.target.closest("[data-peek]"); if (!b) return;
+          saved = { tab: tab, viewer: true }; save(); join(b.getAttribute("data-peek"), false);
+        };
+      });
+    }).catch(function () {});
   }
 
   $("joinForm").addEventListener("submit", function (ev) { ev.preventDefault(); join($("codeInput").value, false); });
@@ -400,6 +426,7 @@
       team = d.team; members = d.members || [];
       saved.code = code; save();
       var me = members.filter(function (m) { return m.id === saved.member; })[0];
+      if (saved.viewer) { saved.name = "👀 관리자 보기"; save(); enterMain(); return; }
       if (me) { saved.name = me.name; save(); enterMain(); } else { pickName(); }
     }, function () { show("join"); $("joinMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
   }
@@ -422,7 +449,7 @@
       saved.member = d.member.id; saved.name = d.member.name; save(); enterMain();
     }, function () { btn.disabled = false; $("nameMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
   });
-  $("otherTeam").onclick = function () { saved = { tab: tab }; save(); team = null; show("join"); $("codeInput").value = ""; };
+  $("otherTeam").onclick = function () { saved = { tab: tab }; save(); team = null; show("join"); $("codeInput").value = ""; adminPeek(); };
   $("changeMe").onclick = function () { stopPoll(); pickName(); };
 
   function enterMain() {
@@ -684,7 +711,7 @@
     });
     root.querySelectorAll("[data-ask]").forEach(function (b) {
       b.onclick = function () {
-        if (!confirm("선생님께 이 말씀을 확인해 달라고 보낼까요?")) return;
+        if (saved.viewer) { toast("👀 관리자 보기에서는 올리거나 제출하지 않아요"); return; } if (!confirm("선생님께 이 말씀을 확인해 달라고 보낼까요?")) return;
         b.disabled = true;
         sb.rpc("picnic_verse_ask", { p_code: saved.code, p_member: saved.member, p_q: Number(b.getAttribute("data-ask")) }).then(function (r) {
           var d = r && r.data;
@@ -695,7 +722,7 @@
     });
     root.querySelectorAll("[data-hint]").forEach(function (b) {
       b.onclick = function () {
-        if (!confirm("힌트를 받으면 이 장소는 5점 대신 3점이 돼요. 받을까요?")) return;
+        if (saved.viewer) { toast("👀 관리자 보기에서는 올리거나 제출하지 않아요"); return; } if (!confirm("힌트를 받으면 이 장소는 5점 대신 3점이 돼요. 받을까요?")) return;
         b.disabled = true;
         sb.rpc("picnic_hint", { p_code: saved.code, p_member: saved.member, p_place: Number(b.getAttribute("data-hint")) }).then(function (r) {
           var d = r && r.data;
@@ -707,6 +734,7 @@
   }
 
   function submit(kind, q, text, photo, formEl) {
+    if (saved.viewer) { toast("👀 관리자 보기에서는 올리거나 제출하지 않아요"); return; } 
     if (busy) return;
     busy = true;
     var btn = formEl && formEl.querySelector("button");
@@ -734,7 +762,7 @@
   }
 
   var pending = null;
-  function pickPhoto(kind, q, btn) { pending = { kind: kind, q: q, btn: btn }; $("filePick").value = ""; $("filePick").click(); }
+  function pickPhoto(kind, q, btn) { if (saved.viewer) { toast("👀 관리자 보기에서는 올리거나 제출하지 않아요"); return; }  pending = { kind: kind, q: q, btn: btn }; $("filePick").value = ""; $("filePick").click(); }
   $("filePick").addEventListener("change", function () {
     var file = this.files && this.files[0];
     if (!file || !pending) return;
