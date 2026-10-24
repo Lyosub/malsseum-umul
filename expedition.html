@@ -213,8 +213,8 @@
 
 
   <!-- 1. 팀 코드 -->
-  <section class="card" id="joinCard" hidden>
-    <h2>팀 코드를 넣어 주세요</h2>
+  <details class="card fold" id="joinCard" hidden open>
+    <summary><span>팀 코드를 넣어 주세요</span></summary>
     <p class="muted" style="margin:0 0 10px;" id="joinNote">선생님께 받은 우리 팀 코드예요. (예: 단풍-1234)</p>
     <form class="row" id="joinForm">
       <input type="text" id="codeInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="팀 코드" maxlength="20">
@@ -226,7 +226,7 @@
       <div style="font-weight:800;margin-bottom:8px;">👀 관리자 보기 — 팀을 골라 그 팀 화면을 봐요</div>
       <div id="adminPeekList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
     </div>
-  </section>
+  </details>
 
   <!-- 2. 내 이름 -->
   <section class="card" id="nameCard" hidden>
