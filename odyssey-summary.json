@@ -5,7 +5,7 @@
   "saved_24h": 1,
   "visitors_24h": 1,
   "new_24h": 0,
-  "steps_24h": 28,
+  "steps_24h": 97,
   "active_7d": 3,
   "chapters": {
     "1편 모세와 함께 (10장)": {
@@ -15,9 +15,10 @@
       "10장 클리어": 4
     },
     "2편 시내산의 마지막 한 달 (10장)": {
-      "10장 클리어": 3
+      "10장 클리어": 4
     },
     "3편 광야 40년 (16장)": {
+      "9장 클리어": 1,
       "16장 클리어": 3
     },
     "4편 여호수아와 함께 (13장)": {
@@ -29,18 +30,12 @@
     {
       "chapter": 9,
       "step": "sinai2/lv9s2",
-      "players": 2,
-      "median_secs": 379
-    },
-    {
-      "chapter": 3,
-      "step": "wild3/w3s1",
-      "players": 2,
-      "median_secs": 284
+      "players": 3,
+      "median_secs": 374
     }
   ],
-  "errors_24h": 0,
+  "errors_24h": 1,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-24 10:02",
+  "generated_kst": "2026-10-24 14:40",
   "ok": true
 }
