@@ -390,6 +390,23 @@
     $("mainArea").hidden = which !== "main";
   }
 
+  // 말씀 쓰기 칸: 붙여넣기·끌어다 놓기·키보드 클립보드로 한꺼번에 넣기를 막는다(직접 써야 해요)
+  function isVerseBox(el) { return el && el.tagName === "TEXTAREA" && /^v\d+$/.test(el.getAttribute("data-draft") || ""); }
+  function noPaste(ev) { if (!isVerseBox(ev.target)) return; ev.preventDefault(); toast("✍️ 말씀은 붙여넣지 말고 직접 써 주세요"); }
+  document.addEventListener("paste", noPaste, true);
+  document.addEventListener("drop", noPaste, true);
+  document.addEventListener("beforeinput", function (ev) {
+    if (isVerseBox(ev.target) && /^insertFrom(Paste|Drop|PasteAsQuotation|YankSourceSelection)$/.test(ev.inputType || "")) noPaste(ev);
+  }, true);
+  document.addEventListener("focusin", function (ev) { if (isVerseBox(ev.target)) ev.target.dataset.prev = ev.target.value; }, true);
+  document.addEventListener("input", function (ev) {
+    var el = ev.target; if (!isVerseBox(el)) return;
+    var prev = el.dataset.prev != null ? el.dataset.prev : "";
+    // 한 번에 12글자 넘게 늘어나면(키보드 클립보드 붙여넣기 등) 되돌린다. 한 글자씩 치는 것·자동완성 한 낱말은 그대로
+    if (!ev.isComposing && el.value.length - prev.length > 12) { el.value = prev; toast("✍️ 말씀은 붙여넣지 말고 직접 써 주세요"); return; }
+    el.dataset.prev = el.value;
+  }, true);
+
   // 최종 모임 장소 카드: 11/8 13:30(한국 시간)부터
   var MEET_AT = new Date("2026-11-08T13:30:00+09:00").getTime();
   function meetCheck() { $("meetCard").hidden = !(Date.now() >= MEET_AT || saved.viewer); }
