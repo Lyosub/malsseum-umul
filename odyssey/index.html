@@ -601,7 +601,7 @@
 <div id="compass"><svg viewBox="0 0 46 46"><path id="compass-arrow" d="M23 7 L31 27 L23 22 L15 27 Z" fill="#ffd27a"/></svg></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "2a902b0d", "wild3": "b4590c52", "joshua": "ef78b784"};</script>
+<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "2a902b0d", "wild3": "b4590c52", "joshua": "55fa5ee7"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -6059,7 +6059,7 @@
     document.getElementById('clear-badge').src = A('ui/game/badge-moses-clear.png');
     const _known = ST.badges.filter(b => BADGES[b]), _more = ST.badges.length - _known.length;   // 다른 두루마리 파일이 아직 안 열렸으면 그 배지 정보가 없다 — 없어도 멈추지 않게
     const bs = (_known.map(b => BADGES[b].ico + ' ' + BADGES[b].name).join(', ') + (_more > 0 ? (_known.length ? ' 외 ' : '') + _more + '개' : '')) || '없음';
-    document.getElementById('clear-body').textContent = `모은 구절 카드 ${ST.verses.length} / ${Object.keys(VERSES).length}장 · ⭐ 지혜 별 ${ST.stars} / ${Object.keys(QUIZ).length} · 얻은 스킬: ${[...unlocked].map(id => SKILLS[id].name).join(', ')}\n배지: ${bs}\n💰 ${ST.ch + 1}장 완료 보상 20달란트${(MSU.client && MSU.session) || SHOP_MOCK ? '' : ' (말씀우물에 로그인하면 받아요)'}\n\n다른 선택을 하면 다른 카드와 배지를 얻을 수 있어요!\n다음: ${CHAPTER.next}`;
+    document.getElementById('clear-body').textContent = `모은 구절 카드 ${ST.verses.length} / ${Object.keys(VERSES).length}장 · ⭐ 지혜 별 ${ST.stars} / ${Object.keys(QUIZ).length} · 얻은 스킬: ${[...unlocked].map(id => SKILLS[id].name).join(', ')}\n배지: ${bs}\n💰 ${ST.ch + 1}장 완료 보상 10달란트${(MSU.client && MSU.session) || SHOP_MOCK ? '' : ' (말씀우물에 로그인하면 받아요)'}\n\n다른 선택을 하면 다른 카드와 배지를 얻을 수 있어요!\n다음: ${CHAPTER.next}`;
     const nextCh = AP().ch + 1, C = actChapters();
     if (ST.cur === 'moses') claimChapter(ST.ch + 1);
     else { const it = SCROLL_LIST.find(x => x.id === ST.cur); if (it && it.num !== undefined) claimScrollChapter(it.num, nextCh); }

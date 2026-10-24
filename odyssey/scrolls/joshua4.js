@@ -154,6 +154,7 @@
     'jos8-35': { ref: '여호수아 8:35', text: '모세가 명령한 것은 여호수아가 이스라엘 온 회중과 여자들과 아이와 그들 중에 동행하는 거류민들 앞에서 낭독하지 아니한 말이 하나도 없었더라' },
     'jos9-14': { ref: '여호수아 9:14-15', text: '무리가 그들의 양식을 취하고는 어떻게 할지를 여호와께 묻지 아니하고 여호수아가 곧 그들과 화친하여 그들을 살리리라는 조약을 맺고 회중 족장들이 그들에게 맹세하였더라' },
     'jos10-12': { ref: '여호수아 10:12-13', text: '여호와께서 아모리 사람을 이스라엘 자손에게 넘겨 주시던 날에 여호수아가 여호와께 아뢰어 이스라엘의 목전에서 이르되 태양아 너는 기브온 위에 머무르라 달아 너도 아얄론 골짜기에서 그리할지어다 하매 태양이 머물고 달이 멈추기를 백성이 그 대적에게 원수를 갚기까지 하였느니라 야살의 책에 태양이 중천에 머물러서 거의 종일토록 속히 내려가지 아니하였다고 기록되지 아니하였느냐' },
+    'jos10-25': { ref: '여호수아 10:25', text: '여호수아가 그들에게 이르되 두려워하지 말며 놀라지 말고 강하고 담대하라 너희가 맞서서 싸우는 모든 대적에게 여호와께서 다 이와 같이 하시리라 하고' },
     'jos14-12': { ref: '여호수아 14:12', text: '그 날에 여호와께서 말씀하신 이 산지를 지금 내게 주소서 당신도 그 날에 들으셨거니와 그 곳에는 아낙 사람이 있고 그 성읍들은 크고 견고할지라도 여호와께서 나와 함께 하시면 내가 여호와께서 말씀하신 대로 그들을 쫓아내리이다 하니' },
     'jos21-45': { ref: '여호수아 21:45', text: '여호와께서 이스라엘 족속에게 말씀하신 선한 말씀이 하나도 남음이 없이 다 응하였더라' },
     'jos24-15': { ref: '여호수아 24:15', text: '만일 여호와를 섬기는 것이 너희에게 좋지 않게 보이거든 너희 조상들이 강 저쪽에서 섬기던 신들이든지 또는 너희가 거주하는 땅에 있는 아모리 족속의 신들이든지 너희가 섬길 자를 오늘 택하라 오직 나와 내 집은 여호와를 섬기겠노라 하니' },
@@ -619,6 +620,7 @@
       [NAR, '그 왕들을 여호수아에게로 끌어내매 여호수아가 이스라엘 모든 사람을 부르고 자기와 함께 갔던 지휘관들에게 이르되 가까이 와서 이 왕들의 목을 발로 밟으라 하매 그들이 가까이 가서 그들의 목을 밟으매 (수 10:24)'],
       [NAR, '여호수아가 그들에게 이르되 (수 10:25)'],
       [JOSHUA, '두려워하지 말며 놀라지 말고 강하고 담대하라 너희가 맞서서 싸우는 모든 대적에게 여호와께서 다 이와 같이 하시리라'],
+      { event: 'braveLink' },
       [NAR, '그 후에 여호수아가 그 왕들을 쳐죽여 다섯 나무에 매달고 저녁까지 나무에 달린 채로 두었다가 (수 10:26)'],
       [NAR, '해 질 때에 여호수아가 명령하매 그들의 시체를 나무에서 내려 그들이 숨었던 굴 안에 던지고 굴 어귀를 큰 돌로 막았더니 오늘까지 그대로 있더라 (수 10:27)'],
     ],
@@ -1205,6 +1207,11 @@
     { say: '"여호와께서 사람의 목소리를 들으신 이같은 날은 전에도 없었고 후에도 없었나니 이는 ○○" (10:14)', ok: '🙌 여호와께서 이스라엘을 위하여 싸우셨음이니라', no: ['⚔ 여호수아가 밤새도록 올라갔음이니라', '🤝 기브온이 이스라엘과 화친하였음이니라'] },
   ], '"이는 여호와께서 이스라엘을 위하여 싸우셨음이니라" (수 10:14)'), null, 'j10_sun'); }
 
+  // 🗺 남쪽 성읍들(수 10:28-39) — 본문에 나온 차례대로 놓는다(성읍을 치는 버튼·성읍마다 보상은 두지 않는다)
+  function citiesGame(q){ api.runDialog(DLG.j10_south, () => orderPlay(q, '🗺 막게다에서 드빌까지', '여호수아가 온 이스라엘과 더불어 나아간 길 — 수 10:28-39에 나온 차례대로 놓아요.', [
+    ['막게다', '10:28'], ['립나', '10:29'], ['라기스', '10:31'], ['에글론', '10:34'], ['헤브론', '10:36'], ['드빌', '10:38'],
+  ], '수 10:28-39를 다시 떠올려 봐요', '✓ "이스라엘의 하나님 여호와께서 이스라엘을 위하여 싸우셨으므로" (10:42)'), null, 'j10_south'); }
+
   // ⏳ 갈렙의 마흔다섯 해(수 14:7-12) — 갈렙이 한 말을 그 차례대로
   function calebGame(q){ api.runDialog(DLG.j11_caleb, () => orderPlay(q, '⏳ 그 날부터 오늘까지', '갈렙이 여호수아에게 한 말(수 14:7-12)을 그 차례대로 놓아요.', [
     ['🧭 사십 세에 가데스 바네아에서 정탐', '14:7'], ['📜 성실한 마음으로 보고', '14:7'], ['🙌 내 하나님 여호와께 충성', '14:8'], ['✋ 모세의 맹세 — 네 발로 밟는 땅', '14:9'],
@@ -1295,6 +1302,8 @@
   function kingsCamp(){ kingsShow = true; refresh('gibeon'); try { api.startCine('j10Kings', KCAMP[0], api.heightAt(KCAMP[0], KCAMP[1]) + 2, KCAMP[1], { r: 16, h: 7, dur: 4.5, spin: 0.3 }); } catch (e){} }
   function hail(){ hailShow = true; flash('#e8f2ff', 0.5); refresh('gibeon'); try { api.startCine('j10Hail', SLOPE[0], api.heightAt(SLOPE[0], SLOPE[1]) + 2, SLOPE[1], { r: 18, h: 9, dur: 5, spin: 0.3 }); } catch (e){} api.toast('🧊 하늘에서 큰 우박 덩이가 내렸어요', 2600); }
   function sunStop(){ sunShow = true; flash('#fff3c4', 0.45); refresh('gibeon'); try { api.startCine('j10Sun', GB[0], api.heightAt(GB[0], GB[1]) + 20, GB[1], { r: 30, h: 16, dur: 5.5, spin: 0.2 }); } catch (e){} api.toast('☀ 태양이 기브온 위에 머물렀어요', 2600); }
+  // 1:9에서 여호수아가 들은 말을 10:25에서 여호수아가 지휘관들에게 전한다
+  function braveLink(){ api.toast('💪 1:9에서 여호수아가 들은 "강하고 담대하라" — 이제 여호수아가 지휘관들에게 전해요', 3400); }
   function caveStone(){ caveShow = true; refresh('gibeon'); try { api.startCine('j10Cave', CAVE[0] - 3.6, api.heightAt(CAVE[0], CAVE[1]) + 1.5, CAVE[1] - 3.6, { r: 9, h: 3.5, dur: 4, spin: 0.4 }); } catch (e){} }
   function edAltar(){ edShow = true; refresh('shiloh'); try { api.startCine('j13Ed', ED[0], api.heightAt(ED[0], ED[1]) + 2, ED[1], { r: 12, h: 5, dur: 4.5, spin: 0.4 }); } catch (e){} }
   function stoneUp(){ stoneShow = true; refresh('shiloh'); try { api.startCine('j13Stone', OAK[0] - 2.6, api.heightAt(OAK[0], OAK[1]) + 2, OAK[1] + 1.4, { r: 9, h: 3.5, dur: 4.5, spin: 0.4 }); } catch (e){} }
@@ -1540,8 +1549,8 @@
           { id: 'j10s5', zone: 'gilgal', obj: '기브온으로 올라가기', where: '서쪽 길의 초록 빛기둥', exit: 'to-gibeon' },
           { id: 'j10s6', zone: 'gibeon', obj: '벧호론에 올라가는 비탈', where: '기브온 남서쪽 비탈(빛나는 곳)', point: 'j10_slope', dlg: 'j10_hail' },
           { id: 'j10s7', zone: 'gibeon', obj: '"태양아 너는 기브온 위에 머무르라"', where: '기브온 성 동쪽 성문 앞(빛나는 곳)', point: 'j10_sky', game: 'sky', doneDlg: 'j10_sun_done' },
-          { id: 'j10s8', zone: 'gibeon', obj: '막게다의 굴', where: '남쪽 바위 언덕의 굴 어귀(빛나는 곳)', point: 'j10_cave', dlg: 'j10_cave' },
-          { id: 'j10s9', zone: 'gibeon', obj: '남쪽 성읍들', where: '기브온 성 남동쪽 길(빛나는 곳)', point: 'j10_south', dlg: 'j10_south', reward: { verse: 'jos10-12', clear: true } },
+          { id: 'j10s8', zone: 'gibeon', obj: '막게다의 굴', where: '남쪽 바위 언덕의 굴 어귀(빛나는 곳)', point: 'j10_cave', dlg: 'j10_cave', reward: { verse: 'jos10-25' } },
+          { id: 'j10s9', zone: 'gibeon', obj: '남쪽 성읍들', where: '기브온 성 남동쪽 길(빛나는 곳)', point: 'j10_south', game: 'cities', reward: { verse: 'jos10-12', clear: true } },
         ] },
       { title: `${T(11)} — 갈렙의 산지`, clearTitle: '🎉 4편 11장 「갈렙의 산지」 완료!', next: '12장: 실로의 회막과 기업',
         steps: [
@@ -1575,8 +1584,8 @@
     ],
     games: { stay: stayGame, hide: hideGame, cord: cordGame, hills: hillsGame, follow: followGame, stones: stonesGame,
       calendar: calendarGame, holy: holyGame, march: marchGame, lots: lotsGame, tent: tentGame, ambush: ambushGame, altar: altarGame,
-      evidence: evidenceGame, night: nightGame, sky: skyGame, caleb: calebGame, trail: trailGame, survey: surveyGame, refuge: refugeGame, twoside: twosideGame, covenant: covenantGame },
-    events: { redCord, jordanStop, jordanBack, stonesUp, wallsFall, jerichoBurn, achorPile, aiBurn, altarUp, kingsCamp, hail, sunStop, caveStone, edAltar, stoneUp, rahabGen },
+      evidence: evidenceGame, night: nightGame, sky: skyGame, cities: citiesGame, caleb: calebGame, trail: trailGame, survey: surveyGame, refuge: refugeGame, twoside: twosideGame, covenant: covenantGame },
+    events: { redCord, jordanStop, jordanBack, stonesUp, wallsFall, jerichoBurn, achorPile, aiBurn, altarUp, kingsCamp, hail, sunStop, caveStone, braveLink, edAltar, stoneUp, rahabGen },
     world: zid => world(zid),
   };
 });
