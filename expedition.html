@@ -173,6 +173,11 @@
   .guide > summary::-webkit-details-marker { display: none; }
   .guide > summary::after { content: "펼치기 ▾"; font-size: 12px; font-weight: 700; color: var(--soft); white-space: nowrap; }
   .guide[open] > summary::after { content: "접기 ▴"; }
+  .fold > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; font-size: 18px; font-weight: 800; }
+  .fold > summary::-webkit-details-marker { display: none; }
+  .fold > summary::after { content: "펼치기 ▾"; font-size: 12px; font-weight: 700; color: var(--soft); white-space: nowrap; }
+  .fold[open] > summary::after { content: "접기 ▴"; }
+  .fold[open] > summary { margin-bottom: 8px; }
   .guide .dday { display: inline-block; margin-left: 6px; padding: 2px 9px; border-radius: 99px; background: var(--rust); color: #fff; font-size: 12px; font-weight: 900; vertical-align: 2px; }
   .guide .when { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 12px 0 4px; font-size: 14px; }
   .guide .when dt { color: var(--soft); font-weight: 700; }
@@ -206,31 +211,6 @@
     <p class="muted" style="margin:4px 0 0;">미션을 다 하면 <b>2시까지 이 호랑이 조형물 앞</b>으로 팀이 함께 모여요(나눔·기도). 늦으면 5분마다 5점이 깎여요.</p>
   </details>
 
-  <!-- 0. 야유회 참가 신청 (온라인 마감 전까지만) -->
-  <section class="card signup" id="signupCard" hidden>
-    <h2>🙋 가을 야유회 참가 신청</h2>
-    <p class="muted" style="margin:0 0 12px;" id="suNote">11월 8일(주일) 서울대공원 · 온라인 신청 마감 <b id="suUntil">10/25(주일) 밤 9시</b></p>
-    <form id="suForm">
-      <label class="lb">이름(실명)</label>
-      <input type="text" id="suName" maxlength="10" autocomplete="name" placeholder="예: 김하은">
-      <label class="lb">학년</label>
-      <div class="seg" data-seg="grade"><button type="button" data-v="1">1학년</button><button type="button" data-v="2">2학년</button><button type="button" data-v="3">3학년</button></div>
-      <div class="two">
-        <div><label class="lb">반</label><input type="text" id="suClass" maxlength="12" placeholder="예: 3반"></div>
-        <div><label class="lb">담임 선생님</label><input type="text" id="suTeacher" maxlength="12" placeholder="예: 김OO 선생님"></div>
-      </div>
-      <label class="lb">함께 오는 새친구 (있으면)</label>
-      <input type="text" id="suFriend" maxlength="40" placeholder="이름 (여러 명이면 쉼표로)">
-      <label class="lb">야유회에</label>
-      <div class="seg" data-seg="going"><button type="button" data-v="1">🙌 갈래요</button><button type="button" data-v="0">😢 못 가요</button></div>
-      <label class="chk"><input type="checkbox" id="suParent"> 부모님께 허락받았어요</label>
-      <label class="chk"><input type="checkbox" id="suStay"> 2시 이후에도 남아서 더 구경할래요 (부모님 허락)</label>
-      <button class="btn block" type="submit" style="margin-top:12px;">신청하기</button>
-      <p class="msg err" id="suMsg" role="alert"></p>
-    </form>
-    <div id="suDone" hidden></div>
-    <p class="muted" style="margin:10px 0 0;">📄 부모님 서명이 있는 <b>종이 신청서</b>는 11월 1일(주일)까지 꼭 내 주세요. <b>함께 오는 새친구도</b> 종이 신청서(부모님 서명)를 따로 내야 해요. 같은 이름·학년으로 다시 신청하면 내용이 바뀌어요.</p>
-  </section>
 
   <!-- 1. 팀 코드 -->
   <section class="card" id="joinCard" hidden>
@@ -333,6 +313,32 @@
     <h3>꼭 챙겨요</h3>
     <div class="bring"><span>🔋 휴대폰 충전 100%</span><span>📖 성경 앱(개역개정)</span><span>👟 편한 운동화</span><span>🧥 따뜻한 겉옷</span><span>💧 개인 물병</span></div>
     <p class="muted" style="margin:12px 0 0;">팀은 끝까지 같이 다녀요. 동물원 규칙을 지키고, 집합 시간에 늦으면 감점이 있어요.</p>
+  </details>
+
+  <!-- 야유회 참가 신청 (온라인 마감 전까지만) — 접고 펼 수 있다 -->
+  <details class="card signup fold" id="signupCard" hidden open>
+    <summary><span>🙋 가을 야유회 참가 신청</span></summary>
+    <p class="muted" style="margin:0 0 12px;" id="suNote">11월 8일(주일) 서울대공원 · 온라인 신청 마감 <b id="suUntil">10/25(주일) 밤 9시</b></p>
+    <form id="suForm">
+      <label class="lb">이름(실명)</label>
+      <input type="text" id="suName" maxlength="10" autocomplete="name" placeholder="예: 김하은">
+      <label class="lb">학년</label>
+      <div class="seg" data-seg="grade"><button type="button" data-v="1">1학년</button><button type="button" data-v="2">2학년</button><button type="button" data-v="3">3학년</button></div>
+      <div class="two">
+        <div><label class="lb">반</label><input type="text" id="suClass" maxlength="12" placeholder="예: 3반"></div>
+        <div><label class="lb">담임 선생님</label><input type="text" id="suTeacher" maxlength="12" placeholder="예: 김OO 선생님"></div>
+      </div>
+      <label class="lb">함께 오는 새친구 (있으면)</label>
+      <input type="text" id="suFriend" maxlength="40" placeholder="이름 (여러 명이면 쉼표로)">
+      <label class="lb">야유회에</label>
+      <div class="seg" data-seg="going"><button type="button" data-v="1">🙌 갈래요</button><button type="button" data-v="0">😢 못 가요</button></div>
+      <label class="chk"><input type="checkbox" id="suParent"> 부모님께 허락받았어요</label>
+      <label class="chk"><input type="checkbox" id="suStay"> 2시 이후에도 남아서 더 구경할래요 (부모님 허락)</label>
+      <button class="btn block" type="submit" style="margin-top:12px;">신청하기</button>
+      <p class="msg err" id="suMsg" role="alert"></p>
+    </form>
+    <div id="suDone" hidden></div>
+    <p class="muted" style="margin:10px 0 0;">📄 부모님 서명이 있는 <b>종이 신청서</b>는 11월 1일(주일)까지 꼭 내 주세요. <b>함께 오는 새친구도</b> 종이 신청서(부모님 서명)를 따로 내야 해요. 같은 이름·학년으로 다시 신청하면 내용이 바뀌어요.</p>
   </details>
 
   <p class="verse-foot">"주께서 지으신 것들이 땅에 가득하니이다" (시편 104:24)</p>
@@ -839,7 +845,8 @@
         $("suName").value = su.name; $("suClass").value = su.cls || ""; $("suTeacher").value = su.teacher || ""; $("suFriend").value = su.friend || ""; $("suParent").checked = !!su.parent; $("suStay").checked = !!su.stay;
         seg("grade", su.grade); seg("going", su.going); done(su);
       }
-      if (location.hash === "#signup") setTimeout(function () { $("signupCard").scrollIntoView({ behavior: "smooth", block: "start" }); }, 200);
+      if (su.name) $("signupCard").open = false;
+      if (location.hash === "#signup") { $("signupCard").open = true; setTimeout(function () { $("signupCard").scrollIntoView({ behavior: "smooth", block: "start" }); }, 200); }
     }, function () {});
     $("suForm").addEventListener("submit", function (ev) {
       ev.preventDefault();
