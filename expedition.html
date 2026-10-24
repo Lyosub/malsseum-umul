@@ -204,8 +204,8 @@
     <p>우리 팀과 함께 하나님이 지으신 것들을 찾아 떠나요!</p>
   </header>
 
-  <!-- 2시 집합 장소: 비밀이 아니므로 누구에게나 맨 위에 보인다 -->
-  <details class="card meetcard" open>
+  <!-- 최종 모임 장소: 당일 11/8 13:30부터 맨 위에 보인다(관리자 보기는 늘 보임) -->
+  <details class="card meetcard" id="meetCard" open hidden>
     <summary style="font-weight:800;font-size:16px;cursor:pointer;">🏁 최종 모임 장소 — 호랑이 조형물 앞 (2시)</summary>
     <img src="assets/picnic/meet.jpg" alt="2시 집합 장소 호랑이 조형물" style="display:block;width:100%;max-width:360px;margin:10px auto 6px;border-radius:12px;">
     <p class="muted" style="margin:4px 0 0;">미션을 다 하면 <b>2시까지 이 호랑이 조형물 앞</b>으로 팀이 함께 모여요(나눔·기도). 늦으면 5분마다 5점이 깎여요.</p>
@@ -390,7 +390,13 @@
     $("mainArea").hidden = which !== "main";
   }
 
+  // 최종 모임 장소 카드: 11/8 13:30(한국 시간)부터
+  var MEET_AT = new Date("2026-11-08T13:30:00+09:00").getTime();
+  function meetCheck() { $("meetCard").hidden = !(Date.now() >= MEET_AT || saved.viewer); }
+  setInterval(meetCheck, 20000);
+
   function start() {
+    meetCheck();
     if (!sb) { show("join"); $("joinMsg").textContent = "연결을 준비하지 못했어요. 새로고침해 주세요."; return; }
     if (saved.code) { join(saved.code, true); } else { show("join"); }
     adminPeek();
@@ -432,7 +438,7 @@
       team = d.team; members = d.members || [];
       saved.code = code; save();
       var me = members.filter(function (m) { return m.id === saved.member; })[0];
-      if (saved.viewer) { saved.name = "👀 관리자 보기"; save(); enterMain(); return; }
+      if (saved.viewer) { saved.name = "👀 관리자 보기"; save(); meetCheck(); enterMain(); return; }
       if (me) { saved.name = me.name; save(); enterMain(); } else { pickName(); }
     }, function () { show("join"); $("joinMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
   }
@@ -455,7 +461,7 @@
       saved.member = d.member.id; saved.name = d.member.name; save(); enterMain();
     }, function () { btn.disabled = false; $("nameMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
   });
-  $("otherTeam").onclick = function () { saved = { tab: tab }; save(); team = null; show("join"); $("codeInput").value = ""; adminPeek(); };
+  $("otherTeam").onclick = function () { saved = { tab: tab }; save(); team = null; show("join"); $("codeInput").value = ""; meetCheck(); adminPeek(); };
   $("changeMe").onclick = function () { stopPoll(); pickName(); };
 
   function enterMain() {
