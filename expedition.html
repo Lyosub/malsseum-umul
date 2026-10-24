@@ -670,6 +670,7 @@
       html += '<details class="q" data-key="' + key + '"' + (open ? " open" : "") + '><summary><span class="qn" style="background:var(--leaf);">' + q + '</span>' +
         '<span class="qt">장소 ' + q + '<small>' + (p && p.status === "ok" ? "찾았어요!" : p && p.status === "pending" ? "선생님 확인 중" : "어디일까요?") + '</small></span>' +
         '<span class="ticks"><span class="tick ' + tickOf(p) + '">📸</span></span></summary><div class="qbody">' +
+        '<p style="margin:0 0 8px;font-size:14px;font-weight:700;">📸 이 사진 속 장소를 찾아가서, <span style="color:var(--rust)">사진과 똑같은 구도로</span> 팀 사진(팀원 3명 이상)을 찍어 올려요.</p>' +
         '<div class="place-img">답사 뒤 사진이 들어가요<img src="assets/picnic/place-' + q + '.jpg" alt="장소 ' + q + ' 사진" onerror="this.remove()"></div>';
       if (hint) html += '<div class="hint">💡 힌트: ' + esc(hint) + '</div>';
       if (p && p.photo) html += '<img class="thumb" loading="lazy" src="' + esc(p.photo) + '" alt="">';
