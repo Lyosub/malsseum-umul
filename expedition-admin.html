@@ -343,11 +343,27 @@
       return ((b.score || 0) - (a.score || 0)) || ((y.h1 ? 1 : 0) - (x.h1 ? 1 : 0)) || ((y.verses || 0) - (x.verses || 0)) ||
         ((x.hints || 0) - (y.hints || 0)) || ((x.last ? Date.parse(x.last) : Infinity) - (y.last ? Date.parse(y.last) : Infinity) || 0);
     }
+    // 항목별로 얻은 점수(승인된 것만, 같은 문제는 가장 높은 점수 하나)
+    function partsHTML(t) {
+      var P = t.parts || {}, rows = [
+        ["🦁 도감 동물", "animal", 10, 10], ["📷 도감 사진", "animal_photo", 10, 20], ["📖 도감 말씀", "verse", 10, 20],
+        ["🏞️ 숨은 풍경", "place", 8, 40], ["🧩 히든 1 말씀 조각", "hidden1", 1, 15], ["🍁 히든 2 단풍잎", "hidden2", 1, 5], ["🎬 히든 3 릴스", "hidden3", 1, 10]];
+      var h = rows.map(function (r) {
+        var x = P[r[1]] || { n: 0, pts: 0 };
+        return '<tr' + (x.pts ? "" : ' style="opacity:.45"') + '><td>' + r[0] + '</td><td style="text-align:right;">' + x.n + " / " + r[2] + '</td><td style="text-align:right;font-weight:800;">' + x.pts + '<small style="opacity:.6"> / ' + r[3] + '</small></td></tr>';
+      }).join("");
+      if (t.bonus) h += '<tr><td>⭐ 특별상</td><td></td><td style="text-align:right;font-weight:800;">+' + t.bonus + '</td></tr>';
+      if (t.penalty) h += '<tr><td>⏰ 늦음 감점</td><td></td><td style="text-align:right;font-weight:800;">−' + t.penalty + '</td></tr>';
+      // 8초마다 다시 그려지므로 접지 않고 늘 펼쳐 둔다
+      return '<div class="parts" style="margin-top:8px;"><div style="font-size:13.5px;font-weight:700;">📊 얻은 점수 (항목 · 개수 · 점수)</div>' +
+        '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;line-height:1.7;">' + h + '</table></div>';
+    }
     var top = D.teams.slice().sort(rankCmp)[0];
     $("scoreSum").textContent = top && top.score > 0 ? "· 1위 " + top.emoji + " " + top.name + " " + top.score + "점" : "· 아직 모두 0점";
     $("scoreBody").innerHTML = D.teams.slice().sort(rankCmp).map(function (t) {
       return '<div class="ts"><div class="hd"><span class="nm">' + esc(t.emoji) + " " + esc(t.name) + '</span><span class="sc">' + t.score + '<small>점</small></span></div>' +
         '<div class="adj"><div><span class="lb">늦음 감점</span>' + pm(t, "penalty", t.penalty) + '</div><div><span class="lb">특별상</span>' + pm(t, "bonus", t.bonus) + '</div></div>' +
+        partsHTML(t) +
         '<div class="who">동점 기준 · 말씀 조각 ' + (t.tb && t.tb.h1 ? "성공" : "—") + ' · 도감 말씀 ' + ((t.tb && t.tb.verses) || 0) + ' · 힌트 ' + ((t.tb && t.tb.hints) || 0) + '</div>' +
         '<div class="who">참여 · ' + (t.members.length ? t.members.map(function (m) { return esc(m.name) + " " + m.count; }).join(" · ") : "아직 들어온 사람이 없어요") + '</div></div>';
     }).join("") || '<p class="muted">팀을 먼저 추가해 주세요.</p>';
