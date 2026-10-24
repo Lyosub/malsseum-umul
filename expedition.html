@@ -707,10 +707,10 @@
     var clues = S.clues.map(function (c) {
       var ph = c.photo && String(c.photo).indexOf(SUPABASE_URL + "/storage/v1/object/public/picnic-photos/") === 0 ? '<img src="' + esc(c.photo) + '" alt="단서 사진" style="display:block;width:100%;max-width:320px;margin:8px auto 0;border-radius:10px;">' : "";
       return '<div class="clue"><b>' + kst(c.at) + '</b>' + esc(c.text || "") + ph + '</div>'; }).join("") ||
-      '<div class="clue">단서는 곧 이곳에 올라와요. 기다리는 동안 숨은 풍경 장소 근처를 잘 살펴보세요!</div>';
+      '<div class="clue">우리 팀 단서는 곧 이곳에 하나씩 올라와요. 그동안 도감과 숨은 풍경을 계속해요!</div>';
     box.innerHTML =
       '<div class="mission"><div class="tag">HIDDEN MISSION 1 · 15점</div><h3>🧩 말씀 조각을 찾아라</h3>' +
-      '<p>숨은 풍경 장소 8곳 중 4곳 근처에 우리 팀 말씀 조각 4장이 숨어 있어요. 4장을 모두 찾아 맞추면 하나의 말씀이 돼요!</p>' +
+      '<p>공원 곳곳 <b>네 곳</b>에 우리 팀 말씀 조각이 한 장씩 숨어 있어요. 단서는 <b>우리 팀 화면에만</b> 하나씩 떠요. 4장을 모두 찾아 맞추면 하나의 말씀이 돼요! <span style="opacity:.85">(다른 팀 봉투는 건드리지 않아요)</span></p>' +
       '<p>찾았으면 <b>' + (S.meet_place ? esc(S.meet_place) : "지정 장소") + '</b>에서 4장을 맞춰 들고 단체 사진을 올려요.</p>' +
       '<img src="assets/picnic/cardspot.jpg" alt="말씀 조각 단체 사진 장소" style="display:block;width:100%;max-width:300px;margin:8px auto;border-radius:12px;">' + clues +
       (h1 && h1.photo ? '<img class="thumb" src="' + esc(h1.photo) + '" alt="">' : "") + stateLine(h1, "미션 성공!") +

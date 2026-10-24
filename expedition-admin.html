@@ -372,15 +372,28 @@
     if (!settingsLoaded) {
       settingsLoaded = true;
       $("meetIn").value = e.meet_place || "";
-      var clues = e.card_clues && e.card_clues.length ? e.card_clues : [
-        { at: "2026-11-08T12:00:00+09:00", text: "" }, { at: "2026-11-08T12:30:00+09:00", text: "" }, { at: "2026-11-08T13:10:00+09:00", text: "" }];
-      $("clueEdit").innerHTML = '<div class="muted" style="margin-bottom:4px;">말씀 조각 단서 (그 시각이 되면 학생 화면에 자동으로 떠요)</div>' + clues.map(function (c, i) {
-        return '<div class="clueBox" style="margin-top:8px;padding-bottom:8px;border-bottom:1px dashed #e5d6bd;"><div class="row"><input type="datetime-local" class="clueAt" value="' + toLocalInput(c.at) + '" style="flex:0 0 210px;"><input class="clueText" value="' + esc(c.text) + '" placeholder="단서 ' + (i + 1) + ' (글 · 사진만 올려도 돼요)" style="flex:1 1 200px;"></div>' +
+      // 말씀 조각 단서(2026-10-24 A안): 팀마다 자기 조각 4곳의 단서만 본다. 팀이 없는 단서는 모든 팀에게
+      var allClues = e.card_clues || [];
+      var DEF_AT = ["2026-11-08T11:40:00+09:00", "2026-11-08T12:00:00+09:00", "2026-11-08T12:30:00+09:00", "2026-11-08T13:10:00+09:00"];
+      function clueRow(c, i, teamId) {
+        return '<div class="clueBox" data-team="' + (teamId || "") + '" style="margin-top:8px;padding-bottom:8px;border-bottom:1px dashed #e5d6bd;"><div class="row"><input type="datetime-local" class="clueAt" value="' + toLocalInput(c.at) + '" style="flex:0 0 210px;"><input class="clueText" value="' + esc(c.text || "") + '" placeholder="단서 ' + (i + 1) + ' (글 · 사진만 올려도 돼요)" style="flex:1 1 200px;"></div>' +
           '<input type="hidden" class="cluePhoto" value="' + esc(c.photo || "") + '"><div class="row" style="margin-top:6px;align-items:center;">' +
           '<button type="button" class="btn ghost cluePick" style="padding:7px 12px;font-size:13px;">📷 ' + (c.photo ? "사진 바꾸기" : "사진 단서 올리기") + '</button>' +
           '<img class="clueThumb" src="' + esc(c.photo || "") + '" alt="" style="height:64px;border-radius:8px;' + (c.photo ? "" : "display:none;") + '">' +
           '<button type="button" class="btn ghost clueDel" style="padding:7px 10px;font-size:13px;' + (c.photo ? "" : "display:none;") + '">사진 빼기</button></div></div>';
-      }).join("") + '<p class="muted" style="margin:6px 0 0;">사진 단서도 그 시각 전에는 학생 화면에 보이지 않아요. 올린 뒤 아래 「저장」을 꼭 눌러 주세요.</p>';
+      }
+      var ch = '<div class="muted" style="margin-bottom:4px;">말씀 조각 단서 — <b>팀마다 그 팀 조각 4곳의 단서</b>만 그 팀 화면에 떠요. 시각이 되면 자동으로 열리고, 그 전에는 사진도 보이지 않아요.</div>';
+      (D.teams || []).forEach(function (t) {
+        var mine = allClues.filter(function (c) { return String(c.team || "") === String(t.id); });
+        while (mine.length < 4) mine.push({ at: DEF_AT[mine.length] || DEF_AT[3], text: "" });
+        ch += '<div style="margin-top:12px;font-weight:800;">' + esc(t.emoji) + " " + esc(t.name) + ' <span class="muted" style="font-weight:600;">— 조각 4곳</span></div>' +
+          mine.map(function (c, i) { return clueRow(c, i, t.id); }).join("");
+      });
+      var common = allClues.filter(function (c) { return !c.team; });
+      if (!common.length) common = [{ at: DEF_AT[0], text: "" }];
+      ch += '<div style="margin-top:14px;font-weight:800;">📢 모든 팀 공통 단서 <span class="muted" style="font-weight:600;">(쓸 때만)</span></div>' +
+        common.map(function (c, i) { return clueRow(c, i, ""); }).join("");
+      $("clueEdit").innerHTML = ch + '<p class="muted" style="margin:6px 0 0;">사진 단서를 올린 뒤 아래 「저장」을 꼭 눌러 주세요. 글도 사진도 없는 칸은 저장하지 않아요.</p>';
       bindCluePhotos();
       var hints = e.place_hints || {};
       var h = '<div class="muted" style="margin:6px 0 4px;">숨은 풍경 장소 힌트 (1시 30분 이후 학생이 「힌트 받기」를 누르면 보여요)</div>';
@@ -566,12 +579,15 @@
   });
 
   $("saveSettings").onclick = function () {
-    var ats = document.querySelectorAll(".clueAt"), txts = document.querySelectorAll(".clueText"), clues = [];
-    var phs = document.querySelectorAll(".cluePhoto");
-    for (var i = 0; i < ats.length; i++) {
-      var ct = txts[i].value.trim(), cp = phs[i] ? phs[i].value.trim() : "";
-      if (ct || cp) { var cl = { at: fromLocalInput(ats[i].value), text: ct }; if (cp) cl.photo = cp; clues.push(cl); }
-    }
+    var clues = [];
+    document.querySelectorAll("#clueEdit .clueBox").forEach(function (box) {
+      var ct = box.querySelector(".clueText").value.trim(), cp = box.querySelector(".cluePhoto").value.trim(), tm = box.getAttribute("data-team");
+      if (!ct && !cp) return;
+      var cl = { at: fromLocalInput(box.querySelector(".clueAt").value), text: ct };
+      if (cp) cl.photo = cp;
+      if (tm) cl.team = Number(tm);
+      clues.push(cl);
+    });
     var hints = {};
     document.querySelectorAll(".hintText").forEach(function (el) { if (el.value.trim()) hints[el.dataset.q] = el.value.trim(); });
     setting({ meet_place: $("meetIn").value.trim(), card_clues: clues, place_hints: hints,
