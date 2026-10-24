@@ -191,6 +191,13 @@ jobs:
                 echo "posted=0" >> "$GITHUB_OUTPUT"
                 exit 0
               fi
+              # 일부러 쉬는 날(설교 없는 주의 예고 숏츠 등)은 queue.json 의 skip_days 에 적어 둔다(2026-10-24 추가)
+              SKIP_TODAY=$(jq -r --arg d "$TODAY_KST" '[(.skip_days // [])[] | select((.date // .) == $d)] | length' instagram/queue.json)
+              if [ "${SKIP_TODAY:-0}" -gt 0 ]; then
+                echo "오늘($TODAY_KST)은 게시 쉬는 날로 등록됨 — 정상 종료"
+                echo "posted=0" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
               echo "::error::오늘 올릴 게시물이 대기열에 없습니다. 컨펌·대기열 등록이 빠졌는지 확인하세요."
               exit 1
             fi
