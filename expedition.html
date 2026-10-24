@@ -622,7 +622,9 @@
       return;
     }
     var h1 = best("hidden1", 0), h2 = best("hidden2", 0), h3 = best("hidden3", 0);
-    var clues = S.clues.map(function (c) { return '<div class="clue"><b>' + kst(c.at) + '</b>' + esc(c.text) + '</div>'; }).join("") ||
+    var clues = S.clues.map(function (c) {
+      var ph = c.photo && String(c.photo).indexOf(SUPABASE_URL + "/storage/v1/object/public/picnic-photos/") === 0 ? '<img src="' + esc(c.photo) + '" alt="단서 사진" style="display:block;width:100%;max-width:320px;margin:8px auto 0;border-radius:10px;">' : "";
+      return '<div class="clue"><b>' + kst(c.at) + '</b>' + esc(c.text || "") + ph + '</div>'; }).join("") ||
       '<div class="clue">단서는 곧 이곳에 올라와요. 기다리는 동안 숨은 풍경 장소 근처를 잘 살펴보세요!</div>';
     box.innerHTML =
       '<div class="mission"><div class="tag">HIDDEN MISSION 1 · 15점</div><h3>🧩 말씀 조각을 찾아라</h3>' +
