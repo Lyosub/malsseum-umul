@@ -5,13 +5,14 @@
 // 2026-10-11 화면 정리: 학생 한 줄을 「이름 / 획득·사용 숫자 / 진행 막대」로 나누고, 펼친 상세는 칸(진행·달란트·산 것·얻은 것)별로 묶었다.
 
 (function () {
-  var TOTALS = { moses: 10, sinai2: 10, wild3: 16, joshua: 13, judges: 12 };
+  var TOTALS = { moses: 10, sinai2: 10, wild3: 16, joshua: 13, judges: 12, ruth: 9 };
   var SCROLLS = [
     { id: "moses", label: "1편", full: "1편 모세와 함께" },
     { id: "sinai2", label: "2편", full: "2편 시내산의 마지막 한 달" },
     { id: "wild3", label: "3편", full: "3편 광야 40년" },
     { id: "joshua", label: "4편", full: "4편 여호수아와 함께" },
-    { id: "judges", label: "5편", full: "5편 사사들과 함께" }
+    { id: "judges", label: "5편", full: "5편 사사들과 함께" },
+    { id: "ruth", label: "6편", full: "6편 룻과 사무엘" }
   ];
   var EARN_LABELS = {
     odyssey_chapter: "장 완료 보상",
