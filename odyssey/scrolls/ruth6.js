@@ -2,14 +2,14 @@
 // 삼상 4장(엘리 집안의 죽음·이가봇)과 6:19(벧세메스)는 해설로 읽고 멀리서만 · 다곤은 얼굴·모양 없는 돌덩이 · 새 마을은 베들레헴 하나(다른 곳은 4·5편 마을을 사무엘 시대에 맞게).
 // 대사·구절 카드는 E:\temp\claude-work\ruth6\gen6.py가 bskorea 개역개정 원문 파일에서 그대로 뽑는다(손으로 옮기지 않음).
 // 무대: 1장 모압 평지(모압 지방) → 베들레헴(새 마을, 헤브론 산지 서쪽 길) · 5~7장 실로(여호와의 전·라마의 집) · 8장 블레셋 평지(아스돗·벧세메스 길) · 9장 기브온 마을(기럇여아림·미스바).
-// 족보 조각 오벳(룻)·이새(룻 4:21-22, 마 1:5-6). 새 인물은 GPT 13차 원화 → Meshy 모델이 오기 전까지 이미 있는 모델을 쓴다.
+// 족보 조각 오벳(룻)·이새(룻 4:21-22, 마 1:5-6). 새 인물·암소·소품은 GPT 13차 원화 → Meshy 모델(npc3d/r6-*, 못 받으면 도형 FB).
 (window.__odyQ = window.__odyQ || []).push(api => {
   const { DLG, ZONES, CONDS, VERSES, THREE, SPEAKERS: { NAR } } = api;
   const RUTH = { n: '룻' }, BOAZ = { n: '보아스' }, HANNAH = { n: '한나' }, SAMUEL = { n: '사무엘' };
   const cur = () => api.ST.cur === 'ruth' && api.ST.sp.ruth ? api.ST.sp.ruth : null;
   const at = (ch, a = 0, b = 99) => () => { const p = cur(); return !!p && p.ch === ch && !p.cleared && p.step >= a && p.step <= b; };
   const from = (ch, s = 0) => () => { const p = cur(); return !!p && (p.ch > ch || (p.ch === ch && (p.cleared || p.step >= s))); };
-  const M_ = { naomi: 'he-grandma', ruth: 'j5-achsah', orpah: 'j5-jael', boaz: 'j5-manoah', elkanah: 'j5-micah', hannah: 'j5-manoah-wife', eli: 'he-grandpa', samuel: 'he-boy-hb' };
+  const M_ = { naomi: 'r6-naomi', ruth: 'r6-ruth', orpah: 'r6-orpah', boaz: 'r6-boaz', elkanah: 'r6-elkanah', hannah: 'r6-hannah', eli: 'r6-eli', samuel: 'r6-samuel-boy' };   // GPT 13차 → Meshy(2026-10-25)
 
   // ── 자리 ──
   const NHOUSE = [16, 26], MOABP = [12, 21];                                   // 모압 평지: 나오미의 집
