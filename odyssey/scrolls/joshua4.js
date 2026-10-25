@@ -64,16 +64,18 @@
   });
   const ZM = ZONES.moab.points, ZG = ZONES.gilgal.points;
   ZM.push({ id: 'j4_joshua', x: MJOSH[0], z: MJOSH[1], type: 'villager', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'j4moab', body: '' });
-  ZM.push({ id: 'j4_east', x: MEAST[0], z: MEAST[1], type: 'villager', title: '르우벤·갓·므낫세 반 지파', model: 'ca-israel-elder', persona: 'rs_static', cond: 'j4east', body: '' });
+  ZM.push({ id: 'j4_east', x: MEAST[0], z: MEAST[1], type: 'villager', title: '르우벤·갓·므낫세 반 지파', model: 'j4-east-tribes', persona: 'rs_static', cond: 'j4east', body: '' });
   ZM.push({ id: 'j4_bank', x: MBANK[0], z: MBANK[1], type: 'lore', title: '요단 강가', cond: 'j4c2', body: '' });
   ZM.push({ id: 'j4_mbed', x: MBED[0], z: MBED[1], type: 'lore', title: '요단 가운데 마른 땅', cond: 'j4bed', body: '' });
   ZM.push({ id: 'j4_priests', x: MBED[0], z: MBED[1] + 3.5, type: 'villager', title: '언약궤를 멘 제사장들', model: 'he-levite', persona: 'rs_static', cond: 'j4dryM', body: '' });
   ZM.push({ id: 'to-gilgal', x: -36.5, z: 9, type: 'exit', title: '요단을 건너 여리고로', to: 'gilgal', spawn: [34, 2], cond: 'j4bank' });
   ZM.push({ id: 'to-gilgal2', x: -43.6, z: -2, type: 'exit', title: '마른 땅으로 요단 건너편 길갈로', to: 'gilgal', spawn: [34, 0], cond: 'j4cross' });
   ZG.push({ id: 'j4_house', x: HOUSE[0], z: HOUSE[1], type: 'lore', title: '성벽 위 라합의 집', cond: 'j4house', body: '' });
-  ZG.push({ id: 'j4_rahab', x: HOUSE[0] + 1.6, z: HOUSE[1] + 1.4, type: 'villager', title: '라합', model: 'he-mother', persona: 'rs_static', cond: 'j4rahab', body: '' });
-  ZG.push({ id: 'j4_spies', x: HOUSE[0] + 2.2, z: HOUSE[1] - 1.2, type: 'villager', title: '두 정탐꾼', model: 'ca-tent-builder', persona: 'rs_static', cond: 'j4spiesHouse', body: '' });
-  ZG.push({ id: 'j4_spies2', x: HILLS[0] + 2, z: HILLS[1] + 1, type: 'villager', title: '두 정탐꾼', model: 'ca-tent-builder', persona: 'rs_static', cond: 'j4spiesHills', body: '' });
+  ZG.push({ id: 'j4_rahab', x: HOUSE[0] + 1.6, z: HOUSE[1] + 1.4, type: 'villager', title: '라합', model: 'j4-rahab', persona: 'rs_static', cond: 'j4rahab', body: '' });
+  ZG.push({ id: 'j4_spies', x: HOUSE[0] + 2.2, z: HOUSE[1] - 1.2, type: 'villager', title: '두 정탐꾼', model: 'j4-spy-1', persona: 'rs_static', cond: 'j4spiesHouse', body: '' });
+  ZG.push({ id: 'j4_spies_b', x: HOUSE[0] + 3.4, z: HOUSE[1] - 1.9, type: 'villager', title: '정탐꾼', model: 'j4-spy-2', persona: 'rs_static', cond: 'j4spiesHouse', body: '' });
+  ZG.push({ id: 'j4_spies2', x: HILLS[0] + 2, z: HILLS[1] + 1, type: 'villager', title: '두 정탐꾼', model: 'j4-spy-1', persona: 'rs_static', cond: 'j4spiesHills', body: '' });
+  ZG.push({ id: 'j4_spies2_b', x: HILLS[0] + 3.2, z: HILLS[1] + 1.6, type: 'villager', title: '정탐꾼', model: 'j4-spy-2', persona: 'rs_static', cond: 'j4spiesHills', body: '' });
   ZG.push({ id: 'j4_hills', x: HILLS[0], z: HILLS[1], type: 'lore', title: '산', cond: 'j4hills', body: '' });
   ZG.push({ id: 'j4_joshua_g', x: GJOSH[0], z: GJOSH[1], type: 'villager', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'j4gilgal', body: '' });
   ZG.push({ id: 'j4_gbed', x: GBED[0], z: GBED[1] + 2.5, type: 'lore', title: '요단 가운데 — 제사장들의 발이 선 곳', cond: 'j4gbed', body: '' });
@@ -84,7 +86,7 @@
   ZG.push({ id: 'j5_camp', x: CAMP5[0], z: CAMP5[1], type: 'lore', title: '길갈 진영 — 여리고 평지', cond: 'j5camp', body: '' });
   ZG.push({ id: 'j5_man', x: MAN[0], z: MAN[1], type: 'lore', title: '칼을 빼어 손에 든 한 사람', cond: 'j5man', body: '' });   // 수 5:13 — 얼굴·모습은 만들지 않고 빛으로만
   ZG.push({ id: 'j6_gate', x: GATE6[0], z: GATE6[1], type: 'lore', title: '굳게 닫힌 여리고 성문 앞', cond: 'j6gate', body: '' });
-  ZG.push({ id: 'j6_rahab_out', x: RAHAB_OUT[0], z: RAHAB_OUT[1], type: 'villager', title: '진영 밖의 라합과 가족', model: 'he-mother', persona: 'rs_static', cond: 'j6rahabOut', body: '' });
+  ZG.push({ id: 'j6_rahab_out', x: RAHAB_OUT[0], z: RAHAB_OUT[1], type: 'villager', title: '진영 밖의 라합과 가족', model: 'j4-rahab', persona: 'rs_static', cond: 'j6rahabOut', body: '' });
   ZG.push({ id: 'j7_ark', x: ARK_G[0], z: ARK_G[1] + 2.6, type: 'lore', title: '여호와의 궤 앞', cond: 'j7ark', body: '' });
   ZG.push({ id: 'j7_tent', x: ACHAN_T[0], z: ACHAN_T[1], type: 'lore', title: '아간의 장막', cond: 'j7tent', body: '' });
   const ZA = ZONES.ai.points;
@@ -116,12 +118,12 @@
     j12tent: () => at(11, 3, 3)() || at(11, 6, 6)(), j12daughters: at(11, 4, 4), j12map: at(11, 5, 5),
     j13joshuaS: () => at(12, 0, 0)() || at(12, 3, 3)(), j13altar: at(12, 1, 1), j13east: at(12, 2, 2), j13oak: at(12, 4, 4), j13joshuaSh: at(12, 5, 5), j13field: at(12, 6, 6),
   });
-  ZG.push({ id: 'j9_gibeonites', x: GIBEONITES_G[0], z: GIBEONITES_G[1], type: 'villager', title: '먼 나라에서 왔다는 나그네들', model: 'merchant', persona: 'rs_static', cond: 'j9meet', body: '' });
+  ZG.push({ id: 'j9_gibeonites', x: GIBEONITES_G[0], z: GIBEONITES_G[1], type: 'villager', title: '먼 나라에서 왔다는 나그네들', model: 'j4-gibeonite', persona: 'rs_static', cond: 'j9meet', body: '' });
   ZG.push({ id: 'j10_road', x: ROAD10[0], z: ROAD10[1], type: 'lore', title: '서쪽 길 어귀 — 기브온으로 오르는 밤길', cond: 'j10road', body: '' });
   ZG.push({ id: 'j11_caleb', x: CALEB_G[0], z: CALEB_G[1], type: 'villager', title: '갈렙', model: 'w3-caleb', persona: 'rs_static', cond: 'j11caleb', body: '' });
   const ZB = ZONES.gibeon.points, ZH = ZONES.hebron.points, ZS = ZONES.shiloh.points;
   ZB.push({ id: 'j9_gate', x: GBGATE[0], z: GBGATE[1], type: 'lore', title: '기브온 성문 앞', cond: 'j9gate', body: '' });
-  ZB.push({ id: 'j9_gibeonites2', x: GBGATE[0] + 2, z: GBGATE[1] + 3, type: 'villager', title: '기브온 사람들', model: 'merchant', persona: 'rs_static', cond: 'j9why', body: '' });
+  ZB.push({ id: 'j9_gibeonites2', x: GBGATE[0] + 2, z: GBGATE[1] + 3, type: 'villager', title: '기브온 사람들', model: 'j4-gibeonite', persona: 'rs_static', cond: 'j9why', body: '' });
   ZB.push({ id: 'j9_joshua_b', x: GBGATE[0] + 4, z: GBGATE[1] - 2, type: 'villager', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'j9why', body: '' });
   ZB.push({ id: 'j10_camp', x: KCAMP[0] + 8, z: KCAMP[1], type: 'lore', title: '기브온 서쪽 — 다섯 왕의 진', cond: 'j10camp', body: '' });
   ZB.push({ id: 'j10_slope', x: SLOPE[0], z: SLOPE[1], type: 'lore', title: '벧호론에 올라가는 비탈', cond: 'j10slope', body: '' });
@@ -141,8 +143,8 @@
   ZS.push({ id: 'j12_map', x: MAP_S[0], z: MAP_S[1], type: 'lore', title: '회막 곁 — 그려 온 땅', cond: 'j12map', body: '' });
   ZS.push({ id: 'j13_joshua_s', x: JOSH_S[0], z: JOSH_S[1], type: 'villager', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'j13joshuaS', body: '' });
   ZS.push({ id: 'j13_altar', x: ED[0] - 3, z: ED[1] + 1, type: 'lore', title: '요단 언덕 가 — 보기에 큰 제단', cond: 'j13altar', body: '' });
-  ZS.push({ id: 'j13_east', x: EAST_S[0], z: EAST_S[1], type: 'villager', title: '르우벤·갓·므낫세 반 지파', model: 'ca-israel-elder', persona: 'rs_static', cond: 'j13east', body: '' });
-  ZS.push({ id: 'j13_envoys', x: EAST_S[0] - 3, z: EAST_S[1] - 2, type: 'villager', title: '비느하스와 열 지도자', model: 'pr-eleazar', persona: 'rs_static', cond: 'j13east', body: '' });
+  ZS.push({ id: 'j13_east', x: EAST_S[0], z: EAST_S[1], type: 'villager', title: '르우벤·갓·므낫세 반 지파', model: 'j4-east-tribes', persona: 'rs_static', cond: 'j13east', body: '' });
+  ZS.push({ id: 'j13_envoys', x: EAST_S[0] - 3, z: EAST_S[1] - 2, type: 'villager', title: '비느하스와 열 지도자', model: 'j4-phinehas', persona: 'rs_static', cond: 'j13east', body: '' });
   ZS.push({ id: 'j13_oak', x: OAK[0], z: OAK[1] + 3, type: 'lore', title: '세겜 — 성소 곁 상수리나무 아래', cond: 'j13oak', body: '' });
   ZS.push({ id: 'j13_joshua_sh', x: JOSH_SH[0], z: JOSH_SH[1], type: 'villager', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'j13joshuaSh', body: '' });
   ZS.push({ id: 'j13_field', x: FIELD[0], z: FIELD[1], type: 'lore', title: '세겜 — 야곱이 산 밭', cond: 'j13field', body: '' });
