@@ -1,11 +1,11 @@
 {
   "testers": 2,
   "players": 12,
-  "active_24h": 1,
-  "saved_24h": 1,
-  "visitors_24h": 1,
+  "active_24h": 2,
+  "saved_24h": 2,
+  "visitors_24h": 2,
   "new_24h": 0,
-  "steps_24h": 49,
+  "steps_24h": 55,
   "active_7d": 3,
   "chapters": {
     "1편 모세와 함께 (10장)": {
@@ -22,8 +22,8 @@
     },
     "4편 여호수아와 함께 (13장)": {
       "1장 클리어": 1,
-      "7장 클리어": 1,
-      "8장 클리어": 1
+      "8장 클리어": 1,
+      "10장 클리어": 1
     },
     "5편 사사들과 함께 (12장)": {},
     "6편 룻과 사무엘 (9장)": {}
@@ -32,12 +32,18 @@
     {
       "chapter": 9,
       "step": "sinai2/lv9s2",
-      "players": 3,
-      "median_secs": 374
+      "players": 2,
+      "median_secs": 339
+    },
+    {
+      "chapter": 3,
+      "step": "wild3/w3s1",
+      "players": 2,
+      "median_secs": 291
     }
   ],
   "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-25 21:40",
+  "generated_kst": "2026-10-26 01:47",
   "ok": true
 }
