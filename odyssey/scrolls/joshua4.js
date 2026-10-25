@@ -118,7 +118,7 @@
   });
   ZG.push({ id: 'j9_gibeonites', x: GIBEONITES_G[0], z: GIBEONITES_G[1], type: 'villager', title: '먼 나라에서 왔다는 나그네들', model: 'merchant', persona: 'rs_static', cond: 'j9meet', body: '' });
   ZG.push({ id: 'j10_road', x: ROAD10[0], z: ROAD10[1], type: 'lore', title: '서쪽 길 어귀 — 기브온으로 오르는 밤길', cond: 'j10road', body: '' });
-  ZG.push({ id: 'j11_caleb', x: CALEB_G[0], z: CALEB_G[1], type: 'villager', title: '갈렙', model: 'he-father', persona: 'rs_static', cond: 'j11caleb', body: '' });
+  ZG.push({ id: 'j11_caleb', x: CALEB_G[0], z: CALEB_G[1], type: 'villager', title: '갈렙', model: 'w3-caleb', persona: 'rs_static', cond: 'j11caleb', body: '' });
   const ZB = ZONES.gibeon.points, ZH = ZONES.hebron.points, ZS = ZONES.shiloh.points;
   ZB.push({ id: 'j9_gate', x: GBGATE[0], z: GBGATE[1], type: 'lore', title: '기브온 성문 앞', cond: 'j9gate', body: '' });
   ZB.push({ id: 'j9_gibeonites2', x: GBGATE[0] + 2, z: GBGATE[1] + 3, type: 'villager', title: '기브온 사람들', model: 'merchant', persona: 'rs_static', cond: 'j9why', body: '' });
@@ -129,15 +129,20 @@
   ZB.push({ id: 'j10_cave', x: CAVE[0] - 4, z: CAVE[1] - 4, type: 'lore', title: '막게다의 굴 어귀', cond: 'j10cave', body: '' });
   ZB.push({ id: 'j10_south', x: SOUTH10[0], z: SOUTH10[1], type: 'lore', title: '남쪽 성읍들로 가는 길', cond: 'j10south', body: '' });
   ZH.push({ id: 'j11_trail', x: TRAIL[0], z: TRAIL[1], type: 'lore', title: '헤브론 산지로 오르는 길', cond: 'j11trail', body: '' });
-  ZH.push({ id: 'j11_caleb_h', x: HTOP[0], z: HTOP[1], type: 'villager', title: '갈렙', model: 'he-father', persona: 'rs_static', cond: 'j11calebH', body: '' });
+  ZH.push({ id: 'j11_caleb_h', x: HTOP[0], z: HTOP[1], type: 'villager', title: '갈렙', model: 'w3-caleb', persona: 'rs_static', cond: 'j11calebH', body: '' });
   ZS.push({ id: 'j12_tent', x: TENT_S[0], z: TENT_S[1], type: 'lore', title: '실로 — 회막 앞', cond: 'j12tent', body: '' });
   ZS.push({ id: 'j12_joshua_s', x: JOSH_S[0], z: JOSH_S[1], type: 'villager', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'j12tent', body: '' });
-  ZS.push({ id: 'j12_daughters', x: DAUGHT_S[0], z: DAUGHT_S[1], type: 'villager', title: '슬로브핫의 딸들', model: 'he-girl-hb', persona: 'rs_static', cond: 'j12daughters', body: '' });
+  ZS.push({ id: 'j12_daughters', x: DAUGHT_S[0], z: DAUGHT_S[1], type: 'villager', title: '슬로브핫의 딸들', model: 'w3-mahlah', persona: 'rs_static', cond: 'j12daughters', body: '' });
+  // 슬로브핫의 다섯 딸 — 말라·노아·호글라·밀가·디르사(민 27:1)
+  ZS.push({ id: 'j12_d_noah', x: DAUGHT_S[0] + 1.8, z: DAUGHT_S[1] + 0.6, type: 'villager', title: '노아', model: 'w3-noah', persona: 'rs_static', cond: 'j12daughters', body: '' });
+  ZS.push({ id: 'j12_d_hoglah', x: DAUGHT_S[0] + -1.8, z: DAUGHT_S[1] + 0.6, type: 'villager', title: '호글라', model: 'w3-hoglah', persona: 'rs_static', cond: 'j12daughters', body: '' });
+  ZS.push({ id: 'j12_d_milcah', x: DAUGHT_S[0] + 1, z: DAUGHT_S[1] + 2.1, type: 'villager', title: '밀가', model: 'w3-milcah', persona: 'rs_static', cond: 'j12daughters', body: '' });
+  ZS.push({ id: 'j12_d_tirzah', x: DAUGHT_S[0] + -1, z: DAUGHT_S[1] + 2.1, type: 'villager', title: '디르사', model: 'w3-tirzah', persona: 'rs_static', cond: 'j12daughters', body: '' });
   ZS.push({ id: 'j12_map', x: MAP_S[0], z: MAP_S[1], type: 'lore', title: '회막 곁 — 그려 온 땅', cond: 'j12map', body: '' });
   ZS.push({ id: 'j13_joshua_s', x: JOSH_S[0], z: JOSH_S[1], type: 'villager', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'j13joshuaS', body: '' });
   ZS.push({ id: 'j13_altar', x: ED[0] - 3, z: ED[1] + 1, type: 'lore', title: '요단 언덕 가 — 보기에 큰 제단', cond: 'j13altar', body: '' });
   ZS.push({ id: 'j13_east', x: EAST_S[0], z: EAST_S[1], type: 'villager', title: '르우벤·갓·므낫세 반 지파', model: 'ca-israel-elder', persona: 'rs_static', cond: 'j13east', body: '' });
-  ZS.push({ id: 'j13_envoys', x: EAST_S[0] - 3, z: EAST_S[1] - 2, type: 'villager', title: '비느하스와 열 지도자', model: 'he-levite', persona: 'rs_static', cond: 'j13east', body: '' });
+  ZS.push({ id: 'j13_envoys', x: EAST_S[0] - 3, z: EAST_S[1] - 2, type: 'villager', title: '비느하스와 열 지도자', model: 'pr-eleazar', persona: 'rs_static', cond: 'j13east', body: '' });
   ZS.push({ id: 'j13_oak', x: OAK[0], z: OAK[1] + 3, type: 'lore', title: '세겜 — 성소 곁 상수리나무 아래', cond: 'j13oak', body: '' });
   ZS.push({ id: 'j13_joshua_sh', x: JOSH_SH[0], z: JOSH_SH[1], type: 'villager', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'j13joshuaSh', body: '' });
   ZS.push({ id: 'j13_field', x: FIELD[0], z: FIELD[1], type: 'lore', title: '세겜 — 야곱이 산 밭', cond: 'j13field', body: '' });

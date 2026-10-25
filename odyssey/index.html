@@ -601,7 +601,7 @@
 <div id="compass"><svg viewBox="0 0 46 46"><path id="compass-arrow" d="M23 7 L31 27 L23 22 L15 27 Z" fill="#ffd27a"/></svg></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "2a902b0d", "wild3": "b4590c52", "joshua": "55fa5ee7"};</script>
+<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "f39d874b", "wild3": "d619b79c", "joshua": "5b2c2457"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -2377,9 +2377,9 @@
     const zone = Z, list = markers.filter(m => m.pending);
     const dist = m => Math.hypot(m.mesh.position.x - player.position.x, m.mesh.position.z - player.position.z);
     list.sort((a, b) => dist(a) - dist(b));
-    list.forEach(m => fetchBytes(`npc3d/${m.data.model}.glb`).catch(() => {}));
+    list.forEach(m => fetchBytes(`npc3d/${npcModel(m)}.glb`).catch(() => {}));
     for (const m of list){
-      try { await fetchBytes(`npc3d/${m.data.model}.glb`); } catch (e){ continue; }
+      try { await fetchBytes(`npc3d/${npcModel(m)}.glb`); } catch (e){ continue; }
       if (Z !== zone || !markers.includes(m)) return;          // 그 사이 다른 마을로 이동
       await setupNPC(m);
       if (Z !== zone || !markers.includes(m)){ m.mesh.traverse(o => { if (o.isMesh){ o.geometry.dispose(); o.material.dispose(); } }); return; }
@@ -2390,10 +2390,28 @@
       await new Promise(r => setTimeout(r, 120));
     }
   }
+  // 2편 3장 위임식(옷 입히기) 뒤로는 아론이 대제사장 옷을 입는다(레 8:7-9) — 3편 내내 그대로
+  function aaronHigh(){
+    if (ST.cur === 'wild3') return true;
+    const p = ST.cur === 'sinai2' && ST.sp && ST.sp.sinai2;
+    return !!p && (p.ch > 3 || (p.ch === 3 && p.step >= 2));
+  }
+  function npcModel(m){ return m.data.id === 'aaron' && aaronHigh() ? 'pr-aaron-high-priest' : m.data.model; }
+  // 진행이 바뀌어 입을 옷이 달라지면 그 자리에서 모델만 바꿔 끼운다
+  function reskinNPCs(){
+    markers.forEach(m => {
+      if (!m.model || !m.data.model || m.loadedModel === npcModel(m)) return;
+      const old = m.model; m.mesh.remove(old); old.traverse(o => { if (o.isMesh){ o.geometry.dispose(); o.material.dispose(); } });
+      if (m.staff){ m.mesh.remove(m.staff); m.staff = null; }
+      if (m.mixer) m.mixer.stopAllAction(); m.model = null; m.actions = {}; m.cur = null; setupNPC(m).catch(e => console.error(e));
+    });
+  }
   async function setupNPC(m){
     {
-      const g = await loadGLB(`npc3d/${m.data.model}.glb`);
+      const mdl = npcModel(m); m.loadedModel = mdl;
+      const g = await loadGLB(`npc3d/${mdl}.glb`);
       const model = g.scene; toToon(model); model.userData.ownGPU = true;   // 마을을 떠나면 해제
+      m.model = model;
       // 화면 밖 NPC는 그리지 않도록(그림자 계산 포함) — 스킨드 메시의 경계 구를 넉넉히 키워 가장자리 깜빡임 방지
       model.traverse(o => { if (o.isMesh){ o.geometry.computeBoundingSphere(); o.geometry.boundingSphere.radius *= 1.6; o.frustumCulled = true; } });
       model.scale.setScalar(WPM);           // 리깅 때 실제 키(미터)를 넣었으므로 학생과 같은 비율
@@ -8159,6 +8177,7 @@
     cloudOn = ST.ch === 3 && !ST.cleared && ST.step >= stepIdx('c4s7') && ST.step <= stepIdx('c4s9');
     sea.target = ST.ch === 3 && !ST.cleared && ST.step === stepIdx('c4s9') ? 1 : 0; sea.k = sea.target; applySeaShape();
     { const sd = SCROLL_DEFS[ST.cur]; if (ST.cur !== 'moses' && sd && sd.world) try { sd.world(Z.id); } catch (e){ console.error(e); } }
+    reskinNPCs();
   }
   let fliesOn = false;
   function runEvent(name){
@@ -9628,7 +9647,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { showClear, claimClearedChapters, packScore, progText, pillarsGame, cleftGame, get mannaSun(){ return mannaSun; }, set mannaSunT0(v){ if (mannaSun) mannaSun.t0 = v; }, get covAltar(){ return !!covObj; }, addGeneal, genealBookHTML, signsGame, get geneal(){ return ST.geneal; }, enterScroll, openScrollGate, SCROLL_DEFS, AP, get cur(){ return ST.cur; }, takePhoto, openAlbum, photoAll, get course(){ return { i: course.i, n: course.rings.length, t: course.t, rings: course.rings.map(r => [r.x, r.y, r.z]), kind: courseKind() }; }, buildCourse, COURSES, updateFollow, get followers(){ return markers.filter(m => m.follow).map(m => m.data.id + '@' + m.mesh.position.x.toFixed(1) + ',' + m.mesh.position.z.toFixed(1)).join(' '); }, openLinks, LINKS, get links(){ return ST.links || []; }, openRecap, openExhibit, openJourney, maybeRecap, get exhibit(){ return exhibitObj ? exhibitObj.children.length : 0; }, starsLeft, spendStars, retryQuiz, openLibrary, renderLibrary, TITLES, SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { showClear, applyWorld, claimClearedChapters, packScore, progText, pillarsGame, cleftGame, get mannaSun(){ return mannaSun; }, set mannaSunT0(v){ if (mannaSun) mannaSun.t0 = v; }, get covAltar(){ return !!covObj; }, addGeneal, genealBookHTML, signsGame, get geneal(){ return ST.geneal; }, enterScroll, openScrollGate, SCROLL_DEFS, AP, get cur(){ return ST.cur; }, takePhoto, openAlbum, photoAll, get course(){ return { i: course.i, n: course.rings.length, t: course.t, rings: course.rings.map(r => [r.x, r.y, r.z]), kind: courseKind() }; }, buildCourse, COURSES, updateFollow, get followers(){ return markers.filter(m => m.follow).map(m => m.data.id + '@' + m.mesh.position.x.toFixed(1) + ',' + m.mesh.position.z.toFixed(1)).join(' '); }, openLinks, LINKS, get links(){ return ST.links || []; }, openRecap, openExhibit, openJourney, maybeRecap, get exhibit(){ return exhibitObj ? exhibitObj.children.length : 0; }, starsLeft, spendStars, retryQuiz, openLibrary, renderLibrary, TITLES, SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>

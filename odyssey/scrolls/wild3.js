@@ -18,7 +18,7 @@
   });
   const Z3 = ZONES.kadesh.points;
   Z3.push({ id: 'kd_door', x: DOOR[0], z: DOOR[1], type: 'lore', title: '회막 문', cond: 'w3On', body: '' });
-  Z3.push({ id: 'kd_hobab', x: -25.5, z: 6.5, type: 'villager', title: '호밥', model: 'merchant', persona: 'rs_static', cond: 'w3c0', body: '' });
+  Z3.push({ id: 'kd_hobab', x: -25.5, z: 6.5, type: 'villager', title: '호밥', model: 'w3-hobab', persona: 'rs_static', cond: 'w3c0', body: '' });
   Z3.push({ id: 'kd_edge', x: EDGE[0], z: EDGE[1], type: 'lore', title: '진영 끝', cond: 'w3c1', body: '' });
   Z3.push({ id: 'kd_crowd', x: 2, z: 12, type: 'villager', title: '우는 백성', model: 'he-father', persona: 'rs_static', cond: 'w3c1', body: '' });
   Z3.push({ id: 'kd_quail', x: KQUAIL[0], z: KQUAIL[1], type: 'lore', title: '진영 곁', cond: 'w3c1', body: '' });
@@ -28,7 +28,7 @@
   Z3.push({ id: 'kd_outside', x: OUTSIDE[0], z: OUTSIDE[1], type: 'lore', title: '진영 밖', cond: 'w3outside', body: '' });
   Z3.push({ id: 'kd_eshcol', x: ESHCOL[0], z: ESHCOL[1], type: 'lore', title: '에스골 골짜기로 가는 길', cond: 'w3c3', body: '' });
   Z3.push({ id: 'kd_meet', x: MEET[0], z: MEET[1], type: 'lore', title: '회중이 모인 곳', cond: 'w3c34', body: '' });
-  Z3.push({ id: 'kd_caleb', x: 3.5, z: 1, type: 'villager', title: '갈렙', model: 'he-father', persona: 'rs_static', cond: 'w3from3', body: '' });
+  Z3.push({ id: 'kd_caleb', x: 3.5, z: 1, type: 'villager', title: '갈렙', model: 'w3-caleb', persona: 'rs_static', cond: 'w3from3', body: '' });
   const KCRACK = [-24, 16], GRAVE = [-28, -18], ROCK = [-16, -30], HOR = [20, 28], ARAD = [-4, 30], EDOM = [34, -18], POLE = [6, -2];
   Object.assign(CONDS, {
     w3c5: at(5), w3c7: at(7), w3c8: at(8), w3c9: at(9), w3c10: at(10),
@@ -44,7 +44,7 @@
   Z3.push({ id: 'kd_grave', x: GRAVE[0], z: GRAVE[1], type: 'lore', title: '가데스', cond: 'w3c7', body: '' });
   Z3.push({ id: 'kd_rock', x: ROCK[0] + 2.2, z: ROCK[1] + 2.2, type: 'lore', title: '반석', cond: 'w3c7', body: '' });
   Z3.push({ id: 'kd_hor', x: HOR[0], z: HOR[1], type: 'lore', title: '호르 산', cond: 'w3c7', body: '' });
-  Z3.push({ id: 'kd_eleazar', x: 15, z: -18, type: 'villager', title: '대제사장 엘르아살', model: 'he-levite', persona: 'rs_static', cond: 'w3eleazar', body: '' });
+  Z3.push({ id: 'kd_eleazar', x: 15, z: -18, type: 'villager', title: '대제사장 엘르아살', model: 'w3-eleazar-high-priest', persona: 'rs_static', cond: 'w3eleazar', body: '' });
   Z3.push({ id: 'kd_arad', x: ARAD[0], z: ARAD[1], type: 'lore', title: '네겝으로 가는 길', cond: 'w3c8', body: '' });
   Z3.push({ id: 'kd_edom', x: EDOM[0], z: EDOM[1], type: 'lore', title: '에돔 땅을 우회하는 길', cond: 'w3c9', body: '' });
   Z3.push({ id: 'kd_pole', x: POLE[0], z: POLE[1], type: 'lore', title: '장대를 세울 곳', cond: 'w3c9', body: '' });
@@ -54,14 +54,19 @@
   Object.assign(CONDS, { w3m10: mAt(10), w3m11: mAt(11), w3m12: mAt(12), w3m13: mAt(13), w3m14: mAt(14), w3m15: mAt(15), w3mAll: mAt(10, 15) });
   ZM.push({ id: 'mb_door', x: MDOOR[0], z: MDOOR[1], type: 'lore', title: '회막 문', cond: 'w3mAll', body: '' });
   ZM.push({ id: 'mb_joshua', x: 18.5, z: -10, type: 'villager', title: '여호수아', model: 'joshua', persona: 'rs_static', cond: 'w3mAll', body: '' });
-  ZM.push({ id: 'mb_eleazar', x: 15, z: -18, type: 'villager', title: '대제사장 엘르아살', model: 'he-levite', persona: 'rs_static', cond: 'w3mAll', body: '' });
+  ZM.push({ id: 'mb_eleazar', x: 15, z: -18, type: 'villager', title: '대제사장 엘르아살', model: 'w3-eleazar-high-priest', persona: 'rs_static', cond: 'w3mAll', body: '' });
   ZM.push({ id: 'mb_road', x: 30, z: 14, type: 'lore', title: '왕의 큰길', cond: 'w3m10', body: '' });
   ZM.push({ id: 'mb_battle', x: 33, z: -26, type: 'lore', title: '야하스로 가는 길', cond: 'w3m10', body: '' });
-  ZM.push({ id: 'mb_balak', x: -20, z: 24, type: 'villager', title: '모압 왕 발락', model: 'eg-merchant-eg', persona: 'rs_static', cond: 'w3m11', body: '' });
-  ZM.push({ id: 'mb_balaam', x: -24, z: 26, type: 'villager', title: '발람', model: 'pal-magician-2', persona: 'rs_static', cond: 'w3m11', body: '' });
+  ZM.push({ id: 'mb_balak', x: -20, z: 24, type: 'villager', title: '모압 왕 발락', model: 'w3-balak', persona: 'rs_static', cond: 'w3m11', body: '' });
+  ZM.push({ id: 'mb_balaam', x: -24, z: 26, type: 'villager', title: '발람', model: 'w3-balaam', persona: 'rs_static', cond: 'w3m11', body: '' });
   ZM.push({ id: 'mb_path', x: -26, z: -30, type: 'lore', title: '포도원 사이 좁은 길', cond: 'w3m11', body: '' });
   ZM.push({ id: 'mb_high', x: -18, z: 29, type: 'lore', title: '이스라엘 진영이 내려다보이는 곳', cond: 'w3m11', body: '' });
-  ZM.push({ id: 'mb_daughters', x: 20, z: -7, type: 'villager', title: '슬로브핫의 딸들', model: 'he-girl-hb', persona: 'rs_static', cond: 'w3m12', body: '' });
+  ZM.push({ id: 'mb_daughters', x: 20, z: -7, type: 'villager', title: '슬로브핫의 딸들', model: 'w3-mahlah', persona: 'rs_static', cond: 'w3m12', body: '' });
+  // 슬로브핫의 다섯 딸 — 말라·노아·호글라·밀가·디르사(민 27:1)
+  ZM.push({ id: 'mb_d_noah', x: 20 + 1.8, z: -7 + 0.6, type: 'villager', title: '노아', model: 'w3-noah', persona: 'rs_static', cond: 'w3m12', body: '' });
+  ZM.push({ id: 'mb_d_hoglah', x: 20 + -1.8, z: -7 + 0.6, type: 'villager', title: '호글라', model: 'w3-hoglah', persona: 'rs_static', cond: 'w3m12', body: '' });
+  ZM.push({ id: 'mb_d_milcah', x: 20 + 1, z: -7 + 2.1, type: 'villager', title: '밀가', model: 'w3-milcah', persona: 'rs_static', cond: 'w3m12', body: '' });
+  ZM.push({ id: 'mb_d_tirzah', x: 20 + -1, z: -7 + 2.1, type: 'villager', title: '디르사', model: 'w3-tirzah', persona: 'rs_static', cond: 'w3m12', body: '' });
   ZM.push({ id: 'mb_refuge', x: REFUGE[0] + 3, z: REFUGE[1] - 3, type: 'lore', title: '도피성 성문', cond: 'w3m13', body: '' });
   ZM.push({ id: 'mb_camp', x: 0, z: 4, type: 'lore', title: '온 이스라엘이 모인 곳', cond: 'w3m14', body: '' });
   ZM.push({ id: 'mb_nebo', x: NEBO[0], z: NEBO[1], type: 'lore', title: '느보 산 오르는 길', cond: 'w3m15', body: '' });

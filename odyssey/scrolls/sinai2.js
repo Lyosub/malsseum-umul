@@ -16,10 +16,10 @@
   ZONES.sinai.points.push({ id: 'lv_door', x: DOOR[0], z: DOOR[1], type: 'lore', title: '회막 문', cond: 'lvOn', body: '' });
   ZONES.sinai.points.push({ id: 'lv_altar', x: ALTAR[0], z: ALTAR[1], type: 'lore', title: '번제단', cond: 'lvOn', body: '' });
   // 아론의 아들들(레 8:13) — 새 모델이 오기 전까지 레위인 모델
-  ZONES.sinai.points.push({ id: 'lv_nadab', x: 15.8, z: -11.6, type: 'villager', title: '나답', model: 'he-levite', persona: 'rs_static', cond: 'lvNA', body: '' });
-  ZONES.sinai.points.push({ id: 'lv_abihu', x: 16.6, z: -13, type: 'villager', title: '아비후', model: 'he-levite', persona: 'rs_static', cond: 'lvNA', body: '' });
-  ZONES.sinai.points.push({ id: 'lv_eleazar', x: 16.6, z: -17, type: 'villager', title: '엘르아살', model: 'he-levite', persona: 'rs_static', cond: 'lvPriests', body: '' });
-  ZONES.sinai.points.push({ id: 'lv_ithamar', x: 15.8, z: -18.4, type: 'villager', title: '이다말', model: 'he-levite', persona: 'rs_static', cond: 'lvPriests', body: '' });
+  ZONES.sinai.points.push({ id: 'lv_nadab', x: 15.8, z: -11.6, type: 'villager', title: '나답', model: 'pr-nadab', persona: 'rs_static', cond: 'lvNA', body: '' });
+  ZONES.sinai.points.push({ id: 'lv_abihu', x: 16.6, z: -13, type: 'villager', title: '아비후', model: 'pr-abihu', persona: 'rs_static', cond: 'lvNA', body: '' });
+  ZONES.sinai.points.push({ id: 'lv_eleazar', x: 16.6, z: -17, type: 'villager', title: '엘르아살', model: 'pr-eleazar', persona: 'rs_static', cond: 'lvPriests', body: '' });
+  ZONES.sinai.points.push({ id: 'lv_ithamar', x: 15.8, z: -18.4, type: 'villager', title: '이다말', model: 'pr-ithamar', persona: 'rs_static', cond: 'lvPriests', body: '' });
   const WILD = [30, 4], FIELD = [24, 12], BOOTH = [-6, 11];   // 진 밖 광야(동쪽) · 밭 · 초막
   ZONES.sinai.points.push({ id: 'lv_field', x: FIELD[0], z: FIELD[1], type: 'lore', title: '밭 모퉁이', cond: 'lv6', body: '' });
   ZONES.sinai.points.push({ id: 'lv_fitman', x: WILD[0] + 1.2, z: WILD[1] + 0.8, type: 'villager', title: '미리 정한 사람', model: 'he-father', persona: 'rs_static', cond: 'lv7', body: '' });
