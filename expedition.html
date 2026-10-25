@@ -414,7 +414,7 @@
 
   // 최종 모임 장소 카드: 11/8 13:30(한국 시간)부터
   var MEET_AT = new Date("2026-11-08T13:30:00+09:00").getTime();
-  function meetCheck() { $("meetCard").hidden = !(Date.now() >= MEET_AT || saved.viewer); }
+  function meetCheck() { $("meetCard").hidden = Date.now() < MEET_AT; }
   setInterval(meetCheck, 20000);
 
   function start() {
