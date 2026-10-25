@@ -1,12 +1,14 @@
-// 5편 「사사들과 함께」 — 사사기 1–21장(삿 19장은 뺌, 2026-10-25 전도사님 결정), 12장. 2026-10-25 1부(1~4장: 여호와를 알지 못하는 세대 · 옷니엘 · 왼손잡이 에훗 · 드보라와 바락, 야엘).
+// 5편 「사사들과 함께」 — 사사기 1–21장(삿 19장은 뺌, 2026-10-25 전도사님 결정), 12장. 2026-10-25 1부(1~4장: 여호와를 알지 못하는 세대 · 옷니엘 · 왼손잡이 에훗 · 드보라와 바락, 야엘),
+// 같은 날 2부(5~7장: 기드온을 부르심 · 기드온 300명 · 입다와 그 딸 — 입다의 서원과 딸은 연출 없이 본문만, 삿 12:1-6도 해설만). 7장 무대는 요단 동편 길르앗 = 모압 평지(3편 마을).
 // 대사 원칙: 성경 인물은 개역개정에 있는 자기 말만, 해설은 원문 + (출처). 대사·구절 카드는 E:\temp\claude-work\judges5\gen_dlg.py가 bskorea 개역개정(GAE) 원문 파일에서 그대로 뽑는다.
 // 무대: 4편 마을을 사사 시대에 맞게 바꿔 다시 쓴다 — 길갈과 여리고(1·3장: 보김, 무너진 성벽 곁 종려나무 성읍 삿 3:13), 헤브론 산지(2장: 드빌=기럇 세벨 삿 1:11),
 //       실로와 세겜(4장: 드보라의 종려나무 삿 4:5 "라마와 벧엘 사이 에브라임 산지"), 새 마을 이스르엘 골짜기(4장: 다볼 산 · 기손 강 · 헤벨의 장막).
 // 칼·말뚝 장면(삿 3:21 · 4:21)은 본문을 해설로 읽되 연출·버튼·보상으로 만들지 않는다. 삿 3:22은 읽지 않는다.
 // 「사사 열두 명」 조각: 큰 사사는 장을 마치면, 작은 사사(삼갈 등)는 그 절이 있는 자리에서 줍는다(api.addJudge).
-// 새 인물(옷니엘·악사·에훗·드보라·바락·야엘)은 GPT 12차 원화 → Meshy 모델이 오기 전까지 이미 있는 모델을 쓴다.
+// 새 인물은 GPT 12차 원화 → Meshy 모델(npc3d/j5-*.glb, 2026-10-25). 갈렙은 3편 모델(w3-caleb).
 (window.__odyQ = window.__odyQ || []).push(api => {
   const { DLG, ZONES, CONDS, VERSES, THREE, SPEAKERS: { NAR } } = api;
+  const GIDEON = { n: '기드온' }, LORD = { n: '여호와' };
   const ANGEL = { n: '여호와의 사자' }, EHUD = { n: '에훗' }, DEBORAH = { n: '드보라' }, SONG = { n: '드보라와 바락의 노래' };
   const cur = () => api.ST.cur === 'judges' && api.ST.sp.judges ? api.ST.sp.judges : null;
   const at = (ch, a = 0, b = 99) => () => { const p = cur(); return !!p && p.ch === ch && !p.cleared && p.step >= a && p.step <= b; };
@@ -44,27 +46,66 @@
   ZG.push({ id: 'jg_camp', x: CAMP_G[0], z: CAMP_G[1], type: 'lore', title: '길갈 진영 — 다른 세대', cond: 'jgCamp', body: '' });
   // 2장 — 헤브론 산지(드빌)
   ZH.push({ id: 'jg_caleb', x: DEBIR[0] - 7, z: DEBIR[1] - 3, type: 'villager', title: '갈렙', model: 'w3-caleb', persona: 'rs_static', cond: 'jgCaleb', body: '' });
-  ZH.push({ id: 'jg_achsah', x: DEBIR[0] - 8.6, z: DEBIR[1] - 1, type: 'villager', title: '악사', model: 'w3-milcah', persona: 'rs_static', cond: 'jgAchsah', body: '' });
-  ZH.push({ id: 'jg_othniel', x: DEBIR[0] - 6.4, z: DEBIR[1] + 1.4, type: 'villager', title: '옷니엘', model: 'j4-spy-1', persona: 'rs_static', cond: 'jgOthniel', body: '' });
+  ZH.push({ id: 'jg_achsah', x: DEBIR[0] - 8.6, z: DEBIR[1] - 1, type: 'villager', title: '악사', model: 'j5-achsah', persona: 'rs_static', cond: 'jgAchsah', body: '' });
+  ZH.push({ id: 'jg_othniel', x: DEBIR[0] - 6.4, z: DEBIR[1] + 1.4, type: 'villager', title: '옷니엘', model: 'j5-othniel', persona: 'rs_static', cond: 'jgOthniel', body: '' });
   ZH.push({ id: 'jg_upper', x: UPPER[0], z: UPPER[1], type: 'lore', title: '윗샘', cond: 'jgUpper', body: '' });
   ZH.push({ id: 'jg_lower', x: LOWER[0], z: LOWER[1], type: 'lore', title: '아랫샘', cond: 'jgLower', body: '' });
   ZH.push({ id: 'jg_cushan', x: CUSHAN[0], z: CUSHAN[1], type: 'lore', title: '남쪽 길 어귀 — 여덟 해', cond: 'jgCushan', body: '' });
   // 3장 — 길갈 · 여리고 성터(종려나무 성읍)
   ZG.push({ id: 'jg_palms', x: PALMS[0], z: PALMS[1], type: 'lore', title: '종려나무 성읍', cond: 'jgPalms', body: '' });
-  ZG.push({ id: 'jg_ehud', x: EHUD_G[0], z: EHUD_G[1], type: 'villager', title: '에훗', model: 'j4-spy-2', persona: 'rs_static', cond: 'jgEhud', body: '' });
+  ZG.push({ id: 'jg_ehud', x: EHUD_G[0], z: EHUD_G[1], type: 'villager', title: '에훗', model: 'j5-ehud', persona: 'rs_static', cond: 'jgEhud', body: '' });
   ZG.push({ id: 'jg_quarry', x: QUARRY[0], z: QUARRY[1], type: 'lore', title: '길갈 근처 돌 뜨는 곳', cond: 'jgQuarry', body: '' });
   ZG.push({ id: 'jg_palace', x: PALACE[0] + 5, z: PALACE[1], type: 'lore', title: '왕의 다락방', cond: 'jgPalace', body: '' });
   ZG.push({ id: 'jg_horn', x: HILLS[0], z: HILLS[1], type: 'lore', title: '에브라임 산지 — 나팔', cond: 'jgHorn', body: '' });
   ZG.push({ id: 'jg_ford', x: FORD[0], z: FORD[1], type: 'lore', title: '모압 맞은편 요단 강 나루', cond: 'jgFord', body: '' });
   ZG.push({ id: 'jg_shamgar', x: SHAMGAR[0], z: SHAMGAR[1], type: 'lore', title: '소 모는 막대기', cond: 'jgShamgar', body: '' });
   // 4장 — 실로(드보라의 종려나무) · 이스르엘 골짜기
-  ZS.push({ id: 'jg_deborah', x: DEBP[0] + 1.6, z: DEBP[1] + 1.2, type: 'villager', title: '드보라', model: 'he-mother', persona: 'rs_static', cond: 'jgDeborah', body: '' });
-  ZS.push({ id: 'jg_barak', x: DEBP[0] + 4.4, z: DEBP[1] + 2.4, type: 'villager', title: '바락', model: 'j4-east-tribes', persona: 'rs_static', cond: 'jgBarak', body: '' });
+  ZS.push({ id: 'jg_deborah', x: DEBP[0] + 1.6, z: DEBP[1] + 1.2, type: 'villager', title: '드보라', model: 'j5-deborah', persona: 'rs_static', cond: 'jgDeborah', body: '' });
+  ZS.push({ id: 'jg_barak', x: DEBP[0] + 4.4, z: DEBP[1] + 2.4, type: 'villager', title: '바락', model: 'j5-barak', persona: 'rs_static', cond: 'jgBarak', body: '' });
   ZJ.push({ id: 'jg_tabor', x: TABOR_UP[0], z: TABOR_UP[1], type: 'lore', title: '다볼 산', cond: 'jgTabor', body: '' });
-  ZJ.push({ id: 'jg_deborah_t', x: TABOR_FOOT[0], z: TABOR_FOOT[1], type: 'villager', title: '드보라', model: 'he-mother', persona: 'rs_static', cond: 'jgTaborFolk', body: '' });
-  ZJ.push({ id: 'jg_barak_t', x: TABOR_FOOT[0] + 2.4, z: TABOR_FOOT[1] + 1, type: 'villager', title: '바락', model: 'j4-east-tribes', persona: 'rs_static', cond: 'jgTaborFolk', body: '' });
+  ZJ.push({ id: 'jg_deborah_t', x: TABOR_FOOT[0], z: TABOR_FOOT[1], type: 'villager', title: '드보라', model: 'j5-deborah', persona: 'rs_static', cond: 'jgTaborFolk', body: '' });
+  ZJ.push({ id: 'jg_barak_t', x: TABOR_FOOT[0] + 2.4, z: TABOR_FOOT[1] + 1, type: 'villager', title: '바락', model: 'j5-barak', persona: 'rs_static', cond: 'jgTaborFolk', body: '' });
   ZJ.push({ id: 'jg_jael', x: JAEL_T[0] + 3, z: JAEL_T[1], type: 'lore', title: '겐 사람 헤벨의 장막', cond: 'jgJael', body: '' });
+  ZJ.push({ id: 'jg_jael_p', x: JAEL_T[0] + 1.6, z: JAEL_T[1] + 2.4, type: 'villager', title: '야엘', model: 'j5-jael', persona: 'rs_static', cond: 'jgJael', body: '' });
   ZJ.push({ id: 'jg_song', x: TABOR_FOOT[0] - 3, z: TABOR_FOOT[1] + 3, type: 'lore', title: '다볼 산기슭 — 노래', cond: 'jgSong', body: '' });
+
+  // ── 2부(5~7장) 자리 ──
+  // 이스르엘 골짜기: 오브라의 상수리나무·포도주 틀·바위(서쪽 가운데), 바알의 제단, 타작마당, 하롯 샘(남쪽), 미디안 진영(북서쪽 모레 산 앞 골짜기)
+  const OAK = [-8, -8], PRESS = [-5, -6], ROCK = [-11, -11], BAAL = [-17, -15], TOWN = [-13, -3], HORN2 = [0, -4], FLOOR = [-12, 7], HAROD = [6, 22], CAMPM = [-12, -30], DREAM = [-6, -24];
+  // 모압 평지 = 요단 동편 길르앗: 미스바의 진·입다의 집, 동쪽 돕 땅, 서쪽 요단 나루턱
+  const MINOR1 = [-20, 10], AGAIN = [0, 6], MIZ = [8, 20], TOB = [30, -24], JHOUSE = [16, 28], FORD2 = [-34, -12];
+  // 4장: 0 미디안의 일곱 해 · 1 기드온을 부르심 · 2 바위 위의 예물 · 3 바알의 제단 · 4 아침의 성읍 · 5 나팔 · 6 양털
+  // 5장: 0 하롯 샘 · 1 물 가 · 2 밤에 내려감 · 3 보리떡 꿈 · 4 항아리와 횃불 · 5 그 뒤
+  // 6장: 0 돌라와 야일 · 1 다시 악을 행함 · 2 미스바 · 3 돕 땅의 입다 · 4 암몬 왕에게 · 5 서원 · 6 입다의 집 · 7 요단 나루턱 · 8 입산·엘론·압돈
+  let offerShow = false, baalShow = false, routShow = false;
+  Object.assign(CONDS, {
+    jgMidian: at(4, 0, 0), jgGideon: at(4, 1, 2), jgRock: at(4, 2, 2), jgBaal: at(4, 3, 3), jgTown: at(4, 4, 4), jgHorn2: at(4, 5, 5), jgFloor: at(4, 6, 6),
+    jgHarod: at(5, 0, 1), jgGideon5: () => at(5, 0, 1)() || at(5, 4, 5)(), jgNight: at(5, 2, 2), jgDream: at(5, 3, 3), jgPurah: at(5, 2, 3), jgAfter: at(5, 5, 5),
+    jgMinor1: at(6, 0, 0), jgAgain: at(6, 1, 1), jgMiz: at(6, 2, 2), jgTob: at(6, 3, 4), jgVow: at(6, 5, 5), jgHouse: at(6, 6, 6), jgFord2: at(6, 7, 7), jgMinor2: at(6, 8, 8),
+  });
+  const ZM = ZONES.moab.points;
+  ZJ.push({ id: 'jg_midian', x: HORN2[0] + 6, z: HORN2[1] + 10, type: 'lore', title: '미디안의 일곱 해', cond: 'jgMidian', body: '' });
+  ZJ.push({ id: 'jg_gideon', x: PRESS[0] + 1.2, z: PRESS[1] + 0.6, type: 'villager', title: '기드온', model: 'j5-gideon', persona: 'rs_static', cond: 'jgGideon', body: '' });
+  ZJ.push({ id: 'jg_rock', x: ROCK[0] + 1.6, z: ROCK[1] + 1.6, type: 'lore', title: '상수리나무 아래 바위', cond: 'jgRock', body: '' });
+  ZJ.push({ id: 'jg_baal', x: BAAL[0] + 2, z: BAAL[1] + 2, type: 'lore', title: '바알의 제단', cond: 'jgBaal', body: '' });
+  ZJ.push({ id: 'jg_town', x: TOWN[0], z: TOWN[1], type: 'lore', title: '오브라 성읍 — 아침', cond: 'jgTown', body: '' });
+  ZJ.push({ id: 'jg_horn2', x: HORN2[0], z: HORN2[1], type: 'lore', title: '나팔을 불매', cond: 'jgHorn2', body: '' });
+  ZJ.push({ id: 'jg_floor', x: FLOOR[0], z: FLOOR[1], type: 'lore', title: '타작마당', cond: 'jgFloor', body: '' });
+  ZJ.push({ id: 'jg_harod', x: HAROD[0] - 2.4, z: HAROD[1] - 2.4, type: 'lore', title: '하롯 샘', cond: 'jgHarod', body: '' });
+  ZJ.push({ id: 'jg_gideon5', x: HAROD[0] + 2.6, z: HAROD[1] - 3, type: 'villager', title: '기드온', model: 'j5-gideon', persona: 'rs_static', cond: 'jgGideon5', body: '' });
+  ZJ.push({ id: 'jg_night', x: CAMPM[0] + 10, z: CAMPM[1] + 8, type: 'lore', title: '미디안 진영 근처 — 밤', cond: 'jgNight', body: '' });
+  ZJ.push({ id: 'jg_purah', x: CAMPM[0] + 11.5, z: CAMPM[1] + 9.5, type: 'villager', title: '부라', model: 'j5-purah', persona: 'rs_static', cond: 'jgPurah', body: '' });
+  ZJ.push({ id: 'jg_dream', x: DREAM[0], z: DREAM[1], type: 'lore', title: '진영 가장자리의 장막', cond: 'jgDream', body: '' });
+  ZJ.push({ id: 'jg_dreamer', x: DREAM[0] - 1.6, z: DREAM[1] - 1.2, type: 'villager', title: '미디안 사람', model: 'j5-midianite', persona: 'rs_static', cond: 'jgDream', body: '' });
+  ZJ.push({ id: 'jg_after', x: HAROD[0] - 3, z: HAROD[1] + 3, type: 'lore', title: '그 뒤 — 사십 년', cond: 'jgAfter', body: '' });
+  ZM.push({ id: 'jg_minor1', x: MINOR1[0], z: MINOR1[1], type: 'lore', title: '돌라와 야일', cond: 'jgMinor1', body: '' });
+  ZM.push({ id: 'jg_again', x: AGAIN[0], z: AGAIN[1], type: 'lore', title: '다시 악을 행하여', cond: 'jgAgain', body: '' });
+  ZM.push({ id: 'jg_miz', x: MIZ[0], z: MIZ[1], type: 'lore', title: '미스바의 진', cond: 'jgMiz', body: '' });
+  ZM.push({ id: 'jg_jephthah', x: TOB[0], z: TOB[1], type: 'villager', title: '입다', model: 'j5-jephthah', persona: 'rs_static', cond: 'jgTob', body: '' });
+  ZM.push({ id: 'jg_vow', x: MIZ[0] + 4, z: MIZ[1] - 3, type: 'lore', title: '길르앗의 미스베', cond: 'jgVow', body: '' });
+  ZM.push({ id: 'jg_house', x: JHOUSE[0] - 3, z: JHOUSE[1] - 2, type: 'lore', title: '미스바의 입다의 집', cond: 'jgHouse', body: '' });
+  ZM.push({ id: 'jg_ford2', x: FORD2[0], z: FORD2[1], type: 'lore', title: '요단 강 나루턱', cond: 'jgFord2', body: '' });
+  ZM.push({ id: 'jg_minor2', x: MIZ[0] - 3, z: MIZ[1] + 3, type: 'lore', title: '입산 · 엘론 · 압돈', cond: 'jgMinor2', body: '' });
 
   // ── 구절 카드(개역개정 원문, gen_dlg.py가 jdgN.txt에서 뽑음) ──
   Object.assign(VERSES, {
@@ -233,11 +274,230 @@
       [NAR, "여호와여 주의 원수들은 다 이와 같이 망하게 하시고 주를 사랑하는 자들은 해가 힘 있게 돋음 같게 하시옵소서 하니라 그 땅이 사십 년 동안 평온하였더라 (삿 5:31)"],
     ],
   });
+  Object.assign(VERSES, {
+    'jdg6-12': { ref: '사사기 6:12', text: "여호와의 사자가 기드온에게 나타나 이르되 큰 용사여 여호와께서 너와 함께 계시도다 하매" },
+    'jdg6-16': { ref: '사사기 6:16', text: "여호와께서 그에게 이르시되 내가 반드시 너와 함께 하리니 네가 미디안 사람 치기를 한 사람을 치듯 하리라 하시니라" },
+    'jdg7-2': { ref: '사사기 7:2', text: "여호와께서 기드온에게 이르시되 너를 따르는 백성이 너무 많은즉 내가 그들의 손에 미디안 사람을 넘겨 주지 아니하리니 이는 이스라엘이 나를 거슬러 스스로 자랑하기를 내 손이 나를 구원하였다 할까 함이니라" },
+    'jdg7-20': { ref: '사사기 7:20', text: "세 대가 나팔을 불며 항아리를 부수고 왼손에 횃불을 들고 오른손에 나팔을 들어 불며 외쳐 이르되 여호와와 기드온의 칼이다 하고" },
+    'jdg8-23': { ref: '사사기 8:23', text: "기드온이 그들에게 이르되 내가 너희를 다스리지 아니하겠고 나의 아들도 너희를 다스리지 아니할 것이요 여호와께서 너희를 다스리시리라 하니라" },
+    'jdg10-16': { ref: '사사기 10:16', text: "자기 가운데에서 이방 신들을 제하여 버리고 여호와를 섬기매 여호와께서 이스라엘의 곤고로 말미암아 마음에 근심하시니라" },
+  });
+  Object.assign(DLG, {
+    jg_midian: [
+      [NAR, "이스라엘 자손이 또 여호와의 목전에 악을 행하였으므로 여호와께서 칠 년 동안 그들을 미디안의 손에 넘겨 주시니 (삿 6:1)"],
+      [NAR, "미디안의 손이 이스라엘을 이긴지라 이스라엘 자손이 미디안으로 말미암아 산에서 웅덩이와 굴과 산성을 자기들을 위하여 만들었으며 (삿 6:2)"],
+      [NAR, "이스라엘이 파종한 때면 미디안과 아말렉과 동방 사람들이 치러 올라와서 (삿 6:3)"],
+      [NAR, "진을 치고 가사에 이르도록 토지 소산을 멸하여 이스라엘 가운데에 먹을 것을 남겨 두지 아니하며 양이나 소나 나귀도 남기지 아니하니 (삿 6:4)"],
+      [NAR, "이는 그들이 그들의 짐승과 장막을 가지고 올라와 메뚜기 떼 같이 많이 들어오니 그 사람과 낙타가 무수함이라 그들이 그 땅에 들어와 멸하려 하니 (삿 6:5)"],
+      [NAR, "이스라엘이 미디안으로 말미암아 궁핍함이 심한지라 이에 이스라엘 자손이 여호와께 부르짖었더라 (삿 6:6)"],
+      [NAR, "이스라엘 자손이 미디안으로 말미암아 여호와께 부르짖었으므로 (삿 6:7)"],
+      [NAR, "여호와께서 이스라엘 자손에게 한 선지자를 보내시니 그가 그들에게 이르되 여호와께서 이같이 말씀하시기를 이스라엘의 하나님 내가 너희를 애굽에서 인도하여 내며 너희를 그 종 되었던 집에서 나오게 하여 (삿 6:8)"],
+      [NAR, "애굽 사람의 손과 너희를 학대하는 모든 자의 손에서 너희를 건져내고 그들을 너희 앞에서 쫓아내고 그 땅을 너희에게 주었으며 (삿 6:9)"],
+      [NAR, "내가 또 너희에게 이르기를 나는 너희의 하나님 여호와이니 너희가 거주하는 아모리 사람의 땅의 신들을 두려워하지 말라 하였으나 너희가 내 목소리를 듣지 아니하였느니라 하셨다 하니라 (삿 6:10)"],
+      [NAR, "▶ 오브라의 상수리나무 아래, 포도주 틀의 기드온에게 가요."],
+    ],
+    jg_call: [
+      [NAR, "여호와의 사자가 아비에셀 사람 요아스에게 속한 오브라에 이르러 상수리나무 아래에 앉으니라 마침 요아스의 아들 기드온이 미디안 사람에게 알리지 아니하려 하여 밀을 포도주 틀에서 타작하더니 (삿 6:11)"],
+      [NAR, "여호와의 사자가 기드온에게 나타나 이르되 (삿 6:12)"],
+      [ANGEL, "큰 용사여 여호와께서 너와 함께 계시도다"],
+      [NAR, "기드온이 그에게 대답하되 (삿 6:13)"],
+      [GIDEON, "오 나의 주여 여호와께서 우리와 함께 계시면 어찌하여 이 모든 일이 우리에게 일어났나이까 또 우리 조상들이 일찍이 우리에게 이르기를 여호와께서 우리를 애굽에서 올라오게 하신 것이 아니냐 한 그 모든 이적이 어디 있나이까 이제 여호와께서 우리를 버리사 미디안의 손에 우리를 넘겨 주셨나이다"],
+      [NAR, "여호와께서 그를 향하여 이르시되 (삿 6:14)"],
+      [LORD, "너는 가서 이 너의 힘으로 이스라엘을 미디안의 손에서 구원하라 내가 너를 보낸 것이 아니냐"],
+      [NAR, "그러나 기드온이 그에게 대답하되 (삿 6:15)"],
+      [GIDEON, "오 주여 내가 무엇으로 이스라엘을 구원하리이까 보소서 나의 집은 므낫세 중에 극히 약하고 나는 내 아버지 집에서 가장 작은 자니이다"],
+      [NAR, "여호와께서 그에게 이르시되 (삿 6:16)"],
+      [LORD, "내가 반드시 너와 함께 하리니 네가 미디안 사람 치기를 한 사람을 치듯 하리라"],
+      [NAR, "▶ 상수리나무 아래 바위로 가요."],
+    ],
+    jg_rock: [
+      [NAR, "기드온이 그에게 대답하되 만일 내가 주께 은혜를 얻었사오면 나와 말씀하신 이가 주 되시는 표징을 내게 보이소서 (삿 6:17)"],
+      [NAR, "내가 예물을 가지고 다시 주께로 와서 그것을 주 앞에 드리기까지 이 곳을 떠나지 마시기를 원하나이다 하니 그가 이르되 내가 너 돌아올 때까지 머무르리라 하니라 (삿 6:18)"],
+      [NAR, "기드온이 가서 염소 새끼 하나를 준비하고 가루 한 에바로 무교병을 만들고 고기를 소쿠리에 담고 국을 양푼에 담아 상수리나무 아래 그에게로 가져다가 드리매 (삿 6:19)"],
+      [NAR, "하나님의 사자가 그에게 이르되 고기와 무교병을 가져다가 이 바위 위에 놓고 국을 부으라 하니 기드온이 그대로 하니라 (삿 6:20)"],
+      [NAR, "여호와의 사자가 손에 잡은 지팡이 끝을 내밀어 고기와 무교병에 대니 불이 바위에서 나와 고기와 무교병을 살랐고 여호와의 사자는 떠나서 보이지 아니한지라 (삿 6:21)"],
+      [NAR, "기드온이 그가 여호와의 사자인 줄을 알고 이르되 슬프도소이다 주 여호와여 내가 여호와의 사자를 대면하여 보았나이다 하니 (삿 6:22)"],
+      [NAR, "여호와께서 그에게 이르시되 너는 안심하라 두려워하지 말라 죽지 아니하리라 하시니라 (삿 6:23)"],
+      [NAR, "기드온이 여호와를 위하여 거기서 제단을 쌓고 그것을 여호와 살롬이라 하였더라 그것이 오늘까지 아비에셀 사람에게 속한 오브라에 있더라 (삿 6:24)"],
+    ],
+    jg_baal: [
+      [NAR, "그 날 밤에 여호와께서 기드온에게 이르시되 네 아버지에게 있는 수소 곧 칠 년 된 둘째 수소를 끌어 오고 네 아버지에게 있는 바알의 제단을 헐며 그 곁의 아세라 상을 찍고 (삿 6:25)"],
+      [NAR, "또 이 산성 꼭대기에 네 하나님 여호와를 위하여 규례대로 한 제단을 쌓고 그 둘째 수소를 잡아 네가 찍은 아세라 나무로 번제를 드릴지니라 하시니라 (삿 6:26)"],
+      [NAR, "이에 기드온이 종 열 사람을 데리고 여호와께서 그에게 말씀하신 대로 행하되 그의 아버지의 가문과 그 성읍 사람들을 두려워하므로 이 일을 감히 낮에 행하지 못하고 밤에 행하니라 (삿 6:27)"],
+      [NAR, "▶ 아침이 되었어요. 성읍 사람들이 모였어요."],
+    ],
+    jg_morning: [
+      [NAR, "그 성읍 사람들이 아침에 일찍이 일어나 본즉 바알의 제단이 파괴되었으며 그 곁의 아세라가 찍혔고 새로 쌓은 제단 위에 그 둘째 수소를 드렸는지라 (삿 6:28)"],
+      [NAR, "서로 물어 이르되 이것이 누구의 소행인가 하고 그들이 캐어 물은 후에 이르되 요아스의 아들 기드온이 이를 행하였도다 하고 (삿 6:29)"],
+      [NAR, "성읍 사람들이 요아스에게 이르되 네 아들을 끌어내라 그는 당연히 죽을지니 이는 바알의 제단을 파괴하고 그 곁의 아세라를 찍었음이니라 하니 (삿 6:30)"],
+      [NAR, "요아스가 자기를 둘러선 모든 자에게 이르되 너희가 바알을 위하여 다투느냐 너희가 바알을 구원하겠느냐 그를 위하여 다투는 자는 아침까지 죽임을 당하리라 바알이 과연 신일진대 그의 제단을 파괴하였은즉 그가 자신을 위해 다툴 것이니라 하니라 (삿 6:31)"],
+      [NAR, "그 날에 기드온을 여룹바알이라 불렀으니 이는 그가 바알의 제단을 파괴하였으므로 바알이 그와 더불어 다툴 것이라 함이었더라 (삿 6:32)"],
+      [NAR, "▶ 진영 가운데로 가요 — 미디안이 이스르엘 골짜기에 진을 쳤어요."],
+    ],
+    jg_horn2: [
+      [NAR, "그 때에 미디안과 아말렉과 동방 사람들이 다 함께 모여 요단 강을 건너와서 이스르엘 골짜기에 진을 친지라 (삿 6:33)"],
+      [NAR, "여호와의 영이 기드온에게 임하시니 기드온이 나팔을 불매 아비에셀이 그의 뒤를 따라 부름을 받으니라 (삿 6:34)"],
+      [NAR, "기드온이 또 사자들을 온 므낫세에 두루 보내매 그들도 모여서 그를 따르고 또 사자들을 아셀과 스불론과 납달리에 보내매 그 무리도 올라와 그를 영접하더라 (삿 6:35)"],
+      [NAR, "▶ 타작마당으로 가요."],
+    ],
+    jg_fleece: [
+      [NAR, "기드온이 하나님께 여쭈되 주께서 이미 말씀하심 같이 내 손으로 이스라엘을 구원하시려거든 (삿 6:36)"],
+      [NAR, "보소서 내가 양털 한 뭉치를 타작 마당에 두리니 만일 이슬이 양털에만 있고 주변 땅은 마르면 주께서 이미 말씀하심 같이 내 손으로 이스라엘을 구원하실 줄을 내가 알겠나이다 하였더니 (삿 6:37)"],
+    ],
+    jg_fleece_done: [
+      [NAR, "그대로 된지라 이튿날 기드온이 일찍이 일어나서 양털을 가져다가 그 양털에서 이슬을 짜니 물이 그릇에 가득하더라 (삿 6:38)"],
+      [NAR, "기드온이 또 하나님께 여쭈되 주여 내게 노하지 마옵소서 내가 이번만 말하리이다 구하옵나니 내게 이번만 양털로 시험하게 하소서 원하건대 양털만 마르고 그 주변 땅에는 다 이슬이 있게 하옵소서 하였더니 (삿 6:39)"],
+      [NAR, "그 밤에 하나님이 그대로 행하시니 곧 양털만 마르고 그 주변 땅에는 다 이슬이 있었더라 (삿 6:40)"],
+    ],
+    jg_harod: [
+      [NAR, "여룹바알이라 하는 기드온과 그를 따르는 모든 백성이 일찍이 일어나 하롯 샘 곁에 진을 쳤고 미디안의 진영은 그들의 북쪽이요 모레 산 앞 골짜기에 있었더라 (삿 7:1)"],
+      [NAR, "여호와께서 기드온에게 이르시되 너를 따르는 백성이 너무 많은즉 내가 그들의 손에 미디안 사람을 넘겨 주지 아니하리니 이는 이스라엘이 나를 거슬러 스스로 자랑하기를 내 손이 나를 구원하였다 할까 함이니라 (삿 7:2)"],
+      [NAR, "이제 너는 백성의 귀에 외쳐 이르기를 누구든지 두려워 떠는 자는 길르앗 산을 떠나 돌아가라 하라 하시니 이에 돌아간 백성이 이만 이천 명이요 남은 자가 만 명이었더라 (삿 7:3)"],
+      [NAR, "여호와께서 또 기드온에게 이르시되 백성이 아직도 많으니 그들을 인도하여 물 가로 내려가라 거기서 내가 너를 위하여 그들을 시험하리라 내가 누구를 가리켜 네게 이르기를 이 사람이 너와 함께 가리라 하면 그는 너와 함께 갈 것이요 내가 누구를 가리켜 네게 이르기를 이 사람은 너와 함께 가지 말 것이니라 하면 그는 가지 말 것이니라 하신지라 (삿 7:4)"],
+    ],
+    jg_lap: [
+      [NAR, "이에 백성을 인도하여 물 가에 내려가매 여호와께서 기드온에게 이르시되 누구든지 개가 핥는 것 같이 혀로 물을 핥는 자들을 너는 따로 세우고 또 누구든지 무릎을 꿇고 마시는 자들도 그와 같이 하라 하시더니 (삿 7:5)"],
+    ],
+    jg_lap_done: [
+      [NAR, "손으로 움켜 입에 대고 핥는 자의 수는 삼백 명이요 그 외의 백성은 다 무릎을 꿇고 물을 마신지라 (삿 7:6)"],
+      [NAR, "여호와께서 기드온에게 이르시되 내가 이 물을 핥아 먹은 삼백 명으로 너희를 구원하며 미디안을 네 손에 넘겨 주리니 남은 백성은 각각 자기의 처소로 돌아갈 것이니라 하시니 (삿 7:7)"],
+      [NAR, "이에 백성이 양식과 나팔을 손에 든지라 기드온이 이스라엘 모든 백성을 각각 그의 장막으로 돌려보내고 그 삼백 명은 머물게 하니라 미디안 진영은 그 아래 골짜기 가운데에 있었더라 (삿 7:8)"],
+      [NAR, "▶ 밤이에요. 부라와 함께 미디안 진영 근처로 내려가요."],
+    ],
+    jg_night: [
+      [NAR, "그 밤에 여호와께서 기드온에게 이르시되 일어나 진영으로 내려가라 내가 그것을 네 손에 넘겨 주었느니라 (삿 7:9)"],
+      [NAR, "만일 네가 내려가기를 두려워하거든 네 부하 부라와 함께 그 진영으로 내려가서 (삿 7:10)"],
+      [NAR, "그들이 하는 말을 들으라 그 후에 네 손이 강하여져서 그 진영으로 내려가리라 하시니 기드온이 이에 그의 부하 부라와 함께 군대가 있는 진영 근처로 내려간즉 (삿 7:11)"],
+      [NAR, "미디안과 아말렉과 동방의 모든 사람들이 골짜기에 누웠는데 메뚜기의 많은 수와 같고 그들의 낙타의 수가 많아 해변의 모래가 많음 같은지라 (삿 7:12)"],
+      [NAR, "▶ 진영 가장자리의 장막 곁으로 가까이 가요."],
+    ],
+    jg_dream: [
+      [NAR, "기드온이 그 곳에 이른즉 어떤 사람이 그의 친구에게 꿈을 말하여 이르기를 보라 내가 한 꿈을 꾸었는데 꿈에 보리떡 한 덩어리가 미디안 진영으로 굴러 들어와 한 장막에 이르러 그것을 쳐서 무너뜨려 위쪽으로 엎으니 그 장막이 쓰러지더라 (삿 7:13)"],
+      [NAR, "그의 친구가 대답하여 이르되 이는 다른 것이 아니라 이스라엘 사람 요아스의 아들 기드온의 칼이라 하나님이 미디안과 그 모든 진영을 그의 손에 넘겨 주셨느니라 하더라 (삿 7:14)"],
+      [NAR, "기드온이 그 꿈과 해몽하는 말을 듣고 경배하며 이스라엘 진영으로 돌아와 이르되 일어나라 여호와께서 미디안과 그 모든 진영을 너희 손에 넘겨 주셨느니라 하고 (삿 7:15)"],
+      [NAR, "▶ 삼백 명에게 돌아가요."],
+    ],
+    jg_torch: [
+      [NAR, "삼백 명을 세 대로 나누어 각 손에 나팔과 빈 항아리를 들리고 항아리 안에는 횃불을 감추게 하고 (삿 7:16)"],
+      [NAR, "그들에게 이르되 너희는 나만 보고 내가 하는 대로 하되 내가 그 진영 근처에 이르러서 내가 하는 대로 너희도 그리하여 (삿 7:17)"],
+      [NAR, "나와 나를 따르는 자가 다 나팔을 불거든 너희도 모든 진영 주위에서 나팔을 불며 이르기를 여호와를 위하라, 기드온을 위하라 하라 하니라 (삿 7:18)"],
+      [NAR, "기드온과 그와 함께 한 백 명이 이경 초에 진영 근처에 이른즉 바로 파수꾼들을 교대한 때라 그들이 나팔을 불며 손에 가졌던 항아리를 부수니라 (삿 7:19)"],
+    ],
+    jg_torch_done: [
+      [NAR, "세 대가 나팔을 불며 항아리를 부수고 왼손에 횃불을 들고 오른손에 나팔을 들어 불며 외쳐 이르되 여호와와 기드온의 칼이다 하고 (삿 7:20)"],
+      [NAR, "각기 제자리에 서서 그 진영을 에워싸매 그 온 진영의 군사들이 뛰고 부르짖으며 도망하였는데 (삿 7:21)"],
+      [NAR, "삼백 명이 나팔을 불 때에 여호와께서 그 온 진영에서 친구끼리 칼로 치게 하시므로 적군이 도망하여 스레라의 벧 싯다에 이르고 또 답밧에 가까운 아벨므홀라의 경계에 이르렀으며 (삿 7:22)"],
+      [NAR, "이스라엘 사람들은 납달리와 아셀과 온 므낫세에서부터 부름을 받고 미디안을 추격하였더라 (삿 7:23)"],
+      [NAR, "▶ 하롯 샘 곁으로 돌아가요."],
+    ],
+    jg_after: [
+      [NAR, "그 때에 이스라엘 사람들이 기드온에게 이르되 당신이 우리를 미디안의 손에서 구원하셨으니 당신과 당신의 아들과 당신의 손자가 우리를 다스리소서 하는지라 (삿 8:22)"],
+      [NAR, "기드온이 그들에게 이르되 내가 너희를 다스리지 아니하겠고 나의 아들도 너희를 다스리지 아니할 것이요 여호와께서 너희를 다스리시리라 하니라 (삿 8:23)"],
+      [NAR, "미디안이 이스라엘 자손 앞에 복종하여 다시는 그 머리를 들지 못하였으므로 기드온이 사는 사십 년 동안 그 땅이 평온하였더라 (삿 8:28)"],
+      [NAR, "기드온이 이미 죽으매 이스라엘 자손이 돌아서서 바알들을 따라가 음행하였으며 또 바알브릿을 자기들의 신으로 삼고 (삿 8:33)"],
+      [NAR, "이스라엘 자손이 주위의 모든 원수들의 손에서 자기들을 건져내신 여호와 자기들의 하나님을 기억하지 아니하며 (삿 8:34)"],
+      [NAR, "또 여룹바알이라 하는 기드온이 이스라엘에 베푼 모든 은혜를 따라 그의 집을 후대하지도 아니하였더라 (삿 8:35)"],
+    ],
+    jg_minor1: [
+      [NAR, "아비멜렉의 뒤를 이어서 잇사갈 사람 도도의 손자 부아의 아들 돌라가 일어나서 이스라엘을 구원하니라 그가 에브라임 산지 사밀에 거주하면서 (삿 10:1)"],
+      [NAR, "이스라엘의 사사가 된 지 이십삼 년 만에 죽으매 사밀에 장사되었더라 (삿 10:2)"],
+      [NAR, "그 후에 길르앗 사람 야일이 일어나서 이십이 년 동안 이스라엘의 사사가 되니라 (삿 10:3)"],
+      [NAR, "그에게 아들 삼십 명이 있어 어린 나귀 삼십을 탔고 성읍 삼십을 가졌는데 그 성읍들은 길르앗 땅에 있고 오늘까지 하봇야일이라 부르더라 (삿 10:4)"],
+      [NAR, "야일이 죽으매 가몬에 장사되었더라 (삿 10:5)"],
+    ],
+    jg_again: [
+      [NAR, "이스라엘 자손이 다시 여호와의 목전에 악을 행하여 바알들과 아스다롯과 아람의 신들과 시돈의 신들과 모압의 신들과 암몬 자손의 신들과 블레셋 사람들의 신들을 섬기고 여호와를 버리고 그를 섬기지 아니하므로 (삿 10:6)"],
+      [NAR, "여호와께서 이스라엘에게 진노하사 블레셋 사람들의 손과 암몬 자손의 손에 그들을 파시매 (삿 10:7)"],
+      [NAR, "그 해에 그들이 요단 강 저쪽 길르앗에 있는 아모리 족속의 땅에 있는 모든 이스라엘 자손을 쳤으며 열여덟 해 동안 억압하였더라 (삿 10:8)"],
+      [NAR, "암몬 자손이 또 요단을 건너서 유다와 베냐민과 에브라임 족속과 싸우므로 이스라엘의 곤고가 심하였더라 (삿 10:9)"],
+      [NAR, "이스라엘 자손이 여호와께 부르짖어 이르되 우리가 우리 하나님을 버리고 바알들을 섬김으로 주께 범죄하였나이다 하니 (삿 10:10)"],
+      [NAR, "여호와께서 이스라엘 자손에게 이르시되 내가 애굽 사람과 아모리 사람과 암몬 자손과 블레셋 사람에게서 너희를 구원하지 아니하였느냐 (삿 10:11)"],
+      [NAR, "또 시돈 사람과 아말렉 사람과 마온 사람이 너희를 압제할 때에 너희가 내게 부르짖으므로 내가 너희를 그들의 손에서 구원하였거늘 (삿 10:12)"],
+      [NAR, "너희가 나를 버리고 다른 신들을 섬기니 그러므로 내가 다시는 너희를 구원하지 아니하리라 (삿 10:13)"],
+      [NAR, "가서 너희가 택한 신들에게 부르짖어 너희의 환난 때에 그들이 너희를 구원하게 하라 하신지라 (삿 10:14)"],
+      [NAR, "이스라엘 자손이 여호와께 여쭈되 우리가 범죄하였사오니 주께서 보시기에 좋은 대로 우리에게 행하시려니와 오직 주께 구하옵나니 오늘 우리를 건져내옵소서 하고 (삿 10:15)"],
+      [NAR, "자기 가운데에서 이방 신들을 제하여 버리고 여호와를 섬기매 여호와께서 이스라엘의 곤고로 말미암아 마음에 근심하시니라 (삿 10:16)"],
+      [NAR, "▶ 미스바의 진으로 가요."],
+    ],
+    jg_mizpah: [
+      [NAR, "그 때에 암몬 자손이 모여서 길르앗에 진을 쳤으므로 이스라엘 자손도 모여서 미스바에 진을 치고 (삿 10:17)"],
+      [NAR, "길르앗 백성과 방백들이 서로 이르되 누가 먼저 나가서 암몬 자손과 싸움을 시작하랴 그가 길르앗 모든 주민의 머리가 되리라 하니라 (삿 10:18)"],
+      [NAR, "길르앗 사람 입다는 큰 용사였으니 기생이 길르앗에게서 낳은 아들이었고 (삿 11:1)"],
+      [NAR, "길르앗의 아내도 그의 아들들을 낳았더라 그 아내의 아들들이 자라매 입다를 쫓아내며 그에게 이르되 너는 다른 여인의 자식이니 우리 아버지의 집에서 기업을 잇지 못하리라 한지라 (삿 11:2)"],
+      [NAR, "이에 입다가 그의 형제들을 피하여 돕 땅에 거주하매 잡류가 그에게로 모여 와서 그와 함께 출입하였더라 (삿 11:3)"],
+      [NAR, "▶ 동쪽 돕 땅의 입다에게 가요."],
+    ],
+    jg_tob: [
+      [NAR, "얼마 후에 암몬 자손이 이스라엘을 치려 하니라 (삿 11:4)"],
+      [NAR, "암몬 자손이 이스라엘을 치려 할 때에 길르앗 장로들이 입다를 데려오려고 돕 땅에 가서 (삿 11:5)"],
+      [NAR, "입다에게 이르되 우리가 암몬 자손과 싸우려 하니 당신은 와서 우리의 장관이 되라 하니 (삿 11:6)"],
+      [NAR, "입다가 길르앗 장로들에게 이르되 너희가 전에 나를 미워하여 내 아버지 집에서 쫓아내지 아니하였느냐 이제 너희가 환난을 당하였다고 어찌하여 내게 왔느냐 하니라 (삿 11:7)"],
+      [NAR, "그러므로 길르앗 장로들이 입다에게 이르되 이제 우리가 당신을 찾아온 것은 우리와 함께 가서 암몬 자손과 싸우게 하려 함이니 그리하면 당신이 우리 길르앗 모든 주민의 머리가 되리라 하매 (삿 11:8)"],
+      [NAR, "입다가 길르앗 장로들에게 이르되 너희가 나를 데리고 고향으로 돌아가서 암몬 자손과 싸우게 할 때에 만일 여호와께서 그들을 내게 넘겨 주시면 내가 과연 너희의 머리가 되겠느냐 하니 (삿 11:9)"],
+      [NAR, "길르앗 장로들이 입다에게 이르되 여호와는 우리 사이의 증인이시니 당신의 말대로 우리가 그렇게 행하리이다 하니라 (삿 11:10)"],
+      [NAR, "이에 입다가 길르앗 장로들과 함께 가니 백성이 그를 자기들의 머리와 장관을 삼은지라 입다가 미스바에서 자기의 말을 다 여호와 앞에 아뢰니라 (삿 11:11)"],
+    ],
+    jg_king: [
+      [NAR, "입다가 암몬 자손의 왕에게 사자들을 보내 이르되 네가 나와 무슨 상관이 있기에 내 땅을 치러 내게 왔느냐 하니 (삿 11:12)"],
+      [NAR, "암몬 자손의 왕이 입다의 사자들에게 대답하되 이스라엘이 애굽에서 올라올 때에 아르논에서부터 얍복과 요단까지 내 땅을 점령했기 때문이니 이제 그것을 평화롭게 돌려 달라 하니라 (삿 11:13)"],
+      [NAR, "입다가 암몬 자손의 왕에게 다시 사자들을 보내 (삿 11:14)"],
+      [NAR, "그에게 이르되 입다가 이같이 말하노라 이스라엘이 모압 땅과 암몬 자손의 땅을 점령하지 아니하였느니라 (삿 11:15)"],
+      [NAR, "▶ 입다가 사자들을 시켜 한 말 — 이스라엘이 걸어온 길을 차례대로 놓아요."],
+    ],
+    jg_king_done: [
+      [NAR, "이스라엘이 헤스본과 그 마을들과 아로엘과 그 마을들과 아르논 강 가에 있는 모든 성읍에 거주한 지 삼백 년이거늘 그 동안에 너희가 어찌하여 도로 찾지 아니하였느냐 (삿 11:26)"],
+      [NAR, "내가 네게 죄를 짓지 아니하였거늘 네가 나를 쳐서 내게 악을 행하고자 하는도다 원하건대 심판하시는 여호와께서 오늘 이스라엘 자손과 암몬 자손 사이에 판결하시옵소서 하였으나 (삿 11:27)"],
+      [NAR, "암몬 자손의 왕이 입다가 사람을 보내어 말한 것을 듣지 아니하였더라 (삿 11:28)"],
+      [NAR, "▶ 미스바로 돌아가요."],
+    ],
+    jg_vow: [
+      [NAR, "이에 여호와의 영이 입다에게 임하시니 입다가 길르앗과 므낫세를 지나서 길르앗의 미스베에 이르고 길르앗의 미스베에서부터 암몬 자손에게로 나아갈 때에 (삿 11:29)"],
+      [NAR, "그가 여호와께 서원하여 이르되 주께서 과연 암몬 자손을 내 손에 넘겨 주시면 (삿 11:30)"],
+      [NAR, "내가 암몬 자손에게서 평안히 돌아올 때에 누구든지 내 집 문에서 나와서 나를 영접하는 그는 여호와께 돌릴 것이니 내가 그를 번제물로 드리겠나이다 하니라 (삿 11:31)"],
+      [NAR, "이에 입다가 암몬 자손에게 이르러 그들과 싸우더니 여호와께서 그들을 그의 손에 넘겨 주시매 (삿 11:32)"],
+      [NAR, "아로엘에서부터 민닛에 이르기까지 이십 성읍을 치고 또 아벨 그라밈까지 매우 크게 무찌르니 이에 암몬 자손이 이스라엘 자손 앞에 항복하였더라 (삿 11:33)"],
+      [NAR, "▶ 미스바의 입다의 집으로 가요."],
+    ],
+    jg_house: [
+      [NAR, "입다가 미스바에 있는 자기 집에 이를 때에 보라 그의 딸이 소고를 잡고 춤추며 나와서 영접하니 이는 그의 무남독녀라 (삿 11:34)"],
+      [NAR, "입다가 이를 보고 자기 옷을 찢으며 이르되 어찌할꼬 내 딸이여 너는 나를 참담하게 하는 자요 너는 나를 괴롭게 하는 자 중의 하나로다 내가 여호와를 향하여 입을 열었으니 능히 돌이키지 못하리로다 하니 (삿 11:35)"],
+      [NAR, "딸이 그에게 이르되 나의 아버지여 아버지께서 여호와를 향하여 입을 여셨으니 아버지의 입에서 낸 말씀대로 내게 행하소서 이는 여호와께서 아버지를 위하여 아버지의 대적 암몬 자손에게 원수를 갚으셨음이니이다 하니라 (삿 11:36)"],
+      [NAR, "또 그의 아버지에게 이르되 이 일만 내게 허락하사 나를 두 달만 버려 두소서 내가 내 여자 친구들과 산에 가서 나의 처녀로 죽음을 인하여 애곡하겠나이다 하니 (삿 11:37)"],
+      [NAR, "그가 이르되 가라 하고 두 달을 기한하고 그를 보내니 그가 그 여자 친구들과 가서 산 위에서 처녀로 죽음을 인하여 애곡하고 (삿 11:38)"],
+      [NAR, "두 달 만에 그의 아버지에게로 돌아온지라 그는 자기가 서원한 대로 딸에게 행하니 딸이 남자를 알지 못하였더라 이것이 이스라엘에 관습이 되어 (삿 11:39)"],
+      [NAR, "이스라엘의 딸들이 해마다 가서 길르앗 사람 입다의 딸을 위하여 나흘씩 애곡하더라 (삿 11:40)"],
+    ],
+    jg_ford2: [
+      [NAR, "에브라임 사람들이 모여 북쪽으로 가서 입다에게 이르되 네가 암몬 자손과 싸우러 건너갈 때에 어찌하여 우리를 불러 너와 함께 가게 하지 아니하였느냐 우리가 반드시 너와 네 집을 불사르리라 하니 (삿 12:1)"],
+      [NAR, "입다가 그들에게 이르되 나와 내 백성이 암몬 자손과 크게 싸울 때에 내가 너희를 부르되 너희가 나를 그들의 손에서 구원하지 아니한 고로 (삿 12:2)"],
+      [NAR, "나는 너희가 도와 주지 아니하는 것을 보고 내 목숨을 돌보지 아니하고 건너가서 암몬 자손을 쳤더니 여호와께서 그들을 내 손에 넘겨 주셨거늘 너희가 어찌하여 오늘 내게 올라와서 나와 더불어 싸우고자 하느냐 하니라 (삿 12:3)"],
+      [NAR, "입다가 길르앗 사람을 다 모으고 에브라임과 싸웠으며 길르앗 사람들이 에브라임을 쳐서 무찔렀으니 이는 에브라임의 말이 너희 길르앗 사람은 본래 에브라임에서 도망한 자로서 에브라임과 므낫세 중에 있다 하였음이라 (삿 12:4)"],
+      [NAR, "길르앗 사람이 에브라임 사람보다 앞서 요단 강 나루턱을 장악하고 에브라임 사람의 도망하는 자가 말하기를 청하건대 나를 건너가게 하라 하면 길르앗 사람이 그에게 묻기를 네가 에브라임 사람이냐 하여 그가 만일 아니라 하면 (삿 12:5)"],
+      [NAR, "그에게 이르기를 쉽볼렛이라 발음하라 하여 에브라임 사람이 그렇게 바로 말하지 못하고 십볼렛이라 발음하면 길르앗 사람이 곧 그를 잡아서 요단 강 나루턱에서 죽였더라 그 때에 에브라임 사람의 죽은 자가 사만 이천 명이었더라 (삿 12:6)"],
+    ],
+    jg_minor2: [
+      [NAR, "입다가 이스라엘의 사사가 된 지 육 년이라 길르앗 사람 입다가 죽으매 길르앗에 있는 그의 성읍에 장사되었더라 (삿 12:7)"],
+      [NAR, "그 뒤를 이어 베들레헴의 입산이 이스라엘의 사사가 되었더라 (삿 12:8)"],
+      [NAR, "그가 아들 삼십 명과 딸 삼십 명을 두었더니 그가 딸들을 밖으로 시집 보냈고 아들들을 위하여는 밖에서 여자 삼십 명을 데려왔더라 그가 이스라엘의 사사가 된 지 칠 년이라 (삿 12:9)"],
+      [NAR, "입산이 죽으매 베들레헴에 장사되었더라 (삿 12:10)"],
+      [NAR, "그 뒤를 이어 스불론 사람 엘론이 이스라엘의 사사가 되어 십 년 동안 이스라엘을 다스렸더라 (삿 12:11)"],
+      [NAR, "스불론 사람 엘론이 죽으매 스불론 땅 아얄론에 장사되었더라 (삿 12:12)"],
+      [NAR, "그 뒤를 이어 비라돈 사람 힐렐의 아들 압돈이 이스라엘의 사사가 되었더라 (삿 12:13)"],
+      [NAR, "그에게 아들 사십 명과 손자 삼십 명이 있어 어린 나귀 칠십 마리를 탔더라 압돈이 이스라엘의 사사가 된 지 팔 년이라 (삿 12:14)"],
+      [NAR, "비라돈 사람 힐렐의 아들 압돈이 죽으매 에브라임 땅 아말렉 사람의 산지 비라돈에 장사되었더라 (삿 12:15)"],
+    ],
+  });
 
   // 사사 조각을 주는 해설 끝(대사 끝에 붙임)
   DLG.jg_othniel.push({ event: 'jOthniel' });
   DLG.jg_shamgar.push({ event: 'jShamgar' });
   DLG.jg_ford_done.push({ event: 'jEhud' });
+  DLG.jg_rock.splice(5, 0, { event: 'offerFire' });   // 6:21 불이 바위에서 나와
+  DLG.jg_baal.push({ event: 'baalDown' });
+  DLG.jg_torch_done.unshift({ event: 'campRout' });
+  DLG.jg_after.push({ event: 'jGideon' });
+  DLG.jg_minor1.push({ event: 'jTola' }, { event: 'jJair' });
+  DLG.jg_minor2.push({ event: 'jJephthah' }, { event: 'jIbzan' }, { event: 'jElon' }, { event: 'jAbdon' });
   DLG.jg_kishon.unshift({ event: 'kishon' });
   DLG.jg_song.push({ event: 'jDeborah' });
 
@@ -376,8 +636,8 @@
     if (zid === 'jezreel'){
       // 바락의 만 명이 모인 다볼 산기슭(삿 4:10) · 시스라의 철 병거(4:13) — 4:15 뒤로는 강가에 흩어져 기운다
       needProps(['tent-small', 'tent-mid'], 'jezreel');
-      [[-6, 4], [-2, 8], [4, 9], [8, 4]].forEach(([dx, dz], i) => prop(i % 2 ? 'tent-small' : 'tent-mid', TABOR_FOOT[0] + dx, TABOR_FOOT[1] + dz, i * 1.3));
-      if (p.ch >= 3){
+      if (p.ch === 3) [[-6, 4], [-2, 8], [4, 9], [8, 4]].forEach(([dx, dz], i) => prop(i % 2 ? 'tent-small' : 'tent-mid', TABOR_FOOT[0] + dx, TABOR_FOOT[1] + dz, i * 1.3));
+      if (p.ch === 3){
         const iron = M(0x5a5a62), wheel = M(0x3a3a40), out = fled();
         for (let i = 0; i < 7; i++){ const x = KISHON[0] + (i % 4) * 3.2 - 2 + (out ? 4 : 0), z = KISHON[1] - 9 + Math.floor(i / 4) * 7 + i * 0.8;
           const c = new THREE.Group(); const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.7, 1.1), iron); body.position.y = 0.75; c.add(body);
@@ -388,8 +648,112 @@
       // 겐 사람 헤벨의 장막 · 사아난님 상수리나무 곁(삿 4:11)
       prop('tent-small', JAEL_T[0], JAEL_T[1], 2.4); needProps(['env-acacia'], 'jezreel'); prop('env-acacia', JAEL_T[0] - 3.5, JAEL_T[1] - 2.5, 1.1);
     }
+    if (zid === 'jezreel' && p.ch >= 4){
+      // 오브라의 상수리나무 아래(6:11) · 포도주 틀 · 바위(6:20)
+      needProps(['env-acacia', 'tent-small', 'tent-mid', 'camel', 'fleece', 'jar-torch'], 'jezreel');
+      prop('env-acacia', OAK[0], OAK[1], 0.4);
+      if (p.ch === 4){ for (let i = 0; i < 10; i++){ const a = i / 10 * Math.PI * 2; put(new THREE.BoxGeometry(0.5, 0.5, 0.4), M(0xb8a888), PRESS[0] + Math.cos(a) * 1.1, 0.25, PRESS[1] + Math.sin(a) * 1.1, -a); } }
+      { const r = put(new THREE.DodecahedronGeometry(1.1, 0), M(0x9a8a72), ROCK[0], 0.6, ROCK[1]); r.scale.set(1.3, 0.7, 1.1); }
+      if (offerShow) for (let i = 0; i < 5; i++){ const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: api.flameTex, color: i % 2 ? 0xffd27a : 0xff8a3a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.9 })); s.position.set(ROCK[0] + (Math.random() - 0.5) * 0.8, api.heightAt(ROCK[0], ROCK[1]) + 1.4 + Math.random() * 0.6, ROCK[1] + (Math.random() - 0.5) * 0.8); s.scale.set(1, 1.6, 1); g.add(s); }
+      // 바알의 제단과 아세라(6:25) → 헐린 뒤에는 무너진 돌과 새로 쌓은 제단(6:28)
+      const down = baalShow || p.ch > 4 || (p.ch === 4 && p.step >= 4);
+      if (!down){ put(new THREE.BoxGeometry(1.8, 1.2, 1.8), M(0x8a7a62), BAAL[0], 0.6, BAAL[1]); put(new THREE.CylinderGeometry(0.12, 0.16, 2.6, 6), M(0x6a5a40), BAAL[0] + 1.6, 1.3, BAAL[1]); }
+      else { for (let i = 0; i < 8; i++){ const r = put(new THREE.DodecahedronGeometry(0.3 + Math.random() * 0.2), M(0x8a7a62), BAAL[0] + (Math.random() - 0.5) * 2.4, 0.15, BAAL[1] + (Math.random() - 0.5) * 2.4); r.rotation.set(Math.random(), Math.random(), 0); }
+        for (let i = 0; i < 6; i++) put(new THREE.DodecahedronGeometry(0.34, 0), M(0xd0c4a8), BAAL[0] + 3.4 + (i % 3) * 0.5 - 0.5, 0.25 + Math.floor(i / 3) * 0.45, BAAL[1]); }
+      // 타작마당과 양털(6:37)
+      { const f = new THREE.Mesh(new THREE.CircleGeometry(2.6, 20).rotateX(-Math.PI / 2), M(0xc8b088)); f.position.set(FLOOR[0], api.heightAt(FLOOR[0], FLOOR[1]) + 0.04, FLOOR[1]); g.add(f); }
+      if (p.ch === 4 && p.step >= 6) prop('fleece', FLOOR[0], FLOOR[1], 0.3);
+      // 하롯 샘(7:1)
+      if (p.ch >= 5){ const w = new THREE.Mesh(new THREE.CircleGeometry(2.4, 24).rotateX(-Math.PI / 2), new THREE.MeshToonMaterial({ color: 0x4f9fb5, gradientMap: api.toonGradient, transparent: true, opacity: 0.85 })); w.position.set(HAROD[0], api.heightAt(HAROD[0], HAROD[1]) + 0.06, HAROD[1]); g.add(w); }
+      // 미디안 진영 — 모레 산 앞 골짜기(7:1, 7:12 "메뚜기의 많은 수와 같고") → 7:21 뒤로는 비고 쓰러진 장막
+      const campOn = (p.ch === 4 && p.step >= 5) || p.ch === 5;
+      if (campOn){ const rout = routShow || (p.ch === 5 && (p.cleared || p.step >= 5));
+        for (let i = 0; i < 14; i++){ const x = CAMPM[0] + (i % 5) * 4 - 8 + (i % 2) * 1.5, z = CAMPM[1] + Math.floor(i / 5) * 4.5 - 4; const o = prop(i % 3 ? 'tent-small' : 'tent-mid', x, z, i * 0.9); if (o && rout){ o.rotation.z = 0.5 + (i % 3) * 0.2; o.position.y -= 0.4; } }
+        if (!rout) [[-6, 6], [4, 7], [9, -2]].forEach(([dx, dz], i) => prop('camel', CAMPM[0] + dx, CAMPM[1] + dz, i * 1.7)); }
+      if (p.ch === 5 && p.step === 4) [[-1.4, 0], [0, 0.6], [1.4, 0]].forEach(([dx, dz]) => prop('jar-torch', HAROD[0] + 2.6 + dx, HAROD[1] - 5 + dz, 0));
+    }
+    if (zid === 'moab' && p.ch >= 6){
+      // 길르앗: 미스바의 진(10:17) · 입다의 집(11:34) · 돕 땅의 장막(11:3)
+      needProps(['tent-small', 'tent-mid'], 'moab');
+      [[-4, 2], [3, 4], [-1, -4], [5, -3]].forEach(([dx, dz], i) => prop(i % 2 ? 'tent-small' : 'tent-mid', MIZ[0] + dx, MIZ[1] + dz, i * 1.4));
+      put(new THREE.BoxGeometry(4.2, 2.6, 3.6), M(0xd8c4a0), JHOUSE[0], 1.3, JHOUSE[1]); put(new THREE.BoxGeometry(4.6, 0.25, 4), M(0xb89a70), JHOUSE[0], 2.7, JHOUSE[1]); obst(JHOUSE[0], JHOUSE[1], 2.6);
+      [[-3, 2], [3, 1]].forEach(([dx, dz], i) => prop('tent-small', TOB[0] + dx, TOB[1] + dz, i * 2));
+    }
     api.zoneRoot.add(g); worldObj = g;
   }
+
+
+  // ── 2부 미니게임 ──
+  // 🐑 양털 표징 두 번(삿 6:36-40) — 밤마다 기드온이 구한 대로 아침의 이슬 자리를 고르고, 첫 아침엔 양털에서 이슬을 짠다
+  function fleeceGame(q){
+    api.runDialog(DLG.jg_fleece, () => {
+      let night = 1, phase = 'ask', squeeze = 0, life = LIVES, msg = '', perfect = true;
+      const ASK = { 1: ['양털에만 이슬, 주변 땅은 마름', '"만일 이슬이 양털에만 있고 주변 땅은 마르면" (6:37)'], 2: ['양털만 마르고 주변 땅에는 이슬', '"원하건대 양털만 마르고 그 주변 땅에는 다 이슬이 있게 하옵소서" (6:39)'] };
+      const OPTS = ['양털에만 이슬, 주변 땅은 마름', '양털만 마르고 주변 땅에는 이슬', '양털도 땅도 다 젖음'];
+      mgOpen('🐑 양털 한 뭉치', '타작마당에 양털을 두었어요. 기드온이 구한 그대로 — 아침에 이슬이 어디에 있을까요?');
+      const draw = () => {
+        if (phase === 'ask') api.mgArea.innerHTML = `<div style="text-align:center;padding:8px;font-size:14px;font-weight:800">🌙 ${night === 1 ? '첫째' : '둘째'} 밤이 지나고 아침 — 기드온이 구한 것은?</div><div style="display:grid;gap:6px;padding:4px 12px">${OPTS.map((o, i) => `<button data-fl="${i}" style="${btnCss};font-size:13.5px">${o}</button>`).join('')}</div>` + msgBox(msg || hearts(life));
+        else if (phase === 'squeeze') api.mgArea.innerHTML = `<div style="text-align:center;padding:8px;font-size:13px">"기드온이 일찍이 일어나서 양털을 가져다가 그 양털에서 이슬을 짜니 물이 그릇에 가득하더라" (6:38)</div><div style="text-align:center;font-size:26px;padding:4px">🥣 ${'💧'.repeat(squeeze)}${'▫️'.repeat(5 - squeeze)}</div><div style="padding:4px 12px"><button data-fl="sq" style="${btnCss};width:100%;font-size:15px">🐑 양털 짜기</button></div>` + msgBox(msg);
+        else api.mgArea.innerHTML = `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800">✓ "그 밤에 하나님이 그대로 행하시니" (6:40)</div>`;
+        api.mgAct.textContent = phase === 'done' ? '계속' : '두 밤이 지나면 계속'; api.mgAct.disabled = phase !== 'done'; };
+      draw();
+      api.mgArea.onclick = e => { const b = e.target.closest('[data-fl]'); if (!b) return; const k = b.dataset.fl;
+        if (phase === 'ask'){
+          if (OPTS[+k] === ASK[night][0]){ msg = ''; if (night === 1){ phase = 'squeeze'; } else phase = 'done'; }
+          else { perfect = false; if (--life <= 0){ night = 1; life = LIVES; msg = OUT; } else msg = `${ASK[night][1]} ${hearts(life)}`; }
+        } else if (phase === 'squeeze' && k === 'sq'){ squeeze++; if (squeeze >= 5){ phase = 'ask'; night = 2; msg = '그릇에 가득해요. 둘째 밤에는?'; } }
+        draw(); };
+      api.mgAct.onclick = () => { if (phase !== 'done') return; api.mgArea.onclick = null; mgCloseAll(); if (perfect) giveBadge('fleece_twice'); completeTask(q); };
+      api.mg.onClose = () => { api.mgArea.onclick = null; };
+    }, null, 'jg_fleece');
+  }
+  // 💧 물 가에서(삿 7:5-7) — 마시는 모습을 보고 따로 세운다: 핥은 자는 기드온과 함께, 무릎을 꿇고 마신 자는 처소로
+  function lapGame(q){
+    api.runDialog(DLG.jg_lap, () => {
+      const CARDS = [...Array(12).keys()].map(i => i % 4 === 0 ? ['👅 손으로 움켜 입에 대고 핥아요', 'go'] : ['🧎 무릎을 꿇고 물을 마셔요', 'home']).sort(() => Math.random() - 0.5);
+      let i = 0, msg = '', life = LIVES;
+      mgOpen('💧 물 가에서', '"누구든지 개가 핥는 것 같이 혀로 물을 핥는 자들을 너는 따로 세우고 또 누구든지 무릎을 꿇고 마시는 자들도 그와 같이 하라" (삿 7:5)');
+      const draw = () => { const c = CARDS[i];
+        api.mgArea.innerHTML = c ? `<div style="text-align:center;padding:12px 8px 8px;font-size:16px;font-weight:800">${c[0]}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 12px"><button data-lp="go" style="${btnCss};font-size:13.5px">🛡 기드온과 함께</button><button data-lp="home" style="${btnCss};font-size:13.5px">🏠 자기 처소로</button></div>` + msgBox(msg || `${i + 1} / ${CARDS.length} · ${hearts(life)}`)
+          : `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800">✓ "물을 핥아 먹은 삼백 명으로 너희를 구원하며" (7:7)</div>`;
+        api.mgAct.textContent = c ? '다 세우면 계속' : '계속'; api.mgAct.disabled = !!c; };
+      draw();
+      api.mgArea.onclick = e => { const b = e.target.closest('[data-lp]'); const c = CARDS[i]; if (!b || !c) return;
+        if (b.dataset.lp === c[1]){ i++; msg = ''; } else if (--life <= 0){ i = 0; life = LIVES; CARDS.sort(() => Math.random() - 0.5); msg = OUT; } else msg = `삿 7:6-7을 다시 읽어 봐요 ${hearts(life)}`; draw(); };
+      api.mgAct.onclick = () => { if (CARDS[i]) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+      api.mg.onClose = () => { api.mgArea.onclick = null; };
+    }, null, 'jg_lap');
+  }
+  // 🏺 세 대가(삿 7:20) — 나팔을 불며 → 항아리를 부수고 → 횃불을 들고 → 외치기. 세 대가 차례대로, 칼을 드는 조작은 없다(7:21 "각기 제자리에 서서")
+  function torchGame(q){
+    api.runDialog(DLG.jg_torch, () => {
+      const SEQ = [['🎺', '나팔을 불며'], ['🏺', '항아리를 부수고'], ['🔥', '횃불을 들고'], ['🗣', '"여호와와 기드온의 칼이다"']];
+      let band = 0, k = 0, life = LIVES, msg = '', perfect = true, order = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+      mgOpen('🏺 항아리와 횃불', '"세 대가 나팔을 불며 항아리를 부수고 왼손에 횃불을 들고 오른손에 나팔을 들어 불며 외쳐 이르되 여호와와 기드온의 칼이다" (삿 7:20) — 세 대가 차례대로!');
+      const draw = () => {
+        api.mgArea.innerHTML = band < 3 ? `<div style="text-align:center;font-size:13px;padding:4px">${['첫째', '둘째', '셋째'][band]} 대 · ${SEQ.slice(0, k).map(s => s[0]).join(' ') || '…'} · ${hearts(life)}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 10px">${order.map(i => `<button data-tc="${i}" style="${btnCss};font-size:13px;padding:12px 4px">${SEQ[i][0]} ${SEQ[i][1]}</button>`).join('')}</div>` + msgBox(msg)
+          : `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800">✓ "각기 제자리에 서서 그 진영을 에워싸매" (7:21)</div>`;
+        api.mgAct.textContent = band < 3 ? '세 대가 다 하면 계속' : '계속'; api.mgAct.disabled = band < 3; };
+      draw();
+      api.mgArea.onclick = e => { const b = e.target.closest('[data-tc]'); if (!b || band >= 3) return;
+        if (+b.dataset.tc === k){ k++; msg = ''; if (k >= 4){ k = 0; band++; order = [0, 1, 2, 3].sort(() => Math.random() - 0.5); msg = band < 3 ? '다음 대!' : ''; } }
+        else { perfect = false; if (--life <= 0){ band = 0; k = 0; life = LIVES; msg = OUT; } else msg = `7:20의 차례를 다시 봐요 ${hearts(life)}`; }
+        draw(); };
+      api.mgAct.onclick = () => { if (band < 3) return; api.mgArea.onclick = null; mgCloseAll(); if (perfect) giveBadge('jar_torch'); completeTask(q); };
+      api.mg.onClose = () => { api.mgArea.onclick = null; };
+    }, null, 'jg_torch');
+  }
+  // 🗺 입다가 암몬 왕에게 한 말(삿 11:16-22) — 이스라엘이 걸어온 길(3편에서 걸었던 길)을 차례대로
+  function routeGame(q){
+    api.runDialog(DLG.jg_king, () => orderPlay(q, '🗺 이스라엘이 걸어온 길', '입다의 사자들이 전한 말(삿 11:16-22) — 이스라엘이 애굽에서 올라와 걸어온 길을 차례대로 놓아요.', [
+      ['🌊 홍해에 이름', '(11:16)'], ['🏕 가데스에 이름', '(11:16)'], ['✉ 에돔 왕에게 사자를 보냄', '(11:17)'], ['↪ 에돔과 모압 땅을 돌아감', '(11:18)'],
+      ['⛺ 아르논 저쪽에 진을 침', '(11:18)'], ['✉ 시혼에게 사자를 보냄', '(11:19)'], ['🏞 아르논에서 얍복까지 점령', '(11:22)'],
+    ], '삿 11장을 다시 떠올려 봐요', '✓ 이스라엘이 걸어온 길을 차례대로 놓았어요'), null, 'jg_king');
+  }
+  Object.assign(api.BADGES, { fleece_twice: { ico: '🐑', name: '이슬을 두 번 본 사람' }, jar_torch: { ico: '🏺', name: '항아리를 깨뜨린 삼백' } });
+  function offerFire(){ offerShow = true; flash('#ffd9a0', 0.4); refresh('jezreel'); try { api.startCine('jgOffer', ROCK[0], api.heightAt(ROCK[0], ROCK[1]) + 1, ROCK[1], { r: 7, h: 3, dur: 4, spin: 0.4 }); } catch (e){} setTimeout(() => { offerShow = false; refresh('jezreel'); }, 6000); }
+  function baalDown(){ baalShow = true; refresh('jezreel'); }
+  function campRout(){ routShow = true; flash('#ffcf8a', 0.4); refresh('jezreel'); try { api.startCine('jgRout', CAMPM[0], api.heightAt(CAMPM[0], CAMPM[1]) + 3, CAMPM[1], { r: 18, h: 8, dur: 4.5, spin: 0.35 }); } catch (e){} }
 
   const T = n => `📜 사사들과 함께 ${n}장`;
   return {
@@ -423,7 +787,7 @@
           { id: 'g3s7', zone: 'gilgal', obj: '요단 강 나루 장악하기', where: '동쪽 요단 강 나루(빛나는 곳)', point: 'jg_ford', game: 'ford', doneDlg: 'jg_ford_done' },
           { id: 'g3s8', zone: 'gilgal', obj: '에훗 후에는 — 삼갈', where: '요단 강가의 소 모는 막대기(빛나는 곳)', point: 'jg_shamgar', dlg: 'jg_shamgar', reward: { verse: 'jdg3-15', clear: true } },
         ] },
-      { title: `${T(4)} — 드보라와 바락, 야엘`, clearTitle: '🎉 5편 4장 「드보라와 바락, 야엘」 완료!', next: '5장: 기드온을 부르심 (준비 중)',
+      { title: `${T(4)} — 드보라와 바락, 야엘`, clearTitle: '🎉 5편 4장 「드보라와 바락, 야엘」 완료!', next: '5장: 기드온을 부르심',
         steps: [
           { id: 'g4s1', zone: 'gilgal', obj: '북쪽 길로 실로에 올라가기', where: '길갈 북쪽 길의 초록 빛기둥', exit: 'to-shiloh' },
           { id: 'g4s2', zone: 'shiloh', obj: '드보라의 종려나무 아래', where: '서북쪽 종려나무 아래의 드보라', npc: 'jg_deborah', dlg: 'jg_deborah' },
@@ -434,9 +798,41 @@
           { id: 'g4s7', zone: 'jezreel', obj: '겐 사람 헤벨의 장막', where: '남서쪽 상수리나무 곁의 장막(빛나는 곳)', point: 'jg_jael', dlg: 'jg_jael' },
           { id: 'g4s8', zone: 'jezreel', obj: '드보라와 바락의 노래', where: '다볼 산기슭(빛나는 곳)', point: 'jg_song', dlg: 'jg_song', reward: { verse: ['jdg4-14', 'jdg5-31'], clear: true } },
         ] },
+      { title: `${T(5)} — 기드온을 부르심`, clearTitle: '🎉 5편 5장 「기드온을 부르심」 완료!', next: '6장: 기드온 300명',
+        steps: [
+          { id: 'g5s1', zone: 'jezreel', obj: '미디안의 손에 넘겨진 일곱 해', where: '골짜기 가운데(빛나는 곳)', point: 'jg_midian', dlg: 'jg_midian' },
+          { id: 'g5s2', zone: 'jezreel', obj: '"큰 용사여 여호와께서 너와 함께 계시도다"', where: '상수리나무 곁 포도주 틀의 기드온', npc: 'jg_gideon', dlg: 'jg_call' },
+          { id: 'g5s3', zone: 'jezreel', obj: '바위 위의 예물', where: '상수리나무 아래 바위(빛나는 곳)', point: 'jg_rock', dlg: 'jg_rock' },
+          { id: 'g5s4', zone: 'jezreel', obj: '그 날 밤 — 바알의 제단', where: '서쪽의 바알의 제단(빛나는 곳)', point: 'jg_baal', dlg: 'jg_baal' },
+          { id: 'g5s5', zone: 'jezreel', obj: '아침에 일찍 일어난 성읍 사람들', where: '오브라 성읍(빛나는 곳)', point: 'jg_town', dlg: 'jg_morning' },
+          { id: 'g5s6', zone: 'jezreel', obj: '기드온이 나팔을 불매', where: '골짜기 가운데(빛나는 곳)', point: 'jg_horn2', dlg: 'jg_horn2' },
+          { id: 'g5s7', zone: 'jezreel', obj: '양털 한 뭉치', where: '타작마당(빛나는 곳)', point: 'jg_floor', game: 'fleece', doneDlg: 'jg_fleece_done', reward: { verse: ['jdg6-12', 'jdg6-16'], clear: true } },
+        ] },
+      { title: `${T(6)} — 기드온 300명`, clearTitle: '🎉 5편 6장 「기드온 300명」 완료!', next: '7장: 입다와 그 딸',
+        steps: [
+          { id: 'g6s1', zone: 'jezreel', obj: '하롯 샘 곁에 진을 치고', where: '남쪽 하롯 샘(빛나는 곳)', point: 'jg_harod', dlg: 'jg_harod' },
+          { id: 'g6s2', zone: 'jezreel', obj: '물 가에서 따로 세우기', where: '하롯 샘(빛나는 곳)', point: 'jg_harod', game: 'lap', doneDlg: 'jg_lap_done' },
+          { id: 'g6s3', zone: 'jezreel', obj: '그 밤에 — 부라와 함께', where: '북쪽 미디안 진영 근처(빛나는 곳)', point: 'jg_night', dlg: 'jg_night' },
+          { id: 'g6s4', zone: 'jezreel', obj: '보리떡 한 덩어리 꿈', where: '진영 가장자리의 장막(빛나는 곳)', point: 'jg_dream', dlg: 'jg_dream' },
+          { id: 'g6s5', zone: 'jezreel', obj: '나팔과 항아리와 횃불', where: '하롯 샘 곁의 기드온', npc: 'jg_gideon5', game: 'torch', doneDlg: 'jg_torch_done' },
+          { id: 'g6s6', zone: 'jezreel', obj: '"여호와께서 너희를 다스리시리라"', where: '하롯 샘 곁(빛나는 곳)', point: 'jg_after', dlg: 'jg_after', reward: { verse: ['jdg7-2', 'jdg7-20', 'jdg8-23'], clear: true } },
+        ] },
+      { title: `${T(7)} — 입다와 그 딸`, clearTitle: '🎉 5편 7장 「입다와 그 딸」 완료!', next: '8장: 삼손이 태어남 (준비 중)',
+        steps: [
+          { id: 'g7s1', zone: 'moab', obj: '돌라와 야일', where: '요단 동편 길르앗, 서쪽 길가(빛나는 곳)', point: 'jg_minor1', dlg: 'jg_minor1' },
+          { id: 'g7s2', zone: 'moab', obj: '다시 악을 행하여 — "오늘 우리를 건져내옵소서"', where: '진영 가운데(빛나는 곳)', point: 'jg_again', dlg: 'jg_again' },
+          { id: 'g7s3', zone: 'moab', obj: '미스바에 진을 치고', where: '남쪽 미스바의 진(빛나는 곳)', point: 'jg_miz', dlg: 'jg_mizpah' },
+          { id: 'g7s4', zone: 'moab', obj: '돕 땅의 입다', where: '동쪽 돕 땅의 입다', npc: 'jg_jephthah', dlg: 'jg_tob' },
+          { id: 'g7s5', zone: 'moab', obj: '암몬 자손의 왕에게 보낸 말', where: '돕 땅의 입다', npc: 'jg_jephthah', game: 'route', doneDlg: 'jg_king_done' },
+          { id: 'g7s6', zone: 'moab', obj: '길르앗의 미스베 — 서원', where: '미스바 동쪽(빛나는 곳)', point: 'jg_vow', dlg: 'jg_vow' },
+          { id: 'g7s7', zone: 'moab', obj: '미스바의 입다의 집', where: '미스바 남쪽의 집(빛나는 곳)', point: 'jg_house', dlg: 'jg_house' },
+          { id: 'g7s8', zone: 'moab', obj: '요단 강 나루턱', where: '서쪽 요단 강가(빛나는 곳)', point: 'jg_ford2', dlg: 'jg_ford2' },
+          { id: 'g7s9', zone: 'moab', obj: '입산 · 엘론 · 압돈', where: '미스바의 진(빛나는 곳)', point: 'jg_minor2', dlg: 'jg_minor2', reward: { verse: 'jdg10-16', clear: true } },
+        ] },
     ],
-    games: { cycle: cycleGame, ford: fordGame, tabor: taborGame },
-    events: { kishon, jOthniel: judge('옷니엘'), jEhud: judge('에훗'), jShamgar: judge('삼갈'), jDeborah: judge('드보라') },
+    games: { cycle: cycleGame, ford: fordGame, tabor: taborGame, fleece: fleeceGame, lap: lapGame, torch: torchGame, route: routeGame },
+    events: { kishon, offerFire, baalDown, campRout, jOthniel: judge('옷니엘'), jEhud: judge('에훗'), jShamgar: judge('삼갈'), jDeborah: judge('드보라'),
+      jGideon: judge('기드온'), jTola: judge('돌라'), jJair: judge('야일'), jJephthah: judge('입다'), jIbzan: judge('입산'), jElon: judge('엘론'), jAbdon: judge('압돈') },
     world: zid => world(zid),
   };
 });

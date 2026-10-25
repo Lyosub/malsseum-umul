@@ -601,7 +601,7 @@
 <div id="compass"><svg viewBox="0 0 46 46"><path id="compass-arrow" d="M23 7 L31 27 L23 22 L15 27 Z" fill="#ffd27a"/></svg></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "8fcd871c", "wild3": "399f9e0d", "joshua": "dcec01a7", "judges": "234ec990"};</script>
+<script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "8fcd871c", "wild3": "399f9e0d", "joshua": "dcec01a7", "judges": "e4a0d59d"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -1379,7 +1379,7 @@
         ['env-rock-hill', 38, 34, 2.0], ['env-rocks-strata', 36, -14, 1.2], ['dry-bush', 4, 18, 0], ['dry-bush', -14, -18, 0],
       ],
       scatter: [['dry-bush', 6, 20, 50], ['rock-group', 8, 22, 50]],
-      clear: [[0, 36, 6], [16, -18, 9], [22, -28, 5], [-30, -4, 11], [-24, 24, 7], [28, -40, 16], [-22, -46, 13], [0, 44, 5]],
+      clear: [[0, 36, 6], [16, -18, 9], [22, -28, 5], [-30, -4, 11], [-24, 24, 7], [28, -40, 16], [-22, -46, 13], [0, 44, 5], [-9, -9, 6], [-17, -15, 4], [-12, 7, 4], [6, 22, 6], [-12, -29, 11]],
       fires: [],
       points: [
         { id: 'to-shiloh-j', x: 0, z: 42, type: 'exit', title: "남쪽 길로 실로에 내려가기", to: 'shiloh', spawn: [-20, -38] },
@@ -8697,6 +8697,15 @@
     'bronze-serpent': { h: 4.6, occ: false, shape: 'none', src: 'story3d/bronze-serpent.glb' },
     'bronze-serpent-sm': { h: 1.5, occ: false, shape: 'none', src: 'story3d/bronze-serpent.glb' },
     'refuge-gate': { h: 4.5, occ: false, shape: 'none', src: 'story3d/refuge-gate.glb' },
+    // 5편 「사사들과 함께」 동물·소품(GPT 12차 원화 → Meshy, 2026-10-25)
+    'lion': { h: 1.1, occ: false, shape: 'none', src: 'animals3d/lion.glb' },
+    'fleece': { h: 0.35, occ: false, shape: 'none', src: 'story3d/fleece.glb' },
+    'jar-torch': { h: 0.7, occ: false, shape: 'none', src: 'story3d/jar-torch.glb' },
+    'jar-torch-sm': { h: 0.45, occ: false, shape: 'none', src: 'story3d/jar-torch.glb' },
+    'barley-loaf': { h: 0.25, occ: false, shape: 'none', src: 'story3d/barley-loaf.glb' },
+    'jawbone': { h: 0.25, occ: false, shape: 'none', src: 'story3d/jawbone.glb' },
+    'honeycomb': { h: 0.45, occ: false, shape: 'none', src: 'story3d/honeycomb.glb' },
+    'pillar': { h: 4.2, occ: false, shape: 'none', src: 'story3d/pillar.glb' },
   });
   const CALF = [-4, -4], ARK_WORK = [11, -7.5], TENT_MEET = [-28, -12];
   const TAB = { x0: -10, x1: 0, z: -15, hw: 2, h: 3.2, court: [-13, 13, -21, -9] };
