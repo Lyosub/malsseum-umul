@@ -793,11 +793,15 @@
   let snakes = null;
   function serpents(){
     if (snakes && snakes.parent) snakes.parent.remove(snakes);
+    if (!api.propTemplates['fiery-serpent'] && !propFail['fiery-serpent']){ api.loadProps(['fiery-serpent']).then(() => { if (!api.propTemplates['fiery-serpent']) propFail['fiery-serpent'] = true; const q = cur(); if (q && q.ch === 9 && api.Z && api.Z.id === 'kadesh' && snakes && snakes.parent) serpents(); }).catch(() => { propFail['fiery-serpent'] = true; }); }
+    const T3 = api.propTemplates['fiery-serpent'];   // 3D 불뱀(2026-10-25), 못 받았으면 고리 도형
     const g = new THREE.Group(), mat = new THREE.MeshToonMaterial({ color: 0xb5542a, gradientMap: api.toonGradient });
-    for (let i = 0; i < 16; i++){ const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 16, x = MEET[0] + Math.cos(a) * r, z = MEET[1] + Math.sin(a) * r;
-      const s = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.07, 6, 14, Math.PI * 1.4), mat); s.rotation.x = -Math.PI / 2; s.position.set(x, api.heightAt(x, z) + 0.08, z); s.userData = { a: Math.random() * 6, x, z }; g.add(s); }
+    for (let i = 0; i < (T3 ? 12 : 16); i++){ const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 16, x = MEET[0] + Math.cos(a) * r, z = MEET[1] + Math.sin(a) * r;
+      let s; if (T3){ s = T3.holder.clone(true); s.position.set(x, api.heightAt(x, z), z); }
+      else { s = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.07, 6, 14, Math.PI * 1.4), mat); s.rotation.x = -Math.PI / 2; s.position.set(x, api.heightAt(x, z) + 0.08, z); }
+      s.userData = { a: Math.random() * 6, x, z, three: !!T3 }; g.add(s); }
     api.zoneRoot.add(g); snakes = g;
-    const t0 = performance.now(); const slither = () => { if (!g.parent) return; const t = (performance.now() - t0) / 1000; g.children.forEach(s => { const u = s.userData; s.position.x = u.x + Math.sin(t * 0.8 + u.a) * 1.2; s.position.z = u.z + Math.cos(t * 0.6 + u.a) * 1.2; s.rotation.z = t + u.a; }); requestAnimationFrame(slither); };
+    const t0 = performance.now(); const slither = () => { if (!g.parent) return; const t = (performance.now() - t0) / 1000; g.children.forEach(s => { const u = s.userData; s.position.x = u.x + Math.sin(t * 0.8 + u.a) * 1.2; s.position.z = u.z + Math.cos(t * 0.6 + u.a) * 1.2; if (u.three){ s.position.y = api.heightAt(s.position.x, s.position.z); s.rotation.y = t * 0.7 + u.a; } else s.rotation.z = t + u.a; }); requestAnimationFrame(slither); };
     slither();
     try { api.startCine('w3Serpents', MEET[0], api.heightAt(MEET[0], MEET[1]) + 1.5, MEET[1], { r: 12, h: 5, dur: 4, spin: 0.5 }); } catch (e){}
   }
@@ -820,11 +824,14 @@
   let fireG = null;
   function taberah(){ fireG = flames(EDGE[0], EDGE[1], 16, 7, 0); try { api.startCine('w3Taberah', EDGE[0], api.heightAt(EDGE[0], EDGE[1]) + 1.5, EDGE[1], { r: 11, h: 5, dur: 4, spin: 0.4 }); } catch (e){} }
   function fireOut(){ if (fireG){ const g = fireG; fireG = null; let o = 1; const f = () => { o -= 0.05; g.children.forEach(s => s.material.opacity = Math.max(0, o * 0.9)); if (o > 0) requestAnimationFrame(f); else g.parent && g.parent.remove(g); }; f(); } }
-  function quail(){
+  async function quail(){
+    if (!api.propTemplates.quail && !propFail.quail) try { await api.loadProps(['quail']); } catch (e){ propFail.quail = true; }
+    const T3 = api.propTemplates.quail;   // 3D 메추라기(2026-10-25) 40마리 + 작은 점 50개, 못 받았으면 점 90개
     const g = new THREE.Group(), mat = new THREE.MeshToonMaterial({ color: 0x8a6a48, gradientMap: api.toonGradient }), geo = new THREE.SphereGeometry(0.16, 8, 6);
     const birds = [];
     for (let i = 0; i < 90; i++){ const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 22, x = MEET[0] + Math.cos(a) * r, z = MEET[1] + Math.sin(a) * r;
-      const m = new THREE.Mesh(geo, mat); m.position.set(x, api.heightAt(x, z) + 8 + Math.random() * 6, z); m.userData.land = api.heightAt(x, z) + 0.15; g.add(m); birds.push(m); }
+      const q3 = T3 && i < 40, m = q3 ? T3.holder.clone(true) : new THREE.Mesh(geo, mat); if (q3) m.rotation.y = Math.random() * 6.3;
+      m.position.set(x, api.heightAt(x, z) + 8 + Math.random() * 6, z); m.userData.land = api.heightAt(x, z) + (q3 ? 0 : 0.15); g.add(m); birds.push(m); }
     addFx(g);
     const t0 = performance.now(); const fall = () => { if (!g.parent) return; const k = (performance.now() - t0) / 2600; birds.forEach(b => { b.position.y = Math.max(b.userData.land, b.position.y - 0.12); }); if (k < 1.2) requestAnimationFrame(fall); };
     fall();
@@ -836,6 +843,13 @@
     const fl = document.getElementById('flash'); if (fl){ fl.style.transition = 'none'; fl.style.background = '#fff6d8'; fl.style.opacity = '0.6'; setTimeout(() => { fl.style.transition = 'opacity 1.4s'; fl.style.opacity = '0'; }, 150); setTimeout(() => { fl.style.background = ''; }, 1700); }
     api.setGlory(true); try { api.startCine('w3Glory14', -5, api.heightAt(-5, -15) + 4, -15, { r: 16, h: 7, dur: 4.5, spin: 0.5 }); } catch (e){}
   }
+  // 3D 동물·소품(2026-10-25, 이름은 PROP_DEFS): 아직 안 받았으면 받은 뒤 그 마을을 다시 그린다. 못 받으면 도형으로
+  const propFail = {};
+  function needProps(names, zid, redraw){
+    const need = names.filter(n => !api.propTemplates[n] && !propFail[n]); if (!need.length) return;
+    api.loadProps(need).then(() => { need.forEach(n => { if (!api.propTemplates[n]) propFail[n] = true; }); if (cur() && api.Z && api.Z.id === zid) redraw(zid); }).catch(() => { need.forEach(n => propFail[n] = true); });
+  }
+  const prop = (g, n, x, z, ry = 0, dy = 0) => { const T = api.propTemplates[n]; if (!T) return null; const o = T.holder.clone(true); o.position.set(x, api.heightAt(x, z) + dy, z); o.rotation.y = ry; g.add(o); return o; };
   // 마을에 놓이는 것: 미리암의 흰 피부(3장) · 에스골 가는 길의 포도나무(4장) · 과일(4~5장)
   let worldObj = null;
   function tintMarker(id, col){ const m = api.markers.find(x => x.data.id === id); if (!m || !m.mesh) return; m.mesh.traverse(o => { if (o.isMesh && o.material){ o.material = o.material.clone(); if (o.material.color) o.material.color.set(col); } }); }
@@ -846,13 +860,16 @@
     if (p.ch === 2 && p.step >= 2 && p.step <= 3) setTimeout(() => tintMarker('kd_miriam_out', 0xf4f1ea), 1500);
     const g = new THREE.Group(), M = c => new THREE.MeshToonMaterial({ color: c, gradientMap: api.toonGradient });
     const put = (geo, mat, x, dy, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, api.heightAt(x, z) + dy, z); m.castShadow = true; g.add(m); return m; };
+    needProps(((p.ch === 3 && p.step >= 2) || p.ch === 4 ? ['grape-pole', 'fruit-basket'] : []).concat(p.ch >= 9 ? ['bronze-serpent'] : []), 'kadesh', world);
     if (p.ch === 3){   // 에스골로 가는 길 끝의 포도나무
       const leaf = M(0x4f7a32), grape = M(0x5b2d7a), wood = M(0x7a5a3a);
       for (let i = 0; i < 6; i++){ const x = ESHCOL[0] - 4 + (i % 3) * 3, z = ESHCOL[1] + 3 + Math.floor(i / 3) * 3;
         put(new THREE.CylinderGeometry(0.06, 0.08, 1.4, 6), wood, x, 0.7, z); put(new THREE.SphereGeometry(0.75, 8, 6), leaf, x, 1.5, z);
         for (let j = 0; j < 5; j++) put(new THREE.SphereGeometry(0.11, 6, 5), grape, x + (Math.random() - 0.5) * 0.5, 1.0 - j * 0.07, z + 0.55); }
     }
-    if ((p.ch === 3 && p.step >= 2) || p.ch === 4){   // 회중 앞의 과일(포도송이 막대 · 석류 · 무화과)
+    if (((p.ch === 3 && p.step >= 2) || p.ch === 4) && api.propTemplates['grape-pole'] && api.propTemplates['fruit-basket']){   // 회중 앞의 과일(3D)
+      prop(g, 'grape-pole', MEET[0] + 1.5, MEET[1] - 1.2, 0); prop(g, 'fruit-basket', MEET[0] - 0.4, MEET[1] - 0.4, 0.5);
+    } else if ((p.ch === 3 && p.step >= 2) || p.ch === 4){   // 회중 앞의 과일(포도송이 막대 · 석류 · 무화과)
       const pole = put(new THREE.CylinderGeometry(0.05, 0.05, 2.6, 6), M(0x7a5a3a), MEET[0] + 1.5, 0.35, MEET[1] - 1.2); pole.rotation.z = Math.PI / 2;
       for (let j = 0; j < 14; j++) put(new THREE.SphereGeometry(0.13, 6, 5), M(0x5b2d7a), MEET[0] + 1.5 + (Math.random() - 0.5) * 0.4, 0.2 - (j % 4) * 0.03, MEET[1] - 1.2 + (Math.random() - 0.5) * 0.3);
       for (let j = 0; j < 4; j++) put(new THREE.SphereGeometry(0.16, 8, 6), M(j % 2 ? 0xb8322a : 0x6a7a3a), MEET[0] - 0.6 + j * 0.35, 0.16, MEET[1] - 0.4);
@@ -869,7 +886,9 @@
       w.position.set(ROCK[0] + 3.4, api.heightAt(ROCK[0] + 3.4, ROCK[1] + 2.6) + 0.07, ROCK[1] + 2.6); g.add(w); }
     if (p.ch > 7 || (p.ch === 7 && p.step >= 1)){ for (let i = 0; i < 9; i++) put(new THREE.DodecahedronGeometry(0.32 + (i < 4 ? 0.12 : 0)), M(0xb8a88e), GRAVE[0] + (Math.random() - 0.5) * 1.6, 0.25 + (i > 5 ? 0.35 : 0), GRAVE[1] + (Math.random() - 0.5) * 1.1); }
     // 10장 놋뱀 장대(세운 뒤로 가데스에 남음)
-    if (p.ch > 9 || (p.ch === 9 && (p.step >= 3 || poleUp))){
+    if ((p.ch > 9 || (p.ch === 9 && (p.step >= 3 || poleUp))) && api.propTemplates['bronze-serpent']){   // 놋뱀 장대(3D)
+      prop(g, 'bronze-serpent', POLE[0], POLE[1], 0.8);
+    } else if (p.ch > 9 || (p.ch === 9 && (p.step >= 3 || poleUp))){
       const bronze = M(0xb07a3a); put(new THREE.CylinderGeometry(0.09, 0.11, 4.6, 8), M(0x7a5a3a), POLE[0], 2.3, POLE[1]);
       const coil = put(new THREE.TorusGeometry(0.32, 0.09, 8, 20, Math.PI * 3.2), bronze, POLE[0], 4.2, POLE[1]); coil.rotation.x = Math.PI / 2;
       put(new THREE.SphereGeometry(0.15, 8, 6), bronze, POLE[0] + 0.34, 4.65, POLE[1]);
@@ -885,11 +904,16 @@
     const p = cur(); if (zid !== 'moab' || !p) return;
     const g = new THREE.Group(), M = c => new THREE.MeshToonMaterial({ color: c, gradientMap: api.toonGradient });
     const put = (geo, mat, x, dy, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, api.heightAt(x, z) + dy, z); m.castShadow = true; g.add(m); return m; };
+    needProps(['refuge-gate'].concat(p.ch === 11 ? ['donkey'] : []), 'moab', worldMoab);
+    if (p.ch === 11) prop(g, 'donkey', -22.6, 27.2, -2.3);   // 12장: 발람의 나귀(민 22:21)
     // 도피성: 돌 성벽 사이의 열린 성문
     const stone = M(0xc8ad84), wood = M(0x7a5a3a);
+    if (api.propTemplates['refuge-gate']) prop(g, 'refuge-gate', REFUGE[0], REFUGE[1], 0);   // 3D 성문
+    else {
     put(new THREE.BoxGeometry(3.2, 3.6, 1.2), stone, REFUGE[0] - 3.2, 1.8, REFUGE[1]); put(new THREE.BoxGeometry(3.2, 3.6, 1.2), stone, REFUGE[0] + 3.2, 1.8, REFUGE[1]);
     put(new THREE.BoxGeometry(9.6, 0.8, 1.3), stone, REFUGE[0], 3.9, REFUGE[1]);
     const d1 = put(new THREE.BoxGeometry(1.5, 2.8, 0.15), wood, REFUGE[0] - 1.9, 1.4, REFUGE[1] - 0.9); d1.rotation.y = 1.1; const d2 = put(new THREE.BoxGeometry(1.5, 2.8, 0.15), wood, REFUGE[0] + 1.9, 1.4, REFUGE[1] - 0.9); d2.rotation.y = -1.1;
+    }
     api.obstacles.push({ x: REFUGE[0] - 3.2, z: REFUGE[1], r: 1.6 }, { x: REFUGE[0] + 3.2, z: REFUGE[1], r: 1.6 });
     if (p.ch === 13 && p.step === 1 && !refugeT0) refugeT0 = performance.now();
     if (p.ch !== 13) refugeT0 = 0;

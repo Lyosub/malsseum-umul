@@ -377,12 +377,18 @@
   }
   // 🐐 광야로 가는 염소(레 16:21-22) — 회막 문에서 진 밖 광야까지 걸어감
   let goatObj = null, goatAnim = 0;
+  // 장마다 놓는 3D 동물·소품(이름은 PROP_DEFS)
+  const propFail = {};
+  const PROPS_AT = p => [[0, 'bull'], [1, 'flour-bowl'], [2, 'unleavened-basket'], [4, 'censer'], [5, 'grain-field'], [6, 'goat-a'], [6, 'goat-b'], [7, 'booth'], [9, 'silver-trumpets']].filter(([c]) => c === p.ch).map(([, n]) => n);
+  // 아사셀 염소는 3D 염소(goat-a), 못 받으면 예전처럼 어둡게 칠한 어린양
+  const goatTpl = () => api.propTemplates['goat-a'] || api.propTemplates.lamb;
   function goatMesh(){
+    if (api.propTemplates['goat-a']) return api.propTemplates['goat-a'].holder.clone(true);
     const t = api.propTemplates.lamb; if (!t) return null;
     const o = t.holder.clone(true); o.traverse(m => { if (m.isMesh){ m.material = m.material.clone(); if (m.material.color) m.material.color.multiplyScalar(0.55); } }); return o;
   }
   async function goatGo(){
-    await api.loadProps(['lamb']); if (!api.Z || api.Z.id !== 'sinai') return;
+    try { await api.loadProps(['goat-a']); } catch (e){ await api.loadProps(['lamb']); } if (!api.Z || api.Z.id !== 'sinai') return;
     if (goatObj && goatObj.parent) goatObj.parent.remove(goatObj);
     goatObj = goatMesh(); if (!goatObj) return; api.zoneRoot.add(goatObj);
     const [x0, z0] = [DOOR[0] + 1.5, DOOR[1] + 1.5], [x1, z1] = WILD, dur = 22000, t0 = performance.now(), my = ++goatAnim;
@@ -495,19 +501,34 @@
     const p = cur(); if (zid !== 'sinai' || !p) return;
     const g = new THREE.Group(), T = api.toonGradient, M = c => new THREE.MeshToonMaterial({ color: c, gradientMap: T });
     const put = (geo, mat, x, dy, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, api.heightAt(x, z) + dy, z); m.rotation.y = ry; m.castShadow = true; g.add(m); return m; };
-    if (p.ch === 4 && p.step >= 2){   // 빈 향로 둘
+    // 3D 동물·소품(2026-10-25): 아직 안 받았으면 받은 뒤 다시 그린다. 못 받으면 아래 도형으로
+    const need = PROPS_AT(p).filter(n => !api.propTemplates[n] && !propFail[n]);
+    if (need.length) api.loadProps(need).then(() => { need.forEach(n => { if (!api.propTemplates[n]) propFail[n] = true; }); const q = cur(); if (q && api.Z && api.Z.id === 'sinai') world('sinai'); }).catch(() => { need.forEach(n => propFail[n] = true); });
+    const prop = (n, x, z, ry = 0, dy = 0) => { const T = api.propTemplates[n]; if (!T) return null; const o = T.holder.clone(true); o.position.set(x, api.heightAt(x, z) + dy, z); o.rotation.y = ry; g.add(o); return o; };
+    if (p.ch === 0) prop('bull', DOOR[0] + 3, DOOR[1] + 2.5, -2.2);   // 1장: 흠 없는 수컷(레 1:3)
+    if (p.ch === 1) prop('flour-bowl', ALTAR[0] + 1.2, ALTAR[1] + 1.4, 0.4);   // 2장: 고운 가루(레 2:1)
+    if (p.ch === 2) prop('unleavened-basket', DOOR[0] - 0.6, DOOR[1] + 1.8, 0.3);   // 3장: 무교병 광주리(레 8:26)
+    if (p.ch === 9) prop('silver-trumpets', DOOR[0] + 0.8, DOOR[1] + 2.2, 0.6);   // 10장: 은 나팔 둘(민 10:2)
+    if (p.ch === 4 && p.step >= 2 && api.propTemplates.censer){   // 빈 향로 둘(3D)
+      for (const dz of [-0.7, 0.7]) prop('censer', ALTAR[0] + 0.6, ALTAR[1] + dz, dz * 2);
+    } else if (p.ch === 4 && p.step >= 2){   // 빈 향로 둘
       const br = M(0xb07a3a);
       for (const dz of [-0.7, 0.7]){ put(new THREE.CylinderGeometry(0.22, 0.14, 0.18, 12), br, ALTAR[0] + 0.6, 0.09, ALTAR[1] + dz); const h = put(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 6), br, ALTAR[0] + 0.95, 0.12, ALTAR[1] + dz); h.rotation.z = Math.PI / 2 - 0.15; }
     }
-    if (p.ch === 5){   // 밭
+    if (p.ch === 5 && api.propTemplates['grain-field']){   // 밭(3D 곡식 밭 여섯 판)
+      for (let i = 0; i < 2; i++) for (let j = 0; j < 3; j++) prop('grain-field', FIELD[0] - 1.3 + i * 2.6, FIELD[1] - 1.8 + j * 1.8);
+    } else if (p.ch === 5){   // 밭
       const gold = M(0xd9b44a), green = M(0x8aa04a);
       for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++){ const x = FIELD[0] - 2.4 + i * 1.2, z = FIELD[1] - 2.4 + j * 1.2; put(new THREE.ConeGeometry(0.28, 0.9, 6), (i + j) % 4 ? gold : green, x, 0.45, z); }
     }
-    if (p.ch === 6 && p.step >= 1 && !(goatObj && goatObj.parent) && api.propTemplates.lamb){   // 광야에 놓인 염소
+    if (p.ch === 6 && p.step >= 1 && !(goatObj && goatObj.parent) && goatTpl()){   // 광야에 놓인 염소
       const o = goatMesh(); if (o){ o.position.set(WILD[0], api.heightAt(WILD[0], WILD[1]) - 0.05, WILD[1]); g.add(o); }
     }
-    if (p.ch === 6 && p.step >= 1 && !api.propTemplates.lamb) api.loadProps(['lamb']).then(() => { const q = cur(); if (q && q.ch === 6 && api.Z && api.Z.id === 'sinai') world('sinai'); });
-    if (p.ch === 7){   // 초막: 기둥 넷 + 나뭇가지 지붕
+    if (p.ch === 6 && p.step < 1) prop('goat-b', DOOR[0] + 2, DOOR[1] + 2.2, -2);   // 대속죄일 두 염소(레 16:7) — 하나는 여호와께, 하나는 아사셀을 위하여
+    if (p.ch === 6 && p.step < 1) prop('goat-a', DOOR[0] + 3.2, DOOR[1] + 1.4, -2.4);
+    if (p.ch === 7 && api.propTemplates.booth){   // 초막(3D)
+      prop('booth', BOOTH[0], BOOTH[1]);
+    } else if (p.ch === 7){   // 초막: 기둥 넷 + 나뭇가지 지붕
       const wood = M(0x8a6040), leaf = M(0x5f8a3a);
       for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) put(new THREE.CylinderGeometry(0.07, 0.07, 1.9, 6), wood, BOOTH[0] + dx, 0.95, BOOTH[1] + dz);
       put(new THREE.BoxGeometry(2.4, 0.25, 2.4), leaf, BOOTH[0], 1.95, BOOTH[1]);
