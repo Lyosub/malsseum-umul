@@ -1,353 +1,355 @@
 {
- "_설명": "중등부 인스타(@logos_jesusplus) 예약 게시 대기열. status 를 skip 으로 바꾸면 그 건은 올라가지 않는다.",
- "_status값": "pending = 예정 / posted = 게시됨 / skip = 취소(올리지 않음) / failed = 실패",
- "_publish_at": "KST 기준. 이 시각이 지나면 다음 워크플로 실행 때 올라간다.",
- "_type": "image = 사진 1장 / carousel = 여러 장(최대 10장) / reels = 영상 1편(9:16, video_url 사용)",
- "_first_comment_file": "첫 댓글로 달 내용(주로 해시태그). 캡션은 읽기 좋게 두고 태그는 여기로 뺀다. 없으면 생략.",
- "_story_image": "⚠ 기본적으로 쓰지 않는다(2026-09-18 전도사님 결정). 스토리는 앱에서 직접 '스토리에 추가'로 공유한다 — 그래야 탭해서 원글로 넘어가는 스티커가 붙기 때문. 그 스티커는 API 로 만들 수 없다. 이 필드에 9:16(1080x1920) 이미지 경로를 넣으면 자동으로 스토리에 올라가지만 탭 링크가 없는 그냥 이미지가 된다. 기능은 남겨두되 평소엔 비워둔다.",
- "_token_issued": "2026-09-18",
- "_token_주의": "인스타 토큰은 발급 후 60일이면 만료된다(2026-11-17경). 만료되면 게시가 멈추므로, 워크플로가 14일 전부터 경고한다. 갱신했으면 이 날짜도 같이 고칠 것.",
- "posts": [
-  {
-   "id": "2026-09-13-cartoon",
-   "type": "image",
-   "publish_at": "2026-09-18 12:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-09-13-cartoon.txt",
-   "first_comment_file": "instagram/captions/2026-09-13-cartoon.tags.txt",
-   "images": [
-    "instagram/2026-09-13-cartoon.jpg"
-   ],
-   "note": "첫 테스트 게시. 9/13 설교 기준 카툰 #001 「채워도 또 허전해」. 이 건은 첫 댓글 기능이 붙기 전에 올라갔으므로 캡션에 해시태그가 그대로 들어가 있다.",
-   "media_id": "17908644042509858",
-   "posted_at": "2026-09-18 12:27"
-  },
-  {
-   "id": "2026-09-20-verse",
-   "type": "carousel",
-   "publish_at": "2026-09-22 16:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-09-20-verse.txt",
-   "first_comment_file": "instagram/captions/2026-09-20-verse.tags.txt",
-   "images": [
-    "instagram/2026-09-20-verse-01.jpg",
-    "instagram/2026-09-20-verse-02.jpg",
-    "instagram/2026-09-20-verse-03.jpg",
-    "instagram/2026-09-20-verse-04.jpg",
-    "instagram/2026-09-20-verse-05.jpg",
-    "instagram/2026-09-20-verse-06.jpg",
-    "instagram/2026-09-20-verse-07.jpg",
-    "instagram/2026-09-20-verse-08.jpg",
-    "instagram/2026-09-20-verse-09.jpg",
-    "instagram/2026-09-20-verse-10.jpg"
-   ],
-   "note": "말씀게시물 — 9/20 설교 「뜻을 먼저 정하면」(다니엘 1:8, 12-17). 10장 캐러셀. 전도사님 컨펌 2026-09-20.",
-   "media_id": "18191852287396901",
-   "posted_at": "2026-09-22 16:05"
-  },
-  {
-   "id": "2026-09-24-chuseok",
-   "type": "image",
-   "publish_at": "2026-09-24 09:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-09-24-chuseok.txt",
-   "first_comment_file": "instagram/captions/2026-09-24-chuseok.tags.txt",
-   "images": [
-    "instagram/2026-09-24-chuseok.jpg"
-   ],
-   "note": "추석 인사 카드(설교와 무관한 단독 특별 콘텐츠). 보름달·한옥 처마 실루엣 배경(GPT 생성) + 민수기 6:24-26 축복문. 전도사님 컨펌 2026-09-22, 같은 날 16:00 카툰 #002보다 먼저 나가도록 오전에 배치.",
-   "media_id": "18092189033248983",
-   "posted_at": "2026-09-24 11:25"
-  },
-  {
-   "id": "2026-09-20-cartoon",
-   "type": "image",
-   "publish_at": "2026-09-24 16:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-09-20-cartoon.txt",
-   "first_comment_file": "instagram/captions/2026-09-20-cartoon.tags.txt",
-   "images": [
-    "instagram/2026-09-20-cartoon.jpg"
-   ],
-   "note": "말씀카툰 #002 「점수는 못 정해도」 — 9/20 설교 기준. 전도사님 컨펌 2026-09-20.",
-   "media_id": "17989286562054290",
-   "posted_at": "2026-09-24 17:59"
-  },
-  {
-   "id": "2026-09-26-preview",
-   "type": "reels",
-   "publish_at": "2026-09-26 13:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-09-26-preview.txt",
-   "first_comment_file": "instagram/captions/2026-09-26-preview.tags.txt",
-   "video": "instagram/2026-09-26-preview.mp4",
-   "note": "설교 예고 숏츠(신설, 토요일마다) 첫 회 — 9/27 설교 「당연한 건 없다」 배경(나병 격리 규정, 유대인·사마리아인 반목)을 다룬 11초 원테이크 영상. 제미나이(Veo) 생성 + Claude 자막·전환·BGM 합성. 전도사님 컨펌 2026-09-23. BGM은 Claude가 코드로 합성한 자작 곡(패드·피아노·기타·스트링·일렉베이스·드럼, 86BPM) — 저작권 문제 없음. 전도사님 청취 확인 2026-09-24.",
-   "media_id": "17870578752639875",
-   "posted_at": "2026-09-26 13:40"
-  },
-  {
-   "id": "2026-09-27-verse",
-   "type": "carousel",
-   "publish_at": "2026-09-29 16:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-09-27-verse.txt",
-   "first_comment_file": "instagram/captions/2026-09-27-verse.tags.txt",
-   "images": [
-    "instagram/2026-09-27-verse-01.jpg",
-    "instagram/2026-09-27-verse-02.jpg",
-    "instagram/2026-09-27-verse-03.jpg",
-    "instagram/2026-09-27-verse-04.jpg",
-    "instagram/2026-09-27-verse-05.jpg",
-    "instagram/2026-09-27-verse-06.jpg",
-    "instagram/2026-09-27-verse-07.jpg",
-    "instagram/2026-09-27-verse-08.jpg",
-    "instagram/2026-09-27-verse-09.jpg",
-    "instagram/2026-09-27-verse-10.jpg"
-   ],
-   "note": "말씀게시물 — 9/27 설교 「당연한 건 없다」(누가복음 17:11-19, 나병환자 열 명). 10장 캐러셀. 전도사님 컨펌 2026-09-22.",
-   "media_id": "18129254056691310",
-   "posted_at": "2026-09-29 22:08"
-  },
-  {
-   "id": "2026-09-27-cartoon",
-   "type": "image",
-   "publish_at": "2026-10-01 16:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-09-27-cartoon.txt",
-   "first_comment_file": "instagram/captions/2026-09-27-cartoon.tags.txt",
-   "images": [
-    "instagram/2026-09-27-cartoon.jpg"
-   ],
-   "note": "말씀카툰 #003 「당연한 게 아니었네」 — 9/27 설교 기준. 지호가 버스를 놓칠 뻔했다가 무사히 탄 하루를 '운'으로 넘기려다, 물방울의 한마디로 하나님께 감사기도. 전도사님 컨펌 2026-09-22.",
-   "media_id": "17904832392579984",
-   "posted_at": "2026-10-01 16:02"
-  },
-  {
-   "id": "2026-10-03-preview",
-   "type": "reels",
-   "publish_at": "2026-10-03 13:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-03-preview.txt",
-   "first_comment_file": "instagram/captions/2026-10-03-preview.tags.txt",
-   "video": "instagram/2026-10-03-preview.mp4",
-   "note": "설교 예고 숏츠 2회 — 10/4 설교 「견디어 낸 자」(약 1:2-12) 배경(흩어진 성도들 행 8:1·약 1:1, 받지 못한 삯 약 5:4, 야고보의 편지). 제미나이 3장면 + Claude 자막·엔딩·자작 BGM(bgm_1004.py) 합성, 18.9초. 전도사님 컨펌 2026-09-28. 설교 제목이 바뀌면 캡션·엔딩 자막도 고칠 것.",
-   "media_id": "18094898165650357",
-   "posted_at": "2026-10-03 13:02"
-  },
-  {
-   "id": "2026-10-04-verse",
-   "type": "carousel",
-   "publish_at": "2026-10-06 16:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-04-verse.txt",
-   "first_comment_file": "instagram/captions/2026-10-04-verse.tags.txt",
-   "images": [
-    "instagram/2026-10-04-verse-01.jpg",
-    "instagram/2026-10-04-verse-02.jpg",
-    "instagram/2026-10-04-verse-03.jpg",
-    "instagram/2026-10-04-verse-04.jpg",
-    "instagram/2026-10-04-verse-05.jpg",
-    "instagram/2026-10-04-verse-06.jpg",
-    "instagram/2026-10-04-verse-07.jpg",
-    "instagram/2026-10-04-verse-08.jpg",
-    "instagram/2026-10-04-verse-09.jpg",
-    "instagram/2026-10-04-verse-10.jpg"
-   ],
-   "note": "말씀게시물 — 10/4 설교 「견디어 낸 자」(야고보서 1:2-12). 10장 캐러셀, 표지 「그릇은 불을 지나야 진짜가 됩니다」. 9장 기도문 뒤 10장에 이번 주 찬양(마커스워십 「거친 길 위를 걸어갈 때도」) 안내. 전도사님 컨펌 2026-09-29.",
-   "media_id": "18099622580076822",
-   "posted_at": "2026-10-06 16:02"
-  },
-  {
-   "id": "2026-10-04-cartoon",
-   "type": "image",
-   "publish_at": "2026-10-08 16:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-04-cartoon.txt",
-   "first_comment_file": "instagram/captions/2026-10-04-cartoon.tags.txt",
-   "images": [
-    "instagram/2026-10-04-cartoon.jpg"
-   ],
-   "note": "말씀카툰 #004 「혼자 참지 않아도 돼」 — 10/4 설교 두 번째 대지. 단톡방 나가기 버튼 앞에서 멈춘 지호가 물방울의 말에 지혜를 구하는 기도. 하단 띠 약 1:5. 전도사님 컨펌 2026-09-29.",
-   "media_id": "17912061630521694",
-   "posted_at": "2026-10-08 16:02"
-  },
-  {
-   "id": "2026-10-11-verse",
-   "type": "carousel",
-   "publish_at": "2026-10-13 19:30",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-11-verse.txt",
-   "first_comment_file": "instagram/captions/2026-10-11-verse.tags.txt",
-   "images": [
-    "instagram/2026-10-11-verse-01.jpg",
-    "instagram/2026-10-11-verse-02.jpg",
-    "instagram/2026-10-11-verse-03.jpg",
-    "instagram/2026-10-11-verse-04.jpg",
-    "instagram/2026-10-11-verse-05.jpg",
-    "instagram/2026-10-11-verse-06.jpg",
-    "instagram/2026-10-11-verse-07.jpg",
-    "instagram/2026-10-11-verse-08.jpg",
-    "instagram/2026-10-11-verse-09.jpg",
-    "instagram/2026-10-11-verse-10.jpg"
-   ],
-   "note": "말씀게시물 — 10/11 설교 「긍휼을 행하는 자」(야고보서 2:1-13). 10장 캐러셀, 표지 「자리를 내어 주는 것이 긍휼입니다」, 6장 약 2:5 전문, 10장에 이번 주 찬양(마커스워십 「거친 길 위를 걸어갈 때도」). 컴팩트판(글자 34/28px). 전도사님 컨펌 2026-10-07.",
-   "media_id": "18117784391077050",
-   "posted_at": "2026-10-13 19:32"
-  },
-  {
-   "id": "2026-10-11-cartoon",
-   "type": "image",
-   "publish_at": "2026-10-15 19:30",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-11-cartoon.txt",
-   "first_comment_file": "instagram/captions/2026-10-11-cartoon.tags.txt",
-   "images": [
-    "instagram/2026-10-11-cartoon.jpg"
-   ],
-   "note": "말씀카툰 #005 「여기 앉아」 — 10/11 설교. 가방을 올려 둔 옆자리, 서 있는 새 친구에게 먼저 자리를 내어 주는 지호. 하단 띠 약 2:1. 전도사님 컨펌 2026-10-07.",
-   "media_id": "18145974115592881",
-   "posted_at": "2026-10-15 19:32"
-  },
-  {
-   "id": "2026-10-10-preview",
-   "type": "reels",
-   "publish_at": "2026-10-10 13:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-10-preview.txt",
-   "first_comment_file": "instagram/captions/2026-10-10-preview.tags.txt",
-   "video": "instagram/2026-10-10-preview.mp4",
-   "note": "설교 예고 숏츠 3회 — 10/11 설교 「긍휼을 행하는 자」(약 2:1-13) 배경(초대교회 모임 공간, 금 가락지와 화려한 옷, 남루한 옷의 사람 약 2:2). 제미나이 API(Veo 3.1 fast) 3장면 + Claude 자막·엔딩·자작 BGM(하프·오르간·플루트, bgm_1011c.py) 합성, 19.9초. 전도사님 컨펌 2026-10-07.",
-   "media_id": "18103640885373508",
-   "posted_at": "2026-10-10 13:02"
-  },
-  {
-   "id": "2026-10-11-recap",
-   "type": "reels",
-   "publish_at": "2026-10-11 11:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-11-recap.txt",
-   "first_comment_file": "instagram/captions/2026-10-11-recap.tags.txt",
-   "video": "instagram/2026-10-11-recap.mp4",
-   "note": "주일 설교 요약 릴스 1회 — 10/11 「긍휼을 행하는 자」(약 2:1-13). 제미나이 영상 3개(전도사님 생성) + Claude 글자(설교문 마무리 대지 3문장·약 2:13 원문) + 제미나이 BGM 「Sunlight on the Floorboards」 22초 지점부터 29초. 전도사님 컨펌 2026-10-10.",
-   "media_id": "17870868735644117",
-   "posted_at": "2026-10-11 11:00"
-  },
-  {
-   "id": "2026-10-18-recap",
-   "type": "reels",
-   "publish_at": "2026-10-18 12:10",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-18-recap.txt",
-   "first_comment_file": "instagram/captions/2026-10-18-recap.tags.txt",
-   "video": "instagram/2026-10-18-recap.mp4",
-   "note": "주일 설교 요약 릴스 2회 — 10/18 「행함으로 믿음을 보이는 자」(약 2:14-26). 제미나이 영상 3개(꽃·폭포 위 줄·손, 전도사님 생성) + Claude 글자(대지 3문장·약 2:26 원문·마지막 문구는 전도사님 지정) + BGM 「다짐 3」. 전도사님 컨펌 2026-10-14, 게시 12:10(전도사님 지정).",
-   "media_id": "18073763201770410",
-   "posted_at": "2026-10-18 12:32"
-  },
-  {
-   "id": "2026-10-17-preview",
-   "type": "reels",
-   "publish_at": "2026-10-17 13:00",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-17-preview.txt",
-   "first_comment_file": "instagram/captions/2026-10-17-preview.tags.txt",
-   "video": "instagram/2026-10-17-preview.mp4",
-   "note": "설교 예고 숏츠 4회 — 10/18 「행함으로 믿음을 보이는 자」(약 2:14-26) 배경: 쉐마를 외우던 유대 성도들(신 6:4, 옥스포드 야고보서 145쪽·WBC 277쪽), 아브라함과 별(약 2:21·창 15:5), 여리고 성벽 집·지붕 삼대(수 2:6·15, 옥스포드 여호수아 100·129-130쪽). GPT 그림 6장 → 제미나이 영상 6개(전도사님 생성) + Claude 자막·엔딩(약 2:14)·BGM 「묵상 2」 합성, 32.6초. 1차(여리고만)는 전도사님 피드백으로 2차 구성. 「편지」 표현은 설교문에 맞춰 뺌. 전도사님 컨펌 2026-10-14.",
-   "media_id": "18115347548127155",
-   "posted_at": "2026-10-17 13:02"
-  },
-  {
-   "id": "2026-10-18-verse",
-   "type": "carousel",
-   "publish_at": "2026-10-20 19:30",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-18-verse.txt",
-   "first_comment_file": "instagram/captions/2026-10-18-verse.tags.txt",
-   "images": [
-    "instagram/2026-10-18-verse-01.jpg",
-    "instagram/2026-10-18-verse-02.jpg",
-    "instagram/2026-10-18-verse-03.jpg",
-    "instagram/2026-10-18-verse-04.jpg",
-    "instagram/2026-10-18-verse-05.jpg",
-    "instagram/2026-10-18-verse-06.jpg",
-    "instagram/2026-10-18-verse-07.jpg",
-    "instagram/2026-10-18-verse-08.jpg",
-    "instagram/2026-10-18-verse-09.jpg",
-    "instagram/2026-10-18-verse-10.jpg"
-   ],
-   "note": "말씀게시물 — 10/18 설교 「행함으로 믿음을 보이는 자」(야고보서 2:14-26). 10장 캐러셀, 표지 「살아 있는 믿음은 움직입니다」, 6장 약 2:22 전문, 배경 들판·아네모네(살아 있는 꽃), 10장 이번 주 찬양(마커스워십 「거친 길 위를 걸어갈 때도」). 「친구」 대신 「사람」(전도사님 10/14). 전도사님 컨펌 2026-10-14.",
-   "media_id": "18270002710305268",
-   "posted_at": "2026-10-20 19:32"
-  },
-  {
-   "id": "2026-10-18-cartoon",
-   "type": "image",
-   "publish_at": "2026-10-22 19:30",
-   "status": "posted",
-   "caption_file": "instagram/captions/2026-10-18-cartoon.txt",
-   "first_comment_file": "instagram/captions/2026-10-18-cartoon.tags.txt",
-   "images": [
-    "instagram/2026-10-18-cartoon.jpg"
-   ],
-   "note": "말씀카툰 #006 「무슨 일 있어?」 — 10/18 설교. 단톡방에 「힘내!」만 보낸 지호가 다음 날 엎드린 친구에게 우유를 건네며 묻는다. 하단 띠 약 2:17. 전도사님 컨펌 2026-10-14.",
-   "media_id": "17914495491471594",
-   "posted_at": "2026-10-22 19:32"
-  },
-  {
-   "id": "2026-10-25-expedition",
-   "type": "carousel",
-   "publish_at": "2026-10-25 10:30",
-   "status": "pending",
-   "caption_file": "instagram/captions/2026-10-25-expedition.txt",
-   "first_comment_file": "instagram/captions/2026-10-25-expedition.tags.txt",
-   "images": [
-    "instagram/2026-10-25-expedition-01.jpg",
-    "instagram/2026-10-25-expedition-02.jpg",
-    "instagram/2026-10-25-expedition-03.jpg",
-    "instagram/2026-10-25-expedition-04.jpg",
-    "instagram/2026-10-25-expedition-05.jpg"
-   ],
-   "note": "말씀우물 「가을 원정대」 예고 5장(11/8 야유회 팀 미션). 놀이터 카드도 같은 시각(10/25 10:30)부터 보임."
-  },
-  {
-   "id": "2026-10-27-recap",
-   "type": "carousel",
-   "publish_at": "2026-10-27 19:30",
-   "status": "pending",
-   "caption_file": "instagram/captions/2026-10-27-recap.txt",
-   "first_comment_file": "instagram/captions/2026-10-27-recap.tags.txt",
-   "images": [
-    "instagram/2026-10-27-recap-01.jpg",
-    "instagram/2026-10-27-recap-02.jpg",
-    "instagram/2026-10-27-recap-03.jpg",
-    "instagram/2026-10-27-recap-04.jpg",
-    "instagram/2026-10-27-recap-05.jpg",
-    "instagram/2026-10-27-recap-06.jpg",
-    "instagram/2026-10-27-recap-07.jpg",
-    "instagram/2026-10-27-recap-08.jpg",
-    "instagram/2026-10-27-recap-09.jpg",
-    "instagram/2026-10-27-recap-10.jpg"
-   ],
-   "note": "대체 게시물 — 10/25 연합예배(설교 없음)로 정기 말씀게시물 대신 「야고보서 지금까지 정리」 10장(10/4·10/11·10/18 핵심 한 줄 + 약 1:12·2:5·2:22, 각 주 배경 재사용, 표지·기도문은 새 언덕길 그림). 전도사님 컨펌 2026-10-23."
-  },
-  {
-   "id": "2026-10-29-picnic",
-   "type": "image",
-   "publish_at": "2026-10-29 19:30",
-   "status": "pending",
-   "caption_file": "instagram/captions/2026-10-29-picnic.txt",
-   "first_comment_file": "instagram/captions/2026-10-29-picnic.tags.txt",
-   "images": [
-    "instagram/2026-10-29-picnic.jpg"
-   ],
-   "note": "11/8 가을 야유회 예고 1장(D-10, 포스터와 같은 그림체·글꼴, 서울대공원 10:30 출발, 시 104:24). 정기 말씀카툰 대체. 전도사님 컨펌 2026-10-23."
-  }
- ],
- "skip_days": [
-  {
-   "date": "2026-10-24",
-   "why": "10/25 중고등부 연합예배(설교 없음) — 토요일 설교 예고 숏츠 없음"
-  }
- ],
- "_skip_days": "게시를 일부러 쉬는 날. 예약 실행이 그날 \"올릴 게 없다\"며 실패·카톡 알림을 보내지 않게 한다. [{\"date\":\"YYYY-MM-DD\",\"why\":\"...\"}]"
+  "_설명": "중등부 인스타(@logos_jesusplus) 예약 게시 대기열. status 를 skip 으로 바꾸면 그 건은 올라가지 않는다.",
+  "_status값": "pending = 예정 / posted = 게시됨 / skip = 취소(올리지 않음) / failed = 실패",
+  "_publish_at": "KST 기준. 이 시각이 지나면 다음 워크플로 실행 때 올라간다.",
+  "_type": "image = 사진 1장 / carousel = 여러 장(최대 10장) / reels = 영상 1편(9:16, video_url 사용)",
+  "_first_comment_file": "첫 댓글로 달 내용(주로 해시태그). 캡션은 읽기 좋게 두고 태그는 여기로 뺀다. 없으면 생략.",
+  "_story_image": "⚠ 기본적으로 쓰지 않는다(2026-09-18 전도사님 결정). 스토리는 앱에서 직접 '스토리에 추가'로 공유한다 — 그래야 탭해서 원글로 넘어가는 스티커가 붙기 때문. 그 스티커는 API 로 만들 수 없다. 이 필드에 9:16(1080x1920) 이미지 경로를 넣으면 자동으로 스토리에 올라가지만 탭 링크가 없는 그냥 이미지가 된다. 기능은 남겨두되 평소엔 비워둔다.",
+  "_token_issued": "2026-09-18",
+  "_token_주의": "인스타 토큰은 발급 후 60일이면 만료된다(2026-11-17경). 만료되면 게시가 멈추므로, 워크플로가 14일 전부터 경고한다. 갱신했으면 이 날짜도 같이 고칠 것.",
+  "posts": [
+    {
+      "id": "2026-09-13-cartoon",
+      "type": "image",
+      "publish_at": "2026-09-18 12:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-09-13-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-09-13-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-09-13-cartoon.jpg"
+      ],
+      "note": "첫 테스트 게시. 9/13 설교 기준 카툰 #001 「채워도 또 허전해」. 이 건은 첫 댓글 기능이 붙기 전에 올라갔으므로 캡션에 해시태그가 그대로 들어가 있다.",
+      "media_id": "17908644042509858",
+      "posted_at": "2026-09-18 12:27"
+    },
+    {
+      "id": "2026-09-20-verse",
+      "type": "carousel",
+      "publish_at": "2026-09-22 16:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-09-20-verse.txt",
+      "first_comment_file": "instagram/captions/2026-09-20-verse.tags.txt",
+      "images": [
+        "instagram/2026-09-20-verse-01.jpg",
+        "instagram/2026-09-20-verse-02.jpg",
+        "instagram/2026-09-20-verse-03.jpg",
+        "instagram/2026-09-20-verse-04.jpg",
+        "instagram/2026-09-20-verse-05.jpg",
+        "instagram/2026-09-20-verse-06.jpg",
+        "instagram/2026-09-20-verse-07.jpg",
+        "instagram/2026-09-20-verse-08.jpg",
+        "instagram/2026-09-20-verse-09.jpg",
+        "instagram/2026-09-20-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 9/20 설교 「뜻을 먼저 정하면」(다니엘 1:8, 12-17). 10장 캐러셀. 전도사님 컨펌 2026-09-20.",
+      "media_id": "18191852287396901",
+      "posted_at": "2026-09-22 16:05"
+    },
+    {
+      "id": "2026-09-24-chuseok",
+      "type": "image",
+      "publish_at": "2026-09-24 09:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-09-24-chuseok.txt",
+      "first_comment_file": "instagram/captions/2026-09-24-chuseok.tags.txt",
+      "images": [
+        "instagram/2026-09-24-chuseok.jpg"
+      ],
+      "note": "추석 인사 카드(설교와 무관한 단독 특별 콘텐츠). 보름달·한옥 처마 실루엣 배경(GPT 생성) + 민수기 6:24-26 축복문. 전도사님 컨펌 2026-09-22, 같은 날 16:00 카툰 #002보다 먼저 나가도록 오전에 배치.",
+      "media_id": "18092189033248983",
+      "posted_at": "2026-09-24 11:25"
+    },
+    {
+      "id": "2026-09-20-cartoon",
+      "type": "image",
+      "publish_at": "2026-09-24 16:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-09-20-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-09-20-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-09-20-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #002 「점수는 못 정해도」 — 9/20 설교 기준. 전도사님 컨펌 2026-09-20.",
+      "media_id": "17989286562054290",
+      "posted_at": "2026-09-24 17:59"
+    },
+    {
+      "id": "2026-09-26-preview",
+      "type": "reels",
+      "publish_at": "2026-09-26 13:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-09-26-preview.txt",
+      "first_comment_file": "instagram/captions/2026-09-26-preview.tags.txt",
+      "video": "instagram/2026-09-26-preview.mp4",
+      "note": "설교 예고 숏츠(신설, 토요일마다) 첫 회 — 9/27 설교 「당연한 건 없다」 배경(나병 격리 규정, 유대인·사마리아인 반목)을 다룬 11초 원테이크 영상. 제미나이(Veo) 생성 + Claude 자막·전환·BGM 합성. 전도사님 컨펌 2026-09-23. BGM은 Claude가 코드로 합성한 자작 곡(패드·피아노·기타·스트링·일렉베이스·드럼, 86BPM) — 저작권 문제 없음. 전도사님 청취 확인 2026-09-24.",
+      "media_id": "17870578752639875",
+      "posted_at": "2026-09-26 13:40"
+    },
+    {
+      "id": "2026-09-27-verse",
+      "type": "carousel",
+      "publish_at": "2026-09-29 16:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-09-27-verse.txt",
+      "first_comment_file": "instagram/captions/2026-09-27-verse.tags.txt",
+      "images": [
+        "instagram/2026-09-27-verse-01.jpg",
+        "instagram/2026-09-27-verse-02.jpg",
+        "instagram/2026-09-27-verse-03.jpg",
+        "instagram/2026-09-27-verse-04.jpg",
+        "instagram/2026-09-27-verse-05.jpg",
+        "instagram/2026-09-27-verse-06.jpg",
+        "instagram/2026-09-27-verse-07.jpg",
+        "instagram/2026-09-27-verse-08.jpg",
+        "instagram/2026-09-27-verse-09.jpg",
+        "instagram/2026-09-27-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 9/27 설교 「당연한 건 없다」(누가복음 17:11-19, 나병환자 열 명). 10장 캐러셀. 전도사님 컨펌 2026-09-22.",
+      "media_id": "18129254056691310",
+      "posted_at": "2026-09-29 22:08"
+    },
+    {
+      "id": "2026-09-27-cartoon",
+      "type": "image",
+      "publish_at": "2026-10-01 16:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-09-27-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-09-27-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-09-27-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #003 「당연한 게 아니었네」 — 9/27 설교 기준. 지호가 버스를 놓칠 뻔했다가 무사히 탄 하루를 '운'으로 넘기려다, 물방울의 한마디로 하나님께 감사기도. 전도사님 컨펌 2026-09-22.",
+      "media_id": "17904832392579984",
+      "posted_at": "2026-10-01 16:02"
+    },
+    {
+      "id": "2026-10-03-preview",
+      "type": "reels",
+      "publish_at": "2026-10-03 13:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-03-preview.txt",
+      "first_comment_file": "instagram/captions/2026-10-03-preview.tags.txt",
+      "video": "instagram/2026-10-03-preview.mp4",
+      "note": "설교 예고 숏츠 2회 — 10/4 설교 「견디어 낸 자」(약 1:2-12) 배경(흩어진 성도들 행 8:1·약 1:1, 받지 못한 삯 약 5:4, 야고보의 편지). 제미나이 3장면 + Claude 자막·엔딩·자작 BGM(bgm_1004.py) 합성, 18.9초. 전도사님 컨펌 2026-09-28. 설교 제목이 바뀌면 캡션·엔딩 자막도 고칠 것.",
+      "media_id": "18094898165650357",
+      "posted_at": "2026-10-03 13:02"
+    },
+    {
+      "id": "2026-10-04-verse",
+      "type": "carousel",
+      "publish_at": "2026-10-06 16:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-04-verse.txt",
+      "first_comment_file": "instagram/captions/2026-10-04-verse.tags.txt",
+      "images": [
+        "instagram/2026-10-04-verse-01.jpg",
+        "instagram/2026-10-04-verse-02.jpg",
+        "instagram/2026-10-04-verse-03.jpg",
+        "instagram/2026-10-04-verse-04.jpg",
+        "instagram/2026-10-04-verse-05.jpg",
+        "instagram/2026-10-04-verse-06.jpg",
+        "instagram/2026-10-04-verse-07.jpg",
+        "instagram/2026-10-04-verse-08.jpg",
+        "instagram/2026-10-04-verse-09.jpg",
+        "instagram/2026-10-04-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 10/4 설교 「견디어 낸 자」(야고보서 1:2-12). 10장 캐러셀, 표지 「그릇은 불을 지나야 진짜가 됩니다」. 9장 기도문 뒤 10장에 이번 주 찬양(마커스워십 「거친 길 위를 걸어갈 때도」) 안내. 전도사님 컨펌 2026-09-29.",
+      "media_id": "18099622580076822",
+      "posted_at": "2026-10-06 16:02"
+    },
+    {
+      "id": "2026-10-04-cartoon",
+      "type": "image",
+      "publish_at": "2026-10-08 16:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-04-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-10-04-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-10-04-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #004 「혼자 참지 않아도 돼」 — 10/4 설교 두 번째 대지. 단톡방 나가기 버튼 앞에서 멈춘 지호가 물방울의 말에 지혜를 구하는 기도. 하단 띠 약 1:5. 전도사님 컨펌 2026-09-29.",
+      "media_id": "17912061630521694",
+      "posted_at": "2026-10-08 16:02"
+    },
+    {
+      "id": "2026-10-11-verse",
+      "type": "carousel",
+      "publish_at": "2026-10-13 19:30",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-11-verse.txt",
+      "first_comment_file": "instagram/captions/2026-10-11-verse.tags.txt",
+      "images": [
+        "instagram/2026-10-11-verse-01.jpg",
+        "instagram/2026-10-11-verse-02.jpg",
+        "instagram/2026-10-11-verse-03.jpg",
+        "instagram/2026-10-11-verse-04.jpg",
+        "instagram/2026-10-11-verse-05.jpg",
+        "instagram/2026-10-11-verse-06.jpg",
+        "instagram/2026-10-11-verse-07.jpg",
+        "instagram/2026-10-11-verse-08.jpg",
+        "instagram/2026-10-11-verse-09.jpg",
+        "instagram/2026-10-11-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 10/11 설교 「긍휼을 행하는 자」(야고보서 2:1-13). 10장 캐러셀, 표지 「자리를 내어 주는 것이 긍휼입니다」, 6장 약 2:5 전문, 10장에 이번 주 찬양(마커스워십 「거친 길 위를 걸어갈 때도」). 컴팩트판(글자 34/28px). 전도사님 컨펌 2026-10-07.",
+      "media_id": "18117784391077050",
+      "posted_at": "2026-10-13 19:32"
+    },
+    {
+      "id": "2026-10-11-cartoon",
+      "type": "image",
+      "publish_at": "2026-10-15 19:30",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-11-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-10-11-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-10-11-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #005 「여기 앉아」 — 10/11 설교. 가방을 올려 둔 옆자리, 서 있는 새 친구에게 먼저 자리를 내어 주는 지호. 하단 띠 약 2:1. 전도사님 컨펌 2026-10-07.",
+      "media_id": "18145974115592881",
+      "posted_at": "2026-10-15 19:32"
+    },
+    {
+      "id": "2026-10-10-preview",
+      "type": "reels",
+      "publish_at": "2026-10-10 13:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-10-preview.txt",
+      "first_comment_file": "instagram/captions/2026-10-10-preview.tags.txt",
+      "video": "instagram/2026-10-10-preview.mp4",
+      "note": "설교 예고 숏츠 3회 — 10/11 설교 「긍휼을 행하는 자」(약 2:1-13) 배경(초대교회 모임 공간, 금 가락지와 화려한 옷, 남루한 옷의 사람 약 2:2). 제미나이 API(Veo 3.1 fast) 3장면 + Claude 자막·엔딩·자작 BGM(하프·오르간·플루트, bgm_1011c.py) 합성, 19.9초. 전도사님 컨펌 2026-10-07.",
+      "media_id": "18103640885373508",
+      "posted_at": "2026-10-10 13:02"
+    },
+    {
+      "id": "2026-10-11-recap",
+      "type": "reels",
+      "publish_at": "2026-10-11 11:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-11-recap.txt",
+      "first_comment_file": "instagram/captions/2026-10-11-recap.tags.txt",
+      "video": "instagram/2026-10-11-recap.mp4",
+      "note": "주일 설교 요약 릴스 1회 — 10/11 「긍휼을 행하는 자」(약 2:1-13). 제미나이 영상 3개(전도사님 생성) + Claude 글자(설교문 마무리 대지 3문장·약 2:13 원문) + 제미나이 BGM 「Sunlight on the Floorboards」 22초 지점부터 29초. 전도사님 컨펌 2026-10-10.",
+      "media_id": "17870868735644117",
+      "posted_at": "2026-10-11 11:00"
+    },
+    {
+      "id": "2026-10-18-recap",
+      "type": "reels",
+      "publish_at": "2026-10-18 12:10",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-18-recap.txt",
+      "first_comment_file": "instagram/captions/2026-10-18-recap.tags.txt",
+      "video": "instagram/2026-10-18-recap.mp4",
+      "note": "주일 설교 요약 릴스 2회 — 10/18 「행함으로 믿음을 보이는 자」(약 2:14-26). 제미나이 영상 3개(꽃·폭포 위 줄·손, 전도사님 생성) + Claude 글자(대지 3문장·약 2:26 원문·마지막 문구는 전도사님 지정) + BGM 「다짐 3」. 전도사님 컨펌 2026-10-14, 게시 12:10(전도사님 지정).",
+      "media_id": "18073763201770410",
+      "posted_at": "2026-10-18 12:32"
+    },
+    {
+      "id": "2026-10-17-preview",
+      "type": "reels",
+      "publish_at": "2026-10-17 13:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-17-preview.txt",
+      "first_comment_file": "instagram/captions/2026-10-17-preview.tags.txt",
+      "video": "instagram/2026-10-17-preview.mp4",
+      "note": "설교 예고 숏츠 4회 — 10/18 「행함으로 믿음을 보이는 자」(약 2:14-26) 배경: 쉐마를 외우던 유대 성도들(신 6:4, 옥스포드 야고보서 145쪽·WBC 277쪽), 아브라함과 별(약 2:21·창 15:5), 여리고 성벽 집·지붕 삼대(수 2:6·15, 옥스포드 여호수아 100·129-130쪽). GPT 그림 6장 → 제미나이 영상 6개(전도사님 생성) + Claude 자막·엔딩(약 2:14)·BGM 「묵상 2」 합성, 32.6초. 1차(여리고만)는 전도사님 피드백으로 2차 구성. 「편지」 표현은 설교문에 맞춰 뺌. 전도사님 컨펌 2026-10-14.",
+      "media_id": "18115347548127155",
+      "posted_at": "2026-10-17 13:02"
+    },
+    {
+      "id": "2026-10-18-verse",
+      "type": "carousel",
+      "publish_at": "2026-10-20 19:30",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-18-verse.txt",
+      "first_comment_file": "instagram/captions/2026-10-18-verse.tags.txt",
+      "images": [
+        "instagram/2026-10-18-verse-01.jpg",
+        "instagram/2026-10-18-verse-02.jpg",
+        "instagram/2026-10-18-verse-03.jpg",
+        "instagram/2026-10-18-verse-04.jpg",
+        "instagram/2026-10-18-verse-05.jpg",
+        "instagram/2026-10-18-verse-06.jpg",
+        "instagram/2026-10-18-verse-07.jpg",
+        "instagram/2026-10-18-verse-08.jpg",
+        "instagram/2026-10-18-verse-09.jpg",
+        "instagram/2026-10-18-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 10/18 설교 「행함으로 믿음을 보이는 자」(야고보서 2:14-26). 10장 캐러셀, 표지 「살아 있는 믿음은 움직입니다」, 6장 약 2:22 전문, 배경 들판·아네모네(살아 있는 꽃), 10장 이번 주 찬양(마커스워십 「거친 길 위를 걸어갈 때도」). 「친구」 대신 「사람」(전도사님 10/14). 전도사님 컨펌 2026-10-14.",
+      "media_id": "18270002710305268",
+      "posted_at": "2026-10-20 19:32"
+    },
+    {
+      "id": "2026-10-18-cartoon",
+      "type": "image",
+      "publish_at": "2026-10-22 19:30",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-18-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-10-18-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-10-18-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #006 「무슨 일 있어?」 — 10/18 설교. 단톡방에 「힘내!」만 보낸 지호가 다음 날 엎드린 친구에게 우유를 건네며 묻는다. 하단 띠 약 2:17. 전도사님 컨펌 2026-10-14.",
+      "media_id": "17914495491471594",
+      "posted_at": "2026-10-22 19:32"
+    },
+    {
+      "id": "2026-10-25-expedition",
+      "type": "carousel",
+      "publish_at": "2026-10-25 10:30",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-10-25-expedition.txt",
+      "first_comment_file": "instagram/captions/2026-10-25-expedition.tags.txt",
+      "images": [
+        "instagram/2026-10-25-expedition-01.jpg",
+        "instagram/2026-10-25-expedition-02.jpg",
+        "instagram/2026-10-25-expedition-03.jpg",
+        "instagram/2026-10-25-expedition-04.jpg",
+        "instagram/2026-10-25-expedition-05.jpg"
+      ],
+      "note": "말씀우물 「가을 원정대」 예고 5장(11/8 야유회 팀 미션). 놀이터 카드도 같은 시각(10/25 10:30)부터 보임.",
+      "media_id": "18076231511725821",
+      "posted_at": "2026-10-25 10:08"
+    },
+    {
+      "id": "2026-10-27-recap",
+      "type": "carousel",
+      "publish_at": "2026-10-27 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-10-27-recap.txt",
+      "first_comment_file": "instagram/captions/2026-10-27-recap.tags.txt",
+      "images": [
+        "instagram/2026-10-27-recap-01.jpg",
+        "instagram/2026-10-27-recap-02.jpg",
+        "instagram/2026-10-27-recap-03.jpg",
+        "instagram/2026-10-27-recap-04.jpg",
+        "instagram/2026-10-27-recap-05.jpg",
+        "instagram/2026-10-27-recap-06.jpg",
+        "instagram/2026-10-27-recap-07.jpg",
+        "instagram/2026-10-27-recap-08.jpg",
+        "instagram/2026-10-27-recap-09.jpg",
+        "instagram/2026-10-27-recap-10.jpg"
+      ],
+      "note": "대체 게시물 — 10/25 연합예배(설교 없음)로 정기 말씀게시물 대신 「야고보서 지금까지 정리」 10장(10/4·10/11·10/18 핵심 한 줄 + 약 1:12·2:5·2:22, 각 주 배경 재사용, 표지·기도문은 새 언덕길 그림). 전도사님 컨펌 2026-10-23."
+    },
+    {
+      "id": "2026-10-29-picnic",
+      "type": "image",
+      "publish_at": "2026-10-29 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-10-29-picnic.txt",
+      "first_comment_file": "instagram/captions/2026-10-29-picnic.tags.txt",
+      "images": [
+        "instagram/2026-10-29-picnic.jpg"
+      ],
+      "note": "11/8 가을 야유회 예고 1장(D-10, 포스터와 같은 그림체·글꼴, 서울대공원 10:30 출발, 시 104:24). 정기 말씀카툰 대체. 전도사님 컨펌 2026-10-23."
+    }
+  ],
+  "skip_days": [
+    {
+      "date": "2026-10-24",
+      "why": "10/25 중고등부 연합예배(설교 없음) — 토요일 설교 예고 숏츠 없음"
+    }
+  ],
+  "_skip_days": "게시를 일부러 쉬는 날. 예약 실행이 그날 \"올릴 게 없다\"며 실패·카톡 알림을 보내지 않게 한다. [{\"date\":\"YYYY-MM-DD\",\"why\":\"...\"}]"
 }
