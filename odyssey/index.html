@@ -435,9 +435,42 @@
   #compass { position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:11; width:46px; height:46px; border-radius:50%;
     background:rgba(20,14,8,0.5); border:2px solid rgba(255,210,122,0.8); opacity:0; pointer-events:none; transition:opacity 1.2s; }
   #compass svg { width:100%; height:100%; }
+  /* 💡 막힌 단계 힌트(2026-10-26): 한 단계에 오래 머물면 나타나고, 누를 때만 도와준다 */
+  #hint-btn { position:fixed; top:66px; left:50%; transform:translateX(-50%) scale(0.8); z-index:11; padding:7px 14px; border-radius:999px; border:1.5px solid rgba(255,210,122,0.85);
+    background:rgba(20,14,8,0.72); color:#ffe6a0; font:700 13px 'Pretendard', sans-serif; box-shadow:0 3px 10px rgba(0,0,0,0.35); opacity:0; pointer-events:none; transition:opacity .5s, transform .5s; white-space:nowrap; }
+  #hint-btn.show { opacity:1; pointer-events:auto; transform:translateX(-50%) scale(1); animation:hintNudge 2.4s ease-in-out 3; }
+  #hint-btn:active { transform:translateX(-50%) scale(0.94); }
+  @keyframes hintNudge { 0%,100%{box-shadow:0 3px 10px rgba(0,0,0,0.35);} 50%{box-shadow:0 0 16px rgba(255,210,122,0.85);} }
+  body.cine #hint-btn, body.homeedit #hint-btn { display:none; }
+  /* 🎉 장 완료 연출(2026-10-26): 빛 + 큰 글씨 + 꽃가루, 누르면 바로 넘어감 */
+  #ch-fx { position:fixed; inset:0; z-index:70; display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer;
+    background:radial-gradient(circle at 50% 46%, rgba(255,236,170,0.55) 0%, rgba(60,36,8,0.72) 62%); animation:chFxIn .35s ease-out; font-family:'Pretendard', sans-serif; }
+  #ch-fx.hidden { display:none; }
+  #ch-fx.out { animation:chFxOut .4s ease-in forwards; }
+  #ch-fx .rays { position:absolute; left:50%; top:46%; width:160vmax; height:160vmax; margin:-80vmax 0 0 -80vmax; opacity:0.5;
+    background:repeating-conic-gradient(from 0deg, rgba(255,226,140,0.55) 0deg 7deg, rgba(255,226,140,0) 7deg 20deg); animation:chRays 9s linear infinite;
+    -webkit-mask:radial-gradient(circle, #000 0%, transparent 58%); mask:radial-gradient(circle, #000 0%, transparent 58%); }
+  #ch-fx .big { position:relative; text-align:center; color:#fff; text-shadow:0 3px 14px rgba(120,70,0,0.8); animation:chPop .7s cubic-bezier(.2,1.6,.4,1) both .1s; padding:0 16px; }
+  #ch-fx .big small { display:block; font-size:15px; color:#ffe6a0; letter-spacing:1px; margin-bottom:6px; }
+  #ch-fx .big b { display:block; font-size:clamp(34px, 9vw, 58px); font-weight:900; letter-spacing:1px; }
+  #ch-fx .big i { display:block; font-style:normal; font-size:16px; margin-top:10px; color:#fff6dc; }
+  #ch-fx .cf { position:absolute; top:-6vh; width:9px; height:14px; border-radius:2px; animation:chFall linear forwards; }
+  #ch-fx .tap { position:absolute; bottom:8vh; left:0; right:0; text-align:center; color:rgba(255,246,220,0.75); font-size:12.5px; animation:chFxIn 1s ease-out 1.2s both; }
+  @keyframes chFxIn { from{opacity:0;} to{opacity:1;} }
+  @keyframes chFxOut { to{opacity:0;} }
+  @keyframes chRays { to{transform:rotate(360deg);} }
+  @keyframes chPop { 0%{opacity:0; transform:scale(0.3);} 100%{opacity:1; transform:scale(1);} }
+  @keyframes chFall { 0%{transform:translateY(0) rotate(0deg);} 100%{transform:translateY(112vh) rotate(var(--r, 540deg));} }
+  #clear-modal.pop .sheet { animation:chPop .5s cubic-bezier(.2,1.5,.4,1) both; }
+  #clear-modal.pop img { animation:chBadge 1.1s ease-out both .25s; }
+  @keyframes chBadge { 0%{opacity:0; transform:scale(0.2) rotate(-200deg); filter:drop-shadow(0 0 0 rgba(255,210,122,0));} 70%{opacity:1; transform:scale(1.12) rotate(8deg); filter:drop-shadow(0 0 18px rgba(255,210,122,0.95));} 100%{transform:scale(1) rotate(0); filter:drop-shadow(0 0 8px rgba(255,210,122,0.6));} }
+  #clear-body .ln { display:block; min-height:1.2em; animation:chLine .45s ease-out both; }
+  @keyframes chLine { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+  @media (prefers-reduced-motion: reduce){ #ch-fx .rays, #ch-fx .cf { animation:none; display:none; } #clear-modal.pop .sheet, #clear-modal.pop img, #clear-body .ln { animation:none; } }
   #quest-panel .obj { font-size:13px; font-weight:700; color:#fff; line-height:1.5; }
   #quest-panel .prog { font-size:11px; opacity:0.65; margin-top:4px; }
   #quest-panel .where { font-size:11.5px; color:#ffe6a0; line-height:1.45; margin-top:3px; }
+  #quest-panel .hintln { font-size:11.5px; color:#bfe8ff; line-height:1.45; margin-top:3px; opacity:1; }
   /* 성능 확인용(주소 끝에 ?fps 를 붙이면 표시) */
   #perf {
     position:fixed; left:50%; bottom:6px; transform:translateX(-50%); z-index:40;
@@ -599,6 +632,8 @@
 <div id="tint" style="position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;background:rgba(58,48,18,0.55);transition:opacity 1.2s"></div>
 <div id="flash" style="position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0;background:#fff"></div>
 <div id="compass"><svg viewBox="0 0 46 46"><path id="compass-arrow" d="M23 7 L31 27 L23 22 L15 27 Z" fill="#ffd27a"/></svg></div>
+<button id="hint-btn" type="button">💡 막혔나요? 힌트</button>
+<div id="ch-fx" class="hidden"><div class="rays"></div><div class="big"><small id="ch-fx-sub"></small><b id="ch-fx-t"></b><i id="ch-fx-n"></i></div><div class="tap">화면을 누르면 넘어가요</div></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
 <script>window.__SCROLL_V={"devtest": "fc6bccf2", "moses0": "c9b16a71", "sinai2": "8fcd871c", "wild3": "399f9e0d", "joshua": "dcec01a7", "judges": "257038a5", "ruth": "b0ac9b0c"};</script>
@@ -5081,6 +5116,7 @@
   const rumorCount = q => { const R = AP().rumor || []; return q.rumorIds ? R.filter(x => q.rumorIds.includes(x)).length : R.length; };
   const curStep = () => { const P = AP(); return P.cleared ? null : STORY[P.step]; };
   let stepT = 0;                          // 지금 단계에 머문 시간(헤맴 힌트용)
+  let hintLv = 0, hintKey = '', hintOn = false, hintBeam = null, hintMsg = '';   // 💡 막힌 단계 힌트(아래 hintText) — 퀘스트 창에도 써야 해서 여기서 선언
 
   // 퀘스트 창 접기/펼치기
   const questPanel = document.getElementById('quest-panel');
@@ -5107,7 +5143,7 @@
     if (q && q.frogs) obj += ` (🐸 ${Math.min(ST.frogs, q.frogs)}/${q.frogs})`;
     if (q && q.chase && chase.on) obj += ` (🐎 뒤에서 ${Math.max(0, Math.round(player.position.x - chase.x))}m)`;
     if (q && q.warn) obj += q.mark ? ` (🩸 ${ST.warned}/${q.warn})` : ` (📣 ${ST.warned}/${q.warn} · ⏱ ${Math.max(0, Math.ceil(warnT))}초)`;
-    document.getElementById('quest-list').innerHTML = `<li><div class="obj">▶ ${obj}</div></li>${q && q.where ? `<li class="where">💡 ${q.where}</li>` : ''}<li class="prog">${q ? `${AP().step + 1}/${STORY.length}` : '✓ 완료'}${q && q.zone !== (Z && Z.id) ? `<span class="zn"> · ${ZONES[q.zone].name}에서</span>` : ''}<span class="more">${questPanel.classList.contains('compact') ? '▾' : '▴'}</span></li>`;
+    document.getElementById('quest-list').innerHTML = `<li><div class="obj">▶ ${obj}</div></li>${q && q.where ? `<li class="where">💡 ${q.where}</li>` : ''}${q && hintMsg ? `<li class="hintln">🙋 ${hintMsg}</li>` : ''}<li class="prog">${q ? `${AP().step + 1}/${STORY.length}` : '✓ 완료'}${q && q.zone !== (Z && Z.id) ? `<span class="zn"> · ${ZONES[q.zone].name}에서</span>` : ''}<span class="more">${questPanel.classList.contains('compact') ? '▾' : '▴'}</span></li>`;
     { const k = ST.cur + ':' + AP().ch + ':' + AP().step; if (questLastKey !== k){ questLastKey = k; questPeek(); } }
   }
   // 조건부로 보이는 자리·인물: 도전(미니게임)은 그 이야기를 지나간 뒤부터, 지친 사람은 바다를 건너는 동안만
@@ -6149,7 +6185,37 @@
     if (ST.cur === 'moses') claimChapter(ST.ch + 1);
     else { const it = SCROLL_LIST.find(x => x.id === ST.cur); if (it && it.num !== undefined) claimScrollChapter(it.num, nextCh); }
     setTimeout(checkNewTitle, 100);
-    setTimeout(() => openModal('clear-modal', () => { if (C[nextCh]) startChapter(nextCh); else if (ST.cur !== 'moses' && (SCROLL_DEFS[ST.cur] || {}).returnToMoses) setTimeout(() => enterScroll('moses'), 400); else setTimeout(() => nextScrollCeremony(), 400); }), 500);
+    { const body = document.getElementById('clear-body'), esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+      body.innerHTML = body.textContent.split('\n').map((l, i) => `<span class="ln" style="animation-delay:${(0.45 + i * 0.12).toFixed(2)}s">${esc(l)}</span>`).join(''); }
+    setTimeout(() => clearFx(nextCh, () => openModal('clear-modal', () => { document.getElementById('clear-modal').classList.remove('pop'); if (C[nextCh]) startChapter(nextCh); else if (ST.cur !== 'moses' && (SCROLL_DEFS[ST.cur] || {}).returnToMoses) setTimeout(() => enterScroll('moses'), 400); else setTimeout(() => nextScrollCeremony(), 400); })), 300);
+  }
+  // 🎉 장 완료 연출(2026-10-26 전도사님 요청): 빛·큰 글씨·꽃가루·짧은 팡파르 → 누르거나 2.8초 뒤 완료 창(배지 돌며 등장, 줄마다 차례로)
+  function clearFx(chNo, then){
+    const el = document.getElementById('ch-fx'), scr = SCROLL_LIST.find(x => x.id === ST.cur);
+    document.getElementById('ch-fx-sub').textContent = scr ? `${scr.no}편 「${scr.title}」` : (CHAPTER.title || '');
+    document.getElementById('ch-fx-t').textContent = `✨ ${chNo}장 완료! ✨`;
+    document.getElementById('ch-fx-n').textContent = CHAPTER.clearTitle || '';
+    const COLS = ['#ffd27a', '#ffffff', '#ff9a7a', '#8fd3ff', '#b6f08a', '#e7a8ff'];
+    for (let i = 0; i < 46; i++){
+      const c = document.createElement('i'); c.className = 'cf';
+      c.style.cssText = `left:${(Math.random() * 100).toFixed(1)}%;background:${COLS[i % COLS.length]};animation-duration:${(1.8 + Math.random() * 1.6).toFixed(2)}s;animation-delay:${(Math.random() * 0.9).toFixed(2)}s;--r:${Math.round(300 + Math.random() * 500) * (i % 2 ? 1 : -1)}deg;width:${6 + (i % 3) * 3}px`;
+      el.appendChild(c);
+    }
+    el.classList.remove('hidden', 'out'); fanfare();
+    let fin = false;
+    const end = () => { if (fin) return; fin = true; el.classList.add('out');
+      setTimeout(() => { el.classList.add('hidden'); el.classList.remove('out'); el.querySelectorAll('.cf').forEach(c => c.remove()); }, 400);
+      document.getElementById('clear-modal').classList.add('pop'); then(); };
+    el.onclick = end; setTimeout(end, 2800);
+  }
+  function fanfare(){   // 도-미-솔-도 짧은 팡파르(배경음악을 꺼 두었으면 소리 없음)
+    if (!BGM.on) return;
+    try { const c = BGM.ctx || (BGM.ctx = new (window.AudioContext || window.webkitAudioContext)()), t0 = c.currentTime + 0.05;
+      [[523, 0, 0.16], [659, 0.14, 0.16], [784, 0.28, 0.16], [1047, 0.42, 0.9]].forEach(([f, d, len]) => {
+        const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = f;
+        g.gain.setValueAtTime(0, t0 + d); g.gain.linearRampToValueAtTime(0.14, t0 + d + 0.03); g.gain.exponentialRampToValueAtTime(0.001, t0 + d + len);
+        o.connect(g); g.connect(c.destination); o.start(t0 + d); o.stop(t0 + d + len + 0.05); });
+    } catch (e){}
   }
   document.getElementById('btn-book').onclick = () => {
     checkNewTitle(); dq('verse');
@@ -9381,13 +9447,59 @@
     if (q.collect && straws.length){ return straws.map(o => new THREE.Vector3(o.x, 0, o.z)).sort((a, b) => a.distanceTo(player.position) - b.distanceTo(player.position))[0]; }
     return null;
   }
+  // 💡 막힌 단계 선택적 힌트(2026-10-26 전도사님 요청): 한 단계에 HINT_WAIT초 넘게 머물면 버튼이 나타나고, 누를 때만 돕는다.
+  //  1번째: 누구·어디로 가야 하는지 글로 + 나침반 바로 켜기 → 2번째: 목표 자리에 빛기둥 / 다른 마을이면 그 마을로 바로 이동
+  const HINT_WAIT = 45, hintBtn = document.getElementById('hint-btn');
+  function hintText(q){
+    const find = id => markers.find(m => m.data.id === id && !m.hidden), nm = m => m && (m.data.title || m.data.name);
+    if (Z && q.zone !== Z.id) return `이 단계는 「${ZONES[q.zone].name}」에서 해요. 위쪽 🧭 화살표를 따라 마을 출구로 가요.`;
+    const m = find(q.npc || q.point || q.exit || q.skillAt);
+    let t = q.skillAt && m ? `「${nm(m)}」 가까이에서 반짝이는 스킬 버튼을 눌러요.`
+      : q.npc && m ? `「${nm(m)}」에게 다가가서 「대화하기」를 눌러요.`
+      : q.point && m ? `「${nm(m)}」(으)로 가까이 가서 버튼을 눌러요.`
+      : q.exit && m ? `「${nm(m)}」(으)로 걸어가요.`
+      : q.rumor ? '아직 이야기하지 않은 마을 사람들에게 다가가 말을 걸어요.'
+      : `할 일: ${q.obj}`;
+    if (q.where && !t.includes(q.where)) t += `\n💡 ${q.where}`;
+    return t + '\n🧭 위쪽 화살표가 가는 쪽을 가리켜요.';
+  }
+  function showHintBeam(p){
+    if (hintBeam){ zoneRoot.remove(hintBeam); hintBeam = null; }
+    if (!p) return;
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffe08a, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 40, 18, 1, true), mat);
+    b.position.set(p.x, heightAt(p.x, p.z) + 20, p.z); zoneRoot.add(b); hintBeam = b;
+    const t0 = performance.now(), key = hintKey;
+    const tick = () => { if (hintBeam !== b) return; const e = (performance.now() - t0) / 1000;
+      if (e > 14 || hintKey !== key || !b.parent){ zoneRoot.remove(b); b.geometry.dispose(); mat.dispose(); if (hintBeam === b) hintBeam = null; return; }
+      mat.opacity = 0.28 + Math.sin(e * 4) * 0.14; requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
+  hintBtn.addEventListener('click', e => {
+    e.stopPropagation(); const q = curStep(); if (!q || !Z) return;
+    if (hintLv === 0){ hintLv = 1; hintMsg = hintText(q).split('\n')[0]; toast(hintText(q), 6000); renderQuestList(); questPeek(); return; }
+    if (q.zone !== Z.id){   // 다른 마을: 이야기가 있는 마을로 바로(바로 이어진 출구면 그 출구로 — 출구를 지나는 단계도 함께 끝남)
+      const ex = markers.find(m => m.data.id === ROUTE[Z.id][q.zone] && !m.hidden);
+      hintLv = 2; hintBtn.classList.remove('show'); hintOn = false;
+      travelTo(ex && ex.data.to === q.zone ? ex.data : { id: 'hint', to: q.zone, spawn: ZONES[q.zone].spawn }).then(() => {
+        const q2 = curStep(); hintLv = 1; hintMsg = q2 ? hintText(q2).split('\n')[0] : ''; renderQuestList(); });
+      return;
+    }
+    hintLv = 2; const p = targetPos();
+    if (p){ showHintBeam(p); toast('✨ 빛기둥이 솟은 곳으로 가 보세요!', 3000); } else toast(hintText(q), 6000);
+  });
   function updateCompass(dt){
     stepT += dt;
     const t = targetPos();
     const far = t && Math.hypot(t.x - player.position.x, t.z - player.position.z) > 10;
     const q = curStep(), wait = q && q.id === 'c2s22' ? 3 : q && (q.manna || q.npc || q.point || q.rumor || q.exit || q.dig || q.reach || q.warn || q.skillAt) ? 10 : 40;
     document.querySelectorAll('.skill-btn').forEach(b => b.classList.toggle('tut-glow', !!(q && q.skillAt) && (b.classList.contains('skill-toggle') ? !skillOpen : true)));
-    const show = t && far && stepT > wait;
+    const show = t && far && (stepT > wait || hintLv > 0);
+    { const k = q ? ST.cur + ':' + AP().ch + ':' + AP().step : '';   // 단계가 바뀌면 힌트 단계 처음으로
+      if (k !== hintKey){ hintKey = k; if (hintLv){ hintLv = 0; hintMsg = ''; renderQuestList(); } }
+      const on = !!q && !REPLAY && stepT > HINT_WAIT, lab = !on ? '' : hintLv === 0 ? '💡 막혔나요? 힌트' : (Z && q.zone !== Z.id) ? '🚀 그곳으로 데려다줘요' : '💡 더 큰 힌트';
+      if (on !== hintOn){ hintOn = on; hintBtn.classList.toggle('show', on); }
+      if (on && lab !== hintBtn.textContent) hintBtn.textContent = lab; }
     compassEl.style.opacity = show ? String(Math.min(0.9, (stepT - wait) / 6)) : '0';
     if (show){
       const dx = t.x - player.position.x, dz = t.z - player.position.z;
@@ -9796,7 +9908,7 @@
   });
 
   // 자동 점검용 훅(헤드리스 브라우저 스크린샷에서 사용)
-  window.__debug = { showClear, applyWorld, get propTemplates(){ return propTemplates; }, get zoneRoot(){ return zoneRoot; }, claimClearedChapters, packScore, progText, pillarsGame, cleftGame, get mannaSun(){ return mannaSun; }, set mannaSunT0(v){ if (mannaSun) mannaSun.t0 = v; }, get covAltar(){ return !!covObj; }, addGeneal, genealBookHTML, signsGame, get geneal(){ return ST.geneal; }, enterScroll, openScrollGate, SCROLL_DEFS, AP, get cur(){ return ST.cur; }, takePhoto, openAlbum, photoAll, get course(){ return { i: course.i, n: course.rings.length, t: course.t, rings: course.rings.map(r => [r.x, r.y, r.z]), kind: courseKind() }; }, buildCourse, COURSES, updateFollow, get followers(){ return markers.filter(m => m.follow).map(m => m.data.id + '@' + m.mesh.position.x.toFixed(1) + ',' + m.mesh.position.z.toFixed(1)).join(' '); }, openLinks, LINKS, get links(){ return ST.links || []; }, openRecap, openExhibit, openJourney, maybeRecap, get exhibit(){ return exhibitObj ? exhibitObj.children.length : 0; }, starsLeft, spendStars, retryQuiz, openLibrary, renderLibrary, TITLES, SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
+  window.__debug = { showClear, clearFx, set stepT(v){ stepT = v; }, get hintLv(){ return hintLv; }, applyWorld, get propTemplates(){ return propTemplates; }, get zoneRoot(){ return zoneRoot; }, claimClearedChapters, packScore, progText, pillarsGame, cleftGame, get mannaSun(){ return mannaSun; }, set mannaSunT0(v){ if (mannaSun) mannaSun.t0 = v; }, get covAltar(){ return !!covObj; }, addGeneal, genealBookHTML, signsGame, get geneal(){ return ST.geneal; }, enterScroll, openScrollGate, SCROLL_DEFS, AP, get cur(){ return ST.cur; }, takePhoto, openAlbum, photoAll, get course(){ return { i: course.i, n: course.rings.length, t: course.t, rings: course.rings.map(r => [r.x, r.y, r.z]), kind: courseKind() }; }, buildCourse, COURSES, updateFollow, get followers(){ return markers.filter(m => m.follow).map(m => m.data.id + '@' + m.mesh.position.x.toFixed(1) + ',' + m.mesh.position.z.toFixed(1)).join(' '); }, openLinks, LINKS, get links(){ return ST.links || []; }, openRecap, openExhibit, openJourney, maybeRecap, get exhibit(){ return exhibitObj ? exhibitObj.children.length : 0; }, starsLeft, spendStars, retryQuiz, openLibrary, renderLibrary, TITLES, SIDE, sideState, sideSet, sideTalk, get sideItems(){ return ST.sideItems || []; }, cloudPack, cloudScore, cloudInit, CLOUD, logStep, buildTabernacle, get tabStage(){ return tabStage; }, get calfOn(){ return !!calfObj; }, get arkOn(){ return !!arkObj; }, get gloryOn(){ return !!gloryObj; }, get shine(){ return !!shineObj; }, HQ, hqTalk, hqState, hqSet, hqRefresh, spawnLostLamb, get lostLamb(){ return lostLamb; }, mannaStreakTick, renderHQ, dumpText(){ return JSON.stringify({ DLG, RUMORS, QUIZ, KEYS, ZONES: Object.fromEntries(Object.entries(ZONES).map(([k, z]) => [k, z.points.map(p => ({ id: p.id, title: p.title, body: p.body }))])) }); }, setShoeDy(v){ SHOE_DY = v; }, get mat(){ return ST.mat || {}; }, addMat, gatherGame, openCraft, CRAFT, get gear(){ return Object.keys(gearOn).map(k => gearOn[k].key).join(','); }, get idols(){ return idolObjs.length; }, actWin, renderWorship, setWOR(v){ WOR = v; }, get mannaFlakes(){ return mannaFlakes; }, openReplay, startReplay, REPLAYS, get REPLAY(){ return REPLAY; }, get petPos3(){ const p = equipObj.pet; return p ? [p.position.x, p.position.y, p.position.z] : null; }, get weekly(){ return ST.weekly; }, wq, syncAchieve, get chase(){ return chase; }, get petWings(){ return equipObj.petWings ? equipObj.petWings.r.rotation.z : null; }, mockMsu(rpc){ MSU.client = { rpc: async (n, a) => rpc(n, a) }; MSU.session = { user: { id: 'me' } }; }, get VISIT(){ return VISIT; }, onInvite, visitHome, homeTap, homeEnter, homeExit, get homeObjs(){ return homeObjs; }, get homeEdit(){ return homeEdit; }, FR, onFriendPos, get daily(){ return ST.daily; }, dq, showBubble, friendPill, rankMock(a, b, tab){ const c = MSU.client, se = MSU.session; MSU.client = {}; MSU.session = {}; rankData = a; oikData = b; rankTab = tab; openModal('rank-modal'); renderRank(); MSU.client = c; MSU.session = se; }, get cine(){ return cine.on; }, startCine, useSkill, get skills(){ return [...unlocked].join(','); }, myTitle, get prayFx(){ return !!prayFx; }, get boost(){ return performance.now() < praiseUntil; }, scrolls, scrollSpots, get camYaw(){ return camYaw; }, get heading(){ return heading; }, get climb(){ return climb; }, reachable, startChallenge, get live(){ return live; }, get mgOpen(){ return !mg.el.classList.contains('hidden'); }, recordBest, refreshShow, get bgm(){ return BGM.src ? "playing:" + BGM.cur : (BGM.on ? "ready" : "off"); }, bgmTitleSkip(){ BGM.titleUntil = 0; }, get headBox(){ return window.__headBox || null; }, get hair(){ if (!playerHair) return "none"; const b = new THREE.Box3().setFromObject(playerHair); return JSON.stringify({ min: b.min.toArray().map(v => +v.toFixed(2)), max: b.max.toArray().map(v => +v.toFixed(2)), vis: playerHair.visible, kids: playerHair.children.length }); }, get equip(){ return JSON.stringify(equip) + ' owned=' + [...owned].join(','); }, get petPos(){ return equipObj.pet ? [equipObj.pet.position.x, equipObj.pet.position.y, equipObj.pet.position.z].map(v => v.toFixed(2)).join(',') : null; }, get staffOn(){ return !!equipObj.staff; }, get tut(){ return tut.on ? tut.i : -1; }, get prefetch(){ return prefetchState.done + '/' + prefetchState.total; }, get quality(){ return qMode + '/' + qLevel; }, setQuality, get doorTarget(){ return doorTarget; }, get pendingNPC(){ return markers.filter(m => m.pending).length; }, get darkK(){ return darkK; }, get hailOn(){ return hailOn; }, get locustOn(){ return locustOn; }, herd, get fliesAmt(){ return flyAmt; }, ST, get STORY(){ return STORY; }, startChapter, frogs, curStep, advance, get dlg(){ return dlgState; }, straws, player, camera, keys, markers, obstacles, POIS, NAV, walkable, findPath, travelTo, get zone(){ return Z && Z.id; }, questState, setCam: (y, p) => { camYaw = y; if (p !== undefined) camPitch = p; }, get grounded(){ return grounded; }, boxes, setZoom: z => setZoom(z), actions: () => actions, natural, get stamina(){ return stamina; }, setHeading: h => heading = h };
 })();
 </script>
 </body>
