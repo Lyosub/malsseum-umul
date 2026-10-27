@@ -30,12 +30,6 @@
   },
   "stuck": [
     {
-      "chapter": 9,
-      "step": "sinai2/lv9s2",
-      "players": 2,
-      "median_secs": 339
-    },
-    {
       "chapter": 3,
       "step": "wild3/w3s1",
       "players": 2,
@@ -44,6 +38,6 @@
   ],
   "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-27 14:40",
+  "generated_kst": "2026-10-27 19:56",
   "ok": true
 }
