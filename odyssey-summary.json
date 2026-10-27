@@ -1,11 +1,11 @@
 {
   "testers": 2,
   "players": 12,
-  "active_24h": 2,
-  "saved_24h": 2,
-  "visitors_24h": 2,
+  "active_24h": 1,
+  "saved_24h": 1,
+  "visitors_24h": 1,
   "new_24h": 0,
-  "steps_24h": 36,
+  "steps_24h": 34,
   "active_7d": 2,
   "chapters": {
     "1편 모세와 함께 (10장)": {
@@ -25,7 +25,9 @@
       "10장 클리어": 1,
       "13장 클리어": 1
     },
-    "5편 사사들과 함께 (12장)": {},
+    "5편 사사들과 함께 (12장)": {
+      "5장 클리어": 1
+    },
     "6편 룻과 사무엘 (9장)": {}
   },
   "stuck": [
@@ -38,6 +40,6 @@
   ],
   "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-27 21:40",
+  "generated_kst": "2026-10-28 03:15",
   "ok": true
 }
