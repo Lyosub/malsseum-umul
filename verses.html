@@ -52,7 +52,42 @@
   <canvas id="verseCardCanvas" style="display:none;"></canvas>
 
   <p class="msg" style="text-align:center;">캡처해서 저장하거나 오늘의 묵상 노트에 옮겨 적어보세요.</p>
+
+  <!-- 추수감사 특별판 (assets/thanks-card.js, 11/30까지 보이고 그 뒤엔 숨는다) -->
+  <section id="thanksBox" class="thanks-box" hidden>
+    <div class="thanks-hd">
+      <span class="thanks-tag">🌾 추수감사 특별판</span>
+      <h2>감사 말씀 카드</h2>
+      <p>11월 15일 추수감사주일을 앞두고 감사 말씀 한 구절을 뽑아, 나의 감사 한 줄과 함께 카드로 저장해 보세요. 하루에 한 번 새로 뽑을 수 있어요.</p>
+    </div>
+    <button id="thanksDrawBtn" type="button" class="btn block thanks-btn">감사 말씀 뽑기 🌾</button>
+    <div id="thanksCard" class="verse-card thanks-card" style="display:none;"></div>
+    <div id="thanksSaveArea" style="display:none;">
+      <label for="thanksLine" class="thanks-label">✍️ 나의 감사 한 줄 <small>(40자까지, 카드에 함께 들어가요)</small></label>
+      <input id="thanksLine" class="thanks-input" maxlength="40" placeholder="예) 매일 아침 깨워 주는 엄마가 있어서 감사해요">
+      <p style="font-size:12.5px;color:var(--text-soft);margin:14px 0 6px;">저장할 사이즈를 골라주세요</p>
+      <div class="tabs" id="thanksSizePicker"></div>
+      <button type="button" class="btn block thanks-btn" style="margin-top:12px;" onclick="saveThanksCard()">📸 감사 카드 저장하기</button>
+    </div>
+    <canvas id="thanksCanvas" style="display:none;"></canvas>
+  </section>
 </div>
+<style>
+  .thanks-box { margin: 28px 0 8px; padding: 18px 16px 20px; border-radius: 20px;
+    background: linear-gradient(160deg, #fff6e6 0%, #fde3bf 100%); border: 1.5px solid #f0c27a; }
+  .thanks-hd { text-align: center; margin-bottom: 14px; }
+  .thanks-tag { display: inline-block; padding: 4px 12px; border-radius: 999px; background: #8a4a17; color: #fff4dc; font-size: 12.5px; font-weight: 800; }
+  .thanks-hd h2 { margin: 10px 0 6px; font-size: 20px; color: #5a2c0c; }
+  .thanks-hd p { margin: 0; font-size: 13px; line-height: 1.6; color: #7a4a22; }
+  .thanks-btn { background: #a85a1c; }
+  .thanks-card { background: linear-gradient(170deg, #4a230c, #8a4a17); color: #fff4dc; }
+  .thanks-card .ref { color: #f3d28b; }
+  .thanks-card .qt-label { color: #f3d28b; }
+  .thanks-card .qt-body { color: #fff4dc; }
+  .thanks-label { display: block; margin: 16px 0 6px; font-size: 13.5px; font-weight: 800; color: #5a2c0c; }
+  .thanks-label small { font-weight: 500; color: #8a6a4a; }
+  .thanks-input { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #e2b06a; font: inherit; font-size: 15px; background: #fffaf2; }
+</style>
 <footer class="site">
   <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
   <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
@@ -66,8 +101,10 @@
 <script src="assets/auth.js"></script>
 <script src="assets/script.js"></script>
 <script src="assets/new-badge.js"></script>
+<script src="assets/thanks-card.js"></script>
 <script>
   initVerseTabs();
+  initThanksCard();
   markStaticSectionSeen("verses");
   initHeaderAuthState();
 </script>
