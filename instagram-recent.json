@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-10-27 10:31",
+  "generated_kst": "2026-10-28 10:27",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
-    "followers_count": 141,
+    "followers_count": 142,
     "follows_count": 111,
-    "media_count": 154
+    "media_count": 155
   },
   "posts": [
+    {
+      "id": "18118508098799000",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-10-27T10:33:14+0000",
+      "permalink": "https://www.instagram.com/p/De_ptI6G5nR/",
+      "caption_first_line": "야고보서, 지금까지 걸어온 길.",
+      "likes": 9,
+      "comments": 1
+    },
     {
       "id": "18076231511725821",
       "type": "FEED",
@@ -247,16 +257,6 @@
       "caption_first_line": "🦸‍♂️ JESUS+ : BRAND NEW DAY",
       "likes": 26,
       "comments": 5
-    },
-    {
-      "id": "17901502359350819",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-09-02T02:34:28+0000",
-      "permalink": "https://www.instagram.com/p/DcxLNb-mlV_/",
-      "caption_first_line": "말씀우물이 안드로이드 앱으로도 만나뵐 준비를 하고 있어요 📱",
-      "likes": 15,
-      "comments": 2
     }
   ]
 }
