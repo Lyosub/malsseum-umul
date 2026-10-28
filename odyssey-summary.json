@@ -1,9 +1,9 @@
 {
   "testers": 2,
   "players": 12,
-  "active_24h": 1,
-  "saved_24h": 1,
-  "visitors_24h": 1,
+  "active_24h": 2,
+  "saved_24h": 2,
+  "visitors_24h": 2,
   "new_24h": 0,
   "steps_24h": 34,
   "active_7d": 2,
@@ -38,8 +38,8 @@
       "median_secs": 291
     }
   ],
-  "errors_24h": 0,
+  "errors_24h": 1,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-28 20:36",
+  "generated_kst": "2026-10-28 21:40",
   "ok": true
 }
