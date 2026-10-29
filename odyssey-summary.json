@@ -32,16 +32,9 @@
       "1장 클리어": 1
     }
   },
-  "stuck": [
-    {
-      "chapter": 3,
-      "step": "wild3/w3s1",
-      "players": 2,
-      "median_secs": 291
-    }
-  ],
-  "errors_24h": 1,
+  "stuck": [],
+  "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-10-29 20:43",
+  "generated_kst": "2026-10-29 21:40",
   "ok": true
 }
