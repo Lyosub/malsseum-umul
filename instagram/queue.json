@@ -355,6 +355,27 @@
       "first_comment_file": "instagram/captions/2026-10-31-preview.tags.txt",
       "video": "instagram/2026-10-31-preview.mp4",
       "note": "설교 예고 숏츠 — 11/1 「하나님을 가까이하는 자」(약 4:8) 배경: 1세기 유대인의 식사 전 손 씻기 풍습(막 7:1-4, 옥스포드 야고보서 234쪽·WBC 372쪽)과 교회 안 싸움의 원인이 바깥 환경이 아니라 자기 안의 욕심(약 4:1, 옥스포드 223쪽·WBC 359쪽). GPT 그림 3장(h1~h3) + Claude 자막·엔딩·BGM 「위로 4」 합성, 20초. 말라기 시대 안은 전도사님 지적(야고보서가 중심)으로 폐기. 손 씻기와 4:1 싸움을 나란히 놓아 설교 답이 드러나도 된다는 전도사님 확정. 전도사님 컨펌 2026-10-29."
+    },
+    {
+      "id": "2026-11-01-verse",
+      "type": "carousel",
+      "publish_at": "2026-11-03 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-01-verse.txt",
+      "first_comment_file": "instagram/captions/2026-11-01-verse.tags.txt",
+      "images": [
+        "instagram/2026-11-01-verse-01.jpg",
+        "instagram/2026-11-01-verse-02.jpg",
+        "instagram/2026-11-01-verse-03.jpg",
+        "instagram/2026-11-01-verse-04.jpg",
+        "instagram/2026-11-01-verse-05.jpg",
+        "instagram/2026-11-01-verse-06.jpg",
+        "instagram/2026-11-01-verse-07.jpg",
+        "instagram/2026-11-01-verse-08.jpg",
+        "instagram/2026-11-01-verse-09.jpg",
+        "instagram/2026-11-01-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 11/1 설교 「하나님을 가까이하는 자」(야고보서 4:8). 10장 캐러셀, 표지 「하나님이 먼저 부르셨습니다 이제 가까이 갑니다」, 6장 약 4:8 전문, 배경 새벽 돌 마당과 구리 물두멍(GPT), 10장 이번 주 찬양(마커스워십 「주께 가까이」). 전도사님 컨펌 2026-10-29(글·캡션)."
     }
   ],
   "skip_days": [
