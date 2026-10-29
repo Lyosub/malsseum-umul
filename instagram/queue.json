@@ -338,13 +338,15 @@
       "id": "2026-10-29-picnic",
       "type": "image",
       "publish_at": "2026-10-29 19:30",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-10-29-picnic.txt",
       "first_comment_file": "instagram/captions/2026-10-29-picnic.tags.txt",
       "images": [
         "instagram/2026-10-29-picnic.jpg"
       ],
-      "note": "11/8 가을 야유회 예고 1장(D-10, 포스터와 같은 그림체·글꼴, 서울대공원 10:30 출발, 시 104:24). 정기 말씀카툰 대체. 전도사님 컨펌 2026-10-23."
+      "note": "11/8 가을 야유회 예고 1장(D-10, 포스터와 같은 그림체·글꼴, 서울대공원 10:30 출발, 시 104:24). 정기 말씀카툰 대체. 전도사님 컨펌 2026-10-23.",
+      "media_id": "18413357458094045",
+      "posted_at": "2026-10-29 19:32"
     },
     {
       "id": "2026-10-31-preview",
