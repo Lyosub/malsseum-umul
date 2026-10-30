@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-10-29 10:52",
+  "generated_kst": "2026-10-30 11:01",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 142,
     "follows_count": 111,
-    "media_count": 155
+    "media_count": 156
   },
   "posts": [
+    {
+      "id": "18413357458094045",
+      "type": "FEED",
+      "media_type": "IMAGE",
+      "timestamp_utc": "2026-10-29T10:32:32+0000",
+      "permalink": "https://www.instagram.com/p/DfEzNpCnFHH/",
+      "caption_first_line": "🍁 로고스교회 중등부 가을 야유회 🍁",
+      "likes": 3,
+      "comments": 1
+    },
     {
       "id": "18118508098799000",
       "type": "FEED",
@@ -247,16 +257,6 @@
       "caption_first_line": "💧 새로워진 말씀우물",
       "likes": 19,
       "comments": 3
-    },
-    {
-      "id": "18103877231191917",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-09-12T00:49:45+0000",
-      "permalink": "https://www.instagram.com/p/DdKvLPegchk/",
-      "caption_first_line": "🦸‍♂️ JESUS+ : BRAND NEW DAY",
-      "likes": 26,
-      "comments": 5
     }
   ]
 }
