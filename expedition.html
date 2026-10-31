@@ -420,7 +420,11 @@
   function start() {
     meetCheck();
     if (!sb) { show("join"); $("joinMsg").textContent = "연결을 준비하지 못했어요. 새로고침해 주세요."; return; }
-    if (saved.code) { join(saved.code, true); } else { show("join"); }
+    // 팀 코드 카드 QR: expedition.html#code=1108-1234 → 코드 칸을 채우고 바로 들어간다(이미 팀에 들어간 폰은 그대로)
+    var qr = /^#code=(\d{4}-?\d{4})$/.exec(location.hash);
+    if (saved.code) { join(saved.code, true); }
+    else if (qr) { $("codeInput").value = qr[1]; show("join"); join(qr[1], false); }
+    else { show("join"); }
     adminPeek();
   }
 
