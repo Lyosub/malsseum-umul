@@ -265,10 +265,10 @@
       <div id="resultList"></div>
     </section>
 
-    <section class="card board" id="boardCard">
-      <h2 style="display:flex;justify-content:space-between;align-items:baseline;">모든 팀 진행판 <span class="muted" style="font-weight:500;font-size:12px;">점수는 11/15 시상 때 공개!</span></h2>
+    <details class="card board fold" id="boardCard" open>
+      <summary><span>모든 팀 진행판 <span class="muted" style="font-weight:500;font-size:12px;">점수는 11/15 시상 때 공개!</span></span></summary>
       <div id="boardList"></div>
-    </section>
+    </details>
 
     <nav class="tabs" role="tablist">
       <button type="button" role="tab" data-tab="dogam" class="on">🦁 동물 도감</button>
@@ -936,6 +936,13 @@
       $("dday").textContent = "D-" + days; $("dday").hidden = false;
       $("joinNote").textContent = "팀 코드는 11월 8일 당일 아침에 선생님이 알려 줘요. (예: 1108-1234)";
     }
+  })();
+
+  // 모든 팀 진행판: 접었는지 기억(이 폰에서만)
+  (function () {
+    var KEY_BOARD = "picnic_board_open", card = $("boardCard");
+    try { if (localStorage.getItem(KEY_BOARD) === "0") card.open = false; } catch (e) {}
+    card.addEventListener("toggle", function () { try { localStorage.setItem(KEY_BOARD, card.open ? "1" : "0"); } catch (e) {} });
   })();
 
   start();
