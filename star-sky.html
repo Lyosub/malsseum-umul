@@ -156,7 +156,7 @@
   var queue = [];          // 승인됐지만 아직 안 켜진 응원
   var lastSeq = 0, total = 0;
   var state = '', stateLabel = '', stateSeq = -1, drawSeq = -1;
-  var gatherT = 0, gatherStart = 0, drawStart = 0, winId = null, spinning = false;
+  var gatherT = 0, gatherStart = 0, drawStart = 0, winId = null, spinning = false, SPIN = 7000;
 
   // 별을 자유롭게 흩뿌리되, 별 아래 문구 자리(상자)끼리는 겹치지 않게 놓는다
   function labelBox() {
@@ -328,14 +328,18 @@
       for (var q = 0; q < stars.length; q++) if (isLive(stars[q], now)) drawLiveStar(stars[q], now, dim);
       requestAnimationFrame(frame); return;
     }
-    cx.setTransform(1, 0, 0, 1, 0, 0); cx.drawImage(bg, 0, 0); cx.setTransform(DPR, 0, 0, DPR, 0, 0);
     var CX = W / 2, CY = H * .42;
     var gp = 0;
     if (state === 'gather') gp = ease(Math.max(0, Math.min(1, (now - gatherStart) / 6000)));
     if (state === 'draw' && !spinning) gp = 0;
-    var spinT = state === 'draw' ? Math.max(0, Math.min(1, (now - drawStart) / 5200)) : 1;
-    var post = state === 'draw' ? ease(Math.max(0, Math.min(1, (now - drawStart - 5200) / 1200))) : 0;
-    var spinAng = state === 'draw' ? (1 - Math.pow(1 - spinT, 3)) * 16 : 0;
+    // 별 추첨: 천천히 돌기 시작해 점점 빨라지다가(약 10배), 가장 빠를 때 별 하나가 튀어나온다
+    var spinT = state === 'draw' ? Math.max(0, Math.min(1, (now - drawStart) / SPIN)) : 1;
+    var post = state === 'draw' ? ease(Math.max(0, Math.min(1, (now - drawStart - SPIN) / 1200))) : 0;
+    // (너무 빠르면 화면에서 바퀴가 멈춘 듯 보이므로 마지막 속도는 초당 1바퀴 남짓으로 둔다)
+    var spinAng = state === 'draw' ? 22 * (.25 * spinT + .75 * spinT * spinT * spinT) : 0;
+    // 빨라질수록 별이 꼬리를 남기도록 앞 장면을 다 지우지 않는다
+    var trail = state === 'draw' && spinning && spinT < 1 ? .55 - spinT * .35 : 1;
+    cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalAlpha = trail; cx.drawImage(bg, 0, 0); cx.globalAlpha = 1; cx.setTransform(DPR, 0, 0, DPR, 0, 0);
     for (var j = 0; j < stars.length; j++) {
       var s = stars[j], x = s.hx * W, y = s.hy * H;
       if (state === 'gather') {
@@ -344,7 +348,7 @@
         var ang = Math.atan2(ty - CY, tx - CX) + sw * .6 * gp, rr = Math.hypot(tx - CX, ty - CY);
         x = CX + Math.cos(ang) * rr; y = CY + Math.sin(ang) * rr;
       } else if (state === 'draw') {
-        var ring = Math.min(W, H) * (.16 + (j % 4) * .07), a0 = j * 2.39996;
+        var ring = Math.min(W, H) * (.16 + (j % 4) * .07) * (1 - spinT * .2), a0 = j * 2.39996;
         var pr = Math.max(0, Math.min(1, (now - drawStart) / 900));
         if (s.id === winId) ring = ring * (1 - post);
         else ring = ring * (1 + post * 1.3);
@@ -360,6 +364,12 @@
       var lit = state === 'cheer' && s.hi && now - s.hi < 3200 ? 1 - (now - s.hi) / 3200 : 0;
       drawStar(x, y, s.r * (1 + (1 - grow) * 2.5) * (isWin ? 3 : 1 + lit * 1.6), Math.min(1, alpha + lit), isWin ? 9 : 5 + lit * 4);
       if (state === 'cheer' && s.labeled) drawLabel(s, Math.min(1, grow * (.82 + lit * .18)), lit > .3);
+    }
+    if (state === 'draw' && spinning && spinT >= 1 && now - drawStart - SPIN < 500) {
+      // 멈추는 순간 가운데에서 빛이 번쩍
+      var fa = 1 - (now - drawStart - SPIN) / 500, fl = cx.createRadialGradient(CX, CY, 0, CX, CY, Math.max(W, H) * .45);
+      fl.addColorStop(0, 'rgba(255,246,220,' + fa * .8 + ')'); fl.addColorStop(1, 'rgba(255,246,220,0)');
+      cx.fillStyle = fl; cx.fillRect(0, 0, W, H);
     }
     if (state === 'gather' && gp > .6) {
       var k = (gp - .6) / .4, pulse = 1 + .04 * Math.sin(now / 400);
@@ -432,7 +442,7 @@
       $('winWho').textContent = d.name + ' · ' + d.dept;
       $('winPrize').textContent = d.dept + ' 경품 당첨!';
       var w = $('win'); w.hidden = false; w.classList.remove('fade'); void w.offsetWidth; w.classList.add('fade');
-    }, reduce ? 300 : 5600);
+    }, reduce ? 300 : SPIN + 400);
   }
 
   // ---------- 서버에서 가져오기 ----------
