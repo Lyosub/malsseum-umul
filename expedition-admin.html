@@ -316,7 +316,7 @@
         body = '<div class="pair"><figure><figcaption>팀 사진</figcaption>' + body + '</figure>' +
           '<figure class="ref"><figcaption>기준 사진</figcaption>기준 사진은 답사 뒤 들어가요<img src="' + ref + '" data-zoom="' + ref + '" alt="" onerror="this.remove()"></figure></div>';
         crit = "같은 장소·비슷한 구도 + 팀원 3명 이상";
-      } else if (p.kind === "animal_photo") crit = "「" + esc((p.animals || []).join(" / ")) + "」 (안 보이면 우리·안내판도 OK) + 팀원 3명 이상";
+      } else if (p.kind === "animal_photo") crit = "「" + esc((p.animals || []).join(" / ")) + "」 (안 보이면 우리·안내판도 OK — 단, 다른 팀 절반 넘게 동물 사진을 올린 문제면 우리·안내판은 돌려보냄) + 팀원 3명 이상";
       else if (p.kind === "hidden1") crit = "말씀 조각 4장이 모두 보이게 + 지정 장소(" + esc(D.event.meet_place || "미정") + ")";
       else if (p.kind === "hidden2") crit = "서로 다른 색(빨·주·노·갈·초) 떨어진 잎 5장";
       else if (p.kind === "hidden3") crit = "<b>영상은 전도사님 카톡으로 받아요</b> — 팀원 모두 등장 · 15~30초 · 「하나님의 작품」 소개 + 시편 104:24 외치기";
@@ -443,7 +443,7 @@
   }
   // 돌려보낼 때 고르는 이유(직접 적을 수도 있다)
   var REASONS = {
-    animal_photo: ["동물(우리·안내판)이 안 보여요"],
+    animal_photo: ["동물(우리·안내판)이 안 보여요", "다른 팀 절반 넘게 동물 사진을 올렸어요 — 동물 앞에서 다시 찍어 주세요"],
     place: ["장소나 구도가 달라요"],
     verse: ["빨간 글자를 고쳐 주세요", "빠진 부분이 있어요"],
     hidden1: ["말씀 조각 4장이 다 안 보여요", "지정 장소가 아니에요"],

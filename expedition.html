@@ -648,7 +648,7 @@
       else html += '<form class="row" data-form="animal" data-q="' + q + '"><input type="text" maxlength="20" placeholder="동물 이름" data-draft="a' + q + '" value="' + esc(drafts["a" + q] || "") + '"><button class="btn" type="submit">확인</button></form>' + stateLine(a, "");
       html += '</div>';
       // ② 사진
-      html += '<div class="step"><h3>② 그 동물 앞에서 단체 사진 (팀원 3명 이상) <small>(2점)</small></h3><p class="muted" style="margin:-4px 0 6px;">동물이 안 보이면 우리·안내판 앞에서 찍어도 돼요.</p>';
+      html += '<div class="step"><h3>② 그 동물 앞에서 단체 사진 (팀원 3명 이상) <small>(2점)</small></h3><p class="muted" style="margin:-4px 0 6px;">동물이 안 보이면 우리·안내판 앞에서 찍어도 돼요. 단, <b>다른 팀 절반 넘게 동물 사진을 올린 문제</b>는 우리·안내판 사진이 통과되지 않아요.</p>';
       if (ph && ph.photo) html += '<img class="thumb" loading="lazy" src="' + esc(ph.photo) + '" alt="">';
       html += stateLine(ph, "통과!");
       html += photoBtn("animal_photo", q, ph, "사진 올리기");
