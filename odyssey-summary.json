@@ -5,7 +5,7 @@
   "saved_24h": 2,
   "visitors_24h": 2,
   "new_24h": 0,
-  "steps_24h": 111,
+  "steps_24h": 109,
   "active_7d": 2,
   "chapters": {
     "1편 모세와 함께 (10장)": {
@@ -31,12 +31,12 @@
       "9장 클리어": 2
     },
     "7편 사울과 다윗 (16장)": {
-      "2장 클리어": 1
+      "4장 클리어": 2
     }
   },
   "stuck": [],
   "errors_24h": 0,
-  "errors_fixed_24h": 1,
-  "generated_kst": "2026-10-31 21:40",
+  "errors_fixed_24h": 0,
+  "generated_kst": "2026-11-01 02:21",
   "ok": true
 }
