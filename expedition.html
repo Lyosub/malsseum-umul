@@ -220,7 +220,7 @@
   <!-- 1. 팀 코드 -->
   <details class="card fold" id="joinCard" hidden open>
     <summary><span>팀 코드를 넣어 주세요</span></summary>
-    <p class="muted" style="margin:0 0 10px;" id="joinNote">선생님께 받은 우리 팀 코드예요. (예: 단풍-1234)</p>
+    <p class="muted" style="margin:0 0 10px;" id="joinNote">선생님께 받은 우리 팀 코드예요. (예: 1108-1234)</p>
     <form class="row" id="joinForm">
       <input type="text" id="codeInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="팀 코드" maxlength="20">
       <button class="btn" type="submit">입장</button>
@@ -451,6 +451,7 @@
 
   function join(code, silent) {
     code = String(code || "").trim().toUpperCase();
+    if (/^\d{8}$/.test(code)) code = code.slice(0, 4) + "-" + code.slice(4); // 11081234 → 1108-1234
     if (!code) { $("joinMsg").textContent = "팀 코드를 넣어 주세요."; return; }
     $("joinMsg").textContent = "";
     sb.rpc("picnic_join", { p_code: code }).then(function (r) {
@@ -929,7 +930,7 @@
     if (days > 0) {
       $("guide").open = true;
       $("dday").textContent = "D-" + days; $("dday").hidden = false;
-      $("joinNote").textContent = "팀 코드는 11월 8일 당일 아침에 선생님이 알려 줘요. (예: 단풍-1234)";
+      $("joinNote").textContent = "팀 코드는 11월 8일 당일 아침에 선생님이 알려 줘요. (예: 1108-1234)";
     }
   })();
 
