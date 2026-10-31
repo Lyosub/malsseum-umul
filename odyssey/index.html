@@ -7425,7 +7425,7 @@
     const rows = CHAPTERS.map((c, i) => {
       const n = i + 1; if (done < n) return `<div class="dq" style="opacity:.5"><span class="ck">🔒</span><span class="tx">${n}장 「${CH_NAMES[i]}」</span></div>`;
       const scenes = (ST.keys || []).filter(k => sceneChapter[k.scene] === n);
-      const lib = LIB.find(x => x[0] === n), vs = lib ? ST.verses.filter(id => { const v = verseNum(id); return v >= lib[2] && v <= lib[3]; }) : [];
+      const lib = LIB.find(x => x[0] === n), vs = lib ? ST.verses.filter(id => { const v = verseNum(id); return VERSES[id] && v >= lib[2] && v <= lib[3]; }) : [];
       return `<details style="margin:6px 0"><summary style="font-weight:800">📜 ${n}장 「${CH_NAMES[i]}」 · 장면 ${scenes.length} · 구절 ${vs.length}</summary>${scenes.map(k => `<div class="keyline"><b>${k.scene}</b> — ${k.t}</div>`).join('')}${vs.map(id => `<div class="keyline">📖 <b>${VERSES[id].ref}</b> — ${VERSES[id].text}</div>`).join('')}</details>`;
     }).join('');
     const head2 = sinai2Done() ? `<div class="keyline">🎺 <b>두 번째 받침대 — 「시내산의 마지막 한 달」의 은 나팔 둘</b><br><span style="opacity:.8">"은 나팔 둘을 만들되 두들겨 만들어서 그것으로 회중을 소집하며 진영을 출발하게 할 것이라" (민수기 10:2)</span></div>` : '';
