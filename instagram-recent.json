@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-10-31 10:39",
+  "generated_kst": "2026-11-01 10:17",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
-    "followers_count": 141,
-    "follows_count": 110,
-    "media_count": 156
+    "followers_count": 142,
+    "follows_count": 111,
+    "media_count": 157
   },
   "posts": [
+    {
+      "id": "18358437376173618",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-10-31T04:02:54+0000",
+      "permalink": "https://www.instagram.com/reel/DfJQLt6jHWq/",
+      "caption_first_line": "그 시대 유대인들은 음식을 먹기 전에 손을 씻었습니다.",
+      "likes": 9,
+      "comments": 1
+    },
     {
       "id": "18413357458094045",
       "type": "FEED",
@@ -245,16 +255,6 @@
       "timestamp_utc": "2026-09-17T05:43:23+0000",
       "permalink": "https://www.instagram.com/p/DdYIwNDmny-/",
       "caption_first_line": "채워도 다시 목마른 건, 당신 탓이 아닙니다.",
-      "likes": 19,
-      "comments": 3
-    },
-    {
-      "id": "18124461535859014",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-09-15T07:16:44+0000",
-      "permalink": "https://www.instagram.com/p/DdTJ2G9Gixo/",
-      "caption_first_line": "💧 새로워진 말씀우물",
       "likes": 19,
       "comments": 3
     }
