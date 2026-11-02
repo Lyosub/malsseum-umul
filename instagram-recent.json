@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-11-01 10:17",
+  "generated_kst": "2026-11-02 10:35",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
-    "followers_count": 142,
-    "follows_count": 111,
-    "media_count": 157
+    "followers_count": 141,
+    "follows_count": 110,
+    "media_count": 158
   },
   "posts": [
+    {
+      "id": "18114436586141779",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-11-01T10:03:31+0000",
+      "permalink": "https://www.instagram.com/reel/DfMeLG2Ac1E/",
+      "caption_first_line": "10월의 말씀연결 · 성경 속 연결고리 · 야고보서 편",
+      "likes": 4,
+      "comments": 1
+    },
     {
       "id": "18358437376173618",
       "type": "REELS",
@@ -247,16 +257,6 @@
       "caption_first_line": "채워도 또 허전한 거, 네가 이상한 게 아니야.",
       "likes": 5,
       "comments": 1
-    },
-    {
-      "id": "18084703103300573",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-09-17T05:43:23+0000",
-      "permalink": "https://www.instagram.com/p/DdYIwNDmny-/",
-      "caption_first_line": "채워도 다시 목마른 건, 당신 탓이 아닙니다.",
-      "likes": 19,
-      "comments": 3
     }
   ]
 }
