@@ -1,17 +1,17 @@
-// 7편 「사울과 다윗」 — 사무엘상 8–31장(2026-10-30 전도사님 결정: 삼상 8–31 전체를 한 편, 16장, 부별 배포). 이 파일은 1부 「사울 왕」(1~4장, 삼상 8–12장).
+// 7편 「사울과 다윗」 — 사무엘상 8–31장(2026-10-30 전도사님 결정: 삼상 8–31 전체를 한 편, 16장, 부별 배포). 이 파일은 1부 「사울 왕」(1~4장, 삼상 8–12장) · 2부 「버림받은 왕」(5~7장, 삼상 13–15장).
 // 대사·구절 카드는 E:\temp\claude-work\saul7\gen7.py가 bskorea 개역개정 원문 파일에서 그대로 뽑는다(손으로 옮기지 않음).
 // 무대: 1장 실로와 세겜의 라마(6편과 같은 자리, 삼상 7:17) · 2장 새 마을 기브아와 믹마스(기스의 집·숩 땅의 성읍·하나님의 산) → 기브온 마을(미스바, 6편과 같은 자리)
 //       3장 모압 평지(요단 동편 길르앗 야베스) · 기브아 · 길갈 · 4장 길갈. 11:7(겨릿소)은 해설로 읽기만, 11:11 싸움은 먼지만 멀리.
 // 새 인물 원화는 GPT 14차(2026-10-30 도착) → 11/24 Meshy 충전 뒤 3D. 그 전에는 기존 모델로 대신한다(M_ 한 곳만 바꾸면 됨).
 (window.__odyQ = window.__odyQ || []).push(api => {
   const { DLG, ZONES, CONDS, VERSES, THREE, SPEAKERS: { NAR } } = api;
-  const SAUL = { n: '사울' }, SAMUEL = { n: '사무엘' }, ELDERS = { n: '장로들' }, SERVANT = { n: '사환' }, GIRLS = { n: '소녀들' }, PEOPLE = { n: '백성' };
+  const SAUL = { n: '사울' }, SAMUEL = { n: '사무엘' }, ELDERS = { n: '장로들' }, SERVANT = { n: '사환' }, GIRLS = { n: '소녀들' }, PEOPLE = { n: '백성' }, JONATHAN = { n: '요나단' }, ARMOR = { n: '무기를 든 소년' };
   const cur = () => api.ST.cur === 'saul' && api.ST.sp.saul ? api.ST.sp.saul : null;
   const at = (ch, a = 0, b = 99) => () => { const p = cur(); return !!p && p.ch === ch && !p.cleared && p.step >= a && p.step <= b; };
   const any = (...fs) => () => fs.some(f => f());
   // 새 인물 3D(GPT 14차 → Meshy)가 오기 전 임시 모델 — 사무엘은 6편 9장과 같은 모델
   const M_ = { samuel: 'j5-levite-youth', saul: 'j4-spy-1', servant: 'ca-water-boy', kish: 'he-father', uncle: 'he-grandpa', girls: 'he-girl-hb', elders: 'ca-israel-elder',
-    prophets: 'he-levite', people: 'he-brickmaker', nahash: 'j5-midianite', messenger: 'ca-horn-blower' };
+    prophets: 'he-levite', people: 'he-brickmaker', nahash: 'j5-midianite', messenger: 'ca-horn-blower', jonathan: 'j4-spy-2', armor: 'he-boy-hb' };
   const TALL = 1.12;   // "키는 모든 백성보다 어깨 위만큼 더 컸더라"(삼상 9:2, 10:23)
 
   // ── 자리 ──
@@ -21,18 +21,25 @@
   const MIZ7 = [10, 20], BAGS = [4, 26];                                                                     // 기브온 마을(미스바)
   const JABESH = [-16, 34], AMMON = [0, 40];                                                                 // 모압 평지(요단 동편) — 가운데 성막 뜰을 피해 북쪽
   const GIL7 = [12, 2], WHEAT = [-20, 10];                                                                   // 길갈
+  const PASS = [28, 18], BOSES = [24, 24], SENEH = [33, 13], PHIL = [40, 26], MIGRON = [8, 18], HONEY = [10, 33], SMITH = [14, 16], SAM15 = [-16, 3], NIGHT = [-26, -14];   // 2부 기브아와 믹마스 — 믹마스 어귀의 두 바위(14:4)·블레셋 부대·석류나무(14:2)·수풀(14:25)·기브아(15:34)
+  const ALT13 = [12, -1], CAMP = [2, 8], GIL15 = [-6, -4];                                                   // 2부 길갈
   // 단계 번호
   // 0장: 0 라마 · 1 장로들 · 2 여호와의 대답 · 3 왕의 제도
   // 1장: 0 기스의 집 · 1 암나귀 찾기 · 2 소녀들 · 3 선견자 · 4 산당 · 5 기름 부음 · 6 세 징조 · 7 선지자의 무리 · 8 숙부 · 9 미스바 · 10 짐보따리
   // 2장: 0 야베스 · 1 밭에서 온 사울 · 2 새벽 세 대 · 3 길갈
   // 3장: 0 증언 · 1 기억의 길 · 2 우레와 비 · 3 기도하기를 쉬는 죄
-  let dustShow = false, rainShow = false, oilShow = false;
+  // 4장: 0 믹마스 소식 · 1 이레 · 2 철공이 없음
+  // 5장: 0 두 바위 · 1 요나단과 소년 · 2 기어 오름 · 3 사울 · 4 수풀의 꿀 · 5 제비
+  // 6장: 0 아말렉 · 1 후회하노니 · 2 길갈에서 만남 · 3 양의 소리 · 4 순종이 제사보다
+  let dustShow = false, rainShow = false, oilShow = false, dust14 = false;
   Object.assign(CONDS, {
     slOn: () => !!cur(),
     slRamah: at(0, 0, 3),
     slKish: at(1, 0, 0), slSaulHome: at(1, 0, 1), slGirls: at(1, 2, 2), slSaulZuph: at(1, 2, 3), slSamZuph: at(1, 3, 3), slFeast: at(1, 4, 4), slEdge: at(1, 5, 6),
     slProphets: at(1, 7, 7), slUncle: at(1, 8, 8), slMizpah: at(1, 9, 10),
     slJabesh: at(2, 0, 0), slAmmon: at(2, 0, 2), slField: at(2, 1, 1), slDawn: at(2, 2, 2), slGilgal: any(at(2, 3, 3), at(3, 0, 3)), slSam12: at(3, 0, 3),
+    slCamp13: at(4, 0, 1), slSmith: at(4, 2, 2), slPass: at(5, 0, 2), slJon: at(5, 1, 2), slMigron: at(5, 3, 5), slHoney: at(5, 4, 4),
+    slSam15: at(6, 0, 0), slNight: at(6, 1, 1), slGil15: at(6, 2, 4), slSound: at(6, 3, 3),
   });
   const ZS = ZONES.shiloh.points, ZG = ZONES.gibeah.points, ZB = ZONES.gibeon.points, ZM = ZONES.moab.points, ZL = ZONES.gilgal.points;
   const V_ = (Z, id, xz, title, model, cond, dx = 0, dz = 0, ex = {}) => Z.push({ id, x: xz[0] + dx, z: xz[1] + dz, type: 'villager', title, model, persona: 'rs_static', cond, body: '', ...ex });
@@ -83,6 +90,25 @@
   L_(ZL, 'sl_wheat', WHEAT, '밀 베는 밭', 'slSam12', 0, 0);
   // 기브온 마을에서 기브아로 가는 길은 엔진(index.html)이 낸다 · 모압 평지에서 요단을 건너 길갈로(6편과 같은 길)
   ZM.push({ id: 'to-gilgal', x: -36.5, z: 9, type: 'exit', title: '요단을 건너 길갈로', to: 'gilgal', spawn: [34, 2], cond: 'slOn' });
+  // 5장 길갈 · 기브아
+  L_(ZL, 'sl_mich', GIL7, '길갈 — 사울을 따라 모인 백성', 'slCamp13', -4, 5);
+  L_(ZL, 'sl_altar13', ALT13, '번제단', 'slCamp13', 0, 2.6);
+  V_(ZL, 'sl_saul13', ALT13, '왕 사울', M_.saul, 'slCamp13', -3, 1, { scale: TALL });
+  V_(ZL, 'sl_people13', ALT13, '떠는 백성', M_.people, 'slCamp13', 3, 3);
+  L_(ZG, 'sl_smith', SMITH, '베냐민 기브아 — 철공이 없는 땅', 'slSmith');
+  // 6장 믹마스 어귀
+  L_(ZG, 'sl_pass', PASS, '믹마스 어귀 — 두 바위', 'slPass', -3, 3);
+  V_(ZG, 'sl_jonathan', PASS, '요나단', M_.jonathan, 'slJon', -1.6, 0.4);
+  V_(ZG, 'sl_armor', PASS, '무기를 든 소년', M_.armor, 'slJon', -3.2, 1.6);
+  V_(ZG, 'sl_saul14', MIGRON, '석류나무 아래의 사울', M_.saul, 'slMigron', 0, 2.2, { scale: TALL });
+  L_(ZG, 'sl_honey', HONEY, '수풀 — 땅에 꿀이 있더라', 'slHoney');
+  // 7장 기브아 → 길갈
+  V_(ZG, 'sl_samuel15', SAM15, '사무엘', M_.samuel, 'slSam15', 1.6, 0);
+  V_(ZG, 'sl_saul15', SAM15, '왕 사울', M_.saul, 'slSam15', -1.6, 0.6, { scale: TALL });
+  L_(ZG, 'sl_night', NIGHT, '온 밤을 여호와께 부르짖으니라', 'slNight');
+  V_(ZL, 'sl_samuel15g', GIL15, '사무엘', M_.samuel, 'slGil15', 1.6, 0);
+  V_(ZL, 'sl_saul15g', GIL15, '왕 사울', M_.saul, 'slGil15', -1.6, 0.6, { scale: TALL });
+  L_(ZL, 'sl_camp15', CAMP, '진영 — 들려오는 소리', 'slSound');
 
   // ── 구절 카드(개역개정 원문, gen7.py가 원문 파일에서 뽑음) ──
   Object.assign(VERSES, {
@@ -92,6 +118,9 @@
     '1sa11-13': { ref: '사무엘상 11:13', text: "사울이 이르되 이 날에는 사람을 죽이지 못하리니 여호와께서 오늘 이스라엘 중에 구원을 베푸셨음이니라" },
     '1sa12-23': { ref: '사무엘상 12:23', text: "나는 너희를 위하여 기도하기를 쉬는 죄를 여호와 앞에 결단코 범하지 아니하고 선하고 의로운 길을 너희에게 가르칠 것인즉" },
     '1sa12-24': { ref: '사무엘상 12:24', text: "너희는 여호와께서 너희를 위하여 행하신 그 큰 일을 생각하여 오직 그를 경외하며 너희의 마음을 다하여 진실히 섬기라" },
+    '1sa13-14': { ref: '사무엘상 13:14', text: "지금은 왕의 나라가 길지 못할 것이라 여호와께서 왕에게 명령하신 바를 왕이 지키지 아니하였으므로 여호와께서 그의 마음에 맞는 사람을 구하여 여호와께서 그를 그의 백성의 지도자로 삼으셨느니라 하고" },
+    '1sa14-6': { ref: '사무엘상 14:6', text: "요나단이 자기의 무기를 든 소년에게 이르되 우리가 이 할례 받지 않은 자들에게로 건너가자 여호와께서 우리를 위하여 일하실까 하노라 여호와의 구원은 사람이 많고 적음에 달리지 아니하였느니라" },
+    '1sa15-22': { ref: '사무엘상 15:22', text: "사무엘이 이르되 여호와께서 번제와 다른 제사를 그의 목소리를 청종하는 것을 좋아하심 같이 좋아하시겠나이까 순종이 제사보다 낫고 듣는 것이 숫양의 기름보다 나으니" },
   });
   // ── 대사(개역개정 원문, gen7.py가 뽑음 — 손으로 고치지 말고 생성기를 고친다) ──
   Object.assign(DLG, {
@@ -308,12 +337,205 @@
       [SAMUEL, "너희는 여호와께서 너희를 위하여 행하신 그 큰 일을 생각하여 오직 그를 경외하며 너희의 마음을 다하여 진실히 섬기라"],
       [SAMUEL, "만일 너희가 여전히 악을 행하면 너희와 너희 왕이 다 멸망하리라"],
     ],
+    sl_mich: [
+      [NAR, "사울이 왕이 될 때에 사십 세라 그가 이스라엘을 다스린 지 이 년에 (삼상 13:1)"],
+      [NAR, "이스라엘 사람 삼천 명을 택하여 그 중에서 이천 명은 자기와 함께 믹마스와 벧엘 산에 있게 하고 일천 명은 요나단과 함께 베냐민 기브아에 있게 하고 남은 백성은 각기 장막으로 보내니라 (삼상 13:2)"],
+      [NAR, "요나단이 게바에 있는 블레셋 사람의 수비대를 치매 블레셋 사람이 이를 들은지라 사울이 온 땅에 나팔을 불어 이르되 히브리 사람들은 들으라 하니 (삼상 13:3)"],
+      [NAR, "온 이스라엘이 사울이 블레셋 사람들의 수비대를 친 것과 이스라엘이 블레셋 사람들의 미움을 받게 되었다 함을 듣고 그 백성이 길갈로 모여 사울을 따르니라 (삼상 13:4)"],
+      [NAR, "블레셋 사람들이 이스라엘과 싸우려고 모였는데 병거가 삼만이요 마병이 육천 명이요 백성은 해변의 모래 같이 많더라 그들이 올라와 벧아웬 동쪽 믹마스에 진 치매 (삼상 13:5)"],
+      [NAR, "이스라엘 사람들이 위급함을 보고 절박하여 굴과 수풀과 바위 틈과 은밀한 곳과 웅덩이에 숨으며 (삼상 13:6)"],
+      [NAR, "어떤 히브리 사람들은 요단을 건너 갓과 길르앗 땅으로 가되 사울은 아직 길갈에 있고 그를 따른 모든 백성은 떨더라 (삼상 13:7)"],
+      [NAR, "▶ 길갈 진영의 번제단으로 가요."],
+    ],
+    sl_wait: [
+      [NAR, "▶ \"사울은 사무엘이 정한 기한대로 이레 동안을 기다렸으나\" (삼상 13:8) — 이레를 지켜봐요. 번제 버튼은 언제든 누를 수 있어요."],
+    ],
+    sl_wait_done: [
+      [NAR, "사울은 사무엘이 정한 기한대로 이레 동안을 기다렸으나 사무엘이 길갈로 오지 아니하매 백성이 사울에게서 흩어지는지라 (삼상 13:8)"],
+      [NAR, "사울이 이르되 (삼상 13:9)"],
+      [SAUL, "번제와 화목제물을 이리로 가져오라"],
+      [NAR, "하여 번제를 드렸더니 (삼상 13:9)"],
+      [NAR, "번제 드리기를 마치자 사무엘이 온지라 사울이 나가 맞으며 문안하매 (삼상 13:10)"],
+      [NAR, "사무엘이 이르되 (삼상 13:11)"],
+      [SAMUEL, "왕이 행하신 것이 무엇이냐"],
+      [NAR, "하니 사울이 이르되 (삼상 13:11)"],
+      [SAUL, "백성은 내게서 흩어지고 당신은 정한 날 안에 오지 아니하고 블레셋 사람은 믹마스에 모였음을 내가 보았으므로"],
+      [SAUL, "이에 내가 이르기를 블레셋 사람들이 나를 치러 길갈로 내려오겠거늘 내가 여호와께 은혜를 간구하지 못하였다 하고 부득이하여 번제를 드렸나이다"],
+      [NAR, "사무엘이 사울에게 이르되 (삼상 13:13)"],
+      [SAMUEL, "왕이 망령되이 행하였도다 왕이 왕의 하나님 여호와께서 왕에게 내리신 명령을 지키지 아니하였도다 그리하였더라면 여호와께서 이스라엘 위에 왕의 나라를 영원히 세우셨을 것이거늘"],
+      [SAMUEL, "지금은 왕의 나라가 길지 못할 것이라 여호와께서 왕에게 명령하신 바를 왕이 지키지 아니하였으므로 여호와께서 그의 마음에 맞는 사람을 구하여 여호와께서 그를 그의 백성의 지도자로 삼으셨느니라"],
+      [NAR, "▶ 기브아로 가요 — 사무엘이 올라간 곳이에요."],
+    ],
+    sl_smith: [
+      [NAR, "사무엘이 일어나 길갈에서 떠나 베냐민 기브아로 올라가니라 사울이 자기와 함께 한 백성의 수를 세어 보니 육백 명 가량이라 (삼상 13:15)"],
+      [NAR, "사울과 그의 아들 요나단과 그들과 함께 한 백성은 베냐민 게바에 있고 블레셋 사람들은 믹마스에 진 쳤더니 (삼상 13:16)"],
+      [NAR, "노략꾼들이 세 대로 블레셋 사람들의 진영에서 나와서 한 대는 오브라 길을 따라서 수알 땅에 이르렀고 (삼상 13:17)"],
+      [NAR, "한 대는 벧호론 길로 향하였고 한 대는 광야쪽으로 스보임 골짜기가 내려다 보이는 지역 길로 향하였더라 (삼상 13:18)"],
+      [NAR, "그 때에 이스라엘 온 땅에 철공이 없었으니 이는 블레셋 사람들이 말하기를 히브리 사람이 칼이나 창을 만들까 두렵다 하였음이라 (삼상 13:19)"],
+      [NAR, "온 이스라엘 사람들이 각기 보습이나 삽이나 도끼나 괭이를 벼리려면 블레셋 사람들에게로 내려갔었는데 (삼상 13:20)"],
+      [NAR, "곧 그들이 괭이나 삽이나 쇠스랑이나 도끼나 쇠채찍이 무딜 때에 그리하였으므로 (삼상 13:21)"],
+      [NAR, "싸우는 날에 사울과 요나단과 함께 한 백성의 손에는 칼이나 창이 없고 오직 사울과 그의 아들 요나단에게만 있었더라 (삼상 13:22)"],
+      [NAR, "블레셋 사람들의 부대가 나와서 믹마스 어귀에 이르렀더라 (삼상 13:23)"],
+    ],
+    sl_pass: [
+      [NAR, "하루는 사울의 아들 요나단이 자기의 무기를 든 소년에게 이르되 우리가 건너편 블레셋 사람들의 부대로 건너가자 하고 그의 아버지에게는 아뢰지 아니하였더라 (삼상 14:1)"],
+      [NAR, "사울이 기브아 변두리 미그론에 있는 석류나무 아래에 머물렀고 함께 한 백성은 육백 명 가량이며 (삼상 14:2)"],
+      [NAR, "아히야는 에봇을 입고 거기 있었으니 그는 이가봇의 형제 아히둡의 아들이요 비느하스의 손자요 실로에서 여호와의 제사장이 되었던 엘리의 증손이었더라 백성은 요나단이 간 줄을 알지 못하니라 (삼상 14:3)"],
+      [NAR, "요나단이 블레셋 사람들에게로 건너가려 하는 어귀 사이 이쪽에는 험한 바위가 있고 저쪽에도 험한 바위가 있는데 하나의 이름은 보세스요 하나의 이름은 세네라 (삼상 14:4)"],
+      [NAR, "한 바위는 북쪽에서 믹마스 앞에 일어섰고 하나는 남쪽에서 게바 앞에 일어섰더라 (삼상 14:5)"],
+      [NAR, "▶ 두 바위 곁의 요나단에게 가요."],
+    ],
+    sl_jon: [
+      [NAR, "요나단이 자기의 무기를 든 소년에게 이르되 (삼상 14:6)"],
+      [JONATHAN, "우리가 이 할례 받지 않은 자들에게로 건너가자 여호와께서 우리를 위하여 일하실까 하노라 여호와의 구원은 사람이 많고 적음에 달리지 아니하였느니라"],
+      [NAR, "무기를 든 자가 그에게 이르되 (삼상 14:7)"],
+      [ARMOR, "당신의 마음에 있는 대로 다 행하여 앞서 가소서 내가 당신과 마음을 같이 하여 따르리이다"],
+      [NAR, "요나단이 이르되 (삼상 14:8)"],
+      [JONATHAN, "보라 우리가 그 사람들에게로 건너가서 그들에게 보이리니"],
+      [JONATHAN, "그들이 만일 우리에게 이르기를 우리가 너희에게로 가기를 기다리라 하면 우리는 우리가 있는 곳에 가만히 서서 그들에게로 올라가지 말 것이요"],
+      [JONATHAN, "그들이 만일 말하기를 우리에게로 올라오라 하면 우리가 올라갈 것은 여호와께서 그들을 우리 손에 넘기셨음이니 이것이 우리에게 표징이 되리라"],
+      [NAR, "▶ 바위 아래로 가서 올라가요."],
+    ],
+    sl_climb: [
+      [NAR, "▶ \"요나단이 손 발로 기어 올라갔고 그 무기를 든 자도 따랐더라\" (삼상 14:13) — 빛나는 바위를 누르고, 소년이 따라오면 다음 바위가 열려요."],
+    ],
+    sl_climb_done: [
+      [NAR, "둘이 다 블레셋 사람들에게 보이매 블레셋 사람이 이르되 보라 히브리 사람이 그들이 숨었던 구멍에서 나온다 하고 (삼상 14:11)"],
+      [NAR, "그 부대 사람들이 요나단과 그의 무기를 든 자에게 이르되 우리에게로 올라오라 너희에게 보여 줄 것이 있느니라 한지라 요나단이 자기의 무기를 든 자에게 이르되 나를 따라 올라오라 여호와께서 그들을 이스라엘의 손에 넘기셨느니라 하고 (삼상 14:12)"],
+      [NAR, "요나단이 손 발로 기어 올라갔고 그 무기를 든 자도 따랐더라 블레셋 사람들이 요나단 앞에서 엎드러지매 무기를 든 자가 따라가며 죽였으니 (삼상 14:13)"],
+      [NAR, "요나단과 그 무기를 든 자가 반나절 갈이 땅 안에서 처음으로 쳐죽인 자가 이십 명 가량이라 (삼상 14:14)"],
+      [NAR, "들에 있는 진영과 모든 백성들이 공포에 떨었고 부대와 노략꾼들도 떨었으며 땅도 진동하였으니 이는 큰 떨림이었더라 (삼상 14:15)"],
+      [NAR, "베냐민 기브아에 있는 사울의 파수꾼이 바라본즉 허다한 블레셋 사람들이 무너져 이리 저리 흩어지더라 (삼상 14:16)"],
+      [NAR, "▶ 석류나무 아래의 사울에게 가요."],
+    ],
+    sl_saul14: [
+      [NAR, "사울이 자기와 함께 한 백성에게 이르되 우리에게서 누가 나갔는지 점호하여 보라 하여 점호한즉 요나단과 그의 무기를 든 자가 없어졌더라 (삼상 14:17)"],
+      [NAR, "사울이 아히야에게 이르되 하나님의 궤를 이리로 가져오라 하니 그 때에 하나님의 궤가 이스라엘 자손과 함께 있음이니라 (삼상 14:18)"],
+      [NAR, "사울이 제사장에게 말할 때에 블레셋 사람들의 진영에 소동이 점점 더한지라 사울이 제사장에게 이르되 네 손을 거두라 하고 (삼상 14:19)"],
+      [NAR, "사울과 그와 함께 한 모든 백성이 모여 전장에 가서 본즉 블레셋 사람들이 각각 칼로 자기의 동무들을 치므로 크게 혼란하였더라 (삼상 14:20)"],
+      [NAR, "전에 블레셋 사람들과 함께 하던 히브리 사람이 사방에서 블레셋 사람들과 함께 진영에 들어왔더니 그들이 돌이켜 사울과 요나단과 함께 한 이스라엘 사람들과 합하였고 (삼상 14:21)"],
+      [NAR, "에브라임 산지에 숨었던 이스라엘 모든 사람도 블레셋 사람들이 도망함을 듣고 싸우러 나와서 그들을 추격하였더라 (삼상 14:22)"],
+      [NAR, "여호와께서 그 날에 이스라엘을 구원하시므로 전쟁이 벧아웬을 지나니라 (삼상 14:23)"],
+      [NAR, "▶ 수풀로 가요."],
+    ],
+    sl_honey: [
+      [NAR, "이 날에 이스라엘 백성들이 피곤하였으니 이는 사울이 백성에게 맹세시켜 경계하여 이르기를 저녁 곧 내가 내 원수에게 보복하는 때까지 아무 음식물이든지 먹는 사람은 저주를 받을지어다 하였음이라 그러므로 모든 백성이 음식물을 맛보지 못하고 (삼상 14:24)"],
+      [NAR, "그들이 다 수풀에 들어간즉 땅에 꿀이 있더라 (삼상 14:25)"],
+      [NAR, "백성이 수풀로 들어갈 때에 꿀이 흐르는 것을 보고도 그들이 맹세를 두려워하여 손을 그 입에 대는 자가 없었으나 (삼상 14:26)"],
+      [NAR, "요나단은 그의 아버지가 백성에게 맹세하여 명령할 때에 듣지 못하였으므로 손에 가진 지팡이 끝을 내밀어 벌집의 꿀을 찍고 그의 손을 돌려 입에 대매 눈이 밝아졌더라 (삼상 14:27)"],
+      [NAR, "그 때에 백성 중 한 사람이 말하여 이르되 당신의 부친이 백성에게 맹세하여 엄히 말씀하시기를 오늘 음식물을 먹는 사람은 저주를 받을지어다 하셨나이다 그러므로 백성이 피곤하였나이다 하니 (삼상 14:28)"],
+      [NAR, "요나단이 이르되 (삼상 14:29)"],
+      [JONATHAN, "내 아버지께서 이 땅을 곤란하게 하셨도다 보라 내가 이 꿀 조금을 맛보고도 내 눈이 이렇게 밝아졌거든"],
+      [JONATHAN, "하물며 백성이 오늘 그 대적에게서 탈취하여 얻은 것을 임의로 먹었더라면 블레셋 사람을 살륙함이 더욱 많지 아니하였겠느냐"],
+      [NAR, "▶ 다시 사울에게 가요."],
+    ],
+    sl_lots: [
+      [NAR, "그 날에 백성이 믹마스에서부터 아얄론에 이르기까지 블레셋 사람들을 쳤으므로 그들이 심히 피곤한지라 (삼상 14:31)"],
+      [NAR, "백성이 이에 탈취한 물건에 달려가서 양과 소와 송아지들을 끌어다가 그것을 땅에서 잡아 피째 먹었더니 (삼상 14:32)"],
+      [NAR, "무리가 사울에게 전하여 이르되 보소서 백성이 고기를 피째 먹어 여호와께 범죄하였나이다 사울이 이르되 너희가 믿음 없이 행하였도다 이제 큰 돌을 내게로 굴려 오라 하고 (삼상 14:33)"],
+      [NAR, "또 사울이 이르되 너희는 백성 중에 흩어져 다니며 그들에게 이르기를 사람은 각기 소와 양을 이리로 끌어다가 여기서 잡아 먹되 피째로 먹어 여호와께 범죄하지 말라 하라 하매 그 밤에 모든 백성이 각각 자기의 소를 끌어다가 거기서 잡으니라 (삼상 14:34)"],
+      [NAR, "사울이 여호와를 위하여 제단을 쌓았으니 이는 그가 여호와를 위하여 처음 쌓은 제단이었더라 (삼상 14:35)"],
+      [NAR, "사울이 이르되 우리가 밤에 블레셋 사람들을 추격하여 동틀 때까지 그들 중에서 탈취하고 한 사람도 남기지 말자 무리가 이르되 왕의 생각에 좋은 대로 하소서 할 때에 제사장이 이르되 이리로 와서 하나님께로 나아가사이다 하매 (삼상 14:36)"],
+      [NAR, "사울이 하나님께 묻자오되 내가 블레셋 사람들을 추격하리이까 주께서 그들을 이스라엘의 손에 넘기시겠나이까 하되 그 날에 대답하지 아니하시는지라 (삼상 14:37)"],
+      [NAR, "사울이 이르되 너희 군대의 지휘관들아 다 이리로 오라 오늘 이 죄가 누구에게 있나 알아보자 (삼상 14:38)"],
+      [NAR, "이스라엘을 구원하신 여호와께서 살아 계심을 두고 맹세하노니 내 아들 요나단에게 있다 할지라도 반드시 죽으리라 하되 모든 백성 중 한 사람도 대답하지 아니하매 (삼상 14:39)"],
+      [NAR, "이에 그가 온 이스라엘에게 이르되 너희는 저쪽에 있으라 나와 내 아들 요나단은 이쪽에 있으리라 백성이 사울에게 말하되 왕의 생각에 좋은 대로 하소서 하니라 (삼상 14:40)"],
+      [NAR, "이에 사울이 이스라엘의 하나님 여호와께 아뢰되 원하건대 실상을 보이소서 하였더니 요나단과 사울이 뽑히고 백성은 면한지라 (삼상 14:41)"],
+      [NAR, "사울이 이르되 나와 내 아들 요나단 사이에 뽑으라 하였더니 요나단이 뽑히니라 (삼상 14:42)"],
+      [NAR, "사울이 요나단에게 이르되 네가 행한 것을 내게 말하라 요나단이 말하여 이르되 내가 다만 내 손에 가진 지팡이 끝으로 꿀을 조금 맛보았을 뿐이오나 내가 죽을 수밖에 없나이다 (삼상 14:43)"],
+      [NAR, "사울이 이르되 (삼상 14:44)"],
+      [SAUL, "요나단아 네가 반드시 죽으리라 그렇지 않으면 하나님이 내게 벌을 내리시고 또 내리시기를 원하노라"],
+      [NAR, "백성이 사울에게 말하되 (삼상 14:45)"],
+      [PEOPLE, "이스라엘에 이 큰 구원을 이룬 요나단이 죽겠나이까 결단코 그렇지 아니하니이다 여호와의 살아 계심을 두고 맹세하옵나니 그의 머리털 하나도 땅에 떨어지지 아니할 것은 그가 오늘 하나님과 동역하였음이니이다"],
+      [NAR, "하여 백성이 요나단을 구원하여 죽지 않게 하니라 (삼상 14:45)"],
+      [NAR, "사울이 블레셋 사람들 추격하기를 그치고 올라가매 블레셋 사람들이 자기 곳으로 돌아가니라 (삼상 14:46)"],
+      [NAR, "사울이 이스라엘 왕위에 오른 후에 사방에 있는 모든 대적 곧 모압과 암몬 자손과 에돔과 소바의 왕들과 블레셋 사람들을 쳤는데 향하는 곳마다 이겼고 (삼상 14:47)"],
+      [NAR, "용감하게 아말렉 사람들을 치고 이스라엘을 그 약탈하는 자들의 손에서 건졌더라 (삼상 14:48)"],
+      [NAR, "사울의 아들은 요나단과 이스위와 말기수아요 그의 두 딸의 이름은 이러하니 맏딸의 이름은 메랍이요 작은 딸의 이름은 미갈이며 (삼상 14:49)"],
+      [NAR, "사울의 아내의 이름은 아히노암이니 아히마아스의 딸이요 그의 군사령관의 이름은 아브넬이니 사울의 숙부 넬의 아들이며 (삼상 14:50)"],
+      [NAR, "사울의 아버지는 기스요 아브넬의 아버지는 넬이니 아비엘의 아들이었더라 (삼상 14:51)"],
+      [NAR, "사울이 사는 날 동안에 블레셋 사람과 큰 싸움이 있었으므로 사울이 힘 센 사람이나 용감한 사람을 보면 그들을 불러모았더라 (삼상 14:52)"],
+    ],
+    sl_amalek: [
+      [NAR, "사무엘이 사울에게 이르되 (삼상 15:1)"],
+      [SAMUEL, "여호와께서 나를 보내어 왕에게 기름을 부어 그의 백성 이스라엘 위에 왕으로 삼으셨은즉 이제 왕은 여호와의 말씀을 들으소서"],
+      [SAMUEL, "만군의 여호와께서 이같이 말씀하시기를 아말렉이 이스라엘에게 행한 일 곧 애굽에서 나올 때에 길에서 대적한 일로 내가 그들을 벌하노니"],
+      [SAMUEL, "지금 가서 아말렉을 쳐서 그들의 모든 소유를 남기지 말고 진멸하되 남녀와 소아와 젖 먹는 아이와 우양과 낙타와 나귀를 죽이라 하셨나이다"],
+      [NAR, "사울이 백성을 소집하고 그들을 들라임에서 세어 보니 보병이 이십만 명이요 유다 사람이 만 명이라 (삼상 15:4)"],
+      [NAR, "사울이 아말렉 성에 이르러 골짜기에 복병시키니라 (삼상 15:5)"],
+      [NAR, "사울이 겐 사람에게 이르되 (삼상 15:6)"],
+      [SAUL, "아말렉 사람 중에서 떠나 가라 그들과 함께 너희를 멸하게 될까 하노라 이스라엘 모든 자손이 애굽에서 올라올 때에 너희가 그들을 선대하였느니라"],
+      [NAR, "이에 겐 사람이 아말렉 사람 중에서 떠나니라 (삼상 15:6)"],
+      [NAR, "사울이 하윌라에서부터 애굽 앞 술에 이르기까지 아말렉 사람을 치고 (삼상 15:7)"],
+      [NAR, "아말렉 사람의 왕 아각을 사로잡고 칼날로 그의 모든 백성을 진멸하였으되 (삼상 15:8)"],
+      [NAR, "사울과 백성이 아각과 그의 양과 소의 가장 좋은 것 또는 기름진 것과 어린 양과 모든 좋은 것을 남기고 진멸하기를 즐겨 아니하고 가치 없고 하찮은 것은 진멸하니라 (삼상 15:9)"],
+    ],
+    sl_regret: [
+      [NAR, "여호와의 말씀이 사무엘에게 임하니라 이르시되 (삼상 15:10)"],
+      [NAR, "내가 사울을 왕으로 세운 것을 후회하노니 그가 돌이켜서 나를 따르지 아니하며 내 명령을 행하지 아니하였음이니라 하신지라 사무엘이 근심하여 온 밤을 여호와께 부르짖으니라 (삼상 15:11)"],
+      [NAR, "사무엘이 사울을 만나려고 아침에 일찍이 일어났더니 어떤 사람이 사무엘에게 말하여 이르되 사울이 갈멜에 이르러 자기를 위하여 기념비를 세우고 발길을 돌려 길갈로 내려갔다 하는지라 (삼상 15:12)"],
+      [NAR, "▶ 길갈로 내려가요."],
+    ],
+    sl_meet: [
+      [NAR, "사무엘이 사울에게 이른즉 사울이 그에게 이르되 (삼상 15:13)"],
+      [SAUL, "원하건대 당신은 여호와께 복을 받으소서 내가 여호와의 명령을 행하였나이다"],
+      [NAR, "사무엘이 이르되 (삼상 15:14)"],
+      [SAMUEL, "그러면 내 귀에 들려오는 이 양의 소리와 내게 들리는 소의 소리는 어찌 됨이니이까"],
+      [NAR, "▶ 진영에서 소리가 나는 곳을 찾아요."],
+    ],
+    sl_sound: [
+      [NAR, "▶ \"내 귀에 들려오는 이 양의 소리와 내게 들리는 소의 소리\" (삼상 15:14) — 🔊 칸을 눌러 가까운 쪽으로 찾아가요."],
+    ],
+    sl_sound_done: [
+      [NAR, "사울이 이르되 (삼상 15:15)"],
+      [SAUL, "그것은 무리가 아말렉 사람에게서 끌어 온 것인데 백성이 당신의 하나님 여호와께 제사하려 하여 양들과 소들 중에서 가장 좋은 것을 남김이요 그 외의 것은 우리가 진멸하였나이다"],
+      [NAR, "사무엘이 사울에게 이르되 (삼상 15:16)"],
+      [SAMUEL, "가만히 계시옵소서 간 밤에 여호와께서 내게 이르신 것을 왕에게 말하리이다"],
+      [NAR, "하니 그가 이르되 (삼상 15:16)"],
+      [SAUL, "말씀하소서"],
+      [NAR, "사무엘이 이르되 (삼상 15:17)"],
+      [SAMUEL, "왕이 스스로 작게 여길 그 때에 이스라엘 지파의 머리가 되지 아니하셨나이까 여호와께서 왕에게 기름을 부어 이스라엘 왕을 삼으시고"],
+      [SAMUEL, "또 여호와께서 왕을 길로 보내시며 이르시기를 가서 죄인 아말렉 사람을 진멸하되 다 없어지기까지 치라 하셨거늘"],
+      [SAMUEL, "어찌하여 왕이 여호와의 목소리를 청종하지 아니하고 탈취하기에만 급하여 여호와께서 악하게 여기시는 일을 행하였나이까"],
+      [NAR, "사울이 사무엘에게 이르되 (삼상 15:20)"],
+      [SAUL, "나는 실로 여호와의 목소리를 청종하여 여호와께서 보내신 길로 가서 아말렉 왕 아각을 끌어 왔고 아말렉 사람들을 진멸하였으나"],
+      [SAUL, "다만 백성이 그 마땅히 멸할 것 중에서 가장 좋은 것으로 길갈에서 당신의 하나님 여호와께 제사하려고 양과 소를 끌어 왔나이다"],
+      [NAR, "▶ 사무엘에게 가요."],
+    ],
+    sl_obey: [
+      [NAR, "▶ 사무엘의 대답을 차례대로 맞춰요 (삼상 15:22)."],
+    ],
+    sl_obey_done: [
+      [NAR, "사무엘이 이르되 (삼상 15:22)"],
+      [SAMUEL, "여호와께서 번제와 다른 제사를 그의 목소리를 청종하는 것을 좋아하심 같이 좋아하시겠나이까 순종이 제사보다 낫고 듣는 것이 숫양의 기름보다 나으니"],
+      [SAMUEL, "이는 거역하는 것은 점치는 죄와 같고 완고한 것은 사신 우상에게 절하는 죄와 같음이라 왕이 여호와의 말씀을 버렸으므로 여호와께서도 왕을 버려 왕이 되지 못하게 하셨나이다"],
+      [NAR, "사울이 사무엘에게 이르되 (삼상 15:24)"],
+      [SAUL, "내가 범죄하였나이다 내가 여호와의 명령과 당신의 말씀을 어긴 것은 내가 백성을 두려워하여 그들의 말을 청종하였음이니이다"],
+      [SAUL, "청하오니 지금 내 죄를 사하고 나와 함께 돌아가서 나로 하여금 여호와께 경배하게 하소서"],
+      [NAR, "사무엘이 사울에게 이르되 (삼상 15:26)"],
+      [SAMUEL, "나는 왕과 함께 돌아가지 아니하리니 이는 왕이 여호와의 말씀을 버렸으므로 여호와께서 왕을 버려 이스라엘 왕이 되지 못하게 하셨음이니이다"],
+      [NAR, "사무엘이 가려고 돌아설 때에 사울이 그의 겉옷자락을 붙잡으매 찢어진지라 (삼상 15:27)"],
+      [NAR, "사무엘이 그에게 이르되 (삼상 15:28)"],
+      [SAMUEL, "여호와께서 오늘 이스라엘 나라를 왕에게서 떼어 왕보다 나은 왕의 이웃에게 주셨나이다"],
+      [SAMUEL, "이스라엘의 지존자는 거짓이나 변개함이 없으시니 그는 사람이 아니시므로 결코 변개하지 않으심이니이다"],
+      [NAR, "사울이 이르되 (삼상 15:30)"],
+      [SAUL, "내가 범죄하였을지라도 이제 청하옵나니 내 백성의 장로들 앞과 이스라엘 앞에서 나를 높이사 나와 함께 돌아가서 내가 당신의 하나님 여호와께 경배하게 하소서"],
+      [NAR, "이에 사무엘이 돌이켜 사울을 따라가매 사울이 여호와께 경배하니라 (삼상 15:31)"],
+      [NAR, "사무엘이 이르되 너희는 아말렉 사람의 왕 아각을 내게로 끌어 오라 하였더니 아각이 즐거이 오며 이르되 진실로 사망의 괴로움이 지났도다 하니라 (삼상 15:32)"],
+      [NAR, "사무엘이 이르되 네 칼이 여인들에게 자식이 없게 한 것 같이 여인 중 네 어미에게 자식이 없으리라 하고 그가 길갈에서 여호와 앞에서 아각을 찍어 쪼개니라 (삼상 15:33)"],
+      [NAR, "이에 사무엘은 라마로 가고 사울은 사울 기브아 자기의 집으로 올라가니라 (삼상 15:34)"],
+      [NAR, "사무엘이 죽는 날까지 사울을 다시 가서 보지 아니하였으니 이는 그가 사울을 위하여 슬퍼함이었고 여호와께서는 사울을 이스라엘 왕으로 삼으신 것을 후회하셨더라 (삼상 15:35)"],
+    ],
   });
-  const LINE = {"9:4": "그가 에브라임 산지와 살리사 땅으로 두루 다녀 보았으나 찾지 못하고 사알림 땅으로 두루 다녀 보았으나 그 곳에는 없었고 베냐민 사람의 땅으로 두루 다녀 보았으나 찾지 못하니라", "10:2": "네가 오늘 나를 떠나가다가 베냐민 경계 셀사에 있는 라헬의 묘실 곁에서 두 사람을 만나리니 그들이 네게 이르기를 네가 찾으러 갔던 암나귀들을 찾은지라 네 아버지가 암나귀들의 염려는 놓았으나 너희로 말미암아 걱정하여 이르되 내 아들을 위하여 어찌하리요 하더라 할 것이요", "10:3": "네가 거기서 더 나아가서 다볼 상수리나무에 이르면 거기서 하나님을 뵈오려고 벧엘로 올라가는 세 사람을 만나리니 한 사람은 염소 새끼 셋을 이끌었고 한 사람은 떡 세 덩이를 가졌고 한 사람은 포도주 한 가죽부대를 가진 자라", "10:5": "그 후에 네가 하나님의 산에 이르리니 그 곳에는 블레셋 사람들의 영문이 있느니라 네가 그리로 가서 그 성읍으로 들어갈 때에 선지자의 무리가 산당에서부터 비파와 소고와 저와 수금을 앞세우고 예언하며 내려오는 것을 만날 것이요", "10:23": "그들이 달려 가서 거기서 그를 데려오매 그가 백성 중에 서니 다른 사람보다 어깨 위만큼 컸더라", "11:11": "이튿날 사울이 백성을 삼 대로 나누고 새벽에 적진 한가운데로 들어가서 날이 더울 때까지 암몬 사람들을 치매 남은 자가 다 흩어져서 둘도 함께 한 자가 없었더라", "12:18": "이에 사무엘이 여호와께 아뢰매 여호와께서 그 날에 우레와 비를 보내시니 모든 백성이 여호와와 사무엘을 크게 두려워하니라"};   // 게임 안에서 보여 주는 원문(삼상)
+  const LINE = {"9:4": "그가 에브라임 산지와 살리사 땅으로 두루 다녀 보았으나 찾지 못하고 사알림 땅으로 두루 다녀 보았으나 그 곳에는 없었고 베냐민 사람의 땅으로 두루 다녀 보았으나 찾지 못하니라", "10:2": "네가 오늘 나를 떠나가다가 베냐민 경계 셀사에 있는 라헬의 묘실 곁에서 두 사람을 만나리니 그들이 네게 이르기를 네가 찾으러 갔던 암나귀들을 찾은지라 네 아버지가 암나귀들의 염려는 놓았으나 너희로 말미암아 걱정하여 이르되 내 아들을 위하여 어찌하리요 하더라 할 것이요", "10:3": "네가 거기서 더 나아가서 다볼 상수리나무에 이르면 거기서 하나님을 뵈오려고 벧엘로 올라가는 세 사람을 만나리니 한 사람은 염소 새끼 셋을 이끌었고 한 사람은 떡 세 덩이를 가졌고 한 사람은 포도주 한 가죽부대를 가진 자라", "10:5": "그 후에 네가 하나님의 산에 이르리니 그 곳에는 블레셋 사람들의 영문이 있느니라 네가 그리로 가서 그 성읍으로 들어갈 때에 선지자의 무리가 산당에서부터 비파와 소고와 저와 수금을 앞세우고 예언하며 내려오는 것을 만날 것이요", "10:23": "그들이 달려 가서 거기서 그를 데려오매 그가 백성 중에 서니 다른 사람보다 어깨 위만큼 컸더라", "11:11": "이튿날 사울이 백성을 삼 대로 나누고 새벽에 적진 한가운데로 들어가서 날이 더울 때까지 암몬 사람들을 치매 남은 자가 다 흩어져서 둘도 함께 한 자가 없었더라", "12:18": "이에 사무엘이 여호와께 아뢰매 여호와께서 그 날에 우레와 비를 보내시니 모든 백성이 여호와와 사무엘을 크게 두려워하니라", "13:8": "사울은 사무엘이 정한 기한대로 이레 동안을 기다렸으나 사무엘이 길갈로 오지 아니하매 백성이 사울에게서 흩어지는지라", "13:9": "사울이 이르되 번제와 화목제물을 이리로 가져오라 하여 번제를 드렸더니", "14:13": "요나단이 손 발로 기어 올라갔고 그 무기를 든 자도 따랐더라 블레셋 사람들이 요나단 앞에서 엎드러지매 무기를 든 자가 따라가며 죽였으니", "15:14": "사무엘이 이르되 그러면 내 귀에 들려오는 이 양의 소리와 내게 들리는 소의 소리는 어찌 됨이니이까 하니라"};   // 게임 안에서 보여 주는 원문(삼상)
+  const OBEY = ["여호와께서 번제와 다른 제사를", "그의 목소리를 청종하는 것을", "좋아하심 같이 좋아하시겠나이까", "순종이 제사보다 낫고", "듣는 것이 숫양의 기름보다 나으니"];   // 삼상 15:22 조각
 
   DLG.sl_anoint.splice(4, 0, { event: 'anoint' });   // 10:1 기름병을 머리에 붓고
   DLG.sl_dawn_done.splice(1, 0, { event: 'dust' });  // 11:11 — 먼지만 멀리
   DLG.sl_thunder_done.splice(1, 0, { event: 'thunder' });   // 12:18 우레와 비
+  const afterRef = (d, ref) => { const i = d.findIndex(l => Array.isArray(l) && l[1].endsWith(`(삼상 ${ref})`)); if (i < 0) throw new Error(ref); return i + 1; };
+  DLG.sl_climb_done.splice(afterRef(DLG.sl_climb_done, '14:15'), 0, { event: 'dust14' });   // 14:15-16 — 싸움은 먼지만 멀리
+  DLG.sl_obey_done.splice(afterRef(DLG.sl_obey_done, '15:27'), 0, { event: 'tear' });       // 15:27 겉옷자락이 찢어진지라
 
   const { mgOpen, mgCloseAll, completeTask } = api;
   const btnCss = 'padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#f5e9d0;font-size:13px';
@@ -321,7 +543,7 @@
   const OUT = '❤️을 다 썼어요 — 처음부터 다시';
   const msgBox = m => `<div style="text-align:center;color:#ffd27a;font-weight:800;min-height:34px;padding:6px 10px 0;font-size:12.5px">${m}</div>`;
   const doneBox = m => `<div style="padding:16px;text-align:center;color:#ffd27a;font-weight:800;line-height:1.6">${m}</div>`;
-  Object.assign(api.BADGES, { lost_donkey: { ico: '🫏', name: '암나귀를 찾아 두루 다닌 사람' }, baggage: { ico: '🧳', name: '짐보따리 사이를 본 사람' } });
+  Object.assign(api.BADGES, { lost_donkey: { ico: '🫏', name: '암나귀를 찾아 두루 다닌 사람' }, baggage: { ico: '🧳', name: '짐보따리 사이를 본 사람' }, seven_days: { ico: '⏳', name: '이레를 지켜본 사람' }, climbed_two: { ico: '🧗', name: '바위를 기어오른 둘' } });
   function giveBadge(k){ const S = api.ST; if (S.badges.includes(k)) return; S.badges.push(k); api.saveST(); setTimeout(() => api.toast(`${api.BADGES[k].ico} 배지 획득: ${api.BADGES[k].name}`, 2600), 900); }
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   function orderPlay(q, title, info, cards, hint, doneMsg, onDone){
@@ -458,11 +680,82 @@
     }, null, 'sl_thunder');
   }
 
+  // ⏳ 이레(삼상 13:8-9) — 날이 갈수록 백성이 흩어진다. 번제 버튼은 언제든 누를 수 있고, 어느 쪽이든 본문은 13:9대로 이어진다(실패 처리 없음)
+  function waitGame(q){
+    api.runDialog(DLG.sl_wait, () => {
+      const DAY = 15000, DAYS = 7, FROM = 3000, TO = 600; let t0 = performance.now(), timer = null, end = '';   // 3000(13:2) → 육백 명 가량(13:15)
+      mgOpen('⏳ 길갈에서 이레', '"사울은 사무엘이 정한 기한대로 이레 동안을 기다렸으나" (삼상 13:8)');
+      const k = () => Math.min(1, (performance.now() - t0) / (DAY * DAYS));
+      const draw = () => { const x = k(), day = Math.min(DAYS, Math.floor(x * DAYS) + 1), n = Math.round((FROM - (FROM - TO) * x) / 10) * 10;
+        api.mgArea.innerHTML = end ? doneBox(end)
+          : `<div style="text-align:center;font-size:15px;font-weight:800;padding:6px">${day}일째 / 이레</div><div style="margin:4px 14px;height:14px;border-radius:7px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:100%;width:${Math.round(x * 100)}%;background:#d9b36a"></div></div>`
+            + `<div style="text-align:center;font-size:13px;padding:6px">사울과 함께 있는 백성 — 약 ${n.toLocaleString()}명</div><div style="text-align:center;font-size:18px;letter-spacing:1px;min-height:28px">${'🧍'.repeat(Math.max(1, Math.round(10 * n / FROM)))}</div>`
+            + `<div style="padding:8px 14px"><button data-wt="1" style="${btnCss};width:100%;font-size:14px">🔥 "번제와 화목제물을 이리로 가져오라" (13:9)</button></div>`;
+        api.mgAct.textContent = end ? '계속' : '이레를 지켜보는 중…'; api.mgAct.disabled = !end; };
+      const stop = () => { if (timer){ clearInterval(timer); timer = null; } };
+      timer = setInterval(() => { if (end) return; if (k() >= 1){ stop(); giveBadge('seven_days'); end = '✓ 이레를 다 지켜보았어요<br>이제 본문을 읽어요 (삼상 13:8-14)'; } draw(); }, 400);
+      draw();
+      api.mgArea.onclick = e => { if (end || !e.target.closest('[data-wt]')) return; stop(); end = `"${LINE['13:9']}" (삼상 13:9)`; draw(); };
+      api.mgAct.onclick = () => { if (!end) return; stop(); api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+      api.mg.onClose = () => { stop(); api.mgArea.onclick = null; };
+    }, null, 'sl_wait');
+  }
+  // 🧗 손 발로 기어 올라갔고(삼상 14:13) — 요나단이 바위를 오르면 소년이 따라와야 다음 바위가 열린다. 치는 장면은 게임에 없다
+  function climbGame(q){
+    api.runDialog(DLG.sl_climb, () => {
+      const H = 6, COLS = 3; let holds = [], jon = 0, boy = 0, life = LIVES, msg = '', perfect = true;
+      const roll = () => { holds = [...Array(H)].map(() => Math.floor(Math.random() * COLS)); jon = 0; boy = 0; };
+      const done = () => jon >= H && boy >= H;
+      mgOpen('🧗 믹마스 어귀의 바위', '"요나단이 손 발로 기어 올라갔고 그 무기를 든 자도 따랐더라" (삼상 14:13) — ✨ 바위를 누르고, 👦 소년이 따라오게 해요.');
+      const draw = () => {
+        if (done()){ api.mgArea.innerHTML = doneBox('✓ "요나단이 손 발로 기어 올라갔고 그 무기를 든 자도 따랐더라" (삼상 14:13)'); api.mgAct.textContent = '계속'; api.mgAct.disabled = false; return; }
+        const rows = []; for (let r = H - 1; r >= 0; r--){ rows.push(`<div style="display:grid;grid-template-columns:repeat(${COLS},1fr);gap:3px">${[...Array(COLS)].map((_, c) => { const isHold = holds[r] === c, next = isHold && r === jon && boy === jon;
+          const who = (isHold && jon === r + 1 ? '🧗' : '') + (isHold && boy === r + 1 ? '👦' : '');
+          return `<button ${next ? `data-cb="${r}"` : 'data-cx="1"'} style="${btnCss};padding:1px 0;font-size:13px;min-height:23px;line-height:1.1;${next ? 'background:rgba(255,210,122,.35);border-color:#ffd27a' : isHold ? '' : 'opacity:.25'}">${who || (next ? '✨' : isHold ? '🪨' : '')}</button>`; }).join('')}</div>`); }
+        api.mgArea.innerHTML = `<div style="display:grid;gap:3px;padding:2px 14px">${rows.join('')}</div><div style="padding:4px 14px"><button data-cf="1" style="${btnCss};width:100%;font-size:13px;padding:5px 6px;${boy < jon ? 'background:rgba(154,180,224,.3);border-color:#9ab4e0' : 'opacity:.5'}">👦 소년이 따라오기</button></div>` + msgBox(msg || `${jon} / ${H} · ${hearts(life)}`);
+        api.mgAct.textContent = '둘 다 오르면 계속'; api.mgAct.disabled = true; };
+      roll(); draw();
+      const miss = m => { perfect = false; if (--life <= 0){ life = LIVES; roll(); msg = OUT; } else msg = `${m} ${hearts(life)}`; };
+      api.mgArea.onclick = e => { if (done()) return;
+        if (e.target.closest('[data-cf]')){ if (boy < jon){ boy++; msg = ''; } else miss('먼저 요나단이 바위를 올라요'); draw(); return; }
+        if (e.target.closest('[data-cb]')){ jon++; msg = ''; draw(); return; }
+        if (e.target.closest('[data-cx]') && boy < jon){ miss('"그 무기를 든 자도 따랐더라" — 소년이 아직 아래에 있어요'); draw(); } };
+      api.mgAct.onclick = () => { if (!done()) return; api.mgArea.onclick = null; mgCloseAll(); if (perfect) giveBadge('climbed_two'); completeTask(q); };
+      api.mg.onClose = () => { api.mgArea.onclick = null; };
+    }, null, 'sl_climb');
+  }
+  // 🔊 양의 소리와 소의 소리(삼상 15:14) — 칸을 누르면 소리가 얼마나 가까운지 보여 준다. 두 곳을 모두 찾으면 계속
+  function soundGame(q){
+    api.runDialog(DLG.sl_sound, () => {
+      const R = 4, C = 4, N = R * C; const pos = shuffle([...Array(N).keys()]).slice(0, 2), names = ['🐑', '🐂']; const opened = new Map(), got = new Set(); let msg = '';
+      const dist = (a, b) => Math.abs((a % C) - (b % C)) + Math.abs(Math.floor(a / C) - Math.floor(b / C));
+      const near = i => Math.min(...pos.filter((p, k) => !got.has(k)).map(p => dist(i, p)));
+      const bar = d => d <= 1 ? '🔊🔊🔊' : d === 2 ? '🔊🔊' : '🔉';
+      const done = () => got.size >= 2;
+      mgOpen('🔊 내 귀에 들려오는 소리', '"이 양의 소리와 내게 들리는 소의 소리는 어찌 됨이니이까" (삼상 15:14) — 진영을 눌러 🔊가 많은 쪽으로 찾아가요.');
+      const draw = () => {
+        api.mgArea.innerHTML = done() ? doneBox(`✓ "${LINE['15:14']}" (삼상 15:14)`)
+          : `<div style="display:grid;grid-template-columns:repeat(${C},1fr);gap:5px;padding:6px 12px">${[...Array(N).keys()].map(i => { const k = pos.indexOf(i); const v = k >= 0 && got.has(k) ? names[k] : opened.has(i) ? opened.get(i) : '⛺'; return `<button data-sd="${i}" style="${btnCss};font-size:${opened.has(i) ? 12 : 18}px;min-height:38px;padding:4px 0">${v}</button>`; }).join('')}</div>` + msgBox(msg || `찾은 소리 ${got.size} / 2`);
+        api.mgAct.textContent = done() ? '계속' : '두 소리를 찾으면 계속'; api.mgAct.disabled = !done(); };
+      draw();
+      api.mgArea.onclick = e => { const b = e.target.closest('[data-sd]'); if (!b || done()) return; const i = +b.dataset.sd, k = pos.indexOf(i);
+        if (k >= 0 && !got.has(k)){ got.add(k); opened.delete(i); msg = k === 0 ? '🐑 양의 소리예요!' : '🐂 소의 소리예요!'; if (!done()) opened.forEach((_, j) => opened.set(j, bar(near(j)))); }
+        else if (k < 0){ opened.set(i, bar(near(i))); msg = ''; }
+        draw(); };
+      api.mgAct.onclick = () => { if (!done()) return; api.mgArea.onclick = null; mgCloseAll(); completeTask(q); };
+      api.mg.onClose = () => { api.mgArea.onclick = null; };
+    }, null, 'sl_sound');
+  }
+  // 📖 삼상 15:22 — 사무엘의 대답을 차례대로
+  function obeyGame(q){ api.runDialog(DLG.sl_obey, () => orderPlay(q, '📖 사무엘의 대답', '"사무엘이 이르되" (삼상 15:22) — 차례대로 놓아요.', OBEY.map(t => [t, '']), '삼상 15:22를 다시 떠올려 봐요', '✓ 삼상 15:22'), null, 'sl_obey'); }
+
   // ── 연출 ──
   function flash(col, o = 0.5){ const fl = document.getElementById('flash'); if (!fl) return; fl.style.transition = 'none'; fl.style.background = col; fl.style.opacity = String(o); setTimeout(() => { fl.style.transition = 'opacity 1.2s'; fl.style.opacity = '0'; }, 120); setTimeout(() => { fl.style.background = ''; }, 1500); }
   const refresh = zid => { if (api.Z && api.Z.id === zid) world(zid); };
   function anoint(){ oilShow = true; flash('#ffe9a8', 0.45); refresh('gibeah'); }
   function dust(){ dustShow = true; refresh('moab'); }
+  function dustFar(){ dust14 = true; refresh('gibeah'); }
+  function tear(){ flash('#d8c4a0', 0.4); }
   function thunder(){ rainShow = true; flash('#eef4ff', 0.6); setTimeout(() => flash('#eef4ff', 0.5), 700); refresh('gilgal');
     try { api.startCine('slThunder', WHEAT[0], api.heightAt(WHEAT[0], WHEAT[1]) + 5, WHEAT[1], { r: 18, h: 8, dur: 4, spin: 0.3 }); } catch (e){} }
 
@@ -504,6 +797,14 @@
       if (p.ch === 2){ prop('bull', FIELD[0] + 1.6, FIELD[1] - 1, 0.3); prop('bull', FIELD[0] - 1.4, FIELD[1] - 0.6, 0.3); }
       for (let i = 0; i < 4; i++) put(new THREE.BoxGeometry(3, 0.12, 2.4), M(0x9a8058), FIELD[0] - 5 + i * 3.4, 0.06, FIELD[1] + 3);   // 갈아 놓은 밭
       if (oilShow || (p.ch === 1 && p.step >= 6)) sprites(EDGE[0] - 1.6, EDGE[1], 3, 0xffe2a0, 0.35, 1.2, 1.2, 2.4, 1);
+      if (p.ch === 5){
+        needProps(['env-rock-hill', 'env-acacia', 'tent-small', 'honeycomb'], 'gibeah');
+        prop('env-rock-hill', BOSES[0], BOSES[1], 0.4); prop('env-rock-hill', SENEH[0], SENEH[1], 2.1); obst(BOSES[0], BOSES[1], 3); obst(SENEH[0], SENEH[1], 3);   // 보세스와 세네(14:4)
+        if (!dust14 && p.step <= 2){ prop('tent-small', PHIL[0], PHIL[1], 1); prop('tent-small', PHIL[0] - 4, PHIL[1] + 3, 2.2); }   // 블레셋 사람들의 부대(14:1)
+        if (dust14 || p.step >= 3) sprites(PHIL[0], PHIL[1], 8, 0xb8a890, 0.42, 4, 3, 2, 10);   // 14:15-16 — 먼지만 멀리
+        prop('env-acacia', MIGRON[0] - 2.4, MIGRON[1] - 1.6, 0.8);   // 미그론의 석류나무(14:2)
+        if (p.step === 4){ if (api.propTemplates.honeycomb) prop('honeycomb', HONEY[0], HONEY[1], 0.5); else put(new THREE.BoxGeometry(0.7, 0.3, 0.5), M(0xe0a93a), HONEY[0], 0.15, HONEY[1]); }   // 땅에 꿀이 있더라(14:25)
+      }
     }
     if (zid === 'gibeon' && p.ch === 1 && p.step >= 9){
       needProps(['tent-small', 'tent-mid', 'crates-sacks', 'pilgrim-bundle'], 'gibeon');
@@ -523,6 +824,12 @@
       put(new THREE.BoxGeometry(1.8, 1.1, 1.8), M(0xb8a888), GIL7[0], 0.55, GIL7[1] - 3); obst(GIL7[0], GIL7[1] - 3, 1.3);   // 화목제(11:15)
       for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) prop('grain-field', WHEAT[0] - 4 + i * 4, WHEAT[1] - 2 + j * 3.4, 0);   // 밀 베는 때(12:17)
       if (rainShow || (p.ch === 3 && p.step >= 3)){ sprites(WHEAT[0], WHEAT[1], 7, 0x7a8090, 0.5, 7, 4, 9, 14); sprites(GIL7[0], GIL7[1], 5, 0x8a90a0, 0.45, 7, 4, 9, 12); }
+    }
+    if (zid === 'gilgal' && (p.ch === 4 || p.ch === 6)){
+      needProps(['tent-small', 'tent-mid', 'lamb', 'bull'], 'gilgal');
+      [[-6, 10], [6, 12], [-14, 2], [18, 10]].forEach(([x, z], i) => prop(i % 2 ? 'tent-small' : 'tent-mid', x, z, i * 1.2));   // 길갈로 모인 백성(13:4)
+      put(new THREE.BoxGeometry(1.8, 1.1, 1.8), M(0xb8a888), ALT13[0], 0.55, ALT13[1]); obst(ALT13[0], ALT13[1], 1.3);   // 번제단(13:9)
+      if (p.ch === 6){ prop('lamb', CAMP[0] - 2, CAMP[1] + 1, 0.4); prop('lamb', CAMP[0] - 3, CAMP[1] - 1, 1.6); prop('bull', CAMP[0] + 2.4, CAMP[1], 0.8); }   // 끌어 온 양과 소(15:15)
     }
     api.zoneRoot.add(g); worldObj = g;
   }
@@ -559,16 +866,39 @@
           { id: 's3s3', zone: 'moab', obj: '삼 대로 나누고 새벽에', where: '야베스 앞(빛나는 곳)', point: 'sl_dawn', game: 'dawn', doneDlg: 'sl_dawn_done' },
           { id: 's3s4', zone: 'gilgal', obj: '길갈에서 나라를 새롭게', where: '길갈 — 여호와 앞(빛나는 곳)', point: 'sl_renew', dlg: 'sl_renew', reward: { verse: '1sa11-13', clear: true } },
         ] },
-      { title: `${T(4)} — 기도하기를 쉬는 죄`, clearTitle: '🎉 7편 1부 「사울 왕」을 마쳤어요! 2부는 준비하고 있어요', next: '5장: 이레를 기다렸으나 (준비 중)',
+      { title: `${T(4)} — 기도하기를 쉬는 죄`, clearTitle: '🎉 7편 1부 「사울 왕」을 마쳤어요!', next: '5장: 이레를 기다렸으나',
         steps: [
           { id: 's4s1', zone: 'gilgal', obj: '"내가 누구의 소를 빼앗았느냐"', where: '길갈의 사무엘', npc: 'sl_samuel12', dlg: 'sl_witness' },
           { id: 's4s2', zone: 'gilgal', obj: '여호와께서 행하신 공의로운 일', where: '길갈의 사무엘', npc: 'sl_samuel12', game: 'remember', doneDlg: 'sl_remember_done' },
           { id: 's4s3', zone: 'gilgal', obj: '밀 베는 때의 우레와 비', where: '서쪽 밀밭(빛나는 곳)', point: 'sl_wheat', game: 'thunder', doneDlg: 'sl_thunder_done' },
           { id: 's4s4', zone: 'gilgal', obj: '기도하기를 쉬는 죄', where: '길갈의 사무엘', npc: 'sl_samuel12', dlg: 'sl_pray', reward: { verse: ['1sa12-23', '1sa12-24'], clear: true } },
         ] },
+      { title: `${T(5)} — 이레를 기다렸으나`, clearTitle: '🎉 7편 5장 「이레를 기다렸으나」 완료!', next: '6장: 요나단과 무기 든 소년',
+        steps: [
+          { id: 's5s1', zone: 'gilgal', obj: '믹마스에 모인 블레셋 사람들', where: '길갈 진영(빛나는 곳)', point: 'sl_mich', dlg: 'sl_mich' },
+          { id: 's5s2', zone: 'gilgal', obj: '이레 동안을 기다렸으나', where: '길갈의 번제단(빛나는 곳)', point: 'sl_altar13', game: 'wait', doneDlg: 'sl_wait_done' },
+          { id: 's5s3', zone: 'gibeah', obj: '이스라엘 온 땅에 철공이 없었으니', where: '기브아 동쪽 길(빛나는 곳)', point: 'sl_smith', dlg: 'sl_smith', reward: { verse: '1sa13-14', clear: true } },
+        ] },
+      { title: `${T(6)} — 요나단과 무기 든 소년`, clearTitle: '🎉 7편 6장 「요나단과 무기 든 소년」 완료!', next: '7장: 순종이 제사보다 낫고',
+        steps: [
+          { id: 's6s1', zone: 'gibeah', obj: '보세스와 세네', where: '동남쪽 믹마스 어귀(빛나는 곳)', point: 'sl_pass', dlg: 'sl_pass' },
+          { id: 's6s2', zone: 'gibeah', obj: '"사람이 많고 적음에 달리지 아니하였느니라"', where: '두 바위 곁의 요나단', npc: 'sl_jonathan', dlg: 'sl_jon' },
+          { id: 's6s3', zone: 'gibeah', obj: '손 발로 기어 올라갔고', where: '두 바위 곁의 요나단', npc: 'sl_jonathan', game: 'climb', doneDlg: 'sl_climb_done' },
+          { id: 's6s4', zone: 'gibeah', obj: '누가 나갔는지 점호하여 보라', where: '석류나무 아래의 사울', npc: 'sl_saul14', dlg: 'sl_saul14' },
+          { id: 's6s5', zone: 'gibeah', obj: '땅에 꿀이 있더라', where: '남쪽 수풀(빛나는 곳)', point: 'sl_honey', dlg: 'sl_honey' },
+          { id: 's6s6', zone: 'gibeah', obj: '백성이 요나단을 구원하여', where: '석류나무 아래의 사울', npc: 'sl_saul14', dlg: 'sl_lots', reward: { verse: '1sa14-6', clear: true } },
+        ] },
+      { title: `${T(7)} — 순종이 제사보다 낫고`, clearTitle: '🎉 7편 2부 「버림받은 왕」을 마쳤어요! 3부는 준비하고 있어요', next: '8장: 사람은 외모를 보거니와 (준비 중)',
+        steps: [
+          { id: 's7s1', zone: 'gibeah', obj: '"이제 왕은 여호와의 말씀을 들으소서"', where: '기브아 기스의 집 곁의 사무엘', npc: 'sl_samuel15', dlg: 'sl_amalek' },
+          { id: 's7s2', zone: 'gibeah', obj: '내가 사울을 왕으로 세운 것을 후회하노니', where: '기브아 북쪽(빛나는 곳)', point: 'sl_night', dlg: 'sl_regret' },
+          { id: 's7s3', zone: 'gilgal', obj: '"내가 여호와의 명령을 행하였나이다"', where: '길갈의 사울', npc: 'sl_saul15g', dlg: 'sl_meet' },
+          { id: 's7s4', zone: 'gilgal', obj: '이 양의 소리와 소의 소리', where: '길갈 진영(빛나는 곳)', point: 'sl_camp15', game: 'sound', doneDlg: 'sl_sound_done' },
+          { id: 's7s5', zone: 'gilgal', obj: '순종이 제사보다 낫고', where: '길갈의 사무엘', npc: 'sl_samuel15g', game: 'obey', doneDlg: 'sl_obey_done', reward: { verse: '1sa15-22', clear: true } },
+        ] },
     ],
-    games: { ways: waysGame, search: searchGame, signs: signsGame, bags: bagsGame, dawn: dawnGame, remember: rememberGame, thunder: thunderGame },
-    events: { anoint, dust, thunder },
+    games: { ways: waysGame, search: searchGame, signs: signsGame, bags: bagsGame, dawn: dawnGame, remember: rememberGame, thunder: thunderGame, wait: waitGame, climb: climbGame, sound: soundGame, obey: obeyGame },
+    events: { anoint, dust, thunder, dust14: dustFar, tear },
     world: zid => world(zid),
   };
 });
