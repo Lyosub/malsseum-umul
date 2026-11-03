@@ -14,7 +14,7 @@
   // 새 인물 3D(GPT 14차 → Meshy)가 오기 전 임시 모델 — 사무엘은 6편 9장과 같은 모델
   const M_ = { samuel: 'j5-levite-youth', saul: 'j4-spy-1', servant: 'ca-water-boy', kish: 'he-father', uncle: 'he-grandpa', girls: 'he-girl-hb', elders: 'ca-israel-elder',
     prophets: 'he-levite', people: 'he-brickmaker', nahash: 'j5-midianite', messenger: 'ca-horn-blower', jonathan: 'j4-spy-2', armor: 'he-boy-hb',
-    david: 'shepherd-boy', jesse: 'he-grandpa', eliab: 'he-father', goliath: 'j5-philistine-lord', shield: 'j5-midianite', michal: 'r6-orpah', women: 'ca-singer-f', arrowBoy: 'ca-water-boy',
+    david: 'shepherd-boy', davidY: 's7-david-young', jesse: 'he-grandpa', eliab: 'he-father', goliath: 'j5-philistine-lord', shield: 'j5-midianite', michal: 'r6-orpah', women: 'ca-singer-f', arrowBoy: 'ca-water-boy',
     ahimelech: 'he-levite', abishai: 'he-boy-hb', abner: 'j5-midianite', nabal: 'he-father', abigail: 'r6-hannah', nabalboy: 'ca-water-boy', abiathar: 'he-levite', egyptian: 'ca-water-boy', jabesh: 'he-brickmaker' };
   const TALL = 1.12;   // "키는 모든 백성보다 어깨 위만큼 더 컸더라"(삼상 9:2, 10:23)
 
@@ -178,30 +178,30 @@
   L_(ZG, 'sl_ezel', EZEL, '에셀 바위 곁 — 숨은 곳', 'slEzel', 0, 2.6);
   // 12장 놉 → 유다 광야
   V_(ZG, 'sl_ahimelech', NOB, '제사장 아히멜렉', M_.ahimelech, 'slNob', 1.6, 0);
-  V_(ZG, 'sl_david21', NOB, '다윗', M_.david, 'slNob', -1.6, 0.8);
+  V_(ZG, 'sl_david21', NOB, '다윗', M_.davidY, 'slNob', -1.6, 0.8);
   L_(ZJ, 'sl_adullam', ADULLAM, '아둘람 굴', 'slAdullam', 0, 2.6);
-  V_(ZJ, 'sl_david22', ADULLAM, '다윗', M_.david, 'slAdullam', 2.6, 1);
+  V_(ZJ, 'sl_david22', ADULLAM, '다윗', M_.davidY, 'slAdullam', 2.6, 1);
   L_(ZJ, 'sl_hereth', HERETH, '헤렛 수풀', 'slHereth');
   V_(ZJ, 'sl_abiathar22', HERETH, '아비아달', M_.abiathar, 'slHereth', 2.4, -1);
   L_(ZJ, 'sl_keilah', KEILAH, '그일라', 'slKeilah', 0, 5);
   V_(ZJ, 'sl_jon23', ZIPH, '요나단', M_.jonathan, 'slZiph', 1.6, 0.6);
-  V_(ZJ, 'sl_david23', ZIPH, '다윗', M_.david, 'slZiph', -1.6, 0.6);
+  V_(ZJ, 'sl_david23', ZIPH, '다윗', M_.davidY, 'slZiph', -1.6, 0.6);
   L_(ZJ, 'sl_maon', MAON, '마온 황무지의 바위', 'slMaon', 0, 4);
   // 13장 엔게디 · 하길라
   L_(ZJ, 'sl_cave', ENGEDI, '들염소 바위 — 양의 우리 곁 굴', 'slCave', 0, 3);
   V_(ZJ, 'sl_saul24', ENGEDI, '자기 길을 가는 사울', M_.saul, 'slSaul24', 6, 5, { scale: TALL });
-  V_(ZJ, 'sl_david24', ENGEDI, '다윗', M_.david, 'slSaul24', 1.4, 3.6);
+  V_(ZJ, 'sl_david24', ENGEDI, '다윗', M_.davidY, 'slSaul24', 1.4, 3.6);
   L_(ZJ, 'sl_hachilah', HACHILAH, '하길라 산 길 가', 'slHach', 8, -8);
   V_(ZJ, 'sl_abishai', HACHILAH, '아비새', M_.abishai, 'slAbishai', 7, -6);
-  V_(ZJ, 'sl_david26', HACHILAH, '다윗', M_.david, 'slCamp26', 8.6, -7);
+  V_(ZJ, 'sl_david26', HACHILAH, '다윗', M_.davidY, 'slCamp26', 8.6, -7);
   L_(ZJ, 'sl_far26', FARPK, '건너편 산 꼭대기', 'slFar');
-  V_(ZJ, 'sl_david26b', FARPK, '다윗', M_.david, 'slFar', 1.6, -1);
+  V_(ZJ, 'sl_david26b', FARPK, '다윗', M_.davidY, 'slFar', 1.6, -1);
   // 14장 광야 · 갈멜
-  V_(ZJ, 'sl_david25', WILD25, '광야의 다윗', M_.david, 'slDavid25');
+  V_(ZJ, 'sl_david25', WILD25, '광야의 다윗', M_.davidY, 'slDavid25');
   V_(ZJ, 'sl_nabal', CARMEL, '나발', M_.nabal, 'slNabal', -4, -3);
   V_(ZJ, 'sl_abigail', CARMEL, '아비가일', M_.abigail, 'slAbigail', -4, -3);
   V_(ZJ, 'sl_nboy', CARMEL, '나발의 하인', M_.nabalboy, 'slAbigail', -6, -1.6);
-  V_(ZJ, 'sl_david_m', PATH25, '다윗', M_.david, 'slMeet');
+  V_(ZJ, 'sl_david_m', PATH25, '다윗', M_.davidY, 'slMeet');
   V_(ZJ, 'sl_abigail_m', PATH25, '아비가일', M_.abigail, 'slMeet', 2.4, 1.2);
   L_(ZJ, 'sl_home25', CARMEL, '갈멜 — 나발의 집', 'slHome', -4, -3);
   // 15장 블레셋 평지
@@ -209,12 +209,12 @@
   L_(ZP, 'sl_aphek', APHEK, '아벡 — 블레셋 군대가 모인 곳', 'slAphek', 0, 4);
   L_(ZP, 'sl_ziklag', ZIKLAG, '시글락 — 성읍이 불탔고', 'slZiklag', 0, 6);
   V_(ZP, 'sl_abiathar', ZIKLAG, '제사장 아비아달', M_.abiathar, 'slEphod', 3, 6);
-  V_(ZP, 'sl_david30', ZIKLAG, '다윗', M_.david, 'slEphod', 0.6, 6.6);
+  V_(ZP, 'sl_david30', ZIKLAG, '다윗', M_.davidY, 'slEphod', 0.6, 6.6);
   L_(ZP, 'sl_besor', BESOR, '브솔 시내', 'slBesor', 3, 0);
   V_(ZP, 'sl_egyptian', EGYBOY, '들의 애굽 사람', M_.egyptian, 'slEgy');
   V_(ZP, 'sl_egyptian2', AMALEK30, '앞서 인도하는 애굽 소년', M_.egyptian, 'slEgy2', 5, 5);
   L_(ZP, 'sl_amalek30', AMALEK30, '온 땅에 편만한 무리', 'slAmal', 3, 3);
-  V_(ZP, 'sl_david_s', BESOR, '다윗', M_.david, 'slShare', 3, 0);
+  V_(ZP, 'sl_david_s', BESOR, '다윗', M_.davidY, 'slShare', 3, 0);
   V_(ZP, 'sl_two', BESOR, '브솔 시내의 이백 명', M_.people, 'slShare', -3, 2);
   // 16장 이스르엘 → 모압 평지
   L_(ZI, 'sl_camp28', SPRING, '이스르엘에 있는 샘 곁', 'slCamp28');
