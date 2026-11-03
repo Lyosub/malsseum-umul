@@ -282,6 +282,22 @@ window.mountWooljigi = function (stage) {
     return pivot;
   }
   var armL = arm(-1), armR = arm(1);
+  // 팔 자세 계산용. 두레박을 안을 때는 어깨를 앞으로 옮기고 팔을 두레박 쪽으로 뻗는다.
+  var DOWN = new THREE.Vector3(0, -1, 0), tmpV = new THREE.Vector3(), tmpP = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), tmpE = new THREE.Euler();
+  function setArm(pivot, sign, angle, t, dt) {
+    var k = Math.min(1, dt * 12);
+    tmpQ.setFromEuler(tmpE.set(0, 0, angle));
+    tmpP.set(sign * 1.04, 0.12, 0.02);
+    if (t > 0.5) {
+      tmpV.set(-sign * 0.66, -0.26, 0.5).normalize();
+      tmpQ.setFromUnitVectors(DOWN, tmpV);
+      tmpP.set(sign * 0.9, -0.3, 0.6);
+    }
+    pivot.quaternion.slerp(tmpQ, k);
+    pivot.position.lerp(tmpP, k);
+    var sc = t > 0.5 ? 0.8 : 1;
+    pivot.scale.setScalar(lerp(pivot.scale.x, sc, k));
+  }
   [-1, 1].forEach(function (s) {
     var leg = part(blob(0.27, 0.26, 0.3), COL.cobalt);
     leg.position.set(s * 0.44, -0.87, 0.1);
@@ -314,9 +330,10 @@ window.mountWooljigi = function (stage) {
   // 동작
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var action = null, actionT = 0, splashed = false;
-  var DUR = { wave: 2, joy: 1.8, dip: 2.8 };
+  var DUR = { wave: 2, joy: 1.8, dip: 2.8, proud: 3.4 };
+  var base = "wave", proudT = 0, showShadow = true;
   var buttons = {};
-  [["wave", "aWave"], ["joy", "aJoy"], ["dip", "aDip"]].forEach(function (b) { var el = document.getElementById(b[1]); if (el) buttons[b[0]] = el; });
+  [["wave", "aWave"], ["joy", "aJoy"], ["proud", "aProud"], ["dip", "aDip"]].forEach(function (b) { var el = document.getElementById(b[1]); if (el) buttons[b[0]] = el; });
   function play(k) {
     action = k; actionT = 0; splashed = false;
     Object.keys(buttons).forEach(function (b) { buttons[b].classList.toggle("on", b === k); });
@@ -362,7 +379,10 @@ window.mountWooljigi = function (stage) {
     if (action) { actionT += dt; if (actionT > DUR[action]) { action = null; Object.keys(buttons).forEach(function (b) { buttons[b].classList.remove("on"); }); } }
 
     // 기본 자세: 왼팔을 들고 천천히 흔든다.
-    var la = -1.95 + (reduce ? 0 : Math.sin(time * 2.2) * 0.14), ra = 0.42, hop = 0, squash = 0, joy = false;
+    var isProud = action === "proud" || (!action && base === "proud");
+    var la = -1.95 + (reduce ? 0 : Math.sin(time * 2.2) * 0.14), ra = 0.42, hop = 0, squash = 0, mouthOpen = false, happyEyes = false;
+    if (!action && base === "idle") la = -0.42;
+    if (isProud) { happyEyes = true; hop = reduce ? 0 : Math.abs(Math.sin(time * 2.4)) * 0.03; }
     if (action === "wave") { la = -1.95 + Math.sin(actionT * 11) * 0.3; ra = 0.5; }
     if (action === "joy") {
       var up2 = ease(actionT / 0.25) * ease((DUR.joy - actionT) / 0.3);
@@ -370,7 +390,7 @@ window.mountWooljigi = function (stage) {
       ra = lerp(ra, 2.25 - Math.sin(actionT * 14) * 0.1, up2);
       hop = Math.abs(Math.sin(actionT * 5.2)) * 0.34 * up2;
       squash = (0.34 - hop) * 0.09 * up2;
-      joy = true;
+      mouthOpen = true;
     }
     var by = BUCKET_REST;
     if (action === "dip") {
@@ -379,13 +399,22 @@ window.mountWooljigi = function (stage) {
       else by = lerp(BUCKET_LOW, BUCKET_REST, ease((actionT - 1.3) / 1.2));
       if (actionT > 0.92 && !splashed) { splashed = true; splash(); }
       la = lerp(la, -0.5, ease(actionT / 0.4));
-      if (actionT > 2.4) joy = true;
+      if (actionT > 2.4) happyEyes = true;
     }
     setBucket(by);
-    bucket.rotation.z = reduce ? 0 : Math.sin(time * 1.4) * 0.05;
-    armL.rotation.z = lerp(armL.rotation.z, la, Math.min(1, dt * 12));
-    armR.rotation.z = lerp(armR.rotation.z, ra, Math.min(1, dt * 12));
-    smile.visible = !joy; openMouth.visible = joy;
+    proudT = lerp(proudT, isProud ? 1 : 0, Math.min(1, dt * 7));
+    if (proudT > 0.002) {
+      // 두레박이 줄에서 내려와 품으로 온다
+      bucket.position.set(0, lerp(by, -0.54, proudT), lerp(0, 1.2, proudT));
+      bucket.scale.setScalar(lerp(1, 1.05, proudT));
+      rope.scale.y = lerp(rope.scale.y, 0.16, proudT);
+    } else {
+      bucket.scale.setScalar(1);
+    }
+    bucket.rotation.z = (reduce || proudT > 0.5) ? 0 : Math.sin(time * 1.4) * 0.05;
+    setArm(armL, -1, la, proudT, dt);
+    setArm(armR, 1, ra, proudT, dt);
+    smile.visible = !mouthOpen; openMouth.visible = mouthOpen;
 
     var bob = reduce ? 0 : Math.sin(time * 1.7) * 0.022;
     root.position.y = hop + bob;
@@ -409,8 +438,8 @@ window.mountWooljigi = function (stage) {
     // 눈 깜빡임과 시선
     if (time > nextBlink) { blink = 0.14; nextBlink = time + 2.6 + Math.random() * 3; }
     blink = Math.max(0, blink - dt);
-    var open = blink > 0 ? 0.08 : (joy ? 0.72 : 1);
-    eyes.forEach(function (e) { e.p.visible = !joy; e.happy.visible = joy; e.g.scale.y = lerp(e.g.scale.y, joy ? 1 : open, Math.min(1, dt * 26)); });
+    var open = blink > 0 ? 0.08 : 1;
+    eyes.forEach(function (e) { e.p.visible = !happyEyes; e.happy.visible = happyEyes; e.g.scale.y = lerp(e.g.scale.y, happyEyes ? 1 : open, Math.min(1, dt * 26)); });
 
     // 놓으면 관성 뒤에 천천히 앞을 본다.
     if (!dragging) {
@@ -426,6 +455,7 @@ window.mountWooljigi = function (stage) {
     }
     root.rotation.y = yaw + (reduce || dragging ? 0 : Math.sin(time * 0.6) * 0.09);
     root.rotation.x = pitch;
+    shadow.visible = showShadow;
     shadow.scale.setScalar(1 - hop * 0.5);
     shadow.material.opacity = Math.max(0, 0.14 - hop * 0.2) * Math.max(0, Math.min(1, 1 + pitch * 3));
   }
@@ -436,5 +466,5 @@ window.mountWooljigi = function (stage) {
     requestAnimationFrame(loop);
   }
   loop();
-  return { play: play, pose: function (y, k, t, p) { yaw = y; pitch = p || 0; idleBack = 0; yawV = 0; if (k) play(k); if (t) actionT = t; } };
+  return { play: play, setBase: function (b) { base = b; action = null; }, hideShadow: function () { showShadow = false; }, stopBlink: function () { nextBlink = 1e9; blink = 0; }, pose: function (y, k, t, p) { yaw = y; pitch = p || 0; idleBack = 0; yawV = 0; if (k) play(k); if (t) actionT = t; } };
 };

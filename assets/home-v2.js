@@ -66,6 +66,7 @@
         var keeper = mountWooljigi(stage);
         if (keeper) {
           if (img) img.remove();
+          keeper.setBase("proud");
           keeper.play("joy");
         }
       });
