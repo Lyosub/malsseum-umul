@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-tone="amber">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,8 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/app-v2.css">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2540d8">
+<meta name="theme-color" content="#c2601a">
 <link rel="apple-touch-icon" href="assets/icons/icon-512.png">
 <script defer src="assets/pwa.js"></script>
 </head>
@@ -30,15 +31,6 @@
     <div class="hand-note">작은 기록이<br>더 큰 믿음으로!</div>
   </div>
 
-  <a class="card" href="profile.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;">
-    <div style="width:46px;height:46px;flex:none;border-radius:50%;background:var(--well-light);display:flex;align-items:center;justify-content:center;font-size:22px;">🙂</div>
-    <div style="flex:1 1 auto;min-width:0;">
-      <div style="font-weight:800;color:var(--well-deep);">나의 프로필</div>
-      <div style="font-size:12.5px;color:var(--text-soft);">내 정보 · 달란트 · 뱃지 · 달란트 얻는 법</div>
-    </div>
-    <span style="color:var(--text-soft);">›</span>
-  </a>
-
   <div class="card streak">
     <div style="text-align:center;">
       <div class="num" id="streakNum">0</div>
@@ -48,6 +40,15 @@
     <button id="checkinBtn" class="btn block" style="margin-top:14px;padding:11px 14px;font-size:13.5px;">오늘 출석 체크하기</button>
     <p class="msg" id="streakMsg"></p>
   </div>
+
+  <a class="card" href="profile.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;">
+    <div style="width:46px;height:46px;flex:none;border-radius:50%;background:var(--well-light);display:flex;align-items:center;justify-content:center;font-size:22px;">🙂</div>
+    <div style="flex:1 1 auto;min-width:0;">
+      <div style="font-weight:800;color:var(--well-deep);">나의 프로필</div>
+      <div style="font-size:12.5px;color:var(--text-soft);">내 정보 · 달란트 · 뱃지 · 달란트 얻는 법</div>
+    </div>
+    <span style="color:var(--text-soft);">›</span>
+  </a>
 
   <div class="card empty-illus" id="recordsEmptyState" style="display:none;">
     <img src="assets/brand/well-mascot-idle.png" alt="">

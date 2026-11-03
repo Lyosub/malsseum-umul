@@ -1,0 +1,74 @@
+/* 말씀우물 공통 화면 틀. 첫 화면·원정대·별 밝히기·관리자·In Odyssey는 쓰지 않는다.
+   화면 묶음마다 <html data-tone="...">로 색을 정한다. 페이지 스크립트가 쓰는 id와 구조는 건드리지 않는다. */
+:root { --tone: #2540d8; --tone-deep: #101d7a; --tone-soft: #e9edff; --v2-bg: #f3f4fa; --v2-ink: #141a3c; --v2-soft: #5a6185; }
+html[data-tone="green"] { --tone: #0f8a5f; --tone-deep: #07573c; --tone-soft: #e2f5ec; }
+html[data-tone="purple"] { --tone: #6a35d8; --tone-deep: #3e1a96; --tone-soft: #efe8ff; }
+html[data-tone="amber"] { --tone: #c2601a; --tone-deep: #843c08; --tone-soft: #fdeedd; }
+html[data-tone="navy"] { --tone: #17287e; --tone-deep: #0c1659; --tone-soft: #e6e9f7; }
+
+html, body { background: var(--v2-bg); background-image: none; }
+body { overflow-x: clip; }
+
+/* 위쪽 색 띠: 맨 위 줄과 제목이 끊기지 않게 이어진다 */
+header.site {
+  max-width: none;
+  padding: 14px max(20px, calc((100vw - var(--max)) / 2 + 20px)) 8px;
+  background: var(--tone);
+}
+header.site .logo, header.site nav a { color: #fff; }
+header.site nav a { display: inline-flex; align-items: center; min-height: 44px; }
+header.site nav a.active, header.site nav a:hover { color: #fff; opacity: .85; }
+.logo-mark path:first-child { fill: #cdec37; }
+.logo-mark path:last-child { stroke: #fff; }
+
+.wrap { padding-top: 0; }
+.page-hd {
+  margin: 0 calc(50% - 50vw) 16px;
+  padding: 2px max(20px, calc(50vw - 50% + 0px)) 26px;
+  background: linear-gradient(180deg, var(--tone) 0%, var(--tone-deep) 100%);
+  color: #fff;
+  border-radius: 0 0 24px 24px;
+}
+.page-hd h1 { font-family: inherit; color: #fff; font-size: 27px; letter-spacing: -.035em; margin-bottom: 4px; }
+.page-hd h1 img { width: 58px; height: 58px; margin: -2px 0; }
+.page-hd p, .page-hd:has(.hand-note) p { color: rgba(255, 255, 255, .86); max-width: 100%; }
+.page-hd a { color: #fff; }
+.page-hd > *:not(h1):not(.hand-note) { color: rgba(255, 255, 255, .86); }
+.page-hd .badge { background: rgba(255, 255, 255, .18); color: #fff; border-color: transparent; }
+header.site nav { display: flex; align-items: center; }
+.page-hd .hand-note { display: none; }
+
+/* 카드: 그림자와 테두리를 걷어 낸다 */
+.card, .dir-group, .home-row { box-shadow: none; border-color: transparent; border-radius: 16px; background: #fff; }
+.card.tint-blue, .card.tint-lime { background: #fff; }
+.sect-hd h2 { color: var(--v2-ink); }
+.sect-hd a { color: var(--tone); }
+.ico-circle, .ico-circle.lime { background: var(--tone-soft); }
+
+/* 화면 색을 따르는 요소 */
+.btn:not(.ghost) { background: var(--tone); border-color: var(--tone); color: #fff; }
+.btn.ghost { color: var(--tone); border-color: var(--tone); }
+.pill-blue { background: var(--tone); color: #fff; }
+.dir-group > h3, .dir-grid .dir-group.h-blue > h3, .dir-grid .dir-group.h-lime > h3 { color: var(--tone-deep); background: var(--tone-soft); }
+.app-tab.on { color: var(--tone); }
+.app-tab.on::before { background: var(--tone); }
+.streak .num { color: var(--tone); }
+
+/* 바로가기 칸 */
+.v2-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 18px; }
+.v2-tile { display: flex; flex-direction: column; gap: 8px; min-height: 112px; padding: 14px; border-radius: 16px; background: #fff; color: var(--v2-ink); text-decoration: none; }
+.v2-tile b { font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
+.v2-tile small { color: var(--v2-soft); font-size: 12.5px; line-height: 1.45; }
+.v2-tile .i { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: var(--tone-soft); color: var(--tone); }
+.v2-tile svg { width: 23px; height: 23px; }
+
+/* 말씀: 첫 화면과 겹치지 않게 오늘의 QT를 작게 */
+html[data-tone] #homeVerseCard { padding: 18px; margin-bottom: 8px; }
+html[data-tone] #homeVerseCard .text { font-size: 16.5px; line-height: 1.6; }
+
+/* 나의 기록: 연속 출석을 위쪽에 간결하게 */
+.card.streak { padding: 16px; }
+.card.streak .num { line-height: 1.15; }
+
+/* 놀이터: 게임 칸을 크게 */
+.pc { min-height: 104px; }

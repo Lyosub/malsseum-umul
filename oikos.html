@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-tone="green">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,8 +11,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/app-v2.css">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2540d8">
+<meta name="theme-color" content="#0f8a5f">
 <link rel="apple-touch-icon" href="assets/icons/icon-512.png">
 <script defer src="assets/pwa.js"></script>
 </head>
@@ -38,12 +39,12 @@
     <div id="groupNone" style="display:none;">
       <div class="empty-illus">
         <img src="assets/brand/well-mascot-bucket.png" alt="">
-        <p>아직 속한 오이코스가 없어요.<br>친구들과 만들거나, 초대 코드로 참여해서 함께 출석해보세요.</p>
+        <p>아직 속한 오이코스가 없어요.<br>함께할 사람들과 만들거나, 초대 코드로 참여해서 함께 출석해보세요.</p>
       </div>
       <form id="createGroupForm" style="margin-bottom:16px;">
         <div class="form-row">
           <label for="groupNameInput">새 오이코스 만들기</label>
-          <input type="text" id="groupNameInput" placeholder="예: 중등부 3반">
+          <input type="text" id="groupNameInput" placeholder="예: 우리 소그룹">
         </div>
         <button type="submit" class="btn block">오이코스 만들기</button>
       </form>

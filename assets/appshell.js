@@ -13,9 +13,9 @@
   // 탭: [키, 라벨, 이동 대상, 이 탭이 활성으로 표시될 페이지들]
   var TABS = [
     ["home",  "홈",           "index.html",  ["index.html", ""]],
-    ["word",  "말씀",         "word.html",   ["word.html", "verses.html", "weekly.html", "read.html", "well.html"]],
+    ["word",  "말씀",         "word.html",   ["word.html", "verses.html", "weekly.html", "read.html", "well.html", "line.html", "ask.html", "wordcards.html", "worship.html"]],
     ["oikos", "오이코스",      "oikos.html",  ["oikos.html", "chodae.html"]],
-    ["play",  "놀이터",        "play.html",   ["play.html", "bookgame.html", "matchgame.html", "oikosgame.html", "memorize.html", "chosung.html", "shop.html"]],
+    ["play",  "놀이터",        "play.html",   ["play.html", "bookgame.html", "matchgame.html", "oikosgame.html", "memorize.html", "chosung.html", "ox.html", "rank.html", "shop.html"]],
     ["me",    "나의 기록",     "mypage.html", ["mypage.html", "profile.html", "feed.html", "board.html"]],
     ["all",   "전체",         "all.html",    ["all.html", "memories.html", "wooljigi.html", "notice.html", "calendar.html", "mbti.html", "wallpaper.html", "about.html", "privacy.html", "app-android.html", "app-ios.html"]]
   ];

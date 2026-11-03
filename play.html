@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-tone="purple">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,8 +11,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/app-v2.css">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2540d8">
+<meta name="theme-color" content="#6a35d8">
 <link rel="apple-touch-icon" href="assets/icons/icon-512.png">
 <script defer src="assets/pwa.js"></script>
 </head>
@@ -39,16 +40,6 @@
     <p>팀 코드로 들어와서<br>우리 팀 미션을 함께 해요!</p>
     <a href="expedition.html" class="pill-lime" style="background:#f2b544;color:#3a1d07;">원정 떠나기 ›</a>
   </div>
-
-  <!-- 놀이터 랭킹 -->
-  <a href="rank.html" class="card" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
-    <span class="ico-circle">🏆</span>
-    <div style="flex:1 1 auto;min-width:0;">
-      <div style="font-weight:800;color:var(--well-deep);">놀이터 랭킹 보기</div>
-      <div style="font-size:12px;color:var(--text-soft);">게임마다 제일 잘한 기록으로 줄을 세워요.</div>
-    </div>
-    <span style="color:var(--text-soft);">›</span>
-  </a>
 
   <!-- In Odyssey 성경 모험 게임 — 2026-10-04 19:30부터 모두에게 공개 -->
   <a href="odyssey/" id="odysseyCard" class="card" style="display:none;align-items:center;gap:12px;text-decoration:none;">
@@ -120,6 +111,16 @@
 
   <!-- 나의 도전 기록 -->
   <div class="sect-hd" style="margin-top:22px;"><h2>나의 도전 기록</h2></div>
+  <!-- 놀이터 랭킹 -->
+  <a href="rank.html" class="card" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
+    <span class="ico-circle">🏆</span>
+    <div style="flex:1 1 auto;min-width:0;">
+      <div style="font-weight:800;color:var(--well-deep);">놀이터 랭킹 보기</div>
+      <div style="font-size:12px;color:var(--text-soft);">게임마다 제일 잘한 기록으로 줄을 세워요.</div>
+    </div>
+    <span style="color:var(--text-soft);">›</span>
+  </a>
+
   <div class="card" id="playRecords">
     <p class="msg" id="prMsg" style="margin:0;">로그인하면 나의 최고 기록이 보여요.</p>
     <div id="prList" style="display:none;"></div>
