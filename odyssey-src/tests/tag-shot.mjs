@@ -1,0 +1,16 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+const errors = []; page.on('pageerror', e => errors.push(e.message));
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?notut&body=boy&q=low');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); const w = ms => new Promise(r => setTimeout(r, ms));
+await page.evaluate(() => { const D = window.__debug; D.player.position.set(-2, 0, 8); D.setCam(0.3, 0.45); }); await w(2500);
+await page.evaluate(() => { document.getElementById('compass').style.opacity = '1'; });
+await page.screenshot({ path: 'E:/temp/claude-work/tmpglb/tags.png' });
+console.log('보이는 이름표', await page.$$eval('.ntag', e => e.filter(x => x.style.display === 'block').map(x => x.textContent).join(', ')));
+const n0 = await page.$$eval('.ntag', e => e.length);
+await page.evaluate(() => { const D = window.__debug; D.travelTo(D.markers.find(m => m.data.to === 'midian').data); });
+await page.waitForFunction('window.__debug.zone === "midian"', { timeout: 120000 }); await w(2500);
+console.log('이름표 수: 두루마리', n0, '→ 미디안', await page.$$eval('.ntag', e => e.length), '| 음악 대기 중 곡', await page.evaluate(() => window.__debug.bgm));
+console.log('errors', errors.length ? errors.join('\n') : 'none');
+await browser.close();

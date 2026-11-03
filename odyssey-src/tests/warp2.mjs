@@ -1,0 +1,10 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11'] });
+const errors = []; const w = ms => new Promise(r => setTimeout(r, ms));
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390 }); page.on('pageerror', e => errors.push(e.message));
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype&ch=3&body=boy'); await page.waitForFunction('window.__ready === true', { timeout: 150000 }); await w(1500);
+await page.evaluate(() => window.__debug.useSkill('warp')); await w(500); await page.evaluate(() => document.querySelector('[data-wz="alpha"]').click());
+await page.waitForFunction(() => window.__debug.zone === 'alpha', { timeout: 120000 }); await w(3000);
+await page.evaluate(() => window.__debug.useSkill('warp')); await w(600);
+console.log('모달', await page.evaluate(() => !document.getElementById('warp-modal').classList.contains('hidden')), '| 토스트', await page.$eval('#quest-toast', e => e.textContent), '| dlg', await page.evaluate(() => !!window.__debug.dlg), '| 목록', await page.evaluate(() => [...document.querySelectorAll('.warp-go')].map(b => (b.disabled ? '✗' : '○') + b.dataset.wz).join(' ')));
+console.log('errors', errors.length ? errors.join('\n') : 'none'); await browser.close();

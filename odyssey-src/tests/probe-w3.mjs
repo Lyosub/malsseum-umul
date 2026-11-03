@@ -1,0 +1,10 @@
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype&ch=10&body=boy&zone=alpha&devscroll');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); await w(1500);
+await E(() => { const S = window.__debug.ST; S.cleared = true; S.sp = S.sp || {}; S.sp.sinai2 = { ch: 9, step: 5, cleared: true, rumor: [] }; S.sp.wild3 = { ch: 11, step: 0, cleared: false, rumor: [] }; });
+await E(() => window.__debug.enterScroll('wild3')); await page.waitForFunction(() => window.__debug.zone === 'moab' && !window.__debug.pendingNPC, { timeout: 150000 }); await w(2500);
+const R = pts => E(pts => pts.map(([x, z]) => x + ',' + z + ':' + window.__debug.reachable(x, z)).join(' '), pts);
+console.log('모압 딸들', await R([[20, -7], [16, -4], [21, -9], [12, -6], [19, -3]]));
+await E(() => window.__debug.travelTo({ id: 'test', to: 'kadesh', spawn: [30, -4] })); await page.waitForFunction(() => window.__debug.zone === 'kadesh', { timeout: 90000 }); await w(2500);
+console.log('가데스 호르', await R([[20, 28], [18, 30], [26, 26], [22, 25], [16, 27]]));
+console.log('가데스 아랏', await R([[-4, 30], [0, 31], [-8, 30], [-2, 28], [4, 30]]));
+await browser.close();

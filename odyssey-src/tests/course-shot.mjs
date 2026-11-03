@@ -1,0 +1,11 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390 });
+const w = ms => new Promise(r => setTimeout(r, ms)); const E = (f, ...a) => page.evaluate(f, ...a);
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype&ch=10&body=boy&zone=alpha');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); await page.waitForFunction('!window.__debug.pendingNPC', { timeout: 90000 }); await w(1500);
+await E(() => { const d = window.__debug, m = d.markers.find(x => x.data.id === 'course'); const p = m.mesh.position; d.player.position.set(p.x + 0.8, 0, p.z + 0.6); }); await w(600);
+await E(() => document.getElementById('interact-btn').click()); await w(300); await E(() => document.getElementById('mg-act').click()); await w(600);
+await E(() => { const D = window.__debug; D.player.position.set(25, 0, 10); D.setHeading(2.4); D.setCam(2.4 + Math.PI, 0.45); D.setZoom(2.2); }); await w(2500);
+await page.screenshot({ path: 'E:/temp/claude-work/tmpglb/course-b.png' });
+await browser.close();

@@ -1,0 +1,22 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+const w = ms => new Promise(r => setTimeout(r, ms));
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&shopmock');
+await page.evaluate(() => { localStorage.removeItem('inodyssey-char'); });
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&shopmock');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); await w(800);
+console.log('처음 고르기 창:', await page.evaluate(() => !document.getElementById('pick-modal').classList.contains('hidden')));
+await page.screenshot({ path: 'E:/temp/claude-work/tmpglb/pick.png' });
+await Promise.all([page.waitForNavigation(), page.evaluate(() => document.querySelector('.pick-b[data-b="girl"]').click())]);
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); await w(1500);
+console.log('여학생 선택 후: 저장', await page.evaluate(() => localStorage.getItem('inodyssey-char')), '| 고르기 창', await page.evaluate(() => !document.getElementById('pick-modal').classList.contains('hidden')), '| 머리', (await page.evaluate(() => window.__debug.hair)).slice(0, 40), '| 튜토리얼', await page.evaluate(() => window.__debug.tut));
+// 꾸미기에서 머리 바꾸기
+await page.evaluate(() => document.getElementById('btn-shop').click()); await w(500);
+await page.evaluate(() => document.querySelector('#shop-tabs [data-c="look"]').click()); await w(300);
+await page.screenshot({ path: 'E:/temp/claude-work/tmpglb/look.png' });
+await page.evaluate(() => document.querySelector('[data-hair="boy-default"]').click()); await w(1500);
+console.log('머리 바꾼 뒤:', await page.$eval('#shop-msg', e => e.textContent), '| 저장', await page.evaluate(() => localStorage.getItem('inodyssey-char')));
+console.log('errors', errors.length ? errors.join('\n') : 'none');
+await browser.close();

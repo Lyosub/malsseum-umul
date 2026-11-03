@@ -1,0 +1,11 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 1100, height: 600 });
+const errs = []; page.on('pageerror', e => errs.push(e.message.slice(0,100)));
+const w = ms => new Promise(r => setTimeout(r, ms)); const E = (f, ...a) => page.evaluate(f, ...a);
+await page.goto('http://localhost:8766/odyssey/index.html?reset&notype&notut&ch=8&body=boy&shopmock&zone=sinai');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); await w(4000);
+console.log('zone', await E(() => window.__debug.zone), 'ch', await E(() => window.__debug.ST.ch), 'step', await E(() => window.__debug.ST.step));
+await E(() => window.__debug.travelTo({ to: 'wild', spawn: [0, 16] })); await w(6000);
+console.log('after travel zone', await E(() => window.__debug.zone), 'errors', errs.length, errs.slice(0,2));
+await browser.close();

@@ -1,0 +1,15 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11', '--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
+const errors = []; page.on('pageerror', e => errors.push(e.message));
+const w = ms => new Promise(r => setTimeout(r, ms)); const E = (f, ...a) => page.evaluate(f, ...a);
+await page.goto('http://localhost:8768/odyssey/index.html?reset&notype&notut&body=boy&devscroll', { waitUntil: 'domcontentloaded' });
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); await w(1500);
+await E(() => window.__debug.enterScroll('judges')); await page.waitForFunction(() => window.__debug.zone === 'gilgal' && !window.__debug.pendingNPC, { timeout: 120000 }); await w(3000);
+console.log(await E(() => { const D = window.__debug; const m = D.markers.find(x => x.data.id === 'jg_angel'); return JSON.stringify({ found: !!m, hidden: m && m.hidden, pos: m && [m.mesh.position.x, m.mesh.position.z], modals: [...document.querySelectorAll('.modal:not(.hidden)')].map(x => x.id) }); }));
+await E(() => { const D = window.__debug, m = D.markers.find(x => x.data.id === 'jg_angel'); D.player.position.set(m.mesh.position.x - 0.9, 0, m.mesh.position.z + 0.7); }); await w(1200);
+console.log('btn', await E(() => { const b = document.getElementById('interact-btn'); return b.textContent + ' vis=' + getComputedStyle(b).display; }));
+await E(() => document.getElementById('interact-btn').click()); await w(800);
+console.log('dlg', await E(() => !!window.__debug.dlg), await E(() => (document.getElementById('dlg-text') || {}).textContent));
+console.log('errors', errors);
+await browser.close();

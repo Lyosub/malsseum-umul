@@ -1,0 +1,10 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390 });
+const errors = []; page.on('pageerror', e => errors.push(e.message));
+await page.goto('https://logoswell.kr/odyssey/?reset&notype&zone=alpha'); await page.waitForFunction('window.__ready === true', { timeout: 200000 });
+console.log('시작:', await page.evaluate(() => window.__debug.cur), await page.evaluate(() => window.__debug.markers.some(m => m.data.id === 'scroll_gate')));
+await page.evaluate(() => window.__debug.enterScroll('moses0'));
+await page.waitForFunction(() => window.__debug.zone === 'egypt', { timeout: 150000 });
+console.log('펼친 뒤:', await page.evaluate(() => window.__debug.cur), await page.evaluate(() => window.__debug.curStep().id));
+console.log('errors', errors.length ? errors : 'none'); await browser.close();

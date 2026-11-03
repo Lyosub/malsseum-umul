@@ -1,0 +1,11 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 480, height: 700 });
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype&ch=2');
+await page.waitForFunction('window.__ready === true', { timeout: 90000 });
+await page.evaluate(() => { const d = window.__debug; while (d.curStep().id !== 'c2s18') d.advance(); });
+await page.evaluate(() => ['hint','joystick-zone','action-cluster','zoom-ctrl','quest-panel','minimap','hud-btns'].forEach(i => document.getElementById(i).style.visibility = 'hidden'));
+await page.evaluate(() => { const d = window.__debug; d.player.position.set(20, 0, 4); d.setCam(-1.9, 0.3); d.setZoom(1.2); });
+await new Promise(r => setTimeout(r, 2500));
+await page.screenshot({ path: 'E:/temp/claude-work/exodus-game/stage1/ch2/5b-hail.png' });
+await browser.close();

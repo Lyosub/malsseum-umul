@@ -1,0 +1,14 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 1280, height: 640, deviceScaleFactor: 1 });
+page.on('dialog', d => d.accept());
+const w = ms => new Promise(r => setTimeout(r, ms));
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype&ch=3&body=boy&shopmock');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 });
+await w(3000);
+const E = (f, ...a) => page.evaluate(f, ...a);
+console.log('zone', await E(() => window.__debug.zone), 'pending', await E(() => !!window.__debug.pendingNPC));
+console.log(await E(() => window.__debug.markers.map(m => m.data.id + ':' + (m.data.name||'')).join(' | ')));
+console.log(Object.keys(await E(() => Object.fromEntries(Object.keys(window.__debug).map(k=>[k,1])))).join(','));
+await page.screenshot({ path: 'E:/temp/claude-work/insta-odyssey/shots/probe.png' });
+await browser.close();

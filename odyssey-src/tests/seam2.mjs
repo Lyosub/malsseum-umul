@@ -1,0 +1,11 @@
+import puppeteer from 'puppeteer-core';
+const tag = process.argv[2] || 'a';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 390, height: 700, deviceScaleFactor: 3 });
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?nomip');
+await page.waitForFunction('window.__ready === true', { timeout: 60000 });
+await page.evaluate(()=>{ document.querySelectorAll('body > div').forEach(d=>{ if(d.id!=='canvas-wrap') d.style.display='none'; }); window.__debug.player.position.set(-3,0,30); });
+await new Promise(r=>setTimeout(r,2000));
+await page.keyboard.down('d'); await new Promise(r=>setTimeout(r,600));
+await page.screenshot({ path: `E:/temp/claude-work/exodus-game/stage1/seam-${tag}.png`, clip: { x: 120, y: 230, width: 150, height: 260 } });
+await browser.close();

@@ -1,0 +1,14 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390 });
+const errors = []; page.on('pageerror', e => errors.push(e.message));
+const w = ms => new Promise(r => setTimeout(r, ms));
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype&ch=8&body=boy&shopmock&zone=midian');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); await page.waitForFunction('!window.__debug.pendingNPC', { timeout: 90000 }); await w(1500);
+const E = (f, ...a) => page.evaluate(f, ...a);
+await E(() => { const d = window.__debug, m = d.markers.find(x => x.data.id === 'aaron' && !x.hidden); const p = m.mesh.position; d.player.position.set(p.x + 0.9, 0, p.z + 0.7); }); await w(900);
+console.log('btn', await page.$eval('#interact-btn', e => e.textContent + ' hidden=' + e.classList.contains('hidden')), await E(() => { const d = window.__debug, P = d.player.position; return d.markers.filter(m => Math.hypot(m.mesh.position.x - P.x, m.mesh.position.z - P.z) < 4).map(m => m.data.id + (m.hidden ? '(h)' : '')).join(','); }));
+console.log('ok?', await E(() => window.__debug.SIDE[0].ok()), 'ch', await E(() => window.__debug.ST.ch));
+await E(() => document.getElementById('interact-btn').click()); await w(600);
+console.log('mg', await page.$eval('#mg-title', e => e.textContent), 'dlg', await E(() => !!window.__debug.dlg), await page.$eval('#dlg-text', e => e.textContent).catch(() => ''));
+console.log(errors); await browser.close();

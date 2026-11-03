@@ -1,0 +1,18 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 900, height: 600 });
+const errors=[]; page.on('pageerror', e=>errors.push(e.message));
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset');
+await page.waitForFunction('window.__ready === true', { timeout: 90000 });
+const w = ms => new Promise(r=>setTimeout(r,ms)); const dir='E:/temp/claude-work/exodus-game/stage1/village/';
+const hideUI = () => page.evaluate(()=>document.querySelectorAll('body > div').forEach(d=>{ if(d.id!=='canvas-wrap') d.style.display='none'; }));
+await hideUI();
+const shot = async (x,z,zoom,name,heading) => { await page.evaluate((x,z,zoom,h)=>{ const d=window.__debug; d.player.position.set(x,0,z); d.setZoom(zoom); if(h!==undefined) d.setHeading(h); }, x,z,zoom,heading); await w(1800); await page.screenshot({path:dir+name}); };
+await shot(0, 15, 1.7, '1-start-wide.png');
+await shot(0, 4, 1.7, '2-village.png', Math.PI);
+await shot(-6, -9, 0.8, '3-jethro-elder.png');
+await shot(30, -26, 1.0, '4-bush.png');
+await shot(15, 9, 1.4, '5-pen.png');
+await shot(3, 6, 0.55, '6-moses-close.png');
+console.log('errors', errors.length?errors.join('\n'):'none');
+await browser.close();

@@ -1,0 +1,20 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 400, height: 780, isMobile: true, hasTouch: true });
+const w = ms => new Promise(r => setTimeout(r, ms)); const dir = 'E:/temp/claude-work/exodus-game/stage1/story/';
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&zone=midian');
+await page.waitForFunction('window.__ready === true', { timeout: 90000 });
+await page.evaluate(() => { const d = window.__debug; while (d.curStep().id !== 's5') d.advance(); });
+await page.evaluate(() => { const d = window.__debug, m = d.markers.find(x => x.data.id === 'bush').mesh.position; d.player.position.set(m.x + 2.2, 0, m.z + 2.2); d.setCam(0.8, 0.35); d.setZoom(0.8); }); await w(1500);
+await page.evaluate(() => document.getElementById('interact-btn').click()); await w(400);
+for (let i = 0; i < 4; i++){ await page.evaluate(() => document.getElementById('dlg-next').click()); await w(150); }
+await w(500); await page.screenshot({ path: dir + '3-choice.png' });
+await page.evaluate(() => document.querySelectorAll('#dlg-choices button')[0].click()); await w(300);
+await page.evaluate(() => document.getElementById('dlg-next').click()); await w(1500);
+await page.screenshot({ path: dir + '4-card.png' });
+await page.evaluate(() => document.querySelector('.modal:not(.hidden) .close').click()); await w(400);
+await page.evaluate(() => { const d = window.__debug, m = d.markers.find(x => x.data.id === 'moses').mesh.position; d.player.position.set(m.x + 1.6, 0, m.z + 1.4); }); await w(900);
+await page.evaluate(() => document.getElementById('interact-btn').click()); await w(300);
+await page.evaluate(() => document.getElementById('dlg-next').click()); await w(700);
+await page.screenshot({ path: dir + '5-moses-dlg.png' });
+await browser.close();

@@ -1,0 +1,11 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu','--ignore-gpu-blocklist'] });
+const page = await browser.newPage(); await page.setViewport({ width: 520, height: 780 });
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?close');
+await page.waitForFunction('window.__ready === true', { timeout: 60000 });
+await page.evaluate(()=>{ document.querySelectorAll('body > div').forEach(d=>{ if(d.id!=='canvas-wrap') d.style.display='none'; }); window.__debug.player.position.set(-3,0,30); window.__debug.setHeading(Math.PI*0.75); });
+await new Promise(r=>setTimeout(r,2500));
+await page.screenshot({ path: 'E:/temp/claude-work/exodus-game/stage1/shots-gpu/closeup-idle.png' });
+await page.keyboard.down('d'); await new Promise(r=>setTimeout(r,700));
+await page.screenshot({ path: 'E:/temp/claude-work/exodus-game/stage1/shots-gpu/closeup-walk.png' });
+await browser.close();

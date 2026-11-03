@@ -1,0 +1,10 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 });
+await new Promise(r => setTimeout(r, 2500));
+await page.screenshot({ path: 'E:/temp/claude-work/tmpglb/set-a.png' });
+await page.evaluate(() => document.getElementById('btn-set').click()); await new Promise(r => setTimeout(r, 600));
+await page.screenshot({ path: 'E:/temp/claude-work/tmpglb/set-b.png' });
+await browser.close();

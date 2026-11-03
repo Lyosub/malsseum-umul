@@ -1,0 +1,12 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390 });
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype&ch=4&body=boy&zone=redsea');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); const w = ms => new Promise(r => setTimeout(r, ms));
+await page.evaluate(() => document.querySelectorAll('body > div').forEach(d => { if (d.id !== 'canvas-wrap' && d.id !== 'tag-layer') d.style.display = 'none'; }));
+const go = async (id, x, z, yaw, pitch, zoom, wait, f) => { await page.evaluate(id => { const d = window.__debug; while (d.curStep() && d.curStep().id !== id) d.advance(); }, id); await w(300);
+  await page.evaluate((x, z, yaw, pitch, zoom) => { const D = window.__debug; D.player.position.set(x, 0, z); D.setCam(yaw, pitch); D.setZoom(zoom); }, x, z, yaw, pitch, zoom); await w(wait); await page.screenshot({ path: `E:/temp/claude-work/tmpglb/${f}.png` }); };
+await go('c4s4', -30, 2, 1.57, 0.15, 1.2, 4000, 'c4-army2');
+await go('c4s9', 14, 3, -1.2, 0.3, 1.8, 7000, 'c4-part2');
+await go('c4s9', 32, 0, -1.57, 0.25, 1.3, 2500, 'c4-part3');
+await browser.close();

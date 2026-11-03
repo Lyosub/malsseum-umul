@@ -1,0 +1,18 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu','--autoplay-policy=no-user-gesture-required'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
+const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error' || /배경음악/.test(m.text())) errors.push(m.text()); });
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?notut&body=boy');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); const w = ms => new Promise(r => setTimeout(r, ms));
+await page.mouse.click(420, 200); await w(3500); console.log('첫 터치 뒤 음악:', await page.evaluate(() => window.__debug.bgm));
+await page.evaluate(() => { document.getElementById('btn-menu').click(); document.getElementById('btn-set').click(); }); await w(600);
+await page.screenshot({ path: 'E:/temp/claude-work/tmpglb/set-land.png' });
+const box = await page.$eval('#set-modal .sheet', e => { const r = e.getBoundingClientRect(); return [r.top, r.bottom]; });
+console.log('설정 창 위·아래:', box.map(v => v.toFixed(0)).join(' ~ '), '(화면 390) | 음악 버튼:', await page.$eval('#bgm-toggle', e => e.textContent));
+await page.evaluate(() => document.getElementById('bgm-toggle').click()); await w(300);
+console.log('끈 뒤:', await page.$eval('#bgm-toggle', e => e.textContent), '| 저장값', await page.evaluate(() => localStorage.getItem('inodyssey-bgm')));
+await page.evaluate(() => document.getElementById('bgm-toggle').click()); await w(1500);
+await page.evaluate(() => document.getElementById('btn-save-exit').click()); await w(500);
+console.log('저장하고 나가기 알림:', await page.$eval('#quest-toast', e => e.textContent));
+console.log('errors', errors.length ? errors.join('\n') : 'none');
+await browser.close();

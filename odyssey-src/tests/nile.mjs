@@ -1,0 +1,14 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 800, height: 560 });
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?zone=egypt');
+await page.waitForFunction('window.__ready === true', { timeout: 90000 });
+await page.evaluate(()=>['hint','quest-panel','joystick-zone','action-cluster','minimap','zoom-ctrl'].forEach(i=>document.getElementById(i).style.visibility='hidden'));
+const w = ms => new Promise(r=>setTimeout(r,ms));
+await page.evaluate(()=>{ const d=window.__debug; d.player.position.set(-24,0,6); d.setCam(1.2,0.5); d.setZoom(1.6); }); await w(2500);
+await page.screenshot({path:'E:/temp/claude-work/exodus-game/stage1/zones/6-nile.png'});
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?zone=midian');
+await page.waitForFunction('window.__ready === true', { timeout: 90000 });
+await page.evaluate(()=>['hint','quest-panel','joystick-zone','action-cluster','minimap','zoom-ctrl'].forEach(i=>document.getElementById(i).style.visibility='hidden'));
+await w(2000); await page.screenshot({path:'E:/temp/claude-work/exodus-game/stage1/zones/7-midian-arrive.png'});
+await browser.close();

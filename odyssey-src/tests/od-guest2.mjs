@@ -1,0 +1,18 @@
+import puppeteer from 'puppeteer-core';
+const OUT='E:/temp/claude-work/insta-odyssey/shots/';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 1280, height: 640 });
+page.on('pageerror', e => console.log('PAGEERR', e.message.slice(0,150)));
+const w = ms => new Promise(r => setTimeout(r, ms)); const E = (f, ...a) => page.evaluate(f, ...a);
+await page.goto('http://localhost:8765/odyssey/index.html?reset');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 });
+await w(5000);
+const goNear = async id => { await E(id => { const d = window.__debug, m = d.markers.find(x => x.data.id === id); const p = m.mesh.position; d.player.position.set(p.x + 1.4, p.y, p.z + 1.4); }, id); await w(1000); };
+const info = async () => ({ login: await E(() => !document.getElementById('login-modal').classList.contains('hidden')), dlg: await E(() => !!window.__debug.dlg), msu: await E(() => document.getElementById('interact-btn').textContent) });
+console.log('MSU ready check: session?', await E(() => { try { return typeof window.supabase; } catch(e){ return 'x'; } }));
+await goNear('guide'); await E(() => document.getElementById('interact-btn').click()); await w(1000);
+console.log('안내자 →', JSON.stringify(await info())); await page.screenshot({ path: OUT + 'guest-login-modal.png' });
+await E(() => document.querySelector('#login-modal .close').click()); await w(500);
+await goNear('a_shop'); await E(() => document.getElementById('interact-btn').click()); await w(1000);
+console.log('상점 주인 →', JSON.stringify(await info()), '상점창', await E(() => !document.getElementById('shop-modal').classList.contains('hidden')));
+await browser.close();

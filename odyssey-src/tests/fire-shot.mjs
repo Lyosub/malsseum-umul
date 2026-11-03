@@ -1,0 +1,10 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390 });
+const w = ms => new Promise(r => setTimeout(r, ms)); const E = (f, ...a) => page.evaluate(f, ...a);
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype&ch=10&body=boy&zone=alpha&devscroll');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); await w(1500);
+await E(() => { window.__debug.ST.cleared = true; }); await E(() => window.__debug.enterScroll('sinai2'));
+await page.waitForFunction(() => window.__debug.zone === 'sinai' && !window.__debug.pendingNPC, { timeout: 120000 }); await w(2500);
+await E(() => { const D = window.__debug; D.player.position.set(12, 0, -8); D.setHeading(-2.4); D.setCam(2.4, 0.45); D.setZoom(2.6); D.SCROLL_DEFS.sinai2.events.lvFire(); }); await w(1800); console.log('tab', await E(() => window.__debug.tabStage), 'ch', await E(() => window.__debug.ST.ch), 'cleared', await E(() => window.__debug.ST.cleared));
+await page.screenshot({ path: 'E:/temp/claude-work/tmpglb/fire2.png' }); await browser.close();

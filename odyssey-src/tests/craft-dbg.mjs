@@ -1,0 +1,17 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
+const errors = []; page.on('pageerror', e => errors.push(e.message));
+const w = ms => new Promise(r => setTimeout(r, ms));
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype&ch=8&body=boy&shopmock&zone=egypt');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 });
+await page.waitForFunction('!window.__debug.pendingNPC', { timeout: 90000 }); await w(2000);
+const E = (f, ...a) => page.evaluate(f, ...a);
+await E(() => { const d = window.__debug, m = d.markers.find(x => x.data.id === 'act_herd'); const p = m.mesh.position; d.player.position.set(p.x + 1.2, p.y, p.z + 1.2); }); await w(800);
+console.log('btn', await page.$eval('#interact-btn', e => e.textContent + ' hidden=' + e.classList.contains('hidden')), await E(() => { const d = window.__debug; const P = d.player.position; return d.markers.filter(m => Math.hypot(m.mesh.position.x - P.x, m.mesh.position.z - P.z) < 5).map(m => m.data.id + (m.hidden ? '(숨김)' : '')).join(','); }));
+await E(() => document.getElementById('interact-btn').click()); await w(400);
+console.log('title', await page.$eval('#mg-title', e => e.textContent), 'act', await page.$eval('#mg-act', e => e.textContent + ' dis=' + e.disabled));
+await E(() => document.getElementById('mg-act').click()); await w(1000);
+console.log('live', await E(() => JSON.stringify({ k: window.__debug.live.kind, n: window.__debug.live.objs.length })), 'toast', await page.$eval('#quest-toast', e => e.textContent));
+console.log(errors);
+await browser.close();

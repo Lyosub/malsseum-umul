@@ -1,0 +1,17 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu','--autoplay-policy=no-user-gesture-required'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390 });
+const errors = []; page.on('pageerror', e => errors.push(e.message));
+const w = ms => new Promise(r => setTimeout(r, ms));
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?notut&body=boy&zone=egypt');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 });
+await page.evaluate(() => { window.__debug.bgmTitleSkip(); }); await page.mouse.click(400, 200); await w(3500);
+console.log('애굽:', await page.evaluate(() => window.__debug.bgm));
+await page.evaluate(() => window.__debug.player.position.set(60, 0, -42)); await w(3500);
+console.log('알현실:', await page.evaluate(() => window.__debug.bgm));
+await page.evaluate(() => window.__debug.player.position.set(20, 0, 0)); await w(3500);
+console.log('다시 밖:', await page.evaluate(() => window.__debug.bgm));
+await page.evaluate(() => { const D = window.__debug; D.travelTo(D.markers.find(m => m.data.to === 'midian').data); });
+await page.waitForFunction('window.__debug.zone === "midian"', { timeout: 120000 }); await w(4000);
+console.log('미디안:', await page.evaluate(() => window.__debug.bgm), '| errors', errors.join(',') || 'none');
+await browser.close();

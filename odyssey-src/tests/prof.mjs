@@ -1,0 +1,22 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu','--ignore-gpu-blocklist'] });
+const page = await browser.newPage();
+await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+const cdp = await page.createCDPSession();
+await cdp.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?fps&zone=egypt');
+await page.waitForFunction('window.__ready === true', { timeout: 120000 });
+await page.waitForFunction('!window.__debug.pendingNPC', { timeout: 120000 });
+const wait = ms => new Promise(r => setTimeout(r, ms));
+await page.evaluate(() => { const D = window.__debug; D.player.position.set(2, 0, 2); D.setCam(0, 0.3); }); await wait(3000);
+await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 500 }); await cdp.send('Profiler.start');
+await wait(6000);
+const { profile } = await cdp.send('Profiler.stop');
+const self = new Map(); const byId = new Map(profile.nodes.map(n => [n.id, n]));
+const dt = profile.timeDeltas; const cnt = new Map();
+profile.samples.forEach((id, i) => cnt.set(id, (cnt.get(id) || 0) + (dt[i] || 0)));
+for (const [id, t] of cnt){ const n = byId.get(id); const k = (n.callFrame.functionName || '(anon)') + ':' + n.callFrame.lineNumber; self.set(k, (self.get(k) || 0) + t); }
+const tot = [...self.values()].reduce((a, b) => a + b, 0);
+console.log([...self].sort((a, b) => b[1] - a[1]).slice(0, 25).map(([k, t]) => (100 * t / tot).toFixed(1).padStart(5) + '% ' + k).join('\n'));
+console.log(await page.evaluate(() => document.getElementById('perf').textContent));
+await browser.close();

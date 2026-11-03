@@ -1,0 +1,11 @@
+import puppeteer from 'puppeteer-core';
+const [, , html, pdf, png] = process.argv;
+const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new' });
+const p = await b.newPage();
+await p.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 });
+await p.goto('file:///' + html.replace(/\\/g, '/'), { waitUntil: 'load' });
+const h = await p.evaluate(() => [...document.querySelectorAll('.page')].map(e => [e.scrollHeight, e.clientHeight]));
+console.log('page scroll/client', h);
+await p.pdf({ path: pdf, format: 'A4', printBackground: true, preferCSSPageSize: true });
+await p.screenshot({ path: png, fullPage: true });
+await b.close();

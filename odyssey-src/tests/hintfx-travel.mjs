@@ -1,0 +1,14 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11', '--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
+const errors = []; page.on('pageerror', e => errors.push('pageerror: ' + e.message));
+const wait = ms => new Promise(r => setTimeout(r, ms));
+await page.goto('http://localhost:8768/odyssey/index.html?reset&notype&notut&body=boy&devscroll&shopmock', { waitUntil: 'domcontentloaded' });
+await page.waitForFunction('window.__ready === true', { timeout: 90000 }); await wait(2500);
+const st = () => page.evaluate(() => { const q = __debug.curStep(); return JSON.stringify({ zone: __debug.zone, qzone: q && q.zone, lv: __debug.hintLv, btn: document.getElementById('hint-btn').textContent, panel: document.querySelector('#quest-panel .hintln') ? document.querySelector('#quest-panel .hintln').textContent : '' }); });
+await page.evaluate(() => { __debug.ST.cleared = true; __debug.startChapter(1); }); await wait(1200);
+await page.evaluate(() => { __debug.stepT = 60; }); await wait(800); console.log('stuck', await st());
+await page.evaluate(() => document.getElementById('hint-btn').click()); await wait(600); console.log('tap1', await st());
+await page.evaluate(() => document.getElementById('hint-btn').click()); await wait(12000); console.log('tap2', await st());
+await page.screenshot({ path: 'E:/temp/claude-work/hintfx/6-travel.png' });
+console.log('errors', errors.length ? errors.join('\n') : 'none'); await browser.close();

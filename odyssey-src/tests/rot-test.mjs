@@ -1,0 +1,13 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--use-angle=d3d11','--enable-gpu'] });
+const page = await browser.newPage(); await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+const errors = []; page.on('pageerror', e => errors.push(e.message));
+const w = ms => new Promise(r => setTimeout(r, ms));
+await page.goto('file:///E:/temp/claude-work/exodus-game/prototype-standalone.html?reset&notype');
+await page.waitForFunction('window.__ready === true', { timeout: 150000 }); await w(800);
+console.log('세로 안내 보임:', await page.$eval('#rotate', e => getComputedStyle(e).display), '| 버튼', !!(await page.$('#btn-landscape')));
+await page.screenshot({ path: 'E:/temp/claude-work/tmpglb/rot.png' });
+await page.tap('#btn-landscape'); await w(1500);
+console.log('누른 뒤:', await page.$eval('#rotate', e => e.innerText.replace(/\s+/g,' ').slice(0,120)), '| fullscreen', await page.evaluate(() => !!document.fullscreenElement));
+console.log('errors', errors.length ? errors.join('\n') : 'none');
+await browser.close();
