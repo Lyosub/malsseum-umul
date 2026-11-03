@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>우물지기 | 말씀우물</title>
+<meta name="description" content="말씀우물을 지키는 캐릭터 우물지기를 소개합니다. 3D로 돌려 보고 인사도 나눠 보세요.">
+<meta property="og:title" content="우물지기 | 말씀우물">
+<meta property="og:description" content="말씀우물을 지키는 캐릭터 우물지기를 소개합니다.">
+<meta property="og:image" content="https://logoswell.kr/assets/brand/well-mascot.png">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2540d8">
+<script defer src="assets/pwa.js"></script>
+<style>
+html, body { background: #f3f4fa; background-image: none; }
+.wk { max-width: 560px; margin: 0 auto; padding: 0 16px 28px; color: #141a3c; }
+.wk h1 { margin: 22px 0 2px; font-size: 30px; font-weight: 800; letter-spacing: -.035em; }
+.wk .lead { margin: 0 0 14px; color: #4c5478; font-size: 16px; line-height: 1.55; }
+#stage { position: relative; height: 400px; border-radius: 20px; overflow: hidden; background: #dfe6fb; }
+#stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; }
+#fallback img { max-height: 100%; }
+#fallback[hidden] { display: none; }
+.hint { margin: 8px 2px 10px; color: #4c5478; font-size: 13.5px; line-height: 1.5; }
+.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.actions button { min-height: 48px; border-radius: 12px; border: 1px solid #c7cfea; background: #fff; color: #141a3c; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.actions button.on { background: #2540d8; border-color: #2540d8; color: #fff; }
+.wk section { margin-top: 30px; }
+.wk h2 { margin: 0 0 10px; font-size: 20px; font-weight: 800; letter-spacing: -.03em; }
+.wk p { margin: 0 0 10px; font-size: 15.5px; line-height: 1.7; }
+.profile { margin: 0; background: #fff; border-radius: 16px; padding: 4px 16px; }
+.profile div { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 8px; padding: 13px 0; }
+.profile div + div { border-top: 1px solid #e6e8f3; }
+.profile dt { color: #4c5478; font-size: 14px; font-weight: 700; }
+.profile dd { margin: 0; font-size: 15px; line-height: 1.55; }
+.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.parts li { background: #fff; border-radius: 14px; padding: 13px 16px; font-size: 15px; line-height: 1.6; }
+.parts b { display: block; color: #2540d8; }
+.verse { background: #17287e; color: #fff; border-radius: 16px; padding: 20px; }
+.verse p { margin: 0; font-size: 17px; line-height: 1.7; font-weight: 600; }
+.verse cite { display: block; margin-top: 8px; color: #cdec37; font-size: 14px; font-style: normal; font-weight: 700; }
+</style>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html">💧 말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<main class="wk">
+  <h1>우물지기</h1>
+  <p class="lead">말씀우물을 지키는 캐릭터입니다. 찾아오는 사람과 함께 날마다 말씀을 길어 올립니다.</p>
+  <div id="stage">
+    <div id="fallback" class="wk-fallback" hidden><img src="assets/brand/well-mascot.png" alt="손을 흔드는 우물지기"></div>
+  </div>
+  <p class="hint wk-hint">위아래, 옆으로 밀어 돌려 보세요. 누르면 기뻐합니다.</p>
+  <div class="actions">
+    <button type="button" id="aWave">인사</button>
+    <button type="button" id="aJoy">기쁨</button>
+    <button type="button" id="aDip">물 긷기</button>
+  </div>
+
+  <section>
+    <h2>프로필</h2>
+    <dl class="profile">
+      <div><dt>이름</dt><dd>우물지기</dd></div>
+      <div><dt>사는 곳</dt><dd>말씀우물</dd></div>
+      <div><dt>하는 일</dt><dd>날마다 말씀을 길어 올려 함께 나눕니다.</dd></div>
+      <div><dt>성격</dt><dd>다정하고 조금 엉뚱합니다. 누구의 이야기든 끝까지 들어 줍니다.</dd></div>
+      <div><dt>좋아하는 것</dt><dd>아침에 새로 길은 물, 함께 말씀을 읽는 사람</dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <h2>이름의 뜻</h2>
+    <p>우물지기는 우물을 돌보는 사람입니다. 우물이 막히지 않게 살피고, 찾아온 사람이 물을 길을 수 있게 돕습니다. 말씀우물의 우물지기도 누구나 말씀 앞으로 올 수 있도록 돕습니다.</p>
+  </section>
+
+  <section>
+    <h2>생김새에 담은 것</h2>
+    <ul class="parts">
+      <li><b>쌓아 올린 벽돌</b>하루하루 쌓아 가는 믿음의 습관입니다.</li>
+      <li><b>두레박과 줄</b>날마다 말씀을 직접 길어 올리는 묵상입니다.</li>
+      <li><b>맑은 물</b>우리 삶을 적시는 하나님의 말씀입니다.</li>
+      <li><b>지붕</b>누구나 쉬어 갈 수 있는 자리입니다.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>우물가에서 만난 예수님</h2>
+    <p>예수님은 야곱의 우물 곁에서 사마리아 여자를 만나 이렇게 말씀하셨습니다. 우물지기는 길을 안내할 뿐이고, 이 물을 주시는 분은 예수님이십니다.</p>
+    <div class="verse">
+      <p>내가 주는 물을 마시는 자는 영원히 목마르지 아니하리니 내가 주는 물은 그 속에서 영생하도록 솟아나는 샘물이 되리라</p>
+      <cite>요한복음 4:14</cite>
+    </div>
+  </section>
+</main>
+<footer class="site">
+  💧 말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a><br>
+  성경 인용: 개역개정판, ⓒ 대한성서공회
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/script.js"></script>
+<script>if (typeof initHeaderAuthState === "function") initHeaderAuthState();</script>
+<script src="assets/vendor/three-r128.min.js"></script>
+<script src="assets/wooljigi-3d.js"></script>
+<script>window.__well = mountWooljigi(document.getElementById("stage"));</script>
+<script src="assets/appshell.js"></script>
+</body>
+</html>
