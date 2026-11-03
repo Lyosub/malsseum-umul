@@ -426,6 +426,19 @@
       "note": "주일 설교 요약 릴스 — 11/8 「서로 기도하는 자」(약 5:13-20). 제미나이 영상 3개(전도사님 생성) + Claude 글자(설교문 대지 제목 3문장·약 5:16 원문) + BGM 「희망 1」, 29.8초. 전도사님 컨펌 2026-11-03."
     },
     {
+      "id": "2026-11-09-lands",
+      "type": "carousel",
+      "publish_at": "2026-11-09 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-09-lands.txt",
+      "first_comment_file": "instagram/captions/2026-11-09-lands.tags.txt",
+      "images": [
+        "instagram/2026-11-09-lands-01.jpg",
+        "instagram/2026-11-09-lands-02.jpg"
+      ],
+      "note": "특별 게시물 「성경의 땅, 지금은 어디일까?」 2장 — 구약 8곳·신약 8곳, 옛날 그림 → 오늘날 그림(GPT), 구절은 개역개정 대조, 지명은 주석 대조. 전도사님 컨펌 2026-11-03."
+    },
+    {
       "id": "2026-11-08-verse",
       "type": "carousel",
       "publish_at": "2026-11-10 19:30",
