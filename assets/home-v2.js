@@ -74,7 +74,7 @@
         var keeper = mountWooljigi(stage);
         if (keeper) {
           if (img) img.remove();
-          keeper.hideShadow();
+          
           keeper.setBase("proud");
           keeper.play("joy");
         }
