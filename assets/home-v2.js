@@ -3,6 +3,13 @@
   var card = document.getElementById("homeVerseCard");
   if (!card) return;
 
+  // 맨 위 배경: 말씀 카드 배경 사진(날마다 바뀜). 글자가 잘 읽히도록 사진 위에 어둡게 한 겹 덮는다.
+  var heroEl = document.getElementById("hvHero");
+  try {
+    var bgNum = String(getVerseCardBgIndex()).padStart(2, "0");
+    heroEl.style.backgroundImage = "linear-gradient(180deg, rgba(8, 14, 44, .54) 0%, rgba(8, 14, 44, .46) 40%, rgba(8, 14, 44, .68) 100%), url(assets/verse-card-bg/verse-card-bg-" + bgNum + ".jpg)";
+  } catch (e) {}
+
   var verse = getVerseFor("daily");
   var len = verse.text.length;
   card.classList.toggle("is-mid", len > 44 && len <= 74);
@@ -49,7 +56,8 @@
     keeperShown = true;
     var box = document.createElement("div");
     box.className = "hv-done";
-    box.innerHTML = '<div class="hv-done-stage" id="hvKeeper"><img src="assets/brand/well-mascot-bucket.png" alt="두레박을 든 우물지기"></div><p>오늘의 1분을 다 채웠어요</p>';
+    box.innerHTML = '<div class="hv-done-text"><span class="hv-done-kicker">오늘도 말씀을 길어 올렸어요</span><strong>오늘의 1분을 다 채웠어요</strong></div>' +
+      '<div class="hv-done-stage" id="hvKeeper"><img src="assets/brand/well-mascot-bucket.png" alt="두레박을 든 우물지기"></div>';
     var list = document.getElementById("hvSteps");
     list.parentNode.insertBefore(box, list);
     var load = function (src, next) {
@@ -66,6 +74,7 @@
         var keeper = mountWooljigi(stage);
         if (keeper) {
           if (img) img.remove();
+          keeper.hideShadow();
           keeper.setBase("proud");
           keeper.play("joy");
         }
