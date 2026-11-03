@@ -396,6 +396,25 @@
       "posted_at": "2026-11-03 19:32"
     },
     {
+      "id": "2026-11-04-well",
+      "type": "carousel",
+      "publish_at": "2026-11-04 09:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-04-well.txt",
+      "first_comment_file": "instagram/captions/2026-11-04-well.tags.txt",
+      "images": [
+        "instagram/2026-11-04-well-01.jpg",
+        "instagram/2026-11-04-well-02.jpg",
+        "instagram/2026-11-04-well-03.jpg",
+        "instagram/2026-11-04-well-04.jpg",
+        "instagram/2026-11-04-well-05.jpg",
+        "instagram/2026-11-04-well-06.jpg",
+        "instagram/2026-11-04-well-07.jpg",
+        "instagram/2026-11-04-well-08.jpg"
+      ],
+      "note": "말씀우물 개편 공지(오늘의 1분, 날짜별 묵상, 우물지기 키우기). 전도사님 요청으로 11/4 오전 9시."
+    },
+    {
       "id": "2026-11-01-cartoon",
       "type": "image",
       "publish_at": "2026-11-05 19:30",
