@@ -1,0 +1,120 @@
+{
+  "members": 44,
+  "new_members_7d": 0,
+  "active_today": 1,
+  "active_7d": 9,
+  "active_prev_7d": 14,
+  "returned_7d": 8,
+  "lapsed_7d": 6,
+  "first_time_7d": 0,
+  "active_30d": 19,
+  "push_subscribers": 4,
+  "features_7d": {
+    "attendance": {
+      "users": 9,
+      "count": 20
+    },
+    "devotion": {
+      "users": 4,
+      "count": 13
+    },
+    "memorize": {
+      "users": 1,
+      "count": 2
+    },
+    "note_gratitude": {
+      "users": 1,
+      "count": 1
+    },
+    "note_greeting": {
+      "users": 1,
+      "count": 1
+    },
+    "note_prayer": {
+      "users": 1,
+      "count": 1
+    },
+    "odyssey": {
+      "users": 4,
+      "count": 321
+    },
+    "quiz": {
+      "users": 1,
+      "count": 1
+    },
+    "verse_draw": {
+      "users": 2,
+      "count": 6
+    }
+  },
+  "weekly": [
+    {
+      "week_start": "2026-08-24",
+      "active": 28,
+      "attendance_users": 28,
+      "attendance_count": 31
+    },
+    {
+      "week_start": "2026-08-31",
+      "active": 30,
+      "attendance_users": 29,
+      "attendance_count": 99
+    },
+    {
+      "week_start": "2026-09-07",
+      "active": 27,
+      "attendance_users": 27,
+      "attendance_count": 119
+    },
+    {
+      "week_start": "2026-09-14",
+      "active": 27,
+      "attendance_users": 26,
+      "attendance_count": 101
+    },
+    {
+      "week_start": "2026-09-21",
+      "active": 21,
+      "attendance_users": 20,
+      "attendance_count": 65
+    },
+    {
+      "week_start": "2026-09-28",
+      "active": 17,
+      "attendance_users": 17,
+      "attendance_count": 44
+    },
+    {
+      "week_start": "2026-10-05",
+      "active": 17,
+      "attendance_users": 16,
+      "attendance_count": 40
+    },
+    {
+      "week_start": "2026-10-12",
+      "active": 13,
+      "attendance_users": 11,
+      "attendance_count": 27
+    },
+    {
+      "week_start": "2026-10-19",
+      "active": 14,
+      "attendance_users": 12,
+      "attendance_count": 33
+    },
+    {
+      "week_start": "2026-10-26",
+      "active": 8,
+      "attendance_users": 7,
+      "attendance_count": 21
+    },
+    {
+      "week_start": "2026-11-02",
+      "active": 4,
+      "attendance_users": 3,
+      "attendance_count": 4
+    }
+  ],
+  "generated_kst": "2026-11-03 17:42",
+  "ok": true
+}
