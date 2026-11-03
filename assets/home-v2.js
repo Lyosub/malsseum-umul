@@ -79,7 +79,9 @@
           try {
             getClient().rpc("get_my_keeper").then(function (r) {
               if (r.error || !r.data || !r.data.length) return;
-              keeper.setStage(r.data[0].stage);
+              var st = r.data[0].stage;
+              box.style.backgroundImage = "url(assets/home/" + (st === 2 ? "keeper-bg" : "stage-" + st) + ".jpg)";
+              keeper.setStage(st);
               keeper.setColor(r.data[0].color_chosen ? r.data[0].color : "classic");
             });
           } catch (e) {}

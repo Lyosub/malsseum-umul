@@ -5,14 +5,16 @@
   if (!card) return;
   var NAMES = ["작은 물방울", "샘", "작은 우물", "두레박 우물", "우물지기", "큰 우물지기"];
   var NEXT = [5, 15, 30, 50, 75];
+  // 말씀 본문은 대한성서공회 개역개정 원문이다.
   var COLORS = [
-    ["blue", "파랑", "#1f52de", "물결과 물방울로 자라요"],
-    ["green", "초록", "#16a34a", "잎과 덩굴로 자라요"],
-    ["purple", "보라", "#7a22e0", "밤하늘의 별로 자라요"],
-    ["pink", "분홍", "#e91e82", "꽃과 화환으로 자라요"],
-    ["teal", "청록", "#0ea5a5", "조약돌과 시냇물로 자라요"],
-    ["yellow", "노랑", "#eeb000", "해와 빛살로 자라요"]
+    ["blue", "파랑", "#1f52de", "생수", "요한복음 4:14", "내가 주는 물을 마시는 자는 영원히 목마르지 아니하리니 내가 주는 물은 그 속에서 영생하도록 솟아나는 샘물이 되리라"],
+    ["green", "초록", "#16a34a", "참포도나무", "요한복음 15:5", "나는 포도나무요 너희는 가지라 그가 내 안에, 내가 그 안에 거하면 사람이 열매를 많이 맺나니 나를 떠나서는 너희가 아무 것도 할 수 없음이라"],
+    ["purple", "보라", "#7a22e0", "약속의 별", "마태복음 2:10", "그들이 별을 보고 매우 크게 기뻐하고 기뻐하더라"],
+    ["pink", "분홍", "#e91e82", "들의 백합화", "마태복음 6:28", "또 너희가 어찌 의복을 위하여 염려하느냐 들의 백합화가 어떻게 자라는가 생각하여 보라 수고도 아니하고 길쌈도 아니하느니라"],
+    ["teal", "청록", "#0ea5a5", "시냇가의 나무", "시편 1:3", "그는 시냇가에 심은 나무가 철을 따라 열매를 맺으며 그 잎사귀가 마르지 아니함 같으니 그가 하는 모든 일이 다 형통하리로다"],
+    ["yellow", "노랑", "#d98a00", "세상의 빛", "마태복음 5:14", "너희는 세상의 빛이라 산 위에 있는 동네가 숨겨지지 못할 것이요"]
   ];
+  function stageBgUrl(n) { return "url(assets/home/" + (n === 2 ? "keeper-bg" : "stage-" + n) + ".jpg)"; }
   var keeper = null, current = null, pick = null, confirming = false, msg = "";
 
   function info(key) {
@@ -41,7 +43,8 @@
     var c = info(pick);
     panel.hidden = false;
     panel.innerHTML = '<p class="kc-pick-title">내 우물지기의 색을 골라 주세요</p>' +
-      '<p class="kc-pick-sub"><b>' + c[1] + "</b> · " + c[3] + ". 샘(Lv 5)부터 모습이 달라져요.</p>" +
+      '<p class="kc-pick-sub"><b>' + c[1] + " · " + c[3] + "</b> · 샘(Lv 5)부터 이 모습으로 자라요.</p>" +
+      '<blockquote class="kc-verse">' + c[5] + "<cite>" + c[4] + "</cite></blockquote>" +
       (msg ? '<p class="kc-msg">' + msg + "</p>" : "") +
       (confirming
         ? '<p class="kc-warn">한 번 고르면 바꿀 수 없어요. 정말 ' + c[1] + "(으)로 정할까요?</p>" +
@@ -56,6 +59,7 @@
     current = d;
     if (!pick) pick = d.color || "blue";
     card.hidden = false;
+    document.getElementById("kcStage").style.backgroundImage = stageBgUrl(d.stage);
     var span = Math.max(1, d.next_xp - d.level_xp);
     var pct = Math.max(0, Math.min(100, Math.round((d.xp - d.level_xp) / span * 100)));
     document.getElementById("kcLevel").textContent = "Lv " + d.level;

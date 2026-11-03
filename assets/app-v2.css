@@ -113,4 +113,5 @@ html[data-tone] #homeVerseCard .text { font-size: 16.5px; line-height: 1.6; }
 .kc-msg { color: #b3261e; font-size: 13.5px; font-weight: 700; }
 .kc-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .kc-actions .btn { min-height: 46px; margin: 0; }
-
+.kc-verse { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--tone-soft); color: var(--v2-ink); font-size: 14px; line-height: 1.65; }
+.kc-verse cite { display: block; margin-top: 4px; color: var(--tone-deep); font-size: 13px; font-style: normal; font-weight: 700; }
