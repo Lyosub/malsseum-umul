@@ -13,16 +13,34 @@ window.mountWooljigi = function (stage) {
     return null;
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  // 느린 기기에서는 실시간 그림자를 끈다.
+  var lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3;
+  renderer.shadowMap.enabled = !lowEnd;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   stage.appendChild(renderer.domElement);
 
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(26, 1, 0.1, 50);
   camera.position.set(0, 3.5, 9.9);
   camera.lookAt(0, 0.66, 0);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-  var key = new THREE.DirectionalLight(0xffffff, 0.3);
-  key.position.set(-2.5, 5, 6);
+  scene.add(new THREE.HemisphereLight(0xdfeaff, 0x7a8a55, 0.72));
+  var key = new THREE.DirectionalLight(0xfff2dc, 1.05);
+  key.position.set(-1.6, 8.5, 3.6);
+  key.castShadow = !lowEnd;
+  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.camera.left = -3.6; key.shadow.camera.right = 3.6; key.shadow.camera.top = 4.4; key.shadow.camera.bottom = -2.6;
+  key.shadow.camera.near = 1; key.shadow.camera.far = 18;
+  key.shadow.bias = -0.0006; key.shadow.normalBias = 0.02; key.shadow.radius = 4;
   scene.add(key);
+  var fill = new THREE.DirectionalLight(0xffd9b0, 0.34);
+  fill.position.set(4, 1.5, 3);
+  scene.add(fill);
+  var rimLight = new THREE.DirectionalLight(0xbcd6ff, 0.5);
+  rimLight.position.set(1, 3.5, -5);
+  scene.add(rimLight);
 
   var COL = { cobalt: 0x1f52de, stone: 0x8cb8f4, cream: 0xfdf0d6, water: 0x2ba8ff, wood: 0xd9852c, roof: 0xff7a35,
     navy: 0x0a1450, pink: 0xfaa6ad, white: 0xffffff, pulley: 0xf5da6e, rope: 0xf3e4b0 };
@@ -32,9 +50,13 @@ window.mountWooljigi = function (stage) {
   grad.minFilter = grad.magFilter = THREE.NearestFilter;
   grad.needsUpdate = true;
 
-  function toon(c) { return new THREE.MeshToonMaterial({ color: c, gradientMap: grad }); }
+  function linearHex(c) { return new THREE.Color(c).convertSRGBToLinear(); }
+  function toon(c) {
+    var rough = c === COL.cream ? 0.86 : c === COL.wood ? 0.74 : c === COL.stone ? 0.82 : c === COL.water ? 0.18 : 0.46;
+    return new THREE.MeshStandardMaterial({ color: linearHex(c), roughness: rough, metalness: (c === 0xf2c230) ? 0.55 : 0 });
+  }
 
-  var OUT = 0.038;
+  var OUT = 0.012;
   function hullMat(t) {
     return new THREE.ShaderMaterial({
       side: THREE.BackSide,
@@ -50,8 +72,11 @@ window.mountWooljigi = function (stage) {
     var mat = toon(color);
     if (color === COL.cobalt) MAIN_MATS.push(mat);
     if (color === COL.stone) STONE_MATS.push(mat);
-    g.add(new THREE.Mesh(geo, mat));
-    if (t !== 0) g.add(new THREE.Mesh(geo, hullMat(t === undefined ? OUT : t)));
+    var solid = new THREE.Mesh(geo, mat);
+    solid.castShadow = true;
+    solid.receiveShadow = true;
+    g.add(solid);
+    if (t !== 0) g.add(new THREE.Mesh(geo, hullMat(Math.min(t === undefined ? OUT : t, 0.012))));
     return g;
   }
   function roundedBox(w, h, d, r, seg) {
@@ -112,7 +137,10 @@ window.mountWooljigi = function (stage) {
       var fromFront = Math.min(d, 360 - d);
       if (fromFront < c.clear) continue;                    // 얼굴 자리
       if (c.y === 0.11 && Math.abs(fromFront - 90) < 1) continue;  // 양쪽 어깨 자리
-      (c.y > 0 ? G.bricksHigh : G.bricks).add(onBody(part(brick, COL.stone, 0.03), deg(d), c.y, c.R));
+      var bk = part(brick, COL.stone, 0.012);
+      bk.scale.set(0.97 + ((k * 7) % 5) * 0.012, 0.96 + ((k * 11) % 4) * 0.014, 1);
+      bk.rotation.z = (((k * 13) % 5) - 2) * 0.006;
+      (c.y > 0 ? G.bricksHigh : G.bricks).add(onBody(bk, deg(d), c.y, c.R));
     }
   });
 
@@ -134,7 +162,7 @@ window.mountWooljigi = function (stage) {
   });
 
   // 우물 입구
-  var water = new THREE.Mesh(new THREE.CircleGeometry(1.02, 48), new THREE.MeshBasicMaterial({ color: COL.water }));
+  var water = new THREE.Mesh(new THREE.CircleGeometry(1.02, 48), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(0x1e9cf5) }));
   water.rotation.x = -Math.PI / 2;
   water.position.y = 0.66;
   G.rim.add(water);
@@ -142,7 +170,7 @@ window.mountWooljigi = function (stage) {
   for (var r = 0; r < 14; r++) G.rim.add(onBody(part(rimStone, COL.cream, 0.032), deg(r * 360 / 14 + 12.8), 0.68, 1.1));
 
   var ripples = [0, 1].map(function () {
-    var m = new THREE.Mesh(new THREE.RingGeometry(0.96, 1, 48), new THREE.MeshBasicMaterial({ color: COL.white, transparent: true, side: THREE.DoubleSide }));
+    var m = new THREE.Mesh(new THREE.RingGeometry(0.96, 1, 48), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.white), transparent: true, side: THREE.DoubleSide }));
     m.rotation.x = -Math.PI / 2;
     m.position.y = 0.675;
     G.rim.add(m);
@@ -176,10 +204,10 @@ window.mountWooljigi = function (stage) {
   bucket.add(pail);
   var bandGeo = new THREE.TorusGeometry(0.175, 0.012, 6, 24);
   bandGeo.rotateX(Math.PI / 2);
-  var band = new THREE.Mesh(bandGeo, new THREE.MeshBasicMaterial({ color: COL.navy }));
+  var band = new THREE.Mesh(bandGeo, new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.navy) }));
   band.position.y = 0.03;
   bucket.add(band);
-  var handle = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.016, 8, 20, Math.PI), new THREE.MeshBasicMaterial({ color: COL.navy }));
+  var handle = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.016, 8, 20, Math.PI), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.navy) }));
   handle.position.y = 0.1;
   bucket.add(handle);
   G.hang.add(bucket);
@@ -198,36 +226,53 @@ window.mountWooljigi = function (stage) {
   roofFlat.computeVertexNormals();
   var roofMat = toon(COL.roof);
   var roof = new THREE.Group();
-  roof.add(new THREE.Mesh(roofFlat, roofMat));
-  var roofLine = new THREE.Mesh(roofGeo.clone().scale(1.045, 1.12, 1.06), new THREE.MeshBasicMaterial({ color: COL.navy, side: THREE.BackSide }));
-  roof.add(roofLine);
-  // 지붕 판 사이의 선: 앞뒤 면의 실제 모서리 좌표를 따라 긋는다.
-  function seam(ax, ay, az, bx, by, bz) {
-    var A = new THREE.Vector3(ax, ay, az), B = new THREE.Vector3(bx, by, bz);
-    var len = A.distanceTo(B);
-    var geo = new THREE.CylinderGeometry(0.018, 0.018, len, 8);
-    var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: COL.navy }));
-    m.position.copy(A).add(B).multiplyScalar(0.5);
-    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize());
-    roof.add(m);
-  }
-  [1, -1].forEach(function (side) {
-    [-1, 1].forEach(function (x) {
-      seam(x * 0.17, 0.31, side * 0.386, x * 0.37, -0.31, side * 0.825);
-    });
-    // 기왓줄: 앞뒤 면을 가로지른다
-    [0.36, 0.68].forEach(function (f) {
-      var y = 0.31 - 0.62 * f, xx = 0.52 + (1.12 - 0.52) * f, zz = side * (0.386 + (0.825 - 0.386) * f);
-      seam(-xx, y, zz, xx, y, zz);
-    });
-    // 옆면 가운데 선
-    seam(side * 0.525, 0.31, 0, side * 1.125, -0.31, 0);
+  var roofBase = new THREE.Mesh(roofFlat, toon(0x7c3c12));
+  roofBase.material.color.setHex(0x5a2a0c);
+  roof.add(roofBase);
+  // 기와: 네 면에 줄지어 얹는다. 같은 모양을 인스턴스로 그려 가볍게 한다.
+  var tileGeo = roundedBox(0.19, 0.2, 0.05, 0.024, 3);
+  var ROWS = 5, placed = [];
+  [[1, 0], [-1, Math.PI]].forEach(function (f) {
+    for (var ro = 0; ro < ROWS; ro++) {
+      var tt = (ro + 0.5) / ROWS, half = 0.51 + 0.59 * tt, z = 0.378 + 0.438 * tt, y = 0.31 - 0.62 * tt;
+      var cols = Math.round(half * 2 / 0.185);
+      for (var co = 0; co < cols; co++) {
+        var xx = -half + (co + 0.5) * (half * 2 / cols) + (ro % 2 ? 0.05 : 0);
+        if (Math.abs(xx) > half - 0.02) continue;
+        placed.push({ x: xx * f[0], y: y + 0.012, z: (z + 0.035) * f[0], ry: f[1], rx: -0.62 });
+      }
+    }
   });
+  [[1, Math.PI / 2], [-1, -Math.PI / 2]].forEach(function (f) {
+    for (var ro = 0; ro < ROWS; ro++) {
+      var tt = (ro + 0.5) / ROWS, half = 0.36 + 0.44 * tt, x = 0.52 + 0.6 * tt, y = 0.31 - 0.62 * tt;
+      var cols = Math.round(half * 2 / 0.185);
+      for (var co = 0; co < cols; co++) {
+        var zz = -half + (co + 0.5) * (half * 2 / cols) + (ro % 2 ? 0.05 : 0);
+        if (Math.abs(zz) > half - 0.02) continue;
+        placed.push({ x: (x + 0.035) * f[0], y: y + 0.012, z: zz, ry: f[1], rx: -0.77 });
+      }
+    }
+  });
+  var tiles = new THREE.InstancedMesh(tileGeo, roofMat, placed.length);
+  tiles.castShadow = true;
+  tiles.receiveShadow = true;
+  var dummy = new THREE.Object3D();
+  placed.forEach(function (q, i) {
+    dummy.position.set(q.x, q.y, q.z);
+    dummy.rotation.set(0, q.ry, 0);
+    dummy.rotateX(q.rx + (q.rx < 0 ? 1 : 0) * 0);
+    dummy.scale.setScalar(0.98 + (i % 5) * 0.01);
+    dummy.updateMatrix();
+    tiles.setMatrixAt(i, dummy.matrix);
+  });
+  roof.add(tiles);
   var ridgeGeo = roundedBox(1.16, 0.13, 0.86, 0.05, 4);
   var ridge = part(ridgeGeo, 0xd95a1e, 0.03);
+  var ridgeMat = ridge.children[0].material;
   ridge.position.y = 0.37;
   roof.add(ridge);
-  var soffit = new THREE.Mesh(new THREE.PlaneGeometry(2.16, 1.58), new THREE.MeshBasicMaterial({ color: 0x8f5420 }));
+  var soffit = new THREE.Mesh(new THREE.PlaneGeometry(2.16, 1.58), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(0x8f5420) }));
   soffit.rotation.x = Math.PI / 2;
   soffit.position.y = -0.315;
   roof.add(soffit);
@@ -252,28 +297,28 @@ window.mountWooljigi = function (stage) {
     var eye = new THREE.Group();
     onBody(eye, s * deg(17), 0.04, 1.035);
     var p = new THREE.Group();
-    p.add(new THREE.Mesh(blob(0.122, 0.16, 0.025), new THREE.MeshBasicMaterial({ color: COL.navy })));
-    var hi = new THREE.Mesh(blob(0.036, 0.036, 0.01), new THREE.MeshBasicMaterial({ color: COL.white }));
-    hi.position.set(0.03, 0.055, 0.024);
+    p.add(new THREE.Mesh(blob(0.122, 0.16, 0.05), new THREE.MeshStandardMaterial({ color: linearHex(0x081244), roughness: 0.14 })));
+    var hi = new THREE.Mesh(blob(0.036, 0.036, 0.01), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.white) }));
+    hi.position.set(0.03, 0.058, 0.046);
     p.add(hi);
     eye.add(p);
-    var happy = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.027, 10, 24, Math.PI), new THREE.MeshBasicMaterial({ color: COL.navy }));
+    var happy = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.027, 10, 24, Math.PI), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.navy) }));
     happy.position.y = -0.04;
     happy.visible = false;
     eye.add(happy);
     G.face.add(eye);
     eyes.push({ g: eye, p: p, happy: happy });
-    var ck = new THREE.Mesh(blob(0.115, 0.075, 0.02), new THREE.MeshBasicMaterial({ color: COL.pink }));
+    var ck = new THREE.Mesh(blob(0.115, 0.075, 0.02), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.pink) }));
     onBody(ck, s * deg(33), -0.14, 1.03);
     G.face.add(ck);
   });
   var smileGeo = new THREE.TorusGeometry(0.085, 0.024, 10, 28, Math.PI);
   smileGeo.rotateZ(Math.PI);
-  var smile = new THREE.Mesh(smileGeo, new THREE.MeshBasicMaterial({ color: COL.navy }));
+  var smile = new THREE.Mesh(smileGeo, new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.navy) }));
   smile.position.set(0, -0.1, 1.04);
   G.face.add(smile);
   var openGeo = new THREE.CircleGeometry(0.11, 28, Math.PI, Math.PI);
-  var openMouth = new THREE.Mesh(openGeo, new THREE.MeshBasicMaterial({ color: COL.navy }));
+  var openMouth = new THREE.Mesh(openGeo, new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.navy) }));
   openMouth.position.set(0, -0.09, 1.045);
   openMouth.visible = false;
   G.face.add(openMouth);
@@ -316,7 +361,7 @@ window.mountWooljigi = function (stage) {
   var dropPts = [[0, -0.74], [0.62, -0.74], [0.9, -0.62], [1.03, -0.32], [1.04, -0.05], [0.94, 0.28], [0.72, 0.62], [0.42, 1.02], [0.14, 1.42], [0, 1.6]]
     .map(function (a) { return new THREE.Vector2(a[0], a[1]); });
   G.drop.add(part(new THREE.LatheGeometry(new THREE.SplineCurve(dropPts).getPoints(48), 56), COL.cobalt));
-  var shine = new THREE.Mesh(blob(0.07, 0.2, 0.03), new THREE.MeshBasicMaterial({ color: 0xcdec37 }));
+  var shine = new THREE.Mesh(blob(0.07, 0.2, 0.03), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(0xcdec37) }));
   onBody(shine, deg(-34), 0.62, 0.82);
   shine.rotation.z = -0.5;
   G.drop.add(shine);
@@ -324,7 +369,7 @@ window.mountWooljigi = function (stage) {
   var moundPts = [[0, -0.74], [0.62, -0.74], [0.92, -0.62], [1.05, -0.34], [1.03, -0.06], [0.94, 0.14], [0, 0.14]]
     .map(function (a) { return new THREE.Vector2(a[0], a[1]); });
   G.spring.add(part(new THREE.LatheGeometry(moundPts, 56), COL.cobalt));
-  var springWater = new THREE.Mesh(new THREE.CircleGeometry(0.86, 40), new THREE.MeshBasicMaterial({ color: COL.water }));
+  var springWater = new THREE.Mesh(new THREE.CircleGeometry(0.86, 40), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.water) }));
   springWater.rotation.x = -Math.PI / 2;
   springWater.position.y = 0.18;
   G.spring.add(springWater);
@@ -339,7 +384,7 @@ window.mountWooljigi = function (stage) {
 
   // 5단계: 큰 우물지기. 탑처럼 쌓지 않고, 같은 우물에 금 장식과 등불, 잎과 꽃을 더해 몸을 키운다.
   var GOLD = 0xf2c230;
-  function goldMesh(geo) { return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: GOLD })); }
+  function goldMesh(geo) { return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(GOLD) })); }
   [[0.53, 1.1]].forEach(function (t) {
     var gg = new THREE.TorusGeometry(t[1], 0.04, 10, 72);
     gg.rotateX(Math.PI / 2);
@@ -369,37 +414,209 @@ window.mountWooljigi = function (stage) {
   crossH.position.y = 3.07;
   G.grand.add(crossH);
 
-  // 기둥 앞 등불 두 개
-  [-1.08, 1.08].forEach(function (x) {
-    var cord = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.14, 6), new THREE.MeshBasicMaterial({ color: COL.navy }));
-    cord.position.set(x, 1.86, 0.5);
-    G.grand.add(cord);
-    var lamp = part(blob(0.12, 0.15, 0.12, 18), 0xffd84d, 0.022);
-    lamp.position.set(x, 1.68, 0.5);
-    G.grand.add(lamp);
-  });
-  for (var lf = 0; lf < 12; lf++) {
-    var leaf = part(blob(0.11, 0.055, 0.08, 12), 0x4aa63c, 0.016);
-    onBody(leaf, deg(lf * 30 + 12), 0.9, 1.2);
-    leaf.rotation.z = lf % 2 ? 0.5 : -0.5;
-    G.grand.add(leaf);
-  }
-  [[-1.32, 0.42], [-1.08, 0.86], [1.32, 0.42], [1.08, 0.86], [-1.42, -0.1], [1.42, -0.1]].forEach(function (a, i) {
-    var stem = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.16, 6), new THREE.MeshBasicMaterial({ color: 0x3f8f34 }));
-    stem.position.set(a[0], -1.05, a[1]);
-    G.grand.add(stem);
-    var flower = part(blob(0.085, 0.06, 0.085, 12), i % 2 ? 0xffffff : 0xffa8c4, 0.016);
-    flower.position.set(a[0], -0.96, a[1]);
-    G.grand.add(flower);
-  });
   var sparks = [];
   for (var sp = 0; sp < 6; sp++) {
-    var sm = new THREE.Mesh(blob(0.05, 0.05, 0.05, 10), new THREE.MeshBasicMaterial({ color: 0xffe36b }));
+    var sm = new THREE.Mesh(blob(0.05, 0.05, 0.05, 10), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(0xffe36b) }));
     G.grand.add(sm);
     sparks.push({ m: sm, a: sp / 6 * Math.PI * 2, y: 0.3 + (sp % 3) * 0.6 });
   }
 
   var stageNow = 4, stageY = 0, stageS = 1;
+  // 색별 성장 모습: 물방울은 색만 다르고, 샘(레벨 5)부터 색마다 장식이 달라지며 단계가 오를수록 더해진다.
+  // 1은 샘 전용(몸 모양이 달라서), 2 이상은 그 단계부터 계속 남는다.
+  function themed(color, level, obj) { THEME[color][level].add(obj); return obj; }
+  var THEME = {};
+  ["blue", "green", "purple", "pink", "teal", "yellow"].forEach(function (c) {
+    THEME[c] = {};
+    [1, 2, 3, 4, 5].forEach(function (k) { THEME[c][k] = new THREE.Group(); well.add(THEME[c][k]); });
+  });
+  var ROOF_FACE = 0.61;   // 지붕 앞면 기울기
+  function onRoof(obj, x, y) {
+    // y는 지붕 앞면 높이(1.97~2.59). 그 높이의 면 위에 붙인다.
+    var f = (2.59 - y) / 0.62;
+    obj.position.set(x, y, 0.386 + 0.44 * f + 0.1);
+    obj.rotation.x = -ROOF_FACE;
+    return obj;
+  }
+  function dropShape(r, color) {
+    var pts = [[0, -r], [r * 0.62, -r * 0.82], [r, -r * 0.2], [r * 0.72, r * 0.5], [r * 0.3, r * 1.15], [0, r * 1.6]]
+      .map(function (a) { return new THREE.Vector2(a[0], a[1]); });
+    return part(new THREE.LatheGeometry(new THREE.SplineCurve(pts).getPoints(18), 18), color, 0.018);
+  }
+  function starShape(r, color) {
+    var sh = new THREE.Shape();
+    for (var i = 0; i < 10; i++) {
+      var rr = i % 2 ? r * 0.45 : r, an = Math.PI / 2 + i * Math.PI / 5;
+      if (i === 0) sh.moveTo(Math.cos(an) * rr, Math.sin(an) * rr); else sh.lineTo(Math.cos(an) * rr, Math.sin(an) * rr);
+    }
+    sh.closePath();
+    var geo = new THREE.ExtrudeGeometry(sh, { depth: 0.05, bevelEnabled: false });
+    geo.translate(0, 0, -0.025);
+    var g = new THREE.Group();
+    g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(color) })));
+    g.add(new THREE.Mesh(geo, hullMat(0.016)));
+    return g;
+  }
+  function flowerShape(r, color) {
+    var g = new THREE.Group();
+    for (var i = 0; i < 5; i++) {
+      var an = i / 5 * Math.PI * 2;
+      var pet = part(blob(r * 0.62, r * 0.62, r * 0.28, 12), color, 0.012);
+      pet.position.set(Math.cos(an) * r * 0.72, Math.sin(an) * r * 0.72, 0);
+      g.add(pet);
+    }
+    var mid = new THREE.Mesh(blob(r * 0.42, r * 0.42, r * 0.34, 12), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(0xffd84d) }));
+    mid.position.z = r * 0.14;
+    g.add(mid);
+    return g;
+  }
+  function leafShape(r, color) {
+    return part(blob(r, r * 0.5, r * 0.72, 12), color || 0x3f9d3a, 0.016);
+  }
+  function sunShape(r) {
+    var g = new THREE.Group();
+    var disc = part(blob(r, r, r * 0.22, 22), 0xffc928, 0.02);
+    g.add(disc);
+    for (var i = 0; i < 8; i++) {
+      var an = i / 8 * Math.PI * 2;
+      var ray = part(blob(r * 0.13, r * 0.34, r * 0.1, 8), 0xffb300, 0.012);
+      ray.position.set(Math.cos(an) * r * 1.42, Math.sin(an) * r * 1.42, 0);
+      ray.rotation.z = an - Math.PI / 2;
+      g.add(ray);
+    }
+    return g;
+  }
+  function lantern(color, x, z, make) {
+    var cord = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.14, 6), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.navy) }));
+    cord.position.set(x, 1.86, z);
+    var body = make ? make() : part(blob(0.12, 0.15, 0.12, 18), color, 0.022);
+    body.position.set(x, 1.68, z);
+    var g = new THREE.Group();
+    g.add(cord, body);
+    return g;
+  }
+  function tube(points, radius, color, seg) {
+    var curveT = new THREE.CatmullRomCurve3(points.map(function (a) { return new THREE.Vector3(a[0], a[1], a[2]); }));
+    return part(new THREE.TubeGeometry(curveT, seg || 48, radius, 8, false), color, 0.014);
+  }
+  [-1, 1].forEach(function (sd) {
+    // 파랑: 물
+    var d3 = dropShape(0.1, 0x45b6ff); d3.position.set(sd * 0.46, 1.31, 0.04); themed("blue", 3, d3);
+    var d4 = dropShape(0.1, 0x45b6ff); d4.position.set(sd * 1.22, 1.78, 0.78); themed("blue", 4, d4);
+    themed("blue", 5, lantern(0, sd * 1.08, 0.5, function () { return dropShape(0.15, 0x7fd0ff); }));
+    // 초록: 잎과 덩굴
+    var helix = [];
+    for (var h = 0; h <= 24; h++) { var ha = h * 0.75; helix.push([sd * 0.92 + Math.cos(ha) * 0.13, 0.78 + h * 0.048, Math.sin(ha) * 0.13]); }
+    themed("green", 3, tube(helix, 0.022, 0x3f9d3a, 90));
+    [0.95, 1.25, 1.55].forEach(function (y, i) {
+      var lf = leafShape(0.085); lf.position.set(sd * (1.06 + (i % 2) * 0.03), y, 0.08); lf.rotation.z = sd * 0.6; themed("green", 3, lf);
+    });
+    [[1.0, 2.04], [0.62, 2.24]].forEach(function (a) {
+      var lf = leafShape(0.11, 0x56b84a); onRoof(lf, sd * a[0], a[1]); themed("green", 4, lf);
+    });
+    themed("green", 5, lantern(0xc6ec5a, sd * 1.08, 0.5));
+    // 보라: 밤하늘
+    var st3 = starShape(0.1, 0xffe36b); st3.position.set(sd * 0.46, 1.32, 0.05); themed("purple", 3, st3);
+    var st4 = onRoof(starShape(0.11, 0xffe36b), sd * 0.62, 2.14); themed("purple", 4, st4);
+    themed("purple", 5, lantern(0, sd * 1.08, 0.5, function () { return starShape(0.16, 0xfff1a1); }));
+    // 분홍: 꽃
+    var fl3 = flowerShape(0.11, 0xffa8c9); fl3.position.set(sd * 0.46, 1.32, 0.06); themed("pink", 3, fl3);
+    var fl4 = onRoof(flowerShape(0.11, 0xfff0f6), sd * 0.62, 2.14); themed("pink", 4, fl4);
+    themed("pink", 5, lantern(0, sd * 1.08, 0.5, function () { return flowerShape(0.13, 0xffd1e3); }));
+    // 청록: 시냇물
+    themed("teal", 4, tube([[sd * 0.74, 0.74, 0.86], [sd * 0.86, 0.3, 0.72], [sd * 0.98, -0.3, 0.56], [sd * 1.08, -0.8, 0.52], [sd * 1.34, -1.1, 0.62]], 0.05, 0x5fd4ee, 40));
+    themed("teal", 5, lantern(0x8ff0e6, sd * 1.08, 0.5));
+    // 노랑: 빛
+    var rayGold = part(blob(0.11, 0.11, 0.04, 14), 0xffc928, 0.016); rayGold.position.set(sd * 0.46, 1.32, 0.05); themed("yellow", 3, rayGold);
+    themed("yellow", 5, lantern(0xfff0a0, sd * 1.08, 0.5));
+  });
+  // 파랑: 지붕의 물결과 바닥 물결
+  [2.1, 2.34].forEach(function (y) {
+    var f = (2.59 - y) / 0.62, half = 0.52 + 0.6 * f, z = 0.386 + 0.44 * f + 0.075, pts = [];
+    for (var i = 0; i <= 12; i++) pts.push([-half + i / 12 * half * 2, y + Math.sin(i * 1.57) * 0.03, z]);
+    themed("blue", 4, tube(pts, 0.014, 0xffffff, 40));
+  });
+  [1.32, 1.6].forEach(function (r, i) {
+    var gg = new THREE.TorusGeometry(r, 0.022, 8, 64);
+    gg.rotateX(Math.PI / 2);
+    var ring = new THREE.Mesh(gg, new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(0x7fd0ff) }));
+    ring.position.y = -1.12;
+    themed("blue", 5, ring);
+  });
+  // 초록: 테두리 잎
+  for (var gl = 0; gl < 12; gl++) { var lg = leafShape(0.1); onBody(lg, deg(gl * 30 + 12), 0.86, 1.2); lg.rotation.z = gl % 2 ? 0.5 : -0.5; themed("green", 5, lg); }
+  // 보라: 지붕 가운데 별, 테두리 작은 별
+  themed("purple", 4, onRoof(starShape(0.15, 0xfff1a1), 0, 2.26));
+  for (var ps = 0; ps < 10; ps++) { var sm5 = starShape(0.075, 0xffe36b); onBody(sm5, deg(ps * 36 + 18), 0.88, 1.2); themed("purple", 5, sm5); }
+  // 분홍: 지붕 가운데 꽃, 테두리 화환, 발 아래 꽃
+  themed("pink", 4, onRoof(flowerShape(0.15, 0xffe1ed), 0, 2.26));
+  for (var pf = 0; pf < 12; pf++) { var fw = flowerShape(0.085, pf % 2 ? 0xffb3d0 : 0xfff0f6); onBody(fw, deg(pf * 30 + 12), 0.72, 1.26); themed("pink", 5, fw); }
+  // 청록: 발 아래 조약돌, 큰 단계의 물길
+  for (var pb = 0; pb < 14; pb++) {
+    var peb = part(blob(0.1 + (pb % 3) * 0.015, 0.06, 0.08, 10), pb % 2 ? 0xd6f3ef : 0xa9e4dc, 0.016);
+    onBody(peb, deg(pb * 360 / 14 + 8), -1.1, 1.32);
+    themed("teal", 2, peb);
+  }
+  var pondG = new THREE.RingGeometry(1.42, 1.78, 56);
+  pondG.rotateX(-Math.PI / 2);
+  var pond = new THREE.Mesh(pondG, new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(0x5fd4ee), side: THREE.DoubleSide }));
+  pond.position.y = -1.13;
+  themed("teal", 5, pond);
+  // 노랑: 해 장식
+  var sun4 = onRoof(sunShape(0.16), 0, 2.26); themed("yellow", 4, sun4);
+  var sun3 = sunShape(0.09); sun3.position.set(0, 1.76, 0.02); themed("yellow", 3, sun3);
+  for (var yl = 0; yl < 10; yl++) { var ym = part(blob(0.05, 0.13, 0.04, 8), 0xffc928, 0.012); onBody(ym, deg(yl * 36 + 18), 0.92, 1.22); themed("yellow", 5, ym); }
+
+  // 샘(1)과 작은 우물(2)의 색별 장식
+  function around(count, start, fn) { for (var i = 0; i < count; i++) fn(deg(start + i * 360 / count), i); }
+  // 파랑: 물결
+  [1.04, 1.3].forEach(function (r, i) {
+    var gg = new THREE.TorusGeometry(r, 0.022, 8, 56); gg.rotateX(Math.PI / 2);
+    var ring = new THREE.Mesh(gg, new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(0x7fd0ff) })); ring.position.y = -1.12;
+    themed("blue", 1, ring);
+    if (i === 0) { var r2 = ring.clone(); r2.scale.setScalar(1.28); themed("blue", 2, r2); }
+  });
+  [-1, 1].forEach(function (sd) {
+    var bd = dropShape(0.1, 0x7fd0ff); bd.position.set(sd * 0.5, 0.72, 0.1); themed("blue", 1, bd);
+    var bd2 = dropShape(0.09, 0x7fd0ff); bd2.position.set(sd * 0.72, 1.0, 0.3); themed("blue", 2, bd2);
+    var tl = dropShape(0.09, 0x5fd4ee); tl.position.set(sd * 0.46, 1.31, 0.04); themed("teal", 3, tl);
+  });
+  // 초록: 새싹과 잎
+  around(4, 45, function (t) { var sp = leafShape(0.13, 0x56b84a); onBody(sp, t, 0.38, 0.96); sp.rotation.z = 0.5; themed("green", 1, sp); });
+  around(6, 30, function (t, i) { var lf = leafShape(0.11, 0x56b84a); onBody(lf, t, 0.86, 1.18); lf.rotation.z = i % 2 ? 0.5 : -0.5; themed("green", 2, lf); });
+  // 보라: 별
+  [[-0.46, 0.74, 0.08], [0.46, 0.74, 0.08], [0, 1.62, 0.13]].forEach(function (a) { var st = starShape(a[2], 0xffe36b); st.position.set(a[0], a[1], 0.14); themed("purple", 1, st); });
+  around(4, 45, function (t) { var st = starShape(0.09, 0xffe36b); onBody(st, t, 0.98, 1.08); themed("purple", 2, st); });
+  // 분홍: 꽃
+  around(4, 45, function (t) { var fw = flowerShape(0.11, 0xffb3d0); onBody(fw, t, 0.3, 1.0); themed("pink", 1, fw); });
+  around(5, 36, function (t) { var fw = flowerShape(0.1, 0xffb3d0); onBody(fw, t, 0.72, 1.28); themed("pink", 2, fw); });
+  // 청록: 샘 둘레 조약돌과 흘러나오는 물
+  around(10, 0, function (t, i) {
+    var pb1 = part(blob(0.1, 0.055, 0.08, 10), i % 2 ? 0xd6f3ef : 0xa9e4dc, 0.016);
+    onBody(pb1, t, -1.1, 1.2);
+    themed("teal", 1, pb1);
+  });
+  themed("teal", 1, tube([[0.6, 0.2, 0.74], [0.86, -0.2, 0.68], [1.02, -0.7, 0.56], [1.22, -1.08, 0.58]], 0.045, 0x5fd4ee, 30));
+  // 노랑: 해와 빛살
+  var sun1 = sunShape(0.13); sun1.position.set(0, 1.66, 0.04); themed("yellow", 1, sun1);
+  around(6, 30, function (t) { var ym = part(blob(0.045, 0.11, 0.035, 8), 0xffc928, 0.012); onBody(ym, t, 0.42, 0.98); themed("yellow", 1, ym); });
+  around(6, 30, function (t) { var ym = part(blob(0.05, 0.13, 0.04, 8), 0xffc928, 0.012); onBody(ym, t, 0.98, 1.1); themed("yellow", 2, ym); });
+
+  var ROOF = {
+    blue: [0x1766c9, 0x0f4c9e], green: [0x3f9d4a, 0x2a7a38], purple: [0x43308f, 0x2c1e66],
+    pink: [0xf58ab5, 0xd9628f], teal: [0x19b0aa, 0x0f8680], yellow: [0xf2ab1d, 0xd18400],
+    classic: [0xe2500c, 0xb83c06]
+  };
+  var colorNow = "classic";
+  function applyTheme() {
+    Object.keys(THEME).forEach(function (c) {
+      [1, 2, 3, 4, 5].forEach(function (k) { THEME[c][k].visible = c === colorNow && (k === 1 ? stageNow === 1 : stageNow >= k); });
+    });
+    var r = ROOF[colorNow] || ROOF.blue;
+    roofMat.color.copy(linearHex(r[0]));
+    ridgeMat.color.copy(linearHex(r[1]));
+  }
+
   // 발이 같은 땅을 딛도록 크기에 맞춰 높이를 정한다. 몸이 단계마다 커진다.
   var STAGE_SIZE = [0.54, 0.68, 0.76, 0.82, 0.87, 0.92];
   var STAGE_LIFT = [0, 0, 0, 0, 0, 0];
@@ -420,21 +637,25 @@ window.mountWooljigi = function (stage) {
     armSize = n === 0 ? 0.62 : n === 1 ? 0.8 : n === 5 ? 1.12 : 1;
     stageS = STAGE_SIZE[n];
     stageY = -1.13 * (1 - stageS) + STAGE_LIFT[n];
+    applyTheme();
   }
   var COLORS = {
     blue: [0x1f52de, 0x8cb8f4], green: [0x16a34a, 0x86d7a2], purple: [0x7a22e0, 0xc2a0f7],
-    pink: [0xe91e82, 0xf8a6cd], teal: [0x0ea5a5, 0x7ad6d3], yellow: [0xeeb000, 0xffe27f]
+    pink: [0xe91e82, 0xf8a6cd], teal: [0x0ea5a5, 0x7ad6d3], yellow: [0xeeb000, 0xffe27f],
+    classic: [0x1f52de, 0x8cb8f4]
   };
   function setColor(name) {
     var c = COLORS[name] || COLORS.blue;
-    MAIN_MATS.forEach(function (m) { m.color.setHex(c[0]); });
-    STONE_MATS.forEach(function (m) { m.color.setHex(c[1]); });
+    MAIN_MATS.forEach(function (m) { m.color.copy(linearHex(c[0])); });
+    STONE_MATS.forEach(function (m) { m.color.copy(linearHex(c[1])); });
+    colorNow = COLORS[name] ? name : "blue";
+    applyTheme();
   }
 
   // 튀어 오르는 물방울
   var drops = [];
   for (var i = 0; i < 8; i++) {
-    var dm = new THREE.Mesh(blob(0.045, 0.06, 0.045, 12), new THREE.MeshBasicMaterial({ color: COL.water }));
+    var dm = new THREE.Mesh(blob(0.045, 0.06, 0.045, 12), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.water) }));
     dm.visible = false;
     well.add(dm);
     drops.push({ m: dm, vx: 0, vy: 0, vz: 0, t: 0 });
@@ -449,10 +670,15 @@ window.mountWooljigi = function (stage) {
   }
 
   // 그림자
-  var shadow = new THREE.Mesh(new THREE.CircleGeometry(1.1, 40), new THREE.MeshBasicMaterial({ color: COL.navy, transparent: true, opacity: 0.14 }));
+  var shadow = new THREE.Mesh(new THREE.CircleGeometry(1.75, 48), new THREE.ShadowMaterial({ opacity: 0.3 }));
   shadow.rotation.x = -Math.PI / 2;
   shadow.position.y = -1.18;
+  shadow.receiveShadow = true;
   scene.add(shadow);
+  var contact = new THREE.Mesh(new THREE.CircleGeometry(1.05, 40), new THREE.MeshBasicMaterial({ toneMapped: false, color: linearHex(COL.navy), transparent: true, opacity: 0.14 }));
+  contact.rotation.x = -Math.PI / 2;
+  contact.position.y = -1.17;
+  scene.add(contact);
 
   // 동작
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -598,8 +824,12 @@ window.mountWooljigi = function (stage) {
     root.rotation.x = pitch;
     shadow.visible = showShadow;
     shadow.position.y = -1.18 * stageS + stageY;
-    shadow.scale.setScalar((1 - hop * 0.5) * stageS);
-    shadow.material.opacity = Math.max(0, 0.14 - hop * 0.2) * Math.max(0, Math.min(1, 1 + pitch * 3));
+        var groundFade = Math.max(0, Math.min(1, 1 + pitch * 3));
+    shadow.material.opacity = 0.3 * groundFade;
+    contact.material.opacity = 0.14 * groundFade * (1 - hop);
+    contact.position.y = shadow.position.y + 0.01;
+    contact.scale.setScalar(stageS);
+    contact.visible = showShadow;
   }
   setStage(4);
   armL.rotation.z = -1.95; armR.rotation.z = 0.42;
