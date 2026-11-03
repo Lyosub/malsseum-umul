@@ -24,13 +24,14 @@ header.site nav a.active, header.site nav a:hover { color: #fff; opacity: .85; }
 .wrap { padding-top: 0; }
 .page-hd {
   margin: 0 calc(50% - 50vw) 16px;
-  padding: 2px max(20px, calc(50vw - 50% + 0px)) 26px;
-  background: linear-gradient(180deg, var(--tone) 0%, var(--tone-deep) 100%);
+  padding: 12px max(20px, calc(50vw - 50% + 0px)) 26px;
+  background: var(--tone);
   color: #fff;
   border-radius: 0 0 24px 24px;
 }
 .page-hd h1 { font-family: inherit; color: #fff; font-size: 27px; letter-spacing: -.035em; margin-bottom: 4px; }
-.page-hd h1 img { width: 58px; height: 58px; margin: -2px 0; }
+.page-hd h1 img { width: 64px; height: 64px; margin: 0; }
+.page-hd h1 { overflow: visible; line-height: 1.25; }
 .page-hd p, .page-hd:has(.hand-note) p { color: rgba(255, 255, 255, .86); max-width: 100%; }
 .page-hd a { color: #fff; }
 .page-hd > *:not(h1):not(.hand-note) { color: rgba(255, 255, 255, .86); }
@@ -39,7 +40,9 @@ header.site nav { display: flex; align-items: center; }
 .page-hd .hand-note { display: none; }
 
 /* 카드: 그림자와 테두리를 걷어 낸다 */
-.card, .dir-group, .home-row { box-shadow: none; border-color: transparent; border-radius: 16px; background: #fff; }
+.card, .dir-group, .home-row { box-shadow: none; border: 1.5px solid #dde1f0; border-radius: 16px; background: #fff; }
+/* 누를 수 있는 곳은 테두리를 더 진하게 해서 어두운 화면에서도 구분되게 한다 */
+a.card, .home-row, .v2-tile, .pc, .mind-box { border: 1.5px solid #aab3d8; }
 .card.tint-blue, .card.tint-lime { background: #fff; }
 .sect-hd h2 { color: var(--v2-ink); }
 .sect-hd a { color: var(--tone); }
@@ -56,7 +59,8 @@ header.site nav { display: flex; align-items: center; }
 
 /* 바로가기 칸 */
 .v2-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 18px; }
-.v2-tile { display: flex; flex-direction: column; gap: 8px; min-height: 112px; padding: 14px; border-radius: 16px; background: #fff; color: var(--v2-ink); text-decoration: none; }
+.v2-tile { position: relative; border: 1.5px solid #aab3d8; display: flex; flex-direction: column; gap: 8px; min-height: 112px; padding: 14px; border-radius: 16px; background: #fff; color: var(--v2-ink); text-decoration: none; }
+.v2-tile::after { content: "›"; position: absolute; top: 12px; right: 14px; color: var(--tone); font-size: 20px; font-weight: 700; line-height: 1; }
 .v2-tile b { font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
 .v2-tile small { color: var(--v2-soft); font-size: 12.5px; line-height: 1.45; }
 .v2-tile .i { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: var(--tone-soft); color: var(--tone); }
@@ -72,3 +76,4 @@ html[data-tone] #homeVerseCard .text { font-size: 16.5px; line-height: 1.6; }
 
 /* 놀이터: 게임 칸을 크게 */
 .pc { min-height: 104px; }
+.mind-box { border-radius: 16px; background: #fff; }

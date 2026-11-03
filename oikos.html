@@ -204,7 +204,7 @@
         client.from("profiles").select("is_teacher, is_admin, is_department_head").eq("user_id", session.user.id).maybeSingle().then(function (res) {
           var p = res.data;
           var c = document.getElementById("oikosChodaeCard");
-          if (c && p && (p.is_teacher || p.is_admin || p.is_department_head)) c.style.display = "flex";
+          // 친구초청잔치는 끝나서 교사·관리자에게도 보여 주지 않는다(2026-11-03).
         });
       }
     });

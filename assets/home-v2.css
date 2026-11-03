@@ -401,3 +401,8 @@ html.home-v2 .app-tab.on::before { display: none; }
 .hv-about img { width: 64px; height: 64px; flex: none; }
 .hv-about b { display: block; color: var(--hv-ink); font-size: 15.5px; }
 html.home-v2 #homeVerseCard .qt-section, html.home-v2 #homeVerseCard .qt-body { color: #fff; }
+/* 어두운 화면에서도 누를 곳이 구분되게 */
+html.home-v2 .hv-share a, html.home-v2 .hv-about > a:first-child { border: 1.5px solid #aab3d8; }
+html.home-v2 .feed-compact { border: 1.5px solid #dde1f0; }
+html.home-v2 .mind-box input { border-color: #aab3d8; }
+.hv-links span.i { border: 1.5px solid transparent; }
