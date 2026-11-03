@@ -288,14 +288,14 @@ window.mountWooljigi = function (stage) {
     var k = Math.min(1, dt * 12);
     tmpQ.setFromEuler(tmpE.set(0, 0, angle));
     tmpP.set(sign * 1.04, 0.12, 0.02);
-    if (t > 0.5) {
-      tmpV.set(-sign * 0.66, -0.26, 0.5).normalize();
+    if (t > 0.72) {
+      tmpV.set(-sign * 0.66, -0.22, 0.72).normalize();
       tmpQ.setFromUnitVectors(DOWN, tmpV);
       tmpP.set(sign * 0.9, -0.3, 0.6);
     }
     pivot.quaternion.slerp(tmpQ, k);
     pivot.position.lerp(tmpP, k);
-    var sc = t > 0.5 ? 0.8 : 1;
+    var sc = t > 0.72 ? 0.98 : 1;
     pivot.scale.setScalar(lerp(pivot.scale.x, sc, k));
   }
   [-1, 1].forEach(function (s) {
@@ -402,16 +402,23 @@ window.mountWooljigi = function (stage) {
       if (actionT > 2.4) happyEyes = true;
     }
     setBucket(by);
-    proudT = lerp(proudT, isProud ? 1 : 0, Math.min(1, dt * 7));
+    // 일정한 속도로 움직여서 두레박이 지나가는 길이 보이게 한다 (약 1초)
+    proudT = isProud ? Math.min(1, proudT + dt / 1.05) : Math.max(0, proudT - dt / 1.05);
     if (proudT > 0.002) {
-      // 두레박이 줄에서 내려와 품으로 온다
-      bucket.position.set(0, lerp(by, -0.54, proudT), lerp(0, 1.2, proudT));
+      // 두레박이 우물 위로 올라와 테두리를 넘은 뒤, 몸 앞쪽으로 내려와 품에 안긴다.
+      // 몸과 테두리를 통과하지 않도록 먼저 앞으로 빼고 나서 내린다.
+      var outT = ease(proudT / 0.5), downT = ease((proudT - 0.5) / 0.5);
+      bucket.position.set(
+        0,
+        proudT < 0.5 ? lerp(by, 1.2, outT) : lerp(1.2, -0.54, downT),
+        lerp(lerp(0, 1.5, outT), 1.33, downT)
+      );
       bucket.scale.setScalar(lerp(1, 1.05, proudT));
-      rope.scale.y = lerp(rope.scale.y, 0.16, proudT);
+      rope.scale.y = lerp(rope.scale.y, 0.16, Math.min(1, proudT * 4));
     } else {
       bucket.scale.setScalar(1);
     }
-    bucket.rotation.z = (reduce || proudT > 0.5) ? 0 : Math.sin(time * 1.4) * 0.05;
+    bucket.rotation.z = (reduce || proudT > 0.02) ? 0 : Math.sin(time * 1.4) * 0.05;
     setArm(armL, -1, la, proudT, dt);
     setArm(armR, 1, ra, proudT, dt);
     smile.visible = !mouthOpen; openMouth.visible = mouthOpen;
