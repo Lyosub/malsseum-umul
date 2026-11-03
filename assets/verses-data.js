@@ -194,8 +194,22 @@ function getMonthIndex() {
   return new Date().getMonth();
 }
 
+// 날짜별 오늘의 QT(assets/qt-data.js). 2026-11-04부터 쓰고, 아직 쓰지 않은 달이나 그 파일을
+// 불러오지 않은 화면에서는 null을 돌려 기존 16개 순환으로 돌아간다.
+function getDailyQt(now) {
+  if (typeof DAILY_QT === "undefined") return null;
+  now = now || new Date();
+  if (now < new Date(2026, 10, 4)) return null;
+  var key = String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+  return DAILY_QT[key] || null;
+}
+
 function getVerseFor(kind) {
   var idx;
+  if (kind === "daily") {
+    var qt = getDailyQt();
+    if (qt) return qt;
+  }
   if (kind === "daily") idx = getDayIndex();
   else if (kind === "weekly") idx = getWeekIndex();
   else idx = getMonthIndex();
