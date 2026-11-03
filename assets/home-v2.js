@@ -76,6 +76,13 @@
           if (img) img.remove();
           
           keeper.setBase("proud");
+          try {
+            getClient().rpc("get_my_keeper").then(function (r) {
+              if (r.error || !r.data || !r.data.length) return;
+              keeper.setStage(r.data[0].stage);
+              keeper.setColor(r.data[0].color);
+            });
+          } catch (e) {}
           keeper.play("joy");
         }
       });

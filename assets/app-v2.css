@@ -85,3 +85,22 @@ html[data-tone] #homeVerseCard .text { font-size: 16.5px; line-height: 1.6; }
 #homeVerseCard .qt-label { display: block; margin: 0 0 7px; padding: 0 0 7px; border-bottom: 1px solid rgba(255, 255, 255, .2); background: none; color: #cdec37; font-size: 14.5px; font-weight: 800; letter-spacing: -.01em; }
 #homeVerseCard .qt-body { color: #fff; font-size: 15px; line-height: 1.7; opacity: 1; }
 #homeVerseCard .qt-reflect-save { border-color: #cdec37; background: #cdec37; color: #26330a; min-height: 44px; }
+
+/* 나의 기록: 내 우물지기 */
+.kc-card { padding: 0; overflow: hidden; }
+.kc-stage { position: relative; height: 270px; background: #2c7a87 url(home/keeper-bg.jpg) center bottom / cover no-repeat; }
+.kc-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+.kc-stage img { display: block; height: 100%; margin: 0 auto; padding: 10px; box-sizing: border-box; }
+.kc-body { padding: 14px 16px 16px; }
+.kc-evolved { margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; background: var(--tone-soft); color: var(--tone-deep); font-size: 14.5px; font-weight: 800; text-align: center; }
+.kc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.kc-head h2 { margin: 0; color: var(--v2-ink); font-size: 20px; font-weight: 800; letter-spacing: -.03em; }
+.kc-head b { color: var(--tone); font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.kc-track { height: 10px; margin: 10px 0 6px; border-radius: 5px; background: #e6e8f3; overflow: hidden; }
+.kc-track i { display: block; height: 100%; width: 0; border-radius: 5px; background: var(--tone); }
+.kc-xp, .kc-next { margin: 0; color: var(--v2-soft); font-size: 13px; line-height: 1.5; }
+.kc-colors { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin: 12px 0; }
+.kc-color { height: 44px; padding: 0; border: 3px solid #fff; border-radius: 12px; background: var(--c); box-shadow: 0 0 0 1.5px #c3c9e2; cursor: pointer; }
+.kc-color.on { box-shadow: 0 0 0 3px var(--v2-ink); }
+.kc-note { margin: 0; color: var(--v2-soft); font-size: 12.5px; line-height: 1.55; }
+

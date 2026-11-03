@@ -43,10 +43,14 @@ window.mountWooljigi = function (stage) {
       fragmentShader: "uniform vec3 c; void main(){ gl_FragColor = vec4(c, 1.0); }"
     });
   }
+  var MAIN_MATS = [], STONE_MATS = [];
   // 색 면과 남색 외곽선을 한 묶음으로 만든다.
   function part(geo, color, t) {
     var g = new THREE.Group();
-    g.add(new THREE.Mesh(geo, toon(color)));
+    var mat = toon(color);
+    if (color === COL.cobalt) MAIN_MATS.push(mat);
+    if (color === COL.stone) STONE_MATS.push(mat);
+    g.add(new THREE.Mesh(geo, mat));
     if (t !== 0) g.add(new THREE.Mesh(geo, hullMat(t === undefined ? OUT : t)));
     return g;
   }
@@ -83,13 +87,16 @@ window.mountWooljigi = function (stage) {
   var well = new THREE.Group();
   root.add(well);
   scene.add(root);
+  // 진화 단계마다 켜고 끄는 부품 묶음
+  var G = {};
+  ["drop", "body", "bricks", "bricksHigh", "rim", "spring", "frame", "hang", "roof", "grand", "face"].forEach(function (k) { G[k] = new THREE.Group(); well.add(G[k]); });
 
   // 몸통
   var pts = [[0, -0.74], [0.62, -0.74], [0.86, -0.66], [0.99, -0.46], [1.03, -0.14], [1.03, 0.3], [1.0, 0.62], [0, 0.62]]
     .map(function (a) { return new THREE.Vector2(a[0], a[1]); });
   var curve = new THREE.SplineCurve(pts.slice(1, 7));
   var lathe = [pts[0]].concat(curve.getPoints(36), [pts[7]]);
-  well.add(part(new THREE.LatheGeometry(lathe, 72), COL.cobalt));
+  G.body.add(part(new THREE.LatheGeometry(lathe, 72), COL.cobalt));
 
   // 몸통 벽돌: 크기가 같은 벽돌 4줄을 한 줄씩 엇갈려 쌓고, 앞면 가운데를 기준으로 좌우를 똑같이 맞춘다.
   var N = 14, STEP = 360 / N;
@@ -105,7 +112,7 @@ window.mountWooljigi = function (stage) {
       var fromFront = Math.min(d, 360 - d);
       if (fromFront < c.clear) continue;                    // 얼굴 자리
       if (c.y === 0.11 && Math.abs(fromFront - 90) < 1) continue;  // 양쪽 어깨 자리
-      well.add(onBody(part(brick, COL.stone, 0.03), deg(d), c.y, c.R));
+      (c.y > 0 ? G.bricksHigh : G.bricks).add(onBody(part(brick, COL.stone, 0.03), deg(d), c.y, c.R));
     }
   });
 
@@ -122,7 +129,7 @@ window.mountWooljigi = function (stage) {
       var fs = part(floorStone, COL.stone, 0.02);
       fs.rotation.x = -ring[3];
       holder.add(fs);
-      well.add(holder);
+      G.bricks.add(holder);
     }
   });
 
@@ -130,15 +137,15 @@ window.mountWooljigi = function (stage) {
   var water = new THREE.Mesh(new THREE.CircleGeometry(1.02, 48), new THREE.MeshBasicMaterial({ color: COL.water }));
   water.rotation.x = -Math.PI / 2;
   water.position.y = 0.66;
-  well.add(water);
+  G.rim.add(water);
   var rimStone = roundedBox(0.46, 0.25, 0.3, 0.09, 6);
-  for (var r = 0; r < 14; r++) well.add(onBody(part(rimStone, COL.cream, 0.032), deg(r * 360 / 14 + 12.8), 0.68, 1.1));
+  for (var r = 0; r < 14; r++) G.rim.add(onBody(part(rimStone, COL.cream, 0.032), deg(r * 360 / 14 + 12.8), 0.68, 1.1));
 
   var ripples = [0, 1].map(function () {
     var m = new THREE.Mesh(new THREE.RingGeometry(0.96, 1, 48), new THREE.MeshBasicMaterial({ color: COL.white, transparent: true, side: THREE.DoubleSide }));
     m.rotation.x = -Math.PI / 2;
     m.position.y = 0.675;
-    well.add(m);
+    G.rim.add(m);
     return m;
   });
 
@@ -147,23 +154,23 @@ window.mountWooljigi = function (stage) {
   [-0.92, 0.92].forEach(function (x) {
     var p = part(post, COL.wood);
     p.position.set(x, 1.38, 0);
-    well.add(p);
+    G.frame.add(p);
   });
   var barGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.7, 14);
   barGeo.rotateZ(Math.PI / 2);
   var bar = part(barGeo, COL.wood, 0.03);
   bar.position.set(0, 1.5, 0);
-  well.add(bar);
+  G.frame.add(bar);
   var pulley = part(new THREE.TorusGeometry(0.11, 0.05, 12, 28), COL.pulley, 0.03);
   pulley.position.set(0, 1.5, 0);
-  well.add(pulley);
+  G.frame.add(pulley);
 
   // 줄과 두레박
   var ropeGeo = new THREE.CylinderGeometry(0.02, 0.02, 1, 8);
   ropeGeo.translate(0, -0.5, 0);
   var rope = part(ropeGeo, COL.rope, 0.016);
   rope.position.set(0, 1.4, 0);
-  well.add(rope);
+  G.hang.add(rope);
   var bucket = new THREE.Group();
   var pail = part(new THREE.CylinderGeometry(0.19, 0.14, 0.22, 18), COL.wood, 0.03);
   bucket.add(pail);
@@ -175,7 +182,7 @@ window.mountWooljigi = function (stage) {
   var handle = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.016, 8, 20, Math.PI), new THREE.MeshBasicMaterial({ color: COL.navy }));
   handle.position.y = 0.1;
   bucket.add(handle);
-  well.add(bucket);
+  G.hang.add(bucket);
   var BUCKET_REST = 0.98, BUCKET_LOW = 0.74;
   function setBucket(y) {
     bucket.position.set(0, y, 0);
@@ -237,7 +244,7 @@ window.mountWooljigi = function (stage) {
     roof.add(purlin);
   });
   roof.position.y = 2.28;
-  well.add(roof);
+  G.roof.add(roof);
 
   // 얼굴: 흰자 없이 작은 타원 눈. 기쁠 때는 웃는 눈으로 바뀐다.
   var eyes = [];
@@ -254,22 +261,22 @@ window.mountWooljigi = function (stage) {
     happy.position.y = -0.04;
     happy.visible = false;
     eye.add(happy);
-    well.add(eye);
+    G.face.add(eye);
     eyes.push({ g: eye, p: p, happy: happy });
     var ck = new THREE.Mesh(blob(0.115, 0.075, 0.02), new THREE.MeshBasicMaterial({ color: COL.pink }));
     onBody(ck, s * deg(33), -0.14, 1.03);
-    well.add(ck);
+    G.face.add(ck);
   });
   var smileGeo = new THREE.TorusGeometry(0.085, 0.024, 10, 28, Math.PI);
   smileGeo.rotateZ(Math.PI);
   var smile = new THREE.Mesh(smileGeo, new THREE.MeshBasicMaterial({ color: COL.navy }));
   smile.position.set(0, -0.1, 1.04);
-  well.add(smile);
+  G.face.add(smile);
   var openGeo = new THREE.CircleGeometry(0.11, 28, Math.PI, Math.PI);
   var openMouth = new THREE.Mesh(openGeo, new THREE.MeshBasicMaterial({ color: COL.navy }));
   openMouth.position.set(0, -0.09, 1.045);
   openMouth.visible = false;
-  well.add(openMouth);
+  G.face.add(openMouth);
 
   // 팔과 다리
   function arm(sign) {
@@ -281,6 +288,7 @@ window.mountWooljigi = function (stage) {
     well.add(pivot);
     return pivot;
   }
+  var armSize = 1;
   var armL = arm(-1), armR = arm(1);
   // 팔 자세 계산용. 두레박을 안을 때는 어깨를 앞으로 옮기고 팔을 두레박 쪽으로 뻗는다.
   var DOWN = new THREE.Vector3(0, -1, 0), tmpV = new THREE.Vector3(), tmpP = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), tmpE = new THREE.Euler();
@@ -295,7 +303,7 @@ window.mountWooljigi = function (stage) {
     }
     pivot.quaternion.slerp(tmpQ, k);
     pivot.position.lerp(tmpP, k);
-    var sc = t > 0.72 ? 0.98 : 1;
+    var sc = (t > 0.72 ? 0.98 : 1) * armSize;
     pivot.scale.setScalar(lerp(pivot.scale.x, sc, k));
   }
   [-1, 1].forEach(function (s) {
@@ -303,6 +311,125 @@ window.mountWooljigi = function (stage) {
     leg.position.set(s * 0.44, -0.87, 0.1);
     root.add(leg);
   });
+
+  // 0단계: 작은 물방울 몸
+  var dropPts = [[0, -0.74], [0.62, -0.74], [0.9, -0.62], [1.03, -0.32], [1.04, -0.05], [0.94, 0.28], [0.72, 0.62], [0.42, 1.02], [0.14, 1.42], [0, 1.6]]
+    .map(function (a) { return new THREE.Vector2(a[0], a[1]); });
+  G.drop.add(part(new THREE.LatheGeometry(new THREE.SplineCurve(dropPts).getPoints(48), 56), COL.cobalt));
+  var shine = new THREE.Mesh(blob(0.07, 0.2, 0.03), new THREE.MeshBasicMaterial({ color: 0xcdec37 }));
+  onBody(shine, deg(-34), 0.62, 0.82);
+  shine.rotation.z = -0.5;
+  G.drop.add(shine);
+  // 1단계: 샘. 매끈한 몸에 같은 크기의 돌을 고르게 두르고, 가운데로 물이 솟는다.
+  var moundPts = [[0, -0.74], [0.62, -0.74], [0.92, -0.62], [1.05, -0.34], [1.03, -0.06], [0.94, 0.14], [0, 0.14]]
+    .map(function (a) { return new THREE.Vector2(a[0], a[1]); });
+  G.spring.add(part(new THREE.LatheGeometry(moundPts, 56), COL.cobalt));
+  var springWater = new THREE.Mesh(new THREE.CircleGeometry(0.86, 40), new THREE.MeshBasicMaterial({ color: COL.water }));
+  springWater.rotation.x = -Math.PI / 2;
+  springWater.position.y = 0.18;
+  G.spring.add(springWater);
+  var springStone = roundedBox(0.4, 0.17, 0.24, 0.07, 5);
+  for (var ss = 0; ss < 12; ss++) G.spring.add(onBody(part(springStone, COL.cream, 0.026), deg(ss * 30 + 15), 0.2, 0.96));
+  var springDrops = [[0.55, 0.075], [0.86, 0.1], [1.22, 0.135]].map(function (a) {
+    var m = part(blob(a[1], a[1] * 1.3, a[1], 18), COL.water, 0.02);
+    m.position.set(0, a[0], 0);
+    G.spring.add(m);
+    return { m: m, y: a[0], o: a[0] * 5 };
+  });
+
+  // 5단계: 큰 우물지기. 탑처럼 쌓지 않고, 같은 우물에 금 장식과 등불, 잎과 꽃을 더해 몸을 키운다.
+  var GOLD = 0xf2c230;
+  function goldMesh(geo) { return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: GOLD })); }
+  [[0.53, 1.1]].forEach(function (t) {
+    var gg = new THREE.TorusGeometry(t[1], 0.04, 10, 72);
+    gg.rotateX(Math.PI / 2);
+    var gm = goldMesh(gg);
+    gm.position.y = t[0];
+    G.grand.add(gm);
+  });
+  // 지붕 처마와 꼭대기의 금테
+  [[0, 1.98, 0.86, 2.34, 0.06], [0, 1.98, -0.86, 2.34, 0.06]].forEach(function (t) {
+    var bar = goldMesh(new THREE.BoxGeometry(t[3], t[4], t[4]));
+    bar.position.set(t[0], t[1], t[2]);
+    G.grand.add(bar);
+  });
+  [-1.17, 1.17].forEach(function (x) {
+    var bar = goldMesh(new THREE.BoxGeometry(0.06, 0.06, 1.78));
+    bar.position.set(x, 1.98, 0);
+    G.grand.add(bar);
+  });
+  var cap = part(roundedBox(1.22, 0.07, 0.9, 0.03, 3), GOLD, 0.02);
+  cap.position.y = 2.72;
+  G.grand.add(cap);
+  // 지붕 꼭대기의 금 십자가
+  var crossV = part(roundedBox(0.09, 0.48, 0.09, 0.025, 3), GOLD, 0.022);
+  crossV.position.y = 2.99;
+  G.grand.add(crossV);
+  var crossH = part(roundedBox(0.3, 0.09, 0.09, 0.025, 3), GOLD, 0.022);
+  crossH.position.y = 3.07;
+  G.grand.add(crossH);
+
+  // 기둥 앞 등불 두 개
+  [-1.08, 1.08].forEach(function (x) {
+    var cord = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.14, 6), new THREE.MeshBasicMaterial({ color: COL.navy }));
+    cord.position.set(x, 1.86, 0.5);
+    G.grand.add(cord);
+    var lamp = part(blob(0.12, 0.15, 0.12, 18), 0xffd84d, 0.022);
+    lamp.position.set(x, 1.68, 0.5);
+    G.grand.add(lamp);
+  });
+  for (var lf = 0; lf < 12; lf++) {
+    var leaf = part(blob(0.11, 0.055, 0.08, 12), 0x4aa63c, 0.016);
+    onBody(leaf, deg(lf * 30 + 12), 0.9, 1.2);
+    leaf.rotation.z = lf % 2 ? 0.5 : -0.5;
+    G.grand.add(leaf);
+  }
+  [[-1.32, 0.42], [-1.08, 0.86], [1.32, 0.42], [1.08, 0.86], [-1.42, -0.1], [1.42, -0.1]].forEach(function (a, i) {
+    var stem = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.16, 6), new THREE.MeshBasicMaterial({ color: 0x3f8f34 }));
+    stem.position.set(a[0], -1.05, a[1]);
+    G.grand.add(stem);
+    var flower = part(blob(0.085, 0.06, 0.085, 12), i % 2 ? 0xffffff : 0xffa8c4, 0.016);
+    flower.position.set(a[0], -0.96, a[1]);
+    G.grand.add(flower);
+  });
+  var sparks = [];
+  for (var sp = 0; sp < 6; sp++) {
+    var sm = new THREE.Mesh(blob(0.05, 0.05, 0.05, 10), new THREE.MeshBasicMaterial({ color: 0xffe36b }));
+    G.grand.add(sm);
+    sparks.push({ m: sm, a: sp / 6 * Math.PI * 2, y: 0.3 + (sp % 3) * 0.6 });
+  }
+
+  var stageNow = 4, stageY = 0, stageS = 1;
+  // 발이 같은 땅을 딛도록 크기에 맞춰 높이를 정한다. 몸이 단계마다 커진다.
+  var STAGE_SIZE = [0.54, 0.68, 0.76, 0.82, 0.87, 0.92];
+  var STAGE_LIFT = [0, 0, 0, 0, 0, 0];
+  function setStage(n) {
+    n = Math.max(0, Math.min(5, n | 0));
+    stageNow = n;
+    G.drop.visible = n === 0;
+    G.spring.visible = n === 1;
+    G.body.visible = n >= 2;
+    G.rim.visible = n >= 2;
+    G.bricks.visible = n >= 2;
+    G.bricksHigh.visible = n >= 3;
+    G.frame.visible = n >= 3;
+    G.hang.visible = n >= 3;
+    G.roof.visible = n >= 4;
+    G.grand.visible = n === 5;
+    G.face.position.y = n === 1 ? -0.32 : 0;
+    armSize = n === 0 ? 0.62 : n === 1 ? 0.8 : n === 5 ? 1.12 : 1;
+    stageS = STAGE_SIZE[n];
+    stageY = -1.13 * (1 - stageS) + STAGE_LIFT[n];
+  }
+  var COLORS = {
+    blue: [0x1f52de, 0x8cb8f4], green: [0x16a34a, 0x86d7a2], purple: [0x7a22e0, 0xc2a0f7],
+    pink: [0xe91e82, 0xf8a6cd], teal: [0x0ea5a5, 0x7ad6d3], yellow: [0xeeb000, 0xffe27f]
+  };
+  function setColor(name) {
+    var c = COLORS[name] || COLORS.blue;
+    MAIN_MATS.forEach(function (m) { m.color.setHex(c[0]); });
+    STONE_MATS.forEach(function (m) { m.color.setHex(c[1]); });
+  }
 
   // 튀어 오르는 물방울
   var drops = [];
@@ -335,6 +462,7 @@ window.mountWooljigi = function (stage) {
   var buttons = {};
   [["wave", "aWave"], ["joy", "aJoy"], ["proud", "aProud"], ["dip", "aDip"]].forEach(function (b) { var el = document.getElementById(b[1]); if (el) buttons[b[0]] = el; });
   function play(k) {
+    if ((k === "dip" || k === "proud") && stageNow < 3) k = "joy";
     action = k; actionT = 0; splashed = false;
     Object.keys(buttons).forEach(function (b) { buttons[b].classList.toggle("on", b === k); });
   }
@@ -379,9 +507,9 @@ window.mountWooljigi = function (stage) {
     if (action) { actionT += dt; if (actionT > DUR[action]) { action = null; Object.keys(buttons).forEach(function (b) { buttons[b].classList.remove("on"); }); } }
 
     // 기본 자세: 왼팔을 들고 천천히 흔든다.
-    var isProud = action === "proud" || (!action && base === "proud");
+    var isProud = stageNow >= 3 && (action === "proud" || (!action && base === "proud"));
     var la = -1.95 + (reduce ? 0 : Math.sin(time * 2.2) * 0.14), ra = 0.42, hop = 0, squash = 0, mouthOpen = false, happyEyes = false;
-    if (!action && base === "idle") la = -0.42;
+    if (!action && (base === "idle" || (base === "proud" && stageNow < 3))) la = -0.42;
     if (isProud) { happyEyes = true; hop = reduce ? 0 : Math.abs(Math.sin(time * 2.4)) * 0.03; }
     if (action === "wave") { la = -1.95 + Math.sin(actionT * 11) * 0.3; ra = 0.5; }
     if (action === "joy") {
@@ -424,7 +552,13 @@ window.mountWooljigi = function (stage) {
     smile.visible = !mouthOpen; openMouth.visible = mouthOpen;
 
     var bob = reduce ? 0 : Math.sin(time * 1.7) * 0.022;
-    root.position.y = hop + bob;
+    root.position.y = hop + bob + stageY;
+    root.scale.setScalar(stageS);
+    if (G.spring.visible) springDrops.forEach(function (d) { d.m.position.y = d.y + (reduce ? 0 : Math.sin(time * 3.4 + d.o) * 0.07); });
+    if (G.grand.visible) sparks.forEach(function (d) {
+      var ang = d.a + (reduce ? 0 : time * 0.55);
+      d.m.position.set(Math.cos(ang) * 1.75, d.y + (reduce ? 0 : Math.sin(time * 1.3 + d.a) * 0.1), Math.sin(ang) * 1.75);
+    });
     well.scale.set(1 + squash, 1 - squash, 1 + squash);
 
     // 물결
@@ -463,9 +597,11 @@ window.mountWooljigi = function (stage) {
     root.rotation.y = yaw + (reduce || dragging ? 0 : Math.sin(time * 0.6) * 0.09);
     root.rotation.x = pitch;
     shadow.visible = showShadow;
-    shadow.scale.setScalar(1 - hop * 0.5);
+    shadow.position.y = -1.18 * stageS + stageY;
+    shadow.scale.setScalar((1 - hop * 0.5) * stageS);
     shadow.material.opacity = Math.max(0, 0.14 - hop * 0.2) * Math.max(0, Math.min(1, 1 + pitch * 3));
   }
+  setStage(4);
   armL.rotation.z = -1.95; armR.rotation.z = 0.42;
   function loop() {
     frame(Math.min(clock.getDelta(), 0.05));
@@ -473,5 +609,5 @@ window.mountWooljigi = function (stage) {
     requestAnimationFrame(loop);
   }
   loop();
-  return { play: play, setBase: function (b) { base = b; action = null; }, hideShadow: function () { showShadow = false; }, stopBlink: function () { nextBlink = 1e9; blink = 0; }, pose: function (y, k, t, p) { yaw = y; pitch = p || 0; idleBack = 0; yawV = 0; if (k) play(k); if (t) actionT = t; } };
+  return { play: play, setStage: setStage, setColor: setColor, setBase: function (b) { base = b; action = null; }, hideShadow: function () { showShadow = false; }, stopBlink: function () { nextBlink = 1e9; blink = 0; }, pose: function (y, k, t, p) { yaw = y; pitch = p || 0; idleBack = 0; yawV = 0; if (k) play(k); if (t) actionT = t; } };
 };

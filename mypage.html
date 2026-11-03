@@ -31,6 +31,19 @@
     <div class="hand-note">작은 기록이<br>더 큰 믿음으로!</div>
   </div>
 
+  <section class="card kc-card" id="keeperCard" hidden aria-labelledby="kcTitle">
+    <div class="kc-stage" id="kcStage"><img src="assets/brand/well-mascot-idle.png" alt="내 우물지기"></div>
+    <div class="kc-body">
+      <p class="kc-evolved" id="kcEvolved" hidden></p>
+      <div class="kc-head"><h2 id="kcTitle"><span id="kcName"></span></h2><b id="kcLevel"></b></div>
+      <div class="kc-track"><i id="kcBar"></i></div>
+      <p class="kc-xp"><span id="kcXp"></span></p>
+      <p class="kc-next" id="kcNext"></p>
+      <div class="kc-colors" id="kcColors" role="group" aria-label="우물지기 색 고르기"></div>
+      <p class="kc-note">말씀우물에서 함께한 발자국만큼 자라요. 믿음의 등급이 아니고, 쉬어도 줄어들지 않아요.</p>
+    </div>
+  </section>
+
   <div class="card streak">
     <div style="text-align:center;">
       <div class="num" id="streakNum">0</div>
@@ -223,6 +236,7 @@
     });
   });
 </script>
+<script src="assets/keeper-card.js"></script>
 <script src="assets/appshell.js"></script>
 </body>
 </html>

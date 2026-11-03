@@ -29,6 +29,10 @@ html, body { background: #f3f4fa; background-image: none; }
 .actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .actions button { min-height: 48px; border-radius: 12px; border: 1px solid #c7cfea; background: #fff; color: #141a3c; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
 .actions button.on { background: #2540d8; border-color: #2540d8; color: #fff; }
+.stages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stages button { min-height: 62px; padding: 8px 4px; border: 1.5px solid #aab3d8; border-radius: 12px; background: #fff; color: #5a6185; font: inherit; font-size: 13px; cursor: pointer; }
+.stages button b { display: block; color: #141a3c; font-size: 13.5px; letter-spacing: -.03em; }
+.stages button.on { border-color: #17287e; background: #e6e9f7; }
 .wk section { margin-top: 30px; }
 .wk h2 { margin: 0 0 10px; font-size: 20px; font-weight: 800; letter-spacing: -.03em; }
 .wk p { margin: 0 0 10px; font-size: 15.5px; line-height: 1.7; }
@@ -79,6 +83,19 @@ html, body { background: #f3f4fa; background-image: none; }
   </section>
 
   <section>
+    <h2>자라는 모습</h2>
+    <p>출석, 말씀, 기록, 게임에 함께한 발자국만큼 내 우물지기가 자랍니다. 믿음의 등급이 아니고, 쉬어도 줄어들지 않습니다.</p>
+    <div class="stages" id="stageChips">
+      <button type="button" data-stage="0"><b>작은 물방울</b>Lv 0</button>
+      <button type="button" data-stage="1"><b>샘</b>Lv 5</button>
+      <button type="button" data-stage="2"><b>작은 우물</b>Lv 15</button>
+      <button type="button" data-stage="3"><b>두레박 우물</b>Lv 30</button>
+      <button type="button" data-stage="4"><b>우물지기</b>Lv 50</button>
+      <button type="button" data-stage="5"><b>큰 우물지기</b>Lv 75</button>
+    </div>
+  </section>
+
+  <section>
     <h2>이름의 뜻</h2>
     <p>우물지기는 우물을 돌보는 사람입니다. 우물이 막히지 않게 살피고, 찾아온 사람이 물을 길을 수 있게 돕습니다. 말씀우물의 우물지기도 누구나 말씀 앞으로 올 수 있도록 돕습니다.</p>
   </section>
@@ -113,7 +130,23 @@ html, body { background: #f3f4fa; background-image: none; }
 <script>if (typeof initHeaderAuthState === "function") initHeaderAuthState();</script>
 <script src="assets/vendor/three-r128.min.js"></script>
 <script src="assets/wooljigi-3d.js"></script>
-<script>window.__well = mountWooljigi(document.getElementById("stage"));</script>
+<script>
+  window.__well = mountWooljigi(document.getElementById("stage"));
+  (function () {
+    var chips = document.querySelectorAll("#stageChips button");
+    function pick(n) {
+      chips.forEach(function (b) { b.classList.toggle("on", Number(b.getAttribute("data-stage")) === n); });
+      if (window.__well) window.__well.setStage(n);
+    }
+    chips.forEach(function (b) {
+      b.addEventListener("click", function () {
+        pick(Number(b.getAttribute("data-stage")));
+        document.getElementById("stage").scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+    pick(4);
+  })();
+</script>
 <script src="assets/appshell.js"></script>
 </body>
 </html>
