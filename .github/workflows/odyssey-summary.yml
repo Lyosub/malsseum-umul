@@ -37,10 +37,24 @@ jobs:
             jq -n --arg t "$KST" --arg b "$BODY" '{generated_kst: $t, ok: false, error: $b}' > odyssey-summary.json
           fi
           cat odyssey-summary.json
+      - name: 말씀우물 이용 현황 받기
+        run: |
+          set -e
+          SB="https://qaxwxbaqduxqzjqoahcb.supabase.co"
+          ANON="sb_publishable_Q5HhLUzyLoFlNK0MCai_eQ_SOFeu_ks"
+          # 공개 집계 함수 get_site_usage_summary(숫자만, 이름·아이디·내용 없음, 관리자·시험 계정 제외)
+          BODY=$(curl -s --max-time 30 -X POST "${SB}/rest/v1/rpc/get_site_usage_summary" -H "apikey: ${ANON}" -H "Content-Type: application/json" -d '{}')
+          KST=$(TZ=Asia/Seoul date +"%Y-%m-%d %H:%M")
+          if echo "$BODY" | jq -e '.active_7d' >/dev/null 2>&1; then
+            echo "$BODY" | jq --arg t "$KST" '. + {generated_kst: $t, ok: true}' > site-usage.json
+          else
+            jq -n --arg t "$KST" --arg b "$BODY" '{generated_kst: $t, ok: false, error: $b}' > site-usage.json
+          fi
+          cat site-usage.json
       - name: 기록
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add odyssey-summary.json
+          git add odyssey-summary.json site-usage.json
           git commit -m "In Odyssey 요약 $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M') KST" || exit 0
           git push origin HEAD:health
