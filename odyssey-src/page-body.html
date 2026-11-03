@@ -1,0 +1,118 @@
+</style>
+</head>
+<body>
+<div id="loading"><img id="logo-img" alt="In Odyssey" style="width:min(78vw,420px);display:none"><div class="logo" id="logo-text">In Odyssey</div><div class="sub" id="loading-sub">불러오는 중...</div><div class="tap">화면을 눌러 시작하기</div></div>
+<div id="canvas-wrap"></div>
+<div id="hint">조이스틱(WASD)으로 이동 · 화면을 드래그하면 시점 회전 · 스페이스로 점프 · 사람들에게 말을 걸어보세요</div>
+<script>if ('ontouchstart' in window || navigator.maxTouchPoints > 0) document.getElementById('hint').textContent = '조이스틱으로 이동 · 화면을 끌어 둘러보기 · 사람에게 다가가 「대화하기」를 눌러 보세요';</script>
+<div id="minimap"><canvas id="minimap-canvas" width="118" height="118"></canvas></div>
+<div id="zoom-ctrl"><button id="zoom-in" aria-label="확대">＋</button><button id="zoom-out" aria-label="축소">－</button></div>
+<div id="quest-panel">
+  <h4>📜 퀘스트 — 광야의 발자취</h4>
+  <ul id="quest-list"></ul>
+</div>
+<div id="quest-toast"></div>
+<div id="joy-hit"></div>
+<div id="joystick-zone"><div id="joystick-knob"></div></div>
+<div id="action-cluster">
+  <div id="run-btn" class="action-btn">달리기
+    <svg id="stamina-ring" viewBox="0 0 90 90"><circle class="track" cx="45" cy="45" r="41"/><circle class="bar" id="stamina-bar" cx="45" cy="45" r="41"/></svg>
+  </div>
+  <div id="jump-btn" class="action-btn">점프</div>
+</div>
+<div id="interact-btn" class="hidden">살펴보기</div>
+<div id="tut" class="hidden"><div class="k" id="tut-k"></div><div class="t" id="tut-t"></div><div class="bar"><i id="tut-bar"></i></div>
+  <div class="row"><span id="tut-n"></span><button id="tut-skip">건너뛰기</button></div></div>
+<div id="skill-bar"></div>
+<div id="skill-modal" class="hidden"><div class="card">
+  <div class="kick">✨ 새 스킬 획득</div><div class="ico" id="skill-modal-ico"></div>
+  <h3 id="skill-modal-name"></h3><p id="skill-modal-desc"></p>
+  <button id="skill-modal-ok">좋아요!</button>
+</div></div>
+<div id="info-panel" class="hidden">
+  <h3 id="info-title"></h3>
+  <p id="info-body"></p>
+  <button id="info-close">닫기</button>
+</div>
+<div id="perf"></div>
+<div id="dlg" class="hidden"><div class="row"><img id="dlg-face" alt=""><div style="flex:1">
+  <div id="dlg-name"></div><div id="dlg-text"></div></div></div>
+  <div id="dlg-choices"></div><button id="dlg-next">다음 ▶</button></div>
+<div id="hud-btns"><button id="btn-pet" title="내 펫" class="hidden">🐾</button><button id="btn-emo" title="인사하기" class="hidden">😊</button><button id="btn-menu" title="메뉴">☰</button>
+  <div id="hud-menu" class="hidden"><button id="btn-book" title="구절 수집첩">📖<span>수집첩</span></button><button id="btn-log" title="대화 기록">💬<span>대화 기록</span></button><button id="btn-worship" title="예배 암호">⛪<span>예배 암호</span></button><button id="btn-friends" title="친구">👥<span>친구</span></button><button id="btn-daily" title="오늘의 퀘스트">📅<span>오늘의 퀘스트</span></button><button id="btn-rank" title="랭킹">🏆<span>랭킹·오이코스</span></button><button id="btn-shop" title="상점">🛍️<span>상점·꾸미기</span></button><button id="btn-photo" title="사진첩">📷<span>사진첩</span></button><button id="btn-recap" title="지난 이야기">📜<span>지난 이야기</span></button><button id="btn-hq" title="히든 퀘스트">❔<span>히든 퀘스트</span></button><button id="btn-set" title="설정">⚙️<span>설정</span></button></div></div>
+<div id="shop-modal" class="modal hidden"><div class="sheet" style="max-width:440px">
+  <h3>🛍️ 두루마리 상점</h3>
+  <div id="shop-bal"></div>
+  <div id="shop-tabs"><button data-c="look">🧑 꾸미기</button><button data-c="staff" class="on">🦯 지팡이</button><button data-c="pet">🐾 동물</button><button data-c="outfit">👕 옷</button></div>
+  <div id="shop-grid"></div>
+  <div id="shop-msg"></div>
+  <button class="close">닫기</button></div></div>
+<div id="craft-modal" class="modal hidden"><div class="sheet" style="max-width:460px">
+  <h3>🔨 브살렐의 공방</h3>
+  <div id="craft-bal"></div>
+  <div id="craft-mats"></div>
+  <div id="craft-tabs"><button data-c="staff" class="on">🦯 지팡이</button><button data-c="robe">🧥 겉옷·띠</button><button data-c="shoes">👡 신발</button><button data-c="head">👑 머리</button><button data-c="where">🗺 재료</button></div>
+  <div id="craft-grid"></div>
+  <div id="craft-msg"></div>
+  <button class="close">닫기</button></div></div>
+<div id="hq-modal" class="modal hidden"><div class="sheet"><h3>❔ 히든 퀘스트</h3><div id="hq-list"></div><button class="close">닫기</button></div></div>
+<div id="lib-modal" class="modal hidden"><div class="sheet"><h3>📚 두루마리 도서관</h3><div id="lib-list" style="max-height:60vh;overflow:auto"></div><button class="close">닫기</button></div></div>
+<div id="recap-modal" class="modal hidden"><div class="sheet"><h3>📜 지난 이야기</h3><div id="recap-body"></div><button class="close">이어서 하기</button></div></div>
+<div id="exhibit-modal" class="modal hidden"><div class="sheet"><h3>🏛 기념 전시관</h3><div id="exhibit-body" style="max-height:58vh;overflow:auto"></div><div style="display:flex;gap:6px;margin-top:8px"><button id="exhibit-replay" class="set-tg" style="flex:1">🎬 다시 하기</button><button class="close" style="flex:1">닫기</button></div></div></div>
+<div id="journey-modal" class="modal hidden"><div class="sheet" style="max-width:720px"><h3>🗺 걸어온 여정</h3><div id="journey-body" style="max-height:62vh;overflow:auto"></div><button class="close">닫기</button></div></div>
+<div id="links-modal" class="modal hidden"><div class="sheet" style="max-width:720px"><h3>🔗 본문 연결 두루마리</h3><div id="links-body" style="max-height:62vh;overflow:auto"></div><button class="close">닫기</button></div></div>
+<div id="album-modal" class="modal hidden"><div class="sheet" style="max-width:720px"><h3>📷 모험 사진첩</h3><div id="album-body" style="max-height:62vh;overflow:auto"></div><button class="close">닫기</button></div></div>
+<div id="next-scroll-modal" class="modal hidden"><div class="sheet" style="max-width:400px"><h3 id="ns-title"></h3><div id="ns-body" style="font-size:14px;line-height:1.75;white-space:pre-line"></div><button id="ns-go" style="width:100%;margin:10px 0 4px;padding:12px;border-radius:12px;border:none;background:#ffd27a;color:#2a1d10;font-weight:800;font-size:15px"></button><button class="close">나중에</button></div></div>
+<div id="scroll-gate-modal" class="modal hidden"><div class="sheet"><h3>📚 두루마리 문</h3><div id="scroll-gate-body" style="max-height:60vh;overflow:auto"></div><button class="close">닫기</button></div></div>
+<div id="set-modal" class="modal hidden"><div class="sheet set-sheet"><h3>⚙️ 설정</h3>
+  <div class="set-row"><span class="set-lbl">🖥 화질</span><span id="quality-now" class="set-now"></span></div>
+  <div id="quality-opts"><button data-q="auto">자동</button><button data-q="low">저</button><button data-q="mid">중</button><button data-q="high">고</button></div>
+  <div class="set-row"><span class="set-lbl">🎵 배경음악</span><button id="bgm-toggle" class="set-tg"></button></div>
+  <div class="set-row"><span class="set-lbl">☁️ 계정 저장</span><span id="cloud-now" class="set-now"></span></div>
+  <div id="cloud-btns" style="display:flex;gap:6px;margin:4px 0 10px"><button id="cloud-save" class="set-tg" style="flex:1">지금 저장</button><button id="cloud-load" class="set-tg" style="flex:1">계정 기록 불러오기</button></div>
+  <div class="set-btns"><button id="btn-save-exit">💾 저장하고 나가기</button><button class="close">닫기</button></div></div></div>
+<div id="book-modal" class="modal hidden"><div class="sheet"><h3>📖 구절 수집첩</h3><div class="cards" id="book-cards"></div><button class="close">닫기</button></div></div>
+<div id="warp-modal" class="modal hidden"><div class="sheet" style="max-width:380px"><h3>🧭 어디로 갈까요?</h3><div id="warp-list"></div><button class="close">닫기</button></div></div>
+<div id="worship-modal" class="modal hidden"><div class="sheet" style="max-width:400px;text-align:center"><h3>⛪ 예배 암호</h3><div id="worship-body"></div><button class="close">닫기</button></div></div>
+<div id="login-modal" class="modal hidden"><div class="sheet" style="max-width:400px;text-align:center"><h3>🔒 로그인이 필요해요</h3><div style="margin:10px 0 14px;line-height:1.7;font-size:14px">조작 연습까지는 로그인 없이 해 볼 수 있어요.<br>이야기를 이어서 모험하려면 말씀우물에 로그인해 주세요.<br><span style="opacity:.8;font-size:13px">로그인하면 진행 상황이 저장되고 달란트도 받아요.</span></div><a href="../login.html?next=/odyssey/" style="display:block;padding:11px;border-radius:10px;background:#ffd27a;color:#3a2400;font-weight:800;font-size:15px;text-decoration:none">로그인하기</a><a href="../signup.html" style="display:block;margin-top:8px;padding:10px;border-radius:10px;border:2px solid #ffd27a;color:#ffd27a;font-weight:800;font-size:14px;text-decoration:none">처음이에요 · 회원가입</a><button class="close">나중에 할게요</button></div></div>
+<div id="pet-modal" class="modal hidden"><div class="sheet" style="max-width:420px"><h3 id="pet-title">🐾 내 펫</h3><div id="pet-body"></div><button class="close">닫기</button></div></div>
+<div id="replay-modal" class="modal hidden"><div class="sheet"><h3>🎬 기념 전시관 — 다시 하기</h3><div id="replay-list"></div><button class="close">닫기</button></div></div>
+<div id="replay-bar" class="hidden"><span id="replay-t"></span><button id="replay-stop">그만두기</button></div>
+<div id="daily-modal" class="modal hidden"><div class="sheet"><h3>📅 오늘의 퀘스트</h3><div id="daily-list"></div><button id="daily-claim"></button>
+<h3 style="margin-top:14px">🗓 이번 주 퀘스트</h3><div id="weekly-list"></div><button id="weekly-claim" class="wk-claim"></button>
+<div style="font-size:12px;opacity:.8;margin-top:10px;line-height:1.6">🏅 업적 보상도 있어요 — 배지를 얻으면 하나에 💰3, 한 마을의 숨은 두루마리 5개를 다 모으면 💰10이 자동으로 들어와요.</div><button class="close">닫기</button></div></div>
+<div id="emo-bar" class="hidden"><button>👋</button><button>🙏</button><button>🎵</button><button>😄</button><button>❤️</button><button>👍</button></div>
+<div id="friend-pill" class="hidden"></div>
+<div id="home-btns" class="hidden"><button id="btn-home">🏠 꾸미기</button><button id="btn-invite">📨 친구 초대</button></div>
+<div id="visit-bar" class="hidden"><span id="visit-t"></span><button id="visit-like">🤍 좋아요</button><button id="visit-back">돌아가기</button></div>
+<div id="invite-pop" class="hidden"><div id="invite-t"></div><div class="row"><button id="invite-go">🏠 놀러 가기</button><button id="invite-no">나중에</button></div></div>
+<div id="people-modal" class="modal hidden"><div class="sheet"><h3>👥 친구</h3><div id="people-tabs"></div><div id="people-list"></div><button class="close">닫기</button></div></div>
+<div id="home-panel" class="hidden">
+  <div class="hp-top"><span id="hp-msg"></span><span id="hp-sel" class="hidden"><button data-hp="rot">↻ 돌리기</button><button data-hp="move">✥ 옮기기</button><button data-hp="del">🗑 치우기</button></span><button id="hp-done">완료</button></div>
+  <div id="hp-items"></div>
+</div>
+<div id="rank-modal" class="modal hidden"><div class="sheet"><h3>🏆 In Odyssey 랭킹</h3><div id="rank-tabs"></div><div id="rank-list"></div><button class="close">닫기</button></div></div>
+<div id="log-modal" class="modal hidden"><div class="sheet"><h3>💬 대화 기록</h3><div id="log-list"></div><button class="close">닫기</button></div></div>
+<div id="card-modal" class="modal hidden"><div class="sheet" style="max-width:300px"><h3>📖 새 구절 카드!</h3><div id="card-one"></div><button class="close">수집첩에 넣기</button></div></div>
+<div id="clear-modal" class="modal hidden"><div class="sheet"><h3 id="clear-title"></h3><img id="clear-badge" alt=""><div id="clear-body" style="font-size:14px;line-height:1.7;white-space:pre-line"></div><button class="close">좋아요!</button></div></div>
+<div id="warp"></div>
+<div id="mg" class="hidden"><div class="mg-box">
+  <div class="mg-top"><b id="mg-title"></b><span id="mg-stat"></span></div>
+  <div id="mg-info"></div>
+  <div id="mg-area"></div>
+  <div class="mg-btns"><button id="mg-act">시작!</button><button id="mg-close">나가기</button></div>
+</div></div>
+<div id="hud-challenge" class="hidden"></div>
+<div id="rotate"><img id="rotate-logo" alt="In Odyssey" style="width:min(70vw,320px);margin-bottom:10px"><div class="ph">📱</div><b>휴대폰을 가로로 돌려 주세요</b><button id="btn-landscape" style="padding:13px 22px;border-radius:14px;border:none;background:#ffd27a;color:#2a1d10;font-weight:800;font-size:17px">🔄 가로 화면으로 켜기</button><div style="font-size:14px;opacity:.85;line-height:1.6">In Odyssey는 가로 화면으로 넓게 플레이해요.<br>화면 자동 회전이 꺼져 있으면 켜 주세요.</div></div>
+<div id="pick-modal" class="modal hidden"><div class="sheet" style="max-width:340px;text-align:center">
+  <h3>나는 누구로 모험할까요?</h3>
+  <p style="font-size:13px;opacity:.85;margin:6px 0 12px">나중에 🛍️ 상점의 「꾸미기」에서 언제든 바꿀 수 있어요.</p>
+  <div style="display:flex;gap:10px"><button class="pick-b" data-b="boy" style="flex:1">🧑 남학생</button><button class="pick-b" data-b="girl" style="flex:1">👧 여학생</button></div>
+  <button class="close" style="display:none"></button></div></div>
+<div id="tint" style="position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;background:rgba(58,48,18,0.55);transition:opacity 1.2s"></div>
+<div id="flash" style="position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0;background:#fff"></div>
+<div id="compass"><svg viewBox="0 0 46 46"><path id="compass-arrow" d="M23 7 L31 27 L23 22 L15 27 Z" fill="#ffd27a"/></svg></div>
+<button id="hint-btn" type="button">💡 막혔나요? 힌트</button>
+<div id="ch-fx" class="hidden"><div class="rays"></div><div class="big"><small id="ch-fx-sub"></small><b id="ch-fx-t"></b><i id="ch-fx-n"></i></div><div class="tap">화면을 누르면 넘어가요</div></div>
+
+<!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
