@@ -77,3 +77,11 @@ html[data-tone] #homeVerseCard .text { font-size: 16.5px; line-height: 1.6; }
 /* 놀이터: 게임 칸을 크게 */
 .pc { min-height: 104px; }
 .mind-box { border-radius: 16px; background: #fff; }
+
+/* 묵상 펼치기: 설명, 적용, 기도, 실천을 칸으로 나눈다 */
+#homeVerseCard .verse-card-more { display: grid; gap: 10px; }
+#homeVerseCard .verse-card-more[hidden] { display: none; }
+#homeVerseCard .qt-section { margin: 0; padding: 14px 15px; border: 1px solid rgba(255, 255, 255, .24); border-radius: 14px; background: rgba(8, 14, 44, .5); text-align: left; }
+#homeVerseCard .qt-label { display: block; margin: 0 0 7px; padding: 0 0 7px; border-bottom: 1px solid rgba(255, 255, 255, .2); background: none; color: #cdec37; font-size: 14.5px; font-weight: 800; letter-spacing: -.01em; }
+#homeVerseCard .qt-body { color: #fff; font-size: 15px; line-height: 1.7; opacity: 1; }
+#homeVerseCard .qt-reflect-save { border-color: #cdec37; background: #cdec37; color: #26330a; min-height: 44px; }
