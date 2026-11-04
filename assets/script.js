@@ -331,7 +331,7 @@ function loadVerseCardFonts() {
   return Promise.all(promises).then(function () { return document.fonts.ready; });
 }
 
-// 말씀카드 배경 70장(1080x2340) 중 한 장을 매일 바꿔서 쓴다.
+// 말씀카드 배경(1080x2340) 중 한 장을 매일 바꿔서 쓴다.
 // 배경은 저장 사이즈에 맞춰 비율을 유지한 채 가운데를 기준으로 잘라 넣는다(drawVerseCardBg 참고).
 var VERSE_CARD_BG_COUNT = 70;
 
@@ -340,14 +340,22 @@ var VERSE_CARD_BG_COUNT = 70;
 var VERSE_CARD_BG_EPOCH = Date.UTC(2026, 8, 17);
 var VERSE_CARD_BG_EPOCH_INDEX = 53;
 
+// 너무 어두워 검게 보이는 사진은 순환에서 뺀다(사진 위쪽 평균 밝기 20 미만, 2026-11-04).
+var VERSE_CARD_BG_SKIP = [3, 4, 19, 20, 22, 29, 31, 34, 42, 44, 45, 49, 52];
+
 function getVerseCardBgIndex() {
   // 홈·말씀 탭 모두 같은 로직을 써서 두 화면의 카드 배경이 같은 날엔 동일하게 보인다.
   var now = new Date();
   var today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
   var diffDays = Math.round((today - VERSE_CARD_BG_EPOCH) / 86400000);
   // 기준일 이전 날짜에서도 음수가 나오지 않도록 나머지를 한 번 더 보정한다.
-  var slot = ((diffDays + VERSE_CARD_BG_EPOCH_INDEX - 1) % VERSE_CARD_BG_COUNT + VERSE_CARD_BG_COUNT) % VERSE_CARD_BG_COUNT;
-  return slot + 1;
+  var used = [];
+  for (var n = 1; n <= VERSE_CARD_BG_COUNT; n++) {
+    if (VERSE_CARD_BG_SKIP.indexOf(n) === -1) used.push(n);
+  }
+  var start = used.indexOf(VERSE_CARD_BG_EPOCH_INDEX);
+  var slot = ((diffDays + start) % used.length + used.length) % used.length;
+  return used[slot];
 }
 
 // 배경 이미지를 미리 불러와둔다. 실패하면(오프라인 등) null로 넘겨서 기존 그라데이션으로 대체된다.
