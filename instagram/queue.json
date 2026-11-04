@@ -399,7 +399,7 @@
       "id": "2026-11-04-well",
       "type": "carousel",
       "publish_at": "2026-11-04 09:00",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-11-04-well.txt",
       "first_comment_file": "instagram/captions/2026-11-04-well.tags.txt",
       "images": [
@@ -412,7 +412,9 @@
         "instagram/2026-11-04-well-07.jpg",
         "instagram/2026-11-04-well-08.jpg"
       ],
-      "note": "말씀우물 개편 공지(오늘의 1분, 날짜별 묵상, 우물지기 키우기). 전도사님 요청으로 11/4 오전 9시."
+      "note": "말씀우물 개편 공지(오늘의 1분, 날짜별 묵상, 우물지기 키우기). 전도사님 요청으로 11/4 오전 9시.",
+      "media_id": "18143005081533013",
+      "posted_at": "2026-11-04 09:02"
     },
     {
       "id": "2026-11-01-cartoon",
