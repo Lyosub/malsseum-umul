@@ -263,6 +263,7 @@ html.home-v2 .hv-actions .verse-card-toggle {
   font-weight: 700;
   text-decoration: none;
 }
+.hv-event[hidden] { display: none; }
 .hv-event b { color: var(--hv-lime); font-weight: 800; white-space: nowrap; }
 html.home-v2 .notice-bar { margin: 12px 0 0; }
 

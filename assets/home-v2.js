@@ -33,6 +33,24 @@
     document.getElementById("hvEventD").textContent = diff === 0 ? "오늘" : "D-" + diff;
   }
 
+  // 감사의 광주리: 11/8 예배 안내 때부터 11/15까지 보인다. 시작 전에는 시작일을, 시작 뒤에는 열매 수를 쓴다.
+  var harvestStart = new Date(2026, 10, 9), harvestEnd = new Date(2026, 10, 15);
+  if (today >= new Date(2026, 10, 8) && today <= harvestEnd) {
+    document.getElementById("hvHarvest").hidden = false;
+    var harvestN = document.getElementById("hvHarvestN");
+    if (today < harvestStart) {
+      harvestN.textContent = "11/9 시작";
+    } else if (typeof SUPABASE_URL !== "undefined") {
+      fetch(SUPABASE_URL + "/rest/v1/rpc/harvest_status", {
+        method: "POST",
+        headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+        body: "{}"
+      }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (d && d.count > 0) harvestN.textContent = "열매 " + d.count;
+      }).catch(function () {});
+    }
+  }
+
   document.getElementById("homeMindForm").addEventListener("submit", function (e) {
     e.preventDefault();
     var v = (document.getElementById("homeMindInput").value || "").trim();

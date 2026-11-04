@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#1d1a12">
+<title>감사의 광주리 | 말씀우물</title>
+<meta name="description" content="11월 9일부터 15일까지, 감사 한 줄로 함께 채우는 광주리.">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&display=swap">
+<style>
+  [hidden] { display: none !important; }
+  :root { --bg: #1d1a12; --card: #2a2519; --ink: #f6efdd; --dim: #c4b99d; --gold: #e9b949; --line: rgba(246,239,221,.2); --err: #ff9b8f; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: radial-gradient(110% 60% at 50% 0%, #3a3019 0%, var(--bg) 62%) fixed, var(--bg);
+    color: var(--ink); font-family: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-size: 16px; line-height: 1.6;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(32px, env(safe-area-inset-bottom));
+  }
+  main { max-width: 440px; margin: 0 auto; display: grid; gap: 16px; }
+  main > * { min-width: 0; }
+  .home { color: var(--dim); font-size: 14px; text-decoration: none; }
+  header { text-align: center; }
+  .period { color: var(--gold); font-size: 13px; font-weight: 700; letter-spacing: .04em; }
+  h1 { font-family: "Gowun Batang", "Nanum Myeongjo", serif; font-size: 32px; line-height: 1.25; margin: 4px 0 0; }
+  .basket { max-width: 340px; width: 100%; margin: 0 auto; }
+  .count { text-align: center; font-size: 17px; margin-top: -4px; }
+  .count b { color: var(--gold); font-size: 34px; font-variant-numeric: tabular-nums; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 12px; }
+  .card h2 { font-size: 17px; margin: 0; }
+  textarea {
+    width: 100%; min-height: 84px; resize: none; font: inherit; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px; outline: none;
+  }
+  textarea:focus { border-color: var(--gold); }
+  .len { text-align: right; color: var(--dim); font-size: 12px; margin-top: 2px; }
+  .share { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; cursor: pointer; }
+  .share input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--gold); }
+  .btn {
+    display: block; width: 100%; min-height: 50px; padding: 13px; border: 0; border-radius: 12px; cursor: pointer; text-align: center;
+    background: var(--gold); color: #2a210c; font: inherit; font-weight: 800; text-decoration: none;
+  }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .note { color: var(--dim); font-size: 13px; margin: 0; }
+  .msg { min-height: 1.5em; margin: 0; font-size: 14.5px; text-align: center; }
+  .msg.err { color: var(--err); }
+  .steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14.5px; }
+  blockquote { margin: 0; padding: 0; font-size: 15px; }
+  cite { display: block; margin-top: 6px; color: var(--gold); font-size: 13px; font-style: normal; font-weight: 700; }
+  a { color: var(--gold); }
+</style>
+</head>
+<body>
+<main>
+  <a class="home" href="index.html">‹ 말씀우물</a>
+  <header>
+    <div class="period">11월 9일 ~ 15일 · 추수감사주일까지</div>
+    <h1>감사의 광주리</h1>
+  </header>
+
+  <div class="basket" id="basket"></div>
+  <div class="count" id="countLine" role="status">불러오는 중</div>
+
+  <section class="card" id="before" hidden>
+    <h2>11월 9일(월)부터 담을 수 있어요</h2>
+    <p class="note">감사 한 줄을 쓸 때마다 열매가 하나씩 담겨요.</p>
+  </section>
+
+  <section class="card" id="after" hidden>
+    <h2>함께 담아 주셔서 고맙습니다</h2>
+    <p class="note">감사의 광주리는 11월 15일에 마쳤어요. 감사노트는 언제든 쓸 수 있어요.</p>
+    <a class="btn" href="mypage.html?open=gratitude">감사노트 쓰기</a>
+  </section>
+
+  <section class="card" id="guest" hidden>
+    <h2>오늘 고마웠던 일을 담아 주세요</h2>
+    <p class="note">감사 글은 로그인한 뒤 쓸 수 있어요.</p>
+    <a class="btn" href="login.html?next=/harvest.html">로그인하고 쓰기</a>
+  </section>
+
+  <form class="card" id="form" hidden>
+    <h2>오늘 고마웠던 일을 담아 주세요</h2>
+    <div>
+      <textarea id="body" maxlength="60" placeholder="오늘 감사한 일 한 줄" aria-label="오늘 감사한 일 한 줄"></textarea>
+      <div class="len"><span id="len">0</span>/60</div>
+    </div>
+    <label class="share"><input type="checkbox" id="share"><span>11월 15일 예배 화면에 이름 없이 나눠도 좋아요</span></label>
+    <button class="btn" id="send" type="submit">광주리에 담기</button>
+    <p class="msg" id="msg" role="status"></p>
+    <p class="note">쓴 글은 감사노트에 저장되고 <a href="feed.html?type=gratitude">실시간 나눔</a>에도 보여요. 예배 화면에는 담당자가 확인한 글만 나와요.</p>
+  </form>
+
+  <section class="card">
+    <blockquote>네 하나님 여호와께서 너와 네 집에 주신 모든 복으로 말미암아 너는 레위인과 너희 가운데에 거류하는 객과 함께 즐거워할지니라
+      <cite>신명기 26장 11절</cite>
+    </blockquote>
+  </section>
+</main>
+
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/harvest.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var client = getClient();
+  var count = 0, userId = null, status = null;
+
+  function showCount() {
+    window.drawHarvestBasket($('basket'), count);
+    $('countLine').innerHTML = count > 0 ? '함께 담은 열매 <b>' + count.toLocaleString('ko-KR') + '</b>개' : '아직 비어 있어요';
+  }
+  function showForm() {
+    if (!status) return;
+    var now = Date.now();
+    var before = now < new Date(status.starts_at).getTime();
+    var after = now >= new Date(status.ends_at).getTime();
+    $('before').hidden = !before;
+    $('after').hidden = !after;
+    $('guest').hidden = before || after || !!userId;
+    $('form').hidden = before || after || !userId;
+  }
+  function load() {
+    return client.rpc('harvest_status').then(function (r) {
+      if (r.error || !r.data) throw r.error || new Error('no data');
+      status = r.data; count = r.data.count; showCount(); showForm();
+    }).catch(function () { $('countLine').textContent = '숫자를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'; });
+  }
+
+  window.drawHarvestBasket($('basket'), 0);
+  getSession().then(function (s) {
+    userId = s && s.user ? s.user.id : null;
+    return load();
+  }).catch(load);
+
+  $('body').addEventListener('input', function () { $('len').textContent = this.value.length; });
+  $('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var text = $('body').value.trim(), msg = $('msg');
+    msg.className = 'msg';
+    if (!text) { msg.className = 'msg err'; msg.textContent = '감사한 일을 한 줄 적어 주세요.'; return; }
+    $('send').disabled = true;
+    msg.textContent = '담는 중…';
+    client.from('notes').insert({ user_id: userId, type: 'gratitude', content: text, image_urls: [] }).select('id').single()
+      .then(function (r) {
+        if (r.error) throw r.error;
+        if (!$('share').checked) return { ok: true, shared: false };
+        return client.rpc('harvest_share', { p_note_id: r.data.id }).then(function (s) {
+          if (s.error) return { ok: true, shared: false, warn: '글은 담겼지만 화면 나눔은 보내지 못했어요.' };
+          if (!s.data.ok) return { ok: true, shared: false, warn: s.data.error };
+          return { ok: true, shared: true };
+        });
+      })
+      .then(function (res) {
+        $('body').value = ''; $('len').textContent = '0'; $('share').checked = false;
+        msg.textContent = res.warn || (res.shared ? '담았어요. 화면 나눔도 보냈어요.' : '열매 하나를 담았어요.');
+        return load();
+      })
+      .catch(function () { msg.className = 'msg err'; msg.textContent = '저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.'; })
+      .then(function () { $('send').disabled = false; });
+  });
+})();
+</script>
+</body>
+</html>

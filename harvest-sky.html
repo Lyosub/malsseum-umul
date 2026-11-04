@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark">
+<title>감사의 광주리 | 예배 화면</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&display=swap">
+<style>
+  [hidden] { display: none !important; }
+  :root { --bg: #1d1a12; --ink: #f6efdd; --dim: #c4b99d; --gold: #e9b949; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    background: radial-gradient(90% 80% at 50% 10%, #4a3b1c 0%, var(--bg) 66%), var(--bg);
+    color: var(--ink); font-family: "Pretendard", "Malgun Gothic", sans-serif;
+    display: grid; grid-template-columns: 42fr 58fr; gap: 3vw; align-items: center; padding: 4vh 5vw 11vh;
+  }
+  .left { min-width: 0; text-align: center; }
+  #basket { width: min(100%, 62vh); margin: 0 auto; }
+  .count { font-size: 2.6vw; margin-top: 1vh; }
+  .count b { color: var(--gold); font-size: 5vw; font-variant-numeric: tabular-nums; }
+  .right { min-width: 0; }
+  h1 { font-family: "Gowun Batang", "Nanum Myeongjo", serif; font-size: 4.6vw; line-height: 1.2; margin: 0 0 5vh; color: var(--gold); }
+  #line {
+    min-height: 36vh; font-size: 3.7vw; line-height: 1.45; font-weight: 700; overflow-wrap: anywhere;
+    opacity: 0; transition: opacity .8s ease;
+  }
+  #line.on { opacity: 1; }
+  footer {
+    position: fixed; left: 5vw; right: 5vw; bottom: 3vh; display: flex; justify-content: center;
+    color: var(--dim); font-size: 1.45vw; text-align: center;
+  }
+  #qrbox { position: fixed; right: 2.5vw; top: 3.5vh; width: 10vw; text-align: center; font-size: 1.15vw; color: var(--dim); }
+  #qrbox img { width: 100%; display: block; border-radius: 8px; background: #fff; margin-bottom: 4px; }
+  #fs { position: fixed; left: 16px; top: 16px; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.4); color: #fff; font: inherit; cursor: pointer; }
+  body.quiet #fs { opacity: 0; pointer-events: none; }
+  body.quiet { cursor: none; }
+  @media (prefers-reduced-motion: reduce) { #line { transition: none; } }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div id="basket"></div>
+    <div class="count" id="count"></div>
+  </div>
+  <div class="right">
+    <h1>감사의 광주리</h1>
+    <div id="line" role="status" aria-live="polite"></div>
+  </div>
+  <footer>네 하나님 여호와께서 너와 네 집에 주신 모든 복으로 말미암아 너는 레위인과 너희 가운데에 거류하는 객과 함께 즐거워할지니라 (신명기 26장 11절)</footer>
+  <div id="qrbox"><img id="qr" alt="감사 글 쓰기 QR 코드"><div>감사 한 줄 쓰기</div></div>
+  <button id="fs" type="button">전체 화면</button>
+
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/qrcode.min.js"></script>
+<script src="assets/harvest.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var ROOM = 'harvest', SHOW_MS = 7000;
+  function rpc(fn, args) {
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+      method: 'POST', cache: 'no-store',
+      headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args || {})
+    }).then(function (r) { if (!r.ok) throw new Error('rpc'); return r.json(); });
+  }
+  try {
+    var q = qrcode(0, 'M');
+    q.addData(location.origin + location.pathname.replace(/harvest-sky\.html$/, 'harvest.html'));
+    q.make(); $('qr').src = q.createDataURL(8, 2);
+  } catch (e) { $('qrbox').hidden = true; }
+
+  var quietT = 0;
+  function wake() { document.body.classList.remove('quiet'); clearTimeout(quietT); quietT = setTimeout(function () { document.body.classList.add('quiet'); }, 3000); }
+  addEventListener('mousemove', wake); addEventListener('keydown', wake); wake();
+  $('fs').onclick = function () { var el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen().catch(function () {}); };
+
+  // 승인된 글: 새로 승인된 글을 먼저 보여 주고, 그다음 처음부터 돌아가며 보여 준다.
+  var items = [], fresh = [], lastSeq = 0, cursor = 0;
+  function pollMessages() {
+    return rpc('star_sky', { p_room: ROOM, p_after: lastSeq }).then(function (d) {
+      if (!d) return;
+      var hidden = d.hidden || [];
+      (d.messages || []).forEach(function (m) {
+        lastSeq = Math.max(lastSeq, m.seq);
+        items.push(m); fresh.push(m);
+      });
+      var keep = function (m) { return hidden.indexOf(m.id) === -1; };
+      items = items.filter(keep); fresh = fresh.filter(keep);
+    }).catch(function () {});
+  }
+  var drawn = -1;
+  function pollCount() {
+    return rpc('harvest_status').then(function (d) {
+      if (!d || d.count === drawn) return;
+      drawn = d.count;
+      window.drawHarvestBasket($('basket'), drawn);
+      $('count').innerHTML = '함께 담은 열매 <b>' + drawn.toLocaleString('ko-KR') + '</b>개';
+    }).catch(function () {});
+  }
+  function setLine(text) {
+    var el = $('line');
+    el.classList.remove('on');
+    setTimeout(function () {
+      el.textContent = text;
+      el.classList.add('on');
+    }, 800);
+  }
+  function next() {
+    var m = fresh.shift();
+    if (!m && items.length) { cursor = cursor % items.length; m = items[cursor++]; }
+    setLine(m ? m.body : '오늘 고마웠던 일을 한 줄 담아 주세요');
+  }
+
+  window.drawHarvestBasket($('basket'), 0);
+  pollCount();
+  pollMessages().then(next);
+  setInterval(pollMessages, 5000);
+  setInterval(pollCount, 10000);
+  setInterval(next, SHOW_MS);
+})();
+</script>
+</body>
+</html>

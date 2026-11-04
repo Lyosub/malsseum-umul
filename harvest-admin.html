@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark">
+<title>감사의 광주리 관리</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  [hidden] { display: none !important; }
+  :root { --bg: #1d1a12; --card: #2a2519; --ink: #f6efdd; --dim: #c4b99d; --gold: #e9b949; --line: rgba(246,239,221,.2); --bad: #ff9b8f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Pretendard", "Malgun Gothic", sans-serif; font-size: 16px; line-height: 1.55; padding: 16px; }
+  main { max-width: 640px; margin: 0 auto; display: grid; gap: 14px; }
+  main > * { min-width: 0; }
+  h1 { font-size: 22px; margin: 0; } h2 { font-size: 17px; margin: 0; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+  .muted { color: var(--dim); font-size: 14px; }
+  input { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  button { font: inherit; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--gold); border-color: var(--gold); color: #2a210c; font-weight: 800; }
+  button.danger { color: var(--bad); border-color: var(--bad); }
+  .list { display: grid; gap: 8px; }
+  .item { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 8px; }
+  .b { overflow-wrap: anywhere; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  details summary { cursor: pointer; color: var(--dim); }
+  a { color: var(--gold); }
+</style>
+</head>
+<body>
+<main>
+  <section class="panel" id="login">
+    <h1>감사의 광주리 관리</h1>
+    <p class="muted" style="margin:0">관리 코드를 넣어 주세요. 이 기기에 기억해 둡니다.</p>
+    <input id="code" type="text" inputmode="numeric" maxlength="6" placeholder="숫자 6자리" autocomplete="off" aria-label="관리 코드">
+    <button class="primary" id="enter" type="button">들어가기</button>
+    <div class="muted" id="loginMsg" role="status"></div>
+  </section>
+
+  <div id="app" hidden style="display:grid;gap:14px">
+    <div class="row" style="justify-content:space-between">
+      <h1>감사의 광주리 관리</h1>
+      <a href="harvest-sky.html" target="_blank" rel="noopener">예배 화면 열기</a>
+    </div>
+    <div class="muted" id="errMsg" role="status"></div>
+    <section class="panel">
+      <h2>승인 대기 <span id="pendingCount">0</span></h2>
+      <div class="list" id="pendingList"></div>
+    </section>
+    <section class="panel">
+      <h2>화면에 나오는 글 <span id="approvedCount">0</span></h2>
+      <div class="list" id="approvedList"></div>
+    </section>
+    <section class="panel">
+      <details><summary>숨긴 글·걸러진 글 <span id="otherCount">0</span></summary>
+        <div class="list" id="otherList" style="margin-top:8px"></div>
+      </details>
+    </section>
+  </div>
+</main>
+
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script>
+(function () {
+  var ROOM = 'harvest', KEY = 'harvest_admin_code', code = '';
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var $ = function (id) { return document.getElementById(id); };
+  try { code = localStorage.getItem(KEY) || ''; } catch (e) {}
+
+  function call(action, args) {
+    return sb.rpc('star_admin', { p_room: ROOM, p_code: code, p_action: action, p_args: args || {} })
+      .then(function (r) { if (r.error) throw r.error; return r.data || {}; });
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function when(at) { var d = new Date(at); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  function item(m, buttons, tag) {
+    return '<div class="item"><div class="b">' + esc(m.body) + '</div><div class="muted">' + when(m.at) + (tag ? ' · ' + tag : '') + '</div><div class="row">' + buttons + '</div></div>';
+  }
+  function btn(action, id, label, cls) { return '<button type="button" class="' + (cls || '') + '" data-a="' + action + '" data-id="' + id + '">' + label + '</button>'; }
+  function render(d) {
+    var ms = d.messages || [];
+    var pend = ms.filter(function (m) { return m.status === 'pending'; }).reverse();
+    var appr = ms.filter(function (m) { return m.status === 'approved'; });
+    var other = ms.filter(function (m) { return m.status === 'hidden' || m.status === 'blocked'; });
+    $('pendingCount').textContent = pend.length; $('approvedCount').textContent = appr.length; $('otherCount').textContent = other.length;
+    $('pendingList').innerHTML = pend.map(function (m) { return item(m, btn('approve', m.id, '승인', 'primary') + btn('hide', m.id, '숨기기')); }).join('') || '<div class="muted">승인할 글이 없습니다.</div>';
+    $('approvedList').innerHTML = appr.map(function (m) { return item(m, btn('hide', m.id, '숨기기', 'danger')); }).join('') || '<div class="muted">아직 없습니다.</div>';
+    $('otherList').innerHTML = other.map(function (m) { return item(m, btn('approve', m.id, '승인'), m.status === 'blocked' ? '금칙어·전화번호로 걸러짐' : '숨김'); }).join('') || '<div class="muted">없습니다.</div>';
+  }
+  var timer = 0;
+  function start(d) { $('login').hidden = true; $('app').hidden = false; render(d); clearTimeout(timer); timer = setTimeout(refresh, 4000); }
+  function refresh() {
+    call('list').then(function (d) { if (d.ok) { $('errMsg').textContent = ''; render(d); } })
+      .catch(function () { $('errMsg').textContent = '연결이 끊겼습니다. 다시 연결하는 중입니다.'; })
+      .then(function () { clearTimeout(timer); timer = setTimeout(refresh, 4000); });
+  }
+  $('enter').onclick = function () {
+    code = $('code').value.replace(/\D/g, '');
+    call('list').then(function (d) {
+      if (!d.ok) { $('loginMsg').textContent = d.error; return; }
+      try { localStorage.setItem(KEY, code); } catch (e) {}
+      start(d);
+    }).catch(function () { $('loginMsg').textContent = '연결하지 못했습니다. 잠시 뒤 다시 눌러 주세요.'; });
+  };
+  if (code) call('list').then(function (d) { if (d.ok) start(d); }).catch(function () {});
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-a]'); if (!b) return;
+    b.disabled = true;
+    call(b.dataset.a, { id: +b.dataset.id }).then(function () { return call('list'); }).then(function (d) { if (d.ok) render(d); })
+      .catch(function () { b.disabled = false; $('errMsg').textContent = '처리하지 못했습니다. 다시 눌러 주세요.'; });
+  });
+})();
+</script>
+</body>
+</html>
