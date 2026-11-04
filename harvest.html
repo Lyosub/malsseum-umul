@@ -31,32 +31,36 @@
   .count b { color: var(--gold); font-size: 34px; font-variant-numeric: tabular-nums; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 12px; }
   .card h2 { font-size: 17px; margin: 0; }
-  textarea, .teamRow input {
+  textarea {
     width: 100%; font: inherit; color: var(--ink); background: var(--bg);
     border: 1px solid var(--line); border-radius: 10px; padding: 12px; outline: none;
   }
   textarea { min-height: 84px; resize: none; }
-  textarea:focus, .teamRow input:focus { border-color: var(--gold); }
+  textarea:focus { border-color: var(--gold); }
   .len { text-align: right; color: var(--dim); font-size: 12px; margin-top: 2px; }
   .btn {
     display: block; width: 100%; min-height: 50px; padding: 13px; border: 0; border-radius: 12px; cursor: pointer; text-align: center;
     background: var(--gold); color: #2a210c; font: inherit; font-weight: 800; text-decoration: none;
   }
   .btn:disabled { opacity: .55; cursor: default; }
-  .btn.small { width: auto; min-height: 48px; flex: none; padding: 0 18px; }
   .note { color: var(--dim); font-size: 13px; margin: 0; }
   .msg { min-height: 1.5em; margin: 0; font-size: 14.5px; text-align: center; }
   .msg.err { color: var(--err); }
-  .teamRow { display: flex; gap: 8px; }
-  .teamRow input { flex: 1; min-width: 0; }
-  .names { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+  .names { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
   .names:empty { display: none; }
   .names button {
     min-height: 46px; padding: 8px; font: inherit; font-weight: 700; color: var(--ink); cursor: pointer;
     background: transparent; border: 1px solid var(--line); border-radius: 10px;
   }
   .who { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .who b { display: block; }
+  .who b { display: block; min-width: 0; overflow-wrap: anywhere; }
+  .rows { display: grid; gap: 10px; }
+  .row { display: grid; gap: 4px; }
+  .rowHead { display: flex; justify-content: space-between; gap: 12px; font-size: 14.5px; }
+  .rowHead span { min-width: 0; overflow-wrap: anywhere; }
+  .rowHead b { flex: none; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .rowBar { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+  .rowBar i { display: block; height: 100%; background: var(--gold); border-radius: 4px; }
   .teamBasket { display: flex; align-items: center; gap: 14px; }
   .teamBasket .mini { width: 112px; flex: none; }
   .teamBasket .note { display: block; }
@@ -89,26 +93,21 @@
     <a class="btn" href="mypage.html?open=gratitude">감사노트 쓰기</a>
   </section>
 
-  <section class="card" id="teamWho" hidden>
+  <section class="card" id="mine" hidden>
     <div class="who">
-      <div><b id="whoName"></b><span class="note" id="whoDays"></span></div>
-      <button class="link" id="teamChange" type="button">이름 바꾸기</button>
+      <b id="mineName"></b>
+      <button class="link" id="mineChange" type="button">바꾸기</button>
     </div>
     <div class="teamBasket">
-      <div class="mini" id="teamBasket"></div>
-      <div><span class="note">우리 팀 광주리</span><b id="teamCount"></b></div>
+      <div class="mini" id="mineBasket"></div>
+      <div><span class="note">우리 광주리</span><b id="mineCount"></b></div>
     </div>
-    <p class="note">팀 점수는 11월 14일까지 한 사람당 하루 한 번(공백 빼고 5자 이상) 세요. 팀원 모두가 6일을 채우면 20점이에요.</p>
   </section>
 
-  <section class="card" id="teamEntry" hidden>
-    <h2>가을 원정대 팀 코드로 쓰기</h2>
-    <div class="teamRow">
-      <input id="teamCode" type="text" autocomplete="off" placeholder="팀 코드" aria-label="원정대 팀 코드">
-      <button class="btn small" id="teamFind" type="button">찾기</button>
-    </div>
-    <div class="names" id="teamNames"></div>
-    <p class="msg" id="teamMsg" role="status"></p>
+  <section class="card" id="pick" hidden>
+    <h2>어느 오이코스인가요?</h2>
+    <div class="names" id="pickNames"></div>
+    <button class="link" id="pickNone" type="button">오이코스가 없어요</button>
   </section>
 
   <form class="card" id="form" hidden>
@@ -122,9 +121,9 @@
     <p class="note" id="formNote"></p>
   </form>
 
-  <section class="card" id="guest" hidden>
-    <p class="note">원정대 팀이 아니어도 로그인하면 함께 담을 수 있어요.</p>
-    <a class="btn" href="login.html?next=/harvest.html">로그인하고 쓰기</a>
+  <section class="card" id="board" hidden>
+    <h2>오이코스별 열매</h2>
+    <div class="rows" id="boardRows"></div>
   </section>
 
   <section class="card">
@@ -142,114 +141,119 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var client = getClient();
-  var KEY = 'msu_harvest_team';
-  var count = 0, userId = null, status = null, team = null, typedCode = '';
+  var KEY = 'msu_harvest_group', DEVICE_KEY = 'msu_harvest_device';
+  // chosen: 아직 안 고름 null / 고름 { id: 오이코스 번호 또는 null(오이코스 없음) }
+  var status = null, userId = null, chosen = null;
 
-  function readJson(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
-  function saveTeam() { try { if (team) localStorage.setItem(KEY, JSON.stringify({ code: team.code, member: team.member })); else localStorage.removeItem(KEY); } catch (e) {} }
+  function readChosen() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
+  function saveChosen() { try { if (chosen) localStorage.setItem(KEY, JSON.stringify(chosen)); else localStorage.removeItem(KEY); } catch (e) {} }
+  var memoryDevice = null;
+  function deviceId() {
+    var d = null;
+    try { d = localStorage.getItem(DEVICE_KEY); } catch (e) {}
+    if (d) return d;
+    d = memoryDevice || (Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
+    memoryDevice = d;
+    try { localStorage.setItem(DEVICE_KEY, d); } catch (e) {}
+    return d;
+  }
+  function groupById(id) {
+    return (status.groups || []).filter(function (g) { return g.id === id; })[0] || null;
+  }
+  function mineInfo() {
+    if (!chosen) return null;
+    if (chosen.id === null) return { name: window.HARVEST_OTHER_NAME, n: status.other };
+    return groupById(chosen.id);
+  }
 
-  function showCount() {
-    window.drawHarvestBasket($('basket'), count);
-    $('countLine').innerHTML = count > 0 ? '함께 담은 열매 <b>' + count.toLocaleString('ko-KR') + '</b>개' : '아직 비어 있어요';
+  function renderBoard() {
+    var rows = (status.groups || []).map(function (g) { return { name: g.name, n: g.n }; });
+    if (status.other > 0) rows.push({ name: window.HARVEST_OTHER_NAME, n: status.other });
+    var max = rows.reduce(function (m, r) { return Math.max(m, r.n); }, 0);
+    var box = $('boardRows');
+    box.innerHTML = '';
+    rows.forEach(function (r) {
+      var row = document.createElement('div'); row.className = 'row';
+      var head = document.createElement('div'); head.className = 'rowHead';
+      var name = document.createElement('span'); name.textContent = r.name;
+      var n = document.createElement('b'); n.textContent = r.n;
+      head.appendChild(name); head.appendChild(n);
+      var bar = document.createElement('div'); bar.className = 'rowBar';
+      var fill = document.createElement('i'); fill.style.width = (max ? Math.round(r.n / max * 100) : 0) + '%';
+      bar.appendChild(fill);
+      row.appendChild(head); row.appendChild(bar);
+      box.appendChild(row);
+    });
+  }
+  function renderPick() {
+    var box = $('pickNames');
+    box.innerHTML = '';
+    (status.groups || []).forEach(function (g) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = g.name; b.dataset.id = g.id;
+      box.appendChild(b);
+    });
   }
   function render() {
     if (!status) return;
     var now = Date.now();
     var before = now < new Date(status.starts_at).getTime();
     var after = now >= new Date(status.ends_at).getTime();
+    var count = status.count;
+    window.drawHarvestBasket($('basket'), count);
+    $('countLine').innerHTML = count > 0 ? '함께 담은 열매 <b>' + count.toLocaleString('ko-KR') + '</b>개' : '아직 비어 있어요';
+
+    // 로그인한 오이코스 멤버는 고르지 않는다. 고른 오이코스가 없어졌으면 다시 고른다.
+    var locked = status.my_group != null && !!groupById(status.my_group);
+    if (locked) { chosen = { id: status.my_group }; saveChosen(); }
+    else if (chosen && chosen.id !== null && !groupById(chosen.id)) { chosen = null; saveChosen(); }
+    var mine = mineInfo();
+
     $('before').hidden = !before;
     $('after').hidden = !after;
-    $('teamWho').hidden = after || !team;
-    $('teamEntry').hidden = after || !!team;
-    $('form').hidden = before || after || !(team || userId);
-    $('guest').hidden = before || after || !!team || !!userId;
-    if (team) {
-      $('whoName').textContent = team.emoji + ' ' + team.teamName + ' ' + team.name;
-      $('whoDays').textContent = '내 감사 ' + team.days + ' / ' + team.scoreDays + '일';
-      window.drawHarvestBasket($('teamBasket'), team.teamN);
-      $('teamCount').textContent = team.teamN + ' / ' + team.teamTotal;
+    $('pick').hidden = before || after || !!mine;
+    $('mine').hidden = before || !mine;
+    $('form').hidden = before || after || !mine;
+    $('board').hidden = before;
+    $('mineChange').hidden = locked || after;
+    if (mine) {
+      $('mineName').textContent = mine.name;
+      window.drawHarvestBasket($('mineBasket'), mine.n);
+      $('mineCount').textContent = ' ' + mine.n + '개';
     }
+    if ($('pickNames').children.length === 0) renderPick();
+    renderBoard();
     $('formNote').textContent = (userId
       ? '쓴 글은 감사노트에 저장되고 실시간 나눔에도 보여요.'
-      : '쓴 글은 광주리에 담기고 실시간 나눔에는 나오지 않아요.') + ' 담당자가 확인한 글은 11월 15일 예배 화면에 이름 없이 나올 수 있어요.';
+      : '이름 없이 담겨요.') + ' 담당자가 확인한 글은 11월 15일 예배 화면에 이름 없이 나올 수 있어요.';
   }
   function loadStatus() {
     return client.rpc('harvest_status').then(function (r) {
       if (r.error || !r.data) throw r.error || new Error('no data');
-      status = r.data; count = r.data.count; showCount(); render();
+      status = r.data; render();
     }).catch(function () { $('countLine').textContent = '숫자를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'; });
   }
-  function loadTeam(code, member) {
-    return client.rpc('harvest_team_me', { p_code: code, p_member: member }).then(function (r) {
-      if (r.error || !r.data) return false;
-      if (!r.data.ok) return false;
-      team = { code: code, member: member, teamName: r.data.team, emoji: r.data.emoji, name: r.data.name, days: r.data.days, scoreDays: r.data.score_days, teamN: r.data.team_n, teamTotal: r.data.team_total };
-      saveTeam();
-      return true;
-    }).catch(function () { return false; });
-  }
-  function teamMsg(text, bad) { $('teamMsg').className = bad ? 'msg err' : 'msg'; $('teamMsg').textContent = text; }
 
-  // 원정대에서 들어온 휴대폰이면 코드와 이름을 다시 묻지 않는다.
-  var saved = readJson(KEY);
-  var exp = readJson('msu_expedition_autumn2026');
-  if (!saved && exp && exp.code && exp.member && !exp.viewer) saved = { code: exp.code, member: exp.member };
-  if (exp && exp.code) $('teamCode').value = exp.code;
-
+  chosen = readChosen();
   window.drawHarvestBasket($('basket'), 0);
-  var ready = saved ? loadTeam(saved.code, saved.member) : Promise.resolve(false);
-  ready.then(function () { return getSession().catch(function () { return null; }); }).then(function (s) {
+  getSession().catch(function () { return null; }).then(function (s) {
     userId = s && s.user ? s.user.id : null;
     return loadStatus();
   });
 
-  $('teamFind').addEventListener('click', function () {
-    typedCode = $('teamCode').value.trim();
-    $('teamNames').innerHTML = '';
-    if (!typedCode) { teamMsg('팀 코드를 적어 주세요.', true); return; }
-    teamMsg('찾는 중…');
-    client.rpc('picnic_join', { p_code: typedCode }).then(function (r) {
-      if (r.error || !r.data) throw new Error('join');
-      if (!r.data.ok) { teamMsg(r.data.error, true); return; }
-      var ms = r.data.members || [];
-      if (!ms.length) { teamMsg('원정대 날 이름을 등록하면 여기에 나와요.', true); return; }
-      teamMsg('내 이름을 눌러 주세요.');
-      ms.forEach(function (m) {
-        var b = document.createElement('button');
-        b.type = 'button'; b.textContent = m.name; b.dataset.id = m.id;
-        $('teamNames').appendChild(b);
-      });
-    }).catch(function () { teamMsg('연결하지 못했어요. 잠시 뒤 다시 눌러 주세요.', true); });
-  });
-  $('teamNames').addEventListener('click', function (e) {
+  $('pickNames').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    teamMsg('들어가는 중…');
-    loadTeam(typedCode, +b.dataset.id).then(function (ok) {
-      if (!ok) { teamMsg('들어가지 못했어요. 잠시 뒤 다시 눌러 주세요.', true); return; }
-      teamMsg(''); $('teamNames').innerHTML = '';
-      render();
-    });
+    chosen = { id: +b.dataset.id }; saveChosen(); render();
   });
-  $('teamChange').addEventListener('click', function () {
-    team = null; saveTeam(); render();
+  $('pickNone').addEventListener('click', function () {
+    chosen = { id: null }; saveChosen(); render();
+  });
+  $('mineChange').addEventListener('click', function () {
+    chosen = null; saveChosen(); render();
   });
 
   $('body').addEventListener('input', function () { $('len').textContent = this.value.length; });
 
-  // 팀으로 들어왔으면 팀 글로, 아니면 로그인한 계정의 감사노트로 담는다.
-  function writeTeam(text) {
-    return client.rpc('harvest_write', { p_code: team.code, p_member: team.member, p_body: text, p_share: true }).then(function (r) {
-      if (r.error || !r.data) throw new Error('write');
-      return r.data;
-    });
-  }
-  function writeNote(text) {
-    return client.from('notes').insert({ user_id: userId, type: 'gratitude', content: text, image_urls: [] }).select('id').single().then(function (r) {
-      if (r.error) throw r.error;
-      // 글은 이미 담겼으니 승인 대기로 못 보내도 쓴 사람에게는 담겼다고만 알린다.
-      return client.rpc('harvest_share', { p_note_id: r.data.id }).then(function () { return { ok: true }; }, function () { return { ok: true }; });
-    });
-  }
   $('form').addEventListener('submit', function (e) {
     e.preventDefault();
     var text = $('body').value.trim(), msg = $('msg');
@@ -257,11 +261,12 @@
     if (!text) { msg.className = 'msg err'; msg.textContent = '감사한 일을 한 줄 적어 주세요.'; return; }
     $('send').disabled = true;
     msg.textContent = '담는 중…';
-    (team ? writeTeam(text) : writeNote(text)).then(function (res) {
-      if (!res.ok) { msg.className = 'msg err'; msg.textContent = res.error; return; }
+    client.rpc('harvest_write', { p_group: chosen.id, p_body: text, p_device: deviceId() }).then(function (r) {
+      if (r.error || !r.data) throw new Error('write');
+      if (!r.data.ok) { msg.className = 'msg err'; msg.textContent = r.data.error; return; }
       $('body').value = ''; $('len').textContent = '0';
       msg.textContent = '열매 하나를 담았어요.';
-      return (team ? loadTeam(team.code, team.member) : Promise.resolve()).then(loadStatus);
+      return loadStatus();
     }).catch(function () { msg.className = 'msg err'; msg.textContent = '저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.'; })
       .then(function () { $('send').disabled = false; });
   });

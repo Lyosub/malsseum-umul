@@ -39,9 +39,6 @@
     return out;
   }
 
-  function readJson(key) {
-    try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; }
-  }
   function rpc(fn, args) {
     return fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, {
       method: "POST",
@@ -50,8 +47,11 @@
     }).then(function (r) { return r.ok ? r.json() : null; });
   }
 
-  // 놀이터 카드와 원정대 화면 줄의 「열매 모으러 가기」. 쓸 수 있는 기간에만 보이고(11/8은 안내용으로 미리),
-  // 팀으로 들어온 휴대폰이면 우리 팀 수를 함께 보여 준다. 카드의 광주리 그림은 팀 수, 팀이 없으면 전체 열매 수로 채운다.
+  // 오이코스가 없는 사람을 묶어 부르는 이름. 쓰기 화면과 놀이터 카드가 함께 쓴다.
+  window.HARVEST_OTHER_NAME = "함께하는 분들";
+
+  // 놀이터 카드의 「열매 모으러 가기」. 쓸 수 있는 기간에만 보이고(11/8은 안내용으로 미리),
+  // 쓰기 화면에서 오이코스를 고른 휴대폰이면 그 오이코스 수로, 아니면 전체 열매 수로 광주리를 채운다.
   window.fillHarvestLink = function (el) {
     if (!el || typeof SUPABASE_URL === "undefined") return;
     rpc("harvest_status").then(function (st) {
@@ -61,15 +61,15 @@
       var label = el.querySelector("[data-label]");
       var basket = el.querySelector("[data-basket]");
       el.style.display = el.getAttribute("data-show") || "flex";
-      if (basket) window.drawHarvestBasket(basket, st.count);
-      var exp = readJson("msu_expedition_autumn2026");
-      var team = readJson("msu_harvest_team") || (exp && exp.code && exp.member && !exp.viewer ? exp : null);
-      if (!team) return;
-      return rpc("harvest_team_me", { p_code: team.code, p_member: team.member }).then(function (d) {
-        if (!d || !d.ok) return;
-        label.textContent = (basket ? "" : "🧺 ") + "우리 팀 광주리 " + d.team_n + " / " + d.team_total;
-        if (basket) window.drawHarvestBasket(basket, d.team_n);
-      });
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem("msu_harvest_group") || "null"); } catch (e) {}
+      var name = null, n = st.count;
+      if (saved && saved.id === null) { name = window.HARVEST_OTHER_NAME; n = st.other; }
+      else if (saved) {
+        (st.groups || []).forEach(function (g) { if (g.id === saved.id) { name = g.name; n = g.n; } });
+      }
+      if (name) label.textContent = name + " 광주리 " + n + "개";
+      if (basket) window.drawHarvestBasket(basket, n);
     }).catch(function () {});
   };
 
