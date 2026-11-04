@@ -340,8 +340,8 @@ var VERSE_CARD_BG_COUNT = 79;
 var VERSE_CARD_BG_EPOCH = Date.UTC(2026, 10, 4);
 var VERSE_CARD_BG_EPOCH_INDEX = 71;
 
-// 너무 어두워 검게 보이는 사진은 순환에서 뺀다(사진 위쪽 평균 밝기 20 미만, 2026-11-04).
-var VERSE_CARD_BG_SKIP = [3, 4, 19, 20, 22, 29, 31, 34, 42, 44, 45, 49, 52];
+// 너무 어두워 검게 보이는 사진은 순환에서 뺀다(사진 위쪽 평균 밝기 20 미만 13장, 눈으로 봐서 검게 보이는 6장, 2026-11-04).
+var VERSE_CARD_BG_SKIP = [3, 4, 7, 15, 19, 20, 22, 25, 29, 31, 34, 35, 42, 44, 45, 47, 49, 50, 52];
 
 function getVerseCardBgIndex() {
   // 홈·말씀 탭 모두 같은 로직을 써서 두 화면의 카드 배경이 같은 날엔 동일하게 보인다.
