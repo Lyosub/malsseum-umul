@@ -39,6 +39,9 @@
     <h2>🍁 가을 원정대</h2>
     <p>팀 코드로 들어와서<br>우리 팀 미션을 함께 해요!</p>
     <a href="expedition.html" class="pill-lime" style="background:#f2b544;color:#3a1d07;">원정 떠나기 ›</a>
+    <a id="harvestLink" href="harvest.html" style="display:none;position:relative;z-index:1;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;min-height:48px;margin-top:14px;padding:10px 14px;border-radius:12px;background:rgba(40,15,5,.86);color:#fff;font-size:14px;font-weight:700;text-decoration:none;">
+      <span data-label>🧺 감사의 광주리</span><b style="color:#f2b544;white-space:nowrap;">열매 모으러 가기 ›</b>
+    </a>
   </div>
 
   <!-- In Odyssey 성경 모험 게임 — 2026-10-04 19:30부터 모두에게 공개 -->
@@ -146,11 +149,13 @@
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/auth.js"></script>
 <script src="assets/appshell.js"></script>
+<script src="assets/harvest.js"></script>
 <script>
   initHeaderAuthState();
   (function () {
     var card = document.getElementById("expeditionCard");
     if (!card) return;
+    if (window.fillHarvestLink) window.fillHarvestLink(document.getElementById("harvestLink"));
     var now = Date.now(), joined = false;
     try { joined = !!(JSON.parse(localStorage.getItem("msu_expedition_autumn2026") || "{}") || {}).code; } catch (e) {}
     if (joined || (now >= new Date("2026-10-25T01:00:00+09:00").getTime() && now < new Date("2026-11-16T00:00:00+09:00").getTime())) { card.style.display = "block"; return; }

@@ -255,6 +255,10 @@
       </div>
     </div>
 
+    <a id="harvestLink" href="harvest.html" style="display:none;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;min-height:50px;margin-top:14px;padding:10px 14px;border-radius:14px;background:#173b2c;color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;">
+      <span data-label>🧺 감사의 광주리</span><b style="color:#f2b544;white-space:nowrap;">열매 모으러 가기 ›</b>
+    </a>
+
     <section class="card closed-note" id="closedCard" hidden>
       <h2>🏁 현장 미션이 끝났어요!</h2>
       <p style="margin:0;">🎬 <b>릴스(히든 3)</b>는 <b id="reelUntil">11월 9일(월)</b>까지 전도사님께 카톡으로 보내고 「보냈어요」를 눌러 주세요.<br>🏆 릴스까지 합친 <b>최종 결과와 시상은 11월 15일(주일)</b>에 발표해요.</p>
@@ -355,6 +359,7 @@
 
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/harvest.js"></script>
 <script>
 (function () {
   "use strict";
@@ -501,6 +506,7 @@
     setTab(tab);
     refresh();
     startPoll();
+    if (window.fillHarvestLink) window.fillHarvestLink($("harvestLink"));
   }
 
   // ---------- 탭 ----------
