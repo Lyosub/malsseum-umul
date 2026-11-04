@@ -57,6 +57,10 @@
   }
   .who { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .who b { display: block; }
+  .teamBasket { display: flex; align-items: center; gap: 14px; }
+  .teamBasket .mini { width: 112px; flex: none; }
+  .teamBasket .note { display: block; }
+  .teamBasket b { color: var(--gold); font-size: 24px; font-variant-numeric: tabular-nums; }
   .link { flex: none; min-height: 44px; padding: 0 4px; font: inherit; font-size: 14px; color: var(--gold); background: none; border: 0; text-decoration: underline; cursor: pointer; }
   blockquote { margin: 0; padding: 0; font-size: 15px; }
   cite { display: block; margin-top: 6px; color: var(--gold); font-size: 13px; font-style: normal; font-weight: 700; }
@@ -90,7 +94,11 @@
       <div><b id="whoName"></b><span class="note" id="whoDays"></span></div>
       <button class="link" id="teamChange" type="button">이름 바꾸기</button>
     </div>
-    <p class="note">팀 점수는 11월 14일까지 하루 한 번(공백 빼고 5자 이상) 세요. 팀원 모두가 6일을 채우면 20점이에요.</p>
+    <div class="teamBasket">
+      <div class="mini" id="teamBasket"></div>
+      <div><span class="note">우리 팀 광주리</span><b id="teamCount"></b></div>
+    </div>
+    <p class="note">팀 점수는 11월 14일까지 한 사람당 하루 한 번(공백 빼고 5자 이상) 세요. 팀원 모두가 6일을 채우면 20점이에요.</p>
   </section>
 
   <section class="card" id="teamEntry" hidden>
@@ -158,6 +166,8 @@
     if (team) {
       $('whoName').textContent = team.emoji + ' ' + team.teamName + ' ' + team.name;
       $('whoDays').textContent = '내 감사 ' + team.days + ' / ' + team.scoreDays + '일';
+      window.drawHarvestBasket($('teamBasket'), team.teamN);
+      $('teamCount').textContent = team.teamN + ' / ' + team.teamTotal;
     }
     $('formNote').textContent = (userId
       ? '쓴 글은 감사노트에 저장되고 실시간 나눔에도 보여요.'
@@ -173,7 +183,7 @@
     return client.rpc('harvest_team_me', { p_code: code, p_member: member }).then(function (r) {
       if (r.error || !r.data) return false;
       if (!r.data.ok) return false;
-      team = { code: code, member: member, teamName: r.data.team, emoji: r.data.emoji, name: r.data.name, days: r.data.days, scoreDays: r.data.score_days };
+      team = { code: code, member: member, teamName: r.data.team, emoji: r.data.emoji, name: r.data.name, days: r.data.days, scoreDays: r.data.score_days, teamN: r.data.team_n, teamTotal: r.data.team_total };
       saveTeam();
       return true;
     }).catch(function () { return false; });
