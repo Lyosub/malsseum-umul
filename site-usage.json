@@ -23,8 +23,8 @@
       "count": 4
     },
     "note_gratitude": {
-      "users": 1,
-      "count": 1
+      "users": 2,
+      "count": 2
     },
     "note_greeting": {
       "users": 2,
@@ -123,6 +123,6 @@
       "attendance_count": 10
     }
   ],
-  "generated_kst": "2026-11-04 21:40",
+  "generated_kst": "2026-11-04 22:15",
   "ok": true
 }
