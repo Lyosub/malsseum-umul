@@ -50,8 +50,8 @@
     }).then(function (r) { return r.ok ? r.json() : null; });
   }
 
-  // 놀이터·원정대 화면의 「열매 모으러 가기」 줄. 쓸 수 있는 기간에만 보이고(11/8은 안내용으로 미리),
-  // 팀으로 들어온 휴대폰이면 우리 팀 수를 함께 보여 준다.
+  // 놀이터 카드와 원정대 화면 줄의 「열매 모으러 가기」. 쓸 수 있는 기간에만 보이고(11/8은 안내용으로 미리),
+  // 팀으로 들어온 휴대폰이면 우리 팀 수를 함께 보여 준다. 카드의 광주리 그림은 팀 수, 팀이 없으면 전체 열매 수로 채운다.
   window.fillHarvestLink = function (el) {
     if (!el || typeof SUPABASE_URL === "undefined") return;
     rpc("harvest_status").then(function (st) {
@@ -59,13 +59,16 @@
       var now = Date.now();
       if (!st.open && !(now >= new Date("2026-11-08T00:00:00+09:00").getTime() && now < new Date(st.ends_at).getTime())) return;
       var label = el.querySelector("[data-label]");
-      label.textContent = "🧺 감사의 광주리";
-      el.style.display = "flex";
+      var basket = el.querySelector("[data-basket]");
+      el.style.display = el.getAttribute("data-show") || "flex";
+      if (basket) window.drawHarvestBasket(basket, st.count);
       var exp = readJson("msu_expedition_autumn2026");
       var team = readJson("msu_harvest_team") || (exp && exp.code && exp.member && !exp.viewer ? exp : null);
       if (!team) return;
       return rpc("harvest_team_me", { p_code: team.code, p_member: team.member }).then(function (d) {
-        if (d && d.ok) label.textContent = "🧺 우리 팀 광주리 " + d.team_n + " / " + d.team_total;
+        if (!d || !d.ok) return;
+        label.textContent = (basket ? "" : "🧺 ") + "우리 팀 광주리 " + d.team_n + " / " + d.team_total;
+        if (basket) window.drawHarvestBasket(basket, d.team_n);
       });
     }).catch(function () {});
   };
