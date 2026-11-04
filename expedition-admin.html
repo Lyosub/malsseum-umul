@@ -348,9 +348,9 @@
       var P = t.parts || {}, rows = [
         ["🦁 도감 동물", "animal", 10, 10], ["📷 도감 사진", "animal_photo", 10, 20], ["📖 도감 말씀", "verse", 10, 20],
         ["🏞️ 숨은 풍경", "place", 8, 40], ["🧩 히든 1 말씀 조각", "hidden1", 1, 15], ["🍁 히든 2 단풍잎", "hidden2", 1, 5], ["🎬 히든 3 릴스", "hidden3", 1, 10]];
-      // 감사의 광주리: 개수 칸은 인정 횟수 / (팀원 수 × 6일), 이은 사람 수를 함께 보여 준다
-      var hv = P.harvest || { n: 0, pts: 0, members: 0, days: 6, max: 20, linked: 0 };
-      rows.push(["🧺 감사의 광주리 (이은 사람 " + hv.linked + "/" + hv.members + ")", "harvest", hv.members * hv.days, hv.max]);
+      // 감사의 광주리: 개수 칸은 인정 횟수 / (팀원 수 × 6일)
+      var hv = P.harvest || { n: 0, pts: 0, members: 0, days: 6, max: 20 };
+      rows.push(["🧺 감사의 광주리", "harvest", hv.members * hv.days, hv.max]);
       var h = rows.map(function (r) {
         var x = P[r[1]] || { n: 0, pts: 0 };
         return '<tr' + (x.pts ? "" : ' style="opacity:.45"') + '><td>' + r[0] + '</td><td style="text-align:right;">' + x.n + " / " + r[2] + '</td><td style="text-align:right;font-weight:800;">' + x.pts + '<small style="opacity:.6"> / ' + r[3] + '</small></td></tr>';

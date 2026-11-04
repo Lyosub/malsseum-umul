@@ -31,11 +31,12 @@
   .count b { color: var(--gold); font-size: 34px; font-variant-numeric: tabular-nums; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 12px; }
   .card h2 { font-size: 17px; margin: 0; }
-  textarea {
-    width: 100%; min-height: 84px; resize: none; font: inherit; color: var(--ink); background: var(--bg);
+  textarea, .teamRow input {
+    width: 100%; font: inherit; color: var(--ink); background: var(--bg);
     border: 1px solid var(--line); border-radius: 10px; padding: 12px; outline: none;
   }
-  textarea:focus { border-color: var(--gold); }
+  textarea { min-height: 84px; resize: none; }
+  textarea:focus, .teamRow input:focus { border-color: var(--gold); }
   .len { text-align: right; color: var(--dim); font-size: 12px; margin-top: 2px; }
   .share { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; cursor: pointer; }
   .share input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--gold); }
@@ -44,27 +45,24 @@
     background: var(--gold); color: #2a210c; font: inherit; font-weight: 800; text-decoration: none;
   }
   .btn:disabled { opacity: .55; cursor: default; }
+  .btn.small { width: auto; min-height: 48px; flex: none; padding: 0 18px; }
   .note { color: var(--dim); font-size: 13px; margin: 0; }
   .msg { min-height: 1.5em; margin: 0; font-size: 14.5px; text-align: center; }
   .msg.err { color: var(--err); }
-  .steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14.5px; }
-  blockquote { margin: 0; padding: 0; font-size: 15px; }
-  cite { display: block; margin-top: 6px; color: var(--gold); font-size: 13px; font-style: normal; font-weight: 700; }
-  a { color: var(--gold); }
-  .card h2 .note { font-weight: 500; }
   .teamRow { display: flex; gap: 8px; }
-  .teamRow input {
-    flex: 1; min-width: 0; font: inherit; color: var(--ink); background: var(--bg);
-    border: 1px solid var(--line); border-radius: 10px; padding: 12px; outline: none;
-  }
-  .teamRow input:focus { border-color: var(--gold); }
-  .btn.small { width: auto; min-height: 48px; flex: none; padding: 0 18px; }
+  .teamRow input { flex: 1; min-width: 0; }
   .names { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
   .names:empty { display: none; }
   .names button {
     min-height: 46px; padding: 8px; font: inherit; font-weight: 700; color: var(--ink); cursor: pointer;
     background: transparent; border: 1px solid var(--line); border-radius: 10px;
   }
+  .who { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .who b { display: block; }
+  .link { flex: none; min-height: 44px; padding: 0 4px; font: inherit; font-size: 14px; color: var(--gold); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+  blockquote { margin: 0; padding: 0; font-size: 15px; }
+  cite { display: block; margin-top: 6px; color: var(--gold); font-size: 13px; font-style: normal; font-weight: 700; }
+  a { color: var(--gold); }
 </style>
 </head>
 <body>
@@ -89,10 +87,22 @@
     <a class="btn" href="mypage.html?open=gratitude">감사노트 쓰기</a>
   </section>
 
-  <section class="card" id="guest" hidden>
-    <h2>오늘 고마웠던 일을 담아 주세요</h2>
-    <p class="note">감사 글은 로그인한 뒤 쓸 수 있어요.</p>
-    <a class="btn" href="login.html?next=/harvest.html">로그인하고 쓰기</a>
+  <section class="card" id="teamWho" hidden>
+    <div class="who">
+      <div><b id="whoName"></b><span class="note" id="whoDays"></span></div>
+      <button class="link" id="teamChange" type="button">이름 바꾸기</button>
+    </div>
+    <p class="note">팀 점수는 11월 14일까지 하루 한 번(공백 빼고 5자 이상) 세요. 팀원 모두가 6일을 채우면 20점이에요.</p>
+  </section>
+
+  <section class="card" id="teamEntry" hidden>
+    <h2>가을 원정대 팀 코드로 쓰기</h2>
+    <div class="teamRow">
+      <input id="teamCode" type="text" autocomplete="off" placeholder="팀 코드" aria-label="원정대 팀 코드">
+      <button class="btn small" id="teamFind" type="button">찾기</button>
+    </div>
+    <div class="names" id="teamNames"></div>
+    <p class="msg" id="teamMsg" role="status"></p>
   </section>
 
   <form class="card" id="form" hidden>
@@ -104,25 +114,12 @@
     <label class="share"><input type="checkbox" id="share"><span>11월 15일 예배 화면에 이름 없이 나눠도 좋아요</span></label>
     <button class="btn" id="send" type="submit">광주리에 담기</button>
     <p class="msg" id="msg" role="status"></p>
-    <p class="note">쓴 글은 감사노트에 저장되고 <a href="feed.html?type=gratitude">실시간 나눔</a>에도 보여요. 예배 화면에는 담당자가 확인한 글만 나와요.</p>
+    <p class="note" id="formNote"></p>
   </form>
 
-  <section class="card" id="teamCard" hidden>
-    <h2>가을 원정대 팀 점수 <span class="note">원정대 팀원만</span></h2>
-    <div id="teamLinked" hidden>
-      <p style="margin:0" id="teamLine"></p>
-      <p class="note" id="teamDays" style="margin-top:4px"></p>
-    </div>
-    <div id="teamLink" hidden style="display:grid;gap:10px">
-      <p class="note">팀 코드로 내 이름을 한 번만 이어 주세요. 잇기 전에 쓴 글도 기간 안이면 함께 세요.</p>
-      <div class="teamRow">
-        <input id="teamCode" type="text" autocomplete="off" placeholder="팀 코드" aria-label="원정대 팀 코드">
-        <button class="btn small" id="teamFind" type="button">찾기</button>
-      </div>
-      <div class="names" id="teamNames"></div>
-      <p class="msg" id="teamMsg" role="status"></p>
-    </div>
-    <p class="note">하루 한 번(공백 빼고 5자 이상), 11월 14일까지 셉니다. 팀원 모두가 6일을 채우면 20점이에요.</p>
+  <section class="card" id="guest" hidden>
+    <p class="note">원정대 팀이 아니어도 로그인하면 함께 담을 수 있어요.</p>
+    <a class="btn" href="login.html?next=/harvest.html">로그인하고 쓰기</a>
   </section>
 
   <section class="card">
@@ -140,61 +137,75 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var client = getClient();
-  var count = 0, userId = null, status = null;
+  var KEY = 'msu_harvest_team';
+  var count = 0, userId = null, status = null, team = null, typedCode = '';
+
+  function readJson(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
+  function saveTeam() { try { if (team) localStorage.setItem(KEY, JSON.stringify({ code: team.code, member: team.member })); else localStorage.removeItem(KEY); } catch (e) {} }
 
   function showCount() {
     window.drawHarvestBasket($('basket'), count);
     $('countLine').innerHTML = count > 0 ? '함께 담은 열매 <b>' + count.toLocaleString('ko-KR') + '</b>개' : '아직 비어 있어요';
   }
-  function showForm() {
+  function render() {
     if (!status) return;
     var now = Date.now();
     var before = now < new Date(status.starts_at).getTime();
     var after = now >= new Date(status.ends_at).getTime();
     $('before').hidden = !before;
     $('after').hidden = !after;
-    $('guest').hidden = before || after || !!userId;
-    $('form').hidden = before || after || !userId;
+    $('teamWho').hidden = after || !team;
+    $('teamEntry').hidden = after || !!team;
+    $('form').hidden = before || after || !(team || userId);
+    $('guest').hidden = before || after || !!team || !!userId;
+    if (team) {
+      $('whoName').textContent = team.emoji + ' ' + team.teamName + ' ' + team.name;
+      $('whoDays').textContent = '내 감사 ' + team.days + ' / ' + team.scoreDays + '일';
+    }
+    $('formNote').textContent = (userId
+      ? '쓴 글은 감사노트에 저장되고 실시간 나눔에도 보여요.'
+      : '쓴 글은 광주리에 담기고 실시간 나눔에는 나오지 않아요.') + ' 예배 화면에는 담당자가 확인한 글만 나와요.';
   }
-  function load() {
+  function loadStatus() {
     return client.rpc('harvest_status').then(function (r) {
       if (r.error || !r.data) throw r.error || new Error('no data');
-      status = r.data; count = r.data.count; showCount(); showForm();
+      status = r.data; count = r.data.count; showCount(); render();
     }).catch(function () { $('countLine').textContent = '숫자를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'; });
   }
-
-  // 원정대 팀 잇기
-  var teamCode = '';
-  function loadTeam() {
-    if (!userId) return Promise.resolve();
-    return client.rpc('harvest_my_team').then(function (r) {
-      if (r.error || !r.data) return;
-      var d = r.data, ended = Date.now() >= new Date(d.score_until).getTime();
-      if (!d.linked && ended) { $('teamCard').hidden = true; return; }
-      $('teamCard').hidden = false;
-      $('teamLinked').hidden = !d.linked;
-      $('teamLink').hidden = !!d.linked;
-      if (d.linked) {
-        $('teamLine').textContent = d.emoji + ' ' + d.team + ' ' + d.name + ' 이어졌어요';
-        $('teamDays').textContent = '내 감사 ' + d.days + ' / ' + d.score_days + '일';
-      }
-    }).catch(function () {});
+  function loadTeam(code, member) {
+    return client.rpc('harvest_team_me', { p_code: code, p_member: member }).then(function (r) {
+      if (r.error || !r.data) return false;
+      if (!r.data.ok) return false;
+      team = { code: code, member: member, teamName: r.data.team, emoji: r.data.emoji, name: r.data.name, days: r.data.days, scoreDays: r.data.score_days };
+      saveTeam();
+      return true;
+    }).catch(function () { return false; });
   }
   function teamMsg(text, bad) { $('teamMsg').className = bad ? 'msg err' : 'msg'; $('teamMsg').textContent = text; }
-  try {
-    var savedTeam = JSON.parse(localStorage.getItem('msu_expedition_autumn2026') || '{}');
-    if (savedTeam && savedTeam.code) $('teamCode').value = savedTeam.code;
-  } catch (e) {}
+
+  // 원정대에서 들어온 휴대폰이면 코드와 이름을 다시 묻지 않는다.
+  var saved = readJson(KEY);
+  var exp = readJson('msu_expedition_autumn2026');
+  if (!saved && exp && exp.code && exp.member && !exp.viewer) saved = { code: exp.code, member: exp.member };
+  if (exp && exp.code) $('teamCode').value = exp.code;
+
+  window.drawHarvestBasket($('basket'), 0);
+  var ready = saved ? loadTeam(saved.code, saved.member) : Promise.resolve(false);
+  ready.then(function () { return getSession().catch(function () { return null; }); }).then(function (s) {
+    userId = s && s.user ? s.user.id : null;
+    return loadStatus();
+  });
+
   $('teamFind').addEventListener('click', function () {
-    teamCode = $('teamCode').value.trim();
+    typedCode = $('teamCode').value.trim();
     $('teamNames').innerHTML = '';
-    if (!teamCode) { teamMsg('팀 코드를 적어 주세요.', true); return; }
+    if (!typedCode) { teamMsg('팀 코드를 적어 주세요.', true); return; }
     teamMsg('찾는 중…');
-    client.rpc('picnic_join', { p_code: teamCode }).then(function (r) {
+    client.rpc('picnic_join', { p_code: typedCode }).then(function (r) {
       if (r.error || !r.data) throw new Error('join');
       if (!r.data.ok) { teamMsg(r.data.error, true); return; }
       var ms = r.data.members || [];
-      if (!ms.length) { teamMsg('원정대 화면에서 이름을 등록한 뒤 이을 수 있어요.', true); return; }
+      if (!ms.length) { teamMsg('원정대 날 이름을 등록하면 여기에 나와요.', true); return; }
       teamMsg('내 이름을 눌러 주세요.');
       ms.forEach(function (m) {
         var b = document.createElement('button');
@@ -205,48 +216,52 @@
   });
   $('teamNames').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    if (!confirm(b.textContent + ' 맞나요? 한 번 이으면 바꾸기 어려워요.')) return;
-    teamMsg('잇는 중…');
-    client.rpc('harvest_team_link', { p_code: teamCode, p_member: +b.dataset.id }).then(function (r) {
-      if (r.error || !r.data) throw new Error('link');
-      if (!r.data.ok) { teamMsg(r.data.error, true); return; }
+    teamMsg('들어가는 중…');
+    loadTeam(typedCode, +b.dataset.id).then(function (ok) {
+      if (!ok) { teamMsg('들어가지 못했어요. 잠시 뒤 다시 눌러 주세요.', true); return; }
       teamMsg(''); $('teamNames').innerHTML = '';
-      return loadTeam();
-    }).catch(function () { teamMsg('잇지 못했어요. 잠시 뒤 다시 눌러 주세요.', true); });
+      render();
+    });
+  });
+  $('teamChange').addEventListener('click', function () {
+    team = null; saveTeam(); render();
   });
 
-  window.drawHarvestBasket($('basket'), 0);
-  getSession().then(function (s) {
-    userId = s && s.user ? s.user.id : null;
-    loadTeam();
-    return load();
-  }).catch(load);
-
   $('body').addEventListener('input', function () { $('len').textContent = this.value.length; });
+
+  // 팀으로 들어왔으면 팀 글로, 아니면 로그인한 계정의 감사노트로 담는다.
+  function writeTeam(text, share) {
+    return client.rpc('harvest_write', { p_code: team.code, p_member: team.member, p_body: text, p_share: share }).then(function (r) {
+      if (r.error || !r.data) throw new Error('write');
+      return r.data;
+    });
+  }
+  function writeNote(text, share) {
+    return client.from('notes').insert({ user_id: userId, type: 'gratitude', content: text, image_urls: [] }).select('id').single().then(function (r) {
+      if (r.error) throw r.error;
+      if (!share) return { ok: true, shared: false };
+      return client.rpc('harvest_share', { p_note_id: r.data.id }).then(function (s) {
+        if (s.error) return { ok: true, shared: false, warn: '글은 담겼지만 화면 나눔은 보내지 못했어요.' };
+        if (!s.data.ok) return { ok: true, shared: false, warn: s.data.error };
+        return { ok: true, shared: true };
+      });
+    });
+  }
   $('form').addEventListener('submit', function (e) {
     e.preventDefault();
-    var text = $('body').value.trim(), msg = $('msg');
+    var text = $('body').value.trim(), share = $('share').checked, msg = $('msg');
     msg.className = 'msg';
     if (!text) { msg.className = 'msg err'; msg.textContent = '감사한 일을 한 줄 적어 주세요.'; return; }
     $('send').disabled = true;
     msg.textContent = '담는 중…';
-    client.from('notes').insert({ user_id: userId, type: 'gratitude', content: text, image_urls: [] }).select('id').single()
-      .then(function (r) {
-        if (r.error) throw r.error;
-        if (!$('share').checked) return { ok: true, shared: false };
-        return client.rpc('harvest_share', { p_note_id: r.data.id }).then(function (s) {
-          if (s.error) return { ok: true, shared: false, warn: '글은 담겼지만 화면 나눔은 보내지 못했어요.' };
-          if (!s.data.ok) return { ok: true, shared: false, warn: s.data.error };
-          return { ok: true, shared: true };
-        });
-      })
-      .then(function (res) {
-        $('body').value = ''; $('len').textContent = '0'; $('share').checked = false;
-        msg.textContent = res.warn || (res.shared ? '담았어요. 화면 나눔도 보냈어요.' : '열매 하나를 담았어요.');
-        loadTeam();
-        return load();
-      })
-      .catch(function () { msg.className = 'msg err'; msg.textContent = '저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.'; })
+    (team ? writeTeam(text, share) : writeNote(text, share)).then(function (res) {
+      if (!res.ok) { msg.className = 'msg err'; msg.textContent = res.error; return; }
+      $('body').value = ''; $('len').textContent = '0'; $('share').checked = false;
+      if (res.warn) msg.textContent = res.warn;
+      else if (share && !res.shared) msg.textContent = '담았어요. 화면 나눔은 하루에 한 번이에요.';
+      else msg.textContent = res.shared ? '담았어요. 화면 나눔도 보냈어요.' : '열매 하나를 담았어요.';
+      return (team ? loadTeam(team.code, team.member) : Promise.resolve()).then(loadStatus);
+    }).catch(function () { msg.className = 'msg err'; msg.textContent = '저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.'; })
       .then(function () { $('send').disabled = false; });
   });
 })();
