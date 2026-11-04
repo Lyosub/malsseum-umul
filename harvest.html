@@ -51,6 +51,20 @@
   blockquote { margin: 0; padding: 0; font-size: 15px; }
   cite { display: block; margin-top: 6px; color: var(--gold); font-size: 13px; font-style: normal; font-weight: 700; }
   a { color: var(--gold); }
+  .card h2 .note { font-weight: 500; }
+  .teamRow { display: flex; gap: 8px; }
+  .teamRow input {
+    flex: 1; min-width: 0; font: inherit; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px; outline: none;
+  }
+  .teamRow input:focus { border-color: var(--gold); }
+  .btn.small { width: auto; min-height: 48px; flex: none; padding: 0 18px; }
+  .names { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+  .names:empty { display: none; }
+  .names button {
+    min-height: 46px; padding: 8px; font: inherit; font-weight: 700; color: var(--ink); cursor: pointer;
+    background: transparent; border: 1px solid var(--line); border-radius: 10px;
+  }
 </style>
 </head>
 <body>
@@ -93,6 +107,24 @@
     <p class="note">쓴 글은 감사노트에 저장되고 <a href="feed.html?type=gratitude">실시간 나눔</a>에도 보여요. 예배 화면에는 담당자가 확인한 글만 나와요.</p>
   </form>
 
+  <section class="card" id="teamCard" hidden>
+    <h2>가을 원정대 팀 점수 <span class="note">원정대 팀원만</span></h2>
+    <div id="teamLinked" hidden>
+      <p style="margin:0" id="teamLine"></p>
+      <p class="note" id="teamDays" style="margin-top:4px"></p>
+    </div>
+    <div id="teamLink" hidden style="display:grid;gap:10px">
+      <p class="note">팀 코드로 내 이름을 한 번만 이어 주세요. 잇기 전에 쓴 글도 기간 안이면 함께 세요.</p>
+      <div class="teamRow">
+        <input id="teamCode" type="text" autocomplete="off" placeholder="팀 코드" aria-label="원정대 팀 코드">
+        <button class="btn small" id="teamFind" type="button">찾기</button>
+      </div>
+      <div class="names" id="teamNames"></div>
+      <p class="msg" id="teamMsg" role="status"></p>
+    </div>
+    <p class="note">하루 한 번(공백 빼고 5자 이상), 11월 14일까지 셉니다. 팀원 모두가 6일을 채우면 20점이에요.</p>
+  </section>
+
   <section class="card">
     <blockquote>네 하나님 여호와께서 너와 네 집에 주신 모든 복으로 말미암아 너는 레위인과 너희 가운데에 거류하는 객과 함께 즐거워할지니라
       <cite>신명기 26장 11절</cite>
@@ -131,9 +163,62 @@
     }).catch(function () { $('countLine').textContent = '숫자를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'; });
   }
 
+  // 원정대 팀 잇기
+  var teamCode = '';
+  function loadTeam() {
+    if (!userId) return Promise.resolve();
+    return client.rpc('harvest_my_team').then(function (r) {
+      if (r.error || !r.data) return;
+      var d = r.data, ended = Date.now() >= new Date(d.score_until).getTime();
+      if (!d.linked && ended) { $('teamCard').hidden = true; return; }
+      $('teamCard').hidden = false;
+      $('teamLinked').hidden = !d.linked;
+      $('teamLink').hidden = !!d.linked;
+      if (d.linked) {
+        $('teamLine').textContent = d.emoji + ' ' + d.team + ' ' + d.name + ' 이어졌어요';
+        $('teamDays').textContent = '내 감사 ' + d.days + ' / ' + d.score_days + '일';
+      }
+    }).catch(function () {});
+  }
+  function teamMsg(text, bad) { $('teamMsg').className = bad ? 'msg err' : 'msg'; $('teamMsg').textContent = text; }
+  try {
+    var savedTeam = JSON.parse(localStorage.getItem('msu_expedition_autumn2026') || '{}');
+    if (savedTeam && savedTeam.code) $('teamCode').value = savedTeam.code;
+  } catch (e) {}
+  $('teamFind').addEventListener('click', function () {
+    teamCode = $('teamCode').value.trim();
+    $('teamNames').innerHTML = '';
+    if (!teamCode) { teamMsg('팀 코드를 적어 주세요.', true); return; }
+    teamMsg('찾는 중…');
+    client.rpc('picnic_join', { p_code: teamCode }).then(function (r) {
+      if (r.error || !r.data) throw new Error('join');
+      if (!r.data.ok) { teamMsg(r.data.error, true); return; }
+      var ms = r.data.members || [];
+      if (!ms.length) { teamMsg('원정대 화면에서 이름을 등록한 뒤 이을 수 있어요.', true); return; }
+      teamMsg('내 이름을 눌러 주세요.');
+      ms.forEach(function (m) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.textContent = m.name; b.dataset.id = m.id;
+        $('teamNames').appendChild(b);
+      });
+    }).catch(function () { teamMsg('연결하지 못했어요. 잠시 뒤 다시 눌러 주세요.', true); });
+  });
+  $('teamNames').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (!confirm(b.textContent + ' 맞나요? 한 번 이으면 바꾸기 어려워요.')) return;
+    teamMsg('잇는 중…');
+    client.rpc('harvest_team_link', { p_code: teamCode, p_member: +b.dataset.id }).then(function (r) {
+      if (r.error || !r.data) throw new Error('link');
+      if (!r.data.ok) { teamMsg(r.data.error, true); return; }
+      teamMsg(''); $('teamNames').innerHTML = '';
+      return loadTeam();
+    }).catch(function () { teamMsg('잇지 못했어요. 잠시 뒤 다시 눌러 주세요.', true); });
+  });
+
   window.drawHarvestBasket($('basket'), 0);
   getSession().then(function (s) {
     userId = s && s.user ? s.user.id : null;
+    loadTeam();
     return load();
   }).catch(load);
 
@@ -158,6 +243,7 @@
       .then(function (res) {
         $('body').value = ''; $('len').textContent = '0'; $('share').checked = false;
         msg.textContent = res.warn || (res.shared ? '담았어요. 화면 나눔도 보냈어요.' : '열매 하나를 담았어요.');
+        loadTeam();
         return load();
       })
       .catch(function () { msg.className = 'msg err'; msg.textContent = '저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.'; })
