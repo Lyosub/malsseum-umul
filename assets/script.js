@@ -333,12 +333,12 @@ function loadVerseCardFonts() {
 
 // 말씀카드 배경(1080x2340) 중 한 장을 매일 바꿔서 쓴다.
 // 배경은 저장 사이즈에 맞춰 비율을 유지한 채 가운데를 기준으로 잘라 넣는다(drawVerseCardBg 참고).
-var VERSE_CARD_BG_COUNT = 70;
+var VERSE_CARD_BG_COUNT = 79;
 
 // 순환의 기준점. 이 날짜에 이 번호가 나오고 하루에 한 칸씩 넘어간다.
-// 2026-09-17에 새로 추가한 배경의 첫 장(53번)부터 나오도록 맞춰두었다.
-var VERSE_CARD_BG_EPOCH = Date.UTC(2026, 8, 17);
-var VERSE_CARD_BG_EPOCH_INDEX = 53;
+// 2026-11-04에 새로 추가한 밝은 배경의 첫 장(71번)부터 나오도록 맞춰두었다.
+var VERSE_CARD_BG_EPOCH = Date.UTC(2026, 10, 4);
+var VERSE_CARD_BG_EPOCH_INDEX = 71;
 
 // 너무 어두워 검게 보이는 사진은 순환에서 뺀다(사진 위쪽 평균 밝기 20 미만, 2026-11-04).
 var VERSE_CARD_BG_SKIP = [3, 4, 19, 20, 22, 29, 31, 34, 42, 44, 45, 49, 52];
