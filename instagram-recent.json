@@ -1,13 +1,33 @@
 {
-  "generated_kst": "2026-11-03 12:30",
+  "generated_kst": "2026-11-04 11:27",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 142,
     "follows_count": 111,
-    "media_count": 158
+    "media_count": 160
   },
   "posts": [
+    {
+      "id": "18143005081533013",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-11-04T00:03:12+0000",
+      "permalink": "https://www.instagram.com/p/DfTH-FFEcLN/",
+      "caption_first_line": "말씀우물이 새로워졌어요 💧",
+      "likes": 3,
+      "comments": 1
+    },
+    {
+      "id": "18142657312714719",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-11-03T10:33:19+0000",
+      "permalink": "https://www.instagram.com/p/DfRrR30m6K_/",
+      "caption_first_line": "하나님이 먼저 부르셨으니, 이제 가까이 갑니다.",
+      "likes": 9,
+      "comments": 1
+    },
     {
       "id": "18114436586141779",
       "type": "REELS",
@@ -35,7 +55,7 @@
       "timestamp_utc": "2026-10-29T10:32:32+0000",
       "permalink": "https://www.instagram.com/p/DfEzNpCnFHH/",
       "caption_first_line": "🍁 로고스교회 중등부 가을 야유회 🍁",
-      "likes": 5,
+      "likes": 6,
       "comments": 1
     },
     {
@@ -236,26 +256,6 @@
       "permalink": "https://www.instagram.com/p/DdpzoC_jZjY/",
       "caption_first_line": "풍성한 한가위 보내세요 🌕",
       "likes": 8,
-      "comments": 1
-    },
-    {
-      "id": "18191852287396901",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-09-22T07:06:36+0000",
-      "permalink": "https://www.instagram.com/p/DdlKPA9m5dA/",
-      "caption_first_line": "점수보다 먼저 정해야 할 것이 있습니다.",
-      "likes": 10,
-      "comments": 1
-    },
-    {
-      "id": "17908644042509858",
-      "type": "FEED",
-      "media_type": "IMAGE",
-      "timestamp_utc": "2026-09-18T03:28:01+0000",
-      "permalink": "https://www.instagram.com/p/DdaeDO3l7sa/",
-      "caption_first_line": "채워도 또 허전한 거, 네가 이상한 게 아니야.",
-      "likes": 5,
       "comments": 1
     }
   ]
