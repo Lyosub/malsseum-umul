@@ -2329,3 +2329,8 @@ header.site nav a { display: inline-block; padding: 10px 5px; margin: -10px -5px
 .sect-hd a { display: inline-block; padding: 10px 4px; margin: -10px -4px; }
 .notice-bar-main { padding: 6px 0; margin: -6px 0; }
 .notice-bar-pause { padding: 12px 10px; margin: -12px -4px; font-size: 12px; }
+
+/* 곳간 카드는 글자가 흰색이라, 안의 흰 접기 칸에서는 글자색을 되돌린다 */
+.oikos-treasury details.mp-fold { color: var(--text); }
+.oikos-treasury details.mp-fold > summary { color: var(--well-deep); }
+.oikos-treasury details.mp-fold .msg { color: var(--text-soft) !important; }
