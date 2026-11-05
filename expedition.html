@@ -245,17 +245,6 @@
     <button class="btn ghost block" type="button" id="otherTeam" style="margin-top:14px;">다른 팀 코드 넣기</button>
   </section>
 
-  <!-- 2-1. 내 오이코스: 시상이 오이코스별이라 이름 다음에 한 번 묻는다 -->
-  <section class="card" id="oikosCard" hidden>
-    <h2 id="oikosTitle">몇 학년인가요?</h2>
-    <p class="muted" style="margin:0 0 10px;">시상은 오이코스별로 해요. 내 오이코스를 골라 주세요.</p>
-    <div class="seg" id="oikosGrades"></div>
-    <div id="oikosNames" style="display:grid;gap:8px;" hidden></div>
-    <p class="msg err" id="oikosMsg" role="alert"></p>
-    <button class="btn ghost block" type="button" id="oikosBack" style="margin-top:12px;" hidden>‹ 학년 다시 고르기</button>
-    <button class="btn ghost block" type="button" id="oikosNone" style="margin-top:12px;">오이코스가 없어요 (선생님·새친구)</button>
-  </section>
-
   <!-- 3. 미션 -->
   <div id="mainArea" hidden>
     <div class="me">
@@ -313,7 +302,7 @@
       <dt>언제</dt><dd>11월 8일(주일) 오전 10시 30분 출발</dd>
       <dt>어디</dt><dd>서울대공원</dd>
       <dt>끝나면</dt><dd>2시 집합(나눔·기도) 뒤 교회로 · 더 구경하고 싶으면 부모님 허락하에 남을 수 있어요</dd>
-      <dt>시상</dt><dd>릴스와 <a href="harvest.html">감사의 광주리</a>까지 합쳐 오이코스별로 11월 15일(주일)</dd>
+      <dt>시상</dt><dd>릴스까지 합쳐 팀별로 11월 15일(주일)</dd>
       <dt>누구랑</dt><dd>학년별로 나눈 우리 팀</dd>
     </dl>
     <p style="margin:10px 0 0;font-size:14px;">팀이 함께 서울대공원을 돌며 <b>하나님이 지으신 것들</b>을 찾는 미션이에요. 팀원 모두가 <b>각자 휴대폰</b>으로 들어와서 함께 채워요.</p>
@@ -328,7 +317,7 @@
       <li>당일 아침, 선생님이 <b>우리 팀 코드</b>를 알려 줘요.</li>
       <li>이 화면에 코드를 넣고 <b>내 이름(실명)</b>을 적어요.</li>
       <li>미션을 하면 바로바로 올려요. <b>모든 팀이 얼마나 했는지</b> 진행판으로 함께 보여요.</li>
-      <li>점수는 비밀! 릴스(11/9까지)와 <a href="harvest.html">감사의 광주리</a>(11/9~14)까지 합쳐 <b>11월 15일(주일)</b>에 오이코스별로 시상해요.</li>
+      <li>점수는 비밀! 릴스(11/9까지)까지 합쳐 <b>11월 15일(주일)</b>에 팀별로 시상해요.</li>
     </ol>
 
     <h3>꼭 챙겨요</h3>
@@ -409,7 +398,6 @@
   function show(which) {
     $("joinCard").hidden = which !== "join";
     $("nameCard").hidden = which !== "name";
-    $("oikosCard").hidden = which !== "oikos";
     $("mainArea").hidden = which !== "main";
   }
 
@@ -487,7 +475,7 @@
       saved.code = code; save();
       var me = members.filter(function (m) { return m.id === saved.member; })[0];
       if (saved.viewer) { saved.name = "👀 관리자 보기"; save(); meetCheck(); enterMain(); return; }
-      if (me) { saved.name = me.name; save(); if (me.oikos_set) enterMain(); else pickOikos(); } else { pickName(); }
+      if (me) { saved.name = me.name; save(); enterMain(); } else { pickName(); }
     }, function () { show("join"); $("joinMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
   }
 
@@ -506,54 +494,9 @@
       btn.disabled = false;
       var d = r && r.data;
       if (!d || !d.ok) { $("nameMsg").textContent = (d && d.error) || "연결이 원활하지 않아요. 다시 눌러 주세요."; return; }
-      saved.member = d.member.id; saved.name = d.member.name; save(); pickOikos();
+      saved.member = d.member.id; saved.name = d.member.name; save(); enterMain();
     }, function () { btn.disabled = false; $("nameMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
   });
-  // 이름 다음에 오이코스를 묻는다. 목록을 못 불러와도 원정대는 막지 않고, 다음에 들어올 때 다시 묻는다.
-  var oikosGroups = [], oikosGrade = null;
-  function pickOikos() {
-    oikosGrade = null;
-    $("oikosMsg").textContent = "";
-    sb.rpc("harvest_status").then(function (r) {
-      oikosGroups = (r && r.data && r.data.groups) || [];
-      if (!oikosGroups.length) { enterMain(); return; }
-      show("oikos");
-      drawOikos();
-    }, function () { enterMain(); });
-  }
-  function drawOikos() {
-    var inGrade = oikosGrade !== null, grades = [];
-    oikosGroups.forEach(function (g) { if (g.grade && grades.indexOf(g.grade) < 0) grades.push(g.grade); });
-    $("oikosTitle").textContent = inGrade ? oikosGrade + "학년 어느 오이코스인가요?" : "몇 학년인가요?";
-    $("oikosGrades").hidden = inGrade;
-    $("oikosNames").hidden = !inGrade;
-    $("oikosBack").hidden = !inGrade;
-    $("oikosNone").hidden = inGrade;
-    $("oikosGrades").innerHTML = grades.map(function (k) { return '<button type="button" data-grade="' + k + '">' + k + '학년</button>'; }).join("");
-    $("oikosNames").innerHTML = inGrade ? oikosGroups.filter(function (g) { return g.grade === oikosGrade; }).map(function (g) {
-      return '<button class="btn ghost block" type="button" data-id="' + g.id + '">' + esc(g.name) + '</button>';
-    }).join("") : "";
-  }
-  function setOikos(id) {
-    $("oikosMsg").textContent = "";
-    sb.rpc("picnic_set_oikos", { p_code: saved.code, p_member: saved.member, p_group: id }).then(function (r) {
-      var d = r && r.data;
-      if (!d || !d.ok) { $("oikosMsg").textContent = (d && d.error) || "연결이 원활하지 않아요. 다시 눌러 주세요."; return; }
-      // 광주리 화면에서 다시 묻지 않도록 같은 선택을 남긴다.
-      try { localStorage.setItem("msu_harvest_group", JSON.stringify({ id: id })); } catch (e) {}
-      enterMain();
-    }, function () { $("oikosMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
-  }
-  $("oikosGrades").addEventListener("click", function (e) {
-    var b = e.target.closest("button"); if (!b) return;
-    oikosGrade = Number(b.getAttribute("data-grade")); drawOikos();
-  });
-  $("oikosNames").addEventListener("click", function (e) {
-    var b = e.target.closest("button"); if (!b) return;
-    setOikos(Number(b.getAttribute("data-id")));
-  });
-  $("oikosBack").onclick = function () { oikosGrade = null; drawOikos(); };
-  $("oikosNone").onclick = function () { setOikos(null); };
   $("otherTeam").onclick = function () { saved = { tab: tab }; save(); team = null; show("join"); $("codeInput").value = ""; meetCheck(); adminPeek(); };
   $("changeMe").onclick = function () { stopPoll(); pickName(); };
 

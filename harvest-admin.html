@@ -54,6 +54,12 @@
       <div class="list" id="approvedList"></div>
     </section>
     <section class="panel">
+      <details id="scoreBox"><summary>🧺 오이코스별 감사 시상</summary>
+        <p class="muted" style="margin:8px 0">승인한 글만, 공백 빼고 5자 이상, 휴대폰 한 대당 하루 한 번, 11월 14일까지 셉니다.</p>
+        <div id="scoreBody"></div>
+      </details>
+    </section>
+    <section class="panel">
       <details><summary>숨긴 글·걸러진 글 <span id="otherCount">0</span></summary>
         <div class="list" id="otherList" style="margin-top:8px"></div>
       </details>
@@ -106,6 +112,23 @@
     }).catch(function () { $('loginMsg').textContent = '연결하지 못했습니다. 잠시 뒤 다시 눌러 주세요.'; });
   };
   if (code) call('list').then(function (d) { if (d.ok) start(d); }).catch(function () {});
+  function loadScores() {
+    var box = $('scoreBody');
+    box.textContent = '불러오는 중…';
+    sb.rpc('harvest_oikos_scores', { p_code: code }).then(function (r) {
+      var d = r.data;
+      if (r.error || !d || !d.ok) { box.textContent = (d && d.error) || '불러오지 못했습니다. 다시 펼쳐 주세요.'; return; }
+      var missing = d.rows.some(function (x) { return x.roster === null; });
+      var rate = function (x) { return x.roster ? x.n / x.roster : 0; };
+      var rows = d.rows.slice().sort(function (a, b) { return missing ? b.n - a.n : rate(b) - rate(a); });
+      box.innerHTML = (missing ? '<p class="muted" style="margin:0 0 6px">재적 인원이 없는 오이코스가 있어 인정 횟수 순으로 보여 줍니다.</p>' : '') +
+        '<table style="width:100%;border-collapse:collapse;font-size:14px"><tr><th style="text-align:left">오이코스</th><th style="text-align:right">인정</th><th style="text-align:right">재적</th><th style="text-align:right">1인당</th></tr>' +
+        rows.map(function (x) {
+          return '<tr style="border-top:1px solid var(--line)"><td style="padding:6px 0">' + esc(x.name) + '</td><td style="text-align:right">' + x.n + '회</td><td style="text-align:right">' + (x.roster === null ? '-' : x.roster + '명') + '</td><td style="text-align:right;font-weight:800">' + (x.roster === null ? '-' : rate(x).toFixed(1) + '회') + '</td></tr>';
+        }).join('') + '</table>';
+    }, function () { box.textContent = '불러오지 못했습니다. 다시 펼쳐 주세요.'; });
+  }
+  $('scoreBox').addEventListener('toggle', function () { if (this.open) loadScores(); });
   document.addEventListener('click', function (e) {
     var b = e.target.closest('button[data-a]'); if (!b) return;
     b.disabled = true;
