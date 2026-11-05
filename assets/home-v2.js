@@ -34,12 +34,12 @@
   }
 
   // 감사의 광주리: 11/8 예배 안내 때부터 11/15까지 보인다. 시작 전에는 시작일을, 시작 뒤에는 열매 수를 쓴다.
-  var harvestStart = new Date(2026, 10, 9), harvestEnd = new Date(2026, 10, 15);
+  var harvestStart = new Date(2026, 10, 8), harvestEnd = new Date(2026, 10, 15);
   if (today >= new Date(2026, 10, 8) && today <= harvestEnd) {
     document.getElementById("hvHarvest").hidden = false;
     var harvestN = document.getElementById("hvHarvestN");
     if (today < harvestStart) {
-      harvestN.textContent = "11/9 시작";
+      harvestN.textContent = "11/8 시작";
     } else if (typeof SUPABASE_URL !== "undefined") {
       fetch(SUPABASE_URL + "/rest/v1/rpc/harvest_status", {
         method: "POST",
