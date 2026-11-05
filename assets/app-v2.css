@@ -61,6 +61,7 @@ a.card, .home-row, .v2-tile, .pc, .mind-box { border: 1.5px solid #aab3d8; }
 .v2-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 18px; }
 .v2-tile { position: relative; border: 1.5px solid #aab3d8; display: flex; flex-direction: column; gap: 8px; min-height: 112px; padding: 14px; border-radius: 16px; background: #fff; color: var(--v2-ink); text-decoration: none; }
 .v2-tile::after { content: "›"; position: absolute; top: 12px; right: 14px; color: var(--tone); font-size: 20px; font-weight: 700; line-height: 1; }
+.v2-tiles > .v2-tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .v2-tile b { font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
 .v2-tile small { color: var(--v2-soft); font-size: 12.5px; line-height: 1.45; }
 .v2-tile .i { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: var(--tone-soft); color: var(--tone); }

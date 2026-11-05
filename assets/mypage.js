@@ -362,6 +362,8 @@ function initAttendance(userId) {
       }
       if (!res.data) {
         if (streakMsg) streakMsg.textContent = "이미 오늘 출석했어요.";
+      } else if (typeof askPushAfterCheckin === "function") {
+        askPushAfterCheckin();
       }
       refreshStreak();
       loadTotalPoints(userId);
@@ -408,6 +410,54 @@ function promptPhoneOnce(session) {
   });
 }
 
+// 생일을 아직 안 넣은 계정에 나의 기록 화면에서 한 번만 안내한다.
+function promptBirthdayOnce(session) {
+  var box = document.getElementById("birthPrompt");
+  var client = getClient();
+  if (!box || !client) return;
+  try { if (localStorage.getItem("msu_birth_prompted") === "1") return; } catch (e) { return; }
+  client.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle().then(function (res) {
+    if (res.error || !res.data || res.data.birth_month) return;
+    box.hidden = false;
+    try { localStorage.setItem("msu_birth_prompted", "1"); } catch (e) {}
+  });
+}
+
+// 나의 프로필: 생일(월·일) 고르기. 안 넣어도 된다.
+function initBirthdayEdit(userId, p) {
+  var mEl = document.getElementById("birthMonth"), dEl = document.getElementById("birthDay");
+  var btn = document.getElementById("saveBirthBtn"), msg = document.getElementById("birthMsg");
+  if (!mEl || !dEl || !btn) return;
+  var i, html = '<option value="">월</option>';
+  for (i = 1; i <= 12; i++) html += '<option value="' + i + '">' + i + '월</option>';
+  mEl.innerHTML = html;
+  function fillDays() {
+    var keep = dEl.value, max = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][Number(mEl.value || 1) - 1];
+    var h = '<option value="">일</option>';
+    for (var d = 1; d <= max; d++) h += '<option value="' + d + '">' + d + '일</option>';
+    dEl.innerHTML = h;
+    if (keep && Number(keep) <= max) dEl.value = keep;
+  }
+  mEl.onchange = fillDays;
+  mEl.value = p.birth_month || "";
+  fillDays();
+  dEl.value = p.birth_day || "";
+  btn.onclick = function () {
+    var m = Number(mEl.value) || null, d = Number(dEl.value) || null;
+    if ((m && !d) || (!m && d)) { msg.textContent = "월과 일을 모두 골라 주세요."; return; }
+    btn.disabled = true;
+    getClient().from("profiles").update({ birth_month: m, birth_day: d }).eq("user_id", userId).then(function (res) {
+      btn.disabled = false;
+      msg.textContent = res.error ? "저장하지 못했어요. 다시 시도해 주세요." : (m ? "생일을 저장했어요." : "생일을 지웠어요.");
+    }, function () { btn.disabled = false; msg.textContent = "저장하지 못했어요. 다시 시도해 주세요."; });
+  };
+  if (/[?&]birth=1/.test(location.search)) {
+    var fold = document.getElementById("profileSection");
+    if (fold) fold.open = true;
+    setTimeout(function () { mEl.scrollIntoView({ behavior: "smooth", block: "center" }); }, 200);
+  }
+}
+
 // 이름(본명) 확인/수정 — real_name 기능이 나오기 전에 가입한 사람은 값이 비어있을 수 있어서
 // 여기서 채우거나 고칠 수 있게 한다. 닉네임은 활동명이라 그대로 유지하고 여기서는 안 바꾼다.
 function initProfileSettings(session) {
@@ -438,6 +488,7 @@ function initProfileSettings(session) {
     if (nicknameInput) nicknameInput.value = p.nickname;
     if (realNameEl) realNameEl.textContent = p.real_name || "아직 등록되지 않았어요";
     if (phoneInput) phoneInput.value = p.phone_number || "";
+    initBirthdayEdit(userId, p);
     var adminLink = document.getElementById("adminPageLink");
     if (adminLink && (p.is_admin || p.is_department_head)) adminLink.style.display = "block";
     // 닉네임이 아직 없으면(가입 직후) "내 정보"를 펼쳐서 바로 설정하게 안내한다.
@@ -616,6 +667,20 @@ function initGroup(userId) {
   }
 
   // 🌊 이번 주 우리 오이코스가 함께 채운 우물 — 점수 경쟁이 아니라 "함께 참여했다"는 경험.
+  function renderOikosBirthdays(wellEl, birth) {
+    if (!birth || !birth.ok || !birth.people || !birth.people.length) return;
+    var today = birth.people.filter(function (x) { return x.today; });
+    var rest = birth.people.filter(function (x) { return !x.today; });
+    var html = "";
+    if (today.length) html += '<p style="margin:0;font-weight:800;font-size:15px;">🎉 오늘은 ' + today.map(function (x) { return escapeHtml(x.name); }).join(", ") + ' 생일이에요!</p>';
+    if (rest.length) html += '<p style="margin:' + (today.length ? "4px" : "0") + ' 0 0;font-size:14px;">🎂 이번 주 생일: ' + rest.map(function (x) { return escapeHtml(x.name) + "(" + x.m + "/" + x.d + ")"; }).join(", ") + '</p>';
+    var box = document.createElement("div");
+    box.id = "oikosBirthdays";
+    box.style.cssText = "margin:0 0 14px;padding:12px 14px;border:1.5px solid var(--border);border-radius:14px;";
+    box.innerHTML = html + '<p style="margin:4px 0 0;font-size:12.5px;color:var(--text-soft);">이번 주에 같이 축하해 줘요</p>';
+    wellEl.insertBefore(box, wellEl.firstChild);
+  }
+
   function renderOikosAbsent(wellEl, absent) {
     // 교사 화면: 이번 주 아직 안 온 학생 이름과 카톡으로 부르기. 메시지에는 이름을 넣지 않는다.
     if (!absent || !absent.ok || !absent.names || !absent.names.length) return;
@@ -660,8 +725,9 @@ function initGroup(userId) {
     if (!el) return;
     // 교사에게만 아직 안 온 학생 명단이 온다(서버에서 권한 확인). 실패해도 우물 카드는 그대로 보여 준다.
     var absentReq = client.rpc("get_group_week_absent", { p_group_id: groupId }).then(function (a) { return a.data; }, function () { return null; });
-    Promise.all([client.rpc("get_group_week_wellfill", { p_group_id: groupId }), absentReq]).then(function (all) {
-      var res = all[0], absent = all[1];
+    var birthReq = client.rpc("get_group_week_birthdays", { p_group_id: groupId }).then(function (b) { return b.data; }, function () { return null; });
+    Promise.all([client.rpc("get_group_week_wellfill", { p_group_id: groupId }), absentReq, birthReq]).then(function (all) {
+      var res = all[0], absent = all[1], birth = all[2];
       var r = res.data && res.data[0];
       if (res.error || !r || !r.member_count) { el.style.display = "none"; return; }
       var pct = Math.round((r.participated_count / r.member_count) * 100);
@@ -681,6 +747,7 @@ function initGroup(userId) {
         '</div>' +
         '<p style="font-size:12.5px;color:var(--text-soft);margin:8px 0 0;text-align:center;">' + line + '</p>' +
         '<p style="font-size:11px;color:var(--text-soft);margin:4px 0 0;text-align:center;">함께한 발자국 ' + r.footprints + '개 · 월요일에 새로 시작해요</p>';
+      renderOikosBirthdays(el, birth);
       renderOikosAbsent(el, absent);
     });
   }

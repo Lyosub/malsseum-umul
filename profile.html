@@ -44,7 +44,7 @@
     <p class="msg" id="nicknameMsg"></p>
 
     <p class="msg" style="margin-top:16px;">이름(본명): <strong id="profileRealName" style="color:var(--text);"></strong></p>
-    <p class="msg" style="margin-top:2px;">닉네임으로 활동하며, 이름은 공개되지 않아요. 이름이 잘못 등록됐다면 담당 교역자에게 말씀해주세요.</p>
+    <p class="msg" style="margin-top:2px;">닉네임으로 활동하며, 이름은 다른 학생에게 공개되지 않아요. 이름이 잘못 등록됐다면 담당 교역자에게 말씀해주세요.</p>
 
     <div class="form-row" style="margin-top:16px;">
       <label for="phoneEditInput">전화번호</label>
@@ -53,6 +53,17 @@
     </div>
     <button type="button" id="savePhoneBtn" class="btn ghost block">전화번호 저장</button>
     <p class="msg" id="phoneMsg"></p>
+
+    <div class="form-row" style="margin-top:16px;">
+      <label for="birthMonth">생일 (넣지 않아도 돼요)</label>
+      <div style="display:flex;gap:8px;">
+        <select id="birthMonth" aria-label="생일 월" style="flex:1;padding:13px 14px;border:1px solid var(--border);border-radius:12px;font-size:14.5px;background:var(--card-bg);color:var(--text);"></select>
+        <select id="birthDay" aria-label="생일 일" style="flex:1;padding:13px 14px;border:1px solid var(--border);border-radius:12px;font-size:14.5px;background:var(--card-bg);color:var(--text);"></select>
+      </div>
+      <p class="msg" style="margin-top:6px;">태어난 해는 받지 않아요. 생일이 있는 주에 같은 오이코스 사람들에게만 보여요.</p>
+    </div>
+    <button type="button" id="saveBirthBtn" class="btn ghost block">생일 저장</button>
+    <p class="msg" id="birthMsg"></p>
 
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
       <p class="msg" style="margin:0;">🔔 새 소식이 올라오면 알림을 받아보세요</p>

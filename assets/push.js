@@ -17,6 +17,49 @@ function isPushSupported() {
   return "serviceWorker" in navigator && "PushManager" in window && typeof Notification !== "undefined";
 }
 
+// 출석 직후 한 번 묻는다. 고르지 않으면 14일 동안 다시 묻지 않는다. 공지가 올라올 때만 발송되므로 그대로 안내한다.
+function askPushAfterCheckin() {
+  var KEY = "msu_push_ask_until";
+  if (!isPushSupported() || Notification.permission === "denied") return;
+  try { if (Number(localStorage.getItem(KEY) || 0) > Date.now()) return; } catch (e) { return; }
+  if (document.getElementById("pushAsk")) return;
+  getSession().then(function (session) {
+    if (!session) return;
+    navigator.serviceWorker.ready.then(function (reg) {
+      reg.pushManager.getSubscription().then(function (sub) {
+        if (sub) return;
+        try { localStorage.setItem(KEY, String(Date.now() + 14 * 86400000)); } catch (e) {}
+        var box = document.createElement("div");
+        box.id = "pushAsk";
+        box.setAttribute("role", "dialog");
+        box.style.cssText = "position:fixed;left:12px;right:12px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:60;padding:14px;border-radius:16px;background:var(--card-bg,#fff);color:var(--text,#1c2430);border:1.5px solid var(--border,#aab3d8);box-shadow:0 8px 24px rgba(0,0,0,.22);";
+        box.innerHTML = '<p style="margin:0 0 10px;font-size:14.5px;font-weight:700;">🔔 새 소식이 올라오면 알림으로 받아 볼까요?</p>' +
+          '<div style="display:flex;gap:8px;"><button type="button" id="pushAskNo" class="btn ghost" style="flex:1;">나중에</button><button type="button" id="pushAskYes" class="btn" style="flex:1;">알림 받기</button></div>' +
+          '<p class="msg" id="pushAskMsg" style="margin:8px 0 0;"></p>';
+        document.body.appendChild(box);
+        document.getElementById("pushAskNo").onclick = function () { box.remove(); };
+        document.getElementById("pushAskYes").onclick = function () {
+          var msg = document.getElementById("pushAskMsg");
+          this.disabled = true;
+          Notification.requestPermission().then(function (permission) {
+            if (permission !== "granted") { box.remove(); return; }
+            return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) }).then(function (s) {
+              var json = s.toJSON();
+              return getClient().from("push_subscriptions").upsert({ user_id: session.user.id, endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth }, { onConflict: "endpoint" }).then(function (res) {
+                if (res.error) throw res.error;
+                box.remove();
+              });
+            });
+          }).catch(function () {
+            msg.textContent = "알림을 켜지 못했어요. 나의 프로필에서 다시 켤 수 있어요.";
+            setTimeout(function () { box.remove(); }, 3000);
+          });
+        };
+      });
+    });
+  }).catch(function () {});
+}
+
 function initPushSubscribe(userId) {
   var btn = document.getElementById("pushSubscribeBtn");
   var msg = document.getElementById("pushSubscribeMsg");

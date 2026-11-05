@@ -156,6 +156,7 @@
     getClient().rpc("checkin_devotion").then(function (res) {
       if (res.error) { if (btn) btn.disabled = false; return; }
       refresh();
+      if (typeof askPushAfterCheckin === "function") askPushAfterCheckin();
     }, function () { if (btn) btn.disabled = false; });
   }
 

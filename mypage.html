@@ -33,6 +33,8 @@
 
   <p class="card" id="phonePrompt" hidden style="margin:0 0 12px;font-size:14.5px;">전화번호를 넣으면 이름이나 전화번호로도 로그인할 수 있어요. <a href="profile.html" style="font-weight:700;white-space:nowrap;">전화번호 넣기 ›</a></p>
 
+  <p class="card" id="birthPrompt" hidden style="margin:0 0 12px;font-size:14.5px;">🎂 생일을 넣으면 그 주에 오이코스에서 함께 축하해 줘요. <a href="profile.html?birth=1" style="font-weight:700;white-space:nowrap;">생일 넣기 ›</a></p>
+
   <section class="card kc-card kc-wait" id="keeperCard" aria-labelledby="kcTitle">
     <div class="kc-stage" id="kcStage" role="img" aria-label="내 우물지기"></div>
     <div class="kc-body">
@@ -216,6 +218,7 @@
     document.getElementById("pageContent").style.display = "block";
     ensureProfile(session).then(function () {
       promptPhoneOnce(session);
+      promptBirthdayOnce(session);
       initAttendance(session.user.id);
       initNotes(session.user.id);
       initAccordions();
@@ -241,6 +244,8 @@
   });
 </script>
 <script src="assets/keeper-card.js"></script>
+<script src="assets/push.js"></script>
+<script src="assets/welcome.js"></script>
 <script src="assets/appshell.js"></script>
 </body>
 </html>
