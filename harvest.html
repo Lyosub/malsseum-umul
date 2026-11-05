@@ -104,6 +104,7 @@
       <div class="mini" id="mineBasket"></div>
       <div><span class="note">우리 광주리</span><b id="mineCount"></b></div>
     </div>
+    <p class="note" id="mineScore">시상 점수는 11월 14일까지 담당자가 확인한 글을 휴대폰 한 대당 하루 한 번(공백 빼고 5자 이상) 세요. 재적 인원이 모두 6일을 채우면 60점이에요.</p>
   </section>
 
   <section class="card" id="pick" hidden>
@@ -256,6 +257,7 @@
     $('mineChange').hidden = locked || after;
     if (mine) {
       $('mineName').textContent = mine.name;
+      $('mineScore').hidden = chosen.id === null;
       window.drawHarvestBasket($('mineBasket'), mine.n);
       $('mineCount').textContent = ' ' + mine.n + '개';
     }
