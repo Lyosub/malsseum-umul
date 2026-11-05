@@ -279,7 +279,7 @@
     renderBoard();
     $('formNote').textContent = (userId
       ? '쓴 글은 감사노트에 저장되고 실시간 나눔에도 보여요.'
-      : '이름 없이 담겨요.') + ' 담당자가 확인한 글은 11월 15일 예배 화면에 이름 없이 나올 수 있어요.';
+      : '이름 없이 담겨요.');
   }
   function loadStatus() {
     return client.rpc('harvest_status').then(function (r) {
