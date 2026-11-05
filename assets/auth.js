@@ -122,6 +122,38 @@ function initSignupForm() {
   });
 }
 
+var RESET_PASSWORD = "000000";
+
+function initFirstPasswordForm() {
+  var form = document.getElementById("changePasswordForm");
+  if (!form) return;
+  var nx = (new URLSearchParams(window.location.search)).get("next") || "";
+  var dest = (/^\/[A-Za-z0-9_\-\/.]*$/.test(nx) && nx.indexOf("//") < 0) ? nx : "mypage.html";
+  if (nx === "mypage.html") dest = nx;
+  document.getElementById("changeLater").href = dest;
+  requireLogin("login.html");
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var msg = document.getElementById("formMsg");
+    var client = getClient();
+    var pw = document.getElementById("newPasswordInput").value;
+    var again = document.getElementById("newPasswordAgain").value;
+    if (!client) { msg.textContent = "아직 준비 중이에요. 잠시 뒤 다시 해 주세요."; return; }
+    if (pw.length < 6) { msg.textContent = "비밀번호는 6자 이상이어야 해요."; return; }
+    if (pw === RESET_PASSWORD) { msg.textContent = "초기화 비밀번호와 다른 비밀번호를 넣어 주세요."; return; }
+    if (pw !== again) { msg.textContent = "두 칸의 비밀번호가 달라요. 다시 적어 주세요."; return; }
+    msg.textContent = "바꾸는 중...";
+    client.auth.updateUser({ password: pw }).then(function (res) {
+      if (res.error) { msg.textContent = "바꾸지 못했어요: " + res.error.message; return; }
+      msg.textContent = "비밀번호를 바꿨어요. 이동 중...";
+      window.location.href = dest;
+    }).catch(function () {
+      msg.textContent = "네트워크 오류로 바꾸지 못했어요. 다시 눌러 주세요.";
+    });
+  });
+}
+
 function initLoginForm() {
   var form = document.getElementById("loginForm");
   if (!form) return;
@@ -243,7 +275,10 @@ function initLoginForm() {
       }
       // ?next=/odyssey/ 처럼 이 사이트 안의 주소가 오면 로그인 뒤 그곳으로(다른 사이트 주소는 무시)
       var nx = (new URLSearchParams(window.location.search)).get("next") || "";
-      window.location.href = (/^\/[A-Za-z0-9_\-\/.]*$/.test(nx) && nx.indexOf("//") < 0) ? nx : "mypage.html";
+      var dest = (/^\/[A-Za-z0-9_\-\/.]*$/.test(nx) && nx.indexOf("//") < 0) ? nx : "mypage.html";
+      // 초기화된 비번으로 들어오면 비밀번호를 바꾸는 화면을 먼저 보여 준다.
+      if (password === RESET_PASSWORD) dest = "change-password.html?next=" + encodeURIComponent(dest);
+      window.location.href = dest;
     }).catch(showConnectError);
     }
 
