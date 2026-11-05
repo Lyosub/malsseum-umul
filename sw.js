@@ -1,7 +1,7 @@
 // 말씀우물 PWA 서비스 워커: 앱 셸을 미리 캐시해두되, 온라인일 때는 항상 최신 버전을
 // 먼저 시도하는 네트워크 우선(network-first) 방식으로 처리하고, 오프라인일 때만 캐시로 대체한다.
 // (예전에는 캐시 우선 방식이라 배포 후에도 옛 버전이 계속 보이는 문제가 있었음)
-var CACHE_VERSION = "msu-v215";
+var CACHE_VERSION = "msu-v216";
 var PRECACHE = [
   "./",
   "index.html",
@@ -38,6 +38,8 @@ var PRECACHE = [
   "memories.html",
   "memorize.html",
   "harvest.html",
+  "expedition.html",
+  "assets/picnic/hero.jpg",
   "assets/harvest.js",
   "chosung.html",
   "ox.html",
@@ -171,17 +173,30 @@ self.addEventListener("fetch", function (event) {
   // 그대로 재사용해버린다. cache: "no-store"로 매번 진짜 네트워크까지 강제로 보낸다.
   var freshReq = new Request(req, { cache: "no-store" });
 
-  event.respondWith(
-    fetch(freshReq)
-      .then(function (res) {
-        if (res && res.status === 200) {
-          var copy = res.clone();
-          caches.open(CACHE_VERSION).then(function (cache) { cache.put(req, copy); });
-        }
-        return res;
-      })
-      .catch(function () { return caches.match(req); })
-  );
+  var net = fetch(freshReq).then(function (res) {
+    if (res && res.status === 200) {
+      var copy = res.clone();
+      caches.open(CACHE_VERSION).then(function (cache) { cache.put(req, copy); });
+    }
+    return res;
+  });
+
+  // 가을 원정대: 야외에서 신호가 약할 때 네트워크를 오래 기다리지 않고, 5초가 지나면 받아 둔 화면을 먼저 보여 준다.
+  if (/\/(expedition\.html|assets\/supabase-config\.js|assets\/vendor\/supabase-js\.js|assets\/harvest\.js)$/.test(url.pathname)) {
+    event.respondWith(new Promise(function (resolve) {
+      var done = false;
+      function finish(res) { if (!done) { done = true; clearTimeout(timer); resolve(res); } }
+      var timer = setTimeout(function () {
+        caches.match(req).then(function (hit) { if (hit) finish(hit); });
+      }, 5000);
+      net.then(finish, function () {
+        caches.match(req).then(function (hit) { finish(hit || Response.error()); });
+      });
+    }));
+    return;
+  }
+
+  event.respondWith(net.catch(function () { return caches.match(req); }));
 });
 
 // 푸시 알림: 서버(send-push Edge Function)가 보낸 payload를 실제 알림으로 띄운다.

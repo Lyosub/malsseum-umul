@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://logoswell.kr/assets/picnic/og.jpg">
 <meta property="og:url" content="https://logoswell.kr/expedition.html">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" crossorigin media="print" onload="this.media='all'" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 <meta name="theme-color" content="#b8481f">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/icons/icon-512.png">
@@ -143,6 +143,7 @@
   .result .rk .sc { font-weight: 900; color: var(--rust); font-size: 20px; }
   .result .rk.mine { border-color: var(--rust); box-shadow: 0 0 0 2px rgba(184, 72, 31, .2); }
 
+  .netbar { position: fixed; left: 10px; right: 10px; top: max(8px, env(safe-area-inset-top)); z-index: 29; padding: 9px 12px; border-radius: 12px; background: #2b2a27; color: #fff; font-size: 13.5px; font-weight: 700; line-height: 1.45; text-align: center; box-shadow: 0 4px 14px rgba(0,0,0,.28); }
   .toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 30;
     max-width: calc(100% - 32px); background: #2b2118; color: #fff; padding: 12px 16px; border-radius: 14px; font-size: 14px; font-weight: 700;
     box-shadow: 0 10px 30px rgba(0,0,0,.25); }
@@ -355,6 +356,7 @@
 </main>
 
 <input type="file" id="filePick" accept="image/*" hidden>
+<div class="netbar" id="netBar" role="status" hidden></div>
 <div class="toast" id="toast" hidden></div>
 <div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
 
@@ -368,6 +370,11 @@
   var KEY = "msu_expedition_" + EVENT;
   var BUCKET = "picnic-photos";
   var POLL_MS = 12000;
+  var UPLOAD_LIMIT_MS = 45000; // 사진 한 장을 올릴 때 이만큼 답이 없으면 신호가 약한 것으로 본다
+  var PHOTO_TRIES = 6;
+  var photoQueue = []; // 신호가 약해 아직 못 보낸 사진. 화면을 닫기 전까지 갖고 있다가 연결되면 보낸다
+  var netFails = 0;
+  var joinRetry = null;
   var sb = (window.supabase && typeof SUPABASE_URL !== "undefined") ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
   var $ = function (id) { return document.getElementById(id); };
@@ -464,11 +471,24 @@
     if (/^\d{8}$/.test(code)) code = code.slice(0, 4) + "-" + code.slice(4); // 11081234 → 1108-1234
     if (!code) { $("joinMsg").textContent = "팀 코드를 넣어 주세요."; return; }
     $("joinMsg").textContent = "";
+    clearTimeout(joinRetry);
+    // 서버 답을 못 받은 것은 코드가 틀린 게 아니다. 저장된 팀과 이름을 지우지 않고 자동으로 다시 시도한다.
+    function noAnswer() {
+      show("join");
+      if (saved.code === code) {
+        $("codeInput").value = code;
+        $("joinMsg").textContent = "📶 신호가 약해요. 연결되면 자동으로 이어져요. 코드를 다시 넣지 않아도 돼요.";
+        joinRetry = setTimeout(function () { if (saved.code === code) join(code, true); }, 5000);
+      } else {
+        $("joinMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요.";
+      }
+    }
     sb.rpc("picnic_join", { p_code: code }).then(function (r) {
       var d = r && r.data;
-      if (!d || !d.ok) {
+      if (!d) { noAnswer(); return; }
+      if (!d.ok) {
         saved = { tab: tab }; save(); show("join");
-        if (!silent || code) $("joinMsg").textContent = (d && d.error) || "연결이 원활하지 않아요. 다시 눌러 주세요.";
+        if (!silent || code) $("joinMsg").textContent = d.error || "연결이 원활하지 않아요. 다시 눌러 주세요.";
         return;
       }
       team = d.team; members = d.members || [];
@@ -476,7 +496,7 @@
       var me = members.filter(function (m) { return m.id === saved.member; })[0];
       if (saved.viewer) { saved.name = "👀 관리자 보기"; save(); meetCheck(); enterMain(); return; }
       if (me) { saved.name = me.name; save(); enterMain(); } else { pickName(); }
-    }, function () { show("join"); $("joinMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
+    }, noAnswer);
   }
 
   function pickName() {
@@ -497,7 +517,7 @@
       saved.member = d.member.id; saved.name = d.member.name; save(); enterMain();
     }, function () { btn.disabled = false; $("nameMsg").textContent = "연결이 원활하지 않아요. 다시 눌러 주세요."; });
   });
-  $("otherTeam").onclick = function () { saved = { tab: tab }; save(); team = null; show("join"); $("codeInput").value = ""; meetCheck(); adminPeek(); };
+  $("otherTeam").onclick = function () { clearTimeout(joinRetry); photoQueue = []; netFails = 0; updateNetBar(); saved = { tab: tab }; save(); team = null; show("join"); $("codeInput").value = ""; meetCheck(); adminPeek(); };
   $("changeMe").onclick = function () { stopPoll(); pickName(); };
 
   function enterMain() {
@@ -528,14 +548,28 @@
     if (!saved.code) return;
     return sb.rpc("picnic_state", { p_code: saved.code }).then(function (r) {
       var d = r && r.data;
-      if (!d) return;
-      if (!d.ok) { stopPoll(); saved = { tab: tab }; save(); show("join"); $("joinMsg").textContent = d.error; return; }
+      if (!d) { netFail(); return; }
+      netFails = 0; updateNetBar();
+      if (!d.ok) { stopPoll(); photoQueue = []; updateNetBar(); saved = { tab: tab }; save(); show("join"); $("joinMsg").textContent = d.error; return; }
       clockOffset = new Date(d.now).getTime() - Date.now();
       S = d;
       notifyChanges();
       render();
-    }, function () {});
+      flushPhotos();
+    }, netFail);
   }
+
+  // ---------- 신호 약함 표시 ----------
+  function netFail() { netFails++; updateNetBar(); }
+  function updateNetBar() {
+    var el = $("netBar"), n = photoQueue.length, msg = "";
+    if (n) msg = "📷 사진 " + n + "장을 아직 못 보냈어요. 연결되면 자동으로 보내요. 이 화면을 닫지 마세요.";
+    else if (team && !$("mainArea").hidden && (netFails >= 2 || navigator.onLine === false)) msg = "📶 신호가 약해요. 연결되면 자동으로 이어져요.";
+    el.textContent = msg;
+    el.hidden = !msg;
+  }
+  window.addEventListener("offline", updateNetBar);
+  window.addEventListener("online", function () { updateNetBar(); if (team && !$("mainArea").hidden) refresh(); });
 
   function notifyChanges() {
     if (lastHiddenOpen === false && S.hidden_open) {
@@ -813,7 +847,8 @@
       busy = false;
       var d = r && r.data;
       if (btn) btn.disabled = false;
-      if (!d || !d.ok) { toast((d && d.error) || "다시 눌러 주세요."); return; }
+      if (!d) { toast("📶 신호가 약해서 못 보냈어요. 쓴 글은 그대로 있어요. 다시 눌러 주세요."); return; }
+      if (!d.ok) { toast(d.error || "다시 눌러 주세요."); return; }
       if (kind === "animal") {
         if (d.correct) { delete drafts["a" + q]; buzz(); toast("🎉 정답! 이제 그 동물을 찾아가 사진을 찍어요"); }
         else { if (formEl) { formEl.classList.remove("shake"); void formEl.offsetWidth; formEl.classList.add("shake"); } toast("🤔 아니에요. 구절을 다시 읽어 봐요!"); }
@@ -829,7 +864,7 @@
       }
       if (document.activeElement) document.activeElement.blur();
       refresh();
-    }, function () { busy = false; if (btn) btn.disabled = false; toast("연결이 원활하지 않아요. 다시 눌러 주세요."); });
+    }, function () { busy = false; if (btn) btn.disabled = false; toast("📶 신호가 약해서 못 보냈어요. 쓴 글은 그대로 있어요. 다시 눌러 주세요."); });
   }
 
   var pending = null;
@@ -841,20 +876,57 @@
     var label = p.btn.textContent;
     p.btn.disabled = true; p.btn.textContent = "올리는 중...";
     busy = true;
+    function restore() { p.btn.disabled = false; p.btn.textContent = label; }
     compress(file).then(function (blob) {
-      var path = EVENT + "/" + uuid() + ".jpg";
-      return sb.storage.from(BUCKET).upload(path, blob, { contentType: "image/jpeg", upsert: false }).then(function (res) {
-        if (res.error) throw res.error;
-        return SUPABASE_URL + "/storage/v1/object/public/" + BUCKET + "/" + path;
-      });
-    }).then(function (url) {
-      busy = false;
-      submit(p.kind, p.q, null, url, null);
+      // 같은 미션에 새 사진을 고르면 못 보낸 옛 사진은 버린다.
+      photoQueue = photoQueue.filter(function (x) { return !(x.kind === p.kind && x.q === p.q); });
+      updateNetBar();
+      sendPhoto({ kind: p.kind, q: p.q, code: saved.code, member: saved.member, blob: blob, url: null, tries: 0 }, restore);
     }).catch(function () {
-      busy = false; p.btn.disabled = false; p.btn.textContent = label;
-      toast("사진을 올리지 못했어요. 다시 해 주세요.");
+      busy = false; restore();
+      toast("사진을 읽지 못했어요. 다른 사진으로 해 주세요.");
     });
   });
+
+  function uploadPhoto(blob) {
+    var path = EVENT + "/" + uuid() + ".jpg";
+    var up = sb.storage.from(BUCKET).upload(path, blob, { contentType: "image/jpeg", upsert: false }).then(function (res) {
+      if (res.error) throw res.error;
+      return SUPABASE_URL + "/storage/v1/object/public/" + BUCKET + "/" + path;
+    });
+    var limit = new Promise(function (_, reject) { setTimeout(function () { reject(new Error("timeout")); }, UPLOAD_LIMIT_MS); });
+    return Promise.race([up, limit]);
+  }
+  // 사진을 올리고 제출한다. 신호 때문에 실패하면 사진을 갖고 있다가 연결됐을 때 그 사진 그대로 다시 보낸다(다시 찍지 않아도 된다).
+  function sendPhoto(it, done) {
+    busy = true;
+    it.tries++;
+    (it.url ? Promise.resolve(it.url) : uploadPhoto(it.blob)).then(function (url) {
+      it.url = url; // 이미 올라간 사진은 다시 올리지 않는다
+      return sb.rpc("picnic_submit", { p_code: it.code, p_member: it.member, p_kind: it.kind, p_q: it.q, p_text: null, p_photo: url });
+    }).then(function (r) {
+      var d = r && r.data;
+      if (!d) throw new Error("no answer");
+      busy = false;
+      dropPhoto(it);
+      toast(d.ok ? "📮 올렸어요! 선생님이 확인하면 ✅로 바뀌어요" : (d.error || "사진을 못 보냈어요. 다시 올려 주세요."));
+      if (done) done();
+      refresh();
+    }).catch(function () {
+      busy = false;
+      if (it.tries >= PHOTO_TRIES) {
+        dropPhoto(it);
+        toast("사진을 못 보냈어요. 신호가 좋은 곳에서 다시 올려 주세요.");
+      } else if (photoQueue.indexOf(it) < 0) {
+        photoQueue.push(it);
+        toast("📶 신호가 약해요. 사진을 갖고 있다가 연결되면 자동으로 보낼게요");
+      }
+      updateNetBar();
+      if (done) done();
+    });
+  }
+  function dropPhoto(it) { photoQueue = photoQueue.filter(function (x) { return x !== it; }); updateNetBar(); }
+  function flushPhotos() { if (!busy && photoQueue.length) sendPhoto(photoQueue[0], null); }
 
   function uuid() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
