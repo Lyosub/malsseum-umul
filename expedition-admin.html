@@ -318,7 +318,7 @@
           '<figure class="ref"><figcaption>기준 사진</figcaption>기준 사진은 답사 뒤 들어가요<img src="' + ref + '" data-zoom="' + ref + '" alt="" onerror="this.remove()"></figure></div>';
         crit = "같은 장소·비슷한 구도 + 팀원 3명 이상";
       } else if (p.kind === "animal_photo") crit = "「" + esc((p.animals || []).join(" / ")) + "」 (안 보이면 우리·안내판도 OK — 단, 다른 팀 절반 넘게 동물 사진을 올린 문제면 우리·안내판은 돌려보냄) + 팀원 3명 이상";
-      else if (p.kind === "hidden1") crit = "말씀 조각 4장이 모두 보이게 + 지정 장소(" + esc(D.event.meet_place || "미정") + ")";
+      else if (p.kind === "hidden1") crit = "말씀 조각 2장이 모두 보이게 + 지정 장소(" + esc(D.event.meet_place || "미정") + ")";
       else if (p.kind === "hidden2") crit = "서로 다른 색(빨·주·노·갈·초) 떨어진 잎 5장";
       else if (p.kind === "hidden3") crit = "<b>영상은 전도사님 카톡으로 받아요</b> — 팀원 모두 등장 · 15~30초 · 「하나님의 작품」 소개 + 시편 104:24 외치기";
       var meta = '<b>' + title + '</b>' + esc(p.emoji) + " " + esc(p.team) + " · " + esc(p.who || "") + " · " + kst(p.at) +
@@ -373,9 +373,9 @@
     if (!settingsLoaded) {
       settingsLoaded = true;
       $("meetIn").value = e.meet_place || "";
-      // 말씀 조각 단서(2026-10-24 A안): 팀마다 자기 조각 4곳의 단서만 본다. 팀이 없는 단서는 모든 팀에게
+      // 말씀 조각 단서(2026-10-24 A안): 팀마다 자기 조각 2곳의 단서만 본다. 팀이 없는 단서는 모든 팀에게
       var allClues = e.card_clues || [];
-      var DEF_AT = ["2026-11-08T11:40:00+09:00", "2026-11-08T12:00:00+09:00", "2026-11-08T12:30:00+09:00", "2026-11-08T13:10:00+09:00"];
+      var DEF_AT = ["2026-11-08T11:40:00+09:00", "2026-11-08T12:30:00+09:00"];
       function clueRow(c, i, teamId) {
         return '<div class="clueBox" data-team="' + (teamId || "") + '" style="margin-top:8px;padding-bottom:8px;border-bottom:1px dashed #e5d6bd;"><div class="row"><input type="datetime-local" class="clueAt" value="' + toLocalInput(c.at) + '" style="flex:0 0 210px;"><input class="clueText" value="' + esc(c.text || "") + '" placeholder="단서 ' + (i + 1) + ' (글 · 사진만 올려도 돼요)" style="flex:1 1 200px;"></div>' +
           '<input type="hidden" class="cluePhoto" value="' + esc(c.photo || "") + '"><div class="row" style="margin-top:6px;align-items:center;">' +
@@ -383,11 +383,11 @@
           '<img class="clueThumb" src="' + esc(c.photo || "") + '" alt="" style="height:64px;border-radius:8px;' + (c.photo ? "" : "display:none;") + '">' +
           '<button type="button" class="btn ghost clueDel" style="padding:7px 10px;font-size:13px;' + (c.photo ? "" : "display:none;") + '">사진 빼기</button></div></div>';
       }
-      var ch = '<div class="muted" style="margin-bottom:4px;">말씀 조각 단서 — <b>팀마다 그 팀 조각 4곳의 단서</b>만 그 팀 화면에 떠요. 시각이 되면 자동으로 열리고, 그 전에는 사진도 보이지 않아요.</div>';
+      var ch = '<div class="muted" style="margin-bottom:4px;">말씀 조각 단서 — <b>팀마다 그 팀 조각 2곳의 단서</b>만 그 팀 화면에 떠요. 시각이 되면 자동으로 열리고, 그 전에는 사진도 보이지 않아요.</div>';
       (D.teams || []).forEach(function (t) {
         var mine = allClues.filter(function (c) { return String(c.team || "") === String(t.id); });
-        while (mine.length < 4) mine.push({ at: DEF_AT[mine.length] || DEF_AT[3], text: "" });
-        ch += '<div style="margin-top:12px;font-weight:800;">' + esc(t.emoji) + " " + esc(t.name) + ' <span class="muted" style="font-weight:600;">— 조각 4곳</span></div>' +
+        while (mine.length < 2) mine.push({ at: DEF_AT[mine.length] || DEF_AT[1], text: "" });
+        ch += '<div style="margin-top:12px;font-weight:800;">' + esc(t.emoji) + " " + esc(t.name) + ' <span class="muted" style="font-weight:600;">— 조각 2곳</span></div>' +
           mine.map(function (c, i) { return clueRow(c, i, t.id); }).join("");
       });
       var common = allClues.filter(function (c) { return !c.team; });
@@ -447,7 +447,7 @@
     animal_photo: ["동물(우리·안내판)이 안 보여요", "다른 팀 절반 넘게 동물 사진을 올렸어요 — 동물 앞에서 다시 찍어 주세요"],
     place: ["장소나 구도가 달라요"],
     verse: ["빨간 글자를 고쳐 주세요", "빠진 부분이 있어요"],
-    hidden1: ["말씀 조각 4장이 다 안 보여요", "지정 장소가 아니에요"],
+    hidden1: ["말씀 조각 2장이 다 안 보여요", "지정 장소가 아니에요"],
     hidden2: ["서로 다른 색 잎 5장이 아니에요", "꺾은 잎은 안 돼요"],
     hidden3: ["아직 카톡으로 영상이 안 왔어요", "팀원이 모두 나와야 해요", "마지막에 말씀 외치기가 빠졌어요"],
     common: ["팀원이 3명 이상 나와야 해요", "사진이 흐리거나 어두워요"]
