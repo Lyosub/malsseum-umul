@@ -260,7 +260,7 @@
       box.innerHTML = (missing ? '<p class="muted" style="margin:0 0 6px;">⚠ 재적 인원이 없는 오이코스는 광주리 점수와 합계가 나오지 않아요.</p>' : "") +
         '<table style="width:100%;border-collapse:collapse;font-size:13px;line-height:1.5;"><tr><th style="text-align:left;">오이코스</th><th style="text-align:right;">원정대</th><th style="text-align:right;">광주리</th><th style="text-align:right;">합계</th></tr>' +
         rows.map(function (x) {
-          return '<tr style="border-top:1px solid rgba(0,0,0,.1);"><td style="padding:6px 0;">' + tx(x.name) + '<br><span class="muted" style="font-size:12px;">참가 ' + x.people + '명 · 인정 ' + x.harvest_n + '회' + (x.roster === null ? "" : " / " + (x.roster * d.days)) + '회</span></td>' +
+          return '<tr style="border-top:1px solid rgba(0,0,0,.1);"><td style="padding:6px 0;">' + tx(x.name) + '<br><span class="muted" style="font-size:12px;">참가 ' + x.people + '명 · 인정 ' + x.harvest_n + '회' + (x.roster === null ? "" : " / " + (x.roster * d.days) + "회") + '</span></td>' +
             '<td style="text-align:right;">' + x.exp_pts + '</td><td style="text-align:right;">' + (x.harvest_pts === null ? "-" : x.harvest_pts) + '</td><td style="text-align:right;font-weight:800;">' + (x.total === null ? "-" : x.total) + '</td></tr>';
         }).join("") + '</table>';
     }, function () { box.textContent = "불러오지 못했어요. 다시 펼쳐 주세요."; });
