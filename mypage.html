@@ -148,21 +148,21 @@
     <div class="feed-preview-list" id="noteListPrayer" style="margin-top:10px;"></div>
   </div>
 
-  <div class="card feed-compact">
+  <details class="card feed-compact feed-fold">
+    <summary><h3>💬 자유게시판</h3></summary>
     <div class="note-card-head">
-      <h3 style="margin:0;color:var(--well-deep);">💬 자유게시판</h3>
+      <p style="color:var(--text-soft);font-size:11.5px;margin:0;">함께 나누는 이야기, 더 깊어지는 우리</p>
       <a href="board.html" class="btn ghost" style="padding:6px 14px;font-size:12.5px;">✏️ 글쓰기</a>
     </div>
-    <p style="color:var(--text-soft);font-size:11.5px;margin:0 0 8px;">함께 나누는 이야기, 더 깊어지는 우리</p>
     <div class="mini-scroll" id="publicFeedBoard"><p class="msg">불러오는 중...</p></div>
-  </div>
+  </details>
 
-  <div class="card feed-compact" id="suggestionCard">
+  <details class="card feed-compact feed-fold" id="suggestionCard">
+    <summary><h3>📮 건의사항</h3></summary>
     <div class="note-card-head">
-      <h3 style="margin:0;color:var(--well-deep);">📮 건의사항</h3>
+      <p style="color:var(--text-soft);font-size:11.5px;margin:0;">교역자·부장에게만 전달되고, 누가 썼는지도 익명이에요.</p>
       <button type="button" class="btn ghost note-write-toggle" style="padding:6px 14px;font-size:12.5px;">✏️ 건의하기</button>
     </div>
-    <p style="color:var(--text-soft);font-size:11.5px;margin:0 0 8px;">교역자·부장에게만 전달되고, 누가 썼는지도 익명이에요.</p>
     <div class="note-write">
       <form class="note-form" data-type="suggestion">
         <div class="form-row">
@@ -177,7 +177,7 @@
       </form>
     </div>
     <div class="feed-preview-list" id="noteListSuggestion" style="margin-top:10px;"></div>
-  </div>
+  </details>
 
 </div>
 

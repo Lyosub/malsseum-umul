@@ -1553,6 +1553,12 @@ details.mp-fold[open] > summary::after { content: "\25b4"; }
 details.mp-fold[open] { padding-bottom: 14px; }
 details.mp-fold > *:not(summary):first-of-type { margin-top: 0; }
 details.mp-fold h4 { margin-top: 4px; }
+details.feed-fold > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 28px; }
+details.feed-fold > summary::-webkit-details-marker { display: none; }
+details.feed-fold > summary h3 { margin: 0; color: var(--well-deep); }
+details.feed-fold > summary::after { content: "\25be"; color: var(--text-soft); font-size: 12px; flex: none; }
+details.feed-fold[open] > summary::after { content: "\25b4"; }
+details.feed-fold > .note-card-head { margin-top: 8px; }
 
 /* 마이페이지 "달란트 얻는 법" — 줄글 대신 정렬된 목록 */
 .rule-group + .rule-group { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }

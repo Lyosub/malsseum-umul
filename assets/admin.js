@@ -177,7 +177,7 @@ function loadMemberDetail(userId, container) {
       : '<p class="msg" style="margin:8px 0 0;">달란트 내역이 없어요.</p>';
 
     container.innerHTML =
-      '<details class="member-fold" open><summary>📅 출석 (' + attendance.length + '일)</summary>' + attendanceHtml + '</details>' +
+      '<details class="member-fold"><summary>📅 출석 (' + attendance.length + '일)</summary>' + attendanceHtml + '</details>' +
       '<details class="member-fold"><summary>✍️ 작성한 기록 (' + notes.length + '건)</summary>' + notesHtml + '</details>' +
       '<details class="member-fold"><summary>💠 달란트 내역 (' + points.length + '건)</summary>' + pointsHtml + '</details>';
   }).catch(function () {
