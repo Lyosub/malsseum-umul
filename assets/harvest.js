@@ -50,14 +50,14 @@
   // 오이코스가 없는 사람을 묶어 부르는 이름. 쓰기 화면과 놀이터 카드가 함께 쓴다.
   window.HARVEST_OTHER_NAME = "함께하는 분들";
 
-  // 놀이터 카드와 원정대 화면 줄의 「열매 모으러 가기」. 쓸 수 있는 기간에만 보이고(11/8은 안내용으로 미리),
+  // 놀이터 카드와 원정대 화면 줄의 「열매 모으러 가기」. 시작 전에도 안내용으로 보이고 행사가 끝나면 사라진다.
   // 쓰기 화면에서 오이코스를 고른 휴대폰이면 그 오이코스 수로, 아니면 전체 열매 수로 광주리를 채운다.
   window.fillHarvestLink = function (el) {
     if (!el || typeof SUPABASE_URL === "undefined") return;
     rpc("harvest_status").then(function (st) {
       if (!st) return;
       var now = Date.now();
-      if (!st.open && !(now >= new Date("2026-11-08T00:00:00+09:00").getTime() && now < new Date(st.ends_at).getTime())) return;
+      if (now >= new Date(st.ends_at).getTime()) return;
       var label = el.querySelector("[data-label]");
       var basket = el.querySelector("[data-basket]");
       el.style.display = el.getAttribute("data-show") || "flex";
