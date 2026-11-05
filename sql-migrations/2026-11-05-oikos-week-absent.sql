@@ -21,7 +21,8 @@ begin
     return jsonb_build_object('ok', false);
   end if;
 
-  select coalesce(jsonb_agg(p.nickname order by p.nickname), '[]'::jsonb) into v_names
+  -- 닉네임만으로는 누구인지 알 수 없어 실명을 보낸다. 실명이 없으면 닉네임.
+  select coalesce(jsonb_agg(coalesce(nullif(trim(p.real_name), ''), p.nickname) order by coalesce(nullif(trim(p.real_name), ''), p.nickname)), '[]'::jsonb) into v_names
     from group_members gm
     join profiles p on p.user_id = gm.user_id
    where gm.group_id = p_group_id
