@@ -360,6 +360,10 @@
 <div class="toast" id="toast" hidden></div>
 <div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
 
+<script>
+  // 신호가 없을 때도 받아 둔 화면이 열리게 서비스워커를 등록한다. 활동 중 화면이 새로고침되면 안 되므로 pwa.js(자동 새로고침)는 쓰지 않는다.
+  if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+</script>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/harvest.js"></script>
