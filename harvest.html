@@ -250,7 +250,7 @@
   function render() {
     if (!status) return;
     var now = Date.now();
-    var before = now < new Date(status.starts_at).getTime();
+    var before = now < new Date(status.starts_at).getTime() && !status.tester;
     var after = now >= new Date(status.ends_at).getTime();
     var count = status.count;
     window.drawHarvestBasket($('basket'), count);
