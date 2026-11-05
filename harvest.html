@@ -55,6 +55,8 @@
   .who { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .who b { display: block; min-width: 0; overflow-wrap: anywhere; }
   .rows { display: grid; gap: 10px; }
+  .gradeHead { margin: 6px 0 -2px; color: var(--dim); font-size: 13px; font-weight: 700; }
+  .gradeHead:first-child { margin-top: 0; }
   .row { display: grid; gap: 4px; }
   .rowHead { display: flex; justify-content: space-between; gap: 12px; font-size: 14.5px; }
   .rowHead span { min-width: 0; overflow-wrap: anywhere; }
@@ -105,8 +107,10 @@
   </section>
 
   <section class="card" id="pick" hidden>
-    <h2>어느 오이코스인가요?</h2>
-    <div class="names" id="pickNames"></div>
+    <h2 id="pickTitle">몇 학년인가요?</h2>
+    <div class="names" id="pickGrades"></div>
+    <div class="names" id="pickNames" hidden></div>
+    <button class="link" id="pickBack" type="button" hidden>‹ 학년 다시 고르기</button>
     <button class="link" id="pickNone" type="button">오이코스가 없어요</button>
   </section>
 
@@ -143,7 +147,7 @@
   var client = getClient();
   var KEY = 'msu_harvest_group', DEVICE_KEY = 'msu_harvest_device';
   // chosen: 아직 안 고름 null / 고름 { id: 오이코스 번호 또는 null(오이코스 없음) }
-  var status = null, userId = null, chosen = null;
+  var status = null, userId = null, chosen = null, pickedGrade = null;
 
   function readChosen() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
   function saveChosen() { try { if (chosen) localStorage.setItem(KEY, JSON.stringify(chosen)); else localStorage.removeItem(KEY); } catch (e) {} }
@@ -166,13 +170,25 @@
     return groupById(chosen.id);
   }
 
+  function gradeLabel(g) { return g ? g + '학년' : '기타'; }
+  // 학년 순서대로 묶는다. 학년이 안 적힌 오이코스는 맨 뒤 「기타」로 간다.
+  function gradeList() {
+    var seen = [];
+    (status.groups || []).forEach(function (g) {
+      var k = g.grade || 0;
+      if (seen.indexOf(k) < 0) seen.push(k);
+    });
+    return seen;
+  }
+  function groupsOfGrade(k) {
+    return (status.groups || []).filter(function (g) { return (g.grade || 0) === k; });
+  }
   function renderBoard() {
-    var rows = (status.groups || []).map(function (g) { return { name: g.name, n: g.n }; });
-    if (status.other > 0) rows.push({ name: window.HARVEST_OTHER_NAME, n: status.other });
-    var max = rows.reduce(function (m, r) { return Math.max(m, r.n); }, 0);
+    var all = (status.groups || []).concat(status.other > 0 ? [{ name: window.HARVEST_OTHER_NAME, n: status.other }] : []);
+    var max = all.reduce(function (m, r) { return Math.max(m, r.n); }, 0);
     var box = $('boardRows');
     box.innerHTML = '';
-    rows.forEach(function (r) {
+    function addRow(r) {
       var row = document.createElement('div'); row.className = 'row';
       var head = document.createElement('div'); head.className = 'rowHead';
       var name = document.createElement('span'); name.textContent = r.name;
@@ -183,15 +199,37 @@
       bar.appendChild(fill);
       row.appendChild(head); row.appendChild(bar);
       box.appendChild(row);
+    }
+    function addHead(text) {
+      var h = document.createElement('div'); h.className = 'gradeHead'; h.textContent = text;
+      box.appendChild(h);
+    }
+    gradeList().forEach(function (k) {
+      addHead(gradeLabel(k));
+      groupsOfGrade(k).forEach(addRow);
     });
+    if (status.other > 0) { addHead('그 외'); addRow({ name: window.HARVEST_OTHER_NAME, n: status.other }); }
   }
+  // 학년을 먼저 고르고, 그 학년의 오이코스를 고른다.
   function renderPick() {
-    var box = $('pickNames');
-    box.innerHTML = '';
-    (status.groups || []).forEach(function (g) {
+    var grades = $('pickGrades'), names = $('pickNames');
+    var inGrade = pickedGrade !== null;
+    grades.hidden = inGrade;
+    names.hidden = !inGrade;
+    $('pickBack').hidden = !inGrade;
+    $('pickNone').hidden = inGrade;
+    $('pickTitle').textContent = inGrade ? gradeLabel(pickedGrade) + ' 어느 오이코스인가요?' : '몇 학년인가요?';
+    grades.innerHTML = '';
+    names.innerHTML = '';
+    gradeList().forEach(function (k) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = gradeLabel(k); b.dataset.grade = k;
+      grades.appendChild(b);
+    });
+    if (inGrade) groupsOfGrade(pickedGrade).forEach(function (g) {
       var b = document.createElement('button');
       b.type = 'button'; b.textContent = g.name; b.dataset.id = g.id;
-      box.appendChild(b);
+      names.appendChild(b);
     });
   }
   function render() {
@@ -221,7 +259,7 @@
       window.drawHarvestBasket($('mineBasket'), mine.n);
       $('mineCount').textContent = ' ' + mine.n + '개';
     }
-    if ($('pickNames').children.length === 0) renderPick();
+    renderPick();
     renderBoard();
     $('formNote').textContent = (userId
       ? '쓴 글은 감사노트에 저장되고 실시간 나눔에도 보여요.'
@@ -241,6 +279,13 @@
     return loadStatus();
   });
 
+  $('pickGrades').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    pickedGrade = +b.dataset.grade; renderPick();
+  });
+  $('pickBack').addEventListener('click', function () {
+    pickedGrade = null; renderPick();
+  });
   $('pickNames').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     chosen = { id: +b.dataset.id }; saveChosen(); render();
@@ -249,7 +294,7 @@
     chosen = { id: null }; saveChosen(); render();
   });
   $('mineChange').addEventListener('click', function () {
-    chosen = null; saveChosen(); render();
+    chosen = null; pickedGrade = null; saveChosen(); render();
   });
 
   $('body').addEventListener('input', function () { $('len').textContent = this.value.length; });
