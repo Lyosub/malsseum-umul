@@ -616,10 +616,52 @@ function initGroup(userId) {
   }
 
   // 🌊 이번 주 우리 오이코스가 함께 채운 우물 — 점수 경쟁이 아니라 "함께 참여했다"는 경험.
+  function renderOikosAbsent(wellEl, absent) {
+    // 교사 화면: 이번 주 아직 안 온 학생 이름과 카톡으로 부르기. 메시지에는 이름을 넣지 않는다.
+    if (!absent || !absent.ok || !absent.names || !absent.names.length) return;
+    var box = document.createElement("div");
+    box.id = "oikosAbsent";
+    box.style.cssText = "margin-top:14px;padding:14px;border:1.5px solid var(--border);border-radius:14px;";
+    box.innerHTML =
+      '<p style="margin:0;font-weight:800;font-size:14.5px;">이번 주 아직 안 온 친구 ' + absent.names.length + '명</p>' +
+      '<p style="margin:2px 0 8px;font-size:12px;color:var(--text-soft);">선생님에게만 보여요</p>' +
+      '<p style="margin:0 0 10px;font-size:14px;line-height:1.6;">' + absent.names.map(escapeHtml).join(", ") + '</p>' +
+      '<label for="oikosAbsentText" style="display:block;font-size:12.5px;color:var(--text-soft);margin-bottom:4px;">보낼 말 (고칠 수 있어요)</label>' +
+      '<textarea id="oikosAbsentText" rows="3" style="width:100%;box-sizing:border-box;"></textarea>' +
+      '<button type="button" id="oikosAbsentSend" class="btn block" style="margin-top:8px;">💬 카톡으로 부르기</button>' +
+      '<p class="msg" id="oikosAbsentMsg" style="margin:6px 0 0;"></p>';
+    wellEl.appendChild(box);
+    var textEl = document.getElementById("oikosAbsentText");
+    var msgEl = document.getElementById("oikosAbsentMsg");
+    textEl.value = "이번 주 말씀우물에서 같이 물 한 방울 채우자! 💧 출석 체크 한 번이면 돼.\nhttps://logoswell.kr";
+    function copyText(text) {
+      function done() { msgEl.textContent = "보낼 말을 복사했어요. 카톡에 붙여 넣어 보내 주세요."; }
+      function manual() { textEl.focus(); textEl.select(); msgEl.textContent = "보낼 말을 길게 눌러 복사한 뒤 카톡에 붙여 넣어 주세요."; }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, manual);
+      else manual();
+    }
+    document.getElementById("oikosAbsentSend").onclick = function () {
+      var text = textEl.value.trim();
+      msgEl.textContent = "";
+      if (!text) { textEl.focus(); return; }
+      if (navigator.share) {
+        navigator.share({ text: text }).catch(function (e) {
+          if (e && e.name === "AbortError") return; // 공유 창을 그냥 닫은 경우
+          copyText(text);
+        });
+      } else {
+        copyText(text);
+      }
+    };
+  }
+
   function renderOikosWell(groupId) {
     var el = document.getElementById("oikosWellCard");
     if (!el) return;
-    client.rpc("get_group_week_wellfill", { p_group_id: groupId }).then(function (res) {
+    // 교사에게만 아직 안 온 학생 명단이 온다(서버에서 권한 확인). 실패해도 우물 카드는 그대로 보여 준다.
+    var absentReq = client.rpc("get_group_week_absent", { p_group_id: groupId }).then(function (a) { return a.data; }, function () { return null; });
+    Promise.all([client.rpc("get_group_week_wellfill", { p_group_id: groupId }), absentReq]).then(function (all) {
+      var res = all[0], absent = all[1];
       var r = res.data && res.data[0];
       if (res.error || !r || !r.member_count) { el.style.display = "none"; return; }
       var pct = Math.round((r.participated_count / r.member_count) * 100);
@@ -639,6 +681,7 @@ function initGroup(userId) {
         '</div>' +
         '<p style="font-size:12.5px;color:var(--text-soft);margin:8px 0 0;text-align:center;">' + line + '</p>' +
         '<p style="font-size:11px;color:var(--text-soft);margin:4px 0 0;text-align:center;">함께한 발자국 ' + r.footprints + '개 · 월요일에 새로 시작해요</p>';
+      renderOikosAbsent(el, absent);
     });
   }
 
