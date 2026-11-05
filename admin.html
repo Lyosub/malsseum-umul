@@ -374,7 +374,7 @@
         if (hf && !hf.src) {
           hf.src = "harvest-admin.html?embed=1";
           setInterval(function () {
-            try { var hh = hf.contentDocument.documentElement.scrollHeight; if (hh && Math.abs(hh - hf.offsetHeight) > 4) hf.style.height = hh + "px"; } catch (e) {}
+            try { var hm = hf.contentDocument.querySelector("main"); var hh = hm ? hm.offsetHeight + 24 : 0; if (hh && Math.abs(hh - hf.offsetHeight) > 4) hf.style.height = hh + "px"; } catch (e) {}
           }, 700);
         }
       }

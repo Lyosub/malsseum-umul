@@ -27,6 +27,10 @@
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   details summary { cursor: pointer; color: var(--dim); }
   a { color: var(--gold); }
+  .fold summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; margin: -6px 0; color: var(--ink); list-style: none; }
+  .fold summary::-webkit-details-marker { display: none; }
+  .fold summary::after { content: "펼치기 ▾"; flex: none; color: var(--gold); font-size: 13px; font-weight: 700; }
+  .fold[open] summary::after { content: "접기 ▴"; }
   .embed body { padding: 12px; border-radius: 14px; }
   .embed #app h1 { display: none; }
 </style>
@@ -48,12 +52,12 @@
     </div>
     <div class="muted" id="errMsg" role="status"></div>
     <section class="panel">
-      <h2>승인 대기 <span id="pendingCount">0</span></h2>
-      <div class="list" id="pendingList"></div>
+      <details class="fold" id="pendingFold" open><summary><h2>승인 대기 <span id="pendingCount">0</span></h2></summary>
+      <div class="list" id="pendingList" style="margin-top:10px"></div></details>
     </section>
     <section class="panel">
-      <h2>화면에 나오는 글 <span id="approvedCount">0</span></h2>
-      <div class="list" id="approvedList"></div>
+      <details class="fold" id="approvedFold" open><summary><h2>화면에 나오는 글 <span id="approvedCount">0</span></h2></summary>
+      <div class="list" id="approvedList" style="margin-top:10px"></div></details>
     </section>
     <section class="panel">
       <details id="scoreBox"><summary>🧺 오이코스별 감사 시상</summary>
@@ -102,6 +106,12 @@
     $('approvedList').innerHTML = appr.map(function (m) { return item(m, btn('hide', m.id, '숨기기', 'danger')); }).join('') || '<div class="muted">아직 없습니다.</div>';
     $('otherList').innerHTML = other.map(function (m) { return item(m, btn('approve', m.id, '승인'), m.status === 'blocked' ? '금칙어·전화번호로 걸러짐' : '숨김'); }).join('') || '<div class="muted">없습니다.</div>';
   }
+  // 접고 펼친 상태를 이 기기에 기억한다.
+  ['pendingFold', 'approvedFold'].forEach(function (id) {
+    var el = $(id), k = 'msu_harvest_admin_fold_' + id;
+    try { var v = localStorage.getItem(k); if (v !== null) el.open = v === '1'; } catch (e) {}
+    el.addEventListener('toggle', function () { try { localStorage.setItem(k, el.open ? '1' : '0'); } catch (e) {} });
+  });
   var timer = 0;
   function start(d) { $('login').hidden = true; $('app').hidden = false; render(d); clearTimeout(timer); timer = setTimeout(refresh, 4000); }
   function refresh() {
