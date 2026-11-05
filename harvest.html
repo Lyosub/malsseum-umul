@@ -93,7 +93,7 @@
   <div class="count" id="countLine" role="status">불러오는 중</div>
 
   <section class="card intro" id="intro">
-    <details class="fold" id="introFold" open><summary><h2>감사의 광주리가 뭐예요?</h2></summary><div class="foldBody">
+    <details class="fold" id="introFold"><summary><h2>감사의 광주리가 뭐예요?</h2></summary><div class="foldBody">
     <p>이스라엘 백성은 땅에서 거둔 첫 열매를 광주리에 담아 하나님께 드리고, 받은 복을 함께 즐거워하라는 말씀을 받았어요(신명기 26장). 우리도 추수감사주일까지, 하나님이 주신 일상의 감사를 한 줄씩 모아 함께 광주리를 채워요.</p>
     <h3>이렇게 해요</h3>
     <ol>
@@ -146,7 +146,7 @@
   </form>
 
   <section class="card" id="board" hidden>
-    <details class="fold" id="boardFold" open><summary><h2>오이코스별 열매</h2></summary><div class="foldBody">
+    <details class="fold" id="boardFold"><summary><h2>오이코스별 열매</h2></summary><div class="foldBody">
     <div class="rows" id="boardRows"></div></div></details>
   </section>
 
@@ -295,7 +295,7 @@
 
   // 접고 펼친 상태를 이 기기에 기억한다.
   ['introFold', 'boardFold'].forEach(function (id) {
-    var el = $(id), k = 'msu_harvest_fold_' + id;
+    var el = $(id), k = 'msu_harvest_fold2_' + id;
     try { var v = localStorage.getItem(k); if (v !== null) el.open = v === '1'; } catch (e) {}
     el.addEventListener('toggle', function () { try { localStorage.setItem(k, el.open ? '1' : '0'); } catch (e) {} });
   });
