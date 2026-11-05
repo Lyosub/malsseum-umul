@@ -101,13 +101,24 @@ function initSignupForm() {
       });
     }
 
+    function checkPhone() {
+      if (!phoneInput) { doSignUp(); return; }
+      client.rpc("is_phone_taken", { p_phone: phoneDigits }).then(function (res) {
+        if (!res.error && res.data === true) {
+          msg.textContent = "이미 가입된 전화번호예요. 로그인해 주세요.";
+          return;
+        }
+        doSignUp();
+      }).catch(doSignUp);
+    }
+
     client.rpc("is_nickname_taken", { p_nickname: nickname }).then(function (res) {
       if (!res.error && res.data === true) {
         msg.textContent = "이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해주세요.";
         return;
       }
-      doSignUp();
-    }).catch(doSignUp);
+      checkPhone();
+    }).catch(checkPhone);
   });
 }
 
@@ -124,6 +135,28 @@ function initLoginForm() {
   if (savedEmail && emailInput) {
     emailInput.value = savedEmail;
     if (rememberCheck) rememberCheck.checked = true;
+  }
+
+  // 입력한 값이 이메일인지 전화번호인지 이름인지 나눈다. 이름이면 전화번호 칸을 연다.
+  var phoneRow = document.getElementById("loginPhoneRow");
+  var phoneField = document.getElementById("loginPhoneInput");
+  function loginKind(v) {
+    if (v.indexOf("@") >= 0) return "email";
+    if (/^[0-9\s-]+$/.test(v)) return "phone";
+    return v ? "name" : "";
+  }
+  function syncPhoneRow() {
+    if (phoneRow) phoneRow.hidden = loginKind(emailInput.value.trim()) !== "name";
+  }
+  emailInput.addEventListener("input", syncPhoneRow);
+  syncPhoneRow();
+
+  function loginDevice() {
+    try {
+      var d = localStorage.getItem("msu_login_device");
+      if (!d) { d = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); localStorage.setItem("msu_login_device", d); }
+      return d;
+    } catch (e) { return ""; }
   }
 
   form.addEventListener("submit", function (e) {
@@ -146,18 +179,31 @@ function initLoginForm() {
     var email = emailInput.value.trim();
     var password = document.getElementById("passwordInput").value;
 
+    var kind = loginKind(email);
+    var loginPhone = phoneField ? phoneField.value.trim() : "";
+
     if (!email || !password) {
-      msg.textContent = "이메일과 비밀번호를 모두 입력해주세요.";
+      msg.textContent = "이름·전화번호·이메일 중 하나와 비밀번호를 입력해주세요.";
       return;
     }
-    if (email.indexOf("@") < 1 || email.indexOf(".", email.indexOf("@")) < 0) {
+    if (kind === "email" && (email.indexOf("@") < 1 || email.indexOf(".", email.indexOf("@")) < 0)) {
       msg.textContent = "이메일 형식이 올바르지 않아요. (예: name@gmail.com)";
+      return;
+    }
+    if (kind === "phone" && email.replace(/[^0-9]/g, "").length < 9) {
+      msg.textContent = "전화번호를 정확히 입력해주세요.";
+      return;
+    }
+    if (kind === "name" && loginPhone.replace(/[^0-9]/g, "").length < 9) {
+      msg.textContent = "이름으로 로그인할 때는 전화번호도 적어 주세요.";
+      if (phoneField) phoneField.focus();
       return;
     }
 
     msg.textContent = "로그인 중...";
 
-    // 로그인 실패 시 원인을 최대한 구체적으로 안내한다.
+    // 어느 칸이 틀렸는지 구분하지 않는다. 남의 이름·번호·이메일이 가입됐는지 알아낼 수 없게 한다.
+    var LOGIN_CHECK_MSG = "입력한 내용을 다시 확인해 주세요.";
     function explainAuthError(err) {
       var m = (err && err.message ? String(err.message) : "").toLowerCase();
       if (m.indexOf("email not confirmed") >= 0) {
@@ -169,28 +215,24 @@ function initLoginForm() {
         return;
       }
       if (m.indexOf("invalid login credentials") >= 0) {
-        // Supabase 는 "이메일 없음"과 "비번 틀림"을 똑같이 반환한다 → 어느 쪽인지 따로 확인.
-        msg.textContent = "확인 중...";
-        client.rpc("check_email_registered", { p_email: email }).then(function (r) {
-          var row = (r.data && r.data[0]) || {};
-          if (r.error || row.registered === undefined) {
-            msg.textContent = "이메일 또는 비밀번호가 맞지 않아요.";
-          } else if (!row.registered) {
-            msg.textContent = "이 이메일로 가입된 계정이 없어요. 이메일을 다시 확인하거나 아래 '이메일을 잊으셨나요?'를 눌러보세요.";
-          } else if (!row.confirmed) {
-            msg.textContent = "이메일 인증이 안 된 계정이에요. 담당 교역자에게 말씀해주세요.";
-          } else {
-            msg.textContent = "비밀번호가 맞지 않아요. 아래 '비밀번호를 잊으셨나요?'로 새로 설정할 수 있어요.";
-          }
-        }).catch(function () {
-          msg.textContent = "이메일 또는 비밀번호가 맞지 않아요.";
-        });
+        msg.textContent = LOGIN_CHECK_MSG;
         return;
       }
       msg.textContent = "로그인 실패: " + (err && err.message ? err.message : "알 수 없는 오류");
     }
 
-    client.auth.signInWithPassword({ email: email, password: password }).then(function (res) {
+    function showConnectError(err) {
+      // fetch 자체가 실패(Load failed / Failed to fetch / 타임아웃) — 계정 문제가 아니라 네트워크/서버 문제.
+      var m = (err && err.message ? String(err.message) : "").toLowerCase();
+      if (m.indexOf("load failed") >= 0 || m.indexOf("failed to fetch") >= 0 || m.indexOf("network") >= 0 || m.indexOf("fetch") >= 0) {
+        msg.textContent = "서버에 연결하지 못했어요. 계정 문제가 아니라 인터넷·네트워크 문제예요. 잠시 후 다시 시도하거나 다른 인터넷·기기에서 해보세요. (아이폰이면 설정 > [이름] > iCloud > 개인정보 보호 릴레이 끄기, 날짜·시간 자동 설정 확인)";
+      } else {
+        msg.textContent = "로그인 중 오류가 났어요: " + (err && err.message ? err.message : "알 수 없음");
+      }
+    }
+
+    function signIn(loginEmail) {
+    client.auth.signInWithPassword({ email: loginEmail, password: password }).then(function (res) {
       if (res.error) { explainAuthError(res.error); return; }
       if (window.localStorage) {
         if (rememberCheck && rememberCheck.checked) {
@@ -202,14 +244,27 @@ function initLoginForm() {
       // ?next=/odyssey/ 처럼 이 사이트 안의 주소가 오면 로그인 뒤 그곳으로(다른 사이트 주소는 무시)
       var nx = (new URLSearchParams(window.location.search)).get("next") || "";
       window.location.href = (/^\/[A-Za-z0-9_\-\/.]*$/.test(nx) && nx.indexOf("//") < 0) ? nx : "mypage.html";
-    }).catch(function (err) {
-      // fetch 자체가 실패(Load failed / Failed to fetch / 타임아웃) — 계정 문제가 아니라 네트워크/서버 문제.
-      var m = (err && err.message ? String(err.message) : "").toLowerCase();
-      if (m.indexOf("load failed") >= 0 || m.indexOf("failed to fetch") >= 0 || m.indexOf("network") >= 0 || m.indexOf("fetch") >= 0) {
-        msg.textContent = "서버에 연결하지 못했어요. 계정 문제가 아니라 인터넷·네트워크 문제예요. 잠시 후 다시 시도하거나 다른 인터넷·기기에서 해보세요. (아이폰이면 설정 > [이름] > iCloud > 개인정보 보호 릴레이 끄기, 날짜·시간 자동 설정 확인)";
-      } else {
-        msg.textContent = "로그인 중 오류가 났어요: " + (err && err.message ? err.message : "알 수 없음");
+    }).catch(showConnectError);
+    }
+
+    // 비번이 맞을 때만 서버가 이메일을 돌려준다. 확인 함수에 문제가 있어도 이메일 로그인은 막히지 않게 한다.
+    client.rpc("login_resolve", {
+      p_id: email, p_password: password,
+      p_phone: kind === "name" ? loginPhone : null,
+      p_device: loginDevice()
+    }).then(function (r) {
+      if (r.error || !r.data) {
+        if (kind === "email") { signIn(email); return; }
+        showConnectError(r.error || { message: "fetch" });
+        return;
       }
+      if (r.data.ok) { signIn(r.data.email); return; }
+      msg.textContent = r.data.error === "locked"
+        ? "여러 번 틀려서 잠시 막아 두었어요. 15분쯤 뒤에 다시 해 주세요."
+        : LOGIN_CHECK_MSG;
+    }, function (err) {
+      if (kind === "email") { signIn(email); return; }
+      showConnectError(err);
     });
   });
 }
@@ -272,7 +327,7 @@ function initForgotPasswordForm() {
     e.preventDefault();
     var loginEmail = document.getElementById("emailInput");
     var resetEmail = document.getElementById("resetEmailInput");
-    if (loginEmail && resetEmail && loginEmail.value.trim()) resetEmail.value = loginEmail.value.trim();
+    if (loginEmail && resetEmail && loginEmail.value.indexOf("@") > 0) resetEmail.value = loginEmail.value.trim();
     section.style.display = section.style.display === "none" ? "block" : "none";
   });
 

@@ -385,7 +385,26 @@ function ensureProfile(session) {
     var payload = { user_id: userId, nickname: meta.nickname || "익명" };
     if (meta.real_name) payload.real_name = meta.real_name;
     if (meta.phone_number) payload.phone_number = meta.phone_number;
-    return client.from("profiles").insert(payload).then(function () {});
+    return client.from("profiles").insert(payload).then(function (r) {
+      // 가입 뒤 같은 번호가 먼저 등록된 경우에도 프로필은 만들고, 번호는 마이페이지에서 다시 넣게 한다.
+      if (r && r.error && r.error.code === "23505" && payload.phone_number) {
+        delete payload.phone_number;
+        return client.from("profiles").insert(payload).then(function () {});
+      }
+    });
+  });
+}
+
+// 전화번호가 없는 계정에 나의 기록 화면에서 한 번만 안내한다.
+function promptPhoneOnce(session) {
+  var box = document.getElementById("phonePrompt");
+  var client = getClient();
+  if (!box || !client) return;
+  try { if (localStorage.getItem("msu_phone_prompted") === "1") return; } catch (e) { return; }
+  client.from("profiles").select("phone_number").eq("user_id", session.user.id).maybeSingle().then(function (res) {
+    if (res.error || !res.data || res.data.phone_number) return;
+    box.hidden = false;
+    try { localStorage.setItem("msu_phone_prompted", "1"); } catch (e) {}
   });
 }
 
@@ -424,6 +443,7 @@ function initProfileSettings(session) {
     // 닉네임이 아직 없으면(가입 직후) "내 정보"를 펼쳐서 바로 설정하게 안내한다.
     var profileFold = document.getElementById("profileSection");
     if (profileFold && !p.nickname) profileFold.open = true;
+    if (!p.phone_number && phoneMsg) phoneMsg.textContent = "전화번호를 넣으면 이름이나 전화번호로도 로그인할 수 있어요.";
   });
 
   if (savePhoneBtn) {
@@ -442,7 +462,7 @@ function initProfileSettings(session) {
       client.from("profiles").update({ phone_number: value }).eq("user_id", userId).then(function (res) {
         savePhoneBtn.disabled = false;
         if (res.error) {
-          phoneMsg.textContent = "저장에 실패했어요.";
+          phoneMsg.textContent = res.error.code === "23505" ? "이미 다른 계정에 등록된 번호예요." : "저장에 실패했어요.";
           return;
         }
         phoneMsg.textContent = "전화번호가 저장되었습니다.";

@@ -26,16 +26,21 @@
 
   <form id="loginForm" class="card">
     <div class="form-row">
-      <label for="emailInput">이메일</label>
-      <input type="email" id="emailInput" placeholder="you@example.com">
+      <label for="emailInput">이름, 전화번호 또는 이메일</label>
+      <input type="text" id="emailInput" placeholder="이름, 전화번호 또는 이메일" autocomplete="username" autocapitalize="none">
     </div>
     <div class="form-row">
       <label for="passwordInput">비밀번호</label>
-      <input type="password" id="passwordInput" placeholder="••••••">
+      <input type="password" id="passwordInput" placeholder="••••••" autocomplete="current-password">
+    </div>
+    <div class="form-row" id="loginPhoneRow" hidden>
+      <label for="loginPhoneInput">전화번호</label>
+      <input type="tel" id="loginPhoneInput" placeholder="01012345678" inputmode="numeric" autocomplete="tel">
+      <p class="msg" style="margin:4px 0 0;">이름으로 로그인할 때는 전화번호도 함께 적어 주세요.</p>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;margin:-4px 0 14px;font-size:13px;color:var(--text-soft);">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <input type="checkbox" id="rememberEmailCheck" style="width:auto;"> 이메일 저장
+        <input type="checkbox" id="rememberEmailCheck" style="width:auto;"> 입력한 이름·번호·이메일 저장
       </label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
         <input type="checkbox" id="keepLoggedInCheck" checked style="width:auto;"> 로그인 상태 유지

@@ -422,7 +422,7 @@ function loadMemberList() {
         }
         client.rpc("admin_set_phone_number", { p_user_id: targetUserId, p_phone_number: newPhone }).then(function (res) {
           if (res.error) {
-            alert("수정에 실패했어요.");
+            alert(res.error.code === "23505" ? "이미 다른 계정에 등록된 번호예요." : "수정에 실패했어요.");
             return;
           }
           loadMemberList();
