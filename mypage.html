@@ -24,7 +24,7 @@
     <a href="#" id="logoutBtn">로그아웃</a>
   </nav>
 </header>
-<div class="wrap" id="pageContent" style="display:none;">
+<div class="wrap" id="pageContent" style="display:none;min-height:100vh;">
   <div class="page-hd">
     <h1><img src="assets/brand/well-mascot-joy.png" alt="">나의 기록</h1>
     <p>오늘도 하나님과 함께한<br>나의 이야기를 쌓아가요!</p>
@@ -33,7 +33,7 @@
 
   <p class="card" id="phonePrompt" hidden style="margin:0 0 12px;font-size:14.5px;">전화번호를 넣으면 이름이나 전화번호로도 로그인할 수 있어요. <a href="profile.html" style="font-weight:700;white-space:nowrap;">전화번호 넣기 ›</a></p>
 
-  <section class="card kc-card" id="keeperCard" hidden aria-labelledby="kcTitle">
+  <section class="card kc-card kc-wait" id="keeperCard" aria-labelledby="kcTitle">
     <div class="kc-stage" id="kcStage" role="img" aria-label="내 우물지기"></div>
     <div class="kc-body">
       <p class="kc-evolved" id="kcEvolved" hidden></p>
@@ -49,7 +49,7 @@
 
   <div class="card streak">
     <div style="text-align:center;">
-      <div class="num" id="streakNum">0</div>
+      <div class="num" id="streakNum">&nbsp;</div>
       <div class="label">일 연속 출석</div>
     </div>
     <p class="msg" id="streakMilestone" style="margin:8px 0 0;font-weight:600;color:var(--well);"></p>

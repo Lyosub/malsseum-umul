@@ -73,9 +73,9 @@
     if (keeperShown) return;
     keeperShown = true;
     var box = document.createElement("div");
-    box.className = "hv-done";
+    box.className = "hv-done hv-wait";
     box.innerHTML = '<div class="hv-done-text"><span class="hv-done-kicker">오늘도 말씀을 길어 올렸어요</span><strong>오늘의 1분을 다 채웠어요</strong></div>' +
-      '<div class="hv-done-stage" id="hvKeeper"><img src="assets/brand/well-mascot-bucket.png" alt="두레박을 든 우물지기"></div>';
+      '<div class="hv-done-stage" id="hvKeeper"></div>';
     var list = document.getElementById("hvSteps");
     list.parentNode.insertBefore(box, list);
     var load = function (src, next) {
@@ -83,28 +83,36 @@
       t.src = src; t.onload = next; t.onerror = next;
       document.body.appendChild(t);
     };
+    // 3D와 내 우물지기 정보를 모두 받은 뒤 한 번에 보여 준다. 먼저 그림을 띄우면 내 모습과 달라 보인다.
+    var mine = null;
+    function show() {
+      var stage = document.getElementById("hvKeeper");
+      var keeper = (window.mountWooljigi && window.THREE) ? mountWooljigi(stage) : null;
+      box.classList.remove("hv-wait");
+      if (mine) box.style.backgroundImage = "url(assets/home/" + (mine.stage === 2 ? "keeper-bg" : "stage-" + mine.stage) + ".jpg)";
+      if (!keeper) {
+        var img = document.createElement("img");
+        img.src = "assets/brand/well-mascot-bucket.png";
+        img.alt = "두레박을 든 우물지기";
+        stage.appendChild(img);
+        return;
+      }
+      keeper.setBase("proud");
+      if (mine) {
+        keeper.setStage(mine.stage);
+        keeper.setColor(mine.color_chosen ? mine.color : "classic");
+      }
+      keeper.play("joy");
+    }
     // 3D는 세 칸을 다 채웠을 때만 불러온다. 첫 화면은 무거워지지 않는다.
     load("assets/vendor/three-r128.min.js", function () {
       load("assets/wooljigi-3d.js", function () {
-        if (!window.mountWooljigi || !window.THREE) return;
-        var stage = document.getElementById("hvKeeper");
-        var img = stage.querySelector("img");
-        var keeper = mountWooljigi(stage);
-        if (keeper) {
-          if (img) img.remove();
-          
-          keeper.setBase("proud");
-          try {
-            getClient().rpc("get_my_keeper").then(function (r) {
-              if (r.error || !r.data || !r.data.length) return;
-              var st = r.data[0].stage;
-              box.style.backgroundImage = "url(assets/home/" + (st === 2 ? "keeper-bg" : "stage-" + st) + ".jpg)";
-              keeper.setStage(st);
-              keeper.setColor(r.data[0].color_chosen ? r.data[0].color : "classic");
-            });
-          } catch (e) {}
-          keeper.play("joy");
-        }
+        try {
+          getClient().rpc("get_my_keeper").then(function (r) {
+            if (!r.error && r.data && r.data.length) mine = r.data[0];
+            show();
+          }, show);
+        } catch (e) { show(); }
       });
     });
   }

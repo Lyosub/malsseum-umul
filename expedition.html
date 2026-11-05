@@ -41,7 +41,7 @@
   .hero.has-art::after { background: linear-gradient(100deg, rgba(50,18,4,.78) 0%, rgba(50,18,4,.5) 55%, rgba(50,18,4,.15) 100%), linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(40,15,5,.45)); }
   .hero .kicker, .hero p, .hero .back { text-shadow: 0 1px 6px rgba(0,0,0,.45); }
   .hero > * { position: relative; z-index: 1; }
-  .hero .back { color: #fff; opacity: .85; text-decoration: none; font-size: 13px; }
+  .hero .back { display: inline-block; padding: 11px 14px 11px 0; margin: -11px 0 -5px; color: #fff; opacity: .85; text-decoration: none; font-size: 14px; }
   .hero .kicker { margin-top: 18px; font-size: 13px; font-weight: 800; letter-spacing: .04em; color: var(--gold); }
   .hero h1 { margin: 2px 0 4px; font-size: 38px; font-weight: 900; letter-spacing: .02em; text-shadow: 0 2px 10px rgba(0,0,0,.3); }
   .hero p { margin: 0; font-size: 14px; opacity: .92; }
@@ -328,7 +328,7 @@
   <!-- 야유회 참가 신청 (온라인 마감 전까지만) — 접고 펼 수 있다 -->
   <details class="card signup fold" id="signupCard" hidden open>
     <summary><span>🙋 가을 야유회 참가 신청</span></summary>
-    <p class="muted" style="margin:0 0 12px;" id="suNote">11월 8일(주일) 서울대공원 · 온라인 신청 마감 <b id="suUntil">10/25(주일) 밤 9시</b></p>
+    <p class="muted" style="margin:0 0 12px;" id="suNote">11월 8일(주일) 서울대공원 · 온라인 신청 마감 <b id="suUntil"></b></p>
     <form id="suForm">
       <label class="lb">이름(실명)</label>
       <input type="text" id="suName" maxlength="10" autocomplete="name" placeholder="예: 김하은">
@@ -348,7 +348,7 @@
       <p class="msg err" id="suMsg" role="alert"></p>
     </form>
     <div id="suDone" hidden></div>
-    <p class="muted" style="margin:10px 0 0;">📄 부모님 서명이 있는 <b>종이 신청서</b>는 11월 1일(주일)까지 꼭 내 주세요. <b>함께 오는 새친구도</b> 종이 신청서(부모님 서명)를 따로 내야 해요. 같은 이름·학년으로 다시 신청하면 내용이 바뀌어요.</p>
+    <p class="muted" style="margin:10px 0 0;">📄 부모님 서명이 있는 <b>종이 신청서</b>를 아직 안 냈다면 바로 내 주세요. <b>함께 오는 새친구도</b> 종이 신청서(부모님 서명)를 따로 내야 해요. 같은 이름·학년으로 다시 신청하면 내용이 바뀌어요.</p>
   </details>
 
   <p class="verse-foot">"주께서 지으신 것들이 땅에 가득하니이다" (시편 104:24)</p>
@@ -893,7 +893,7 @@
     });
     function done(d) {
       $("suForm").hidden = true; var el = $("suDone"); el.hidden = false;
-      el.innerHTML = '<div class="su-done">' + (d.going === "1" ? "🙌 <b>" + esc(d.name) + "</b>(" + d.grade + "학년) 신청됐어요!" + (d.friend ? " 새친구 " + esc(d.friend) + "도 함께요. (새친구도 부모님 서명 신청서를 11/1까지 내야 해요)" : "") + " 11월 8일에 만나요." : "<b>" + esc(d.name) + "</b>(" + d.grade + "학년) 「못 가요」로 알려 줬어요. 알려 줘서 고마워요!") +
+      el.innerHTML = '<div class="su-done">' + (d.going === "1" ? "🙌 <b>" + esc(d.name) + "</b>(" + d.grade + "학년) 신청됐어요!" + (d.friend ? " 새친구 " + esc(d.friend) + "도 함께요. (새친구도 부모님 서명 신청서를 꼭 내야 해요)" : "") + " 11월 8일에 만나요." : "<b>" + esc(d.name) + "</b>(" + d.grade + "학년) 「못 가요」로 알려 줬어요. 알려 줘서 고마워요!") +
         '</div><button class="btn ghost block" type="button" id="suEdit" style="margin-top:10px;">내용 고치기</button>';
       $("suEdit").onclick = function () { $("suForm").hidden = false; el.hidden = true; };
     }

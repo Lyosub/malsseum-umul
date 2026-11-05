@@ -630,6 +630,7 @@ function initGroup(userId) {
             ? "이번 주 " + r.participated_count + "명이 함께했어요. 아직 안 온 친구를 불러볼까요?"
             : "아직 이번 주엔 참여 안 했어요. 출석 체크나 한 줄 기록으로 물 한 방울 더해요.");
       el.style.display = "block";
+      el.style.minHeight = "";
       el.innerHTML =
         '<h4 style="margin:0 0 8px;color:var(--well-deep);">🌊 이번 주 우리 오이코스 우물</h4>' +
         '<div class="oikos-well">' +

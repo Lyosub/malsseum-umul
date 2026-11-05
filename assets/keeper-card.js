@@ -59,6 +59,7 @@
     current = d;
     if (!pick) pick = d.color || "blue";
     card.hidden = false;
+    card.classList.remove("kc-wait");
     document.getElementById("kcStage").style.backgroundImage = stageBgUrl(d.stage);
     var span = Math.max(1, d.next_xp - d.level_xp);
     var pct = Math.max(0, Math.min(100, Math.round((d.xp - d.level_xp) / span * 100)));
@@ -146,13 +147,26 @@
     }
     try { localStorage.setItem(key, String(current.stage)); } catch (e) {}
   }
-  window.keeperRender = function (d) { render(d); load3d(mount); };
+  window.keeperRender = function (d) {
+    render(d);
+    // 다음에 열 때 이 높이만큼 자리를 잡아 둔다(색을 골랐는지에 따라 높이가 다르다).
+    var body = card.querySelector(".kc-body");
+    body.style.minHeight = "";
+    try { localStorage.setItem("msu_keeper_body_h", String(body.offsetHeight)); } catch (e) {}
+    load3d(mount);
+  };
 
-  if (typeof getClient !== "function" || typeof getSession !== "function") return;
+  var keeperBox = document.getElementById("keeperCard");
+  function hideKeeper() { if (keeperBox) keeperBox.hidden = true; }
+  try {
+    var savedH = Number(localStorage.getItem("msu_keeper_body_h"));
+    if (savedH > 0 && keeperBox) keeperBox.querySelector(".kc-body").style.minHeight = savedH + "px";
+  } catch (e) {}
+  if (typeof getClient !== "function" || typeof getSession !== "function") { hideKeeper(); return; }
   getSession().then(function (session) {
-    if (!session) return;
+    if (!session) { hideKeeper(); return; }
     getClient().rpc("get_my_keeper").then(function (res) {
-      if (res.error || !res.data || !res.data.length) return;
+      if (res.error || !res.data || !res.data.length) { hideKeeper(); return; }
       window.keeperRender(res.data[0]);
     });
   });

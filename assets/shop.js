@@ -43,10 +43,9 @@ function initShopPage() {
   getSession().then(function (session) {
     if (!session) {
       if (gateEl) gateEl.innerHTML = '<div class="card"><p class="msg" style="margin:0;">로그인하면 달란트로 상품을 교환할 수 있어요.</p><a href="login.html" class="btn block" style="margin-top:10px;">로그인하러 가기</a></div>';
-      if (itemsEl) itemsEl.innerHTML = '<p class="msg">로그인이 필요해요.</p>';
+      if (itemsEl) itemsEl.innerHTML = '<p class="msg">로그인하면 상품을 볼 수 있어요.</p>';
       if (ordersEl) ordersEl.innerHTML = '<p class="msg">로그인이 필요해요.</p>';
       if (suggestCard) suggestCard.style.display = "none";
-      loadItems(true);
       return;
     }
     loadBalance();
