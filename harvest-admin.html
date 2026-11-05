@@ -27,6 +27,8 @@
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   details summary { cursor: pointer; color: var(--dim); }
   a { color: var(--gold); }
+  .embed body { padding: 12px; border-radius: 14px; }
+  .embed #app h1 { display: none; }
 </style>
 </head>
 <body>
@@ -69,10 +71,14 @@
 
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
 <script>
 (function () {
   var ROOM = 'harvest', KEY = 'harvest_admin_code', code = '';
-  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // 로그인한 세션을 같이 쓴다(관리자 계정이면 관리 코드 없이 열린다).
+  var sb = (typeof getClient === 'function' && getClient()) || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // 관리자 페이지 「광주리」 탭 안에 들어갈 때(?embed=1): 제목을 숨긴다.
+  if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add('embed');
   var $ = function (id) { return document.getElementById(id); };
   try { code = localStorage.getItem(KEY) || ''; } catch (e) {}
 
@@ -111,7 +117,7 @@
       start(d);
     }).catch(function () { $('loginMsg').textContent = '연결하지 못했습니다. 잠시 뒤 다시 눌러 주세요.'; });
   };
-  if (code) call('list').then(function (d) { if (d.ok) start(d); }).catch(function () {});
+  call('list').then(function (d) { if (d.ok) start(d); }).catch(function () {});
   function loadScores() {
     var box = $('scoreBody');
     box.textContent = '불러오는 중…';

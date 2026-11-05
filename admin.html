@@ -39,6 +39,7 @@
       <button type="button" data-panel="stats">📊 통계</button>
       <button type="button" data-panel="odyssey">🗺 오디세이</button>
       <button type="button" data-panel="expedition">🍁 원정대</button>
+      <button type="button" data-panel="harvest">🧺 광주리</button>
       <button type="button" data-panel="inbox">📥 승인함</button>
     </div>
 
@@ -288,6 +289,15 @@
       </div>
     </section>
 
+    <!-- ===== 감사의 광주리 (11/8~11/15) ===== -->
+    <section class="admin-panel" data-panel="harvest" hidden>
+      <div class="card">
+        <h3 style="margin-top:0;">🧺 감사의 광주리 관리</h3>
+        <p class="msg" style="margin:0;">글 승인 · 예배 화면에 나오는 글 · 오이코스별 감사 시상을 여기서 봐요. 4초마다 새로 고쳐져요.</p>
+      </div>
+      <iframe id="harvestFrame" title="감사의 광주리 관리" style="width:100%;border:0;min-height:600px;display:block;border-radius:14px;background:#1d1a12;"></iframe>
+    </section>
+
     <!-- ===== 가을 원정대 (11/8 야유회) ===== -->
     <section class="admin-panel" data-panel="expedition" hidden>
       <div class="card">
@@ -359,6 +369,15 @@
       });
       try { localStorage.setItem("msu-admin-tab", name); } catch (e) {}
       if (name === "odyssey" && window.initAdminOdyssey) window.initAdminOdyssey();
+      if (name === "harvest") {
+        var hf = document.getElementById("harvestFrame");
+        if (hf && !hf.src) {
+          hf.src = "harvest-admin.html?embed=1";
+          setInterval(function () {
+            try { var hh = hf.contentDocument.documentElement.scrollHeight; if (hh && Math.abs(hh - hf.offsetHeight) > 4) hf.style.height = hh + "px"; } catch (e) {}
+          }, 700);
+        }
+      }
       if (name === "expedition") {
         var f = document.getElementById("expeditionFrame");
         if (f && !f.src) {
