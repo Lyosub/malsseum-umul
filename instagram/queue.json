@@ -420,13 +420,15 @@
       "id": "2026-11-01-cartoon",
       "type": "image",
       "publish_at": "2026-11-05 19:30",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-11-01-cartoon.txt",
       "first_comment_file": "instagram/captions/2026-11-01-cartoon.tags.txt",
       "images": [
         "instagram/2026-11-01-cartoon.jpg"
       ],
-      "note": "말씀카툰 #007 「오늘도 같이 가 주세요」 — 11/1 설교. 늦어서 허둥대던 지호가 현관에서 1분 멈춰 「하나님, 오늘도 같이 가 주세요」 하고 대답한다. 하단 띠 약 4:8. 전도사님 컨펌 2026-10-30."
+      "note": "말씀카툰 #007 「오늘도 같이 가 주세요」 — 11/1 설교. 늦어서 허둥대던 지호가 현관에서 1분 멈춰 「하나님, 오늘도 같이 가 주세요」 하고 대답한다. 하단 띠 약 4:8. 전도사님 컨펌 2026-10-30.",
+      "media_id": "17975109729139135",
+      "posted_at": "2026-11-05 19:32"
     },
     {
       "id": "2026-11-07-preview",
