@@ -44,6 +44,11 @@
   }
   .btn:disabled { opacity: .55; cursor: default; }
   .note { color: var(--dim); font-size: 13px; margin: 0; }
+  .fold summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; margin: -6px 0; cursor: pointer; list-style: none; }
+  .fold summary::-webkit-details-marker { display: none; }
+  .fold summary::after { content: "펼치기 ▾"; flex: none; color: var(--gold); font-size: 13px; font-weight: 700; }
+  .fold[open] summary::after { content: "접기 ▴"; }
+  .foldBody { display: grid; gap: 12px; margin-top: 12px; }
   .intro p { margin: 0; font-size: 15px; }
   .intro h3 { margin: 2px 0 -6px; font-size: 15px; color: var(--gold); }
   .intro ol { margin: 0; padding-left: 20px; font-size: 15px; display: grid; gap: 4px; }
@@ -88,14 +93,14 @@
   <div class="count" id="countLine" role="status">불러오는 중</div>
 
   <section class="card intro" id="intro">
-    <h2>감사의 광주리가 뭐예요?</h2>
+    <details class="fold" id="introFold" open><summary><h2>감사의 광주리가 뭐예요?</h2></summary><div class="foldBody">
     <p>이스라엘 백성은 땅에서 거둔 첫 열매를 광주리에 담아 하나님께 드리고, 받은 복을 함께 즐거워하라는 말씀을 받았어요(신명기 26장). 우리도 추수감사주일까지, 하나님이 주신 일상의 감사를 한 줄씩 모아 함께 광주리를 채워요.</p>
     <h3>이렇게 해요</h3>
     <ol>
       <li>내 오이코스를 골라요. 오이코스가 없어도 함께할 수 있어요.</li>
       <li>오늘 고마웠던 일을 한 줄로 써요.</li>
       <li>쓸 때마다 열매가 하나씩 담겨 광주리가 채워져요.</li>
-    </ol>
+    </ol></div></details>
   </section>
 
   <section class="card" id="before" hidden>
@@ -141,8 +146,8 @@
   </form>
 
   <section class="card" id="board" hidden>
-    <h2>오이코스별 열매</h2>
-    <div class="rows" id="boardRows"></div>
+    <details class="fold" id="boardFold" open><summary><h2>오이코스별 열매</h2></summary><div class="foldBody">
+    <div class="rows" id="boardRows"></div></div></details>
   </section>
 
   <section class="card">
@@ -287,6 +292,13 @@
       status = r.data; render();
     }).catch(function () { $('countLine').textContent = '숫자를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'; });
   }
+
+  // 접고 펼친 상태를 이 기기에 기억한다.
+  ['introFold', 'boardFold'].forEach(function (id) {
+    var el = $(id), k = 'msu_harvest_fold_' + id;
+    try { var v = localStorage.getItem(k); if (v !== null) el.open = v === '1'; } catch (e) {}
+    el.addEventListener('toggle', function () { try { localStorage.setItem(k, el.open ? '1' : '0'); } catch (e) {} });
+  });
 
   chosen = readChosen();
   window.drawHarvestBasket($('basket'), 0);
