@@ -116,12 +116,19 @@
     add("assets/vendor/three-r128.min.js", function () { add("assets/wooljigi-3d.js", done); });
   }
   function mount() {
-    if (keeper || !window.mountWooljigi || !window.THREE) return;
+    if (keeper) return;
     var stage = document.getElementById("kcStage");
-    var img = stage.querySelector("img");
-    keeper = mountWooljigi(stage);
-    if (!keeper) return;
-    if (img) img.remove();
+    if (window.mountWooljigi && window.THREE) keeper = mountWooljigi(stage);
+    // 3D를 못 띄우는 기기에서만 그림을 보여 준다. 그 전에 그림을 먼저 띄우면 내 우물지기와 달라 보인다.
+    if (!keeper) {
+      if (!stage.querySelector("img")) {
+        var img = document.createElement("img");
+        img.src = "assets/brand/well-mascot-idle.png";
+        img.alt = "내 우물지기";
+        stage.appendChild(img);
+      }
+      return;
+    }
     keeper.setBase("idle");
     apply();
     celebrate();
