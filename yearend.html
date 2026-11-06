@@ -7,9 +7,9 @@
 <title>한 해 마무리 말씀카드 | 말씀우물</title>
 <meta name="description" content="2026년을 돌아보고, 새해를 여는 말씀카드 한 장을 뽑아요.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="2026 한 해를 마무리하며 말씀카드 뽑기 | 말씀우물">
-<meta property="og:description" content="2026년을 돌아보고, 새해를 여는 말씀카드 한 장을 뽑아요.">
-<meta property="og:image" content="https://logoswell.kr/assets/og-image.jpg">
+<meta property="og:title" content="2027년을 여는 말씀카드 한 장 뽑기 | 말씀우물">
+<meta property="og:description" content="12월 한 달, 한 해를 돌아보며 새해 말씀카드 한 장을 뽑아 보세요.">
+<meta property="og:image" content="https://logoswell.kr/assets/og-yearend.jpg">
 <meta property="og:url" content="https://logoswell.kr/yearend.html">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
@@ -142,16 +142,17 @@
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
     function kst() { var d = new Date(Date.now() + 9 * 3600e3); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); }
     // 화면에서도 같은 기간을 쓴다(서버 yearend_is_open과 같음). 관리자·부장은 서버가 미리 열어 준다.
-    function openByDate() { var t = kst(); return t >= Date.UTC(Y, 11, 27) && t <= Date.UTC(NEXT, 0, 31); }
+    function openByDate() { var t = kst(); return t >= Date.UTC(Y, 11, 1) && t <= Date.UTC(Y, 11, 31); }
 
     function showClosed() {
-      var left = Math.round((Date.UTC(Y, 11, 27) - kst()) / 86400000);
+      var left = Math.round((Date.UTC(Y, 11, 1) - kst()) / 86400000);
       var box = $("yeClosed");
-      var ended = kst() > Date.UTC(NEXT, 0, 31);
+      var ended = kst() > Date.UTC(Y, 11, 31);
       box.innerHTML = left > 0
-        ? '<p class="ye-msg">12월 27일(주일)에 열려요<span class="ye-count">D-' + left + '</span>한 해 동안 말씀우물에서 함께한 기록을 돌아보고,<br>' + NEXT + '년을 여는 말씀카드 한 장을 뽑아요.</p>'
-        : ended ? '<p class="ye-msg">' + Y + '년 말씀카드 뽑기는 1월 31일에 끝났어요.</p>'
+        ? '<p class="ye-msg">12월 1일에 열려요<span class="ye-count">D-' + left + '</span>12월 한 달 동안 한 해를 돌아보고,<br>' + NEXT + '년을 여는 말씀카드 한 장을 뽑아요.</p>'
+        : ended ? '<p class="ye-msg">' + Y + '년 말씀카드 뽑기는 12월 31일에 끝났어요.</p>'
         : '<p class="ye-msg">곧 열려요. 잠시 뒤 다시 열어 주세요.</p>';
+      if (!ended) box.innerHTML += '<button type="button" class="ye-link" data-share-link>🔗 뽑기 링크 미리 보내 두기</button><p class="msg" data-share-msg style="text-align:center;"></p>';
       box.style.display = "block";
     }
 
@@ -188,7 +189,8 @@
         '<p class="ye-sub">한 해를 지켜 주신 하나님께 감사하며 잠깐 기도해 보세요. 그리고 마음이 가는 카드 한 장을 골라 보세요.' +
         (state.user ? ' 한 사람이 한 장만 뽑을 수 있어요.' : ' <a href="login.html" style="color:var(--well);font-weight:700;">로그인</a>하면 한 해 기록도 함께 볼 수 있어요.') + '</p>' +
         '<div class="ye-deck shuffle" id="yeDeck">' + cards + '</div>' +
-        '<p class="msg" id="yeDrawMsg" style="text-align:center;margin-top:10px;"></p>';
+        '<p class="msg" id="yeDrawMsg" style="text-align:center;margin-top:10px;"></p>' +
+        '<button type="button" class="ye-link" data-share-link>🔗 친구에게 뽑기 링크 보내기</button><p class="msg" data-share-msg style="text-align:center;"></p>';
       box.style.display = "block";
       var deck = $("yeDeck"), busy = false;
       deck.addEventListener("click", function (e) {
@@ -318,6 +320,7 @@
           '<a class="btn ghost" href="' + readHref + '"' + (/^https?:/.test(readHref) ? ' target="_blank" rel="noopener"' : '') + '>📖 본문 읽기</a>' +
         '</div>' +
         '<button type="button" class="ye-link" id="yeShareBtn">💬 이 말씀 나누기</button>' +
+        '<button type="button" class="ye-link" data-share-link style="margin-top:0;">🔗 친구에게 뽑기 링크 보내기</button><p class="msg" data-share-msg style="text-align:center;"></p>' +
         (state.staff ? '<button type="button" class="ye-link" id="yeResetBtn" style="margin-top:0;color:#a33;font-size:12.5px;">관리자 시험: 내 뽑기 지우고 다시 뽑기</button>' : '') +
         '<p class="msg" id="yeSaveMsg" style="text-align:center;margin-top:8px;"></p>' +
         '</div>';
@@ -354,13 +357,28 @@
     }
 
     function share(v) {
-      var text = "[" + NEXT + "년을 여는 말씀] " + v.ref + "\n\"" + v.text + "\"\n\n말씀우물에서 나도 한 장 뽑아 보기 👉 https://logoswell.kr/yearend.html";
+      var text = "[" + NEXT + "년을 여는 말씀] " + v.ref + "\n\"" + v.text + "\"\n\n말씀우물에서 나도 한 장 뽑아 보기 👉 " + SHARE_URL;
       var msg = $("yeSaveMsg");
       if (navigator.share) { navigator.share({ text: text }).catch(function () {}); return; }
       (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () {
         msg.textContent = "말씀을 복사했어요. 카톡에 붙여 넣어 나눠 보세요.";
       }, function () { msg.textContent = "이 기기에서는 나누기를 쓸 수 없어요."; });
     }
+
+    // 뽑기 링크 나누기: 카톡 등으로 보낼 짧은 주소(logoswell.kr/2027 → 이 화면).
+    var SHARE_URL = "https://logoswell.kr/2027";
+    function shareLink(btn) {
+      var msg = btn.parentNode.querySelector("[data-share-msg]");
+      var text = NEXT + "년을 여는 말씀카드 한 장, 같이 뽑아요 🎁\n한 해를 돌아보며 새해 말씀을 받아 보세요.";
+      if (navigator.share) { navigator.share({ title: "말씀우물 새해 말씀카드", text: text, url: SHARE_URL }).catch(function () {}); return; }
+      (navigator.clipboard ? navigator.clipboard.writeText(text + "\n" + SHARE_URL) : Promise.reject()).then(function () {
+        if (msg) msg.textContent = "링크를 복사했어요. 카톡에 붙여 넣어 보내 보세요.";
+      }, function () { if (msg) msg.textContent = "링크: " + SHARE_URL; });
+    }
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest("[data-share-link]");
+      if (b) shareLink(b);
+    });
 
     getSession().then(function (s) {
       state.user = s ? s.user : null;
@@ -380,7 +398,7 @@
         if (!r || !r.ok) { $("yeClosed").innerHTML = '<p class="ye-msg">기록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>'; $("yeClosed").style.display = "block"; return; }
         state.review = r;
         if (!r.open) { showClosed(); return; }
-        if (state.staff && !openByDate()) { $("yeClosed").innerHTML = '<p class="ye-msg">👀 관리자 미리보기예요. 다른 사람에게는 12월 27일에 열려요.</p>'; $("yeClosed").style.display = "block"; }
+        if (state.staff && !openByDate()) { $("yeClosed").innerHTML = '<p class="ye-msg">👀 관리자 미리보기예요. 다른 사람에게는 12월 1일에 열려요.</p>'; $("yeClosed").style.display = "block"; }
         renderReview(r);
         if (r.pick != null) showResult(r.pick, false); else renderDeck();
       });
