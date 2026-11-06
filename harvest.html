@@ -158,6 +158,13 @@
     <div class="rows" id="boardRows"></div></div></details>
   </section>
 
+  <section class="card shareCard">
+    <h2>함께 채워요</h2>
+    <p class="note">친구와 가족에게도 감사의 광주리를 알려 주세요. 로그인 없이 참여할 수 있어요.</p>
+    <button class="btn" id="shareBtn" type="button">🔗 친구에게 감사의 광주리 링크 보내기</button>
+    <p class="msg" id="shareMsg" role="status"></p>
+  </section>
+
   <section class="card">
     <blockquote>네 하나님 여호와께서 너와 네 집에 주신 모든 복으로 말미암아 너는 레위인과 너희 가운데에 거류하는 객과 함께 즐거워할지니라
       <cite>신명기 26장 11절</cite>
@@ -352,6 +359,21 @@
       .then(function () { $('send').disabled = false; });
   });
 })();
+</script>
+<script>
+  // 감사의 광주리 링크 나누기: 폰 공유 창(카톡 등), 없으면 링크 복사.
+  (function () {
+    var btn = document.getElementById("shareBtn"), msg = document.getElementById("shareMsg");
+    if (!btn) return;
+    var url = "https://logoswell.kr/harvest.html";
+    var text = "감사의 광주리 🧺 11월 8일부터 15일까지, 오늘 고마웠던 일 한 줄로 함께 채워요. 로그인 없이 참여할 수 있어요.";
+    btn.addEventListener("click", function () {
+      if (navigator.share) { navigator.share({ title: "감사의 광주리 | 말씀우물", text: text, url: url }).catch(function () {}); return; }
+      (navigator.clipboard ? navigator.clipboard.writeText(text + " " + url) : Promise.reject()).then(function () {
+        msg.textContent = "링크를 복사했어요. 카톡에 붙여 넣어 보내 보세요.";
+      }, function () { msg.textContent = "링크: " + url; });
+    });
+  })();
 </script>
 </body>
 </html>
