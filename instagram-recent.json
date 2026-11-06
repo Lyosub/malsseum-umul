@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-11-05 11:34",
+  "generated_kst": "2026-11-06 11:34",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 141,
     "follows_count": 110,
-    "media_count": 160
+    "media_count": 161
   },
   "posts": [
+    {
+      "id": "17975109729139135",
+      "type": "FEED",
+      "media_type": "IMAGE",
+      "timestamp_utc": "2026-11-05T10:32:33+0000",
+      "permalink": "https://www.instagram.com/p/DfW0x2Vm4Rc/",
+      "caption_first_line": "바쁜 아침, 1분이면 충분합니다.",
+      "likes": 5,
+      "comments": 1
+    },
     {
       "id": "18143005081533013",
       "type": "FEED",
@@ -246,16 +256,6 @@
       "permalink": "https://www.instagram.com/p/Ddqgw8IG5P8/",
       "caption_first_line": "점수는 내가 정할 수 없지만, 마음가짐은 내가 정할 수 있습니다.",
       "likes": 12,
-      "comments": 1
-    },
-    {
-      "id": "18092189033248983",
-      "type": "FEED",
-      "media_type": "IMAGE",
-      "timestamp_utc": "2026-09-24T02:25:14+0000",
-      "permalink": "https://www.instagram.com/p/DdpzoC_jZjY/",
-      "caption_first_line": "풍성한 한가위 보내세요 🌕",
-      "likes": 8,
       "comments": 1
     }
   ]
