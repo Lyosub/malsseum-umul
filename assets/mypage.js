@@ -1207,6 +1207,13 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
+// 감사의 광주리 기간인지(한국 시간 11/8~11/15). 서버(harvest_from_note)도 같은 기간을 다시 확인한다.
+function harvestOpenNow() {
+  var d = new Date(Date.now() + 9 * 3600e3);
+  var t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return t >= Date.UTC(2026, 10, 8) && t <= Date.UTC(2026, 10, 15);
+}
+
 var NOTE_LABELS = { greeting: "하루 인사", gratitude: "감사노트", prayer: "기도제목", suggestion: "건의사항" };
 var NOTE_LIST_IDS = { greeting: "noteListGreeting", gratitude: "noteListGratitude", prayer: "noteListPrayer", suggestion: "noteListSuggestion" };
 
@@ -1462,6 +1469,17 @@ function initNotes(userId) {
     var submitBtn = form.querySelector('button[type="submit"]');
     var picker = bindImagePicker(form);
 
+    // 감사의 광주리 기간(11/8~11/15, 한국 시간)에는 감사노트에 「광주리에도 담기」 체크를 둔다(처음부터 켜짐, 11/7 전도사님).
+    var basketChk = null;
+    if (type === "gratitude" && harvestOpenNow()) {
+      var wrap = document.createElement("label");
+      wrap.className = "basket-share";
+      wrap.style.cssText = "display:flex;align-items:center;gap:8px;margin:6px 0 10px;font-size:13.5px;font-weight:700;color:var(--well-deep);cursor:pointer;min-height:40px;";
+      wrap.innerHTML = '<input type="checkbox" checked style="width:20px;height:20px;accent-color:#c9932f;"> 🧺 감사의 광주리에도 담기 <span style="font-weight:400;color:var(--text-soft);font-size:12px;">(11/15까지)</span>';
+      if (submitBtn) form.insertBefore(wrap, submitBtn); else form.appendChild(wrap);
+      basketChk = wrap.querySelector("input");
+    }
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var content = textarea.value.trim();
@@ -1483,7 +1501,7 @@ function initNotes(userId) {
           image_urls: urls
         };
         if (type === "prayer" && visSel) payload.visibility = visSel.value;
-        return client.from("notes").insert(payload);
+        return client.from("notes").insert(payload).select("id").single();
       }).then(function (res) {
         if (submitBtn) submitBtn.disabled = false;
         if (res && res.error) {
@@ -1491,6 +1509,13 @@ function initNotes(userId) {
           return;
         }
         msg.textContent = "기록되었습니다.";
+        if (basketChk && basketChk.checked && content && res && res.data && res.data.id) {
+          client.rpc("harvest_from_note", { p_note_id: res.data.id }).then(function (r) {
+            var d = r && r.data;
+            if (d && d.ok) msg.textContent = "기록되었습니다. 감사의 광주리에도 담았어요 🧺";
+            else if (d && d.error) msg.textContent = "기록되었습니다. (" + d.error + ")";
+          }, function () {});
+        }
         textarea.value = "";
         picker.reset();
         loadNotes();
