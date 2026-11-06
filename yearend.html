@@ -75,6 +75,10 @@
   .ye-design { border:2px solid #dfe3f4; border-radius:12px; padding:5px 5px 6px; background:#fff; font-family:inherit; font-size:12px; font-weight:800; color:#17287e; cursor:pointer; }
   .ye-design img { display:block; width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:8px; margin-bottom:5px; background:#eef1fb; }
   .ye-design.on { border-color:#c9932f; box-shadow:0 0 0 3px rgba(233,196,106,.45); }
+  .ye-mean { text-align:left; margin:14px 0 0; padding:14px 16px; border-radius:14px; background:#f6f7fd; border:1.5px solid #dfe3f4; }
+  .ye-mean-h { font-size:13px; font-weight:800; color:#a0741c; margin:12px 0 4px; }
+  .ye-mean-h:first-child { margin-top:0; }
+  .ye-mean p { margin:0; font-size:14.5px; line-height:1.75; color:var(--text); word-break:keep-all; }
   .ye-small { font-size:12.5px; color:var(--text-soft); margin:14px 0 6px; text-align:left; font-weight:700; }
   @media (prefers-reduced-motion: reduce) {
     .ye-rays, .ye-fan span, .ye-go, .ye-strip.spin, .ye-spark { animation:none !important; }
@@ -119,6 +123,7 @@
 </footer>
 <script src="assets/yearend-data.js"></script>
 <script src="assets/yearend-card.js"></script>
+<script src="assets/yearend-meaning.js"></script>
 <script src="assets/card-sizes.js"></script>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
@@ -379,6 +384,17 @@
         if (img) img.src = c.toDataURL("image/jpeg", 0.9);
       });
     }
+    // 카드 아래 풀이: 이 말씀은 / 새해 한 걸음 / 기도
+    function meaningHtml(v) {
+      var m = typeof YEAREND_MEANING !== "undefined" && YEAREND_MEANING[v.ref];
+      if (!m) return '<p class="ye-note" style="margin-top:8px;">' + NEXT + '년, 이 말씀과 함께 걸어가요.</p>';
+      return '<div class="ye-mean">' +
+        '<div class="ye-mean-h">이 말씀은</div><p>' + esc(m.m) + '</p>' +
+        '<div class="ye-mean-h">' + NEXT + ' 새해 한 걸음</div><p>' + esc(m.s) + '</p>' +
+        '<div class="ye-mean-h">기도</div><p>' + esc(m.p) + '</p>' +
+      '</div>';
+    }
+
     function showResult(pick, fresh) {
       state.pick = pick;
       var v = YEAREND_VERSES[pick];
@@ -393,7 +409,8 @@
         '<span class="ye-label">' + (fresh ? "🎁 내가 뽑은 " : "🎁 올해 뽑은 ") + NEXT + '년 말씀</span>' +
         '<div class="ye-ref">' + esc(v.ref) + '</div>' +
         '<img class="ye-preview" id="yePreview" alt="' + esc(v.ref + " " + v.text) + '">' +
-        '<p class="ye-note" style="margin-top:8px;">' + NEXT + '년, 이 말씀과 함께 걸어가요.<br>휴대폰 배경으로 저장해 두면 매일 볼 수 있어요.</p>' +
+        meaningHtml(v) +
+        '<p class="ye-note" style="margin-top:10px;">휴대폰 배경으로 저장해 두면 매일 볼 수 있어요.</p>' +
         '<div class="ye-small">저장할 크기</div>' +
         '<div class="tabs" id="yeSizePicker"></div>' +
         '<div class="ye-btns">' +
