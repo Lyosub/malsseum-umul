@@ -12,7 +12,7 @@ body { overflow-x: clip; }
 /* 위쪽 색 띠: 맨 위 줄과 제목이 끊기지 않게 이어진다 */
 header.site {
   max-width: none;
-  padding: 14px max(20px, calc((100vw - var(--max)) / 2 + 20px)) 8px;
+  padding: 14px max(20px, calc((100vw / var(--zf, 1) - var(--max)) / 2 + 20px)) 8px;
   background: var(--tone);
 }
 header.site .logo, header.site nav a { color: #fff; }
@@ -23,8 +23,8 @@ header.site nav a.active, header.site nav a:hover { color: #fff; opacity: .85; }
 
 .wrap { padding-top: 0; }
 .page-hd {
-  margin: 0 calc(50% - 50vw) 16px;
-  padding: 12px max(20px, calc(50vw - 50% + 0px)) 26px;
+  margin: 0 calc(50% - 50vw / var(--zf, 1)) 16px;
+  padding: 12px max(20px, calc(50vw / var(--zf, 1) - 50% + 0px)) 26px;
   background: var(--tone);
   color: #fff;
   border-radius: 0 0 24px 24px;

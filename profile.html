@@ -14,6 +14,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#c2601a">
 <link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script src="assets/text-size.js"></script>
 <script defer src="assets/pwa.js"></script>
 </head>
 <body>
@@ -70,6 +71,11 @@
       <button type="button" id="pushSubscribeBtn" class="btn ghost" data-subscribed="0" style="white-space:nowrap;padding:8px 14px;font-size:12.5px;">🔔 알림 받기</button>
     </div>
     <p class="msg" id="pushSubscribeMsg"></p>
+
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+      <p class="msg" style="margin:0 0 8px;">가 글자 크기 <span style="font-size:11.5px;">(이 기기에서만 바뀌어요)</span></p>
+      <div class="ts-row" id="profileTextSize" role="group" aria-label="글자 크기"></div>
+    </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
       <p class="msg" style="margin:0;">🔒 비밀번호를 바꾸고 싶으신가요?</p>
@@ -178,6 +184,7 @@
 <script src="assets/push.js"></script>
 <script>
   initLogoutButton();
+  msuTextSizeControl("profileTextSize");
   getSession().then(function (session) {
     if (!session) {
       var _lg=document.getElementById("navLoginGated"); if(_lg)_lg.style.display="inline"; var _lo=document.getElementById("logoutBtn"); if(_lo)_lo.style.display="none";

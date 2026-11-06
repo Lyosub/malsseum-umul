@@ -2334,3 +2334,15 @@ header.site nav a { display: inline-block; padding: 10px 5px; margin: -10px -5px
 .oikos-treasury details.mp-fold { color: var(--text); }
 .oikos-treasury details.mp-fold > summary { color: var(--well-deep); }
 .oikos-treasury details.mp-fold .msg { color: var(--text-soft) !important; }
+
+/* 글자 크게 보기 (assets/text-size.js) */
+.ts-box { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; background:var(--card-bg,#fff); border:1.5px solid var(--border); border-radius:14px; padding:10px 12px; margin:0 0 16px; }
+.ts-title { font-weight:800; color:var(--well-deep); font-size:13.5px; }
+.ts-row { display:flex; gap:6px; flex-wrap:wrap; }
+.ts-btn { font-family:inherit; font-weight:700; min-height:40px; padding:6px 12px; border-radius:10px; border:1.5px solid var(--border); background:var(--card-bg,#fff); color:var(--text); cursor:pointer; }
+.ts-btn.on { background:var(--well); border-color:var(--well); color:#fff; }
+/* 확대된 화면 안에서 100vw는 확대 배수만큼 넓어지므로, 화면 폭을 쓰는 곳은 --zf로 나눈다(app-v2.css) */
+html[data-text-size="1.12"] { --zf: 1.12; }
+html[data-text-size="1.25"] { --zf: 1.25; }
+html[data-text-size="1.12"] body { zoom: 1.12; }
+html[data-text-size="1.25"] body { zoom: 1.25; }

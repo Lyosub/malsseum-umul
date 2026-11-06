@@ -15,6 +15,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#17287e">
 <link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script src="assets/text-size.js"></script>
 <script defer src="assets/pwa.js"></script>
 </head>
 <body>
@@ -37,6 +38,11 @@
     <input type="text" id="menuSearch" placeholder="메뉴를 검색해 보세요!" autocomplete="off">
   </div>
   <p class="msg" id="menuSearchEmpty" style="display:none;text-align:center;">찾는 메뉴가 없어요.</p>
+
+  <div class="ts-box" id="allTextSizeBox">
+    <span class="ts-title">가 글자 크기</span>
+    <div class="ts-row" id="allTextSize" role="group" aria-label="글자 크기"></div>
+  </div>
 
   <a href="admin.html" id="allAdminLink" class="pill-blue block" style="display:none;margin:-4px 0 16px;">🛠️ 관리자 페이지로 들어가기</a>
 
@@ -129,6 +135,7 @@
 <script src="assets/appshell.js"></script>
 <script>
   initHeaderAuthState();
+  msuTextSizeControl("allTextSize");
   // 앱 설치: 기기에 맞는 안내로 (아이폰이면 iOS 안내)
   (function () {
     var ai = document.getElementById("allAppInstall");
