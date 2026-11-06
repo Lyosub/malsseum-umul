@@ -7,7 +7,8 @@
     return d.getUTCFullYear() + "-" + (d.getUTCMonth() + 1) + "-" + d.getUTCDate();
   }
   function kstMs() { var d = new Date(Date.now() + 9 * 3600e3); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); }
-  var KEY = "msu_ye_prompt_later";
+  // 11/6: 「뽑으러 가기」만 누르고 안 뽑은 사람도 다시 보이도록 키 이름을 바꿔 예전 기록을 비운다.
+  var KEY = "msu_ye_prompt_later2";
 
   function later() { try { return localStorage.getItem(KEY) === kstKey(); } catch (e) { return false; } }
   function setLater() { try { localStorage.setItem(KEY, kstKey()); } catch (e) {} }
@@ -55,7 +56,7 @@
     function close() { setLater(); el.classList.remove("on"); setTimeout(function () { el.remove(); }, 400); }
     el.querySelector(".yp-no").onclick = close;
     el.addEventListener("click", function (e) { if (e.target === el) close(); });
-    el.querySelector(".yp-go").onclick = function () { setLater(); };
+    // 「뽑으러 가기」는 그날 막지 않는다. 실제로 뽑으면 서버가 picked를 돌려주어 더는 뜨지 않는다.
   }
 
   function check() {
