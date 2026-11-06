@@ -13,6 +13,7 @@
 <meta property="og:url" content="https://logoswell.kr/yearend.html">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@800&display=swap">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/app-v2.css">
 <link rel="manifest" href="manifest.json">
@@ -28,63 +29,55 @@
   .ye-stat b { display:block; font-size:24px; font-weight:800; color:#17287e; line-height:1.15; }
   .ye-stat span { font-size:12px; font-weight:700; color:var(--text-soft); }
   .ye-stat.wide { grid-column:1 / -1; }
-  .ye-deck { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; perspective:900px; margin-top:6px; }
-  .ye-card { aspect-ratio:3/4.2; border:0; padding:0; background:none; cursor:pointer; position:relative; font-family:inherit; }
-  .ye-card .in { position:absolute; inset:0; transition:transform .7s; transform-style:preserve-3d; }
-  .ye-card .f, .ye-card .b { position:absolute; inset:0; border-radius:12px; backface-visibility:hidden; -webkit-backface-visibility:hidden; display:flex; align-items:center; justify-content:center; }
-  .ye-card .f { background:linear-gradient(155deg,#17287e,#2540d8); border:2px solid #c9932f; color:#e9c46a; font-size:22px; box-shadow:0 4px 10px rgba(23,40,126,.25); }
-  .ye-card .b { background:#fffaf0; border:2px solid #c9932f; color:#7a5310; font-size:12px; font-weight:800; transform:rotateY(180deg); padding:4px; text-align:center; }
-  .ye-card.flip .in { transform:rotateY(180deg); }
-  .ye-deck.picking .ye-card:not(.flip) { opacity:.35; transition:opacity .4s; }
-  .ye-deck.shuffle .ye-card { animation:yeShake .5s ease-in-out; }
-  @keyframes yeShake { 0%,100% { transform:translateY(0) rotate(0); } 30% { transform:translateY(-6px) rotate(-3deg); } 60% { transform:translateY(2px) rotate(3deg); } }
-  .ye-result { text-align:center; padding:0 !important; overflow:hidden; }
-  .ye-photo { position:relative; padding:34px 18px 120px; background-color:#17287e; background-size:cover; background-position:center; color:#fff; }
-  .ye-photo::before { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(8,12,40,.42) 0%, rgba(8,12,40,.22) 45%, rgba(8,12,40,.5) 100%); }
-  .ye-photo > * { position:relative; }
-  .ye-photo .ye-label { background:rgba(255,255,255,.16); color:#ffe7a8; border:1px solid rgba(255,231,168,.5); }
-  .ye-photo .ye-ref { color:#ffe7a8; }
-  .ye-photo .ye-verse { color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6), 0 2px 14px rgba(0,0,0,.5); }
-  .ye-photo .ye-note, .ye-photo .ye-ref { text-shadow:0 1px 4px rgba(0,0,0,.6); }
-  .ye-photo .ye-note { color:rgba(255,255,255,.88); margin-bottom:0; }
-  .ye-actions { padding:16px 18px 18px; }
-  .ye-result.reveal .ye-photo { animation:yeReveal 1s ease-out both; }
-  .ye-result.reveal .ye-photo > * { animation:yeRise .9s ease-out both; }
-  .ye-result.reveal .ye-ref { animation-delay:.25s; }
-  .ye-result.reveal .ye-verse { animation-delay:.45s; }
-  .ye-result.reveal .ye-note { animation-delay:.7s; }
-  @keyframes yeReveal { from { filter:brightness(2.2) saturate(.4); } to { filter:none; } }
-  @keyframes yeRise { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
-  /* 카드판: 기다리는 동안 반짝임 */
-  .ye-deck:not(.picking) .ye-card .f { animation:yeGlow 2.6s ease-in-out infinite; }
-  .ye-deck .ye-card:nth-child(3n+1) .f { animation-delay:.4s; }
-  .ye-deck .ye-card:nth-child(3n+2) .f { animation-delay:1.1s; }
-  @keyframes yeGlow { 0%,100% { box-shadow:0 4px 10px rgba(23,40,126,.25); } 50% { box-shadow:0 0 16px rgba(233,196,106,.75); } }
-  .ye-card:active .in { transform:scale(.94); }
-  /* 뽑기 연출: 화면 가운데로 커지는 카드, 빛, 별가루 */
-  .ye-stage { position:fixed; inset:0; z-index:2000; display:flex; align-items:center; justify-content:center; background:rgba(6,10,34,0); transition:background .5s; pointer-events:auto; }
-  .ye-stage.on { background:rgba(6,10,34,.86); }
-  .ye-stage.out { background:rgba(6,10,34,0); transition:background .6s, opacity .6s; opacity:0; }
-  .ye-rays { position:absolute; width:520px; height:520px; border-radius:50%; background:repeating-conic-gradient(from 0deg, rgba(255,226,150,.22) 0 8deg, transparent 8deg 22deg); opacity:0; transform:scale(.3); transition:opacity .6s, transform 1.2s; animation:yeSpin 9s linear infinite; }
+  /* 뽑기 시작 칸 */
+  .ye-start { text-align:center; }
+  .ye-fan { position:relative; height:150px; margin:8px 0 14px; }
+  .ye-fan span { position:absolute; left:50%; top:10px; width:92px; height:128px; margin-left:-46px; border-radius:12px; background:linear-gradient(155deg,#17287e,#2540d8); border:2px solid #e9c46a; color:#ffe7a8; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 6px 16px rgba(23,40,126,.3); animation:yeFloat 3s ease-in-out infinite; }
+  .ye-fan span:nth-child(1) { transform:translateX(-62px) rotate(-14deg); animation-delay:.3s; }
+  .ye-fan span:nth-child(3) { transform:translateX(62px) rotate(14deg); animation-delay:.9s; }
+  .ye-fan span:nth-child(2) { z-index:1; background:linear-gradient(160deg,#fffaf0,#f6e3b4); border-color:#c9932f; color:#5a3c06; font-size:14px; font-weight:800; line-height:1.35; text-align:center; }
+  @keyframes yeFloat { 0%,100% { margin-top:0; } 50% { margin-top:-7px; } }
+  .ye-go { width:100%; min-height:56px; border:0; border-radius:16px; background:linear-gradient(135deg,#17287e,#2540d8); color:#fff; font-family:inherit; font-size:17px; font-weight:800; cursor:pointer; box-shadow:0 6px 18px rgba(23,40,126,.35), inset 0 0 0 2px rgba(233,196,106,.7); animation:yeGoGlow 2.4s ease-in-out infinite; }
+  .ye-go:active { transform:scale(.98); }
+  .ye-go:disabled { opacity:.6; animation:none; }
+  @keyframes yeGoGlow { 0%,100% { box-shadow:0 6px 18px rgba(23,40,126,.35), inset 0 0 0 2px rgba(233,196,106,.7); } 50% { box-shadow:0 6px 26px rgba(233,196,106,.6), inset 0 0 0 2px rgba(255,231,168,1); } }
+  /* 뽑기 연출: 말씀들이 돌아가다 하나에 멈춘다 */
+  .ye-stage { position:fixed; inset:0; z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(6,10,34,0); transition:background .5s; }
+  .ye-stage.on { background:rgba(6,10,34,.9); }
+  .ye-stage.out { opacity:0; transition:opacity .6s; }
+  .ye-stage-title { color:#ffe7a8; font-size:15px; font-weight:800; margin-bottom:14px; letter-spacing:.02em; opacity:0; transition:opacity .5s .2s; }
+  .ye-stage.on .ye-stage-title { opacity:1; }
+  .ye-rays { position:absolute; left:50%; top:50%; width:560px; height:560px; margin:-280px 0 0 -280px; border-radius:50%; background:repeating-conic-gradient(from 0deg, rgba(255,226,150,.24) 0 8deg, transparent 8deg 22deg); opacity:0; transform:scale(.3); transition:opacity .6s, transform 1.2s; animation:yeSpin 9s linear infinite; pointer-events:none; }
   .ye-stage.lit .ye-rays { opacity:1; transform:scale(1); }
   @keyframes yeSpin { to { rotate:360deg; } }
-  .ye-big { position:relative; width:170px; height:238px; perspective:1000px; transform:scale(.4); opacity:0; transition:transform .6s cubic-bezier(.2,1.4,.4,1), opacity .3s; }
-  .ye-stage.on .ye-big { transform:scale(1); opacity:1; }
-  .ye-big .in { position:absolute; inset:0; transform-style:preserve-3d; transition:transform .8s cubic-bezier(.3,1.3,.5,1); }
-  .ye-big.wait .in { animation:yeWobble .55s ease-in-out infinite; }
-  @keyframes yeWobble { 0%,100% { transform:rotate(-3deg) scale(1); } 50% { transform:rotate(3deg) scale(1.04); } }
-  .ye-big.flip .in { transform:rotateY(180deg); animation:none; }
-  .ye-big .f, .ye-big .b { position:absolute; inset:0; border-radius:16px; backface-visibility:hidden; -webkit-backface-visibility:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
-  .ye-big .f { background:linear-gradient(155deg,#17287e,#2540d8); border:3px solid #e9c46a; color:#ffe7a8; font-size:44px; box-shadow:0 0 34px rgba(233,196,106,.7); }
-  .ye-big .b { transform:rotateY(180deg); background:linear-gradient(160deg,#fffaf0,#f6e3b4); border:3px solid #c9932f; color:#5a3c06; padding:14px; text-align:center; box-shadow:0 0 50px rgba(255,226,150,.9); }
-  .ye-big .b small { font-size:12px; font-weight:800; letter-spacing:.04em; color:#a0741c; }
-  .ye-big .b b { font-size:20px; font-weight:800; }
+  .ye-reel { position:relative; width:min(320px, 86vw); height:360px; overflow:hidden; border-radius:18px; -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 26%, #000 74%, transparent 100%); mask-image:linear-gradient(180deg, transparent 0, #000 26%, #000 74%, transparent 100%); }
+  .ye-frame { position:absolute; left:50%; top:50%; width:min(320px, 86vw); height:124px; transform:translate(-50%, -50%); border:3px solid #e9c46a; border-radius:18px; box-shadow:0 0 24px rgba(233,196,106,.6), inset 0 0 18px rgba(233,196,106,.25); pointer-events:none; transition:box-shadow .4s, border-color .4s; }
+  .ye-stage.lit .ye-frame { border-color:#fff3c4; box-shadow:0 0 50px rgba(255,226,150,.95), inset 0 0 26px rgba(255,226,150,.5); }
+  .ye-strip { position:absolute; left:0; right:0; top:118px; will-change:transform; }
+  .ye-strip.spin { animation:yeRoll .7s linear infinite; }
+  @keyframes yeRoll { from { transform:translateY(0); } to { transform:translateY(calc(var(--loop) * -1)); } }
+  .ye-item { height:124px; box-sizing:border-box; padding:16px 18px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:#fff; }
+  .ye-item b { font-size:19px; font-weight:800; color:#ffe7a8; }
+  .ye-item span { font-size:13.5px; color:rgba(255,255,255,.78); margin-top:6px; line-height:1.45; word-break:keep-all; }
+  .ye-item.win { animation:yeWin .7s cubic-bezier(.2,1.5,.4,1) both; }
+  .ye-item.win b { font-size:22px; color:#fff6dc; text-shadow:0 0 14px rgba(255,226,150,.9); }
+  @keyframes yeWin { from { transform:scale(1); } to { transform:scale(1.1); } }
   .ye-spark { position:absolute; left:50%; top:50%; width:var(--s); height:var(--s); margin:calc(var(--s) / -2); border-radius:50%; background:radial-gradient(circle, #fff 0 25%, #ffe08a 45%, rgba(255,200,80,0) 72%); animation:yeBurst var(--d) cubic-bezier(.1,.7,.3,1) forwards; pointer-events:none; }
   .ye-spark.star { border-radius:0; background:none; color:#ffe08a; font-size:var(--s); width:auto; height:auto; margin:0; line-height:1; text-shadow:0 0 8px rgba(255,224,138,.9); }
   @keyframes yeBurst { 0% { transform:translate(0,0) scale(.3); opacity:1; } 70% { opacity:1; } 100% { transform:translate(var(--x), var(--y)) scale(1); opacity:0; } }
-  .ye-tap { position:absolute; bottom:calc(48px + env(safe-area-inset-bottom)); left:0; right:0; text-align:center; color:rgba(255,255,255,.8); font-size:14px; font-weight:700; }
+  .ye-tap { margin-top:22px; color:rgba(255,255,255,.82); font-size:14px; font-weight:700; min-height:20px; text-align:center; padding:0 16px; }
+  /* 결과: 카드 미리보기와 디자인 고르기 */
+  .ye-result { text-align:center; }
+  .ye-preview { display:block; margin:12px auto 4px; max-width:100%; max-height:66vh; border-radius:14px; box-shadow:0 8px 24px rgba(23,40,126,.25); }
+  .ye-result.reveal .ye-preview { animation:yeReveal 1.1s ease-out both; }
+  @keyframes yeReveal { from { opacity:0; transform:scale(.92); filter:brightness(2); } to { opacity:1; transform:none; filter:none; } }
+  .ye-designs { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin:6px 0 4px; }
+  .ye-design { border:2px solid #dfe3f4; border-radius:12px; padding:5px 5px 6px; background:#fff; font-family:inherit; font-size:12px; font-weight:800; color:#17287e; cursor:pointer; }
+  .ye-design img { display:block; width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:8px; margin-bottom:5px; background:#eef1fb; }
+  .ye-design.on { border-color:#c9932f; box-shadow:0 0 0 3px rgba(233,196,106,.45); }
+  .ye-small { font-size:12.5px; color:var(--text-soft); margin:14px 0 6px; text-align:left; font-weight:700; }
   @media (prefers-reduced-motion: reduce) {
-    .ye-rays, .ye-big.wait .in, .ye-deck .ye-card .f, .ye-spark { animation:none !important; }
+    .ye-rays, .ye-fan span, .ye-go, .ye-strip.spin, .ye-spark { animation:none !important; }
   }
 
   .ye-label { display:inline-block; font-size:12px; font-weight:800; padding:4px 10px; border-radius:999px; background:#fbf3e0; color:#7a5310; }
@@ -125,6 +118,7 @@
   성경 인용: 개역개정판, ⓒ 대한성서공회
 </footer>
 <script src="assets/yearend-data.js"></script>
+<script src="assets/yearend-card.js"></script>
 <script src="assets/card-sizes.js"></script>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
@@ -137,7 +131,7 @@
     var Y = YEAREND_YEAR, NEXT = Y + 1;
     var GUEST_KEY = "msu_yearend_pick_" + Y;
     var $ = function (id) { return document.getElementById(id); };
-    var state = { user: null, review: null, staff: false, pick: null };
+    var state = { user: null, review: null, staff: false, pick: null, design: "photo" };
 
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
     function kst() { var d = new Date(Date.now() + 9 * 3600e3); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); }
@@ -182,36 +176,35 @@
 
     function renderDeck() {
       var box = $("yeDraw");
-      var cards = "";
-      for (var i = 0; i < 12; i++) cards += '<button type="button" class="ye-card" data-i="' + i + '" aria-label="카드 ' + (i + 1) + '"><span class="in"><span class="f">✦</span><span class="b">' + NEXT + '<br>말씀</span></span></button>';
+      box.className = "card ye-start";
       box.innerHTML =
         '<div class="ye-sec-title">' + NEXT + '년을 여는 말씀카드</div>' +
-        '<p class="ye-sub">한 해를 지켜 주신 하나님께 감사하며 잠깐 기도해 보세요. 그리고 마음이 가는 카드 한 장을 골라 보세요.' +
-        (state.user ? ' 한 사람이 한 장만 뽑을 수 있어요.' : ' <a href="login.html" style="color:var(--well);font-weight:700;">로그인</a>하면 한 해 기록도 함께 볼 수 있어요.') + '</p>' +
-        '<div class="ye-deck shuffle" id="yeDeck">' + cards + '</div>' +
+        '<p class="ye-sub">한 해를 지켜 주신 하나님께 감사하며 잠깐 기도해 보세요.<br>그리고 아래 버튼을 눌러 새해 말씀을 받아 보세요.' +
+        (state.user ? '<br>한 사람이 한 번만 뽑을 수 있어요.' : '<br><a href="login.html" style="color:var(--well);font-weight:700;">로그인</a>하면 한 해 기록도 함께 볼 수 있어요.') + '</p>' +
+        '<div class="ye-fan" aria-hidden="true"><span>✦</span><span>' + NEXT + '<br>말씀</span><span>✦</span></div>' +
+        '<button type="button" class="ye-go" id="yeGoBtn">✦ 말씀 뽑기</button>' +
         '<p class="msg" id="yeDrawMsg" style="text-align:center;margin-top:10px;"></p>' +
         '<button type="button" class="ye-link" data-share-link>🔗 친구에게 뽑기 링크 보내기</button><p class="msg" data-share-msg style="text-align:center;"></p>';
       box.style.display = "block";
-      var deck = $("yeDeck"), busy = false;
-      deck.addEventListener("click", function (e) {
-        var c = e.target.closest(".ye-card");
-        if (!c || busy) return;
-        busy = true;
-        $("yeDrawMsg").textContent = "카드를 펼치는 중...";
+      var btn = $("yeGoBtn");
+      btn.onclick = function () {
+        btn.disabled = true;
+        $("yeDrawMsg").textContent = "";
+        var el = stage();
+        var t0 = Date.now();
         draw().then(function (pick) {
-          if (pick == null) { busy = false; return; }
-          c.classList.add("flip");
-          deck.classList.add("picking");
-          $("yeDrawMsg").textContent = "";
-          playReveal(pick, function () {
-            $("yeDraw").style.display = "none";
-            showResult(pick, true);
-          });
+          if (pick == null) { el.remove(); btn.disabled = false; return; }
+          setTimeout(function () {
+            roll(el, pick, function () {
+              $("yeDraw").style.display = "none";
+              showResult(pick, true);
+            });
+          }, Math.max(0, 1100 - (Date.now() - t0)));
         });
-      });
+      };
     }
 
-    // 뽑은 말씀마다 배경 사진을 하나로 정한다(다시 열어도, 저장한 카드도 같은 사진). 너무 어두운 사진은 뺀다.
+    // 뽑은 말씀마다 배경 사진을 하나로 정한다(다시 열어도, 저장한 카드도 같은 사진).
     function bgNum(pick) {
       // 밝고 풍경이 잘 보이는 사진(71~85번: 11/4 밝은 배경 9장 + 가을 단풍 6장)만 쓴다.
       var bright = [71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85];
@@ -219,24 +212,52 @@
     }
     function bgUrl(pick) { return "assets/verse-card-bg/verse-card-bg-" + String(bgNum(pick)).padStart(2, "0") + ".jpg"; }
 
-    // 뽑기 연출. 고른 카드가 가운데로 커지고, 서버 응답을 기다리는 동안 흔들리다가, 별가루와 함께 뒤집힌다.
+    // ---- 뽑기 연출: 말씀들이 빠르게 돌다가 점점 느려져 하나에 멈춘다 ----
+    var ITEM_H = 124;
+    function itemHtml(v, win) {
+      var s = v.text.length > 26 ? v.text.slice(0, 26) + "…" : v.text;
+      return '<div class="ye-item' + (win ? " win-target" : "") + '"><b>' + esc(v.ref) + '</b><span>' + esc(s) + '</span></div>';
+    }
+    function randomVerses(n, not) {
+      var out = [];
+      while (out.length < n) {
+        var i = Math.floor(Math.random() * YEAREND_VERSES.length);
+        if (i !== not && (!out.length || out[out.length - 1] !== i)) out.push(i);
+      }
+      return out;
+    }
     function stage() {
       var el = document.createElement("div");
       el.className = "ye-stage";
-      el.innerHTML = '<div class="ye-rays"></div><div class="ye-big wait"><span class="in"><span class="f">✦</span><span class="b"></span></span></div><div class="ye-tap">기도하는 마음으로 잠시 기다려 주세요</div>';
+      el.innerHTML = '<div class="ye-rays"></div>' +
+        '<div class="ye-stage-title">✦ 말씀을 고르고 있어요 ✦</div>' +
+        '<div class="ye-reel"><div class="ye-strip spin"></div></div><div class="ye-frame"></div>' +
+        '<div class="ye-tap">기도하는 마음으로 잠시 기다려 주세요</div>';
+      // 기다리는 동안 도는 띠: 같은 묶음을 두 번 이어 붙여 끊김 없이 돈다.
+      var loop = randomVerses(14, -1).map(function (i) { return itemHtml(YEAREND_VERSES[i]); }).join("");
+      var strip = el.querySelector(".ye-strip");
+      strip.innerHTML = loop + loop;
+      strip.style.setProperty("--loop", (14 * ITEM_H) + "px");
+      // 프레임을 띠 가운데 칸에 맞춘다.
       document.body.appendChild(el);
+      var reel = el.querySelector(".ye-reel"), frame = el.querySelector(".ye-frame");
+      var r = reel.getBoundingClientRect();
+      frame.style.top = (r.top + r.height / 2) + "px";
       requestAnimationFrame(function () { requestAnimationFrame(function () { el.classList.add("on"); }); });
       return el;
     }
     function burst(el) {
       var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-      var n = reduce ? 0 : 42;
+      var n = reduce ? 0 : 46;
+      var fr = el.querySelector(".ye-frame").getBoundingClientRect();
+      var cx = fr.left + fr.width / 2, cy = fr.top + fr.height / 2;
       for (var i = 0; i < n; i++) {
         var s = document.createElement("span");
         var star = i % 3 === 0;
         s.className = "ye-spark" + (star ? " star" : "");
         if (star) s.textContent = i % 2 ? "✦" : "✧";
-        var ang = Math.random() * Math.PI * 2, dist = 110 + Math.random() * 190;
+        s.style.left = cx + "px"; s.style.top = cy + "px";
+        var ang = Math.random() * Math.PI * 2, dist = 120 + Math.random() * 200;
         s.style.setProperty("--x", Math.round(Math.cos(ang) * dist) + "px");
         s.style.setProperty("--y", Math.round(Math.sin(ang) * dist) + "px");
         s.style.setProperty("--s", (star ? 14 + Math.random() * 14 : 6 + Math.random() * 10) + "px");
@@ -245,17 +266,27 @@
       }
       try { if (navigator.vibrate) navigator.vibrate([30, 60, 40]); } catch (e) {}
     }
-    function playReveal(pick, done) {
-      var el = stage();
+    function roll(el, pick, done) {
       var v = YEAREND_VERSES[pick];
-      // 배경 사진을 미리 받아 둔다.
-      var img = new Image(); img.src = bgUrl(pick);
-      var big = el.querySelector(".ye-big");
-      el.querySelector(".b").innerHTML = '<small>' + NEXT + ' 나에게 주신 말씀</small><b>' + esc(v.ref) + '</b>';
+      var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var strip = el.querySelector(".ye-strip");
+      var before = randomVerses(reduce ? 1 : 34, pick);
+      var after = randomVerses(2, pick);
+      strip.classList.remove("spin");
+      strip.style.transition = "none";
+      strip.style.transform = "translateY(0)";
+      strip.innerHTML = before.map(function (i) { return itemHtml(YEAREND_VERSES[i]); }).join("") + itemHtml(v, true) + after.map(function (i) { return itemHtml(YEAREND_VERSES[i]); }).join("");
+      var target = before.length * ITEM_H;
+      var dur = reduce ? 300 : 4200;
+      strip.offsetHeight; // 위치를 먼저 잡고 움직인다
+      strip.style.transition = "transform " + dur + "ms cubic-bezier(.12,.72,.14,1)";
+      strip.style.transform = "translateY(-" + target + "px)";
+      el.querySelector(".ye-tap").textContent = "";
       setTimeout(function () {
-        big.classList.remove("wait");
+        var w = strip.querySelector(".win-target");
+        if (w) w.classList.add("win");
         el.classList.add("lit");
-        big.classList.add("flip");
+        el.querySelector(".ye-stage-title").textContent = "✦ " + NEXT + " 나에게 주신 말씀 ✦";
         burst(el);
         el.querySelector(".ye-tap").textContent = "화면을 누르면 말씀이 펼쳐져요";
         var closed = false;
@@ -266,15 +297,15 @@
           setTimeout(function () { el.remove(); }, 650);
         }
         el.addEventListener("click", close);
-        setTimeout(close, 2600);
-      }, 1200);
+        setTimeout(close, 2800);
+      }, dur + 80);
     }
 
     function draw() {
       if (!state.user) {
         var p = null;
         try { p = localStorage.getItem(GUEST_KEY); } catch (e) {}
-        if (p == null || isNaN(Number(p))) {
+        if (p == null || isNaN(Number(p)) || !YEAREND_VERSES[Number(p)]) {
           p = Math.floor(Math.random() * YEAREND_VERSES.length);
           try { localStorage.setItem(GUEST_KEY, String(p)); } catch (e) {}
         }
@@ -282,38 +313,78 @@
       }
       return getClient().rpc("draw_year_verse", { p_year: Y }).then(function (r) {
         if (r.error || !r.data || !r.data.ok) {
-          $("yeDrawMsg").textContent = r.data && r.data.reason === "closed" ? "아직 뽑기가 열리지 않았어요." : "카드를 펼치지 못했어요. 잠시 뒤 다시 눌러 주세요.";
+          $("yeDrawMsg").textContent = r.data && r.data.reason === "closed" ? "아직 뽑기가 열리지 않았어요." : "말씀을 뽑지 못했어요. 잠시 뒤 다시 눌러 주세요.";
           return null;
         }
         return r.data.pick;
       }, function () { $("yeDrawMsg").textContent = "인터넷 연결을 확인하고 다시 눌러 주세요."; return null; });
     }
 
-    function noteLine() {
+    function cardWho() {
       var r = state.review;
-      var who = r && r.nickname ? r.nickname + "님에게 주신 " + NEXT + " 말씀" : NEXT + "년을 여는 말씀";
-      var tail = [];
+      return r && r.nickname ? r.nickname + "님에게 주신 " + NEXT + " 말씀" : "";
+    }
+    function cardStats() {
+      var r = state.review, tail = [];
       if (r && r.attend) tail.push(Y + " 출석 " + r.attend + "일");
       if (r && r.devotion) tail.push("묵상 " + r.devotion + "일");
-      return who + (tail.length ? " · " + tail.join(" · ") : "");
+      return tail.join(" · ");
+    }
+
+    // ---- 결과: 카드 미리보기, 디자인 6가지, 크기 고르기 ----
+    var bgCache = {};
+    function loadBg(pick) {
+      if (bgCache[pick]) return bgCache[pick];
+      bgCache[pick] = new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = bgUrl(pick); });
+      return bgCache[pick];
+    }
+    function cardOpts(size, bg) {
+      return { W: size.w, H: size.h, bg: bg, who: cardWho(), stats: cardStats(), seed: state.pick + 1 };
+    }
+    function currentSize() {
+      return (typeof getSelectedSize === "function") ? getSelectedSize("yeSizePicker", "post") : { w: 1080, h: 1350 };
+    }
+    function renderPreview() {
+      var v = YEAREND_VERSES[state.pick];
+      var size = currentSize();
+      var scale = 540 / size.w;
+      Promise.all([loadYearCardFonts(v.text), loadBg(state.pick)]).then(function (r) {
+        var c = document.createElement("canvas");
+        drawYearCard(c, state.design, v, cardOpts({ w: Math.round(size.w * scale), h: Math.round(size.h * scale) }, r[1]));
+        var img = $("yePreview");
+        if (img) img.src = c.toDataURL("image/jpeg", 0.9);
+      });
+    }
+    function renderThumbs() {
+      var v = YEAREND_VERSES[state.pick];
+      Promise.all([loadYearCardFonts(v.text), loadBg(state.pick)]).then(function (r) {
+        YEAR_CARD_DESIGNS.forEach(function (d) {
+          var c = document.createElement("canvas");
+          drawYearCard(c, d.key, v, cardOpts({ w: 270, h: 338 }, r[1]));
+          var im = document.querySelector('.ye-design[data-design="' + d.key + '"] img');
+          if (im) im.src = c.toDataURL("image/jpeg", 0.8);
+        });
+      });
     }
 
     function showResult(pick, fresh) {
       state.pick = pick;
       var v = YEAREND_VERSES[pick];
       if (!v) return;
+      state.design = YEAR_CARD_DESIGNS[pick % YEAR_CARD_DESIGNS.length].key;
       if (!fresh) $("yeDraw").style.display = "none";
       var readHref = (typeof refToReadLink === "function" && refToReadLink(v.ref)) || "read.html";
       var box = $("yeResult");
       box.innerHTML =
-        '<div class="ye-photo" style="background-image:url(' + bgUrl(pick) + ')">' +
-          '<span class="ye-label">' + (fresh ? "🎁 내가 뽑은 " : "🎁 올해 뽑은 ") + NEXT + '년 말씀</span>' +
-          '<div class="ye-ref">' + esc(v.ref) + '</div>' +
-          '<p class="ye-verse">"' + esc(v.text) + '"</p>' +
-          '<p class="ye-note">' + NEXT + '년 첫날부터 이 말씀을 붙들고 시작해요.<br>휴대폰 배경으로 저장해 두면 매일 볼 수 있어요.</p>' +
-        '</div>' +
-        '<div class="ye-actions">' +
-        '<p style="font-size:12.5px;color:var(--text-soft);margin:0 0 6px;">저장할 크기를 골라 주세요</p>' +
+        '<span class="ye-label">' + (fresh ? "🎁 내가 뽑은 " : "🎁 올해 뽑은 ") + NEXT + '년 말씀</span>' +
+        '<div class="ye-ref">' + esc(v.ref) + '</div>' +
+        '<img class="ye-preview" id="yePreview" alt="' + esc(v.ref + " " + v.text) + '">' +
+        '<p class="ye-note" style="margin-top:8px;">' + NEXT + '년 첫날부터 이 말씀을 붙들고 시작해요.<br>휴대폰 배경으로 저장해 두면 매일 볼 수 있어요.</p>' +
+        '<div class="ye-small">카드 디자인</div>' +
+        '<div class="ye-designs" id="yeDesigns">' + YEAR_CARD_DESIGNS.map(function (d) {
+          return '<button type="button" class="ye-design' + (d.key === state.design ? " on" : "") + '" data-design="' + d.key + '"><img alt="">' + d.label + '</button>';
+        }).join("") + '</div>' +
+        '<div class="ye-small">저장할 크기</div>' +
         '<div class="tabs" id="yeSizePicker"></div>' +
         '<div class="ye-btns">' +
           '<button type="button" class="btn" id="yeSaveBtn">🖼️ 카드 저장</button>' +
@@ -322,11 +393,19 @@
         '<button type="button" class="ye-link" id="yeShareBtn">💬 이 말씀 나누기</button>' +
         '<button type="button" class="ye-link" data-share-link style="margin-top:0;">🔗 친구에게 뽑기 링크 보내기</button><p class="msg" data-share-msg style="text-align:center;"></p>' +
         (state.staff ? '<button type="button" class="ye-link" id="yeResetBtn" style="margin-top:0;color:#a33;font-size:12.5px;">관리자 시험: 내 뽑기 지우고 다시 뽑기</button>' : '') +
-        '<p class="msg" id="yeSaveMsg" style="text-align:center;margin-top:8px;"></p>' +
-        '</div>';
+        '<p class="msg" id="yeSaveMsg" style="text-align:center;margin-top:8px;"></p>';
       box.classList.toggle("reveal", !!fresh);
       box.style.display = "block";
-      if (typeof initSizePicker === "function") initSizePicker("yeSizePicker", function () {}, "wallpaper");
+      if (typeof initSizePicker === "function") initSizePicker("yeSizePicker", function () { renderPreview(); }, "post");
+      $("yeDesigns").addEventListener("click", function (e) {
+        var b = e.target.closest(".ye-design");
+        if (!b) return;
+        state.design = b.getAttribute("data-design");
+        [].forEach.call(document.querySelectorAll(".ye-design"), function (x) { x.classList.toggle("on", x === b); });
+        renderPreview();
+      });
+      renderPreview();
+      renderThumbs();
       $("yeSaveBtn").onclick = function () { saveCard(v); };
       $("yeShareBtn").onclick = function () { share(v); };
       var rb = $("yeResetBtn");
@@ -342,12 +421,11 @@
 
     function saveCard(v) {
       var msg = $("yeSaveMsg");
-      var size = (typeof getSelectedSize === "function") ? getSelectedSize("yeSizePicker", "wallpaper") : { w: 1080, h: 2340 };
+      var size = currentSize();
       msg.textContent = "카드를 만드는 중...";
-      var bgLoad = new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = bgUrl(state.pick); });
-      Promise.all([loadVerseCardFonts(), bgLoad]).then(function (r) {
+      Promise.all([loadYearCardFonts(v.text), loadBg(state.pick)]).then(function (r) {
         var canvas = $("yeCanvas");
-        drawVerseCardImage(canvas, { ref: v.ref, text: v.text, note: noteLine() }, "yearend", size.w, size.h, r[1]);
+        drawYearCard(canvas, state.design, v, cardOpts(size, r[1]));
         var a = document.createElement("a");
         a.download = "말씀우물_" + NEXT + "_말씀카드.png";
         a.href = canvas.toDataURL("image/png");
