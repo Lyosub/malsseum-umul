@@ -206,14 +206,6 @@
       };
     }
 
-    // 뽑은 말씀마다 배경 사진을 하나로 정한다(다시 열어도, 저장한 카드도 같은 사진).
-    function bgNum(pick) {
-      // 밝고 풍경이 잘 보이는 사진(71~85번: 11/4 밝은 배경 9장 + 가을 단풍 6장)만 쓴다.
-      var bright = [71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85];
-      return bright[(pick * 7 + 3) % bright.length];
-    }
-    function bgUrl(pick) { return "assets/verse-card-bg/verse-card-bg-" + String(bgNum(pick)).padStart(2, "0") + ".jpg"; }
-
     // ---- 뽑기 연출: 말씀들이 빠르게 돌다가 점점 느려져 하나에 멈춘다 ----
     var ITEM_H = 124;
     function itemHtml(v, win) {
@@ -335,10 +327,21 @@
 
     // ---- 결과: 카드 미리보기, 디자인 6가지, 크기 고르기 ----
     var bgCache = {};
-    function loadBg(pick) {
-      if (bgCache[pick]) return bgCache[pick];
-      bgCache[pick] = new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = bgUrl(pick); });
-      return bgCache[pick];
+    function loadBg() {
+      var n = state.bg;
+      if (!n) return Promise.resolve(null);
+      if (bgCache[n]) return bgCache[n];
+      bgCache[n] = new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = "assets/verse-card-bg/verse-card-bg-" + String(n).padStart(2, "0") + ".jpg"; });
+      return bgCache[n];
+    }
+    // 이 사람·이 말씀에 어울리는 카드를 정한다(사람마다 다를 수 있고, 다시 열어도 같다).
+    function lookSeed(pick) {
+      var id = state.user ? state.user.id : null;
+      if (!id) {
+        try { id = localStorage.getItem(GUEST_KEY + "_seed"); } catch (e) {}
+        if (!id) { id = "g" + Math.floor(Math.random() * 1e9); try { localStorage.setItem(GUEST_KEY + "_seed", id); } catch (e) {} }
+      }
+      return yearCardSeed(id, pick);
     }
     function cardOpts(size, bg) {
       return { W: size.w, H: size.h, bg: bg, who: cardWho(), stats: cardStats(), seed: state.pick + 1 };
@@ -350,30 +353,20 @@
       var v = YEAREND_VERSES[state.pick];
       var size = currentSize();
       var scale = 540 / size.w;
-      Promise.all([loadYearCardFonts(v.text), loadBg(state.pick)]).then(function (r) {
+      Promise.all([loadYearCardFonts(v.text), loadBg()]).then(function (r) {
         var c = document.createElement("canvas");
         drawYearCard(c, state.design, v, cardOpts({ w: Math.round(size.w * scale), h: Math.round(size.h * scale) }, r[1]));
         var img = $("yePreview");
         if (img) img.src = c.toDataURL("image/jpeg", 0.9);
       });
     }
-    function renderThumbs() {
-      var v = YEAREND_VERSES[state.pick];
-      Promise.all([loadYearCardFonts(v.text), loadBg(state.pick)]).then(function (r) {
-        YEAR_CARD_DESIGNS.forEach(function (d) {
-          var c = document.createElement("canvas");
-          drawYearCard(c, d.key, v, cardOpts({ w: 270, h: 338 }, r[1]));
-          var im = document.querySelector('.ye-design[data-design="' + d.key + '"] img');
-          if (im) im.src = c.toDataURL("image/jpeg", 0.8);
-        });
-      });
-    }
-
     function showResult(pick, fresh) {
       state.pick = pick;
       var v = YEAREND_VERSES[pick];
       if (!v) return;
-      state.design = YEAR_CARD_DESIGNS[pick % YEAR_CARD_DESIGNS.length].key;
+      var look = yearCardLook(v, lookSeed(pick));
+      state.design = look.design;
+      state.bg = look.bg;
       if (!fresh) $("yeDraw").style.display = "none";
       var readHref = (typeof refToReadLink === "function" && refToReadLink(v.ref)) || "read.html";
       var box = $("yeResult");
@@ -382,10 +375,6 @@
         '<div class="ye-ref">' + esc(v.ref) + '</div>' +
         '<img class="ye-preview" id="yePreview" alt="' + esc(v.ref + " " + v.text) + '">' +
         '<p class="ye-note" style="margin-top:8px;">' + NEXT + '년, 이 말씀과 함께 걸어가요.<br>휴대폰 배경으로 저장해 두면 매일 볼 수 있어요.</p>' +
-        '<div class="ye-small">카드 디자인</div>' +
-        '<div class="ye-designs" id="yeDesigns">' + YEAR_CARD_DESIGNS.map(function (d) {
-          return '<button type="button" class="ye-design' + (d.key === state.design ? " on" : "") + '" data-design="' + d.key + '"><img alt="">' + d.label + '</button>';
-        }).join("") + '</div>' +
         '<div class="ye-small">저장할 크기</div>' +
         '<div class="tabs" id="yeSizePicker"></div>' +
         '<div class="ye-btns">' +
@@ -399,15 +388,7 @@
       box.classList.toggle("reveal", !!fresh);
       box.style.display = "block";
       if (typeof initSizePicker === "function") initSizePicker("yeSizePicker", function () { renderPreview(); }, "post");
-      $("yeDesigns").addEventListener("click", function (e) {
-        var b = e.target.closest(".ye-design");
-        if (!b) return;
-        state.design = b.getAttribute("data-design");
-        [].forEach.call(document.querySelectorAll(".ye-design"), function (x) { x.classList.toggle("on", x === b); });
-        renderPreview();
-      });
       renderPreview();
-      renderThumbs();
       $("yeSaveBtn").onclick = function () { saveCard(v); };
       $("yeShareBtn").onclick = function () { share(v); };
       var rb = $("yeResetBtn");
@@ -425,7 +406,7 @@
       var msg = $("yeSaveMsg");
       var size = currentSize();
       msg.textContent = "카드를 만드는 중...";
-      Promise.all([loadYearCardFonts(v.text), loadBg(state.pick)]).then(function (r) {
+      Promise.all([loadYearCardFonts(v.text), loadBg()]).then(function (r) {
         var canvas = $("yeCanvas");
         drawYearCard(canvas, state.design, v, cardOpts(size, r[1]));
         var a = document.createElement("a");

@@ -227,3 +227,43 @@ var YEAR_CARD_DESIGNS = [
       .then(function () { return document.fonts.ready; });
   };
 })();
+
+// ---- 말씀에 어울리는 카드 짝짓기 ----
+// 말씀 속 낱말로 주제를 찾고, 주제에 맞는 카드 모양(디자인 + 사진) 후보 가운데 하나를 고른다.
+// seed가 같으면 늘 같은 카드가 나온다(다시 열어도 같은 카드). 사람마다 seed가 달라 같은 말씀도 카드가 다를 수 있다.
+// 사진 번호는 assets/verse-card-bg 밝은 사진: 71 냇가 72 호수와 나무 73 바다 74 노을 도시 75 호수 76 해 뜨는 언덕 77 들판 나무
+// 78 초록 언덕 79 황금 들판 80 은행나무 길 81 단풍 언덕 82 벤치 83 노을 속 나무 84 억새 언덕 85 가을 호수
+var YEAR_CARD_THEMES = [
+  { re: /새벽|아침|햇살|돋는|해요|빛|비추|광명/, looks: ["dawn", "dawn", "p76", "p74", "p79"] },
+  { re: /새 일|새 노래|새 마음|새 영|새롭|새 사람|새로워|만물|내일|앞에 있는|이전 일|옛날 일/, looks: ["dawn", "gold", "p79", "p76"] },
+  { re: /별|밤|영광|영원|보좌|하늘/, looks: ["night", "night", "gold"] },
+  { re: /길|인도|가든지|다닐|달려|걸|발을|출입|나아가|이끌|지도하/, looks: ["p80", "p80", "p78", "p77", "gold"] },
+  { re: /(?<!만)물|시냇가|샘|강변|비와|적시|바다/, looks: ["p71", "p72", "p75", "p85", "p73"] },
+  { re: /나무|열매|뿌리|잎|심은|결실|씨를|거두|동산/, looks: ["p72", "p77", "p83", "p76"] },
+  { re: /산|언덕|반석|요새|산성|바위|피난처|높은 곳|눈을 들/, looks: ["p81", "p84", "p78"] },
+  { re: /쉬게|쉼|평안|평강|근심하지|염려하지|가만히|잠잠|두려워하지/, looks: ["p82", "clean", "paper", "p75"] },
+  { re: /복|은혜|은택|선물|은사|관 씌우|채우|넉넉|좋은 것|소원/, looks: ["gold", "gold", "p79", "p76"] },
+  { re: /말씀|진리|교훈|지혜|가르치|기록|명철|도를/, looks: ["paper", "paper", "clean"] },
+  { re: /힘|능력|강하고|담대|이기|독수리|싸우|견고/, looks: ["gold", "p81", "p84", "night"] },
+  { re: /사랑|마음|인자/, looks: ["clean", "paper", "dawn"] }
+];
+var YEAR_CARD_ANY = ["p71", "p72", "p76", "p77", "p78", "p79", "p80", "p83", "p85", "gold", "paper", "dawn", "night", "clean"];
+
+function yearCardLook(verse, seed) {
+  var pool = [];
+  YEAR_CARD_THEMES.forEach(function (t) { if (t.re.test(verse.text)) pool = pool.concat(t.looks); });
+  if (!pool.length) pool = YEAR_CARD_ANY;
+  var s = Math.abs(Math.floor(seed)) || 1;
+  s = (s * 2654435761) % 4294967296;
+  var look = pool[s % pool.length];
+  if (/^p\d+$/.test(look)) return { design: "photo", bg: Number(look.slice(1)) };
+  return { design: look, bg: 0 };
+}
+
+// 짝짓기에 쓸 수: 로그인한 사람은 계정 번호로, 비로그인은 이 기기에 저장한 수로 만든다.
+function yearCardSeed(id, pick) {
+  var h = 5381;
+  var s = String(id || "") + ":" + pick;
+  for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return h;
+}
