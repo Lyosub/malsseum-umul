@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko" data-tone="navy">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>대림절 말씀 달력 | 말씀우물</title>
+<meta name="description" content="12월 1일부터 25일까지, 하루 한 칸씩 말씀을 열며 성탄을 기다려요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="대림절 말씀 달력 | 말씀우물">
+<meta property="og:description" content="12월 1일부터 25일까지, 하루 한 칸씩 말씀을 열며 성탄을 기다려요.">
+<meta property="og:image" content="https://logoswell.kr/assets/og-image.jpg">
+<meta property="og:url" content="https://logoswell.kr/advent.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/app-v2.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#17287e">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script src="assets/text-size.js"></script>
+<script defer src="assets/pwa.js"></script>
+<style>
+  .adv-intro { font-size:13.5px; color:var(--text-soft); line-height:1.7; margin:0 0 12px; }
+  .adv-stages { display:flex; gap:4px; margin:0 0 14px; }
+  .adv-stages span { flex:1; text-align:center; font-size:12px; font-weight:800; padding:7px 2px; border-radius:10px; background:#eef1fb; color:#6b74a0; border:1.5px solid transparent; }
+  .adv-stages span.on { background:#17287e; color:#fff; }
+  .adv-stages span.done { background:#dfe5fb; color:#17287e; }
+  .adv-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-bottom:16px; }
+  .adv-door { position:relative; aspect-ratio:1/1; border-radius:14px; border:1.5px solid #aab3d8; background:#fff; color:#17287e; font-family:inherit; font-size:19px; font-weight:800; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:0; }
+  .adv-door small { font-size:10.5px; font-weight:700; opacity:.75; }
+  .adv-door.locked { background:#f3f4f8; color:#9aa1bd; border-style:dashed; }
+  .adv-door.today { background:#17287e; color:#fff; border-color:#17287e; box-shadow:0 0 0 3px rgba(201,147,47,.55); }
+  .adv-door.seen::after { content:"✓"; position:absolute; top:4px; right:6px; font-size:11px; color:#2f9e5a; }
+  .adv-door.today.seen::after { color:#cdf27a; }
+  .adv-door.d25 { background:linear-gradient(160deg,#c9932f,#e9c46a); color:#3a2500; border-color:#c9932f; }
+  .adv-door.d25.locked { background:#fbf3e0; color:#b59a5e; }
+  .adv-door.sel { outline:3px solid #c9932f; outline-offset:1px; }
+  .adv-detail { scroll-margin-top:12px; }
+  .adv-chip { display:inline-block; font-size:12px; font-weight:800; padding:4px 10px; border-radius:999px; background:#eef1fb; color:#17287e; }
+  .adv-title { font-size:20px; font-weight:800; color:var(--well-deep); margin:10px 0 4px; }
+  .adv-ref { font-size:13.5px; font-weight:700; color:var(--well); margin-bottom:10px; }
+  .adv-verse { font-size:16px; line-height:1.75; font-weight:700; color:var(--text); background:#f6f7fd; border-left:4px solid #17287e; border-radius:10px; padding:12px 14px; margin:0 0 14px; }
+  .adv-sec { font-size:12.5px; font-weight:800; color:var(--well-deep); margin:14px 0 4px; }
+  .adv-body { font-size:14.5px; line-height:1.75; color:var(--text); margin:0; }
+  .adv-btns { display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+  .adv-btns > * { flex:1 1 140px; }
+  .adv-msg { text-align:center; font-size:14px; color:var(--text-soft); padding:6px 0; }
+  .adv-count { font-size:28px; font-weight:800; color:#17287e; display:block; margin:4px 0; }
+</style>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#2540d8" d="M12 1.500s-6.200 6.400-6.200 10.600a6.200 6.200 0 0 0 12.400 0C18.200 7.900 12 1.500 12 1.500Z"/><path fill="none" stroke="#17287e" stroke-width="1.800" stroke-linecap="round" d="M2.500 17.800c1.900 2.800 5.400 4.600 9.500 4.600s7.600-1.800 9.500-4.600"/></svg>말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap">
+  <div class="page-hd">
+    <h1>🕯️ 대림절 말씀 달력</h1>
+    <p>하루 한 칸씩, 말씀을 열며 성탄을 기다려요</p>
+  </div>
+
+  <p class="adv-intro">대림절은 예수님 오심을 기다리는 절기예요. 12월 1일부터 25일까지 날마다 한 칸이 열리고, 하나님의 첫 약속부터 예수님 탄생까지 성탄 이야기를 차례로 따라가요.</p>
+  <div class="card" id="advBefore" style="display:none;text-align:center;"></div>
+  <div class="adv-stages" id="advStages"></div>
+  <div class="adv-grid" id="advGrid"></div>
+  <div class="card adv-detail" id="advDetail" style="display:none;"></div>
+  <canvas id="advCanvas" style="display:none;"></canvas>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a><br>
+  성경 인용: 개역개정판, ⓒ 대한성서공회
+</footer>
+<script src="assets/advent-data.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/bible-books.js"></script>
+<script src="assets/script.js"></script>
+<script>
+  initHeaderAuthState();
+  (function () {
+    var SEEN_KEY = "msu_advent_seen_" + ADVENT_YEAR;
+    var grid = document.getElementById("advGrid");
+    var detail = document.getElementById("advDetail");
+    var openUpTo = 0;   // 오늘까지 열린 칸 수(0이면 아직 12월 전)
+    var todayDay = 0;   // 12월 1~25일이면 그 날
+    var selected = 0;
+
+    function kstToday() {
+      var d = new Date(Date.now() + 9 * 3600e3);
+      return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() };
+    }
+    function readSeen() {
+      try { return JSON.parse(localStorage.getItem(SEEN_KEY) || "[]"); } catch (e) { return []; }
+    }
+    function markSeen(n) {
+      var s = readSeen();
+      if (s.indexOf(n) === -1) s.push(n);
+      try { localStorage.setItem(SEEN_KEY, JSON.stringify(s)); } catch (e) {}
+    }
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+    function computeOpen(preview) {
+      var t = kstToday();
+      if (preview) { openUpTo = 25; todayDay = 0; return; }
+      if (t.y > ADVENT_YEAR || (t.y === ADVENT_YEAR && t.m === 12 && t.d > 25)) { openUpTo = 25; todayDay = 0; }
+      else if (t.y === ADVENT_YEAR && t.m === 12) { openUpTo = t.d; todayDay = t.d; }
+      else { openUpTo = 0; todayDay = 0; }
+    }
+
+    function renderBefore() {
+      var box = document.getElementById("advBefore");
+      if (openUpTo > 0) { box.style.display = "none"; return; }
+      var t = kstToday();
+      var now = Date.UTC(t.y, t.m - 1, t.d), start = Date.UTC(ADVENT_YEAR, 11, 1);
+      var left = Math.round((start - now) / 86400000);
+      box.innerHTML = '<p class="adv-msg">첫 칸은 <b>12월 1일(화)</b>에 열려요<span class="adv-count">D-' + left + '</span>대림절 첫 주일은 11월 29일이에요.</p>';
+      box.style.display = "block";
+    }
+
+    function renderStages() {
+      var cur = selected || todayDay || (openUpTo === 25 ? 25 : 0);
+      var curStage = cur ? ADVENT_DAYS[cur - 1].stage : "";
+      var passed = true;
+      document.getElementById("advStages").innerHTML = ADVENT_STAGES.map(function (s) {
+        var cls = "";
+        if (s === curStage) { cls = "on"; passed = false; }
+        else if (passed && curStage) cls = "done";
+        return '<span class="' + cls + '">' + s + '</span>';
+      }).join("");
+    }
+
+    function renderGrid() {
+      var seen = readSeen();
+      grid.innerHTML = ADVENT_DAYS.map(function (x) {
+        var n = x.day, cls = ["adv-door"];
+        if (n > openUpTo) cls.push("locked");
+        if (n === todayDay) cls.push("today");
+        if (seen.indexOf(n) !== -1 && n <= openUpTo) cls.push("seen");
+        if (n === 25) cls.push("d25");
+        if (n === selected) cls.push("sel");
+        var sub = n > openUpTo ? "🔒" : (n === todayDay ? "오늘" : (n === 25 ? "성탄" : ""));
+        return '<button type="button" class="' + cls.join(" ") + '" data-day="' + n + '" aria-label="12월 ' + n + '일' + (n > openUpTo ? ", 아직 안 열림" : "") + '">' +
+          n + (sub ? '<small>' + sub + '</small>' : '') + '</button>';
+      }).join("");
+    }
+
+    function showLocked(n) {
+      detail.innerHTML = '<p class="adv-msg">🔒 이 칸은 <b>12월 ' + n + '일</b>에 열려요.</p>';
+      detail.style.display = "block";
+    }
+
+    function showDay(n, scroll) {
+      var x = ADVENT_DAYS[n - 1];
+      selected = n;
+      markSeen(n);
+      var readHref = (typeof refToReadLink === "function") ? refToReadLink(x.ref) : "read.html";
+      detail.innerHTML =
+        '<span class="adv-chip">12월 ' + n + '일 · ' + esc(x.stage) + '</span>' +
+        '<div class="adv-title">' + esc(x.title) + '</div>' +
+        '<div class="adv-ref">' + esc(x.ref) + '</div>' +
+        '<p class="adv-verse">' + esc(x.text) + '</p>' +
+        '<div class="adv-sec">말씀 묵상</div><p class="adv-body">' + esc(x.msg) + '</p>' +
+        '<div class="adv-sec">오늘의 한 걸음</div><p class="adv-body">' + esc(x.step) + '</p>' +
+        '<div class="adv-sec">기도</div><p class="adv-body">' + esc(x.prayer) + '</p>' +
+        '<div class="adv-btns">' +
+          '<button type="button" class="btn" id="advSaveBtn">🖼️ 말씀카드 저장</button>' +
+          '<a class="btn ghost" href="' + readHref + '"' + (/^https?:/.test(readHref) ? ' target="_blank" rel="noopener"' : '') + '>📖 본문 읽기</a>' +
+        '</div>' +
+        '<p class="msg" id="advSaveMsg" style="text-align:center;margin-top:8px;"></p>' +
+        (n < openUpTo ? '<button type="button" class="tap-link" id="advNextBtn" style="display:block;margin:10px auto 0;">다음 날 말씀 ›</button>' : '');
+      detail.style.display = "block";
+      document.getElementById("advSaveBtn").onclick = function () { saveCard(x); };
+      var nb = document.getElementById("advNextBtn");
+      if (nb) nb.onclick = function () { showDay(n + 1, true); };
+      renderGrid();
+      renderStages();
+      if (scroll) detail.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function saveCard(x) {
+      var msg = document.getElementById("advSaveMsg");
+      var canvas = document.getElementById("advCanvas");
+      msg.textContent = "카드를 만드는 중...";
+      Promise.all([loadVerseCardFonts(), loadVerseCardBackground()]).then(function (r) {
+        drawVerseCardImage(canvas, { ref: x.ref, text: x.text, note: "12월 " + x.day + "일 · " + x.title }, "advent", 1080, 1350, r[1]);
+        var link = document.createElement("a");
+        link.download = "말씀우물_대림절_12월" + x.day + "일.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        msg.textContent = "저장했어요. 사진첩이나 다운로드 폴더에서 볼 수 있어요.";
+      }).catch(function () { msg.textContent = "카드를 만들지 못했어요. 잠시 뒤 다시 눌러 주세요."; });
+    }
+
+    grid.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-day]");
+      if (!b) return;
+      var n = Number(b.getAttribute("data-day"));
+      if (n > openUpTo) { selected = 0; renderGrid(); showLocked(n); return; }
+      showDay(n, true);
+    });
+
+    function start(preview) {
+      computeOpen(preview);
+      renderBefore();
+      renderGrid();
+      var q = Number(new URLSearchParams(location.search).get("day") || 0);
+      if (q >= 1 && q <= openUpTo) showDay(q, false);
+      else if (todayDay) showDay(todayDay, false);
+      else renderStages();
+    }
+
+    // 관리자·부장은 ?preview=1로 12월 전에도 모든 칸을 미리 볼 수 있다(내용 확인용).
+    start(false);
+    if (/[?&]preview=1/.test(location.search) && typeof getSession === "function") {
+      getSession().then(function (s) {
+        if (!s) return;
+        return getClient().from("profiles").select("is_admin, is_department_head").eq("user_id", s.user.id).single().then(function (r) {
+          var p = r && r.data;
+          if (p && (p.is_admin || p.is_department_head)) {
+            start(true);
+            var box = document.getElementById("advBefore");
+            box.innerHTML = '<p class="adv-msg">👀 관리자 미리보기: 모든 칸이 열려 있어요. 다른 사람에게는 날짜대로 열려요.</p>';
+            box.style.display = "block";
+          }
+        });
+      }).catch(function () {});
+    }
+  })();
+</script>
+<script src="assets/appshell.js"></script>
+</body>
+</html>

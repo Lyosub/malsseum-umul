@@ -33,6 +33,14 @@
     document.getElementById("hvEventD").textContent = diff === 0 ? "오늘" : "D-" + diff;
   }
 
+  // 대림절 말씀 달력: 대림절 첫 주일(11/29)부터 성탄(12/25)까지 보인다.
+  if (today >= new Date(2026, 10, 29) && today <= new Date(2026, 11, 25)) {
+    document.getElementById("hvAdvent").hidden = false;
+    var advD = today.getMonth() === 11 ? today.getDate() : 0;
+    document.getElementById("hvAdventN").textContent = advD ? (advD === 25 ? "성탄 칸 열림" : advD + "번째 칸 열림") : "12/1 첫 칸";
+    if (advD) document.getElementById("hvAdvent").href = "advent.html?day=" + advD;
+  }
+
   // 감사의 광주리: 11/8 예배 안내 때부터 11/15까지 보인다. 시작 전에는 시작일을, 시작 뒤에는 열매 수를 쓴다.
   var harvestStart = new Date(2026, 10, 8), harvestEnd = new Date(2026, 10, 15);
   if (today >= new Date(2026, 10, 8) && today <= harvestEnd) {

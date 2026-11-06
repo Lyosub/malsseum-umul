@@ -409,7 +409,7 @@ function drawVerseCardImage(canvas, verse, kind, W, H, bgImage) {
   ctx.textAlign = "center";
   ctx.shadowColor = "rgba(0,0,0,0.25)";
 
-  var kindLabel = { daily: "오늘의 말씀", weekly: "이번 주 말씀", monthly: "이번 달 말씀" }[kind] || "말씀";
+  var kindLabel = { daily: "오늘의 말씀", weekly: "이번 주 말씀", monthly: "이번 달 말씀", advent: "대림절 말씀 달력", yearend: "2026 한 해를 마무리하며" }[kind] || "말씀";
 
   // 사이즈(폰 배경/게시물/스토리)마다 세로 길이가 달라서, 고정된 비율 위치(H*0.14 등)로 그리면
   // 세로가 긴 폰 배경화면에서는 글자가 위쪽에 몰리고 아래가 텅 비어 보였다. 실제로 그리기 전에
