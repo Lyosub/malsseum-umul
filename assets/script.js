@@ -333,7 +333,7 @@ function loadVerseCardFonts() {
 
 // 말씀카드 배경(1080x2340) 중 한 장을 매일 바꿔서 쓴다.
 // 배경은 저장 사이즈에 맞춰 비율을 유지한 채 가운데를 기준으로 잘라 넣는다(drawVerseCardBg 참고).
-var VERSE_CARD_BG_COUNT = 97; // 80~85: 가을 단풍 6장, 86~97: 새해 12장(2026-11-06 추가, 1/7부터 순환에 들어감)
+var VERSE_CARD_BG_COUNT = 127; // 80~85: 가을 단풍 6장, 86~127: 새해(겨울) 42장(2026-11-06 추가, 1~2월에만 순환)
 
 // 순환의 기준점. 이 날짜에 이 번호가 나오고 하루에 한 칸씩 넘어간다.
 // 2026-11-04에 새로 추가한 밝은 배경의 첫 장(71번)부터 나오도록 맞춰두었다.
@@ -355,7 +355,8 @@ function getVerseCardBgIndex() {
   var used = [];
   for (var n = 1; n <= VERSE_CARD_BG_COUNT; n++) {
     if (VERSE_CARD_BG_SKIP.indexOf(n) !== -1) continue;
-    if (n >= 86 && today < NEWYEAR_FROM) continue;
+    // 새해(겨울) 사진은 1~2월에만 돈다(봄·여름에 눈 사진이 나오지 않게).
+    if (n >= 86 && (today < NEWYEAR_FROM || now.getMonth() > 1)) continue;
     used.push(n);
   }
   var start = used.indexOf(VERSE_CARD_BG_EPOCH_INDEX);
