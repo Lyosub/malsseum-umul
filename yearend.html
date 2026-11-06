@@ -136,7 +136,25 @@
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
     function kst() { var d = new Date(Date.now() + 9 * 3600e3); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); }
     // 화면에서도 같은 기간을 쓴다(서버 yearend_is_open과 같음). 관리자·부장은 서버가 미리 열어 준다.
-    function openByDate() { var t = kst(); return t >= Date.UTC(Y, 11, 1) && t <= Date.UTC(NEXT, 0, 31); }
+    // 11/6~11/30은 모두에게 미리 해 보는 기간(12/1 0시에 서버가 시험 기록을 지운다), 12/1~1/31이 진짜 뽑기 기간.
+    var TEST_FROM = Date.UTC(Y, 10, 6), REAL_FROM = Date.UTC(Y, 11, 1);
+    function openByDate() { var t = kst(); return t >= TEST_FROM && t <= Date.UTC(NEXT, 0, 31); }
+    function inTest() { var t = kst(); return t >= TEST_FROM && t < REAL_FROM; }
+    // 비로그인: 시험 기간에 이 기기에 저장한 말씀은 12/1부터 지운다.
+    (function () {
+      try {
+        var at = Number(localStorage.getItem(GUEST_KEY + "_at") || 0);
+        if (kst() >= REAL_FROM && localStorage.getItem(GUEST_KEY) != null && at < REAL_FROM) {
+          localStorage.removeItem(GUEST_KEY); localStorage.removeItem(GUEST_KEY + "_at");
+        }
+      } catch (e) {}
+    })();
+    function testNote() {
+      if (!inTest()) return;
+      var box = $("yeClosed");
+      box.innerHTML = '<p class="ye-msg">🧪 지금은 미리 해 보는 기간이에요.<br>지금 뽑은 말씀은 11월 30일 밤에 지워지고,<br><b>12월 1일부터 다시 뽑을 수 있어요.</b></p>';
+      box.style.display = "block";
+    }
     // 뽑기가 끝난 뒤(2/1부터)에는 새로 뽑을 수 없고, 이미 뽑은 사람은 자기 말씀을 계속 본다.
     function ended() { return kst() > Date.UTC(NEXT, 0, 31); }
 
@@ -301,7 +319,7 @@
         try { p = localStorage.getItem(GUEST_KEY); } catch (e) {}
         if (p == null || isNaN(Number(p)) || !YEAREND_VERSES[Number(p)]) {
           p = Math.floor(Math.random() * YEAREND_VERSES.length);
-          try { localStorage.setItem(GUEST_KEY, String(p)); } catch (e) {}
+          try { localStorage.setItem(GUEST_KEY, String(p)); localStorage.setItem(GUEST_KEY + "_at", String(kst())); } catch (e) {}
         }
         return Promise.resolve(Number(p));
       }
@@ -344,7 +362,8 @@
       return yearCardSeed(id, pick);
     }
     function cardOpts(size, bg) {
-      return { W: size.w, H: size.h, bg: bg, who: cardWho(), stats: cardStats(), seed: state.pick + 1 };
+      // 카드 아래에는 이름·출석 기록을 넣지 않는다(전도사님 11/6).
+      return { W: size.w, H: size.h, bg: bg, seed: state.pick + 1 };
     }
     function currentSize() {
       return (typeof getSelectedSize === "function") ? getSelectedSize("yeSizePicker", "post") : { w: 1080, h: 1350 };
@@ -447,6 +466,7 @@
         var p = null;
         try { p = localStorage.getItem(GUEST_KEY); } catch (e) {}
         var has = p != null && !isNaN(Number(p)) && YEAREND_VERSES[Number(p)];
+        testNote();
         if (has) { showResult(Number(p), false); return; }
         if (!openByDate()) { showClosed(); return; }
         renderDeck();
@@ -462,6 +482,7 @@
         state.review = r;
         if (!r.open && r.pick == null) { showClosed(); return; }
         if (!r.open) { renderReview(r); showResult(r.pick, false); return; }
+        testNote();
         if (state.staff && !openByDate()) { $("yeClosed").innerHTML = '<p class="ye-msg">👀 관리자 미리보기예요. 다른 사람에게는 12월 1일에 열려요.</p>'; $("yeClosed").style.display = "block"; }
         renderReview(r);
         if (r.pick != null) showResult(r.pick, false); else renderDeck();

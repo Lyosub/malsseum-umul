@@ -42,7 +42,7 @@
   }
 
   // 새해 말씀카드 뽑기: 12/1부터 1/31까지 보인다(yearend.html, 서버도 같은 기간).
-  if (today >= new Date(2026, 11, 1) && today <= new Date(2027, 0, 31)) {
+  if (today >= new Date(2026, 10, 6) && today <= new Date(2027, 0, 31)) { // 11/6~11/30은 미리 해 보는 기간
     document.getElementById("hvYearend").hidden = false;
   }
 

@@ -174,13 +174,13 @@ var YEAR_CARD_DESIGNS = [
 
     // 위: 이름표
     ctx.shadowBlur = th.shadow ? 10 * u : 0;
-    var labelY = midY - blockH / 2 - (tall ? 150 : 128) * u;
-    ctx.fillStyle = th.accent;
-    ctx.font = "800 " + Math.round((tall ? 34 : 30) * u) + "px " + SANS;
-    ctx.fillText("✦  2027 나에게 주신 말씀  ✦", W / 2, labelY);
+    var labelY = midY - blockH / 2 - (tall ? 160 : 138) * u;
     ctx.fillStyle = th.sub;
     ctx.font = "600 " + Math.round((tall ? 27 : 24) * u) + "px " + SANS;
-    ctx.fillText("2026 한 해를 마무리하며", W / 2, labelY + 48 * u);
+    ctx.fillText("2026 한 해를 마무리하며", W / 2, labelY);
+    ctx.fillStyle = th.accent;
+    ctx.font = "800 " + Math.round((tall ? 34 : 30) * u) + "px " + SANS;
+    ctx.fillText("✦  2027 나에게 주신 말씀  ✦", W / 2, labelY + 48 * u);
 
     ctx.font = th.weight + " " + fit.size + "px " + th.font;
     ctx.fillStyle = th.ink;
