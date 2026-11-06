@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko" data-tone="navy">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>한 해 마무리 말씀카드 | 말씀우물</title>
+<meta name="description" content="2026년을 돌아보고, 새해를 여는 말씀카드 한 장을 뽑아요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="2026 한 해를 마무리하며 말씀카드 뽑기 | 말씀우물">
+<meta property="og:description" content="2026년을 돌아보고, 새해를 여는 말씀카드 한 장을 뽑아요.">
+<meta property="og:image" content="https://logoswell.kr/assets/og-image.jpg">
+<meta property="og:url" content="https://logoswell.kr/yearend.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/app-v2.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#17287e">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script src="assets/text-size.js"></script>
+<script defer src="assets/pwa.js"></script>
+<style>
+  .ye-sec-title { font-size:16px; font-weight:800; color:var(--well-deep); margin:0 0 4px; }
+  .ye-sub { font-size:13px; color:var(--text-soft); line-height:1.65; margin:0 0 12px; }
+  .ye-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .ye-stat { background:#f6f7fd; border:1.5px solid #dfe3f4; border-radius:14px; padding:12px; }
+  .ye-stat b { display:block; font-size:24px; font-weight:800; color:#17287e; line-height:1.15; }
+  .ye-stat span { font-size:12px; font-weight:700; color:var(--text-soft); }
+  .ye-stat.wide { grid-column:1 / -1; }
+  .ye-deck { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; perspective:900px; margin-top:6px; }
+  .ye-card { aspect-ratio:3/4.2; border:0; padding:0; background:none; cursor:pointer; position:relative; font-family:inherit; }
+  .ye-card .in { position:absolute; inset:0; transition:transform .7s; transform-style:preserve-3d; }
+  .ye-card .f, .ye-card .b { position:absolute; inset:0; border-radius:12px; backface-visibility:hidden; -webkit-backface-visibility:hidden; display:flex; align-items:center; justify-content:center; }
+  .ye-card .f { background:linear-gradient(155deg,#17287e,#2540d8); border:2px solid #c9932f; color:#e9c46a; font-size:22px; box-shadow:0 4px 10px rgba(23,40,126,.25); }
+  .ye-card .b { background:#fffaf0; border:2px solid #c9932f; color:#7a5310; font-size:12px; font-weight:800; transform:rotateY(180deg); padding:4px; text-align:center; }
+  .ye-card.flip .in { transform:rotateY(180deg); }
+  .ye-deck.picking .ye-card:not(.flip) { opacity:.35; transition:opacity .4s; }
+  .ye-deck.shuffle .ye-card { animation:yeShake .5s ease-in-out; }
+  @keyframes yeShake { 0%,100% { transform:translateY(0) rotate(0); } 30% { transform:translateY(-6px) rotate(-3deg); } 60% { transform:translateY(2px) rotate(3deg); } }
+  .ye-result { text-align:center; }
+  .ye-label { display:inline-block; font-size:12px; font-weight:800; padding:4px 10px; border-radius:999px; background:#fbf3e0; color:#7a5310; }
+  .ye-ref { font-size:15px; font-weight:800; color:var(--well); margin:12px 0 6px; }
+  .ye-verse { font-size:18px; line-height:1.75; font-weight:800; color:var(--text); margin:0 0 10px; word-break:keep-all; }
+  .ye-note { font-size:13.5px; color:var(--text-soft); line-height:1.7; margin:0 0 12px; }
+  .ye-btns { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .ye-btns > * { flex:1 1 140px; }
+  .ye-msg { text-align:center; font-size:14px; color:var(--text-soft); }
+  .ye-link { display:block; margin:12px auto 0; background:none; border:0; font-family:inherit; font-size:14px; font-weight:700; color:var(--well); min-height:40px; padding:6px 12px; cursor:pointer; }
+  .ye-count { font-size:28px; font-weight:800; color:#17287e; display:block; margin:4px 0; }
+</style>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#2540d8" d="M12 1.500s-6.200 6.400-6.200 10.600a6.200 6.200 0 0 0 12.400 0C18.200 7.900 12 1.500 12 1.500Z"/><path fill="none" stroke="#17287e" stroke-width="1.800" stroke-linecap="round" d="M2.500 17.800c1.900 2.800 5.400 4.600 9.500 4.600s7.600-1.800 9.500-4.600"/></svg>말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap">
+  <div class="page-hd">
+    <h1>🎁 한 해 마무리 말씀카드</h1>
+    <p>2026년을 돌아보고, 새해를 여는 말씀 한 장</p>
+  </div>
+
+  <div class="card" id="yeClosed" style="display:none;text-align:center;"></div>
+  <div class="card" id="yeReview" style="display:none;"></div>
+  <div class="card" id="yeDraw" style="display:none;"></div>
+  <div class="card ye-result" id="yeResult" style="display:none;"></div>
+  <canvas id="yeCanvas" style="display:none;"></canvas>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a><br>
+  성경 인용: 개역개정판, ⓒ 대한성서공회
+</footer>
+<script src="assets/yearend-data.js"></script>
+<script src="assets/card-sizes.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/bible-books.js"></script>
+<script src="assets/script.js"></script>
+<script>
+  initHeaderAuthState();
+  (function () {
+    var Y = YEAREND_YEAR, NEXT = Y + 1;
+    var GUEST_KEY = "msu_yearend_pick_" + Y;
+    var $ = function (id) { return document.getElementById(id); };
+    var state = { user: null, review: null, staff: false, pick: null };
+
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+    function kst() { var d = new Date(Date.now() + 9 * 3600e3); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); }
+    // 화면에서도 같은 기간을 쓴다(서버 yearend_is_open과 같음). 관리자·부장은 서버가 미리 열어 준다.
+    function openByDate() { var t = kst(); return t >= Date.UTC(Y, 11, 27) && t <= Date.UTC(NEXT, 0, 31); }
+
+    function showClosed() {
+      var left = Math.round((Date.UTC(Y, 11, 27) - kst()) / 86400000);
+      var box = $("yeClosed");
+      var ended = kst() > Date.UTC(NEXT, 0, 31);
+      box.innerHTML = left > 0
+        ? '<p class="ye-msg">12월 27일(주일)에 열려요<span class="ye-count">D-' + left + '</span>한 해 동안 말씀우물에서 함께한 기록을 돌아보고,<br>' + NEXT + '년을 여는 말씀카드 한 장을 뽑아요.</p>'
+        : ended ? '<p class="ye-msg">' + Y + '년 말씀카드 뽑기는 1월 31일에 끝났어요.</p>'
+        : '<p class="ye-msg">곧 열려요. 잠시 뒤 다시 열어 주세요.</p>';
+      box.style.display = "block";
+    }
+
+    function stat(n, label, wide) {
+      return '<div class="ye-stat' + (wide ? " wide" : "") + '"><b>' + n + '</b><span>' + label + '</span></div>';
+    }
+    function renderReview(r) {
+      var box = $("yeReview");
+      var j = r.joined ? new Date(r.joined + "T00:00:00") : null;
+      var rows = [];
+      if (r.attend) rows.push(stat(r.attend + "일", "출석한 날"));
+      if (r.best_streak > 1) rows.push(stat(r.best_streak + "일", "가장 길게 이어 간 출석"));
+      if (r.devotion) rows.push(stat(r.devotion + "일", "오늘의 QT 묵상"));
+      if (r.memorize) rows.push(stat(r.memorize + "일", "말씀 외우기"));
+      if (r.gratitude) rows.push(stat(r.gratitude + "개", "감사노트"));
+      if (r.prayer) rows.push(stat(r.prayer + "개", "기도제목"));
+      if (r.lines) rows.push(stat(r.lines + "번", "설교 한 줄"));
+      if (r.odyssey) rows.push(stat(r.odyssey + "편", "In Odyssey 완료"));
+      if (r.level) rows.push(stat("Lv." + r.level, "우물지기 레벨"));
+      if (rows.length % 2 === 1) rows[rows.length - 1] = rows[rows.length - 1].replace('class="ye-stat"', 'class="ye-stat wide"');
+      box.innerHTML =
+        '<div class="ye-sec-title">' + esc(r.nickname || "나") + '님의 ' + Y + ' 말씀우물</div>' +
+        '<p class="ye-sub">' + (j ? (j.getMonth() + 1) + '월 ' + j.getDate() + '일에 처음 함께했어요. ' : '') + '올 한 해 이렇게 말씀 곁에 있었어요.</p>' +
+        (rows.length ? '<div class="ye-stats">' + rows.join("") + '</div>' : '<p class="ye-sub">아직 쌓인 기록이 많지 않아요. 새해에는 매일 한 걸음씩 함께해요.</p>');
+      box.style.display = "block";
+    }
+
+    function renderDeck() {
+      var box = $("yeDraw");
+      var cards = "";
+      for (var i = 0; i < 12; i++) cards += '<button type="button" class="ye-card" data-i="' + i + '" aria-label="카드 ' + (i + 1) + '"><span class="in"><span class="f">✦</span><span class="b">' + NEXT + '<br>말씀</span></span></button>';
+      box.innerHTML =
+        '<div class="ye-sec-title">' + NEXT + '년을 여는 말씀카드</div>' +
+        '<p class="ye-sub">한 해를 지켜 주신 하나님께 감사하며 잠깐 기도해 보세요. 그리고 마음이 가는 카드 한 장을 골라 보세요.' +
+        (state.user ? ' 한 사람이 한 장만 뽑을 수 있어요.' : ' <a href="login.html" style="color:var(--well);font-weight:700;">로그인</a>하면 한 해 기록도 함께 볼 수 있어요.') + '</p>' +
+        '<div class="ye-deck shuffle" id="yeDeck">' + cards + '</div>' +
+        '<p class="msg" id="yeDrawMsg" style="text-align:center;margin-top:10px;"></p>';
+      box.style.display = "block";
+      var deck = $("yeDeck"), busy = false;
+      deck.addEventListener("click", function (e) {
+        var c = e.target.closest(".ye-card");
+        if (!c || busy) return;
+        busy = true;
+        $("yeDrawMsg").textContent = "카드를 펼치는 중...";
+        draw().then(function (pick) {
+          if (pick == null) { busy = false; return; }
+          c.classList.add("flip");
+          deck.classList.add("picking");
+          $("yeDrawMsg").textContent = "";
+          setTimeout(function () { showResult(pick, true); }, 900);
+        });
+      });
+    }
+
+    function draw() {
+      if (!state.user) {
+        var p = null;
+        try { p = localStorage.getItem(GUEST_KEY); } catch (e) {}
+        if (p == null || isNaN(Number(p))) {
+          p = Math.floor(Math.random() * YEAREND_VERSES.length);
+          try { localStorage.setItem(GUEST_KEY, String(p)); } catch (e) {}
+        }
+        return Promise.resolve(Number(p));
+      }
+      return getClient().rpc("draw_year_verse", { p_year: Y }).then(function (r) {
+        if (r.error || !r.data || !r.data.ok) {
+          $("yeDrawMsg").textContent = r.data && r.data.reason === "closed" ? "아직 뽑기가 열리지 않았어요." : "카드를 펼치지 못했어요. 잠시 뒤 다시 눌러 주세요.";
+          return null;
+        }
+        return r.data.pick;
+      }, function () { $("yeDrawMsg").textContent = "인터넷 연결을 확인하고 다시 눌러 주세요."; return null; });
+    }
+
+    function noteLine() {
+      var r = state.review;
+      var who = r && r.nickname ? r.nickname + "님에게 주신 " + NEXT + " 말씀" : NEXT + "년을 여는 말씀";
+      var tail = [];
+      if (r && r.attend) tail.push(Y + " 출석 " + r.attend + "일");
+      if (r && r.devotion) tail.push("묵상 " + r.devotion + "일");
+      return who + (tail.length ? " · " + tail.join(" · ") : "");
+    }
+
+    function showResult(pick, fresh) {
+      state.pick = pick;
+      var v = YEAREND_VERSES[pick];
+      if (!v) return;
+      if (!fresh) $("yeDraw").style.display = "none";
+      var readHref = (typeof refToReadLink === "function" && refToReadLink(v.ref)) || "read.html";
+      var box = $("yeResult");
+      box.innerHTML =
+        '<span class="ye-label">' + (fresh ? "🎁 내가 뽑은 " : "🎁 올해 뽑은 ") + NEXT + '년 말씀</span>' +
+        '<div class="ye-ref">' + esc(v.ref) + '</div>' +
+        '<p class="ye-verse">"' + esc(v.text) + '"</p>' +
+        '<p class="ye-note">' + NEXT + '년 첫날부터 이 말씀을 붙들고 시작해요. 휴대폰 배경으로 저장해 두면 매일 볼 수 있어요.</p>' +
+        '<p style="font-size:12.5px;color:var(--text-soft);margin:6px 0;">저장할 크기를 골라 주세요</p>' +
+        '<div class="tabs" id="yeSizePicker"></div>' +
+        '<div class="ye-btns">' +
+          '<button type="button" class="btn" id="yeSaveBtn">🖼️ 카드 저장</button>' +
+          '<a class="btn ghost" href="' + readHref + '"' + (/^https?:/.test(readHref) ? ' target="_blank" rel="noopener"' : '') + '>📖 본문 읽기</a>' +
+        '</div>' +
+        '<button type="button" class="ye-link" id="yeShareBtn">💬 이 말씀 나누기</button>' +
+        (state.staff ? '<button type="button" class="ye-link" id="yeResetBtn" style="margin-top:0;color:#a33;font-size:12.5px;">관리자 시험: 내 뽑기 지우고 다시 뽑기</button>' : '') +
+        '<p class="msg" id="yeSaveMsg" style="text-align:center;margin-top:8px;"></p>';
+      box.style.display = "block";
+      if (typeof initSizePicker === "function") initSizePicker("yeSizePicker", function () {}, "wallpaper");
+      $("yeSaveBtn").onclick = function () { saveCard(v); };
+      $("yeShareBtn").onclick = function () { share(v); };
+      var rb = $("yeResetBtn");
+      if (rb) rb.onclick = function () {
+        getClient().rpc("reset_my_year_draw", { p_year: Y }).then(function () {
+          try { localStorage.removeItem(GUEST_KEY); } catch (e) {}
+          box.style.display = "none";
+          renderDeck();
+        });
+      };
+      if (fresh) setTimeout(function () { box.scrollIntoView({ behavior: "smooth", block: "start" }); }, 100);
+    }
+
+    function saveCard(v) {
+      var msg = $("yeSaveMsg");
+      var size = (typeof getSelectedSize === "function") ? getSelectedSize("yeSizePicker", "wallpaper") : { w: 1080, h: 2340 };
+      msg.textContent = "카드를 만드는 중...";
+      Promise.all([loadVerseCardFonts(), loadVerseCardBackground()]).then(function (r) {
+        var canvas = $("yeCanvas");
+        drawVerseCardImage(canvas, { ref: v.ref, text: v.text, note: noteLine() }, "yearend", size.w, size.h, r[1]);
+        var a = document.createElement("a");
+        a.download = "말씀우물_" + NEXT + "_말씀카드.png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+        msg.textContent = "저장했어요. 사진첩이나 다운로드 폴더에서 볼 수 있어요.";
+      }).catch(function () { msg.textContent = "카드를 만들지 못했어요. 잠시 뒤 다시 눌러 주세요."; });
+    }
+
+    function share(v) {
+      var text = "[" + NEXT + "년을 여는 말씀] " + v.ref + "\n\"" + v.text + "\"\n\n말씀우물에서 나도 한 장 뽑아 보기 👉 https://logoswell.kr/yearend.html";
+      var msg = $("yeSaveMsg");
+      if (navigator.share) { navigator.share({ text: text }).catch(function () {}); return; }
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () {
+        msg.textContent = "말씀을 복사했어요. 카톡에 붙여 넣어 나눠 보세요.";
+      }, function () { msg.textContent = "이 기기에서는 나누기를 쓸 수 없어요."; });
+    }
+
+    getSession().then(function (s) {
+      state.user = s ? s.user : null;
+      if (!state.user) {
+        if (!openByDate()) { showClosed(); return; }
+        var p = null;
+        try { p = localStorage.getItem(GUEST_KEY); } catch (e) {}
+        if (p != null && !isNaN(Number(p))) showResult(Number(p), false); else renderDeck();
+        return;
+      }
+      return Promise.all([
+        getClient().rpc("get_my_year_review", { p_year: Y }),
+        getClient().from("profiles").select("is_admin, is_department_head").eq("user_id", state.user.id).single()
+      ]).then(function (res) {
+        var r = res[0].data, p = res[1].data;
+        state.staff = !!(p && (p.is_admin || p.is_department_head));
+        if (!r || !r.ok) { $("yeClosed").innerHTML = '<p class="ye-msg">기록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>'; $("yeClosed").style.display = "block"; return; }
+        state.review = r;
+        if (!r.open) { showClosed(); return; }
+        if (state.staff && !openByDate()) { $("yeClosed").innerHTML = '<p class="ye-msg">👀 관리자 미리보기예요. 다른 사람에게는 12월 27일에 열려요.</p>'; $("yeClosed").style.display = "block"; }
+        renderReview(r);
+        if (r.pick != null) showResult(r.pick, false); else renderDeck();
+      });
+    }).catch(function () {
+      $("yeClosed").innerHTML = '<p class="ye-msg">화면을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</p>';
+      $("yeClosed").style.display = "block";
+    });
+  })();
+</script>
+<script src="assets/appshell.js"></script>
+</body>
+</html>

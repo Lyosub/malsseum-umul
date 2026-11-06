@@ -46,6 +46,7 @@
   .adv-btns { display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
   .adv-btns > * { flex:1 1 140px; }
   .adv-msg { text-align:center; font-size:14px; color:var(--text-soft); padding:6px 0; }
+  .adv-link { display:block; margin:12px auto 0; background:none; border:0; font-family:inherit; font-size:14px; font-weight:700; color:var(--well); min-height:40px; padding:6px 12px; cursor:pointer; }
   .adv-count { font-size:28px; font-weight:800; color:#17287e; display:block; margin:4px 0; }
 </style>
 </head>
@@ -174,7 +175,7 @@
           '<a class="btn ghost" href="' + readHref + '"' + (/^https?:/.test(readHref) ? ' target="_blank" rel="noopener"' : '') + '>📖 본문 읽기</a>' +
         '</div>' +
         '<p class="msg" id="advSaveMsg" style="text-align:center;margin-top:8px;"></p>' +
-        (n < openUpTo ? '<button type="button" class="tap-link" id="advNextBtn" style="display:block;margin:10px auto 0;">다음 날 말씀 ›</button>' : '');
+        (n < openUpTo ? '<button type="button" class="adv-link" id="advNextBtn">다음 날 말씀 ›</button>' : '');
       detail.style.display = "block";
       document.getElementById("advSaveBtn").onclick = function () { saveCard(x); };
       var nb = document.getElementById("advNextBtn");

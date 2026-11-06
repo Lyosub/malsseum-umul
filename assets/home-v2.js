@@ -41,6 +41,11 @@
     if (advD) document.getElementById("hvAdvent").href = "advent.html?day=" + advD;
   }
 
+  // 한 해 마무리 말씀카드 뽑기: 12/27(주일)부터 1/31까지 보인다(yearend.html, 서버도 같은 기간).
+  if (today >= new Date(2026, 11, 27) && today <= new Date(2027, 0, 31)) {
+    document.getElementById("hvYearend").hidden = false;
+  }
+
   // 감사의 광주리: 11/8 예배 안내 때부터 11/15까지 보인다. 시작 전에는 시작일을, 시작 뒤에는 열매 수를 쓴다.
   var harvestStart = new Date(2026, 10, 8), harvestEnd = new Date(2026, 10, 15);
   if (today >= new Date(2026, 10, 8) && today <= harvestEnd) {
