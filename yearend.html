@@ -205,7 +205,7 @@
       box.innerHTML =
         '<div class="ye-sec-title">' + NEXT + '년을 여는 말씀카드</div>' +
         '<p class="ye-sub">한 해를 지켜 주신 하나님께 감사하며 잠깐 기도해 보세요.<br>그리고 아래 버튼을 눌러 새해 말씀을 받아 보세요.' +
-        (state.user ? '<br>한 사람이 한 번만 뽑을 수 있어요.' : '<br><a href="login.html" style="color:var(--well);font-weight:700;">로그인</a>하면 한 해 기록도 함께 볼 수 있어요.') + '</p>' +
+        (state.user ? '' : '<br><a href="login.html" style="color:var(--well);font-weight:700;">로그인</a>하면 한 해 기록도 함께 볼 수 있어요.') + '</p>' +
         '<div class="ye-fan" aria-hidden="true"><span>✦</span><span>' + NEXT + '<br>말씀</span><span>✦</span></div>' +
         '<button type="button" class="ye-go" id="yeGoBtn">✦ 말씀 뽑기</button>' +
         '<p class="msg" id="yeDrawMsg" style="text-align:center;margin-top:10px;"></p>' +
@@ -318,6 +318,21 @@
       }, dur + 80);
     }
 
+    // 다시 뽑기: 지금 말씀과 다른 말씀을 새로 뽑는다(로그인은 서버, 비로그인은 이 기기).
+    function redraw(cur) {
+      var msg = $("yeSaveMsg");
+      if (!state.user) {
+        var n = YEAREND_VERSES.length, p = Math.floor(Math.random() * (n - 1));
+        if (p >= cur) p += 1;
+        try { localStorage.setItem(GUEST_KEY, String(p)); localStorage.setItem(GUEST_KEY + "_at", String(kst())); } catch (e) {}
+        return Promise.resolve(p);
+      }
+      return getClient().rpc("redraw_year_verse", { p_year: Y }).then(function (r) {
+        if (r.error || !r.data || !r.data.ok) { if (msg) msg.textContent = "다시 뽑지 못했어요. 잠시 뒤 다시 눌러 주세요."; return null; }
+        return r.data.pick;
+      }, function () { if (msg) msg.textContent = "인터넷 연결을 확인하고 다시 눌러 주세요."; return null; });
+    }
+
     function draw() {
       if (!state.user) {
         var p = null;
@@ -419,7 +434,7 @@
         '</div>' +
         '<button type="button" class="ye-link" id="yeShareBtn">💬 이 말씀 나누기</button>' +
         (ended() ? '' : '<button type="button" class="ye-link" data-share-link style="margin-top:0;">🔗 친구에게 뽑기 링크 보내기</button><p class="msg" data-share-msg style="text-align:center;"></p>') +
-        (state.staff ? '<button type="button" class="ye-link" id="yeResetBtn" style="margin-top:0;color:#a33;font-size:12.5px;">관리자 시험: 내 뽑기 지우고 다시 뽑기</button>' : '') +
+        (ended() ? '' : '<button type="button" class="ye-link" id="yeRedrawBtn" style="margin-top:0;">🔄 다시 뽑기</button>') +
         '<p class="msg" id="yeSaveMsg" style="text-align:center;margin-top:8px;"></p>';
       box.classList.toggle("reveal", !!fresh);
       box.style.display = "block";
@@ -427,12 +442,17 @@
       renderPreview();
       $("yeSaveBtn").onclick = function () { saveCard(v); };
       $("yeShareBtn").onclick = function () { share(v); };
-      var rb = $("yeResetBtn");
+      var rb = $("yeRedrawBtn");
       if (rb) rb.onclick = function () {
-        getClient().rpc("reset_my_year_draw", { p_year: Y }).then(function () {
-          try { localStorage.removeItem(GUEST_KEY); } catch (e) {}
-          box.style.display = "none";
-          renderDeck();
+        if (!confirm("지금 말씀 대신 새 말씀을 뽑을까요? 지금 말씀은 바뀌어요.")) return;
+        rb.disabled = true;
+        var el = stage();
+        var t0 = Date.now();
+        redraw(pick).then(function (np) {
+          if (np == null) { el.remove(); rb.disabled = false; return; }
+          setTimeout(function () {
+            roll(el, np, function () { showResult(np, true); });
+          }, Math.max(0, 1100 - (Date.now() - t0)));
         });
       };
       if (fresh) setTimeout(function () { box.scrollIntoView({ behavior: "smooth", block: "start" }); }, 100);
