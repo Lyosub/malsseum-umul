@@ -1,5 +1,5 @@
 // 로그인했는데 아직 새해 말씀카드를 안 뽑은 사람에게 첫 화면·나의 기록에서 안내 창을 띄운다.
-// 기간(12/1~12/31)은 서버 get_my_year_pick이 정한다(관리자·부장은 미리 보임). 「나중에」를 누르면 그날은 다시 안 띄운다.
+// 기간(12/1~1/31)은 서버 get_my_year_pick이 정한다(관리자·부장은 미리 보임). 「나중에」를 누르면 그날은 다시 안 띄운다.
 (function () {
   var Y = 2026;
   function kstKey() {
@@ -31,7 +31,7 @@
       "#yePrompt .yp-no{display:block;width:100%;margin-top:6px;min-height:42px;background:none;border:0;font-family:inherit;font-size:13.5px;font-weight:700;color:#6b74a0;cursor:pointer;}" +
       "@media (prefers-reduced-motion: reduce){#yePrompt .yp-c.m{animation:none}}";
     document.head.appendChild(css);
-    var left = Math.round((Date.UTC(Y, 11, 31) - kstMs()) / 86400000);
+    var left = Math.round((Date.UTC(Y + 1, 0, 31) - kstMs()) / 86400000);
     var el = document.createElement("div");
     el.id = "yePrompt";
     el.setAttribute("role", "dialog");
@@ -45,7 +45,7 @@
         '</div>' +
         '<div class="yp-body">' +
           '<h3>🎁 ' + (Y + 1) + '년을 여는 말씀카드</h3>' +
-          '<p>아직 카드를 안 뽑으셨어요. 한 해를 돌아보고<br>새해 말씀 한 장을 받아 보세요.' + (left >= 0 && left <= 31 ? '<br><b style="color:#a0741c;">' + (left === 0 ? "오늘이 마지막 날이에요" : "12월 31일까지 · " + left + "일 남음") + '</b>' : '') + '</p>' +
+          '<p>아직 카드를 안 뽑으셨어요. 한 해를 돌아보고<br>새해 말씀 한 장을 받아 보세요.' + (left >= 0 && left <= 62 ? '<br><b style="color:#a0741c;">' + (left === 0 ? "오늘이 마지막 날이에요" : "1월 31일까지 · " + left + "일 남음") + '</b>' : '') + '</p>' +
           '<a class="yp-go" href="yearend.html">카드 뽑으러 가기</a>' +
           '<button type="button" class="yp-no">나중에 할게요</button>' +
         '</div>' +
@@ -61,7 +61,7 @@
   function check() {
     if (later()) return;
     // 기간이 끝난 뒤에는 서버에 묻지도 않는다.
-    if (kstMs() > Date.UTC(Y, 11, 31)) return;
+    if (kstMs() > Date.UTC(Y + 1, 0, 31)) return;
     if (typeof getSession !== "function" || typeof getClient !== "function") return;
     getSession().then(function (s) {
       if (!s) return;

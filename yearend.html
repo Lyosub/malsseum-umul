@@ -8,7 +8,7 @@
 <meta name="description" content="2026년을 돌아보고, 새해를 여는 말씀카드 한 장을 뽑아요.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="2027년을 여는 말씀카드 한 장 뽑기 | 말씀우물">
-<meta property="og:description" content="12월 한 달, 한 해를 돌아보며 새해 말씀카드 한 장을 뽑아 보세요.">
+<meta property="og:description" content="12월 1일부터 1월 31일까지, 한 해를 돌아보며 새해 말씀카드 한 장을 뽑아 보세요.">
 <meta property="og:image" content="https://logoswell.kr/assets/og-yearend.jpg">
 <meta property="og:url" content="https://logoswell.kr/yearend.html">
 <meta name="twitter:card" content="summary_large_image">
@@ -136,17 +136,19 @@
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
     function kst() { var d = new Date(Date.now() + 9 * 3600e3); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); }
     // 화면에서도 같은 기간을 쓴다(서버 yearend_is_open과 같음). 관리자·부장은 서버가 미리 열어 준다.
-    function openByDate() { var t = kst(); return t >= Date.UTC(Y, 11, 1) && t <= Date.UTC(Y, 11, 31); }
+    function openByDate() { var t = kst(); return t >= Date.UTC(Y, 11, 1) && t <= Date.UTC(NEXT, 0, 31); }
+    // 뽑기가 끝난 뒤(2/1부터)에는 새로 뽑을 수 없고, 이미 뽑은 사람은 자기 말씀을 계속 본다.
+    function ended() { return kst() > Date.UTC(NEXT, 0, 31); }
 
     function showClosed() {
       var left = Math.round((Date.UTC(Y, 11, 1) - kst()) / 86400000);
       var box = $("yeClosed");
-      var ended = kst() > Date.UTC(Y, 11, 31);
+      var isEnded = ended();
       box.innerHTML = left > 0
-        ? '<p class="ye-msg">12월 1일에 열려요<span class="ye-count">D-' + left + '</span>12월 한 달 동안 한 해를 돌아보고,<br>' + NEXT + '년을 여는 말씀카드 한 장을 뽑아요.</p>'
-        : ended ? '<p class="ye-msg">' + Y + '년 말씀카드 뽑기는 12월 31일에 끝났어요.</p>'
+        ? '<p class="ye-msg">12월 1일에 열려요<span class="ye-count">D-' + left + '</span>12월 1일부터 1월 31일까지 한 해를 돌아보고,<br>' + NEXT + '년을 여는 말씀카드 한 장을 뽑아요.</p>'
+        : isEnded ? '<p class="ye-msg">새해 말씀카드 뽑기는 1월 31일에 끝났어요.</p>'
         : '<p class="ye-msg">곧 열려요. 잠시 뒤 다시 열어 주세요.</p>';
-      if (!ended) box.innerHTML += '<button type="button" class="ye-link" data-share-link>🔗 뽑기 링크 미리 보내 두기</button><p class="msg" data-share-msg style="text-align:center;"></p>';
+      if (!isEnded) box.innerHTML += '<button type="button" class="ye-link" data-share-link>🔗 뽑기 링크 미리 보내 두기</button><p class="msg" data-share-msg style="text-align:center;"></p>';
       box.style.display = "block";
     }
 
@@ -391,7 +393,7 @@
           '<a class="btn ghost" href="' + readHref + '"' + (/^https?:/.test(readHref) ? ' target="_blank" rel="noopener"' : '') + '>📖 본문 읽기</a>' +
         '</div>' +
         '<button type="button" class="ye-link" id="yeShareBtn">💬 이 말씀 나누기</button>' +
-        '<button type="button" class="ye-link" data-share-link style="margin-top:0;">🔗 친구에게 뽑기 링크 보내기</button><p class="msg" data-share-msg style="text-align:center;"></p>' +
+        (ended() ? '' : '<button type="button" class="ye-link" data-share-link style="margin-top:0;">🔗 친구에게 뽑기 링크 보내기</button><p class="msg" data-share-msg style="text-align:center;"></p>') +
         (state.staff ? '<button type="button" class="ye-link" id="yeResetBtn" style="margin-top:0;color:#a33;font-size:12.5px;">관리자 시험: 내 뽑기 지우고 다시 뽑기</button>' : '') +
         '<p class="msg" id="yeSaveMsg" style="text-align:center;margin-top:8px;"></p>';
       box.classList.toggle("reveal", !!fresh);
@@ -461,10 +463,12 @@
     getSession().then(function (s) {
       state.user = s ? s.user : null;
       if (!state.user) {
-        if (!openByDate()) { showClosed(); return; }
         var p = null;
         try { p = localStorage.getItem(GUEST_KEY); } catch (e) {}
-        if (p != null && !isNaN(Number(p))) showResult(Number(p), false); else renderDeck();
+        var has = p != null && !isNaN(Number(p)) && YEAREND_VERSES[Number(p)];
+        if (has) { showResult(Number(p), false); return; }
+        if (!openByDate()) { showClosed(); return; }
+        renderDeck();
         return;
       }
       return Promise.all([
@@ -475,7 +479,8 @@
         state.staff = !!(p && (p.is_admin || p.is_department_head));
         if (!r || !r.ok) { $("yeClosed").innerHTML = '<p class="ye-msg">기록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>'; $("yeClosed").style.display = "block"; return; }
         state.review = r;
-        if (!r.open) { showClosed(); return; }
+        if (!r.open && r.pick == null) { showClosed(); return; }
+        if (!r.open) { renderReview(r); showResult(r.pick, false); return; }
         if (state.staff && !openByDate()) { $("yeClosed").innerHTML = '<p class="ye-msg">👀 관리자 미리보기예요. 다른 사람에게는 12월 1일에 열려요.</p>'; $("yeClosed").style.display = "block"; }
         renderReview(r);
         if (r.pick != null) showResult(r.pick, false); else renderDeck();

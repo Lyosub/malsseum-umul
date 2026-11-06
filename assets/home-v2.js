@@ -41,8 +41,8 @@
     if (advD) document.getElementById("hvAdvent").href = "advent.html?day=" + advD;
   }
 
-  // 한 해 마무리 말씀카드 뽑기: 12/1부터 12/31까지 보인다(yearend.html, 서버도 같은 기간).
-  if (today >= new Date(2026, 11, 1) && today <= new Date(2026, 11, 31)) {
+  // 새해 말씀카드 뽑기: 12/1부터 1/31까지 보인다(yearend.html, 서버도 같은 기간).
+  if (today >= new Date(2026, 11, 1) && today <= new Date(2027, 0, 31)) {
     document.getElementById("hvYearend").hidden = false;
   }
 
