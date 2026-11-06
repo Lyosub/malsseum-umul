@@ -82,7 +82,7 @@ var YEAR_CARD_DESIGNS = [
   var THEMES = {
     photo: { font: SANS, weight: "800", ink: "#ffffff", sub: "rgba(255,255,255,.86)", accent: "#ffe7a8", shadow: "rgba(0,0,0,.55)" },
     gold: { font: SANS, weight: "800", ink: "#ffffff", sub: "rgba(255,255,255,.8)", accent: "#e9c46a", shadow: "rgba(0,0,0,.3)" },
-    paper: { font: SERIF, weight: "800", ink: "#3b2a12", sub: "#7a6040", accent: "#a33a2a", shadow: null },
+    paper: { font: SERIF, weight: "800", ink: "#2f2412", sub: "#8a6a3a", accent: "#a33a2a", shadow: null },
     dawn: { font: SANS, weight: "800", ink: "#ffffff", sub: "rgba(255,255,255,.9)", accent: "#fff1c9", shadow: "rgba(60,20,40,.35)" },
     night: { font: SERIF, weight: "800", ink: "#fdf6e3", sub: "rgba(253,246,227,.78)", accent: "#e9c46a", shadow: "rgba(0,0,0,.4)" },
     clean: { font: SANS, weight: "800", ink: "#17287e", sub: "#6b74a0", accent: "#c9932f", shadow: null }
@@ -106,16 +106,23 @@ var YEAR_CARD_DESIGNS = [
       ctx.lineWidth = W * 0.0022; ctx.strokeRect(m + W * 0.018, m + W * 0.018, W - (m + W * 0.018) * 2, H - (m + W * 0.018) * 2);
       [[m, m], [W - m, m], [m, H - m], [W - m, H - m]].forEach(function (p) { sparkle(ctx, p[0], p[1], W * 0.03, "#ffe7a8"); });
     } else if (key === "paper") {
-      ctx.fillStyle = "#f7efdc"; ctx.fillRect(0, 0, W, H);
+      // 밝고 깨끗한 크림색 종이. 가장자리를 어둡게 하지 않는다(어두우면 회색 종이처럼 보였다, 11/6).
+      g = ctx.createLinearGradient(0, 0, W, H);
+      g.addColorStop(0, "#fffaf0"); g.addColorStop(0.5, "#fdf4e1"); g.addColorStop(1, "#faeed6");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
       R = rng(o.seed + 7);
       ctx.save();
-      for (var i = 0; i < 2600; i++) { ctx.globalAlpha = R() * 0.05; ctx.fillStyle = R() > 0.5 ? "#8a6a3a" : "#ffffff"; ctx.fillRect(R() * W, R() * H, 2, 2); }
+      for (var i = 0; i < 1400; i++) { ctx.globalAlpha = R() * 0.035; ctx.fillStyle = "#c9a36a"; ctx.fillRect(R() * W, R() * H, 2, 2); }
       ctx.restore();
-      g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.72);
-      g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(120,80,30,.18)");
-      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = "rgba(122,96,64,.45)"; ctx.lineWidth = W * 0.002;
-      var pm = W * 0.07; ctx.strokeRect(pm, pm, W - pm * 2, H - pm * 2);
+      var pm = W * 0.07, pl = W * 0.08;
+      ctx.strokeStyle = "rgba(201,147,47,.7)"; ctx.lineWidth = W * 0.0025;
+      ctx.strokeRect(pm, pm, W - pm * 2, H - pm * 2);
+      ctx.strokeStyle = "rgba(201,147,47,.35)"; ctx.lineWidth = W * 0.0015;
+      ctx.strokeRect(pm + W * 0.014, pm + W * 0.014, W - (pm + W * 0.014) * 2, H - (pm + W * 0.014) * 2);
+      [[pm, pm], [W - pm, pm], [pm, H - pm], [W - pm, H - pm]].forEach(function (q) { sparkle(ctx, q[0], q[1], W * 0.022, "#c9932f"); });
+      // 위·아래 가운데 작은 장식
+      sparkle(ctx, W / 2, pm, W * 0.016, "#c9932f"); sparkle(ctx, W / 2, H - pm, W * 0.016, "#c9932f");
+      void pl;
     } else if (key === "dawn") {
       g = ctx.createLinearGradient(0, 0, 0, H);
       g.addColorStop(0, "#1d2b6e"); g.addColorStop(0.45, "#6b5aa8"); g.addColorStop(0.72, "#e98aa0"); g.addColorStop(0.9, "#f7c27c"); g.addColorStop(1, "#fde3a7");
