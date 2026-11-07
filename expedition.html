@@ -642,6 +642,14 @@
     renderResult();
     if (typing() || busy) return; // 글을 쓰는 중에는 미션 카드를 다시 그리지 않는다
     keepDrafts();
+    // 11/8: 도감·숨은 풍경은 오전 11시(mission_open_at)부터. 그 전에는 잠금 안내만 보인다.
+    if (S.mission_open === false) {
+      var lockHtml = '<div class="card lock"><div class="ic">🔒</div><h2>미션은 오전 11시에 열려요</h2>' +
+        '<p class="muted" style="margin:0;">11시가 지나면 앱을 닫았다가 다시 들어와 주세요.<br>그 전에는 팀원들과 함께 모여 있어요!</p></div>';
+      $("dogamList").innerHTML = lockHtml; $("placeList").innerHTML = lockHtml;
+      renderHidden();
+      return;
+    }
     renderDogam(); renderPlace(); renderHidden();
   }
 
