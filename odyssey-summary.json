@@ -5,7 +5,7 @@
   "saved_24h": 2,
   "visitors_24h": 1,
   "new_24h": 0,
-  "steps_24h": 66,
+  "steps_24h": 58,
   "active_7d": 3,
   "chapters": {
     "1편 모세와 함께 (10장)": {
@@ -31,13 +31,20 @@
       "9장 클리어": 2
     },
     "7편 사울과 다윗 (16장)": {
-      "10장 클리어": 1,
+      "15장 클리어": 1,
       "16장 클리어": 1
     }
   },
-  "stuck": [],
+  "stuck": [
+    {
+      "chapter": 14,
+      "step": "saul/s14s1",
+      "players": 2,
+      "median_secs": 460
+    }
+  ],
   "errors_24h": 0,
   "errors_fixed_24h": 0,
-  "generated_kst": "2026-11-08 21:40",
+  "generated_kst": "2026-11-09 03:03",
   "ok": true
 }
