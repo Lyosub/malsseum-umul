@@ -1,8 +1,8 @@
 {
   "members": 49,
   "new_members_7d": 6,
-  "active_today": 5,
-  "active_7d": 13,
+  "active_today": 7,
+  "active_7d": 14,
   "active_prev_7d": 8,
   "returned_7d": 6,
   "lapsed_7d": 2,
@@ -23,8 +23,8 @@
       "count": 9
     },
     "note_gratitude": {
-      "users": 5,
-      "count": 6
+      "users": 7,
+      "count": 9
     },
     "note_greeting": {
       "users": 6,
@@ -36,7 +36,7 @@
     },
     "odyssey": {
       "users": 3,
-      "count": 80
+      "count": 105
     },
     "qt_reflection": {
       "users": 1,
@@ -118,11 +118,11 @@
     },
     {
       "week_start": "2026-11-02",
-      "active": 13,
+      "active": 14,
       "attendance_users": 12,
       "attendance_count": 24
     }
   ],
-  "generated_kst": "2026-11-08 10:47",
+  "generated_kst": "2026-11-08 14:40",
   "ok": true
 }
