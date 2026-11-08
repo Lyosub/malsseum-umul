@@ -761,7 +761,7 @@ function initGroup(userId) {
         ? "🎯 <strong>오이코스 챌린지</strong> — 매주(월~일) 자동 정산, 개인 달란트가 아니라 <strong>오이코스 공동 곳간</strong>에 쌓여요.<br><br>" +
           "· 멤버 80% 이상 출석 → 곳간 <strong>+인원수</strong><br>" +
           "· 멤버 전원이 감사노트/기도제목 1개+ 쓰고 오이코스 합계 10개 이상 → 곳간 <strong>+인원수×2</strong>"
-        : "이 오이코스는 학생들끼리 만든 오이코스라 챌린지 보너스가 적용되지 않아요. 교사가 만든 오이코스만 보너스 대상이에요.";
+        : "이 오이코스는 교사 없이 만든 오이코스라 챌린지 보너스가 적용되지 않아요. 교사가 만든 오이코스만 보너스 대상이에요.";
     });
   }
 
@@ -1349,12 +1349,24 @@ function initNotes(userId) {
           '</select>' +
         '</div>';
     }
+    var ansRow = "";
+    if (item.type === "prayer") {
+      if (item.answered_at) {
+        var ad = new Date(item.answered_at);
+        ansRow = '<div class="pr-answered">🙌 응답됐어요 · ' + (ad.getMonth() + 1) + "." + ad.getDate() +
+          (item.answer_note ? '<div class="pr-answer-note">' + escapeHtml(item.answer_note) + '</div>' : "") +
+          '<button type="button" class="pr-undo" data-action="unanswer">표시 지우기</button></div>';
+      } else {
+        ansRow = '<button type="button" class="btn ghost pr-answer-btn" data-action="answer">🙌 응답됐어요</button>';
+      }
+    }
     return (
-      '<div class="note-item" data-note-id="' + item.id + '">' +
+      '<div class="note-item' + (item.answered_at ? " is-answered" : "") + '" data-note-id="' + item.id + '">' +
         '<div class="meta">' + dateStr + '</div>' +
         '<div data-role="body">' +
           '<div class="content">' + linkifyHtml(item.content) + '</div>' +
           renderImageGallery(item.image_urls) +
+          ansRow +
           visRow +
           '<div style="margin-top:8px;display:flex;gap:8px;">' +
             '<button type="button" class="btn ghost" data-action="edit" style="padding:6px 14px;font-size:12.5px;">수정</button>' +
@@ -1396,6 +1408,32 @@ function initNotes(userId) {
       return;
     }
 
+    // 기도 다시 보기: 응답 표시(짧은 메모는 선택), 표시 지우기
+    if (action === "answer") {
+      var box = document.createElement("div");
+      box.className = "pr-answer-form";
+      box.innerHTML = '<textarea data-role="answer-input" maxlength="200" placeholder="어떻게 응답하셨는지 짧게 남겨도 좋아요 (선택)"></textarea>' +
+        '<div style="display:flex;gap:8px;margin-top:6px;"><button type="button" class="btn" data-action="answer-save" style="padding:6px 14px;font-size:12.5px;">저장</button>' +
+        '<button type="button" class="btn ghost" data-action="cancel" style="padding:6px 14px;font-size:12.5px;">취소</button></div>';
+      btn.replaceWith(box);
+      return;
+    }
+    if (action === "answer-save") {
+      var ai = itemEl.querySelector('[data-role="answer-input"]');
+      var noteTxt = ai ? ai.value.trim().slice(0, 200) : "";
+      btn.disabled = true;
+      client.from("notes").update({ answered_at: new Date().toISOString(), answer_note: noteTxt || null }).eq("id", noteId).then(function (res) {
+        if (res && res.error) { btn.disabled = false; alert("저장하지 못했어요. 잠시 뒤 다시 눌러 주세요."); return; }
+        loadNotes();
+      });
+      return;
+    }
+    if (action === "unanswer") {
+      if (!confirm("응답 표시를 지울까요?")) return;
+      client.from("notes").update({ answered_at: null, answer_note: null }).eq("id", noteId).then(function () { loadNotes(); });
+      return;
+    }
+
     if (action === "save") {
       var textarea = itemEl.querySelector('[data-role="edit-input"]');
       var newContent = textarea.value.trim();
@@ -1424,6 +1462,64 @@ function initNotes(userId) {
     if (el) {
       el.addEventListener("click", handleListClick);
       el.addEventListener("change", handleListChange);
+    }
+  });
+
+  // 기도 다시 보기(2026-11-08): 쓴 지 14일이 지났고 아직 응답 표시가 없는 기도를 최대 2개 다시 꺼내 보여 준다.
+  // 「계속 기도해요」를 누르면 revisited_at을 오늘로 두고, 다시 14일 뒤에 꺼낸다. 본인에게만 보인다.
+  var REVISIT_DAYS = 14;
+  function renderPrayerRevisit(prayers) {
+    var host = document.getElementById("prayerRevisit");
+    if (!host) return;
+    var now = Date.now(), gap = REVISIT_DAYS * 86400000;
+    var due = (prayers || []).filter(function (p) {
+      if (p.answered_at) return false;
+      var base = new Date(p.revisited_at || p.created_at).getTime();
+      return now - base >= gap;
+    }).slice(-2);
+    var answered = (prayers || []).filter(function (p) { return p.answered_at; }).length;
+    if (!due.length && !answered) { host.hidden = true; host.innerHTML = ""; return; }
+    var html = '<div class="pr-revisit-head">🔁 기도 다시 보기' + (answered ? ' <span>지금까지 응답 ' + answered + '개</span>' : "") + '</div>';
+    if (due.length) {
+      html += due.map(function (p) {
+        var days = Math.floor((now - new Date(p.created_at).getTime()) / 86400000);
+        var c = String(p.content || "");
+        if (c.length > 80) c = c.slice(0, 80) + "…";
+        return '<div class="pr-revisit-item" data-note-id="' + p.id + '">' +
+          '<div class="pr-revisit-when">' + days + '일 전에 이렇게 기도했어요. 지금은 어떤가요?</div>' +
+          '<div class="pr-revisit-text">' + escapeHtml(c) + '</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' +
+            '<button type="button" class="btn" data-rv="answer" style="padding:6px 14px;font-size:12.5px;">🙌 응답됐어요</button>' +
+            '<button type="button" class="btn ghost" data-rv="keep" style="padding:6px 14px;font-size:12.5px;">🙏 계속 기도해요</button>' +
+          '</div></div>';
+      }).join("");
+    } else {
+      html += '<p class="msg" style="margin:4px 0 0;">다시 볼 기도가 생기면 여기에 보여 드릴게요.</p>';
+    }
+    host.innerHTML = html;
+    host.hidden = false;
+  }
+  var revisitHost = document.getElementById("prayerRevisit");
+  if (revisitHost) revisitHost.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-rv]");
+    if (!b) return;
+    var row = b.closest(".pr-revisit-item");
+    var id = row && row.getAttribute("data-note-id");
+    if (!id) return;
+    if (b.getAttribute("data-rv") === "keep") {
+      b.disabled = true;
+      client.from("notes").update({ revisited_at: new Date().toISOString() }).eq("id", id).then(function () { loadNotes(); });
+      return;
+    }
+    // 응답됐어요: 아래 기도 목록의 같은 기도에서 메모를 남길 수 있게 펼친다
+    var listItem = document.querySelector('#noteListPrayer .note-item[data-note-id="' + id + '"] [data-action="answer"]');
+    var card = document.getElementById("noteListPrayer");
+    var fold = card && card.closest("details");
+    if (fold) fold.open = true;
+    if (listItem) { listItem.click(); var it = listItem.closest(".note-item") || document.querySelector('#noteListPrayer .note-item[data-note-id="' + id + '"]'); if (it) it.scrollIntoView({ block: "center", behavior: "smooth" }); }
+    else {
+      b.disabled = true;
+      client.from("notes").update({ answered_at: new Date().toISOString() }).eq("id", id).then(function () { loadNotes(); });
     }
   });
 
@@ -1459,6 +1555,7 @@ function initNotes(userId) {
           emptyState.style.display = hasAny ? "none" : "block";
         }
         updateGreetingDrawSection(userId, grouped.greeting);
+        renderPrayerRevisit(grouped.prayer);
       });
   }
 

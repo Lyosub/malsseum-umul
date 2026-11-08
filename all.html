@@ -50,7 +50,7 @@
     <div class="dir-group h-blue">
       <h3>📖 말씀</h3>
       <div class="dir-list">
-        <a class="dir-row" href="word.html"><span class="di">💧</span><span class="dg">오늘의 QT</span><span class="dc">›</span></a>
+        <a class="dir-row" href="word.html"><span class="di">💧</span><span class="dg">오늘의 QT · 말씀 모아보기</span><span class="dc">›</span></a>
         <a class="dir-row" href="read.html"><span class="di"><img src="assets/menu-icons/read.png" alt=""></span><span class="dg">성경 읽기</span><span class="dc">›</span></a>
         <a class="dir-row" href="weekly.html"><span class="di"><img src="assets/menu-icons/weekly.png" alt=""></span><span class="dg">이번 주 말씀</span><span class="dc">›</span></a>
         <a class="dir-row" href="verses.html"><span class="di"><img src="assets/menu-icons/verse-card.png" alt=""></span><span class="dg">말씀 카드 (하루·주간·월간 뽑기)</span><span class="dc">›</span></a>
@@ -58,6 +58,8 @@
         <a class="dir-row" href="advent.html"><span class="di">🕯️</span><span class="dg">대림절 말씀 달력</span><span class="dc">›</span></a>
         <a class="dir-row" href="yearend.html"><span class="di">🎁</span><span class="dg">한 해 마무리 말씀카드</span><span class="dc">›</span></a>
         <a class="dir-row" href="line.html"><span class="di">✍️</span><span class="dg">오늘의 한 줄</span><span class="dc">›</span></a>
+        <a class="dir-row" href="wordcards.html"><span class="di">🔍</span><span class="dg">설교 속 원어 한 단어</span><span class="dc">›</span></a>
+        <a class="dir-row" href="worship.html"><span class="di">🎵</span><span class="dg">오늘의 찬양</span><span class="dc">›</span></a>
       </div>
     </div>
 
@@ -66,6 +68,7 @@
       <div class="dir-list">
         <a class="dir-row" href="oikos.html"><span class="di">👥</span><span class="dg">우리 오이코스</span><span class="dc">›</span></a>
         <a class="dir-row" href="memories.html"><span class="di">📷</span><span class="dg">추억</span><span class="dc">›</span></a>
+        <a class="dir-row" id="allHarvestRow" href="harvest.html"><span class="di">🧺</span><span class="dg">감사의 광주리 (11/15까지)</span><span class="dc">›</span></a>
         <a class="dir-row" id="allChodaeRow" href="chodae.html"><span class="di">🎟️</span><span class="dg">친구초청잔치</span><span class="dc">›</span></a>
       </div>
     </div>
@@ -85,11 +88,13 @@
     <div class="dir-group h-blue">
       <h3>🎮 말씀놀이터</h3>
       <div class="dir-list">
+        <a class="dir-row" href="play.html"><span class="di">🎮</span><span class="dg">말씀놀이터 전체 보기</span><span class="dc">›</span></a>
         <a class="dir-row" href="memorize.html"><span class="di">🧠</span><span class="dg">오늘의 말씀 외우기</span><span class="dc">›</span></a>
         <a class="dir-row" href="chosung.html"><span class="di">🔤</span><span class="dg">성경 인물 초성 퀴즈</span><span class="dc">›</span></a>
         <a class="dir-row" href="bookgame.html"><span class="di">📚</span><span class="dg">성경책 순서 맞추기</span><span class="dc">›</span></a>
         <a class="dir-row" href="matchgame.html"><span class="di">🃏</span><span class="dg">같은 성경 찾기</span><span class="dc">›</span></a>
         <a class="dir-row" href="oikosgame.html"><span class="di">📖</span><span class="dg">말씀 빈칸 채우기</span><span class="dc">›</span></a>
+        <a class="dir-row" href="ox.html"><span class="di">⭕</span><span class="dg">성경 O/X 스피드퀴즈</span><span class="dc">›</span></a>
         <a class="dir-row" href="rank.html"><span class="di">🏆</span><span class="dg">놀이터 랭킹</span><span class="dc">›</span></a>
       </div>
     </div>
@@ -143,6 +148,8 @@
     var ai = document.getElementById("allAppInstall");
     if (ai && /iP(hone|ad|od)/i.test(navigator.userAgent)) ai.href = "app-ios.html";
   })();
+  // 감사의 광주리: 11/15(주일)까지만 보이고 그 뒤엔 숨긴다(한국 시간)
+  try { if (Date.now() >= new Date("2026-11-16T00:00:00+09:00").getTime()) { var _hv = document.getElementById("allHarvestRow"); if (_hv) _hv.remove(); } } catch (e) {}
   // 친구초청잔치: 행사 기간(9/13, 이후 자동 숨김)일 때만 노출
   (function () {
     var row = document.getElementById("allChodaeRow");

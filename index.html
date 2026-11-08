@@ -47,6 +47,24 @@
   </section>
 
   <section class="hv-sheet" aria-labelledby="hvTodayTitle">
+    <!-- 처음 온 사람 안내(2026-11-08): 로그인 기록이 없는 기기에만, 닫으면 다시 안 보인다 -->
+    <div class="hv-guide" id="hvGuide" hidden>
+      <div class="hv-guide-head"><b>처음 오셨나요? 이렇게 시작해 보세요</b><button type="button" id="hvGuideClose" aria-label="안내 닫기">닫기</button></div>
+      <a href="word.html"><span class="hv-guide-ico">📖</span><span><b>말씀 읽기</b>오늘의 말씀과 이번 주 말씀을 읽어요. 로그인 없이 볼 수 있어요.</span></a>
+      <a href="mypage.html"><span class="hv-guide-ico">✍️</span><span><b>혼자 기록하기</b>감사와 기도제목을 나만의 기록으로 남겨요. 로그인이 필요해요.</span></a>
+      <a href="play.html"><span class="hv-guide-ico">🤝</span><span><b>함께 참여하기</b>말씀놀이터 게임과 오이코스로 함께해요.</span></a>
+    </div>
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("msu_guide_closed") === "1") return;
+          var stores = [localStorage, sessionStorage];
+          for (var j = 0; j < stores.length; j++) for (var i = 0; i < stores[j].length; i++) { var k = stores[j].key(i) || ""; if (k.indexOf("sb-") === 0 && k.indexOf("auth-token") > 0) return; }
+        } catch (e) {}
+        var g = document.getElementById("hvGuide"); g.hidden = false;
+        document.getElementById("hvGuideClose").onclick = function () { g.hidden = true; try { localStorage.setItem("msu_guide_closed", "1"); } catch (e) {} };
+      })();
+    </script>
     <div class="hv-sheet-head">
       <h2 id="hvTodayTitle">오늘의 1분</h2>
       <div class="hv-progress" id="hvProgress"></div>

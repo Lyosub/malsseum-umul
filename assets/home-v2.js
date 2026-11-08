@@ -178,6 +178,7 @@
     if (typeof getClient === "function" && getClient() && typeof getSession === "function") {
       getSession().then(function (session) {
         if (!session) return;
+        var gd = document.getElementById("hvGuide"); if (gd) gd.hidden = true;
         render({}, true);
         refresh();
       });
