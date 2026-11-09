@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko" data-tone="cobalt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>교회 용어집 | 말씀우물</title>
+<meta name="description" content="예배, 큐티, 은혜, 오이코스처럼 교회에서 자주 듣는 말을 쉽게 풀어 둔 용어집.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="교회 용어집 | 말씀우물">
+<meta property="og:description" content="예배, 큐티, 은혜, 오이코스처럼 교회에서 자주 듣는 말을 쉽게 풀어 둔 용어집.">
+<meta property="og:image" content="https://logoswell.kr/assets/og-image.jpg">
+<meta property="og:url" content="https://logoswell.kr/terms.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/app-v2.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2540d8">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script src="assets/text-size.js"></script>
+<script defer src="assets/pwa.js"></script>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#2540d8" d="M12 1.500s-6.200 6.400-6.200 10.600a6.200 6.200 0 0 0 12.400 0C18.200 7.900 12 1.500 12 1.500Z"/><path fill="none" stroke="#17287e" stroke-width="1.800" stroke-linecap="round" d="M2.500 17.800c1.900 2.800 5.400 4.600 9.500 4.600s7.600-1.800 9.500-4.600"/></svg>말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap">
+<style>
+  .tm-search{width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--border);font:inherit;font-size:15px;background:var(--card,#fff);color:inherit;margin-bottom:12px}
+  .tm-chips{display:flex;gap:8px;overflow-x:auto;padding:0 0 12px;scrollbar-width:none}
+  .tm-chips::-webkit-scrollbar{display:none}
+  .tm-chips a{flex:none;padding:7px 12px;border-radius:999px;border:1.5px solid var(--border);font-size:13.5px;font-weight:700;text-decoration:none;color:inherit}
+  .tm-g{scroll-margin-top:72px}
+  .tm-g h2{margin:0 0 6px;font-size:17px;color:var(--well-deep)}
+  .tm-i{padding:12px 0;border-top:1px solid var(--border)}
+  .tm-g h2 + .tm-i{border-top:0}
+  .tm-i b{display:block;font-size:16px;margin-bottom:3px}
+  .tm-i p{margin:0;font-size:14.5px;line-height:1.65;color:var(--text-soft)}
+  .tm-empty{text-align:center;color:var(--text-soft)}
+</style>
+  <div class="page-hd">
+    <h1>교회 용어집</h1>
+    <p>교회에서 자주 듣는 말, 쉽게 풀어 봤어요</p>
+  </div>
+  <input type="search" class="tm-search" id="tmQ" placeholder="찾는 말 (예: 은혜, 큐티)" aria-label="용어 찾기" autocomplete="off">
+  <div class="tm-chips" id="tmChips"></div>
+  <div id="tmList"></div>
+  <p class="tm-empty card" id="tmEmpty" hidden>찾는 말이 아직 없어요.</p>
+  <p class="msg" style="text-align:center;">더 알고 싶은 말이 있으면 <a class="tap-link" href="board.html">자유게시판</a>에 남겨 주세요.</p>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a>
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/auth.js"></script>
+<script>
+var TERMS = [{"g": "예배와 모임", "items": [{"t": "예배", "d": "하나님께 감사와 찬양을 드리고 말씀을 듣는 시간이에요. 찬양, 기도, 설교, 헌금 같은 순서로 이루어져요."}, {"t": "주일", "d": "예수님이 다시 살아나신 일요일을 「주님의 날」이라 부르는 말이에요. 그래서 교회는 일요일에 모여 예배해요."}, {"t": "설교", "d": "목사님·전도사님이 성경 본문을 풀어, 오늘 우리에게 주시는 하나님의 말씀을 전하는 것이에요."}, {"t": "찬양", "d": "노래로 하나님을 높이고 감사하는 것이에요. 오래된 찬송가와 새로 만든 찬양(CCM)을 함께 불러요."}, {"t": "기도", "d": "하나님과 이야기하는 것이에요. 감사, 고백, 부탁을 말씀드리고 「예수님의 이름으로」 기도를 마쳐요."}, {"t": "대표기도", "d": "예배 때 한 사람이 모인 모든 사람을 대신해 드리는 기도예요. 듣는 사람도 마음으로 함께 기도해요."}, {"t": "헌금", "d": "받은 것이 모두 하나님께로부터 왔다는 감사의 마음으로 드리는 돈이에요. 교회 살림과 이웃을 돕는 데 쓰여요."}, {"t": "축도", "d": "예배 마지막에 목사님이 하나님의 복이 함께하기를 비는 기도예요."}, {"t": "큐티(QT)", "d": "Quiet Time(조용한 시간)의 줄임말이에요. 매일 정해진 성경 본문을 읽고, 생각하고, 오늘 삶에 적용해 보는 시간이에요."}, {"t": "묵상", "d": "말씀을 한 번 읽고 끝내지 않고, 곱씹으며 오래 생각하는 것이에요."}, {"t": "오이코스", "d": "그리스어로 「집·가정」이라는 뜻이에요. 로고스교회에서는 함께 모이고 서로 돌보는 작은 모임을 이렇게 불러요."}]}, {"g": "믿음의 말", "items": [{"t": "아멘", "d": "「참으로 그렇습니다」, 「그대로 이루어지기를 원합니다」라는 뜻의 히브리어예요. 기도와 말씀에 마음으로 동의할 때 말해요."}, {"t": "할렐루야", "d": "「여호와를 찬양하라」라는 뜻의 히브리어예요."}, {"t": "복음", "d": "「기쁜 소식」이라는 뜻이에요. 예수님이 우리 죄를 위해 십자가에서 죽으시고 다시 살아나셔서, 믿는 사람을 구원하신다는 소식이에요."}, {"t": "은혜", "d": "받을 자격이 없는데도 하나님이 값없이 주시는 사랑과 선물이에요."}, {"t": "죄", "d": "하나님을 떠나 하나님 뜻과 다르게 생각하고 말하고 행동하는 것이에요. 하나님과 사람 사이를 멀어지게 해요."}, {"t": "회개", "d": "죄를 인정하고 돌이켜 하나님께로 돌아오는 것이에요. 「미안해요」에서 그치지 않고 방향을 바꾸는 것이에요."}, {"t": "구원", "d": "죄와 죽음에서 건져져 하나님의 자녀가 되는 것이에요. 우리가 노력해서 얻는 것이 아니라 예수님을 믿음으로 받는 선물이에요."}, {"t": "십자가", "d": "예수님이 우리 죄를 대신 지고 돌아가신 곳이에요. 그래서 교회는 십자가를 하나님 사랑의 표시로 여겨요."}, {"t": "부활", "d": "죽음에서 다시 살아나는 것이에요. 예수님은 돌아가신 지 사흘 만에 다시 살아나셨어요."}, {"t": "성령", "d": "하나님의 영이에요. 믿는 사람 안에 계셔서 말씀을 깨닫게 하시고, 기도를 도우시고, 예수님을 닮아 가게 하세요."}, {"t": "믿음", "d": "하나님의 말씀과 약속을 참이라고 믿고, 예수님께 나를 맡기는 것이에요."}, {"t": "세례", "d": "예수님을 믿는다고 고백한 사람이 물로 받는 예식이에요. 예수님과 하나 되어 교회의 식구가 되었다는 표시예요."}, {"t": "성찬", "d": "떡과 잔을 나누며, 우리를 위해 몸과 피를 주신 예수님을 기억하는 예식이에요."}]}, {"g": "성경", "items": [{"t": "성경", "d": "하나님이 사람들을 통해 기록하게 하신 66권의 책이에요. 구약 39권과 신약 27권으로 되어 있어요."}, {"t": "구약·신약", "d": "구약은 예수님이 오시기 전, 신약은 예수님이 오신 뒤의 이야기와 가르침이에요. 「약」은 하나님이 맺으신 약속(언약)이라는 뜻이에요."}, {"t": "장과 절", "d": "성경 위치를 찾는 주소예요. 「요한복음 3장 16절」은 요한복음의 3번째 장, 16번째 절이라는 뜻이에요. 「요 3:16」처럼 줄여 쓰기도 해요."}, {"t": "개역개정", "d": "우리 교회가 예배 때 읽는 한국어 성경 번역본이에요. 대한성서공회에서 펴냈어요."}, {"t": "복음서", "d": "예수님의 삶과 가르침을 기록한 마태복음, 마가복음, 누가복음, 요한복음 네 권이에요."}, {"t": "서신", "d": "사도 바울 같은 사람들이 교회와 성도에게 보낸 편지예요. 로마서, 빌립보서, 야고보서 같은 책이 여기에 속해요."}]}, {"g": "교회에서 만나는 분들", "items": [{"t": "목사", "d": "교회에서 말씀을 전하고 예배를 인도하며, 성도를 돌보는 일을 맡은 분이에요."}, {"t": "전도사", "d": "신학을 공부하며 교회에서 사역하는 분이에요. 중등부처럼 한 부서를 맡아 섬기기도 해요."}, {"t": "장로", "d": "교인들이 뽑아 세운 분으로, 목사님과 함께 교회를 돌보고 살피는 일을 해요."}, {"t": "권사·집사", "d": "교회를 위해 기도하고 섬기는 일을 맡은 분들이에요. 교회 살림과 성도 돌봄을 함께해요."}, {"t": "교사", "d": "교회학교에서 학생들과 함께 말씀을 나누고 돌보는 선생님이에요."}, {"t": "성도", "d": "하나님께 속한 거룩한 백성이라는 뜻으로, 예수님을 믿는 모든 사람을 부르는 말이에요."}]}, {"g": "교회 절기", "items": [{"t": "사순절", "d": "부활절 전 40일(주일 제외) 동안 예수님의 고난을 기억하며 준비하는 기간이에요."}, {"t": "고난주간", "d": "부활절 바로 앞의 한 주예요. 예수님이 예루살렘에 들어가셔서 십자가에 달리시기까지를 기억해요."}, {"t": "부활절", "d": "예수님이 다시 살아나신 것을 기뻐하는 날이에요. 해마다 날짜가 바뀌어요."}, {"t": "맥추감사절", "d": "한 해의 첫 수확을 감사하는 절기예요. 한국 교회는 보통 7월 첫 주일에 지켜요."}, {"t": "추수감사절", "d": "한 해 동안 주신 모든 것에 감사하는 절기예요. 한국 교회는 보통 11월 셋째 주일에 지켜요."}, {"t": "대림절", "d": "예수님 오심을 기다리며 성탄을 준비하는 4주간이에요. 「대강절」이라고도 해요."}, {"t": "성탄절", "d": "예수님이 이 땅에 오신 것을 기뻐하는 날이에요(12월 25일)."}, {"t": "송구영신예배", "d": "한 해를 보내고(송구) 새해를 맞는(영신) 예배예요. 12월 31일 밤에 드려요."}]}, {"g": "말씀우물에서 쓰는 말", "items": [{"t": "말씀우물", "d": "매일 말씀을 길어 올리는 우물이라는 뜻의 이 사이트 이름이에요. 누구나 말씀을 읽고 기록하고 함께 나눌 수 있어요."}, {"t": "우물지기", "d": "말씀우물을 지키는 캐릭터예요."}, {"t": "달란트", "d": "말씀우물에서 말씀 읽기·기록 같은 활동을 하면 받는 점수예요. 달란트 상점에서 상품으로 바꿀 수 있어요. 이름은 마태복음 25장의 달란트 비유에서 왔어요."}]}];
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  $('tmChips').innerHTML = TERMS.map(function (g, i) { return '<a href="#tg' + i + '">' + esc(g.g) + '</a>'; }).join('');
+  function norm(s) { return String(s).toLowerCase().replace(/\s+/g, ''); }
+  function render() {
+    var q = norm($('tmQ').value), any = false;
+    $('tmList').innerHTML = TERMS.map(function (g, i) {
+      var items = g.items.filter(function (it) { return !q || norm(it.t).indexOf(q) > -1 || norm(it.d).indexOf(q) > -1; });
+      if (!items.length) return '';
+      any = true;
+      return '<section class="card tm-g" id="tg' + i + '"><h2>' + esc(g.g) + '</h2>' + items.map(function (it) {
+        return '<div class="tm-i"><b>' + esc(it.t) + '</b><p>' + esc(it.d) + '</p></div>';
+      }).join('') + '</section>';
+    }).join('');
+    $('tmEmpty').hidden = any;
+    $('tmChips').hidden = !!q;
+  }
+  $('tmQ').addEventListener('input', render);
+  render();
+})();
+</script>
+<script>initHeaderAuthState();</script>
+<script src="assets/appshell.js"></script>
+</body>
+</html>
