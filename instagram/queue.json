@@ -458,14 +458,16 @@
       "id": "2026-11-09-lands",
       "type": "carousel",
       "publish_at": "2026-11-09 19:30",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-11-09-lands.txt",
       "first_comment_file": "instagram/captions/2026-11-09-lands.tags.txt",
       "images": [
         "instagram/2026-11-09-lands-01.jpg",
         "instagram/2026-11-09-lands-02.jpg"
       ],
-      "note": "특별 게시물 「성경의 땅, 지금은 어디일까?」 2장 — 구약 8곳·신약 8곳, 옛날 그림 → 오늘날 그림(GPT), 구절은 개역개정 대조, 지명은 주석 대조. 전도사님 컨펌 2026-11-03."
+      "note": "특별 게시물 「성경의 땅, 지금은 어디일까?」 2장 — 구약 8곳·신약 8곳, 옛날 그림 → 오늘날 그림(GPT), 구절은 개역개정 대조, 지명은 주석 대조. 전도사님 컨펌 2026-11-03.",
+      "media_id": "18127826114494007",
+      "posted_at": "2026-11-09 19:32"
     },
     {
       "id": "2026-11-08-verse",
