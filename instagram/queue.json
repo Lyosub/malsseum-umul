@@ -506,7 +506,7 @@
       "id": "2026-11-09-harvest",
       "type": "carousel",
       "publish_at": "2026-11-09 20:00",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-11-09-harvest.txt",
       "first_comment_file": "instagram/captions/2026-11-09-harvest.tags.txt",
       "images": [
@@ -521,7 +521,9 @@
         "instagram/2026-11-09-harvest-09.jpg",
         "instagram/2026-11-09-harvest-10.jpg"
       ],
-      "note": "감사의 광주리 안내 10장(의미·들어가는 길 3곳·STEP 1~3·슬라이드·감사노트 체크·공유·시상). 실제 화면 캡처, 8장만 문구 그대로 그린 그림. 전도사님 「지금 올리자」 2026-11-09."
+      "note": "감사의 광주리 안내 10장(의미·들어가는 길 3곳·STEP 1~3·슬라이드·감사노트 체크·공유·시상). 실제 화면 캡처, 8장만 문구 그대로 그린 그림. 전도사님 「지금 올리자」 2026-11-09.",
+      "media_id": "18222987193344826",
+      "posted_at": "2026-11-09 20:40"
     }
   ],
   "skip_days": [
