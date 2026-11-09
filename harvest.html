@@ -87,6 +87,14 @@
   blockquote { margin: 0; padding: 0; font-size: 15px; }
   cite { display: block; margin-top: 6px; color: var(--gold); font-size: 13px; font-style: normal; font-weight: 700; }
   a { color: var(--gold); }
+  .slides { position: relative; margin: 4px 0 -8px; padding: 14px 16px 10px; text-align: center; border: 1px solid var(--line); border-radius: 16px; background: rgba(42,37,25,.7); touch-action: pan-y; user-select: none; }
+  .slides .tag { color: var(--gold); font-size: 12.5px; font-weight: 700; letter-spacing: .04em; }
+  .slides .line { min-height: 3.3em; display: flex; align-items: center; justify-content: center; margin: 6px 0 4px; font-family: "Gowun Batang", "Nanum Myeongjo", serif; font-size: 18px; line-height: 1.55; overflow-wrap: anywhere; transition: opacity .45s, transform .45s; }
+  .slides .line.out { opacity: 0; transform: translateX(var(--dx, -18px)); }
+  .slides .nav { display: flex; justify-content: space-between; align-items: center; }
+  .slides .nav button { min-width: 44px; min-height: 36px; font: inherit; font-size: 18px; color: var(--dim); background: none; border: 0; cursor: pointer; }
+  .slides .pos { color: var(--dim); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  @media (prefers-reduced-motion: reduce) { .slides .line { transition: none; } }
 </style>
 </head>
 <body>
@@ -96,6 +104,15 @@
     <div class="period">11월 8일 ~ 15일 · 추수감사주일까지</div>
     <h1>감사의 광주리</h1>
   </header>
+  <section class="slides" id="slides" hidden aria-label="광주리에 담긴 감사">
+    <div class="tag">광주리에 담긴 감사</div>
+    <p class="line" id="slideLine" aria-live="polite"></p>
+    <div class="nav">
+      <button type="button" id="slidePrev" aria-label="이전 감사">‹</button>
+      <span class="pos" id="slidePos"></span>
+      <button type="button" id="slideNext" aria-label="다음 감사">›</button>
+    </div>
+  </section>
 
   <div class="basket" id="basket"></div>
   <div class="count" id="countLine" role="status">불러오는 중</div>
@@ -359,6 +376,55 @@
       .then(function () { $('send').disabled = false; });
   });
 })();
+</script>
+<script>
+  // 광주리 위 슬라이드: 담당자가 확인한 감사 한 줄을 넘겨 보여 준다(이름 없이 글만, 큰 화면과 같은 목록).
+  (function () {
+    var box = document.getElementById('slides'), line = document.getElementById('slideLine'), pos = document.getElementById('slidePos');
+    var items = [], i = 0, lastSeq = 0, timer = 0, SHOW_MS = 5000;
+    var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function shuffle(a) { for (var k = a.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), t = a[k]; a[k] = a[j]; a[j] = t; } return a; }
+    function show(dir) {
+      if (!items.length) return;
+      i = (i + items.length) % items.length;
+      var text = items[i].body;
+      pos.textContent = (i + 1) + ' / ' + items.length;
+      if (still) { line.textContent = text; return; }
+      line.style.setProperty('--dx', dir < 0 ? '18px' : '-18px');
+      line.classList.add('out');
+      setTimeout(function () {
+        line.textContent = text;
+        line.style.setProperty('--dx', dir < 0 ? '-18px' : '18px');
+        line.style.transition = 'none'; void line.offsetWidth;
+        line.style.transition = ''; line.classList.remove('out');
+      }, 450);
+    }
+    function go(d) { i += d; show(d); restart(); }
+    function restart() { clearInterval(timer); if (!still && items.length > 1) timer = setInterval(function () { if (!document.hidden) { i++; show(1); } }, SHOW_MS); }
+    function load() {
+      return fetch(SUPABASE_URL + '/rest/v1/rpc/star_sky', {
+        method: 'POST', cache: 'no-store',
+        headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_room: 'harvest', p_after: lastSeq })
+      }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
+        if (!d) return;
+        var hidden = d.hidden || [], first = !items.length;
+        var add = (d.messages || []).filter(function (m) { lastSeq = Math.max(lastSeq, m.seq); return m.body; });
+        items = items.concat(first ? shuffle(add) : add).filter(function (m) { return hidden.indexOf(m.id) === -1; });
+        if (!items.length) { box.hidden = true; return; }
+        box.hidden = false;
+        document.getElementById('slidePrev').hidden = document.getElementById('slideNext').hidden = items.length < 2;
+        if (first) { i = 0; line.textContent = items[0].body; pos.textContent = '1 / ' + items.length; restart(); }
+        else pos.textContent = (i % items.length + 1) + ' / ' + items.length;
+      }).catch(function () {});
+    }
+    document.getElementById('slidePrev').onclick = function () { go(-1); };
+    document.getElementById('slideNext').onclick = function () { go(1); };
+    var x0 = null;
+    box.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+    box.addEventListener('touchend', function (e) { if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); });
+    load(); setInterval(load, 60000);
+  })();
 </script>
 <script>
   // 감사의 광주리 링크 나누기: 폰 공유 창(카톡 등), 없으면 링크 복사.
