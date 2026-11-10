@@ -1,30 +1,30 @@
 {
   "members": 49,
   "new_members_7d": 6,
-  "active_today": 5,
-  "active_7d": 16,
-  "active_prev_7d": 10,
+  "active_today": 0,
+  "active_7d": 15,
+  "active_prev_7d": 11,
   "returned_7d": 9,
-  "lapsed_7d": 1,
+  "lapsed_7d": 2,
   "first_time_7d": 1,
   "active_30d": 19,
   "push_subscribers": 4,
   "features_7d": {
     "attendance": {
-      "users": 12,
-      "count": 31
+      "users": 11,
+      "count": 27
     },
     "devotion": {
-      "users": 8,
-      "count": 23
+      "users": 7,
+      "count": 20
     },
     "memorize": {
-      "users": 6,
-      "count": 15
+      "users": 5,
+      "count": 13
     },
     "note_gratitude": {
       "users": 9,
-      "count": 18
+      "count": 16
     },
     "note_greeting": {
       "users": 6,
@@ -36,23 +36,15 @@
     },
     "odyssey": {
       "users": 3,
-      "count": 143
-    },
-    "qt_reflection": {
-      "users": 1,
-      "count": 1
-    },
-    "quiz": {
-      "users": 2,
-      "count": 2
+      "count": 128
     },
     "reading": {
       "users": 1,
       "count": 1
     },
     "verse_draw": {
-      "users": 3,
-      "count": 11
+      "users": 2,
+      "count": 6
     }
   },
   "weekly": [
@@ -129,6 +121,6 @@
       "attendance_count": 9
     }
   ],
-  "generated_kst": "2026-11-10 22:44",
+  "generated_kst": "2026-11-11 07:40",
   "ok": true
 }
