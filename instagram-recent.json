@@ -1,13 +1,33 @@
 {
-  "generated_kst": "2026-11-09 10:46",
+  "generated_kst": "2026-11-10 13:11",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 142,
     "follows_count": 110,
-    "media_count": 163
+    "media_count": 165
   },
   "posts": [
+    {
+      "id": "18222987193344826",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-11-09T11:41:40+0000",
+      "permalink": "https://www.instagram.com/p/DfhP3uPIA68/",
+      "caption_first_line": "🧺 감사의 광주리 · 11월 15일 추수감사주일까지",
+      "likes": 5,
+      "comments": 1
+    },
+    {
+      "id": "18127826114494007",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-11-09T10:33:02+0000",
+      "permalink": "https://www.instagram.com/p/DfhIBCsG1R-/",
+      "caption_first_line": "성경에 나오는 그 땅들, 지금은 어디일까요?",
+      "likes": 7,
+      "comments": 1
+    },
     {
       "id": "17954034591337223",
       "type": "REELS",
@@ -55,7 +75,7 @@
       "timestamp_utc": "2026-11-03T10:33:19+0000",
       "permalink": "https://www.instagram.com/p/DfRrR30m6K_/",
       "caption_first_line": "하나님이 먼저 부르셨으니, 이제 가까이 갑니다.",
-      "likes": 14,
+      "likes": 15,
       "comments": 1
     },
     {
@@ -237,26 +257,6 @@
       "caption_first_line": "흩어진 그들에게, 편지 한 통이 도착했습니다.",
       "likes": 8,
       "comments": 1
-    },
-    {
-      "id": "17904832392579984",
-      "type": "FEED",
-      "media_type": "IMAGE",
-      "timestamp_utc": "2026-10-01T07:02:25+0000",
-      "permalink": "https://www.instagram.com/p/Dd8U6MUFqBr/",
-      "caption_first_line": "점수는 내가 정할 수 없지만, 감사는 내가 정할 수 있습니다.",
-      "likes": 6,
-      "comments": 1
-    },
-    {
-      "id": "18129254056691310",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-09-29T13:09:41+0000",
-      "permalink": "https://www.instagram.com/p/Dd31XF6ID4d/",
-      "caption_first_line": "열 명이 나았다. 돌아온 건 한 명이었다.",
-      "likes": 10,
-      "comments": 3
     }
   ]
 }
