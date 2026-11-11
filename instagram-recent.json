@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-11-10 13:11",
+  "generated_kst": "2026-11-11 10:59",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 142,
     "follows_count": 110,
-    "media_count": 165
+    "media_count": 166
   },
   "posts": [
+    {
+      "id": "18110283080461622",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-11-10T10:33:13+0000",
+      "permalink": "https://www.instagram.com/p/Dfjs1RrG0e4/",
+      "caption_first_line": "내 기도에도 힘이 있습니다.",
+      "likes": 3,
+      "comments": 1
+    },
     {
       "id": "18222987193344826",
       "type": "FEED",
@@ -35,7 +45,7 @@
       "timestamp_utc": "2026-11-08T10:32:45+0000",
       "permalink": "https://www.instagram.com/reel/DfejKcvgqBF/",
       "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「서로 기도하는 자」 (야고보서 5장 13-20절)",
-      "likes": 6,
+      "likes": 7,
       "comments": 1
     },
     {
@@ -247,16 +257,6 @@
       "caption_first_line": "성경 이야기 속을 직접 걸어 본다면? 🌿",
       "likes": 17,
       "comments": 0
-    },
-    {
-      "id": "18094898165650357",
-      "type": "REELS",
-      "media_type": "VIDEO",
-      "timestamp_utc": "2026-10-03T04:02:43+0000",
-      "permalink": "https://www.instagram.com/reel/DeBJ5t7DNrf/",
-      "caption_first_line": "흩어진 그들에게, 편지 한 통이 도착했습니다.",
-      "likes": 8,
-      "comments": 1
     }
   ]
 }
