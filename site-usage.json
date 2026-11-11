@@ -1,7 +1,7 @@
 {
   "members": 49,
   "new_members_7d": 6,
-  "active_today": 0,
+  "active_today": 3,
   "active_7d": 15,
   "active_prev_7d": 11,
   "returned_7d": 9,
@@ -11,8 +11,8 @@
   "push_subscribers": 4,
   "features_7d": {
     "attendance": {
-      "users": 11,
-      "count": 27
+      "users": 12,
+      "count": 28
     },
     "devotion": {
       "users": 7,
@@ -24,11 +24,11 @@
     },
     "note_gratitude": {
       "users": 9,
-      "count": 16
+      "count": 19
     },
     "note_greeting": {
       "users": 6,
-      "count": 7
+      "count": 8
     },
     "note_prayer": {
       "users": 1,
@@ -116,11 +116,11 @@
     },
     {
       "week_start": "2026-11-09",
-      "active": 9,
-      "attendance_users": 6,
-      "attendance_count": 9
+      "active": 10,
+      "attendance_users": 7,
+      "attendance_count": 10
     }
   ],
-  "generated_kst": "2026-11-11 11:13",
+  "generated_kst": "2026-11-11 14:40",
   "ok": true
 }
