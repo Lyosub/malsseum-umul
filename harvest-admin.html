@@ -92,8 +92,17 @@
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function when(at) { var d = new Date(at); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  // 감사노트에서 담긴 글은 60자로 잘려 들어온다 — 승인할 때는 원문 전체를 아래에 보여 준다(11/12).
+  var FULL = {};
+  function loadFull() {
+    return sb.rpc('harvest_note_full', { p_code: code }).then(function (r) {
+      var d = r && r.data; FULL = {};
+      if (d && d.ok) (d.rows || []).forEach(function (x) { FULL[x.message_id] = x.full; });
+    }, function () {});
+  }
   function item(m, buttons, tag) {
-    return '<div class="item"><div class="b">' + esc(m.body) + '</div><div class="muted">' + when(m.at) + (tag ? ' · ' + tag : '') + '</div><div class="row">' + buttons + '</div></div>';
+    var full = FULL[m.id] ? '<div class="muted" style="margin-top:6px">감사노트 원문: ' + esc(FULL[m.id]) + '</div>' : '';
+    return '<div class="item"><div class="b">' + esc(m.body) + '</div>' + full + '<div class="muted">' + when(m.at) + (tag ? ' · ' + tag : '') + '</div><div class="row">' + buttons + '</div></div>';
   }
   function btn(action, id, label, cls) { return '<button type="button" class="' + (cls || '') + '" data-a="' + action + '" data-id="' + id + '">' + label + '</button>'; }
   function render(d) {
@@ -113,9 +122,9 @@
     el.addEventListener('toggle', function () { try { localStorage.setItem(k, el.open ? '1' : '0'); } catch (e) {} });
   });
   var timer = 0;
-  function start(d) { $('login').hidden = true; $('app').hidden = false; render(d); clearTimeout(timer); timer = setTimeout(refresh, 4000); }
+  function start(d) { $('login').hidden = true; $('app').hidden = false; render(d); loadFull().then(function () { render(d); }); clearTimeout(timer); timer = setTimeout(refresh, 4000); }
   function refresh() {
-    call('list').then(function (d) { if (d.ok) { $('errMsg').textContent = ''; render(d); } })
+    call('list').then(function (d) { if (d.ok) { $('errMsg').textContent = ''; loadFull().then(function () { render(d); }); } })
       .catch(function () { $('errMsg').textContent = '연결이 끊겼습니다. 다시 연결하는 중입니다.'; })
       .then(function () { clearTimeout(timer); timer = setTimeout(refresh, 4000); });
   }
