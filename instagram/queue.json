@@ -496,13 +496,15 @@
       "id": "2026-11-08-cartoon",
       "type": "image",
       "publish_at": "2026-11-12 19:30",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-11-08-cartoon.txt",
       "first_comment_file": "instagram/captions/2026-11-08-cartoon.tags.txt",
       "images": [
         "instagram/2026-11-08-cartoon.jpg"
       ],
-      "note": "말씀카툰 #008 「기도할게」 — 11/8 설교. 친구에게 「기도할게」라고 한 지호가 밤에 정말 이름을 부르며 기도하고 다음 날 전한다. 하단 띠 약 5:16. 전도사님 컨펌 2026-11-02."
+      "note": "말씀카툰 #008 「기도할게」 — 11/8 설교. 친구에게 「기도할게」라고 한 지호가 밤에 정말 이름을 부르며 기도하고 다음 날 전한다. 하단 띠 약 5:16. 전도사님 컨펌 2026-11-02.",
+      "media_id": "17944994532099003",
+      "posted_at": "2026-11-12 19:32"
     },
     {
       "id": "2026-11-09-harvest",
