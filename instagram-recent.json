@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-11-11 10:59",
+  "generated_kst": "2026-11-12 12:08",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 142,
     "follows_count": 110,
-    "media_count": 166
+    "media_count": 167
   },
   "posts": [
+    {
+      "id": "18110144144271925",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-11-11T04:40:42+0000",
+      "permalink": "https://www.instagram.com/reel/DflpOEZAMsY/",
+      "caption_first_line": "🍁 중등부 가을 원정대 · 서울대공원 (11월 8일)",
+      "likes": 25,
+      "comments": 1
+    },
     {
       "id": "18110283080461622",
       "type": "FEED",
@@ -15,7 +25,7 @@
       "timestamp_utc": "2026-11-10T10:33:13+0000",
       "permalink": "https://www.instagram.com/p/Dfjs1RrG0e4/",
       "caption_first_line": "내 기도에도 힘이 있습니다.",
-      "likes": 3,
+      "likes": 4,
       "comments": 1
     },
     {
@@ -45,7 +55,7 @@
       "timestamp_utc": "2026-11-08T10:32:45+0000",
       "permalink": "https://www.instagram.com/reel/DfejKcvgqBF/",
       "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「서로 기도하는 자」 (야고보서 5장 13-20절)",
-      "likes": 7,
+      "likes": 8,
       "comments": 1
     },
     {
@@ -55,7 +65,7 @@
       "timestamp_utc": "2026-11-07T04:02:59+0000",
       "permalink": "https://www.instagram.com/reel/DfbRwVNDzRl/",
       "caption_first_line": "야고보의 편지를 받은 사람들은 시련 속에 있었습니다.",
-      "likes": 12,
+      "likes": 13,
       "comments": 1
     },
     {
@@ -85,7 +95,7 @@
       "timestamp_utc": "2026-11-03T10:33:19+0000",
       "permalink": "https://www.instagram.com/p/DfRrR30m6K_/",
       "caption_first_line": "하나님이 먼저 부르셨으니, 이제 가까이 갑니다.",
-      "likes": 15,
+      "likes": 16,
       "comments": 1
     },
     {
@@ -95,7 +105,7 @@
       "timestamp_utc": "2026-11-01T10:03:31+0000",
       "permalink": "https://www.instagram.com/reel/DfMeLG2Ac1E/",
       "caption_first_line": "10월의 말씀연결 · 성경 속 연결고리 · 야고보서 편",
-      "likes": 5,
+      "likes": 6,
       "comments": 1
     },
     {
@@ -105,7 +115,7 @@
       "timestamp_utc": "2026-10-31T04:02:54+0000",
       "permalink": "https://www.instagram.com/reel/DfJQLt6jHWq/",
       "caption_first_line": "그 시대 유대인들은 음식을 먹기 전에 손을 씻었습니다.",
-      "likes": 9,
+      "likes": 10,
       "comments": 1
     },
     {
@@ -247,16 +257,6 @@
       "caption_first_line": "그릇은 불을 지나야 진짜가 됩니다.",
       "likes": 15,
       "comments": 1
-    },
-    {
-      "id": "18092555111430695",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-10-04T10:30:00+0000",
-      "permalink": "https://www.instagram.com/p/DeEbH9dmlLL/",
-      "caption_first_line": "성경 이야기 속을 직접 걸어 본다면? 🌿",
-      "likes": 17,
-      "comments": 0
     }
   ]
 }
