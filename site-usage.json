@@ -1,7 +1,7 @@
 {
   "members": 49,
   "new_members_7d": 2,
-  "active_today": 2,
+  "active_today": 3,
   "active_7d": 17,
   "active_prev_7d": 13,
   "returned_7d": 12,
@@ -16,7 +16,7 @@
     },
     "devotion": {
       "users": 9,
-      "count": 21
+      "count": 22
     },
     "memorize": {
       "users": 7,
@@ -129,6 +129,6 @@
       "attendance_count": 19
     }
   ],
-  "generated_kst": "2026-11-13 14:40",
+  "generated_kst": "2026-11-13 21:40",
   "ok": true
 }
