@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-11-12 12:08",
+  "generated_kst": "2026-11-13 11:42",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
-    "followers_count": 142,
+    "followers_count": 143,
     "follows_count": 110,
-    "media_count": 167
+    "media_count": 169
   },
   "posts": [
+    {
+      "id": "17944994532099003",
+      "type": "FEED",
+      "media_type": "IMAGE",
+      "timestamp_utc": "2026-11-12T10:32:26+0000",
+      "permalink": "https://www.instagram.com/p/Dfo2Vxkke6t/",
+      "caption_first_line": "\"기도할게.\" 그 말, 진짜로 해 본 적 있나요?",
+      "likes": 6,
+      "comments": 1
+    },
     {
       "id": "18110144144271925",
       "type": "REELS",
@@ -35,7 +45,7 @@
       "timestamp_utc": "2026-11-09T11:41:40+0000",
       "permalink": "https://www.instagram.com/p/DfhP3uPIA68/",
       "caption_first_line": "🧺 감사의 광주리 · 11월 15일 추수감사주일까지",
-      "likes": 5,
+      "likes": 6,
       "comments": 1
     },
     {
@@ -75,7 +85,7 @@
       "timestamp_utc": "2026-11-05T10:32:33+0000",
       "permalink": "https://www.instagram.com/p/DfW0x2Vm4Rc/",
       "caption_first_line": "바쁜 아침, 1분이면 충분합니다.",
-      "likes": 5,
+      "likes": 6,
       "comments": 1
     },
     {
@@ -85,7 +95,7 @@
       "timestamp_utc": "2026-11-04T00:03:12+0000",
       "permalink": "https://www.instagram.com/p/DfTH-FFEcLN/",
       "caption_first_line": "말씀우물이 새로워졌어요 💧",
-      "likes": 6,
+      "likes": 7,
       "comments": 1
     },
     {
@@ -246,16 +256,6 @@
       "permalink": "https://www.instagram.com/reel/DeLoiBQN9Mr/",
       "caption_first_line": "성경 속 연결고리",
       "likes": 14,
-      "comments": 1
-    },
-    {
-      "id": "18099622580076822",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-10-06T07:03:02+0000",
-      "permalink": "https://www.instagram.com/p/DeJM9GUlZwn/",
-      "caption_first_line": "그릇은 불을 지나야 진짜가 됩니다.",
-      "likes": 15,
       "comments": 1
     }
   ]
