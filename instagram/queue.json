@@ -562,6 +562,16 @@
       "first_comment_file": "instagram/captions/2026-11-15-recap.tags.txt",
       "video": "instagram/2026-11-15-recap.mp4",
       "note": "주일 설교 요약 릴스 — 11/15 「감사의 광주리」(신 26:1-11). 제미나이 영상 3개(전도사님 생성) + Claude 글자(설교문 대지 제목 3문장·신 26:11 원문) + BGM 「희망 1」, 29.8초. 전도사님 컨펌 2026-11-13."
+    },
+    {
+      "id": "2026-11-15-harvest",
+      "type": "reels",
+      "publish_at": "2026-11-15 11:00",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-15-harvest.txt",
+      "first_comment_file": "instagram/captions/2026-11-15-harvest.tags.txt",
+      "video": "instagram/2026-11-15-harvest.mp4",
+      "note": "감사의 광주리 릴스 — 11/14 오후 2시 기준 승인 글 35개 전부, 세로 76초, BGM 제미나이. 전도사님 컨펌·게시 시각 지정 2026-11-14."
     }
   ],
   "skip_days": [
