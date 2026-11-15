@@ -470,43 +470,6 @@
       "posted_at": "2026-11-09 19:32"
     },
     {
-      "id": "2026-11-08-verse",
-      "type": "carousel",
-      "publish_at": "2026-11-10 19:30",
-      "status": "posted",
-      "caption_file": "instagram/captions/2026-11-08-verse.txt",
-      "first_comment_file": "instagram/captions/2026-11-08-verse.tags.txt",
-      "images": [
-        "instagram/2026-11-08-verse-01.jpg",
-        "instagram/2026-11-08-verse-02.jpg",
-        "instagram/2026-11-08-verse-03.jpg",
-        "instagram/2026-11-08-verse-04.jpg",
-        "instagram/2026-11-08-verse-05.jpg",
-        "instagram/2026-11-08-verse-06.jpg",
-        "instagram/2026-11-08-verse-07.jpg",
-        "instagram/2026-11-08-verse-08.jpg",
-        "instagram/2026-11-08-verse-09.jpg",
-        "instagram/2026-11-08-verse-10.jpg"
-      ],
-      "note": "말씀게시물 — 11/8 설교 「서로 기도하는 자」(약 5:13-20). 10장 캐러셀, 표지 「내 기도에도 힘이 있습니다」, 6장 약 5:16 전문, 배경 갈멜 산에서 본 바다(GPT), 10장 이번 주 찬양(마커스워십 「주께 가까이」). 전도사님 컨펌 2026-11-02.",
-      "media_id": "18110283080461622",
-      "posted_at": "2026-11-10 19:32"
-    },
-    {
-      "id": "2026-11-08-cartoon",
-      "type": "image",
-      "publish_at": "2026-11-12 19:30",
-      "status": "posted",
-      "caption_file": "instagram/captions/2026-11-08-cartoon.txt",
-      "first_comment_file": "instagram/captions/2026-11-08-cartoon.tags.txt",
-      "images": [
-        "instagram/2026-11-08-cartoon.jpg"
-      ],
-      "note": "말씀카툰 #008 「기도할게」 — 11/8 설교. 친구에게 「기도할게」라고 한 지호가 밤에 정말 이름을 부르며 기도하고 다음 날 전한다. 하단 띠 약 5:16. 전도사님 컨펌 2026-11-02.",
-      "media_id": "17944994532099003",
-      "posted_at": "2026-11-12 19:32"
-    },
-    {
       "id": "2026-11-09-harvest",
       "type": "carousel",
       "publish_at": "2026-11-09 20:00",
@@ -530,6 +493,29 @@
       "posted_at": "2026-11-09 20:40"
     },
     {
+      "id": "2026-11-08-verse",
+      "type": "carousel",
+      "publish_at": "2026-11-10 19:30",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-11-08-verse.txt",
+      "first_comment_file": "instagram/captions/2026-11-08-verse.tags.txt",
+      "images": [
+        "instagram/2026-11-08-verse-01.jpg",
+        "instagram/2026-11-08-verse-02.jpg",
+        "instagram/2026-11-08-verse-03.jpg",
+        "instagram/2026-11-08-verse-04.jpg",
+        "instagram/2026-11-08-verse-05.jpg",
+        "instagram/2026-11-08-verse-06.jpg",
+        "instagram/2026-11-08-verse-07.jpg",
+        "instagram/2026-11-08-verse-08.jpg",
+        "instagram/2026-11-08-verse-09.jpg",
+        "instagram/2026-11-08-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 11/8 설교 「서로 기도하는 자」(약 5:13-20). 10장 캐러셀, 표지 「내 기도에도 힘이 있습니다」, 6장 약 5:16 전문, 배경 갈멜 산에서 본 바다(GPT), 10장 이번 주 찬양(마커스워십 「주께 가까이」). 전도사님 컨펌 2026-11-02.",
+      "media_id": "18110283080461622",
+      "posted_at": "2026-11-10 19:32"
+    },
+    {
       "id": "2026-11-11-expedition-reel",
       "type": "reels",
       "publish_at": "2026-11-11 13:00",
@@ -540,6 +526,20 @@
       "note": "가을 원정대 히든3 팀 릴스(카톡 11/8 13:17로 받음, 제출 팀 1곳뿐). Claude 편집: 누운 장면 세움·틱톡 아이디 가림·캡컷 로고 제거, 14.9초. 전도사님 「인스타에 올리자」 2026-11-11.",
       "media_id": "18110144144271925",
       "posted_at": "2026-11-11 13:39"
+    },
+    {
+      "id": "2026-11-08-cartoon",
+      "type": "image",
+      "publish_at": "2026-11-12 19:30",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-11-08-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-11-08-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-11-08-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #008 「기도할게」 — 11/8 설교. 친구에게 「기도할게」라고 한 지호가 밤에 정말 이름을 부르며 기도하고 다음 날 전한다. 하단 띠 약 5:16. 전도사님 컨펌 2026-11-02.",
+      "media_id": "17944994532099003",
+      "posted_at": "2026-11-12 19:32"
     },
     {
       "id": "2026-11-14-preview",
@@ -554,6 +554,18 @@
       "posted_at": "2026-11-14 13:02"
     },
     {
+      "id": "2026-11-15-harvest",
+      "type": "reels",
+      "publish_at": "2026-11-15 11:00",
+      "status": "posted",
+      "caption_file": "instagram/captions/2026-11-15-harvest.txt",
+      "first_comment_file": "instagram/captions/2026-11-15-harvest.tags.txt",
+      "video": "instagram/2026-11-15-harvest.mp4",
+      "note": "감사의 광주리 릴스 — 11/14 오후 2시 기준 승인 글 35개 전부, 세로 76초, BGM 제미나이. 전도사님 컨펌·게시 시각 지정 2026-11-14.",
+      "media_id": "18128814011311768",
+      "posted_at": "2026-11-15 11:02"
+    },
+    {
       "id": "2026-11-15-recap",
       "type": "reels",
       "publish_at": "2026-11-15 19:30",
@@ -566,16 +578,37 @@
       "posted_at": "2026-11-15 19:32"
     },
     {
-      "id": "2026-11-15-harvest",
-      "type": "reels",
-      "publish_at": "2026-11-15 11:00",
-      "status": "posted",
-      "caption_file": "instagram/captions/2026-11-15-harvest.txt",
-      "first_comment_file": "instagram/captions/2026-11-15-harvest.tags.txt",
-      "video": "instagram/2026-11-15-harvest.mp4",
-      "note": "감사의 광주리 릴스 — 11/14 오후 2시 기준 승인 글 35개 전부, 세로 76초, BGM 제미나이. 전도사님 컨펌·게시 시각 지정 2026-11-14.",
-      "media_id": "18128814011311768",
-      "posted_at": "2026-11-15 11:02"
+      "id": "2026-11-15-verse",
+      "type": "carousel",
+      "publish_at": "2026-11-17 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-15-verse.txt",
+      "first_comment_file": "instagram/captions/2026-11-15-verse.tags.txt",
+      "images": [
+        "instagram/2026-11-15-verse-01.jpg",
+        "instagram/2026-11-15-verse-02.jpg",
+        "instagram/2026-11-15-verse-03.jpg",
+        "instagram/2026-11-15-verse-04.jpg",
+        "instagram/2026-11-15-verse-05.jpg",
+        "instagram/2026-11-15-verse-06.jpg",
+        "instagram/2026-11-15-verse-07.jpg",
+        "instagram/2026-11-15-verse-08.jpg",
+        "instagram/2026-11-15-verse-09.jpg",
+        "instagram/2026-11-15-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 11/15 설교 「감사의 광주리」(신 26:1-11). 10장 캐러셀, 표지 「내가 애쓴 건데 왜 \"주께서 주신\" 걸까요?」, 3장 「\"제가 공부했는데요?\"」, 7장 신 26:11, 10장 이번 주 찬양(손경민 「은혜」). 배경 해 질 녘 밀밭과 광주리(GPT). 전도사님 컨펌 2026-11-15."
+    },
+    {
+      "id": "2026-11-15-cartoon",
+      "type": "image",
+      "publish_at": "2026-11-19 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-15-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-11-15-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-11-15-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #009 「같이 먹자」 — 11/15 설교. 점심시간 지호가 엄마가 챙겨 준 귤을 혼자 앉은 민준과 나눈다. 하단 띠 신 26:11. 전도사님 컨펌 2026-11-15."
     }
   ],
   "skip_days": [
