@@ -72,13 +72,13 @@
 
   <form class="card" id="form" autocomplete="off">
     <div>
-      <label for="dept">내 부서</label>
+      <label for="dept">성탄 선물을 보낼 부서</label>
       <select id="dept" required>
         <option value="">골라 주세요</option>
         <option>영어예배부</option><option>영아부</option><option>유아부</option><option>유치부</option>
         <option>유년부</option><option>초등부</option><option>중등부</option><option>고등부</option>
       </select>
-      <div class="count" style="text-align:left">학생·교사는 소속 부서, 학부모는 자녀의 부서, 그 밖의 성도는 함께하고 싶은 부서</div>
+      <div class="count" style="text-align:left">추첨에 뽑히면 이 부서에 성탄 선물이 갑니다. 학생·교사는 소속 부서, 학부모는 자녀의 부서, 그 밖의 성도는 원하는 부서</div>
     </div>
     <div>
       <label for="name">이름</label>
@@ -94,7 +94,7 @@
       <input type="checkbox" id="showName" checked>
       <span>본당 화면에 내 이름을 함께 띄웁니다<br><span style="color:var(--dim);font-size:12.5px">끄면 「한 성도」로 표시됩니다.</span></span>
     </label>
-    <div class="notice">경품 추첨에 당첨되면 화면에 감사 메시지와 함께 <b>이름과 부서가 공개</b>됩니다.</div>
+    <div class="notice">성탄 선물 추첨에 뽑히면 화면에 <b>이름과 부서가 공개</b>됩니다.</div>
     <button class="send" id="send" type="submit">별 보내기 ⭐</button>
     <div class="msg" id="msg" role="status"></div>
   </form>
@@ -134,7 +134,7 @@
   $('form').addEventListener('submit', function (e) {
     e.preventDefault();
     var msg = $('msg'); msg.className = 'msg'; msg.textContent = '';
-    if (!$('dept').value) { msg.className = 'msg err'; msg.textContent = '내 부서를 골라 주세요.'; return; }
+    if (!$('dept').value) { msg.className = 'msg err'; msg.textContent = '성탄 선물을 보낼 부서를 골라 주세요.'; return; }
     $('send').disabled = true; msg.textContent = '보내는 중…';
     var payload = { p_room: ROOM, p_device: device, p_name: $('name').value, p_dept: $('dept').value, p_body: $('body').value, p_show_name: $('showName').checked };
     var tries = 0;

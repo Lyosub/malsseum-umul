@@ -196,7 +196,7 @@
       return item(m, '<span class="pill ' + m.status + '">' + (m.status === 'blocked' ? '금칙어로 걸러짐' : '숨김') + '</span><button data-a="approve" data-id="' + m.id + '">다시 승인</button>');
     }).join('') || '<div class="muted">없습니다.</div>';
     $('winners').innerHTML = (d.winners || []).map(function (w, i) {
-      return '<div class="item win"><div class="b">' + (i + 1) + '. ' + esc(w.dept) + ' 당첨</div><div class="m">「' + esc(w.body) + '」 — ' + esc(w.name) + '</div></div>';
+      return '<div class="item win"><div class="b">' + (i + 1) + '. ' + esc(w.dept) + ' 성탄 선물</div><div class="m">「' + esc(w.body) + '」 — ' + esc(w.name) + '</div></div>';
     }).join('');
   }
 

@@ -442,10 +442,10 @@
     winId = d.id; spinning = true; drawStart = performance.now();
     setTimeout(function () {
       if (winId !== d.id) return;
-      $('winLabel').textContent = '별 추첨 · 당첨';
-      $('winBody').textContent = '「' + d.body + '」';
-      $('winWho').textContent = d.name + ' · ' + d.dept;
-      $('winPrize').textContent = d.dept + ' 경품 당첨!';
+      $('winLabel').textContent = '별 추첨 · 성탄 선물';
+      $('winBody').textContent = d.dept + '에 성탄 선물이 갑니다';
+      $('winWho').textContent = d.name + '님의 별';
+      $('winPrize').style.display = 'none';
       var w = $('win'); w.hidden = false; w.classList.remove('fade'); void w.offsetWidth; w.classList.add('fade');
     }, reduce ? 300 : SPIN + 400);
   }
