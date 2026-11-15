@@ -36,11 +36,11 @@
     position: fixed; left: 50%; bottom: 6vh; transform: translateX(-50%); max-width: min(70vw, 1100px);
     text-align: center; transition: opacity .5s;
   }
-  #card .body { font-family: var(--serif); font-weight: 700; font-size: clamp(22px, 3.6vw, 60px); text-shadow: 0 2px 24px rgba(0,0,0,.6); }
+  #card .body { word-break: keep-all; font-family: var(--serif); font-weight: 700; font-size: clamp(22px, 3.6vw, 60px); text-shadow: 0 2px 24px rgba(0,0,0,.6); }
   #card .who { font-size: clamp(14px, 1.7vw, 28px); color: var(--gold); margin-top: .35em; }
   #win { position: fixed; left: 50%; top: 60%; transform: translate(-50%, -50%); text-align: center; width: min(86vw, 1200px); }
   #win .label { font-size: clamp(14px, 1.6vw, 26px); }
-  #win .body { font-family: var(--serif); font-weight: 700; font-size: clamp(26px, 4.4vw, 76px); margin: .2em 0; text-shadow: 0 0 30px rgba(0,0,0,.8); }
+  #win .body { word-break: keep-all; font-family: var(--serif); font-weight: 700; font-size: clamp(26px, 4.4vw, 76px); margin: .2em 0; text-shadow: 0 0 30px rgba(0,0,0,.8); }
   #win .who { font-size: clamp(18px, 2.4vw, 40px); color: var(--gold); }
   #win .prize { display: inline-block; margin-top: .8em; padding: .35em 1em; border-radius: 999px; background: linear-gradient(180deg, var(--gold), var(--gold2)); color: #241a02; font-weight: 800; font-size: clamp(18px, 2.2vw, 36px); }
   #verse { position: fixed; left: 50%; bottom: 7vh; transform: translateX(-50%); width: min(82vw, 1300px); text-align: center; }
@@ -69,7 +69,7 @@
   <div style="transform: translateY(-20vh)">
     <p class="label">2026 교회학교 성탄발표회</p>
     <h1 class="title">오늘 밤, 이 하늘을 함께 밝혀 주세요</h1>
-    <p class="sub">QR을 찍고 교회학교 학생들에게 응원 한 줄을 보내 주세요</p>
+    <p class="sub">QR을 찍고 이 땅에 오신 예수님께 감사 한 줄을 보내 주세요</p>
   </div>
 </div>
 
@@ -77,7 +77,7 @@
   <div>
     <p class="label">지금 무대</p>
     <h1 class="title" id="stageName">부서 발표</h1>
-    <p class="sub">공연 중에는 박수로 응원해 주세요. 보낸 응원은 발표가 끝나면 별로 켜집니다.</p>
+    <p class="sub">공연 중에는 박수로 응원해 주세요. 보낸 감사는 발표가 끝나면 별로 켜집니다.</p>
     <p class="sub" style="font-size:clamp(11px,1.2vw,16px);opacity:.7">(실제 행사에서는 이 화면 대신 부서 소개 영상과 무대 배경이 나갑니다)</p>
   </div>
 </div>
@@ -96,7 +96,7 @@
   <div class="prize" id="winPrize"></div>
 </div>
 
-<div id="qrbox" hidden><img id="qr" alt="응원 보내기 QR 코드"><div>응원 보내기</div></div>
+<div id="qrbox" hidden><img id="qr" alt="감사 보내기 QR 코드"><div>감사 보내기</div></div>
 <button id="fs" type="button">전체 화면</button>
 
 <script src="assets/supabase-config.js"></script>
@@ -153,7 +153,7 @@
 
   var stars = [];          // 켜진 별
   var byId = {};
-  var queue = [];          // 승인됐지만 아직 안 켜진 응원
+  var queue = [];          // 승인됐지만 아직 안 켜진 감사
   var lastSeq = 0, total = 0;
   var state = '', stateLabel = '', stateSeq = -1, drawSeq = -1;
   var gatherT = 0, gatherStart = 0, drawStart = 0, winId = null, spinning = false, SPIN = 7000;
@@ -284,7 +284,7 @@
   // 바뀔 때만 다시 그린다. 매 장면에서는 그 한 장을 붙이고, 반짝이는 작은 별·막 켜지는 별·빛나는 별만 위에 그린다.
   var still = document.createElement('canvas'), sx = still.getContext('2d'), stillDirty = true, stillKey = '';
   function markDirty() { stillDirty = true; }
-  // 응원의 시간에는 문구를 한꺼번에 다 띄우지 않고, 최근에 비춘 몇 개만 보여 준다
+  // 감사의 시간에는 문구를 한꺼번에 다 띄우지 않고, 최근에 비춘 몇 개만 보여 준다
   var LABMAX = 5, shown = [];
   function markShown(s) { var i = shown.indexOf(s.id); if (i >= 0) shown.splice(i, 1); shown.push(s.id); while (shown.length > LABMAX) shown.shift(); stillDirty = true; }
   function showLab(s) { return state === 'cheer' && s.labeled && shown.indexOf(s.id) >= 0; }
@@ -383,7 +383,7 @@
   }
   requestAnimationFrame(frame);
 
-  // ---------- 응원의 시간: 큐에서 하나씩 켜기 ----------
+  // ---------- 감사의 시간: 큐에서 하나씩 켜기 ----------
   var cardTimer = 0, cheerTimer = 0, cheerEnd = 0, lastPick = null;
   function showCard(m) {
     $('cardBody').textContent = '「' + m.body + '」'; $('cardWho').textContent = m.who;
@@ -398,7 +398,7 @@
       cheerTimer = setTimeout(lightNext, gap);
       return;
     }
-    // 새로 켤 별이 없으면, 이미 켜진 별의 응원을 하나씩 다시 비춰 준다
+    // 새로 켤 별이 없으면, 이미 켜진 별의 감사를 하나씩 다시 비춰 준다
     if (stars.length) {
       var pick = stars[Math.floor(Math.random() * stars.length)];
       if (stars.length > 1 && pick.id === lastPick) pick = stars[(stars.indexOf(pick) + 1) % stars.length];
@@ -409,12 +409,12 @@
   function tickTimer() {
     if (state !== 'cheer') { $('timer').hidden = true; return; }
     var left = Math.max(0, Math.ceil((cheerEnd - Date.now()) / 1000));
-    $('timer').hidden = false; $('timer').textContent = '응원의 시간 ' + left + '초';
+    $('timer').hidden = false; $('timer').textContent = '감사의 시간 ' + left + '초';
     setTimeout(tickTimer, 250);
   }
 
   // ---------- 상태 바꾸기 ----------
-  var names = { empty: '빈 하늘', stage: '무대', cheer: '응원의 시간', gather: '별이 모이는 시간', draw: '별 추첨' };
+  var names = { empty: '빈 하늘', stage: '무대', cheer: '감사의 시간', gather: '별이 모이는 시간', draw: '별 추첨' };
   function show(id, on) { $(id).hidden = !on; }
   function enter(st, label, first) {
     stillDirty = true;

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="dark">
-<title>별 밝히기 | 응원 보내기</title>
+<title>별 밝히기 | 감사 보내기</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&display=swap">
 <meta name="theme-color" content="#0b1026">
@@ -67,7 +67,7 @@
   <header>
     <div class="eyebrow">2026 교회학교 성탄발표회</div>
     <h1>별 밝히기</h1>
-    <p>교회학교 학생들에게 응원 한 줄을 보내 주세요.<br>선생님이 확인하면 본당 화면에 별로 켜집니다.</p>
+    <p>이 땅에 오신 예수님께 감사 한 줄을 보내 주세요.<br>선생님이 확인하면 본당 화면에 별로 켜집니다.</p>
   </header>
 
   <form class="card" id="form" autocomplete="off">
@@ -78,14 +78,14 @@
         <option>영어예배부</option><option>영아부</option><option>유아부</option><option>유치부</option>
         <option>유년부</option><option>초등부</option><option>중등부</option><option>고등부</option>
       </select>
-      <div class="count" style="text-align:left">학생·교사는 소속 부서, 학부모는 자녀의 부서, 그 밖의 성도는 응원하고 싶은 부서</div>
+      <div class="count" style="text-align:left">학생·교사는 소속 부서, 학부모는 자녀의 부서, 그 밖의 성도는 함께하고 싶은 부서</div>
     </div>
     <div>
       <label for="name">이름</label>
       <input id="name" maxlength="20" placeholder="예: 김OO 집사" required>
     </div>
     <div>
-      <label for="body">응원 한 줄</label>
+      <label for="body">예수님께 감사 한 줄</label>
       <textarea id="body" maxlength="40" placeholder="40자 안에서 적어 주세요" required></textarea>
       <div class="count"><span id="len">0</span> / 40</div>
       <div class="chips" id="chips"></div>
@@ -94,16 +94,16 @@
       <input type="checkbox" id="showName" checked>
       <span>본당 화면에 내 이름을 함께 띄웁니다<br><span style="color:var(--dim);font-size:12.5px">끄면 「한 성도」로 표시됩니다.</span></span>
     </label>
-    <div class="notice">경품 추첨에 당첨되면 화면에 응원과 함께 <b>이름과 부서가 공개</b>됩니다.</div>
+    <div class="notice">경품 추첨에 당첨되면 화면에 감사 메시지와 함께 <b>이름과 부서가 공개</b>됩니다.</div>
     <button class="send" id="send" type="submit">별 보내기 ⭐</button>
     <div class="msg" id="msg" role="status"></div>
   </form>
 
   <section class="card done" id="done" hidden>
     <div class="star">⭐</div>
-    <h2>응원을 보냈습니다</h2>
+    <h2>감사를 보냈습니다</h2>
     <p>선생님이 확인하면 본당 화면 하늘에 별로 켜집니다.</p>
-    <button class="chip" id="again" type="button" style="justify-self:center">응원 하나 더 보내기</button>
+    <button class="chip" id="again" type="button" style="justify-self:center">감사 하나 더 보내기</button>
   </section>
 
   <p class="verse">보라 내가 온 백성에게 미칠 큰 기쁨의 좋은 소식을 너희에게 전하노라<br>누가복음 2:10</p>
@@ -116,7 +116,7 @@
   var ROOM = (location.hash || '').replace('#', '') || 'demo';
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   var $ = function (id) { return document.getElementById(id); };
-  var examples = ['너희의 찬양이 오늘 밤 가장 큰 선물이었어', '하나님이 너희를 정말 기뻐하셔', '무대에 선 용기, 멋있었어!', '너희가 세상의 빛이야', '내년 성탄에도 이 자리에서 만나자'];
+  var examples = ['예수님, 우리에게 오셔서 감사합니다', '올 한 해도 함께해 주셔서 감사해요', '나를 구원하신 예수님, 사랑합니다', '우리 아이들을 지켜 주셔서 감사합니다', '예수님, 생일 축하드려요!'];
 
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
   var device = store('star_device');
