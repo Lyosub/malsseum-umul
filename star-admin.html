@@ -76,6 +76,11 @@
         </select>
         <button type="button" id="nextDept">다음 부서 무대로</button>
       </div>
+      <div class="row">
+        <label class="muted" for="show">발표</label>
+        <input id="show" maxlength="40" placeholder="예: 연극 [ 로고스 황금 티켓 ]" style="flex:1;min-width:0">
+      </div>
+      <div class="muted">무대 화면에는 「부서 + 발표」로 나옵니다(예: 중등부 연극 [ 로고스 황금 티켓 ]). 부서마다 한 번 적어 두면 이 기기에 기억됩니다.</div>
       <div class="muted">응원 문구는 ③ 응원의 시간에 하늘 화면 아래쪽에 하나씩 뜹니다. 추첨 화면에서 돌아가려면 ①~④ 중 하나를 누르세요.</div>
     </section>
 
@@ -175,7 +180,8 @@
     var room = d.room, ms = d.messages || [];
     document.querySelectorAll('[data-state]').forEach(function (b) { b.classList.toggle('on', b.dataset.state === room.state); });
     $('stats').textContent = '지금: ' + ({ empty: '빈 하늘', stage: '무대 · ' + room.stage_label, cheer: '응원의 시간', gather: '별이 모이는 시간', draw: '별 추첨' }[room.state] || room.state);
-    if (room.stage_label && DEPTS.indexOf(room.stage_label) >= 0 && document.activeElement !== $('dept')) $('dept').value = room.stage_label;
+    var curDept = (room.stage_label || '').split(' ')[0];
+    if (DEPTS.indexOf(curDept) >= 0 && document.activeElement !== $('dept') && $('dept').value !== curDept) { $('dept').value = curDept; loadShow(); }
     $('noDupe').checked = room.no_dupe_dept; $('testMode').checked = room.test_mode; $('open').checked = room.open;
 
     var pend = ms.filter(function (m) { return m.status === 'pending'; }).reverse();
@@ -197,11 +203,23 @@
   document.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.a) act(b.dataset.a, { id: +b.dataset.id });
-    if (b.dataset.state) act('state', { state: b.dataset.state, label: b.dataset.state === 'stage' ? $('dept').value : undefined });
+    if (b.dataset.state) act('state', { state: b.dataset.state, label: b.dataset.state === 'stage' ? stageLabel() : undefined });
   });
+  // 부서별 발표 내용(예: 연극 [ 로고스 황금 티켓 ])은 이 기기에 기억한다
+  var SHOWKEY = 'star_show_' + ROOM, shows = {};
+  try { shows = JSON.parse(localStorage.getItem(SHOWKEY) || '{}') || {}; } catch (e) {}
+  function loadShow() { $('show').value = shows[$('dept').value] || ''; }
+  function stageLabel() { var s = $('show').value.trim(); return $('dept').value + (s ? ' ' + s : ''); }
+  $('show').oninput = function () {
+    shows[$('dept').value] = this.value.trim();
+    try { localStorage.setItem(SHOWKEY, JSON.stringify(shows)); } catch (e) {}
+  };
+  $('dept').onchange = loadShow;
+  loadShow();
   $('nextDept').onclick = function () {
     var i = DEPTS.indexOf($('dept').value); $('dept').value = DEPTS[Math.min(DEPTS.length - 1, i + 1)];
-    act('state', { state: 'stage', label: $('dept').value });
+    loadShow();
+    act('state', { state: 'stage', label: stageLabel() });
   };
   $('approveAll').onclick = function () { act('approve_all'); };
   $('draw').onclick = function () { $('drawMsg').textContent = ''; act('draw'); };
