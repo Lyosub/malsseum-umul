@@ -1,13 +1,33 @@
 {
-  "generated_kst": "2026-11-15 10:59",
+  "generated_kst": "2026-11-16 11:14",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 143,
     "follows_count": 110,
-    "media_count": 170
+    "media_count": 172
   },
   "posts": [
+    {
+      "id": "17916200418551241",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-11-15T10:32:48+0000",
+      "permalink": "https://www.instagram.com/reel/DfwkunIlBvn/",
+      "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「감사의 광주리」 (신명기 26장 1-11절)",
+      "likes": 4,
+      "comments": 1
+    },
+    {
+      "id": "18128814011311768",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-11-15T02:03:12+0000",
+      "permalink": "https://www.instagram.com/reel/DfvqXkylcvk/",
+      "caption_first_line": "중등부가 한 주 동안 담은 감사 🧺",
+      "likes": 6,
+      "comments": 1
+    },
     {
       "id": "18111113879302612",
       "type": "REELS",
@@ -25,7 +45,7 @@
       "timestamp_utc": "2026-11-12T10:32:26+0000",
       "permalink": "https://www.instagram.com/p/Dfo2Vxkke6t/",
       "caption_first_line": "\"기도할게.\" 그 말, 진짜로 해 본 적 있나요?",
-      "likes": 6,
+      "likes": 7,
       "comments": 1
     },
     {
@@ -236,26 +256,6 @@
       "permalink": "https://www.instagram.com/reel/DeViYIVkdKr/",
       "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「긍휼을 행하는 자」 (야고보서 2장 1-13절)",
       "likes": 4,
-      "comments": 1
-    },
-    {
-      "id": "18103640885373508",
-      "type": "REELS",
-      "media_type": "VIDEO",
-      "timestamp_utc": "2026-10-10T04:02:40+0000",
-      "permalink": "https://www.instagram.com/reel/DeTLdrWlPAL/",
-      "caption_first_line": "금 가락지를 낀 사람도, 남루한 옷의 사람도 들어서던 그 모임에",
-      "likes": 6,
-      "comments": 1
-    },
-    {
-      "id": "17912061630521694",
-      "type": "FEED",
-      "media_type": "IMAGE",
-      "timestamp_utc": "2026-10-08T07:02:28+0000",
-      "permalink": "https://www.instagram.com/p/DeOWewTlfxA/",
-      "caption_first_line": "참는 것과 포기하는 것 사이에, 세 번째 길이 있습니다.",
-      "likes": 3,
       "comments": 1
     }
   ]
