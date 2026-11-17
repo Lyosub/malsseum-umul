@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#a9d4ef">
+<title>방주 마을 | 말씀우물</title>
+<meta name="description" content="창세기 6장 크기 그대로 지은 노아의 방주를 구경하고, 내 땅에 집을 지어 보세요.">
+<link rel="icon" href="favicon.ico">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#a9d4ef; font-family:'Pretendard','Malgun Gothic',sans-serif; color:#1b2433;
+    -webkit-user-select:none; user-select:none; overscroll-behavior:none; }
+  #game { position:fixed; inset:0; width:100%; height:100%; touch-action:none; display:block; }
+  .hud { position:fixed; z-index:5; }
+  #top { top:calc(10px + env(safe-area-inset-top)); left:12px; right:12px; display:flex; gap:8px; align-items:flex-start; pointer-events:none; }
+  #top > * { pointer-events:auto; }
+  .pill { background:rgba(255,255,255,.86); border-radius:999px; padding:8px 14px; font-size:14px; font-weight:800; box-shadow:0 2px 10px rgba(20,40,70,.15); }
+  #place { flex:none; }
+  #saveState { font-weight:600; color:#4a5a70; font-size:12.5px; padding:9px 12px; }
+  #who { font-size:12.5px; font-weight:700; color:#4a5a70; }
+  .spacer { flex:1; }
+  .tbtn { border:none; background:rgba(255,255,255,.86); border-radius:12px; padding:9px 12px; font:800 13.5px 'Pretendard',sans-serif; color:#1b2433;
+    box-shadow:0 2px 10px rgba(20,40,70,.15); cursor:pointer; }
+  .tbtn:active { transform:scale(.96); }
+  a.tbtn { text-decoration:none; display:inline-block; }
+  #cross { position:fixed; left:50%; top:50%; width:22px; height:22px; margin:-11px 0 0 -11px; z-index:4; pointer-events:none; }
+  #cross:before,#cross:after { content:''; position:absolute; background:rgba(255,255,255,.95); box-shadow:0 0 0 1px rgba(20,30,50,.35); border-radius:2px; }
+  #cross:before { left:10px; top:2px; width:2px; height:18px; } #cross:after { top:10px; left:2px; height:2px; width:18px; }
+  #bottom { left:0; right:0; bottom:calc(10px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; }
+  #selName { pointer-events:none; font-size:13px; font-weight:800; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6); }
+  #hotbar { pointer-events:auto; display:flex; gap:6px; padding:6px; background:rgba(20,30,50,.45); border-radius:14px; max-width:calc(100vw - 24px);
+    overflow-x:auto; scrollbar-width:none; }
+  #hotbar::-webkit-scrollbar { display:none; }
+  .slot { flex:none; width:44px; height:44px; border-radius:10px; border:2px solid rgba(255,255,255,.35); background:rgba(255,255,255,.12); padding:5px; cursor:pointer; }
+  .slot span { display:block; width:100%; height:100%; border-radius:5px; box-shadow:inset 0 0 0 1px rgba(0,0,0,.18); }
+  .slot.on { border-color:#ffd65a; background:rgba(255,214,90,.25); transform:translateY(-3px); }
+  #right { right:calc(14px + env(safe-area-inset-right)); bottom:calc(92px + env(safe-area-inset-bottom)); display:none; flex-direction:column; gap:10px; align-items:flex-end; }
+  body.touch #right { display:flex; }
+  .rbtn { width:64px; height:64px; border-radius:50%; border:none; background:rgba(255,255,255,.82); font:800 14px 'Pretendard',sans-serif; color:#1b2433;
+    box-shadow:0 3px 12px rgba(20,40,70,.2); }
+  .rbtn:active { background:#fff; transform:scale(.95); }
+  #btnMode { background:#3d7be0; color:#fff; } #btnMode.break { background:#d9534f; }
+  #btnFly.on { background:#ffd65a; }
+  #flyPad { display:none; flex-direction:column; gap:8px; }
+  #flyPad .rbtn { width:52px; height:52px; font-size:20px; }
+  #stick { position:fixed; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.18); border:2px solid rgba(255,255,255,.55); display:none; z-index:4; pointer-events:none; }
+  #knob { position:absolute; left:34px; top:34px; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,.85); box-shadow:0 2px 8px rgba(0,0,0,.2); }
+  #toast { left:50%; top:calc(64px + env(safe-area-inset-top)); transform:translate(-50%,-8px); opacity:0; transition:.2s; background:rgba(27,36,51,.9); color:#fff;
+    padding:10px 16px; border-radius:12px; font-size:14px; font-weight:700; max-width:88vw; text-align:center; pointer-events:none; }
+  #toast.show { opacity:1; transform:translate(-50%,0); }
+  #verseBox { left:12px; right:12px; top:calc(60px + env(safe-area-inset-top)); margin:0 auto; max-width:560px; background:rgba(255,253,246,.96); border-radius:16px; padding:16px 18px;
+    box-shadow:0 6px 24px rgba(20,40,70,.25); display:none; font-size:14.5px; line-height:1.65; }
+  #verseBox.show { display:block; }
+  #verseBox b { color:#8a5a1e; }
+  #verseBox .hint { margin-top:8px; font-size:12.5px; color:#6a7486; }
+  #loading { position:fixed; inset:0; z-index:20; background:linear-gradient(180deg,#a9d4ef,#e9f4fb); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
+  #loading h1 { font-size:30px; font-weight:900; } #loading p { color:#4a5a70; font-weight:600; }
+  #lockHint { position:fixed; inset:0; z-index:6; display:none; align-items:center; justify-content:center; background:rgba(15,25,40,.35); cursor:pointer; }
+  #lockHint div { background:#fff; border-radius:16px; padding:20px 24px; font-size:15px; line-height:1.7; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,.25); }
+  @media (max-height:460px) { #right { bottom:calc(76px + env(safe-area-inset-bottom)); } .rbtn { width:56px; height:56px; } }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="cross"></div>
+<div id="stick"><div id="knob"></div></div>
+
+<div id="top" class="hud">
+  <a class="tbtn" href="index.html" aria-label="말씀우물로">←</a>
+  <span id="place" class="pill">방주 마을</span>
+  <span id="saveState" class="pill"></span>
+  <span class="spacer"></span>
+  <button id="btnVerse" class="tbtn">📜 창 6장</button>
+  <button id="btnArk" class="tbtn">⛵ 방주</button>
+  <button id="btnHome" class="tbtn">🏠 내 땅</button>
+</div>
+<div id="who" class="hud" style="top:calc(52px + env(safe-area-inset-top)); left:14px;"></div>
+
+<div id="verseBox" class="hud">
+  <b>창세기 6:14</b> 너는 고페르 나무로 너를 위하여 방주를 만들되 그 안에 칸들을 막고 역청을 그 안팎에 칠하라<br>
+  <b>창세기 6:15</b> 네가 만들 방주는 이러하니 그 길이는 삼백 규빗, 너비는 오십 규빗, 높이는 삼십 규빗이라<br>
+  <b>창세기 6:16</b> 거기에 창을 내되 위에서부터 한 규빗에 내고 그 문은 옆으로 내고 상 중 하 삼층으로 할지니라
+  <div class="hint">이 방주는 1규빗을 한 칸으로 해서 성경에 나온 크기 그대로 지었어요. 걸어서 하층 · 중층 · 상층을 둘러보세요.</div>
+</div>
+
+<div id="right" class="hud">
+  <div id="flyPad"><button id="btnUp" class="rbtn">▲</button><button id="btnDown" class="rbtn">▼</button></div>
+  <button id="btnFly" class="rbtn">날기</button>
+  <button id="btnMode" class="rbtn">놓기</button>
+  <button id="btnJump" class="rbtn">점프</button>
+</div>
+
+<div id="bottom" class="hud">
+  <div id="selName"></div>
+  <div id="hotbar"></div>
+</div>
+<div id="toast" class="hud"></div>
+
+<div id="lockHint"><div><b>화면을 누르면 시작해요</b><br>W A S D 이동 · 마우스로 둘러보기 · 스페이스 점프<br>왼쪽 클릭 부수기 · 오른쪽 클릭 놓기 · F 날기 · 1~9 블록 고르기<br>Esc 마우스 풀기</div></div>
+<div id="loading"><h1>⛵ 방주 마을</h1><p>방주를 짓는 중…</p></div>
+
+<script src="odyssey/three-bundle.min.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/ark-game.js"></script>
+</body>
+</html>
