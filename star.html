@@ -102,7 +102,7 @@
   <section class="card done" id="done" hidden>
     <div class="star">⭐</div>
     <h2>감사를 보냈습니다</h2>
-    <p>선생님이 확인하면 본당 화면 하늘에 별로 켜집니다.</p>
+    <p id="doneSub">선생님이 확인하면 본당 화면 하늘에 별로 켜집니다.</p>
     <button class="chip" id="again" type="button" style="justify-self:center">감사 하나 더 보내기</button>
   </section>
 
@@ -146,6 +146,8 @@
         if (!d.ok) { msg.className = 'msg err'; msg.textContent = d.error || '보내지 못했습니다.'; return; }
         store('star_name', $('name').value); store('star_dept', $('dept').value);
         msg.textContent = ''; $('body').value = ''; $('len').textContent = '0';
+        // 행사 날 전에 보낸 감사(pre)는 성탄발표회 날 하늘에 켜진다
+        $('doneSub').textContent = d.kind === 'pre' ? '12월 20일 성탄발표회 날 본당 화면 하늘에 별로 켜집니다.' : '선생님이 확인하면 본당 화면 하늘에 별로 켜집니다.';
         $('form').hidden = true; $('done').hidden = false;
       }).catch(function () {
         if (++tries < 3) { msg.textContent = '연결이 느립니다. 다시 보내는 중…'; setTimeout(go, 1500); return; }

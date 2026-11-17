@@ -156,7 +156,7 @@
   var queue = [];          // 승인됐지만 아직 안 켜진 감사
   var lastSeq = 0, total = 0;
   var state = '', stateLabel = '', stateSeq = -1, drawSeq = -1;
-  var gatherT = 0, gatherStart = 0, drawStart = 0, winId = null, spinning = false, SPIN = 7000;
+  var gatherT = 0, gatherStart = 0, drawStart = 0, winId = null;
 
   // 별을 자유롭게 흩뿌리되, 별 아래 문구 자리(상자)끼리는 겹치지 않게 놓는다
   function labelBox() {
@@ -333,55 +333,306 @@
       requestAnimationFrame(frame); return;
     }
     var CX = W / 2, CY = H * .42;
-    var gp = 0;
-    if (state === 'gather') gp = ease(Math.max(0, Math.min(1, (now - gatherStart) / 6000)));
-    if (state === 'draw' && !spinning) gp = 0;
-    // 별 추첨: 천천히 돌기 시작해 점점 빨라지다가(약 10배), 가장 빠를 때 별 하나가 튀어나온다
-    var spinT = state === 'draw' ? Math.max(0, Math.min(1, (now - drawStart) / SPIN)) : 1;
-    var post = state === 'draw' ? ease(Math.max(0, Math.min(1, (now - drawStart - SPIN) / 1200))) : 0;
-    // (너무 빠르면 화면에서 바퀴가 멈춘 듯 보이므로 마지막 속도는 초당 1바퀴 남짓으로 둔다)
-    var spinAng = state === 'draw' ? 22 * (.25 * spinT + .75 * spinT * spinT * spinT) : 0;
-    // 빨라질수록 별이 꼬리를 남기도록 앞 장면을 다 지우지 않는다
-    var trail = state === 'draw' && spinning && spinT < 1 ? .55 - spinT * .35 : 1;
-    cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalAlpha = trail; cx.drawImage(bg, 0, 0); cx.globalAlpha = 1; cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (state === 'draw') { if (DRAW_MODE === 'pin') drawPin(now); else drawRace(now); requestAnimationFrame(frame); return; }
+    // 별이 모이는 시간: 모든 별이 가운데로 모여 베들레헴의 별이 된다
+    var gp = ease(Math.max(0, Math.min(1, (now - gatherStart) / 6000)));
+    cx.setTransform(1, 0, 0, 1, 0, 0); cx.drawImage(bg, 0, 0); cx.setTransform(DPR, 0, 0, DPR, 0, 0);
     for (var j = 0; j < stars.length; j++) {
       var s = stars[j], x = s.hx * W, y = s.hy * H;
-      if (state === 'gather') {
-        var sw = (1 - gp) * 1.2;
-        var tx = CX + (x - CX) * (1 - gp), ty = CY + (y - CY) * (1 - gp);
-        var ang = Math.atan2(ty - CY, tx - CX) + sw * .6 * gp, rr = Math.hypot(tx - CX, ty - CY);
-        x = CX + Math.cos(ang) * rr; y = CY + Math.sin(ang) * rr;
-      } else if (state === 'draw') {
-        var ring = Math.min(W, H) * (.16 + (j % 4) * .07) * (1 - spinT * .2), a0 = j * 2.39996;
-        var pr = Math.max(0, Math.min(1, (now - drawStart) / 900));
-        if (s.id === winId) ring = ring * (1 - post);
-        else ring = ring * (1 + post * 1.3);
-        var ox = CX + Math.cos(a0 + spinAng) * ring, oy = (s.id === winId ? CY - post * H * .2 : CY) + Math.sin(a0 + spinAng) * ring * .8;
-        x = x + (ox - x) * ease(pr); y = y + (oy - y) * ease(pr);
-      }
+      var sw = (1 - gp) * 1.2;
+      var tx = CX + (x - CX) * (1 - gp), ty = CY + (y - CY) * (1 - gp);
+      var ang = Math.atan2(ty - CY, tx - CX) + sw * .6 * gp, rr = Math.hypot(tx - CX, ty - CY);
+      x = CX + Math.cos(ang) * rr; y = CY + Math.sin(ang) * rr;
       s.x = x; s.y = y;
       var tw = .7 + .3 * Math.sin(now / 600 + s.p);
       var grow = s.born ? Math.min(1, (now - s.born) / 900) : 1;
-      var alpha = tw * grow * dim * (state === 'gather' ? 1 - gp * .85 : 1);
-      var isWin = state === 'draw' && spinT >= 1 && s.id === winId;
-      if (state === 'draw' && spinT >= 1 && !isWin) alpha *= .35;
-      var lit = state === 'cheer' && s.hi && now - s.hi < 3200 ? 1 - (now - s.hi) / 3200 : 0;
-      drawStar(x, y, s.r * (1 + (1 - grow) * 2.5) * (isWin ? 3 : 1 + lit * 1.6), Math.min(1, alpha + lit), isWin ? 9 : 5 + lit * 4);
-      if (showLab(s)) drawLabel(s, Math.min(1, grow * (.82 + lit * .18)), lit > .3);
+      drawStar(x, y, s.r * (1 + (1 - grow) * 2.5), Math.min(1, tw * grow * dim * (1 - gp * .85)), 5);
     }
-    if (state === 'draw' && spinning && spinT >= 1 && now - drawStart - SPIN < 500) {
-      // 멈추는 순간 가운데에서 빛이 번쩍
-      var fa = 1 - (now - drawStart - SPIN) / 500, fl = cx.createRadialGradient(CX, CY, 0, CX, CY, Math.max(W, H) * .45);
-      fl.addColorStop(0, 'rgba(255,246,220,' + fa * .8 + ')'); fl.addColorStop(1, 'rgba(255,246,220,0)');
-      cx.fillStyle = fl; cx.fillRect(0, 0, W, H);
-    }
-    if (state === 'gather' && gp > .6) {
+    if (gp > .6) {
       var k = (gp - .6) / .4, pulse = 1 + .04 * Math.sin(now / 400);
       bigStar(CX, CY, Math.min(W, H) * .09 * k * pulse, Math.min(1, k * 1.2));
     }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+
+
+  // ---------- 별 추첨: 베들레헴의 별까지 달리는 레이스 ----------
+  // 당첨은 서버(star_admin draw)가 먼저 정한다. 화면은 그 결과대로 달리기만 한다(공정성은 서버 추첨 그대로).
+  // 레인 = 아직 추첨 대상이 남은 부서(star_sky racers). 3·2·1 뒤 10초 동안 달리고, 당첨 부서의 별이 먼저 닿는다.
+  var COUNT = 3000, RUN = 10000, RACE = COUNT + RUN;
+  var DEPT_ORDER = ['영어예배부', '영아부', '유아부', '유치부', '유년부', '초등부', '중등부', '고등부'];
+  var race = null;
+  function rng(seed) {
+    return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+  function makeRace(d, list) {
+    var depts = DEPT_ORDER.filter(function (x) { return (list || []).indexOf(x) >= 0 || x === d.dept; });
+    var r = rng(d.id * 7919 + drawSeq * 31), others = depts.filter(function (x) { return x !== d.dept; });
+    var second = others.length ? others[Math.floor(r() * others.length)] : null;   // 아슬아슬한 2등
+    var T = [0, .2, .4, .6, .8, 1];
+    return depts.map(function (dept) {
+      var win = dept === d.dept, end = win ? 1 : dept === second ? .955 + r() * .02 : .78 + r() * .14, ks = [0], k;
+      for (k = 1; k < 5; k++) ks.push(T[k] * (.8 + r() * .4));
+      if (win) ks[3] = Math.min(ks[3], .5 + r() * .05);       // 당첨 별은 중간에 뒤처졌다가 막판에 치고 나온다
+      if (dept === second) ks[4] = Math.max(ks[4], .86);       // 2등은 막판까지 앞선다
+      ks.push(end);
+      for (k = 1; k < 6; k++) ks[k] = Math.max(ks[k], ks[k - 1] + .04);
+      for (k = 4; k > 0; k--) ks[k] = Math.min(ks[k], ks[k + 1] - .04);
+      return { dept: dept, win: win, ks: ks };
+    });
+  }
+  function laneP(ks, t) {
+    var n = ks.length - 1, x = Math.max(0, Math.min(1, t)) * n, i = Math.min(n - 1, Math.floor(x)), u = x - i;
+    function m(k) { return k <= 0 ? ks[1] - ks[0] : k >= n ? ks[n] - ks[n - 1] : (ks[k + 1] - ks[k - 1]) / 2; }
+    var u2 = u * u, u3 = u2 * u;
+    return (2 * u3 - 3 * u2 + 1) * ks[i] + (u3 - 2 * u2 + u) * m(i) + (-2 * u3 + 3 * u2) * ks[i + 1] + (u3 - u2) * m(i + 1);
+  }
+  function drawRace(now) {
+    cx.setTransform(1, 0, 0, 1, 0, 0); cx.drawImage(bg, 0, 0); cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    for (var j = 0; j < stars.length; j++) drawStar(stars[j].hx * W, stars[j].hy * H, stars[j].r, .16, 4);
+    if (!race) return;
+    var el = now - drawStart, t = Math.max(0, Math.min(1, (el - COUNT) / RUN)), done = el >= RACE;
+    var fade = done ? 1 - .55 * Math.max(0, Math.min(1, (el - RACE - 300) / 800)) : 1;   // 끝나면 당첨 카드가 잘 보이게 레인을 낮춘다
+    var n = race.length, lh = Math.min(H * .1, H * .68 / n), top = H * .5 - lh * n / 2;
+    var x0 = W * .19, fx = W * .8, gx = W * .89, gy = H * .5;
+    var fs = Math.max(14, Math.min(30, W / 60));
+    // 결승점: 베들레헴의 별
+    bigStar(gx, gy, Math.min(W, H) * .07 * (1 + .05 * Math.sin(now / 380)), fade);
+    cx.globalAlpha = fade; cx.textAlign = 'center'; cx.textBaseline = 'top'; cx.fillStyle = 'rgb(245,210,122)';
+    cx.font = '700 ' + fs * .8 + 'px "Gowun Batang", serif'; cx.fillText('베들레헴의 별', gx, gy + Math.min(W, H) * .13);
+    cx.strokeStyle = 'rgba(245,210,122,.55)'; cx.lineWidth = 2; cx.setLineDash([6, 8]);
+    cx.beginPath(); cx.moveTo(fx, top - lh * .2); cx.lineTo(fx, top + lh * n + lh * .2); cx.stroke(); cx.setLineDash([]);
+    // 지금 앞선 별
+    var lead = -1, best = -1;
+    race.forEach(function (l, i) { var p = laneP(l.ks, t); if (p > best) { best = p; lead = i; } });
+    race.forEach(function (l, i) {
+      var y = top + lh * (i + .5), p = laneP(l.ks, t), x = x0 + (fx - x0) * p;
+      var v = (p - laneP(l.ks, Math.max(0, t - .03))) / .03;            // 지금 속도
+      var hot = done ? l.win : (i === lead && el > COUNT);
+      cx.globalAlpha = fade * (done && !l.win ? .45 : 1);
+      cx.strokeStyle = 'rgba(200,210,255,.14)'; cx.lineWidth = 1;
+      cx.beginPath(); cx.moveTo(x0, y); cx.lineTo(fx, y); cx.stroke();
+      cx.textAlign = 'right'; cx.textBaseline = 'middle';
+      cx.font = '700 ' + fs + 'px "Gowun Batang", serif';
+      cx.fillStyle = hot ? 'rgb(245,210,122)' : 'rgba(238,240,251,.85)';
+      cx.fillText(l.dept, x0 - fs * .9, y);
+      if (t > 0 && !done) {                                          // 빛 꼬리
+        var tl = Math.min(W * .16, (fx - x0) * v * .12 + 20), g = cx.createLinearGradient(x - tl, y, x, y);
+        g.addColorStop(0, 'rgba(245,210,122,0)'); g.addColorStop(1, 'rgba(255,240,200,' + (hot ? .75 : .45) + ')');
+        cx.strokeStyle = g; cx.lineWidth = lh * .16; cx.lineCap = 'round';
+        cx.beginPath(); cx.moveTo(x - tl, y); cx.lineTo(x, y); cx.stroke(); cx.lineCap = 'butt';
+      }
+      cx.globalAlpha = 1;
+      var tw = .85 + .15 * Math.sin(now / 120 + i);
+      drawStar(x, y, lh * (done && l.win ? .16 : hot ? .12 : .09), fade * (done && !l.win ? .4 : tw), done && l.win ? 9 : hot ? 7 : 5);
+    });
+    cx.globalAlpha = 1;
+    if (el < COUNT + 700) {                                           // 3 · 2 · 1 · 출발
+      var c = el < COUNT ? String(3 - Math.floor(el / 1000)) : '출발!', u = el < COUNT ? (el % 1000) / 1000 : (el - COUNT) / 700;
+      cx.globalAlpha = Math.max(0, 1 - u * .9); cx.textAlign = 'center'; cx.textBaseline = 'middle';
+      cx.font = '700 ' + Math.min(W, H) * (.22 + u * .08) + 'px "Gowun Batang", serif';
+      cx.fillStyle = 'rgb(255,244,214)'; cx.shadowColor = 'rgba(245,210,122,.9)'; cx.shadowBlur = 40;
+      cx.fillText(c, W / 2, H * .5); cx.shadowBlur = 0; cx.globalAlpha = 1;
+    }
+    if (done && el - RACE < 600) {                                    // 닿는 순간 결승점에서 빛이 번쩍
+      var fa = 1 - (el - RACE) / 600, fl = cx.createRadialGradient(gx, gy, 0, gx, gy, Math.max(W, H) * .5);
+      fl.addColorStop(0, 'rgba(255,246,220,' + fa * .85 + ')'); fl.addColorStop(1, 'rgba(255,246,220,0)');
+      cx.fillStyle = fl; cx.fillRect(0, 0, W, H);
+    }
+  }
+
+
+  // ---------- 별 추첨: 핀볼(기본) ----------
+  // 베들레헴의 별에서 별 하나가 떨어져 별빛 못에 부딪혀 튀며 내려오다가 아래 부서 칸에 들어간다.
+  // 중간중간 「점프 별」을 밟으면 위로 크게 튀어 올랐다가 다시 내려온다(마지막 몇 줄 앞에서도 한 번).
+  // 당첨은 서버가 먼저 정하고, 그 부서 칸에 닿도록 튀는 길을 미리 짠다. 주소에 ?draw=race를 붙이면 레이스로 본다.
+  var DRAW_MODE = /[?&]draw=race/.test(location.search) ? 'race' : 'pin';
+  var pin = null;
+  function makePin(d, list) {
+    var bins = DEPT_ORDER.filter(function (x) { return (list || []).indexOf(x) >= 0 || x === d.dept; });
+    var n = bins.length, target = 2 * bins.indexOf(d.dept) - (n - 1);   // 칸 가운데 열(반 칸 단위)
+    var R = (n - 1) % 2 === 0 ? 12 : 11, lim = Math.max(1, n - 1), best = null;
+    function range(k) { var a = []; for (var x = -k; x <= k; x += 2) a.push(x); return a; }
+    for (var tr = 0; tr < 80 && !best; tr++) {
+      var r = rng(d.id * 7919 + drawSeq * 31 + 7 + tr * 1013), i;
+      // 1) 줄 순서 짜기: 내려가기 / 점프(위로 k줄) / 옆으로 튕기기
+      var ev = {}, ups = [3 + Math.floor(r() * 2), 6 + Math.floor(r() * 2), R - 2];
+      ups.forEach(function (row, q) { ev[row] = { up: q === 2 ? 3 : 2 + Math.floor(r() * 2) }; });
+      if (lim >= 2) [2 + Math.floor(r() * 2), 8 + Math.floor(r() * 2)].forEach(function (row) { if (!ev[row]) ev[row] = { side: 1 }; });   // 칸이 둘 이하면 옆으로 튕길 자리가 없다
+      var steps = [], row = 0;
+      while (row < R) {
+        var e = ev[row];
+        if (e && !e.used) { e.used = 1; if (e.up) { steps.push({ k: 'up', dr: -e.up, ds: range(e.up), w: e.up }); row -= e.up; continue; }
+                                         steps.push({ k: 'side', dr: 0, ds: [-2, 2], w: 2 }); continue; }
+        steps.push({ k: row === R - 1 ? 'bin' : 'down', dr: 1, ds: [-1, 1], w: 1 }); row++;
+      }
+      var cap = [0]; for (i = steps.length - 1; i >= 0; i--) cap.unshift(cap[0] + steps[i].w);
+      // 2) 칸 고르기: 당첨 칸에 닿을 수 있는 길만, 앞쪽에선 당첨 칸에서 멀어지는 쪽을 조금 더
+      var pts = [{ r: 0, c: 0 }], ok = true;
+      for (i = 0; i < steps.length && ok; i++) {
+        var p = pts[i], s = steps[i];
+        var opts = s.ds.filter(function (dd) { var nc = p.c + dd; return Math.abs(nc) <= lim && Math.abs(target - nc) <= cap[i + 1]; });
+        if (!opts.length) { ok = false; break; }
+        var pick;
+        if (opts.length > 1 && i < steps.length * .6 && r() < .55) {
+          opts.sort(function (a, b) { return Math.abs(target - (p.c + b)) - Math.abs(target - (p.c + a)); }); pick = opts[0];
+        } else pick = opts[Math.floor(r() * opts.length)];
+        pts.push({ r: p.r + s.dr, c: p.c + pick });
+      }
+      if (!ok) continue;
+      // 점프 별은 한 번 튀어 오르고 나면 빛이 꺼져 보통 못이 된다(다시 내려앉아도 또 튀지 않는다)
+      var bump = [];
+      steps.forEach(function (s, j) { if (s.k === 'up') bump.push(pts[j].r + ',' + pts[j].c); });
+      var early = pts.some(function (q, j) {                      // 튀기 전에 그 점프 별에 먼저 내려앉으면 다시 짠다
+        var bi = bump.indexOf(q.r + ',' + q.c); if (bi < 0 || (steps[j] && steps[j].k === 'up')) return false;
+        for (var x = j + 1; x < steps.length; x++) if (steps[x].k === 'up' && pts[x].r + ',' + pts[x].c === bump[bi]) return true;
+        return false;
+      });
+      if (early && tr < 79) continue;
+      best = { steps: steps, pts: pts, bump: bump, r: r };
+    }
+    if (!best) {                                                   // 만약을 위한 예비 길: 점프 없이 곧게 내려간다
+      var fs0 = [], fp = [{ r: 0, c: 0 }];
+      for (i = 0; i < R; i++) { var c0 = fp[i].c, dd0 = Math.abs(target - (c0 + 1)) <= R - i - 1 && c0 + 1 <= lim ? 1 : -1;
+        fs0.push({ k: i === R - 1 ? 'bin' : 'down', dr: 1 }); fp.push({ r: i + 1, c: c0 + dd0 }); }
+      best = { steps: fs0, pts: fp, bump: [], r: rng(d.id) };
+    }
+    var st = best.steps, P = best.pts, rr = best.r;
+    // 3) 시간: 떨어짐 0.9초 → 못마다 튀기 → 마지막 세 번은 느려진다
+    var lastDown = [], T = [COUNT + 900];
+    for (i = st.length - 1; i >= 0 && lastDown.length < 3; i--) if (st[i].k !== 'up' && st[i].k !== 'side') lastDown.push(i);
+    for (i = 0; i < st.length; i++) {
+      var dur, li = lastDown.indexOf(i);
+      if (li === 0) dur = 1150; else if (li === 1) dur = 840; else if (li === 2) dur = 680;
+      else if (st[i].k === 'up') dur = 780 + 110 * (-st[i].dr) + rr() * 80;
+      else if (st[i].k === 'side') dur = 560;
+      else dur = 420 + rr() * 90;
+      T.push(T[i] + dur);
+    }
+    // 길에 없는 못 몇 개도 점프 별로 꾸며 어디서 튈지 모르게
+    var on = {}; P.forEach(function (q) { on[q.r + ',' + q.c] = 1; });
+    var deco = [], tries = 0;
+    while (deco.length < 3 && tries++ < 200) {
+      var dr = 1 + Math.floor(rr() * (R - 2)), dc = -lim + Math.floor(rr() * (2 * lim + 1));
+      if ((dc - dr) % 2 !== 0 || on[dr + ',' + dc] || deco.indexOf(dr + ',' + dc) >= 0) continue;
+      deco.push(dr + ',' + dc);
+    }
+    return { bins: bins, n: n, R: R, lim: lim, pts: P, steps: st, T: T, bump: best.bump, deco: deco,
+             k: bins.indexOf(d.dept), last: st.length, end: T[st.length] + 500 };
+  }
+  function pinGeo() {
+    var n = pin.n, fw = Math.min(W * .62, H * 1.05), u = fw / n / 2;
+    var top = H * .2, bot = H * .74, rh = (bot - top) / (pin.R - 1);
+    return { u: u, top: top, rh: rh, cx0: W / 2, binTop: bot + rh * .55, binBot: H * .9 };
+  }
+  function pinAt(q, g) { return { x: g.cx0 + q.c * g.u, y: q.r < pin.R ? g.top + q.r * g.rh : (g.binTop + g.binBot) / 2 }; }
+  function pinPos(el) {
+    var g = pinGeo(), P = pin;
+    if (el < COUNT) return null;
+    if (el < P.T[0]) {                                              // 베들레헴의 별에서 첫 못까지 떨어진다
+      var k = (el - COUNT) / (P.T[0] - COUNT), a = pinAt(P.pts[0], g); return { x: a.x, y: H * .1 + (a.y - H * .1) * k * k, j: -1 };
+    }
+    for (var j = 0; j < P.last; j++) {
+      if (el < P.T[j + 1]) {
+        var u = (el - P.T[j]) / (P.T[j + 1] - P.T[j]), A = pinAt(P.pts[j], g), B = pinAt(P.pts[j + 1], g), dy = B.y - A.y, kd = P.steps[j].k, y;
+        if (kd === 'up') { var h = -dy * .75 + g.rh * .9; y = A.y + dy * u - 4 * h * u * (1 - u); }   // 위로 크게 솟았다가 내려앉기
+        else if (kd === 'side') y = A.y - g.rh * .8 * 4 * u * (1 - u);
+        else y = A.y + dy * (u * u * .6 + u * .4) - g.rh * (kd === 'bin' ? .3 : .55) * 4 * u * (1 - u);
+        return { x: A.x + (B.x - A.x) * u, y: y, j: j };
+      }
+    }
+    var z = pinAt(P.pts[P.last], g); return { x: z.x, y: z.y, j: P.last };
+  }
+  function drawPin(now) {
+    cx.setTransform(1, 0, 0, 1, 0, 0); cx.drawImage(bg, 0, 0); cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    for (var j = 0; j < stars.length; j++) drawStar(stars[j].hx * W, stars[j].hy * H, stars[j].r, .12, 4);
+    if (!pin) return;
+    var el = now - drawStart, g = pinGeo(), P = pin, done = el >= P.T[P.last], m = Math.min(g.u, g.rh);
+    var fade = el > P.end ? 1 - .5 * Math.min(1, (el - P.end) / 800) : 1;
+    var fs = Math.max(13, Math.min(28, W / 64));
+    bigStar(W / 2, H * .1, Math.min(W, H) * .045 * (1 + .05 * Math.sin(now / 380)), fade);
+    // 지금까지 각 못에 마지막으로 닿은 때
+    var hitAt = {}, launch = {};
+    for (j = 0; j < P.last; j++) {
+      if (P.T[j] > el) break;
+      var kk = P.pts[j].r + ',' + P.pts[j].c; hitAt[kk] = P.T[j]; if (P.steps[j].k === 'up' && launch[kk] == null) launch[kk] = P.T[j];
+    }
+    // 별빛 못과 점프 별
+    for (var i = 0; i < P.R; i++) {
+      var y = g.top + i * g.rh;
+      for (var cc = -P.lim; cc <= P.lim; cc++) {
+        if ((cc - i) % 2 !== 0) continue;
+        var key = i + ',' + cc, x = g.cx0 + cc * g.u;
+        var hit = hitAt[key] != null ? Math.max(0, 1 - (el - hitAt[key]) / 500) : 0;
+        var spent = launch[key] != null && el - launch[key] > 700;     // 다 쓴 점프 별
+        if (!spent && (P.bump.indexOf(key) >= 0 || P.deco.indexOf(key) >= 0)) {
+          var lp = launch[key] != null ? Math.max(0, 1 - (el - launch[key]) / 700) : 0, pul = .5 + .5 * Math.sin(now / 260 + cc + i);
+          cx.globalAlpha = fade * (.35 + .25 * pul + lp * .4); cx.strokeStyle = 'rgb(170,205,255)'; cx.lineWidth = 2 + lp * 2;
+          cx.beginPath(); cx.arc(x, y, m * (.3 + .04 * pul), 0, 6.283); cx.stroke(); cx.globalAlpha = 1;
+          drawStar(x, y, m * (.12 + lp * .14), fade * (.8 + lp * .2), 6 + lp * 6);
+          if (lp > 0) {                                               // 튀어 오르는 순간: 빛 고리 두 겹 + 불꽃
+            for (var rg = 0; rg < 2; rg++) {
+              var e2 = Math.min(1, (1 - lp) * 1.4 + rg * .25);
+              cx.globalAlpha = fade * lp * (.9 - rg * .35); cx.strokeStyle = rg ? 'rgb(245,210,122)' : 'rgb(200,225,255)'; cx.lineWidth = 3 - rg;
+              cx.beginPath(); cx.arc(x, y, m * (.35 + e2 * 1.4), 0, 6.283); cx.stroke();
+            }
+            for (var sp = 0; sp < 8; sp++) {
+              var an = sp * .785 + i, dd = m * (.3 + (1 - lp) * 1.3);
+              drawStar(x + Math.cos(an) * dd, y + Math.sin(an) * dd, m * .05, fade * lp, 4);
+            }
+            cx.globalAlpha = 1;
+          }
+          continue;
+        }
+        drawStar(x, y, m * (.07 + hit * .1), fade * (.55 + hit * .45), 4 + hit * 5);
+        if (hit > 0) {
+          cx.globalAlpha = hit * .8 * fade; cx.strokeStyle = 'rgb(245,210,122)'; cx.lineWidth = 2;
+          cx.beginPath(); cx.arc(x, y, m * (.25 + (1 - hit) * .5), 0, 6.283); cx.stroke(); cx.globalAlpha = 1;
+        }
+      }
+    }
+    // 부서 칸
+    var L = g.cx0 - P.n * g.u;
+    for (var b = 0; b < P.n; b++) {
+      var bx = L + b * 2 * g.u, on = done && b === P.k;
+      if (on) {
+        var gl = cx.createLinearGradient(0, g.binBot, 0, g.binTop - g.rh);
+        gl.addColorStop(0, 'rgba(245,210,122,.45)'); gl.addColorStop(1, 'rgba(245,210,122,0)');
+        cx.fillStyle = gl; cx.fillRect(bx, g.binTop - g.rh, 2 * g.u, g.binBot - g.binTop + g.rh);
+      }
+      cx.globalAlpha = fade * (done && !on ? .45 : 1);
+      cx.strokeStyle = 'rgba(200,210,255,.35)'; cx.lineWidth = 2;
+      cx.beginPath(); cx.moveTo(bx, g.binTop); cx.lineTo(bx, g.binBot); cx.lineTo(bx + 2 * g.u, g.binBot); cx.lineTo(bx + 2 * g.u, g.binTop); cx.stroke();
+      cx.textAlign = 'center'; cx.textBaseline = 'top'; cx.font = '700 ' + fs + 'px "Gowun Batang", serif';
+      cx.fillStyle = on ? 'rgb(245,210,122)' : 'rgba(238,240,251,.85)';
+      cx.fillText(P.bins[b], bx + g.u, g.binBot + fs * .4);
+      cx.globalAlpha = 1;
+    }
+    // 떨어지는 별(빛 꼬리, 점프할 땐 꼬리가 길어진다)
+    var pos = pinPos(el);
+    if (pos) {
+      var jumping = pos.j >= 0 && pos.j < P.last && P.steps[pos.j].k === 'up', TL = jumping ? 10 : 6;
+      for (var t = TL; t >= 1; t--) {
+        var q = pinPos(el - t * 26); if (!q) continue;
+        drawStar(q.x, q.y, m * (jumping ? .12 : .1), (1 - t / (TL + 1)) * (jumping ? .6 : .5) * fade, 5);
+      }
+      drawStar(pos.x, pos.y, m * (done ? .26 : jumping ? .2 : .17), fade, done ? 9 : 7);
+    }
+    if (el < COUNT + 700) {                                           // 3 · 2 · 1
+      var c = el < COUNT ? String(3 - Math.floor(el / 1000)) : '출발!', uu = el < COUNT ? (el % 1000) / 1000 : (el - COUNT) / 700;
+      cx.globalAlpha = Math.max(0, 1 - uu * .9); cx.textAlign = 'center'; cx.textBaseline = 'middle';
+      cx.font = '700 ' + Math.min(W, H) * (.22 + uu * .08) + 'px "Gowun Batang", serif';
+      cx.fillStyle = 'rgb(255,244,214)'; cx.shadowColor = 'rgba(245,210,122,.9)'; cx.shadowBlur = 40;
+      cx.fillText(c, W / 2, H * .5); cx.shadowBlur = 0; cx.globalAlpha = 1;
+    }
+    if (done && el - P.T[P.last] < 600) {                             // 칸에 들어가는 순간 번쩍
+      var fa = 1 - (el - P.T[P.last]) / 600, px = L + (P.k * 2 + 1) * g.u, fl = cx.createRadialGradient(px, g.binBot, 0, px, g.binBot, Math.max(W, H) * .45);
+      fl.addColorStop(0, 'rgba(255,246,220,' + fa * .8 + ')'); fl.addColorStop(1, 'rgba(255,246,220,0)');
+      cx.fillStyle = fl; cx.fillRect(0, 0, W, H);
+    }
+  }
 
   // ---------- 감사의 시간: 큐에서 하나씩 켜기 ----------
   var cardTimer = 0, cheerTimer = 0, cheerEnd = 0, lastPick = null;
@@ -409,14 +660,21 @@
   function tickTimer() {
     if (state !== 'cheer') { $('timer').hidden = true; return; }
     var left = Math.max(0, Math.ceil((cheerEnd - Date.now()) / 1000));
+    if (!left) { $('timer').hidden = true; return; }   // 60초가 지나면 타이머만 사라지고 감사는 계속 비춘다
     $('timer').hidden = false; $('timer').textContent = '감사의 시간 ' + left + '초';
     setTimeout(tickTimer, 250);
   }
 
   // ---------- 상태 바꾸기 ----------
+  // 화면 상태(서버 star_rooms.state, 관리 화면 버튼으로만 바뀜):
+  //   empty 빈 하늘 · stage 무대 · cheer 감사의 시간(옛 이름 「응원」, 내부 이름은 그대로) · gather 별이 모이는 시간 · draw 별 추첨
+  //   어느 상태에서든 다른 상태로 갈 수 있다. 「추첨하기」는 상태를 draw로 바꾸고 draw_seq를 올린다.
+  //   state_seq가 바뀌면 enter(), draw_seq가 바뀌면 runDraw(), epoch(처음부터 횟수)가 바뀌면 하늘을 비우고 빈 하늘로.
+  //   새로고침하면 지금 상태를 그대로 따라가되, 이미 지난 연출(모이기·추첨 회전)은 끝난 모습으로 보여 준다.
   var names = { empty: '빈 하늘', stage: '무대', cheer: '감사의 시간', gather: '별이 모이는 시간', draw: '별 추첨' };
   function show(id, on) { $(id).hidden = !on; }
-  function enter(st, label, first) {
+  function enter(st, label, first, age) {
+    var ago = (age || 0) * 1000;   // 이 상태가 시작된 지 몇 ms 지났는지(새로고침했을 때)
     stillDirty = true;
     state = st; stateLabel = label;
     $('stateName').textContent = names[st] || st;
@@ -426,20 +684,25 @@
     var qb = $('qrbox'); qb.hidden = !(st === 'empty' || st === 'cheer' || st === 'stage'); qb.classList.toggle('big', st === 'empty');
     clearTimeout(cheerTimer);
     if (st !== 'cheer') shown = [];
-    if (st === 'cheer') { cheerEnd = Date.now() + 60000; tickTimer(); lightNext(); }
+    if (st === 'cheer') { cheerEnd = Date.now() + 60000 - ago; tickTimer(); lightNext(); }
     if (st === 'gather') {
       while (queue.length) addStar(queue.shift(), true);
-      gatherStart = performance.now();
-      setTimeout(function () { if (state === 'gather') { var v = $('verse'); v.hidden = false; v.classList.add('fade'); } }, reduce ? 0 : 6500);
+      gatherStart = performance.now() - ago;
+      setTimeout(function () { if (state === 'gather') { var v = $('verse'); v.hidden = false; v.classList.add('fade'); } }, reduce ? 0 : Math.max(0, 6500 - ago));
     }
     if (st === 'draw') { $('qrbox').hidden = true; }
     if (first && st !== 'empty') while (queue.length) addStar(queue.shift(), true);
   }
-  function runDraw(d) {
+  function runDraw(d, instant, list) {
     show('win', false);
-    if (!d) { winId = null; drawStart = performance.now(); return; }
+    // 추첨할 감사가 없으면 레이스 없이 별만 흐리게 둔다(관리 화면에 이유가 뜬다)
+    if (!d) { winId = null; race = null; pin = null; return; }
     if (!byId[d.id]) addStar({ id: d.id, body: d.body, who: d.name }, true);
-    winId = d.id; spinning = true; drawStart = performance.now();
+    if (reduce) instant = true;
+    winId = d.id;
+    if (DRAW_MODE === 'pin') pin = makePin(d, list); else race = makeRace(d, list);
+    var dur = DRAW_MODE === 'pin' ? pin.end : RACE;
+    drawStart = performance.now() - (instant ? dur + 2000 : 0);
     setTimeout(function () {
       if (winId !== d.id) return;
       $('winLabel').textContent = '별 추첨 · 성탄 선물';
@@ -447,26 +710,33 @@
       $('winWho').textContent = d.name + '님의 별';
       $('winPrize').style.display = 'none';
       var w = $('win'); w.hidden = false; w.classList.remove('fade'); void w.offsetWidth; w.classList.add('fade');
-    }, reduce ? 300 : SPIN + 400);
+    }, instant ? 0 : dur + 400);
   }
 
   // ---------- 서버에서 가져오기 ----------
-  var first = true;
+  var first = true, epoch = null;
+  function clearSky() { stars = []; byId = {}; queue = []; shown = []; lastSeq = 0; total = 0; winId = null; stillDirty = true; }
   function poll() {
     rpc('star_sky', { p_room: ROOM, p_after: lastSeq }).then(function (res) {
       var d = res.data;
       if (res.error || !d) { $('stateName').textContent = res.error ? '연결 다시 시도 중' : '방을 찾을 수 없음'; return; }
-      (d.hidden || []).forEach(removeStar);
-      // 시연 초기화 등으로 개수가 줄면 처음부터 다시 받는다
-      if (d.total < stars.length + queue.length && !d.messages.length) {
-        stars = []; byId = {}; queue = []; lastSeq = 0; first = true; total = 0; return;
+      // 「시연 처음부터」를 누르면 하늘을 비우고 빈 하늘에서 다시 받는다
+      if (epoch !== null && d.epoch !== epoch) {
+        epoch = d.epoch; clearSky(); stateSeq = d.state_seq; drawSeq = d.draw_seq; enter('empty', '', false); return;
       }
+      epoch = d.epoch;
+      (d.hidden || []).forEach(removeStar);
       total = d.total;
       d.messages.forEach(function (m) { lastSeq = Math.max(lastSeq, m.seq); if (!byId[m.id] && !queue.some(function (q) { return q.id === m.id; })) queue.push(m); });
-      // 화면을 새로 열면 지금 방 상태와 상관없이 첫 화면(빈 하늘)에서 시작하고, 관리 화면에서 버튼을 누를 때부터 따라간다
-      if (first) { stateSeq = d.state_seq; drawSeq = d.draw_seq; first = false; return; }
+      // 화면을 새로 열면(행사 중 새로고침 포함) 지금 방 상태를 그대로 따라간다
+      if (first) {
+        stateSeq = d.state_seq; drawSeq = d.draw_seq; first = false;
+        if (d.state !== 'empty' || d.stage_label) enter(d.state, d.stage_label, true, d.state_age);
+        if (d.state === 'draw') runDraw(d.draw, true, d.racers);
+        return;
+      }
       if (d.state_seq !== stateSeq) { stateSeq = d.state_seq; enter(d.state, d.stage_label, false); }
-      if (d.draw_seq !== drawSeq) { var was = drawSeq; drawSeq = d.draw_seq; if (d.state === 'draw' && (was !== -1 || first)) runDraw(d.draw); }
+      if (d.draw_seq !== drawSeq) { var was = drawSeq; drawSeq = d.draw_seq; if (d.state === 'draw') runDraw(d.draw, false, d.racers); }
       first = false;
     }).catch(function () { $('stateName').textContent = '연결 다시 시도 중'; })
       .then(function () { setTimeout(poll, 1500); });
