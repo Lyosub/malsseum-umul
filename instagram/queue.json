@@ -611,6 +611,39 @@
         "instagram/2026-11-15-cartoon.jpg"
       ],
       "note": "말씀카툰 #009 「같이 먹자」 — 11/15 설교. 점심시간 지호가 엄마가 챙겨 준 귤을 혼자 앉은 민준과 나눈다. 하단 띠 신 26:11. 전도사님 컨펌 2026-11-15."
+    },
+    {
+      "id": "2026-11-22-verse",
+      "type": "carousel",
+      "publish_at": "2026-11-24 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-22-verse.txt",
+      "first_comment_file": "instagram/captions/2026-11-22-verse.tags.txt",
+      "images": [
+        "instagram/2026-11-22-verse-01.jpg",
+        "instagram/2026-11-22-verse-02.jpg",
+        "instagram/2026-11-22-verse-03.jpg",
+        "instagram/2026-11-22-verse-04.jpg",
+        "instagram/2026-11-22-verse-05.jpg",
+        "instagram/2026-11-22-verse-06.jpg",
+        "instagram/2026-11-22-verse-07.jpg",
+        "instagram/2026-11-22-verse-08.jpg",
+        "instagram/2026-11-22-verse-09.jpg",
+        "instagram/2026-11-22-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 11/22 설교 「만물의 으뜸」(골 1:15-20). 10장 캐러셀, 표지 「왜 예수님이 \"만물의 으뜸\"이실까요?」, 3장 「바뀌지 않는 것 — 만물의 으뜸이신 예수님」(전도사님 수정), 4장 골 1:18, 10장 이번 주 찬양(피아워십). 배경 새벽 산맥(GPT). 전도사님 컨펌 2026-11-17."
+    },
+    {
+      "id": "2026-11-22-cartoon",
+      "type": "image",
+      "publish_at": "2026-11-26 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-22-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-11-22-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-11-22-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #010 「제일 먼저」 — 11/22 설교. 아침에 폰부터 집으려던 지호가 먼저 기도하고 하루를 시작한다. 하단 띠 골 1:18. 전도사님 컨펌 2026-11-17."
     }
   ],
   "skip_days": [
