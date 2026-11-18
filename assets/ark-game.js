@@ -1578,10 +1578,25 @@
   // ───────── 설정·가방(이 기기에 저장, 로그인하면 내 땅 기록에도 저장) ─────────
   var S = { sens: 1, aim: 'finger', sound: true, view: 0 };
   try { var saved = JSON.parse(localStorage.getItem('arkVillage.settings') || 'null'); if (saved) for (var sk in saved) S[sk] = saved[sk]; } catch (e) {}
-  try { var hb = JSON.parse(localStorage.getItem('arkVillage.hotbar3') || 'null'); if (hb && hb.length === 9) HOTBAR = hb.map(function (v) { return INV.indexOf(v) >= 0 ? v : GOPHER; }); } catch (e) {}
+  // 단축 칸은 처음엔 비어 있고(0 = 빈 칸), 플레이어가 직접 채운다
+  HOTBAR = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  try { var hb = JSON.parse(localStorage.getItem('arkVillage.hotbar4') || 'null'); if (hb && hb.length === 9) HOTBAR = hb.map(function (v) { return INV.indexOf(v) >= 0 ? v : 0; }); } catch (e) {}
+  // 가방 칸: 가진 것을 플레이어가 정한 자리에(이 기기에 저장)
+  var BAGSLOT = [];
+  try { BAGSLOT = (JSON.parse(localStorage.getItem('arkVillage.bagslots') || '[]') || []).map(function (v) { return INV.indexOf(v) >= 0 ? v : 0; }); } catch (e) { BAGSLOT = []; }
+  function nameOf(id) { return id && B[id] ? B[id][0] : '빈 칸'; }
   var BAG = {};
   try { var bg = JSON.parse(localStorage.getItem('arkVillage.bag') || 'null'); if (bg) for (var bk in bg) if (INV.indexOf(+bk) >= 0) BAG[+bk] = Math.max(0, Math.min(9999, bg[bk] | 0)); } catch (e) {}
-  function saveSettings() { try { localStorage.setItem('arkVillage.settings', JSON.stringify(S)); localStorage.setItem('arkVillage.hotbar3', JSON.stringify(HOTBAR)); } catch (e) {} }
+  function saveSettings() { try { localStorage.setItem('arkVillage.settings', JSON.stringify(S)); localStorage.setItem('arkVillage.hotbar4', JSON.stringify(HOTBAR)); localStorage.setItem('arkVillage.bagslots', JSON.stringify(BAGSLOT)); } catch (e) {} }
+  // 가방 칸 정리: 다 쓴 것은 빼고, 새로 얻은 것은 빈 칸에(최소 4줄 × 9칸)
+  function syncBagSlots() {
+    var i, seenIds = {};
+    for (i = 0; i < BAGSLOT.length; i++) { var v = BAGSLOT[i]; if (!v || have(v) < 1 || seenIds[v]) BAGSLOT[i] = 0; else seenIds[v] = 1; }
+    INV.forEach(function (id) { if (have(id) > 0 && !seenIds[id]) { var e = BAGSLOT.indexOf(0); if (e < 0) { e = BAGSLOT.length; BAGSLOT.push(0); } BAGSLOT[e] = id; seenIds[id] = 1; } });
+    while (BAGSLOT.length < 36) BAGSLOT.push(0);
+    while (BAGSLOT.length > 36 && BAGSLOT.length % 9 === 0 && BAGSLOT.slice(-9).every(function (v) { return !v; })) BAGSLOT.length -= 9;
+    while (BAGSLOT.length % 9) BAGSLOT.push(0);
+  }
   var WEAR = {};
   try { var wr = JSON.parse(localStorage.getItem('arkVillage.wear') || 'null'); if (wr) for (var wk in wr) if (isTool(+wk)) WEAR[+wk] = Math.max(1, Math.min(toolMax(+wk), wr[wk] | 0)); } catch (e) {}
   // 관리자 계정: 모든 자원 무한, 모든 제작법 열림, 날기 가능(서버 get_my_ark_name의 admin)
@@ -1599,13 +1614,24 @@
   }
   function bagChanged() {
     for (var wk2 in WEAR) if (have(+wk2) < 1) delete WEAR[wk2];
+    // 다 쓴 것은 단축 칸에서 빠진다
+    var hc = false; for (var hi = 0; hi < 9; hi++) if (HOTBAR[hi] && have(HOTBAR[hi]) < 1) { HOTBAR[hi] = 0; hc = true; }
+    syncBagSlots(); if (hc) saveSettings();
     try { localStorage.setItem('arkVillage.bag', JSON.stringify(BAG)); localStorage.setItem('arkVillage.wear', JSON.stringify(WEAR)); localStorage.setItem('arkVillage.heat', String(HEAT)); } catch (e) {}
     renderHotbar(); setSel(sel, true);
     if (ui === 'inv') renderInv();
     if (ui === 'chest') renderChest();
     if (me && myPlot >= 0) markDirty();
   }
-  function give(id, n) { if (INV.indexOf(id) < 0 || isAdm()) return; BAG[id] = Math.min(9999, have(id) + n); if (n > 0) markSeen(id); }
+  function give(id, n) {
+    if (INV.indexOf(id) < 0 || isAdm()) return;
+    BAG[id] = Math.min(9999, have(id) + n);
+    if (n > 0) {
+      markSeen(id);
+      // 새로 얻은 것은 단축 칸 빈자리에 저절로(이미 있으면 그대로)
+      if (HOTBAR.indexOf(id) < 0) { var e = HOTBAR.indexOf(0); if (e >= 0) { HOTBAR[e] = id; saveSettings(); } }
+    }
+  }
   // ───────── 제작법은 단계별로 열린다: 재료를 한 번이라도 얻으면 그 재료로 만드는 법이 열림 ─────────
   var SEEN = {}, seenQuiet = true, newRecs = [], newRecT = null;
   try { (localStorage.getItem('arkVillage.seen') || '').split(',').forEach(function (k) { if (+k) SEEN[+k] = 1; }); } catch (e) {}
@@ -1795,7 +1821,7 @@
     ui = name;
     if (name !== 'play') { joy.x = joy.y = 0; keys = {}; jumpHeld = false; flyDown = false; mouseMining = false; stopHold(); }
   }
-  function openPanel(name) { uiBack = ui === 'play' ? 'play' : ui; showUI(name); if (name === 'inv') renderInv(); if (lockOn) document.exitPointerLock(); }
+  function openPanel(name) { bagPick = null; uiBack = ui === 'play' ? 'play' : ui; showUI(name); if (name === 'inv') renderInv(); if (lockOn) document.exitPointerLock(); }
   function closePanel() { if (uiBack === 'play') resume(); else showUI(uiBack); }
   function resume() {
     showUI('play'); sfx('click');
@@ -1873,7 +1899,7 @@
       if (e.button === 0) { mouseMining = true; return; }
       if (e.button === 2) { tapAt(); return; }
       var h = pickCenter(); if (!h) return;
-      else if (e.button === 1) { var id = get(h.x, h.y, h.z); id = dropOf(id); if (INV.indexOf(id) >= 0) { HOTBAR[sel] = id; renderHotbar(); setSel(sel); saveSettings(); } }
+      else if (e.button === 1) { var id = get(h.x, h.y, h.z); id = dropOf(id); if (INV.indexOf(id) >= 0 && have(id) > 0) { var hj = HOTBAR.indexOf(id); if (hj >= 0) { setSel(hj); return; } HOTBAR[sel] = id; renderHotbar(); setSel(sel); saveSettings(); } }
     });
     window.addEventListener('mouseup', function (e) { if (e.button === 0) { mouseMining = false; mine = null; } });
     canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -1955,7 +1981,7 @@
     var slots = document.querySelectorAll('#hotbar .slot');
     for (var k = 0; k < slots.length; k++) slots[k].classList.toggle('on', k === i);
     if (!quiet) {
-      var el = $('selName'); el.textContent = B[HOTBAR[i]][0] + ' · ' + have(HOTBAR[i]) + '개'; el.classList.add('show');
+      var el = $('selName'); el.textContent = HOTBAR[i] ? B[HOTBAR[i]][0] + ' · ' + have(HOTBAR[i]) + '개' : '빈 손'; el.classList.add('show');
       clearTimeout(selNameT); selNameT = setTimeout(function () { el.classList.remove('show'); }, 1600);
     }
     if (heldMesh) setHeld(HOTBAR[i]);
@@ -2059,6 +2085,7 @@
       if (tgt === CHEST) return openChest(h.x, h.y, h.z);
       if (tgt === CRAFT) { craftCat = 'wear'; invTab = 'craft'; openPanel('inv'); sfx('click'); return; }
       var item = HOTBAR[sel];
+      if (!item) return deny('손에 든 것이 없어요. 아래 칸을 고르거나 🎒 가방에서 단축 칸에 넣어요');
       if (WEARINFO[item]) return wearItem(item);
       var why2 = canPlace(h.px, h.py, h.pz, item); if (why2) return deny(why2);
       if (isItem(item)) return deny('「' + B[item][0] + '」은(는) 놓는 블록이 아니에요. 블록을 골라 주세요');
@@ -2424,7 +2451,7 @@
   function renderHotbar() {
     var bar = $('hotbar'); bar.innerHTML = '';
     HOTBAR.forEach(function (id, i) {
-      var d = document.createElement('button'); d.className = 'slot' + (i === sel ? ' on' : ''); d.title = B[id][0] + ' (' + (i + 1) + ')'; d.innerHTML = slotHTML(id, have(id)) + '<u class="num">' + (i + 1) + '</u>';
+      var d = document.createElement('button'); d.className = 'slot' + (i === sel ? ' on' : ''); d.title = nameOf(id) + ' (' + (i + 1) + ')'; d.innerHTML = (id ? slotHTML(id, have(id)) : '') + '<u class="num">' + (i + 1) + '</u>';
       d.addEventListener('click', function () { setSel(i); sfx('click'); });
       bar.appendChild(d);
     });
@@ -2432,20 +2459,56 @@
     more.addEventListener('click', function () { openPanel('inv'); sfx('click'); });
     bar.appendChild(more);
   }
-  var invTab = 'bag', craftCat = 'block';
+  var invTab = 'bag', craftCat = 'block', bagPick = null;
   function renderInv() {
     $('tabBag').classList.toggle('on', invTab === 'bag'); $('tabCraft').classList.toggle('on', invTab === 'craft'); $('tabDex').classList.toggle('on', invTab === 'dex');
     $('bagView').style.display = invTab === 'bag' ? '' : 'none'; $('craftView').style.display = invTab === 'craft' ? '' : 'none'; $('dexView').style.display = invTab === 'dex' ? '' : 'none';
     renderDex();
     var grid = $('invGrid'), row = $('invHot'), list = $('craftList'); grid.innerHTML = ''; row.innerHTML = ''; list.innerHTML = '';
-    INV.slice().sort(function (a, b) { return (have(b) > 0) - (have(a) > 0); }).forEach(function (id) {   // 가진 것부터
-      var d = document.createElement('button'); d.className = 'islot'; d.innerHTML = slotHTML(id, have(id)); d.title = B[id][0];
-      d.addEventListener('click', function () { HOTBAR[sel] = id; saveSettings(); renderHotbar(); setSel(sel, true); renderInv(); $('invName').textContent = B[id][0] + ' (' + have(id) + '개' + (isTool(id) && have(id) > 0 ? ' · 남은 힘 ' + wearLeft(id) + '/' + toolMax(id) : '') + ') → ' + (sel + 1) + '번 칸'; sfx('click'); });
+    // 가방: 가진 것만 칸에. 눌러서 집고 → 다른 가방 칸(자리 바꾸기)이나 아래 단축 칸(넣기)을 누른다
+    syncBagSlots();
+    function info(id) { return B[id][0] + ' ' + have(id) + '개' + (isTool(id) ? ' · 남은 힘 ' + wearLeft(id) + '/' + toolMax(id) : ''); }
+    BAGSLOT.forEach(function (id, i) {
+      var d = document.createElement('button'), on = bagPick && bagPick.from === 'bag' && bagPick.i === i;
+      d.className = 'islot' + (on ? ' pick' : '') + (id ? '' : ' empty'); d.innerHTML = id ? slotHTML(id, have(id)) : ''; d.title = id ? B[id][0] : '빈 칸';
+      d.addEventListener('click', function () {
+        sfx('click');
+        if (bagPick && bagPick.from === 'bag') {
+          if (bagPick.i !== i) { var t = BAGSLOT[i]; BAGSLOT[i] = BAGSLOT[bagPick.i]; BAGSLOT[bagPick.i] = t; saveSettings(); $('invName').textContent = '자리를 옮겼어요'; }
+          else $('invName').textContent = '내려놓았어요';
+          bagPick = null; renderInv(); return;
+        }
+        if (bagPick && bagPick.from === 'hot') {   // 단축 칸에서 집은 것을 가방에 놓으면 단축 칸이 빈다
+          var hid = HOTBAR[bagPick.i]; HOTBAR[bagPick.i] = 0; saveSettings(); renderHotbar(); setSel(sel, true);
+          $('invName').textContent = (bagPick.i + 1) + '번 단축 칸을 비웠어요' + (hid ? ' (' + jo(B[hid][0], '은', '는') + ' 가방에 그대로 있어요)' : '');
+          bagPick = null; renderInv(); return;
+        }
+        if (!id) { $('invName').textContent = '빈 칸이에요'; return; }
+        bagPick = { from: 'bag', i: i, id: id }; renderInv();
+        $('invName').textContent = info(id) + ' — 집었어요 → 아래 단축 칸을 누르면 넣고, 다른 가방 칸을 누르면 자리를 바꿔요';
+      });
       grid.appendChild(d);
     });
     HOTBAR.forEach(function (id, i) {
-      var d = document.createElement('button'); d.className = 'islot' + (i === sel ? ' on' : ''); d.innerHTML = slotHTML(id, have(id)); d.title = B[id][0];
-      d.addEventListener('click', function () { setSel(i, true); renderHotbar(); renderInv(); $('invName').textContent = (i + 1) + '번 칸: ' + B[id][0]; sfx('click'); });
+      var on = bagPick && bagPick.from === 'hot' && bagPick.i === i;
+      var d = document.createElement('button'); d.className = 'islot' + (i === sel ? ' on' : '') + (on ? ' pick' : '') + (id ? '' : ' empty'); d.innerHTML = (id ? slotHTML(id, have(id)) : '') + '<u class="num">' + (i + 1) + '</u>'; d.title = (i + 1) + '번 칸: ' + nameOf(id);
+      d.addEventListener('click', function () {
+        sfx('click');
+        if (bagPick && bagPick.from === 'bag') {   // 가방에서 집은 것을 이 단축 칸에
+          var pid = bagPick.id, j = HOTBAR.indexOf(pid);
+          if (j >= 0 && j !== i) HOTBAR[j] = HOTBAR[i];   // 같은 것이 다른 칸에 있으면 서로 바꿈
+          HOTBAR[i] = pid; saveSettings(); bagPick = null; setSel(i, true); renderHotbar(); renderInv();
+          $('invName').textContent = B[pid][0] + ' → ' + (i + 1) + '번 단축 칸'; return;
+        }
+        if (bagPick && bagPick.from === 'hot') {   // 단축 칸끼리 자리 바꾸기
+          if (bagPick.i !== i) { var t2 = HOTBAR[i]; HOTBAR[i] = HOTBAR[bagPick.i]; HOTBAR[bagPick.i] = t2; saveSettings(); $('invName').textContent = '단축 칸 자리를 바꿨어요'; }
+          bagPick = null; setSel(i, true); renderHotbar(); renderInv(); return;
+        }
+        setSel(i, true); renderHotbar();
+        if (id) { bagPick = { from: 'hot', i: i, id: id }; $('invName').textContent = (i + 1) + '번 칸 ' + info(id) + ' — 집었어요 → 다른 단축 칸을 누르면 자리 바꾸기, 가방 칸을 누르면 이 칸 비우기'; }
+        else $('invName').textContent = (i + 1) + '번 칸은 비어 있어요. 가방에서 넣을 것을 먼저 눌러요';
+        renderInv();
+      });
       row.appendChild(d);
     });
     ['block', 'shape', 'tool', 'smelt', 'wear'].forEach(function (c) { var b = $('cc_' + c); if (b) b.classList.toggle('on', craftCat === c); });
@@ -3319,7 +3382,7 @@
     g.setIndex([0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2]);   // 앞뒤 두 면
     return g;
   }
-  function setHeld(id) { if (heldMesh.geometry) heldMesh.geometry.dispose(); heldMesh.geometry = isItem(id) || id === TORCH ? itemGeometry(id) : blockGeometry(id); heldMesh.material.alphaTest = isItem(id) || id === TORCH ? 0.5 : 0; heldMesh.material.needsUpdate = true; }
+  function setHeld(id) { if (heldMesh.geometry) heldMesh.geometry.dispose(); if (!id) { heldMesh.geometry = new THREE.BufferGeometry(); return; } heldMesh.geometry =isItem(id) || id === TORCH ? itemGeometry(id) : blockGeometry(id); heldMesh.material.alphaTest = isItem(id) || id === TORCH ? 0.5 : 0; heldMesh.material.needsUpdate = true; }
   function init() {
     canvasEl = $('game');
     if (isTouch) document.body.classList.add('touch');
@@ -3349,7 +3412,7 @@
     for (var st = 1; st <= 8; st++) (function (t) { crackGeo.push(cubeGeometry(function () { return t; }, false)); })(TILE['crack' + st]);
     crackMesh = new THREE.Mesh(crackGeo[0], new THREE.MeshBasicMaterial({ map: atlasTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
     crackMesh.scale.setScalar(1.004); crackMesh.visible = false; crackMesh.renderOrder = 3; scene.add(crackMesh);
-    heldMesh = new THREE.Mesh(blockGeometry(HOTBAR[0]), new THREE.MeshBasicMaterial({ map: atlasTex, vertexColors: true, depthTest: false, depthWrite: false, transparent: true }));
+    heldMesh = new THREE.Mesh(HOTBAR[0] ? blockGeometry(HOTBAR[0]) : new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({ map: atlasTex, vertexColors: true, depthTest: false, depthWrite: false, transparent: true }));
     lightPatch(heldMesh.material); heldMesh.renderOrder = 10; heldMesh.scale.setScalar(0.34); camera.add(heldMesh);
     refreshMyAvatar(); avatar.visible = false;
     makeSky();
