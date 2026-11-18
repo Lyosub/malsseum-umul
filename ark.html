@@ -137,6 +137,25 @@
   #pickup { left:50%; bottom:calc(112px + var(--sab)); transform:translateX(-50%); font-size:14px; opacity:0; transition:opacity .4s; pointer-events:none; color:#d8ffb0; white-space:nowrap; }
   #pickup.show { opacity:1; transition:none; }
   body.underwater:after { content:''; position:fixed; inset:0; background:rgba(30,80,160,.38); pointer-events:none; z-index:3; }
+  /* 체력·기운·숨 */
+  #vitals { display:flex; justify-content:space-between; gap:10px; width:min(440px, 96vw); pointer-events:none; min-height:0; }
+  #vitals span { display:flex; gap:1px; } #vitals .air { position:absolute; left:50%; transform:translateX(-50%) translateY(-16px); }
+  #vitals b { font-weight:400; font-size:14px; line-height:1; text-shadow:1px 1px 0 #000; }
+  #vitals b.h { color:#ff3a4a; } #vitals b.f { color:#e8a83a; } #vitals b.a { color:#7ac8ff; }
+  #vitals b.off { color:#3a3a3a; } #vitals b.half { opacity:.6; }
+  body.hurt:before { content:''; position:fixed; inset:0; background:rgba(200,0,0,.28); pointer-events:none; z-index:6; }
+  body.faint:before, body.sleep:before { content:''; position:fixed; inset:0; background:#000; opacity:.85; pointer-events:none; z-index:7; transition:opacity .4s; }
+  body.sneaking #btnSneak { background:rgba(120,180,255,.55); }
+  #btnSneak { right:calc(166px + var(--sar)); bottom:calc(112px + var(--sab)); width:62px; height:34px; font-size:12px; }
+  @media (max-height:430px) { #btnSneak { bottom:calc(100px + var(--sab)); } }
+  @media (orientation:portrait) { body.touch #btnSneak { right:calc(14px + var(--sar)); bottom:calc(226px + var(--sab)); } }
+  #vitals { position:relative; }
+  /* 업적 */
+  #achGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:4px; max-height:calc(100vh - 190px); overflow:auto; }
+  .ach { display:grid; grid-template-columns:28px 1fr; grid-template-rows:auto auto; column-gap:6px; background:#8b8b8b; padding:4px 6px; color:#eee; opacity:.7; }
+  .ach.on { background:#7a9a5a; opacity:1; }
+  .ach .em { grid-row:1 / 3; font-size:20px; align-self:center; } .ach b { font-weight:400; font-size:12px; color:#fff; } .ach small { font-size:10px; color:#eee; }
+  #achCount { font-size:13px; color:#3f3f3f; margin-bottom:6px; }
 
   /* 처음 안내 */
   #quest { top:calc(8px + var(--sat)); left:50%; transform:translateX(-50%); width:min(360px, 46vw); background:rgba(16,16,24,.72); border:2px solid #000; box-shadow:inset 0 0 0 2px #5a4a8a;
@@ -319,10 +338,10 @@
     body.touch #splash { display:none; }
     body.touch #quest { top:calc(66px + var(--sat)) !important; } body.touch #mapc { top:calc(66px + var(--sat)) !important; } body.touch #mapCap { top:calc(160px + var(--sat)); }
     body.touch #chatLog { top:calc(182px + var(--sat)); }
-    body.touch #dpad { bottom:calc(80px + var(--sab)); }
-    body.touch #btnJump { bottom:calc(90px + var(--sab)); } body.touch #btnDown, body.touch #btnRide { bottom:calc(90px + var(--sab)); }
-    body.touch #btnFly, body.touch #btnRun { bottom:calc(162px + var(--sab)); }
-    body.touch #toast { bottom:calc(226px + var(--sab)); } body.touch #pickup { bottom:calc(256px + var(--sab)); }
+    body.touch #dpad { bottom:calc(100px + var(--sab)); }
+    body.touch #btnJump { bottom:calc(110px + var(--sab)); } body.touch #btnDown, body.touch #btnRide { bottom:calc(110px + var(--sab)); }
+    body.touch #btnFly, body.touch #btnRun { bottom:calc(182px + var(--sab)); }
+    body.touch #toast { bottom:calc(246px + var(--sab)); } body.touch #pickup { bottom:calc(276px + var(--sab)); }
     body.touch #map .wrap { flex-direction:column; align-items:center; } body.touch #bigmapc { width:min(92vw, 360px); height:auto; } body.touch #map .side { width:min(92vw, 360px); }
   }
   #rotate .phone { width:46px; height:78px; border:4px solid #e0e0e0; border-radius:8px; animation:turn 1.8s ease-in-out infinite; }
@@ -401,6 +420,7 @@
   <div id="cardText"></div><div id="cardRef"></div><div id="cardNew"></div></div>
 <canvas id="mapc" width="128" height="128" aria-label="지도 크게 보기"></canvas>
 <div id="bottom" class="hud">
+  <div id="vitals"></div>
   <div id="selName" class="sh"></div>
   <div id="hotbar"></div>
 </div>
@@ -412,6 +432,7 @@
   </div>
   <button id="btnFly" class="tbtn">날기</button>
   <button id="btnRun" class="tbtn">🏃<small>달리기</small></button>
+  <button id="btnSneak" class="tbtn">웅크리기</button>
   <button id="btnRide" class="tbtn">내리기</button>
   <button id="btnDown" class="tbtn" aria-label="내려가기">▼</button>
   <button id="btnJump" class="tbtn" aria-label="점프">▲<small>점프</small></button>
@@ -446,6 +467,7 @@
     <button id="mArk" class="mc">⛵ 방주 앞</button>
     <button id="mHome" class="mc">🏠 내 땅</button>
     <button id="mSound" class="mc">소리: 켬</button>
+    <button id="mMusic" class="mc">음악: 켬</button>
     <button id="mForest" class="mc">🌲 동쪽 숲</button>
     <button id="mHill" class="mc">⛰ 서쪽 산</button>
     <button id="mLake" class="mc">🌊 남쪽 호수</button>
@@ -460,9 +482,9 @@
 <!-- 가방·만들기 -->
 <div id="inv" class="screen dim">
   <div class="panel">
-    <div class="tabs"><button id="tabBag" class="tab on">🎒 가방</button><button id="tabCraft" class="tab">🔨 만들기</button><button id="tabDex" class="tab">📖 도감</button></div>
+    <div class="tabs"><button id="tabBag" class="tab on">🎒 가방</button><button id="tabCraft" class="tab">🔨 만들기</button><button id="tabDex" class="tab">📖 도감</button><button id="tabAch" class="tab">🏅 업적</button></div>
     <div id="bagView">
-      <h2>🎒 가방 — 눌러서 집고, 다른 칸을 누르면 자리를 바꿔요 <small id="bagUse"></small> <button id="bagDrop" class="mc" style="display:none;height:26px;font-size:12px;padding:0 8px;">🗑 집은 묶음 버리기</button></h2>
+      <h2>🎒 가방 — 눌러서 집고, 다른 칸을 누르면 자리를 바꿔요 <small id="bagUse"></small> <button id="bagDrop" class="mc" style="display:none;height:26px;font-size:12px;padding:0 8px;">🗑 집은 묶음 버리기</button><button id="hotClear" class="mc" style="display:none;height:26px;font-size:12px;padding:0 8px;">집은 단축 칸 비우기</button></h2>
       <div id="invGrid"></div>
       <h2 class="hoth">손에 들 단축 칸 1~9 — 가방에서 집은 것을 여기 눌러 넣어요 · 단축 칸을 집어 가방 칸에 놓으면 비워져요</h2>
       <div id="invHot"></div>
@@ -471,6 +493,7 @@
       <div class="ccats"><button id="cc_block" class="tab on">🧱 블록</button><button id="cc_shape" class="tab">🚪 모양</button><button id="cc_tool" class="tab">⛏ 도구</button><button id="cc_smelt" class="tab">🔥 녹이기</button><button id="cc_wear" class="tab">👕 옷</button></div>
       <div id="craftList"></div>
     </div>
+    <div id="achView" style="display:none"><div id="achCount"></div><div id="achGrid"></div></div>
     <div id="dexView" style="display:none">
       <div id="dexCount"></div>
       <div id="dexGrid"></div>
@@ -507,6 +530,7 @@
     </div>
   </div>
 </div>
+<div id="signs" class="screen dim"><div class="panel"><h2>🪧 표지판에 쓸 글을 골라요</h2><div id="signList" style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow:auto"></div></div></div>
 <div id="chat" class="screen">
   <div class="panel cpanel">
     <h2>💬 함께 이야기하기 <small id="chatWho"></small></h2>
@@ -528,6 +552,7 @@
       <button id="go_sea" class="mc">🏖 북쪽 바다</button>
       <button id="go_desert" class="mc">🐪 동쪽 사막</button>
       <button id="go_ararat" class="mc">🏔 아라랏 산</button>
+      <button id="go_commons" class="mc">🏗 함께 짓는 터</button>
       <button id="mapDone" class="mc">닫기</button>
     </div>
   </div>
@@ -580,6 +605,10 @@
       🌳 캔 것은 땅에 떨어졌다가 가까이 가면 가방에 들어와요. 모래·자갈은 받침이 없으면 떨어져요. 나뭇잎에서 가끔 묘목이 나오는데, 풀·흙 위에 심으면 2~3분 뒤 나무로 자라요(시 1:3). 아주 드물게 감람나무 새 잎사귀도 나와요(창 8:11).<br>
       🐎 들판에는 말(욥 39:19)과 나귀(슥 9:9)가 있어요. 안장(고페르 나무 3 + 철 덩이 1, 창 22:3)을 손에 들고 누르면 안장을 얹고, 한 번 더 누르면 타요. 말은 걷기보다 2배, 나귀는 1.4배 빨라요. 「내리기」(PC: Shift)로 내리면 그 자리에서 기다려요.<br>
       👕 첫 화면이나 메뉴의 「👤 내 모습」에서 나그네 6명 중 하나를 골라요(히 11:13). 칼을 들고 양을 누르면 양털, 소·염소·낙타를 누르면 가죽을 얻어요. 제작대(고페르 나무 4)를 가방에 넣거나 내 땅에 놓고 🔨 만들기 → 👕 옷에서 가죽옷(창 3:21)·채색옷(창 37:3)·놋 투구(삼상 17:38)·순금 관(시 21:3)·방패·신을 만들어요. 손에 들고 누르거나 「내 모습」에서 입어요. 하나님의 전신 갑주 다섯 가지를 다 입으면 말씀 카드가 나와요(엡 6:11-17).<br>
+      ♥ 체력과 ◆ 기운: 걷고 달리고 캐면 기운이 줄어요. 떡(밀 3, 마 4:4)이나 무화과(나뭇잎에서 가끔)를 들고 누르면 먹어요. 기운이 넉넉하면 체력이 차오르고, 기운이 없으면 달릴 수 없어요. 높은 곳에서 떨어지거나 물속에 오래 있으면 다쳐요. 쓰러져도 가진 것은 그대로예요.<br>
+      🌾 풀이나 꽃을 캐면 가끔 밀 씨가 나와요. 흙·풀 위에 심으면 자라요(물이 가까우면 빨리, 막 4:3). 익은 밀을 거둬요. 밀을 들고 있으면 양·소·염소가 따라오고, 둘에게 먹이면 새끼가 태어나요 — 내 땅 안의 동물은 저장돼요.<br>
+      🛏 침대(양털 3 + 고페르 나무 3)를 누르면 다시 일어날 자리가 되고, 밤이면 자고 아침이 돼요(시 4:8). 🔘 레버(막대기 + 돌)를 누르면 둘레 문이 함께 열리고 닫혀요. 🪧 표지판은 내 땅에 세우고 글을 골라요. 횃불은 벽에도 붙고, 통나무는 옆면에 놓으면 눕혀져요. 웅크리기(PC: Shift)로 가장자리에서 떨어지지 않아요.<br>
+      🏗 방주 북쪽 「함께 짓는 터」(지도에서 이동)는 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요. 🏅 업적은 가방 → 업적에서 봐요. 마을 사람(노아·목자·안내하는 나그네)을 누르면 말씀을 들려줘요.<br>
       📦 궤(고페르 나무 8, 출 25:10)를 내 땅에 놓고 누르면 물건을 넣어 둘 수 있어요. 용광로도 내 땅에 놓을 수 있고, 녹이는 동안 불이 켜져요.<br>
       🔥 용광로(돌 8)에서 땔감으로 광석을 녹여 덩이로 만들어요(욥 28:1-2). 하나 녹는 데 3초 — 넣어 두고 다른 일을 해도 화면 위 막대가 차면 가방에 들어와요. 땔감은 석탄·숯 1개로 8번, 통나무 1개로 1.5번 — 통나무를 녹이면 숯이 돼요(요 21:9). 막대기 + 석탄(또는 숯)으로 횃불 4개(창 15:17), 횃불은 굴 속에도 놓아 밝힐 수 있어요. 덩이·보석 9개는 블록으로 묶고 다시 풀 수 있어요.<br>
       🛠 나무·돌·구리·철·금강석으로 곡괭이·도끼·삽·칼을 만들어요(창 4:22, 렘 17:1). 도구는 단축 칸에서 골라 손에 들고 캐요 — 맞는 도구(돌·광석은 곡괭이, 나무는 도끼, 흙·모래는 삽, 잎·풀은 칼)면 빨리, 맨손·블록·맞지 않는 도구는 2배, 물속에서는 3배 느려요. 광석은 귀할수록 단단해요(석탄 → 구리 → 철 → 은 → 호마노 → 금 → 청옥 → 금강석). 도구는 쓸수록 닳아서(칸 아래 막대) 다 닳으면 부서져요 — 나무 60번·돌 130번·구리 200번·철 300번·금강석 1000번. 닳은 도구는 만들기 ⛏ 칸에서 그 재료 1개로 고쳐요(힘 25%씩).
