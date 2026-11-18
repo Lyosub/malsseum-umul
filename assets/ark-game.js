@@ -550,6 +550,48 @@
         px(x, y, frame ? 0x3a3a3a : (y > 9 ? 0xffd860 : 0xfff0b0), frame ? 0.9 : 0.95 + R() * 0.1);
       }
     });
+    // 열두 보석: 광석(돌 속 결정), 보석(깎은 모양), 기초석(테두리 있는 보석 블록)
+    GEMS.forEach(function (g, i) {
+      if (!g) return;
+      tile('gemOre' + i, function (px, R, noise) {
+        noise(0x8f8f8b, 0.14);
+        [[3, 3], [10, 4], [6, 9], [12, 11], [3, 12]].forEach(function (c, k) {
+          for (var dy = 0; dy < 3; dy++) for (var dx = 0; dx < 2 + (k & 1); dx++) px(c[0] + dx, c[1] + dy, dy === 0 ? g[2] : g[1], 0.9 + R() * 0.25);
+          px(c[0], c[1], 0xffffff, 1);
+        });
+      });
+      tile('gem' + i, function (px) {
+        clear(px);
+        for (var y = 3; y < 14; y++) { var w = y < 7 ? (y - 2) : (14 - y) * 0.75; for (var x = Math.round(8 - w); x <= Math.round(7 + w); x++) px(x, y, y < 7 ? g[2] : g[1], x < 8 ? 1.15 : 0.85); }
+        px(6, 5, 0xffffff); px(7, 4, 0xffffff);
+      });
+    });
+    FS_NAMES.forEach(function (n, i) {
+      var g = GEMS[i] || ['청옥', 0x2a5ad0, 0x7aa0f0];
+      tile('fstone' + i, function (px, R) {
+        for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) {
+          var edge = x === 0 || y === 0 || x === 15 || y === 15, in2 = x > 2 && y > 2 && x < 13 && y < 13;
+          px(x, y, edge ? 0xe8c33c : (in2 ? g[2] : g[1]), edge ? 1 : 0.85 + R() * 0.2 + ((x + y) % 7 === 0 ? 0.3 : 0));
+        }
+      });
+    });
+    tile('lampstand', function (px, R) { for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) px(x, y, 0xb8962e, 0.8 + R() * 0.3); });
+    tile('lampstandLit', function (px, R) { for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) px(x, y, y < 5 ? 0xfff0a0 : 0xe8c33c, 0.95 + R() * 0.1); });
+    tile('pearl', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var v = Math.sin(x * 0.7 + y * 0.4) * 0.5 + 0.5; px(x, y, v > 0.5 ? 0xf4f0ff : 0xffeef4, 0.92 + v * 0.1 + R() * 0.04); }
+    });
+    tile('socket', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var hole = x > 3 && x < 12 && y > 3 && y < 12; px(x, y, hole ? 0x2a2a2a : 0x9a9a96, hole ? 0.8 + R() * 0.2 : 0.85 + R() * 0.2); }
+    });
+    tile('goldst', function (px, R) { for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) px(x, y, 0xf0c840, 1 + Math.sin((x + y) * 0.5) * 0.08 + R() * 0.06 + ((x - y + 16) % 9 === 0 ? 0.2 : 0)); });
+    tile('citywall', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var row = y >> 2, mortar = y % 4 === 3 || (x + (row % 2) * 4) % 8 === 7; px(x, y, 0xa84a38, mortar ? 0.7 : 0.88 + R() * 0.2); }
+    });
+    tile('lifeleaf', function (px, R) {
+      var FR = [0xd03a3a, 0xf0c040, 0x8a3ab0, 0xf08a30, 0x3a8ad0];
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) px(x, y, 0x3aa04a, 0.75 + R() * 0.45);
+      for (var k = 0; k < 4; k++) { var fx = (k * 5 + 2) % 14 + 1, fy = (k * 7 + 3) % 13 + 1; px(fx, fy, FR[k % 5], 1.1); px(fx + 1, fy, FR[k % 5]); px(fx, fy + 1, FR[k % 5], 0.85); }
+    });
     // 눕힌 통나무 옆면: 세운 통나무 옆면을 돌려서
     tile('logSideH', function (px) {
       var t = TILE.logSide, d = actx.getImageData((t % ACOLS) * TS, Math.floor(t / ACOLS) * TS, TS, TS).data;
@@ -691,6 +733,7 @@
   var LIGHTS = {}; LIGHTS[LAMP] = 1; LIGHTS[TORCH] = 1; LIGHTS[FURNACE_ON] = 1;   // 빛을 내는 것
   for (var wl = 170; wl < 174; wl++) LIGHTS[wl] = 1;   // 벽 횃불
   LIGHTS[199] = 1;   // 등롱
+  LIGHTS[212] = 1;   // 켜진 등잔대
   B[DEEP] = ['깊은 돌', 'deepStone', 'deepStone', 'deepStone'];
   [[COAL, '석탄', 'coal'], [CHAR, '숯', 'charcoal'], [GEM_ONYX, '호마노', 'gemOnyx'], [GEM_SAPH, '청옥', 'gemSapphire'], [GEM_DIA, '금강석', 'gemDiamond']].forEach(function (it) { B[it[0]] = [it[1], it[2], it[2], it[2], 0, 0, 'item']; });
   B[ORE_CU] = ['구리 광석', 'oreCopper', 'oreCopper', 'oreCopper']; B[ORE_FE] = ['철 광석', 'oreIron', 'oreIron', 'oreIron'];
@@ -737,6 +780,28 @@
   var SHELF = 196, SBRICK = 197, CARPET = 198, LANTERN = 199;
   B[SHELF] = ['책장', 'plankG', 'shelf', 'plankG']; B[SBRICK] = ['돌 벽돌', 'sbrick', 'sbrick', 'sbrick'];
   regShape(CARPET, '카펫', 'carpet', CARPET, WOOL_R); regShape(LANTERN, '등롱', 'lantern', LANTERN, GOPHER); B[LANTERN][1] = B[LANTERN][2] = B[LANTERN][3] = 'lantern'; B[LANTERN][5] = 1;
+  // ── 「본향을 향하여」 이야기(2026-11-18): 열두 보석 광석(200~210), 보석(300~310), 기초석 블록(230~241),
+  //    등잔대(211 꺼짐·212 켜짐), 진주 문(213), 기초석 자리(214), 정금 길(215), 성곽(216), 생명나무 잎(217) ──
+  // [이름, 진한 색, 밝은 색, 나오는 곳(T.reg 또는 'any'), y 아래, y 위, 드물기, 곡괭이 단계]
+  var GEMS = [
+    ['벽옥', 0xa04030, 0xd06a50, 'west', 20, 60, 0.00012, 2], ['남보석', 0x2a4ab0, 0x6a8ae0, 'sea', 1, 14, 0.0002, 3],
+    ['옥수', 0xc8c0b0, 0xe8eef8, 'lake', 1, 12, 0.00025, 2], ['녹보석', 0x1f8a4a, 0x60d090, 'east', 1, 12, 0.00012, 3],
+    ['홍마노', 0xb0402e, 0xf0e0d0, 'desert', 1, 16, 0.00008, 2], ['홍보석', 0xc8102e, 0xff6a7a, 'desert', 1, 7, 0.0001, 4],
+    ['황옥', 0xb8c030, 0xf0f080, 'oasis', 1, 14, 0.0006, 3], ['녹옥', 0x309a8a, 0x90e0d0, 'sea', 1, 8, 0.00015, 4],
+    ['담황옥', 0xe0a840, 0xffe0a0, 'ararat', 55, 79, 0.00012, 3], ['비취옥', 0x70b030, 0xb8e888, 'ararat', 1, 10, 0.0001, 4],
+    null /* 열한째 청옥은 원래 있는 청옥 */, ['자수정', 0x7a38a8, 0xc898f0, 'south', 1, 20, 0.00015, 3]
+  ];
+  var GEM_ORE0 = 200, GEM_ITEM0 = 300, FSTONE0 = 230, LAMPSTAND = 211, PEARL = 213, SOCKET = 214, GOLDST = 215, CITYWALL = 216, LIFELEAF = 217;
+  var FS_NAMES = ['벽옥', '남보석', '옥수', '녹보석', '홍마노', '홍보석', '황옥', '녹옥', '담황옥', '비취옥', '청옥', '자수정'];
+  function gemOre(i) { return i < 10 ? GEM_ORE0 + i : (i === 11 ? GEM_ORE0 + 10 : ORE_SAPH); }      // 열두 번째 자수정은 210
+  function gemItem(i) { return i < 10 ? GEM_ITEM0 + i : (i === 11 ? GEM_ITEM0 + 10 : GEM_SAPH); }
+  GEMS.forEach(function (g, i) { if (!g) return; B[gemOre(i)] = [g[0] + ' 광석', 'gemOre' + i, 'gemOre' + i, 'gemOre' + i]; B[gemItem(i)] = [g[0], 'gem' + i, 'gem' + i, 'gem' + i, 0, 0, 'item']; });
+  FS_NAMES.forEach(function (n, i) { B[FSTONE0 + i] = [n + ' 기초석', 'fstone' + i, 'fstone' + i, 'fstone' + i]; });
+  regShape(LAMPSTAND, '등잔대', 'lampstand', LAMPSTAND, GOPHER); regShape(LAMPSTAND + 1, '켜진 등잔대', 'lampstand', LAMPSTAND, GOPHER, 0, true);
+  B[LAMPSTAND][1] = B[LAMPSTAND][2] = B[LAMPSTAND][3] = 'lampstand'; B[LAMPSTAND + 1][1] = B[LAMPSTAND + 1][2] = B[LAMPSTAND + 1][3] = 'lampstandLit'; B[LAMPSTAND + 1][5] = 1;
+  B[PEARL] = ['진주 문', 'pearl', 'pearl', 'pearl', 0, 1]; B[SOCKET] = ['기초석 자리', 'socket', 'sbrick', 'sbrick'];
+  B[GOLDST] = ['정금 길', 'goldst', 'goldst', 'goldst', 0, 1]; B[CITYWALL] = ['벽옥 성곽', 'citywall', 'citywall', 'citywall'];
+  B[LIFELEAF] = ['생명나무 잎', 'lifeleaf', 'lifeleaf', 'lifeleaf'];
   for (var bi = 0; bi < B.length; bi++) if (B[bi] === undefined) B[bi] = null;
   function isShape(id) { return !!SHAPE[id]; }
   function baseOf(id) { return SHAPE[id] ? SHAPE[id].base : id; }
@@ -750,6 +815,7 @@
     if (s.type === 'ladder') return [[[0, 0, 0, 1, 1, 0.1], [0.9, 0, 0, 1, 1, 1], [0, 0, 0.9, 1, 1, 1], [0, 0, 0, 0.1, 1, 1]][s.f]];
     if (s.type === 'bed') return [[0, 0, 0, 1, 0.56, 1]];
     if (s.type === 'carpet') return [[0, 0, 0, 1, 0.07, 1]];
+    if (s.type === 'lampstand') return [[0.25, 0, 0.25, 0.75, 0.15, 0.75], [0.44, 0.15, 0.44, 0.56, 0.85, 0.56], [0.3, 0.85, 0.3, 0.7, 1, 0.7]];
     if (s.type === 'lantern') return [[0.3, 0.15, 0.3, 0.7, 0.7, 0.7], [0.4, 0.7, 0.4, 0.6, 1, 0.6]];
     if (s.type === 'lever') return [[0.3, 0, 0.3, 0.7, 0.12, 0.7], s.open ? [0.45, 0.12, 0.6, 0.55, 0.62, 0.7] : [0.45, 0.12, 0.3, 0.55, 0.62, 0.4]];
     if (s.type === 'wtorch') return [[[0.43, 0.25, 0, 0.57, 0.85, 0.14], [0.86, 0.25, 0.43, 1, 0.85, 0.57], [0.43, 0.25, 0.86, 0.57, 0.85, 1], [0, 0.25, 0.43, 0.14, 0.85, 0.57]][s.f]];
@@ -771,13 +837,15 @@
     });
     return bx;
   }
-  function collBoxes(id, x, y, z) { var s = SHAPE[id]; if (s.type === 'ladder' || s.type === 'wtorch' || s.type === 'lever' || s.type === 'sign' || s.type === 'lantern' || s.type === 'carpet') return []; if (s.type === 'fence') return [[0.3, 0, 0.3, 0.7, 1, 0.7]].concat(shapeBoxes(id, x, y, z).slice(1).map(function (b) { return [b[0], 0, b[2], b[3], 1, b[5]]; })); return shapeBoxes(id, x, y, z); }
+  function collBoxes(id, x, y, z) { var s = SHAPE[id]; if (s.type === 'ladder' || s.type === 'wtorch' || s.type === 'lever' || s.type === 'sign' || s.type === 'lantern' || s.type === 'carpet' || s.type === 'lampstand') return []; if (s.type === 'fence') return [[0.3, 0, 0.3, 0.7, 1, 0.7]].concat(shapeBoxes(id, x, y, z).slice(1).map(function (b) { return [b[0], 0, b[2], b[3], 1, b[5]]; })); return shapeBoxes(id, x, y, z); }
   // 가방에 들어가는 것(캐거나 만들어서 모음)
   var INV = [7, 5, 6, 8, 3, 21, 23, 4, 2, 26, 27, 25, 28, 29, 11, 12, 13, 20, 22, 9, 10, 18, 14, 15, 16, 17, SLAB_G, SLAB_S, SLAB_B, STAIR_G, STAIR_S, STAIR_B, FENCE, DOOR,
     ORE_CU, ORE_FE, ORE_AG, ORE_AU, ING_CU, ING_FE, ING_AG, ING_AU, FURNACE, BLK_CU, BLK_FE, BLK_AG, BLK_AU, STICK];
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
   INV.push(SEED, WHEAT, BREAD, FIG, BED, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
+  GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
+  for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
   INV.push(ORE_COAL, COAL, CHAR, BLK_COAL, TORCH, DEEP, ORE_ONYX, GEM_ONYX, BLK_ONYX, ORE_SAPH, GEM_SAPH, BLK_SAPH, ORE_DIA, GEM_DIA, BLK_DIA);
   for (var tl = 0; tl < 16; tl++) INV.push(TOOL0 + tl);
   for (tl = 0; tl < 4; tl++) INV.push(TOOL4 + tl);
@@ -802,6 +870,8 @@
   setClass('pick', [FURNACE_ON], 1.6); setClass('axe', [LADDER, LADDER + 1, LADDER + 2, LADDER + 3], 0.4); setClass('axe', [CHEST, CRAFT], 1.2);
   setClass('axe', [BED, SIGN, SIGN + 1, SIGN + 2, SIGN + 3], 0.5); setClass('pick', [LEVER, LEVER + 1], 0.3); setClass('pick', [PANE], 0.25);
   setClass('knife', [WOOL_W, WOOL_B, WOOL_V, WOOL_R], 0.5); setClass('axe', [LOG_X, LOG_Z], 1.4);
+  GEMS.forEach(function (g, i) { if (!g) return; setClass('pick', [gemOre(i)], 5.2 + g[7] * 0.3); DROP[gemOre(i)] = gemItem(i); });
+  for (var fsj = 0; fsj < 12; fsj++) setClass('pick', [FSTONE0 + fsj], 3.0);
   setClass('axe', [SHELF], 1.0); setClass('pick', [SBRICK], 1.6); setClass('knife', [CARPET], 0.1); setClass('pick', [LANTERN], 0.4);
   setClass('pick', [SLAB_L, STAIR_L, STAIR_L + 1, STAIR_L + 2, STAIR_L + 3], 1.2); setClass('axe', [SLAB_P, STAIR_P, STAIR_P + 1, STAIR_P + 2, STAIR_P + 3], 1.0);
   for (var cb = 0; cb < 4; cb++) { BASE_T[CROP0 + cb] = 0.05; BASE_T[WTORCH + cb] = 0.05; }
@@ -813,6 +883,7 @@
   setClass('shovel', [GRASS, DIRT, 19], 0.7); setClass('shovel', [SAND], 0.6); setClass('shovel', [CLAY, TAR], 0.9); setClass('shovel', [18], 0.9); setClass('shovel', [SNOW], 0.4);
   setClass('knife', [LEAF], 0.35); setClass('knife', [REED, FLOWER], 0.08); setClass('knife', [14, 15, 16, 17], 0.6);
   var NEED_TIER = {}; NEED_TIER[ORE_CU] = 0; NEED_TIER[ORE_FE] = 1; NEED_TIER[ORE_AG] = 2; NEED_TIER[ORE_AU] = 3;   // 0=나무 1=돌 2=구리 3=철 곡괭이
+  GEMS.forEach(function (g, i) { if (g) NEED_TIER[gemOre(i)] = g[7]; });   // 열두 보석: 귀한 것은 금강석 곡괭이(4)
   NEED_TIER[ORE_COAL] = 0; NEED_TIER[ORE_ONYX] = 2; NEED_TIER[ORE_SAPH] = 3; NEED_TIER[ORE_DIA] = 3;
   for (var dk3 in DEEPV) NEED_TIER[DEEPV[dk3]] = NEED_TIER[dk3];
   var HAND_SLOW = 2, MINE_SLOW = 1.8, TIER_SPEED = [2, 3, 4.5, 6, 8], TOOL_MAX = [60, 130, 200, 300, 1000];
@@ -887,6 +958,8 @@
   RECIPES.push({ out: [SADDLE, 1], need: [[GOPHER, 3], [ING_FE, 1]], cat: 'tool', ref: '창 22:3' });
   // 농사·침대·레버·유리판·표지판·양털 블록·반 블록과 계단(2026-11-18)
   RECIPES.push({ out: [BREAD, 1], need: [[WHEAT, 3]], cat: 'block', ref: '마 4:4' });
+  // 열두 기초석: 보석 3 + 금 덩이 1, 제작대에서(계 21:19-20)
+  FS_NAMES.forEach(function (n, i) { RECIPES.push({ out: [FSTONE0 + i, 1], need: [[gemItem(i), 3], [ING_AU, 1]], cat: 'block', table: true, ref: i < 4 ? '계 21:19' : '계 21:20' }); });
   RECIPES.push({ out: [SHELF, 1], need: [[GOPHER, 6], [REED, 3]], cat: 'block' });
   RECIPES.push({ out: [SBRICK, 4], need: [[STONE, 4]], cat: 'block' });
   RECIPES.push({ out: [CARPET, 3], need: [[WOOL_R, 2]], cat: 'shape' });
@@ -1097,6 +1170,74 @@
   var TARPITS = [];
   for (var tp0 = 0; tp0 < 9; tp0++) TARPITS.push([TARR[0] + 2 + Math.floor(rnd(tp0 * 7.7 + 3) * (TARR[2] - TARR[0] - 6)), TARR[1] + 2 + Math.floor(rnd(tp0 * 9.1 + 4) * (TARR[3] - TARR[1] - 6)), 3 + Math.floor(rnd(tp0 * 2.2) * 3)]);
 
+  // ── 3부: 사망의 음침한 골짜기(시 23:4) — 동쪽 사막 땅속 14×14칸 미로, 깨지지 않는 깊은 돌, 일곱 등잔대 ──
+  var DUN = { x0: DES_X + 60, z0: PZ0 + 100, n: 14, cs: 6, yf: 3, yc: 10 };
+  var DUN_LAMPS = [[13, 0], [0, 0], [13, 13], [7, 7], [3, 10], [10, 3], [6, 12]];
+  function inDungeon(x, y, z) { return x >= DUN.x0 && x < DUN.x0 + DUN.n * DUN.cs && z >= DUN.z0 && z < DUN.z0 + DUN.n * DUN.cs && y <= DUN.yc + 1; }
+  function dunOpen(i, j, dir) {   // 칸 (i,j)에서 동쪽(1)·북쪽(0)으로 길이 열렸나(정해진 무늬 + 가끔 고리)
+    var n = DUN.n;
+    if (dir === 1 && i >= n - 1) return false; if (dir === 0 && j <= 0) return false;
+    var pick = (i >= n - 1) ? 0 : (j <= 0 ? 1 : (hash2(i * 31 + 7, j * 17 + 3, 61) < 0.5 ? 0 : 1));
+    return pick === dir || hash2(i * 13 + dir * 101, j * 29 + 5, 62) < 0.12;
+  }
+  function buildDungeon() {
+    var D = DUN, cs = D.cs, X1 = D.x0 + D.n * cs - 1, Z1 = D.z0 + D.n * cs - 1;
+    fill(D.x0, 1, D.z0, X1, D.yc, Z1, DEEP);
+    for (var j = 0; j < D.n; j++) for (var i = 0; i < D.n; i++) {
+      var cx0 = D.x0 + i * cs, cz0 = D.z0 + j * cs;
+      fill(cx0 + 1, D.yf + 1, cz0 + 1, cx0 + 4, D.yf + 5, cz0 + 4, AIR);
+      if (dunOpen(i, j, 1)) fill(cx0 + 5, D.yf + 1, cz0 + 1, cx0 + 6, D.yf + 5, cz0 + 4, AIR);
+      if (dunOpen(i, j, 0)) fill(cx0 + 1, D.yf + 1, cz0 - 1, cx0 + 4, D.yf + 5, cz0, AIR);
+    }
+    DUN_LAMPS.forEach(function (c, k) { var lx = D.x0 + c[0] * cs + 2, lz = D.z0 + c[1] * cs + 2; fill(lx, D.yf + 1, lz, lx, D.yf + 1, lz, STORY.lamps[k] ? LAMPSTAND + 1 : LAMPSTAND); });
+    // 들어가는 곳: 남서쪽 칸(0, n-1)에서 땅 위까지 세로 굴과 사닥다리, 돌 벽돌 입구
+    var ex = D.x0 + 2, ez = D.z0 + (D.n - 1) * cs + 2; terrain(ex, ez); var top = T.h;
+    fill(ex, D.yf + 1, ez, ex + 1, top + 4, ez + 1, AIR);
+    for (var y = D.yf + 1; y <= top + 1; y++) fill(ex, y, ez, ex, y, ez, LADDER + 3);
+    fill(ex - 1, D.yf + 1, ez - 1, ex - 1, top + 3, ez + 2, SBRICK); fill(ex + 2, top - 1, ez - 1, ex + 2, top + 3, ez + 2, SBRICK);
+    fill(ex - 1, top + 4, ez - 1, ex + 2, top + 4, ez + 2, SBRICK); fill(ex, top + 4, ez, ex + 1, top + 4, ez + 1, AIR);
+    fill(ex - 1, top + 3, ez - 1, ex - 1, top + 3, ez - 1, LAMP); fill(ex + 2, top + 3, ez + 2, ex + 2, top + 3, ez + 2, LAMP);
+  }
+  // ── 4부: 거룩한 성(계 21) — 동쪽 끝, 벽옥 성곽, 열두 진주 문, 서쪽 성벽 밑 기초석 자리 열둘, 정금 길, 생명수 강과 생명나무 ──
+  var CITY = { x0: 1888, z0: 946, x1: 1998, z1: 1056 };
+  function inCity(x, z) { return x >= CITY.x0 - 3 && x <= CITY.x1 + 3 && z >= CITY.z0 - 3 && z <= CITY.z1 + 3; }
+  function cityInside(x, z) { return x > CITY.x0 + 1 && x < CITY.x1 - 1 && z > CITY.z0 + 1 && z < CITY.z1 - 1; }
+  function cityGates() {   // 열두 문: 각 변에 셋(가운데 x/z 위치, 변)
+    var g = [], C = CITY, w = C.x1 - C.x0;
+    [0.25, 0.5, 0.75].forEach(function (f) { var m = Math.round(C.x0 + w * f); g.push(['n', m]); g.push(['s', m]); var mz = Math.round(C.z0 + (C.z1 - C.z0) * f); g.push(['w', mz]); g.push(['e', mz]); });
+    return g;
+  }
+  function socketPos(i) { var C = CITY, zc = Math.round((C.z0 + C.z1) / 2); return [C.x0 - 3, G, zc - 11 + i * 2]; }
+  function buildCity() {
+    var C = CITY, xm = Math.round((C.x0 + C.x1) / 2), zm = Math.round((C.z0 + C.z1) / 2);
+    fill(C.x0 - 4, G, C.z0 - 4, C.x1 + 4, SY - 1, C.z1 + 4, AIR);
+    fill(C.x0 - 4, G - 14, C.z0 - 4, C.x1 + 4, G - 2, C.z1 + 4, STONE);
+    fill(C.x0 - 4, G - 1, C.z0 - 4, C.x1 + 4, G - 1, C.z1 + 4, 18);
+    fill(C.x0 + 2, G - 1, C.z0 + 2, C.x1 - 2, G - 1, C.z1 - 2, GOLDST);
+    // 성곽(두께 2, 높이 20)과 성가퀴
+    fill(C.x0, G - 1, C.z0, C.x1, G + 19, C.z0 + 1, CITYWALL); fill(C.x0, G - 1, C.z1 - 1, C.x1, G + 19, C.z1, CITYWALL);
+    fill(C.x0, G - 1, C.z0, C.x0 + 1, G + 19, C.z1, CITYWALL); fill(C.x1 - 1, G - 1, C.z0, C.x1, G + 19, C.z1, CITYWALL);
+    for (var k = C.x0; k <= C.x1; k += 2) { fill(k, G + 20, C.z0, k, G + 20, C.z0, CITYWALL); fill(k, G + 20, C.z1, k, G + 20, C.z1, CITYWALL); }
+    for (k = C.z0; k <= C.z1; k += 2) { fill(C.x0, G + 20, k, C.x0, G + 20, k, CITYWALL); fill(C.x1, G + 20, k, C.x1, G + 20, k, CITYWALL); }
+    // 열두 진주 문(이야기를 다 마치면 열림)
+    var open = STORY.done;
+    cityGates().forEach(function (g) {
+      var id = open ? AIR : PEARL, m = g[1];
+      if (g[0] === 'n') fill(m - 2, G, C.z0, m + 2, G + 6, C.z0 + 1, id);
+      if (g[0] === 's') fill(m - 2, G, C.z1 - 1, m + 2, G + 6, C.z1, id);
+      if (g[0] === 'w') fill(C.x0, G, m - 2, C.x0 + 1, G + 6, m + 2, id);
+      if (g[0] === 'e') fill(C.x1 - 1, G, m - 2, C.x1, G + 6, m + 2, id);
+    });
+    // 기초석 자리 열둘(서쪽 성벽 밖)
+    for (var i = 0; i < 12; i++) { var s = socketPos(i); fill(s[0], s[1], s[2], s[0], s[1], s[2], STORY.sockets[i] ? FSTONE0 + i : SOCKET); }
+    // 생명수 강(가운데 남북으로)과 강 좌우 생명나무, 가운데 다리
+    fill(xm - 1, G - 4, C.z0 + 2, xm + 1, G - 4, C.z1 - 2, GOLDST); fill(xm - 1, G - 3, C.z0 + 2, xm + 1, G - 1, C.z1 - 2, WATER);
+    fill(xm - 1, G - 1, zm - 1, xm + 1, G - 1, zm + 1, GOLDST);
+    for (var tz = C.z0 + 6; tz <= C.z1 - 6; tz += 8) [xm - 4, xm + 4].forEach(function (tx) {
+      fill(tx, G, tz, tx, G + 5, tz, LOG);
+      for (var ly = G + 4; ly <= G + 7; ly++) { var r = ly >= G + 7 ? 1 : 2; for (var dz = -r; dz <= r; dz++) for (var dx = -r; dx <= r; dx++) { if (r === 2 && Math.abs(dx) === 2 && Math.abs(dz) === 2) continue; if (dx === 0 && dz === 0 && ly <= G + 5) continue; fill(tx + dx, ly, tz + dz, tx + dx, ly, tz + dz, LIFELEAF); } }
+    });
+  }
   function genColumn(cx, cz) {
     var col = { d: new Uint8Array(CS * SY * CS), sky: new Int16Array(CS * CS), lamps: [], mod: false };
     genCol = col; genCX = cx; genCZ = cz;
@@ -1125,6 +1266,11 @@
           }
           // 석탄: 큰 덩이(3칸씩)로 흔하게, 산 속 높은 곳까지
           if (id === STONE && y <= 72) { var cc = hash2(Math.floor(x / 3) * 13 + Math.floor(y / 3) * 71, Math.floor(z / 3) * 17 - Math.floor(y / 3) * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.75) id = ORE_COAL; }
+          // 열두 보석 광석: 곳마다·깊이마다 다르고 아주 드묾(계 21:19-20)
+          if (id === STONE) {
+            var gv = hash2(x * 7 + y * 131, z * 11 - y * 17, 41), gb = 0.3;
+            for (var gi = 0; gi < 12; gi++) { var gg = GEMS[gi]; if (gg && gg[3] === T.reg && y >= gg[4] && y <= gg[5] && gv >= gb && gv < gb + gg[6]) { id = gemOre(gi); break; } gb += 0.002; }
+          }
           // 맨 아래 몇 칸은 깊은 돌(더 단단함)
           if (y <= 4 + Math.floor(hash2(x >> 2, z >> 2, 17) * 3)) { if (id === STONE) id = DEEP; else if (DEEPV[id]) id = DEEPV[id]; }
         }
@@ -1164,6 +1310,9 @@
       fill(COMMONS[0] - 1, G - 1, COMMONS[1] - 1, COMMONS[0] - 1, G - 1, COMMONS[3] + 1, 18); fill(COMMONS[2] + 1, G - 1, COMMONS[1] - 1, COMMONS[2] + 1, G - 1, COMMONS[3] + 1, 18);
       [[COMMONS[0] - 1, COMMONS[1] - 1], [COMMONS[2] + 1, COMMONS[1] - 1], [COMMONS[0] - 1, COMMONS[3] + 1], [COMMONS[2] + 1, COMMONS[3] + 1]].forEach(function (c) { fill(c[0], G, c[1], c[0], G, c[1], LAMP); });
     }
+    // 이야기 3부·4부: 사막 땅속 「사망의 음침한 골짜기」 미로, 동쪽 끝 「거룩한 성」
+    if (x0 + CS > DUN.x0 && x0 < DUN.x0 + DUN.n * DUN.cs && z0 + CS > DUN.z0 && z0 < DUN.z0 + DUN.n * DUN.cs) buildDungeon();
+    if (x0 + CS > CITY.x0 - 4 && x0 < CITY.x1 + 4 && z0 + CS > CITY.z0 - 4 && z0 < CITY.z1 + 4) buildCity();
     // 마을·방주(그 기둥에 걸친 부분만)
     if (x0 + CS > TOWN[0][0] - 6 && x0 < TOWN[1][2] + 6 && z0 + CS > TOWN[0][1] - 6 && z0 < LZ - LRZ) buildTown();
     if (x0 + CS > TARR[0] && x0 < TARR[2] + 6 && z0 + CS > TARR[1] && z0 < TARR[3] + 6)
@@ -1401,7 +1550,7 @@
           }
           if (def[6] === 'shape') {
             // 문·계단·반 블록·울타리: 작은 상자들
-            var sb = shapeBoxes(id, x, y, z), sh0 = SHAPE[id].type === 'wtorch' || SHAPE[id].type === 'lantern' ? 1 : skyLight(x, y + 1, z), bk = SHAPE[id].type === 'ladder' ? 2 : (SHAPE[id].type === 'pane' ? 1 : 0);
+            var sb = shapeBoxes(id, x, y, z), sh0 = SHAPE[id].type === 'wtorch' || SHAPE[id].type === 'lantern' || id === LAMPSTAND + 1 ? 1 : skyLight(x, y + 1, z), bk = SHAPE[id].type === 'ladder' ? 2 : (SHAPE[id].type === 'pane' ? 1 : 0);
             for (var bi3 = 0; bi3 < sb.length; bi3++) {
               var bb = sb[bi3];
               for (var f2 = 0; f2 < 6; f2++) {
@@ -2004,11 +2153,15 @@
   var isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   var lockOn = false, canvasEl;
   function showUI(name) {
-    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
+    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
     document.body.classList.toggle('playing', name === 'play');
     document.body.classList.toggle('menu', name !== 'play');
     ui = name;
-    if (name !== 'play') resetInput();
+    if (name !== 'play') {
+      resetInput();
+      // 어떤 창이든 열리면 마우스 잠금을 풀어 커서가 화면에 갇히지 않게
+      try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {}
+    }
   }
   function openPanel(name) { bagPick = null; uiBack = ui === 'play' ? 'play' : ui; showUI(name); if (name === 'inv') renderInv(); if (lockOn) document.exitPointerLock(); }
   function closePanel() { if (uiBack === 'play') resume(); else showUI(uiBack); }
@@ -2256,6 +2409,8 @@
   var client = null, me = null, myPlot = -1, plotOwners = {}, plotUser = {}, saveTimer = null, dirty = false, started = false;
   function canMine(x, y, z) {
     if (inArk(x, y, z)) return '방주는 3단계에서 다 함께 지어요. 지금은 구경해요!';
+    if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
+    if (inDungeon(x, y, z) && get(x, y, z) !== TORCH && !(get(x, y, z) >= 170 && get(x, y, z) < 174) && get(x, y, z) !== LADDER + 3) return '골짜기의 벽은 깨지지 않아요 — 길을 찾아 지나가요(시 23:4)';
     if (y <= 0) return '맨 아래 바닥은 캘 수 없어요';
     var p = plotAt(x, z);
     if (p >= 0) {
@@ -2268,6 +2423,8 @@
   }
   function canPlace(x, y, z, id) {
     if (inArk(x, y, z)) return '방주는 3단계에서 다 함께 지어요. 지금은 구경해요!';
+    if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
+    if (inDungeon(x, y, z) && id !== TORCH) return '골짜기에는 횃불만 놓을 수 있어요';
     var p = plotAt(x, z);
     // 땅 밖(숲·산·호수 같은 자연)에서도 블록을 놓을 수 있다 — 마을 마당·다른 사람 땅·방주만 빼고
     if (p < 0) return inTown(x, z) && y >= G - 4 ? '마을 마당에는 놓을 수 없어요' : '';
@@ -2318,6 +2475,9 @@
       if (tgt === CHEST) return openChest(h.x, h.y, h.z);
       if (tgt === CRAFT) { craftCat = 'wear'; invTab = 'craft'; openPanel('inv'); sfx('click'); return; }
       if (tgt === BED) return useBed(h.x, h.y, h.z);
+      if (tgt === LAMPSTAND || tgt === LAMPSTAND + 1) return useLampstand(h.x, h.y, h.z);
+      if (tgt === SOCKET) return useSocket(h.x, h.y, h.z);
+      if (tgt === PEARL) return toast(STORY.done ? '문이 열려 있어요' : '진주 문은 닫혀 있어요 — 📜 나그네의 길을 끝까지 걸어야 열려요(계 21:21)');
       if (tgt === LEVER || tgt === LEVER + 1) return useLever(h.x, h.y, h.z);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'sign' && plotAt(h.x, h.z) === myPlot && myPlot >= 0) return openSignPick(h.x, h.y, h.z);
       var item = HOTBAR[sel];
@@ -2849,6 +3009,7 @@
           if (rc.fuel) queueSmelt(rc.out[0], rc.out[1]); else give(rc.out[0], rc.out[1]);
           made++;
           if (rc.out[0] === GOPHER) { stats.crafted++; questCheck(); }
+          if (rc.out[0] === PITCH && STORY.started) { STORY.s.pitch += rc.out[1]; saveStory(); }
         }
         sfx('craft'); $('invName').textContent = rc.fuel ? '용광로에 넣었어요 — ' + B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개가 하나에 ' + SMELT_SEC + '초씩 녹아요' : B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개를 만들었어요';
         bagChanged();
@@ -3048,6 +3209,8 @@
     ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);
+    on('mStory', openStory); on('storyDone', function () { closePanel(); }); on('storyStart', function () { closePanel(); startStory(); });
+    on('endingDone', function () { closePanel(); toast('🏙 본향에 이르렀어요 — 성 안을 거닐어 보세요'); });
     on('mAutoJump', function () { S.autoJump = S.autoJump === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('go_visit', openVisit); on('mVisit', openVisit);
     on('visitDone', function () { closePanel(); });
@@ -3408,7 +3571,23 @@
   }
   function renderQuest() {
     var el = $('quest'); if (!el) return;
-    if (qStep >= QUEST.length) { el.style.display = 'none'; return; }
+    if (qStep >= QUEST.length) {   // 첫 집을 다 지으면: 「본향을 향하여」 지금 할 일
+      if (STORY.ended) { el.style.display = 'none'; return; }
+      el.style.display = ''; var b2 = $('qBtn'); b2.style.display = '';
+      if (!STORY.started) {
+        $('qHead').textContent = '📜 ' + PART_NAMES[0]; $('qText').textContent = '🧭 마을 입구의 「안내하는 나그네」에게 말을 걸어요';
+        b2.textContent = '가기'; b2.onclick = function (e) { e.stopPropagation(); teleport(XM - 6.5, G, PZ0 - 3, 0); resume(); };
+        return;
+      }
+      var part = partOf(), txt = '';
+      if (part === 1) { var t = TOKENS.filter(function (t2) { return !has(t2[0]); })[0], q = t && tokenTasks(t).filter(function (q2) { return q2[1] < q2[2]; })[0]; txt = t ? t[2] + ' ' + t[1] + ': ' + (q ? q[0] + ' ' + Math.min(q[1], q[2]) + '/' + q[2] : '') : ''; }
+      else if (part === 2) txt = '💎 기초석 ' + FS_NAMES.filter(function (n, i) { return have(FSTONE0 + i) > 0 || STORY.sockets[i]; }).length + '/12 — 땅속 깊이 열두 보석을 캐요';
+      else if (part === 3) txt = '🕯 골짜기 등잔대 ' + STORY.lamps.filter(Boolean).length + '/7 — 동쪽 사막 땅속 미로';
+      else txt = '🚪 기초석 자리 ' + STORY.sockets.filter(Boolean).length + '/12 — 동쪽 끝 거룩한 성';
+      $('qHead').textContent = '📜 ' + PART_NAMES[part]; $('qText').textContent = txt;
+      b2.textContent = '자세히'; b2.onclick = function (e) { e.stopPropagation(); sfx('click'); openStory(); };
+      return;
+    }
     var q = QUEST[qStep], guest = q.guest && !me;
     el.style.display = '';
     $('qHead').textContent = '할 일 ' + (qStep + 1) + '/' + QUEST.length;
@@ -3457,6 +3636,8 @@
     var p = (dayT % DAY_LEN) / DAY_LEN, ang = p < 0.62 ? p / 0.62 * Math.PI : Math.PI + (p - 0.62) / 0.38 * Math.PI;
     var elev = Math.sin(ang), dayF = clamp01((elev + 0.12) / 0.34); dayF = dayF * dayF * (3 - 2 * dayF);
     var dusk = elev > -0.2 ? clamp01(1 - Math.abs(elev) / 0.28) : 0;
+    // 거룩한 성 안: 다시 밤이 없음(계 22:5)
+    if (started && STORY.done && cityInside(Math.floor(P.x), Math.floor(P.z))) { dayF = 1; dusk = 0; }
     // 비: 가끔 1~2분
     rainTimer -= dt;
     if (rainTimer <= 0) { if (rainOn) { rainOn = false; rainTimer = 150 + Math.random() * 200; } else if (Math.random() < 0.35) { rainOn = true; rainTimer = 60 + Math.random() * 70; } else rainTimer = 90; }
@@ -3808,7 +3989,7 @@
           updateCrack(); updateRing();
           hl.visible = !!h; if (h) hl.position.set(h.x + 0.5, h.y + 0.5, h.z + 0.5);
         }
-        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); spawnZoneSigns(); } }
+        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);
           if (ui === 'play' || ui === 'map') {
@@ -3856,7 +4037,7 @@
     P.sneak = !P.fly && !riding && !P.swim && (keys.ShiftLeft || keys.ShiftRight || sneakLock);
     P.sprint = !P.swim && !P.sneak && (keys.ControlLeft || keys.KeyR || runLock) && mz < -0.3 && (FOOD > 6 || !vitalsOn());
     if (!P.sprint && (keys.ControlLeft || runLock) && mz < -0.3 && FOOD <= 6 && vitalsOn() && !sprintTold) { sprintTold = true; toast('기운이 없어서 달릴 수 없어요 — 떡이나 무화과를 먹어요'); }
-    var sp = (P.fly ? 20 : (P.swim ? 5 : (riding ? riding.sp.ride : 8.5))) * (P.sprint && !riding ? 1.5 : 1) * (P.sneak ? 0.35 : 1);
+    var sp = (P.fly ? 20 : (P.swim ? (has('moses') ? 8 : 5) : (riding ? riding.sp.ride : 8.5 * (has('enoch') ? 1.1 : 1)))) * (P.sprint && !riding ? 1.5 : 1) * (P.sneak ? 0.35 : 1);
     document.body.classList.toggle('sneaking', !!P.sneak);
     var sin = Math.sin(P.yaw), cos = Math.cos(P.yaw);
     var wx = (mx * cos + mz * sin) * sp, wz = (-mx * sin + mz * cos) * sp;
@@ -3870,7 +4051,7 @@
       if (jumpHeld || keys.Space) P.vy = 6;
     } else if (P.ladder) {
       // 사닥다리: 앞으로 밀거나 점프하면 오르고, 가만히 있으면 천천히 내려간다(창 28:12)
-      if (jumpHeld || keys.Space || mz < -0.2) P.vy = 5.5;
+      if (jumpHeld || keys.Space || mz < -0.2) P.vy = has('jacob') ? 11 : 5.5;
       else if (flyDown || keys.ShiftLeft) P.vy = 0;
       else { P.vy -= 50 * dt; if (P.vy < -3.5) P.vy = -3.5; }
     } else {
@@ -3893,6 +4074,7 @@
     else if (!P.ground) { if (fallTop === null || P.y > fallTop) fallTop = P.y; }
     else if (fallTop !== null) { var fd = fallTop - P.y; fallTop = null; if (fd > 8) hurt(Math.floor((fd - 8) / 2) + 1, '높은 곳에서 떨어졌어요'); }
     if (P.ground && !riding) exhaust(moved * (P.sprint ? 0.03 : 0.004));
+    storyStep(dt, moved);
     if (P.ground) { P.walk += moved * 0.55; P.stepAcc += moved; if (P.stepAcc > 2.6) { P.stepAcc = 0; sfx('step', matSound(get(Math.floor(P.x), Math.floor(P.y - 0.1), Math.floor(P.z)))); } }
     else P.walk += moved * 0.2;
     P.camY += (0 - P.camY) * Math.min(1, 12 * dt);
@@ -3950,7 +4132,7 @@
   var HP = 20, FOOD = 20, AIRV = 10, EXH = 0, regenT = 0, starveT = 0, drownT = 0, fallTop = null, SPAWN = null, vitT = 0;
   var FOODS = {}; FOODS[BREAD] = 6; FOODS[FIG] = 3;
   function vitalsOn() { return started && !isAdm(); }
-  function exhaust(v) { if (!vitalsOn()) return; EXH += v; while (EXH >= 4) { EXH -= 4; if (FOOD > 0) { FOOD--; renderVitals(); stateDirty(); } } }
+  function exhaust(v) { if (!vitalsOn()) return; EXH += v * (has('abraham') ? 0.7 : 1); while (EXH >= 4) { EXH -= 4; if (FOOD > 0) { FOOD--; renderVitals(); stateDirty(); } } }
   function hurt(n, why) {
     if (!vitalsOn() || n <= 0) return;
     HP = Math.max(0, HP - n); renderVitals(); stateDirty();
@@ -3974,8 +4156,9 @@
     var headWater = get(Math.floor(P.x), Math.floor(P.y + EYE + P.camY), Math.floor(P.z)) === WATER;
     if (headWater) { AIRV -= dt; if (AIRV <= 0) { AIRV = 0; drownT -= dt; if (drownT <= 0) { drownT = 1; hurt(2, '물속에서 숨이 막혔어요'); } } }
     else AIRV = Math.min(10, AIRV + dt * 4);
+    if (headWater && has('noah')) AIRV += dt * 0.5;   // 노아의 증표: 숨을 두 배 오래
     regenT += dt;
-    if (FOOD >= 16 && HP < 20 && regenT > 4) { regenT = 0; HP++; exhaust(1.2); renderVitals(); }
+    if (FOOD >= 16 && HP < 20 && regenT > (has('abel') ? 2 : 4)) { regenT = 0; HP++; exhaust(1.2); renderVitals(); }
     if (FOOD === 0) { starveT += dt; if (starveT > 8) { starveT = 0; if (HP > 2) hurt(1, '배가 고파요'); } } else starveT = 0;
     vitT -= dt; if (vitT <= 0) { vitT = 0.25; renderVitals(headWater || AIRV < 10); }
   }
@@ -4073,6 +4256,8 @@
   function isNight() { var p = (dayT % DAY_LEN) / DAY_LEN; return p > 0.6 && p < 0.97; }
   function useBed(x, y, z) {
     SPAWN = { x: x, y: y + 1, z: z }; stateDirty();
+    var bday = Math.floor(dayT / DAY_LEN);
+    if (isNight() && STORY.started && !inTown(x, z) && plotAt(x, z) < 0 && STORY.s.bedDay !== bday) { STORY.s.bedDay = bday; STORY.s.bedsOut++; saveStory(); toast('⛺ 마을 밖에서 장막을 치고 자요 (' + Math.min(7, STORY.s.bedsOut) + '/7, 히 11:9)'); }
     if (!isNight()) { toast('🛏 여기서 다시 일어나요. 밤이 되면 누워서 잘 수 있어요'); return; }
     document.body.classList.add('sleep');
     setTimeout(function () { dayT = Math.ceil(dayT / DAY_LEN) * DAY_LEN + DAY_LEN * 0.02; document.body.classList.remove('sleep'); toast('🌅 아침이에요 — 내가 평안히 눕고 자기도 하리니 나를 안전히 살게 하시는 이는 오직 여호와이시니이다 (시 4:8)'); unlock('sleep'); }, 1600);
@@ -4177,7 +4362,9 @@
     ['diamond', '💎', '금강석', '금강석을 캐요(렘 17:1)'], ['house', '🏠', '첫 집', '내 땅에 블록 30개를 놓아요'], ['harvest', '🌾', '거두는 기쁨', '익은 밀을 거둬요'],
     ['eat', '🍞', '일용할 양식', '먹을 것을 먹어요'], ['breed', '🐑', '목자', '새끼 동물이 태어나게 해요'], ['ride', '🐎', '말 타기', '말이나 나귀를 타요'],
     ['wear', '👕', '옷 입기', '만든 옷을 입어요'], ['armor', '🛡', '전신 갑주', '하나님의 전신 갑주를 다 입어요(엡 6:11)'], ['commons', '🏗', '함께 짓기', '함께 짓는 터에 블록을 놓아요'],
-    ['sleep', '🛏', '평안한 잠', '침대에서 자고 아침을 맞아요(시 4:8)'], ['shadow', '⚔', '말씀의 검', '어둠의 그림자를 물리쳐요(엡 6:17)'], ['chat', '💬', '첫 인사', '채팅으로 인사해요'], ['lever', '🔘', '레버', '레버로 문을 열어요'], ['dex', '📖', '도감 완성', '도감을 다 채워요']
+    ['sleep', '🛏', '평안한 잠', '침대에서 자고 아침을 맞아요(시 4:8)'], ['shadow', '⚔', '말씀의 검', '어둠의 그림자를 물리쳐요(엡 6:17)'], ['chat', '💬', '첫 인사', '채팅으로 인사해요'], ['lever', '🔘', '레버', '레버로 문을 열어요'],
+    ['tokens', '🎖', '믿음의 증표', '일곱 증표를 모두 받아요(히 11)'], ['stones', '💎', '열두 기초석', '기초석 열둘을 성벽 밑에 놓아요(계 21:19-20)'],
+    ['valley', '🕯', '골짜기의 빛', '일곱 등잔대를 모두 밝혀요(시 23:4)'], ['home', '🏙', '본향에 이르다', '거룩한 성에 들어가요(히 11:16)'], ['dex', '📖', '도감 완성', '도감을 다 채워요']
   ];
   var ACH = {};
   try { ACH = JSON.parse(localStorage.getItem('arkVillage.ach') || '{}') || {}; } catch (e) { ACH = {}; }
@@ -4208,7 +4395,8 @@
     NPCS.forEach(function (n) { var dx = P.x - n.x, dz = P.z - n.z; if (Math.hypot(dx, dz) < 12) n.av.rotation.y = Math.atan2(-dx, -dz) + Math.PI; });
   }
   function showNpc(n) {
-    var d = n.d; $('cardEmoji').textContent = d.emoji; $('cardName').textContent = d.name; $('cardText').textContent = d.text; $('cardRef').textContent = d.ref; $('cardNew').textContent = '';
+    var d = n.d;
+    if (d.name === '안내하는 나그네' && (!STORY.started || STORY.ended === false)) { if (!STORY.started) return startStory(); } $('cardEmoji').textContent = d.emoji; $('cardName').textContent = d.name; $('cardText').textContent = d.text; $('cardRef').textContent = d.ref; $('cardNew').textContent = '';
     $('card').classList.add('show'); sfx('pop'); clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, 10000);
   }
   // ── 어둠의 그림자(미움·거짓·교만): 밤 들판과 굴 속에 나옴. 마을·내 땅·함께 짓는 터·불빛 가까이엔 안 나옴.
@@ -4217,7 +4405,8 @@
   var SH_KINDS = {
     hate: { name: '미움', eye: 0xff3a3a, hp: 3, dmg: 2, speed: 4.2, h: 1 },
     lie: { name: '거짓', eye: 0xc060ff, hp: 2, dmg: 2, speed: 5.0, h: 0.95, blink: true },
-    pride: { name: '교만', eye: 0xffc840, hp: 5, dmg: 3, speed: 3.0, h: 1.25 }
+    pride: { name: '교만', eye: 0xffc840, hp: 5, dmg: 3, speed: 3.0, h: 1.25 },
+    great: { name: '큰 그림자', eye: 0xff8a2a, hp: 10, dmg: 4, speed: 4.6, h: 1.45 }   // 골짜기에만
   };
   function shadowsOn() { return S.shadows !== false; }
   function armorGuard() {   // 0~1: 줄여 주는 몫
@@ -4244,7 +4433,7 @@
     }
     return false;
   }
-  function safeZone(x, z) { return inTown(x, z) || inCommons(x, z) || plotAt(x, z) >= 0 || inArk(x, G + 2, z); }
+  function safeZone(x, z) { return inTown(x, z) || inCommons(x, z) || plotAt(x, z) >= 0 || inArk(x, G + 2, z) || inCity(x, z); }
   function removeShadow(s) {
     var materials = new Set();
     s.mesh.traverse(function (o) {
@@ -4263,13 +4452,20 @@
     // 나타나기
     shadowT -= dt;
     if (shadowT <= 0) {
-      shadowT = 4 + Math.random() * 5;
-      if (dark && ui === 'play' && SHADOWS.length < 4 && !safeZone(px, pz) && !riding) {
-        var ang = Math.random() * Math.PI * 2, d = 14 + Math.random() * 8, sx = P.x + Math.cos(ang) * d, sz = P.z + Math.sin(ang) * d;
-        var gy = cave ? null : groundAt(sx, sz, SY - 3);
-        if (cave) { for (var yy = Math.floor(P.y) + 3; yy > Math.floor(P.y) - 6; yy--) if (!isSolid(get(Math.floor(sx), yy, Math.floor(sz))) && !isSolid(get(Math.floor(sx), yy + 1, Math.floor(sz))) && isSolid(get(Math.floor(sx), yy - 1, Math.floor(sz)))) { gy = yy; break; } }
+      var inDun = inDungeon(px, Math.floor(P.y), pz);   // 골짜기: 더 자주, 더 많이, 큰 그림자도
+      shadowT = inDun ? 1.5 + Math.random() * 2 : 4 + Math.random() * 5;
+      if ((dark || inDun) && ui === 'play' && SHADOWS.length < (inDun ? 8 : 4) && !safeZone(px, pz) && !riding) {
+        var ang = Math.random() * Math.PI * 2, d = inDun ? 8 + Math.random() * 10 : 14 + Math.random() * 8, sx = P.x + Math.cos(ang) * d, sz = P.z + Math.sin(ang) * d;
+        if (inDun) {   // 미로: 가까운 칸(2~3칸 떨어진) 한가운데에서
+          var ci = Math.floor((P.x - DUN.x0) / DUN.cs) + (Math.random() < 0.5 ? -1 : 1) * (2 + (Math.random() * 2 | 0)), cj = Math.floor((P.z - DUN.z0) / DUN.cs) + ((Math.random() * 5 | 0) - 2);
+          ci = Math.max(0, Math.min(DUN.n - 1, ci)); cj = Math.max(0, Math.min(DUN.n - 1, cj));
+          sx = DUN.x0 + ci * DUN.cs + 2.5; sz = DUN.z0 + cj * DUN.cs + 2.5;
+        }
+        var gy = cave || inDun ? null : groundAt(sx, sz, SY - 3);
+        if (cave || inDun) { for (var yy = Math.floor(P.y) + 3; yy > Math.floor(P.y) - 6; yy--) if (!isSolid(get(Math.floor(sx), yy, Math.floor(sz))) && !isSolid(get(Math.floor(sx), yy + 1, Math.floor(sz))) && isSolid(get(Math.floor(sx), yy - 1, Math.floor(sz)))) { gy = yy; break; } }
         if (gy !== null && !safeZone(Math.floor(sx), Math.floor(sz)) && !litNear(Math.floor(sx), gy, Math.floor(sz), 7) && get(Math.floor(sx), gy, Math.floor(sz)) !== WATER) {
-          var keys2 = Object.keys(SH_KINDS), s = makeShadow(keys2[Math.random() * keys2.length | 0], sx, sz); s.y = gy; s.mesh.position.y = gy; SHADOWS.push(s);
+          var keys2 = Object.keys(SH_KINDS).filter(function (k) { return k !== 'great'; }), kk = inDun && Math.random() < 0.4 ? 'great' : keys2[Math.random() * keys2.length | 0];
+          var s = makeShadow(kk, sx, sz); s.y = gy; s.mesh.position.y = gy; SHADOWS.push(s);
           if (!shadowTold) { shadowTold = true; toast('어둠 속에 그림자가 있어요 — 횃불을 들거나, 칼·성령의 검으로 물리쳐요(엡 6:17). 마을과 불빛 곁은 안전해요'); }
         }
       }
@@ -4278,7 +4474,7 @@
     SHADOWS.forEach(function (s) {
       s.t += dt;
       var dx = P.x - s.x, dz = P.z - s.z, dist = Math.hypot(dx, dz) || 0.01;
-      var sun = !cave && !isNight() && skyLight(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z)) > 0.6;
+      var sun = !cave && !inDungeon(Math.floor(s.x), Math.floor(s.y), Math.floor(s.z)) && !isNight() && skyLight(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z)) > 0.6;
       if (s.dead || sun || dist > 44 || safeZone(Math.floor(s.x), Math.floor(s.z))) { s.fade += dt * 1.5; }
       else if (!s.dead) {
         var want = torch ? 6 : 1.2, mv = 0;
@@ -4308,6 +4504,7 @@
     var held = HOTBAR[sel], dmg = 1;
     if (held === SWORD && have(SWORD) > 0) dmg = 4;
     else if (isTool(held) && have(held) > 0 && TOOL_TYPES[typeOf(held)] === 'knife') dmg = 1.5 + tierOf(held) * 0.5;
+    if (has('jericho')) dmg += 1;
     s.hp -= dmg; swingT = 0.25; sfx('dig', 300);
     var dx = s.x - P.x, dz = s.z - P.z, d = Math.hypot(dx, dz) || 1; s.x += dx / d * 1.5; s.z += dz / d * 1.5;   // 밀려남
     if (isTool(held)) wearTool(held);
@@ -4315,6 +4512,7 @@
       s.dead = true; burst(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z), LAMP); sfx('craft', 1800);
       if (!ACH.shadow) { $('cardEmoji').textContent = '⚔'; $('cardName').textContent = '성령의 검'; $('cardText').textContent = '구원의 투구와 성령의 검 곧 하나님의 말씀을 가지라'; $('cardRef').textContent = '에베소서 6:17'; $('cardNew').textContent = '어둠의 그림자 「' + s.sp.name + '」을(를) 물리쳤어요'; $('card').classList.add('show'); clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, 9000); }
       unlock('shadow');
+      if (STORY.started) { STORY.s.shadows++; if (isNight()) STORY.s.night++; saveStory(); }
     }
     bagChanged();
   }
@@ -4341,7 +4539,7 @@
   function stateDirty() { stateDirtyF = true; }
   function stateGather() {
     var horses = []; try { horses = JSON.parse(localStorage.getItem('arkVillage.horses') || '[]'); } catch (e) {}
-    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, spawn: SPAWN, ach: ACH, quest: { stats: stats, step: qStep } };
+    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, spawn: SPAWN, ach: ACH, quest: { stats: stats, step: qStep }, story: STORY };
   }
   function stateApply(d) {
     if (!d || d.v !== 1) return;
@@ -4353,6 +4551,7 @@
     if (d.crops) CROPS = d.crops; if (d.saps) { SAPS = d.saps; saveSaps(); }
     if (typeof d.hp === 'number') HP = Math.max(1, Math.min(20, d.hp)); if (typeof d.food === 'number') FOOD = Math.max(0, Math.min(20, d.food));
     SPAWN = d.spawn || null; if (d.ach) ACH = d.ach;
+    if (d.story) { mergeStory(d.story); try { localStorage.setItem('arkVillage.story', JSON.stringify(STORY)); } catch (e) {} }
     if (d.quest) { stats = d.quest.stats || stats; qStep = d.quest.step || 0; questSave(); }
     saveSettings(); saveCrops();
     try { localStorage.setItem('arkVillage.ach', JSON.stringify(ACH)); localStorage.setItem('arkVillage.herd', JSON.stringify(HERD)); } catch (e) {}
@@ -4383,6 +4582,171 @@
       var srvAt = r.data.at, mine2 = null; try { mine2 = localStorage.getItem('arkVillage.stateSrv'); } catch (e) {}
       if (!mine2 || srvAt > mine2) { stateApply(r.data.data); try { localStorage.setItem('arkVillage.stateSrv', srvAt); localStorage.setItem('arkVillage.state', JSON.stringify(r.data.data)); } catch (e) {} }
     }, function () {});
+  }
+
+  // ════════ 「본향을 향하여」(히 11:16) — 긴 이야기: 서장 · 1부 믿음의 증표 · 2부 열두 기초석 · 3부 골짜기 · 4부 진주 문 ════════
+  var STORY = { started: false, tokens: {}, s: { walk: 0, swim: 0, ladder: 0, shadows: 0, night: 0, bedsOut: 0, pitch: 0, arkY: {}, regions: {}, ararat: 0, laps: 0, lapDay: -1, lapAng: null, lapAcc: 0 },
+    lamps: [0, 0, 0, 0, 0, 0, 0], sockets: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], done: false, ended: false };
+  function mergeStory(o) {
+    if (!o) return;
+    STORY.started = !!o.started; STORY.done = !!o.done; STORY.ended = !!o.ended; STORY.tokens = o.tokens || {};
+    if (o.s) for (var k in o.s) STORY.s[k] = o.s[k];
+    if (o.lamps && o.lamps.length === 7) STORY.lamps = o.lamps; if (o.sockets && o.sockets.length === 12) STORY.sockets = o.sockets;
+  }
+  try { mergeStory(JSON.parse(localStorage.getItem('arkVillage.story') || 'null')); } catch (e) {}
+  function saveStory() { try { localStorage.setItem('arkVillage.story', JSON.stringify(STORY)); } catch (e) {} stateDirty(); }
+  var ARARAT_TOP = 70;   // 아라랏 산 꼭대기로 치는 높이(가장 높은 곳이 76칸 — 시험으로 맞춤)
+  var REGION_NAMES = { east: '동쪽 숲', west: '서쪽 산', lake: '남쪽 호수', sea: '북쪽 바다', desert: '동쪽 사막', oasis: '오아시스', ararat: '아라랏 산', tar: '역청 구덩이' };
+  function sheepCount() { return HERD.filter(function (h) { return h.k === 'sheep'; }).length; }
+  function nK(o) { return Object.keys(o || {}).length; }
+  // 일곱 증표(히 11) — [키, 이름, 그림, 구절 장절, 구절, 할 일들, 받는 힘]
+  var TOKENS = [
+    ['abel', '아벨의 증표', '🐑', '히브리서 11:4', '믿음으로 아벨은 가인보다 더 나은 제사를 하나님께 드림으로 의로운 자라 하시는 증거를 얻었으니 하나님이 그 예물에 대하여 증언하심이라 그가 죽었으나 그 믿음으로써 지금도 말하느니라',
+      function () { return [['내 땅 우리에서 양 12마리 기르기', sheepCount(), 12]]; }, '체력이 두 배 빨리 차올라요'],
+    ['enoch', '에녹의 증표', '👣', '히브리서 11:5', '믿음으로 에녹은 죽음을 보지 않고 옮겨졌으니 하나님이 그를 옮기심으로 다시 보이지 아니하였느니라 그는 옮겨지기 전에 하나님을 기쁘시게 하는 자라 하는 증거를 받았느니라',
+      function () { return [['걸어서 2만 칸 다니기', Math.floor(STORY.s.walk), 20000]]; }, '걷기·달리기가 10% 빨라져요'],
+    ['noah', '노아의 증표', '⛵', '히브리서 11:7', '믿음으로 노아는 아직 보이지 않는 일에 경고하심을 받아 경외함으로 방주를 준비하여 그 집을 구원하였으니 이로 말미암아 세상을 정죄하고 믿음을 따르는 의의 상속자가 되었느니라',
+      function () { return [['역청 칠한 나무 300개 만들기', STORY.s.pitch, 300], ['방주 하층·중층·상층 모두 가 보기', nK(STORY.s.arkY), 3]]; }, '물속에서 숨을 두 배 오래 참아요'],
+    ['abraham', '아브라함의 증표', '⛺', '히브리서 11:8', '믿음으로 아브라함은 부르심을 받았을 때에 순종하여 장래의 유업으로 받을 땅에 나아갈새 갈 바를 알지 못하고 나아갔으며',
+      function () { return [['여덟 곳 모두 가 보기(숲·산·호수·바다·사막·오아시스·아라랏 산·역청 구덩이)', nK(STORY.s.regions), 8], ['아라랏 산 꼭대기에 오르기', STORY.s.ararat, 1], ['마을 밖에서 침대에 누워 일곱 밤 자기', STORY.s.bedsOut, 7]]; }, '기운이 천천히 줄어요'],
+    ['jacob', '야곱의 증표', '🪜', '히브리서 11:21', '믿음으로 야곱은 죽을 때에 요셉의 각 아들에게 축복하고 그 지팡이 머리에 의지하여 경배하였으며',
+      function () { return [['사닥다리로 모두 120칸 오르기', Math.floor(STORY.s.ladder), 120]]; }, '사닥다리를 두 배 빨리 올라요'],
+    ['moses', '모세의 증표', '🌊', '히브리서 11:29', '믿음으로 그들은 홍해를 육지 같이 건넜으나 애굽 사람들은 이것을 시험하다가 빠져 죽었으며',
+      function () { return [['물에서 모두 600칸 헤엄치기', Math.floor(STORY.s.swim), 600], ['어둠의 그림자 40번 물리치기', STORY.s.shadows, 40]]; }, '헤엄이 빨라져요'],
+    ['jericho', '여리고와 기드온의 증표', '📯', '히브리서 11:30 · 사사기 7:20', '믿음으로 칠 일 동안 여리고를 도니 성이 무너졌으며 (히 11:30) — 세 대가 나팔을 불며 항아리를 부수고 왼손에 횃불을 들고 오른손에 나팔을 들어 불며 외쳐 이르되 여호와와 기드온의 칼이다 하고 (삿 7:20)',
+      function () { return [['하루(해 뜰 때부터 다음 해 뜰 때까지) 안에 방주 둘레 일곱 바퀴 돌기', Math.min(7, STORY.s.laps), 7], ['밤에 어둠의 그림자 30번 물리치기', STORY.s.night, 30]]; }, '어둠의 그림자에게 주는 힘 +1']
+  ];
+  function tokenTasks(t) { return t[5](); }
+  function tokenReady(t) { return tokenTasks(t).every(function (q) { return q[1] >= q[2]; }); }
+  function has(k) { return !!STORY.tokens[k]; }
+  function partOf() {
+    if (!STORY.started) return 0;
+    if (nK(STORY.tokens) < 7) return 1;
+    if (!FS_NAMES.every(function (n, i) { return have(FSTONE0 + i) > 0 || STORY.sockets[i]; })) return 2;
+    if (STORY.lamps.some(function (v) { return !v; })) return 3;
+    return 4;
+  }
+  var PART_NAMES = ['서장 「떠나라」', '1부 「믿음의 증표」', '2부 「열두 기초석」', '3부 「사망의 음침한 골짜기」', '4부 「진주 문」'];
+  function storyCard(emoji, name, text, ref, sub, ms) {
+    $('cardEmoji').textContent = emoji; $('cardName').textContent = name; $('cardText').textContent = text; $('cardRef').textContent = ref; $('cardNew').textContent = sub || '';
+    $('card').classList.add('show'); sfx('craft', 1400); clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, ms || 14000);
+  }
+  function startStory() {
+    if (STORY.started) { openStory(); return; }
+    if (qStep < QUEST.length && !isAdm()) { storyCard('🧭', '안내하는 나그네', '여호와께서 아브람에게 이르시되 너는 너의 고향과 친척과 아버지의 집을 떠나 내가 네게 보여 줄 땅으로 가라', '창세기 12:1', '먼저 위의 할 일(첫 집 짓기)을 다 마치면 길을 떠날 수 있어요'); return; }
+    STORY.started = true; saveStory();
+    storyCard('🧭', '서장 「떠나라」', '여호와께서 아브람에게 이르시되 너는 너의 고향과 친척과 아버지의 집을 떠나 내가 네게 보여 줄 땅으로 가라', '창세기 12:1', '본향을 향한 길이 시작됐어요 — 메뉴 → 📜 나그네의 길에서 할 일을 봐요', 16000);
+    renderQuest();
+  }
+  // 걸음·헤엄·사닥다리·방주 둘레 바퀴(매 프레임)
+  function storyStep(dt, moved) {
+    if (!STORY.started || !vitalsOn() && !isAdm()) return;
+    var s = STORY.s;
+    if (P.swim) s.swim += moved; else if (P.ground && !riding) s.walk += moved;
+    if (P.ladder && P.vy > 0) s.ladder += P.vy * dt;
+    // 방주 둘레: 방주 밖, 방주를 둘러싼 테 안에서 각도를 모아 바퀴 수로
+    var cx = XM, cz = (AZ0 + AZ1) / 2, dx = P.x - cx, dz = P.z - cz, ring = Math.abs(dx) <= 230 && Math.abs(dz) <= 120 && !(Math.abs(dx) < 152 && Math.abs(dz) < 27);
+    var day = Math.floor((dayT + DAY_LEN * 0.06) / DAY_LEN);
+    if (day !== s.lapDay) { s.lapDay = day; s.lapAcc = 0; s.lapAng = null; }
+    if (ring) { var a = Math.atan2(dz, dx); if (s.lapAng !== null) { var da = a - s.lapAng; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; s.lapAcc += da; } s.lapAng = a; s.laps = Math.max(s.laps || 0, Math.floor(Math.abs(s.lapAcc) / (Math.PI * 2))); }
+    else s.lapAng = null;
+  }
+  // 1초마다: 가 본 곳, 증표 받기, 성문, 엔딩
+  var storyT = 0;
+  function storyTick(dt) {
+    if (!STORY.started) return;
+    storyT -= dt; if (storyT > 0) return; storyT = 1;
+    var s = STORY.s, x = Math.floor(P.x), z = Math.floor(P.z), reg = region(x, z), pn = placeName(), ch = false;
+    if (REGION_NAMES[reg] && !s.regions[reg]) { s.regions[reg] = 1; ch = true; toast('📜 「' + REGION_NAMES[reg] + '」에 왔어요 (' + nK(s.regions) + '/8)'); }
+    var ak = pn === '방주 하층' ? 'lo' : pn === '방주 중층' ? 'mid' : pn === '방주 상층' ? 'hi' : '';
+    if (ak && !s.arkY[ak]) { s.arkY[ak] = 1; ch = true; }
+    if (reg === 'ararat' && P.y >= ARARAT_TOP && !s.ararat) { s.ararat = 1; ch = true; toast('⛰ 아라랏 산 꼭대기에 올랐어요 (창 8:4)'); }
+    TOKENS.forEach(function (t) {
+      if (has(t[0]) || !tokenReady(t)) return;
+      STORY.tokens[t[0]] = Date.now(); ch = true;
+      storyCard(t[2], '믿음의 증표 — ' + t[1], t[4], t[3], '받은 힘: ' + t[6] + ' · 증표 ' + nK(STORY.tokens) + '/7');
+      if (nK(STORY.tokens) === 7) { unlock('tokens'); setTimeout(function () { toast('🎖 일곱 증표를 다 받았어요! 2부 「열두 기초석」 — 세상 곳곳 땅속의 보석을 찾아요'); }, 15000); }
+    });
+    if (!STORY.done && STORY.sockets.every(Boolean) && nK(STORY.tokens) === 7 && STORY.lamps.every(Boolean)) openGates();
+    if (STORY.done && !STORY.ended && cityInside(x, z)) showEnding();
+    if (ch) saveStory();
+    if (ui === 'play' && qStep >= QUEST.length) renderQuest();
+  }
+  // 3부: 등잔대를 횃불로 밝히기
+  function localSet(x, y, z, id) { NET.applying = true; try { setBlock(x, y, z, id); } finally { NET.applying = false; } }
+  function useLampstand(x, y, z) {
+    var k = -1; DUN_LAMPS.forEach(function (c, i) { if (DUN.x0 + c[0] * DUN.cs + 2 === x && DUN.z0 + c[1] * DUN.cs + 2 === z) k = i; });
+    if (k < 0) return;
+    if (STORY.lamps[k]) return toast('이미 밝힌 등잔대예요 (' + STORY.lamps.filter(Boolean).length + '/7)');
+    if (!(HOTBAR[sel] === TORCH && have(TORCH) > 0)) return deny('횃불을 손에 들고 누르면 등잔대에 불을 밝혀요');
+    take(TORCH, 1); bagChanged(); STORY.lamps[k] = 1; localSet(x, y, z, LAMPSTAND + 1); saveStory(); sfx('craft', 900);
+    var n = STORY.lamps.filter(Boolean).length;
+    if (n < 7) toast('🕯 등잔대에 불을 밝혔어요 (' + n + '/7)');
+    else { unlock('valley'); storyCard('🕯', '골짜기의 빛', '내가 사망의 음침한 골짜기로 다닐지라도 해를 두려워하지 않을 것은 주께서 나와 함께 하심이라 주의 지팡이와 막대기가 나를 안위하시나이다', '시편 23:4', '일곱 등잔대를 다 밝혔어요 — 4부 「진주 문」: 동쪽 끝 거룩한 성으로 가요'); }
+  }
+  // 4부: 기초석 자리에 맞는 기초석 넣기
+  function useSocket(x, y, z) {
+    var k = -1; for (var i = 0; i < 12; i++) { var sp = socketPos(i); if (sp[0] === x && sp[1] === y && sp[2] === z) k = i; }
+    if (k < 0 || STORY.sockets[k]) return;
+    var need = FSTONE0 + k;
+    if (!(HOTBAR[sel] === need && have(need) > 0)) return deny('이 자리에는 「' + FS_NAMES[k] + ' 기초석」을 손에 들고 눌러요 (' + (k + 1) + '번째 기초석, 계 21:19-20)');
+    take(need, 1); bagChanged(); STORY.sockets[k] = 1; localSet(x, y, z, need); saveStory(); sfx('craft', 700);
+    var n = STORY.sockets.filter(Boolean).length;
+    toast('💎 ' + FS_NAMES[k] + ' 기초석을 놓았어요 (' + n + '/12)' + (n === 12 && (nK(STORY.tokens) < 7 || !STORY.lamps.every(Boolean)) ? ' — 증표 일곱과 일곱 등잔대도 있어야 문이 열려요' : ''));
+    if (n === 12) unlock('stones');
+  }
+  function regenArea(ax0, az0, ax1, az1) {
+    for (var cz = az0 >> 5; cz <= az1 >> 5; cz++) for (var cx = ax0 >> 5; cx <= ax1 >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } }
+  }
+  function openGates() {
+    STORY.done = true; saveStory();
+    regenArea(CITY.x0 - 4, CITY.z0 - 4, CITY.x1 + 4, CITY.z1 + 4);
+    storyCard('🚪', '열두 진주 문이 열렸어요', '그 열두 문은 열두 진주니 각 문마다 한 개의 진주로 되어 있고 성의 길은 맑은 유리 같은 정금이더라', '요한계시록 21:21', '성 안으로 들어가요');
+  }
+  function showEnding() {
+    STORY.ended = true; saveStory(); unlock('home');
+    var s = STORY.s, el = $('endingText'); el.innerHTML = '';
+    var lines = [
+      ['또 내가 보매 거룩한 성 새 예루살렘이 하나님께로부터 하늘에서 내려오니 그 준비한 것이 신부가 남편을 위하여 단장한 것 같더라', '요한계시록 21:2'],
+      ['내가 들으니 보좌에서 큰 음성이 나서 이르되 보라 하나님의 장막이 사람들과 함께 있으매 하나님이 그들과 함께 계시리니 그들은 하나님의 백성이 되고 하나님은 친히 그들과 함께 계셔서', '요한계시록 21:3'],
+      ['모든 눈물을 그 눈에서 닦아 주시니 다시는 사망이 없고 애통하는 것이나 곡하는 것이나 아픈 것이 다시 있지 아니하리니 처음 것들이 다 지나갔음이러라', '요한계시록 21:4'],
+      ['또 그가 수정 같이 맑은 생명수의 강을 내게 보이니 하나님과 및 어린 양의 보좌로부터 나와서', '요한계시록 22:1'],
+      ['길 가운데로 흐르더라 강 좌우에 생명나무가 있어 열두 가지 열매를 맺되 달마다 그 열매를 맺고 그 나무 잎사귀들은 만국을 치료하기 위하여 있더라', '요한계시록 22:2'],
+      ['그들이 이제는 더 나은 본향을 사모하니 곧 하늘에 있는 것이라 이러므로 하나님이 그들의 하나님이라 일컬음 받으심을 부끄러워하지 아니하시고 그들을 위하여 한 성을 예비하셨느니라', '히브리서 11:16']
+    ];
+    lines.forEach(function (l, i) { var p = document.createElement('p'); p.style.animationDelay = (i * 2.2) + 's'; p.textContent = l[0]; var r = document.createElement('small'); r.textContent = l[1]; p.appendChild(r); el.appendChild(p); });
+    $('endingStats').textContent = '걸은 길 ' + Math.floor(s.walk).toLocaleString() + '칸 · 헤엄 ' + Math.floor(s.swim).toLocaleString() + '칸 · 물리친 어둠의 그림자 ' + s.shadows + ' · 믿음의 증표 7 · 기초석 12 · 등잔대 7';
+    openPanel('ending');
+  }
+  // 📜 나그네의 길(이야기 진행판)
+  function openStory() { openPanel('story'); renderStory(); sfx('click'); }
+  function bar(cur, need) { var f = Math.max(0, Math.min(1, cur / need)); return '<span class="sbar"><s style="width:' + Math.round(f * 100) + '%"></s></span> <b>' + Math.min(cur, need).toLocaleString() + '/' + need.toLocaleString() + '</b>'; }
+  function dirText(tx, tz) { var dx = tx - P.x, dz = tz - P.z, d = Math.round(Math.hypot(dx, dz)); var ns = dz < -d * 0.38 ? '북' : (dz > d * 0.38 ? '남' : ''), ew = dx > d * 0.38 ? '동' : (dx < -d * 0.38 ? '서' : ''); return (ns + ew || '바로 여기') + (d > 3 ? '쪽 ' + d + '칸' : ''); }
+  function renderStory() {
+    var L = $('storyBody'), h = '', part = partOf();
+    function esc(t) { return String(t).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+    h += '<div class="sverse">이는 그가 하나님이 계획하시고 지으실 터가 있는 성을 바랐음이라 <small>(히브리서 11:10)</small></div>';
+    if (!STORY.started) h += '<div class="spart on"><h3>' + PART_NAMES[0] + '</h3><p>' + (qStep < QUEST.length ? '먼저 위의 할 일(첫 집 짓기)을 다 마쳐요. 그다음 나그네 마을 입구의 「안내하는 나그네」를 찾아가 말을 걸어요.' : '나그네 마을 입구의 「안내하는 나그네」를 찾아가 말을 걸면 길이 시작돼요.') + '</p></div>';
+    else {
+      h += '<div class="spart' + (part === 1 ? ' on' : ' done') + '"><h3>' + PART_NAMES[1] + ' <small>' + nK(STORY.tokens) + '/7</small></h3>';
+      TOKENS.forEach(function (t) {
+        h += '<div class="stok' + (has(t[0]) ? ' got' : '') + '"><b>' + t[2] + ' ' + esc(t[1]) + '</b> <small>' + t[3] + ' · 받는 힘: ' + esc(t[6]) + '</small>';
+        tokenTasks(t).forEach(function (q) { h += '<div class="stask">' + esc(q[0]) + ' ' + bar(q[1], q[2]) + '</div>'; });
+        h += '</div>';
+      });
+      h += '</div>';
+      h += '<div class="spart' + (part === 2 ? ' on' : (part > 2 ? ' done' : '')) + '"><h3>' + PART_NAMES[2] + ' <small>계 21:19-20</small></h3><p>세상 곳곳 땅속 깊은 곳에 열두 보석이 있어요. 보석 3개와 금 덩이 1개로 제작대에서 기초석을 만들어요. 귀한 보석은 금강석 곡괭이가 있어야 캐요.</p><div class="sgems">';
+      FS_NAMES.forEach(function (n, i) {
+        var g = GEMS[i], ok = have(FSTONE0 + i) > 0 || STORY.sockets[i], where = g ? (g[3] === 'south' ? '남쪽 들판' : REGION_NAMES[g[3]]) + ' · ' + (g[4] > 30 ? '높은 바위 속' : (g[5] <= 8 ? '아주 깊은 곳' : '땅속')) : '어디든 깊은 곳';
+        h += '<span class="sg' + (ok ? ' got' : '') + '">' + (ok ? '💎' : '◇') + ' ' + n + '<small>' + where + ' · 보석 ' + have(gemItem(i)) + '/3</small></span>';
+      });
+      h += '</div></div>';
+      h += '<div class="spart' + (part === 3 ? ' on' : (part > 3 ? ' done' : '')) + '"><h3>' + PART_NAMES[3] + ' <small>시 23:4</small></h3><p>동쪽 사막 땅속 깊이 깨지지 않는 미로가 있어요. 어둠의 그림자와 큰 그림자가 끝없이 나와요. 일곱 등잔대를 찾아 횃불을 들고 눌러 밝혀요. 입구: ' + dirText(DUN.x0 + 2, DUN.z0 + (DUN.n - 1) * DUN.cs + 2) + '</p>' + bar(STORY.lamps.filter(Boolean).length, 7) + '</div>';
+      h += '<div class="spart' + (part === 4 ? ' on' : '') + '"><h3>' + PART_NAMES[4] + ' <small>계 21:12·21</small></h3><p>세상 동쪽 끝에 벽옥 성곽과 열두 진주 문이 있어요. 서쪽 성벽 밖의 기초석 자리 열둘에 기초석을 하나씩 들고 눌러 놓아요. 증표 일곱·등잔대 일곱·기초석 열둘이 다 갖춰지면 문이 열려요. 성: ' + dirText((CITY.x0 + CITY.x1) / 2, (CITY.z0 + CITY.z1) / 2) + '</p>' + bar(STORY.sockets.filter(Boolean).length, 12) + '</div>';
+      if (STORY.ended) h += '<div class="spart done"><h3>🏙 본향에 이르렀어요</h3><p>그래도 길은 계속돼요. 성 안을 거닐고, 마을로 돌아가 친구들을 도와요.</p></div>';
+    }
+    L.innerHTML = h;
+    $('storyStart').style.display = STORY.started ? 'none' : '';
   }
 
   // ───────── 함께 놀기(2단계): 친구 보기 · 블록 함께 바꾸기 · 채팅 ─────────
@@ -4799,7 +5163,9 @@
   window.addEventListener('beforeunload', function () { if (dirty) savePlot(); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) { saveEdits(); if (dirty) savePlot(); } });
 
-  window.__arkDebug = { regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
+  window.__arkDebug = { inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+    araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
+    gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

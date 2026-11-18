@@ -35,6 +35,25 @@
   #netState { color:#b8f0ff; }
   body:not(.adm) .admonly { display:none !important; }
   body:not(.touch) .touchonly { display:none !important; }
+  /* 나그네의 길 */
+  .stpanel { width:min(720px, 96vw); }
+  #storyBody { max-height:calc(100vh - 150px); overflow:auto; display:flex; flex-direction:column; gap:6px; padding-right:4px; }
+  .sverse { font-size:12px; color:#5a4220; background:#f3e9cc; border:2px solid #d7c69a; padding:6px 8px; line-height:1.6; }
+  .spart { background:#b4b4b4; border:2px solid #8b8b8b; padding:6px 8px; font-size:12px; color:#3f3f3f; line-height:1.55; opacity:.75; }
+  .spart.on { opacity:1; background:#d8d0ea; border-color:#7a6aa8; } .spart.done { opacity:.9; background:#c8dcc0; border-color:#5a8a4a; }
+  .spart h3 { font-size:13px; font-weight:400; color:#2a2a4a; margin-bottom:3px; } .spart h3 small { color:#555; }
+  .stok { background:rgba(255,255,255,.45); padding:4px 6px; margin-top:4px; } .stok.got { background:#e8f4d8; } .stok b { font-weight:400; color:#2a2a4a; } .stok small { color:#666; font-size:11px; }
+  .stask { font-size:11px; margin-top:2px; }
+  .sbar { display:inline-block; width:90px; height:7px; background:#3a3a3a; border:1px solid #000; vertical-align:middle; margin:0 4px; } .sbar s { display:block; height:100%; background:#7ac84a; }
+  .sgems { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:3px; margin-top:4px; }
+  .sg { background:rgba(255,255,255,.45); padding:3px 5px; font-size:12px; } .sg.got { background:#e8f4d8; } .sg small { display:block; font-size:10px; color:#666; }
+  #ending { background:radial-gradient(circle at 50% 35%, #fff8e0 0%, #f0d890 35%, #8a6a30 100%); z-index:20; }
+  .endbox { width:min(640px, 94vw); max-height:100%; overflow:auto; text-align:center; color:#3a2a10; padding:16px; }
+  .endbox h1 { font-size:26px; font-weight:400; margin-bottom:10px; text-shadow:0 2px 0 #fff; }
+  #endingText p { font-size:14px; line-height:1.8; margin:10px 0; opacity:0; animation:endIn 1.2s ease forwards; }
+  #endingText small { display:block; font-size:12px; color:#7a5a20; }
+  @keyframes endIn { to { opacity:1; } }
+  #endingStats { font-size:12px; margin-top:12px; color:#5a4220; } .endcred { font-size:11px; color:#6a5030; margin-top:6px; }
   .vpanel { width:min(560px, 94vw); }
   .vme { display:flex; gap:8px; align-items:center; font-size:13px; color:#3f3f3f; margin-bottom:6px; flex-wrap:wrap; }
   .vme select { font-family:inherit; font-size:13px; height:30px; }
@@ -484,6 +503,7 @@
     <button id="mMusic" class="mc">음악: 켬</button>
     <button id="mShadow" class="mc">어둠의 그림자: 나옴</button>
     <button id="mAutoJump" class="mc touchonly">자동 점프: 켬</button>
+    <button id="mStory" class="mc">📜 나그네의 길</button>
     <button id="mVisit" class="mc">🏡 친구 집 구경</button>
     <button id="mRevert" class="mc admonly">🧹 함께 짓는 터 되돌리기</button>
     <button id="mForest" class="mc">🌲 동쪽 숲</button>
@@ -548,6 +568,18 @@
     </div>
   </div>
 </div>
+<div id="story" class="screen dim"><div class="panel stpanel">
+  <h2>📜 나그네의 길 — 본향을 향하여 <small>(히 11:13-16)</small></h2>
+  <div id="storyBody"></div>
+  <div class="pfoot"><button id="storyStart" class="mc" style="width:140px">🧭 길 떠나기</button> <button id="storyDone" class="mc" style="width:120px">닫기</button></div>
+</div></div>
+<div id="ending" class="screen"><div class="endbox">
+  <h1>🏙 본향에 이르렀어요</h1>
+  <div id="endingText"></div>
+  <div id="endingStats"></div>
+  <div class="endcred">나그네 마을 · 말씀우물 · 로고스교회 중등부</div>
+  <button id="endingDone" class="mc" style="width:180px;margin:12px auto 0">계속 걷기</button>
+</div></div>
 <div id="visit" class="screen dim"><div class="panel vpanel">
   <h2>🏡 친구 집 구경 — 친구가 보여 준 집으로 가 볼 수 있어요(구경만)</h2>
   <div class="vme"><label><input type="checkbox" id="visitShow"> 내 집도 보여 주기</label> <select id="visitIntro"></select></div>
@@ -634,6 +666,7 @@
       🌾 풀이나 꽃을 캐면 가끔 밀 씨가 나와요. 흙·풀 위에 심으면 자라요(물이 가까우면 빨리, 막 4:3). 익은 밀을 거둬요. 밀을 들고 있으면 양·소·염소가 따라오고, 둘에게 먹이면 새끼가 태어나요 — 내 땅 안의 동물은 저장돼요.<br>
       🛏 침대(양털 3 + 고페르 나무 3)를 누르면 다시 일어날 자리가 되고, 밤이면 자고 아침이 돼요(시 4:8). 🔘 레버(막대기 + 돌)를 누르면 둘레 문이 함께 열리고 닫혀요. 🪧 표지판은 내 땅에 세우고 글을 골라요. 횃불은 벽에도 붙고, 통나무는 옆면에 놓으면 눕혀져요. 웅크리기(PC: Shift, 휴대폰: 방향키 가운데 2초)로 가장자리에서 떨어지지 않아요.<br>
       🌑 밤 들판과 굴 속에는 「어둠의 그림자」(미움·거짓·교만)가 나와요. 마을·내 땅·함께 짓는 터와 불빛 곁은 안전하고, 횃불을 들면 가까이 못 오고, 햇빛에는 사라져요. 갑옷을 입으면 덜 다치고, 하나님의 전신 갑주 다섯 가지를 다 입으면 다치지 않아요(엡 6:11). 칼이나 성령의 검(철 2 + 금 1 + 막대기, 제작대, 엡 6:17)으로 물리쳐요 — 톡(PC: 클릭). 메뉴에서 안 나오게 할 수 있어요.<br>
+      📜 첫 집을 다 지으면 마을 입구의 「안내하는 나그네」에게 말을 걸어 긴 이야기 「본향을 향하여」(히 11:16)를 시작해요 — 1부 믿음의 증표 일곱(히 11장), 2부 땅속 깊이 숨은 열두 보석으로 기초석 만들기(계 21:19-20), 3부 동쪽 사막 땅속 「사망의 음침한 골짜기」 미로에서 일곱 등잔대 밝히기(시 23:4), 4부 동쪽 끝 거룩한 성의 열두 진주 문(계 21:21). 메뉴 → 📜 나그네의 길에서 할 일을 봐요. 아주 어려워요 — 친구들과 함께 가요.<br>
       🏗 방주 북쪽 「함께 짓는 터」(지도에서 이동)는 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요. 정원·우리·길과 다리·모임터 네 구역 중 맡고 싶은 곳을 골라 지어요. 🏡 지도나 메뉴의 「친구 집 구경」에서 내 집을 보여 줄 수 있고, 친구가 보여 준 집에 가 볼 수 있어요. 🏅 업적은 가방 → 업적에서 봐요. 마을 사람(노아·목자·안내하는 나그네)을 누르면 말씀을 들려줘요.<br>
       📦 궤(고페르 나무 8, 출 25:10)를 내 땅에 놓고 누르면 물건을 넣어 둘 수 있어요. 용광로도 내 땅에 놓을 수 있고, 녹이는 동안 불이 켜져요.<br>
       🔥 용광로(돌 8)에서 땔감으로 광석을 녹여 덩이로 만들어요(욥 28:1-2). 하나 녹는 데 3초 — 넣어 두고 다른 일을 해도 화면 위 막대가 차면 가방에 들어와요. 땔감은 석탄·숯 1개로 8번, 통나무 1개로 1.5번 — 통나무를 녹이면 숯이 돼요(요 21:9). 막대기 + 석탄(또는 숯)으로 횃불 4개(창 15:17), 횃불은 굴 속에도 놓아 밝힐 수 있어요. 덩이·보석 9개는 블록으로 묶고 다시 풀 수 있어요.<br>
