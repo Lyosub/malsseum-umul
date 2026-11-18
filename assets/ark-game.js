@@ -2034,7 +2034,7 @@
     try { localStorage.setItem('arkVillage.worn', wornString()); } catch (e) {}
     if (me && myPlot >= 0) markDirty();
     refreshMyAvatar();
-    if (NET.ch) NET.ch.track({ n: NET.nick, w: wornString() }).catch(function () {});
+    if (NET.ch) trackMe();
   }
   function refreshMyAvatar() {
     if (!scene) return;
@@ -2153,7 +2153,7 @@
   var isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   var lockOn = false, canvasEl;
   function showUI(name) {
-    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
+    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
     document.body.classList.toggle('playing', name === 'play');
     document.body.classList.toggle('menu', name !== 'play');
     ui = name;
@@ -2521,6 +2521,7 @@
       take(item, 1); setBlock(bx, by, bz, id); sfx('place', matSound(item)); bagChanged();
       if (isGrav(id)) startFall(bx, by, bz);
       if (id === SAPLING) { SAPS.push({ x: bx, y: by, z: bz, t: Date.now() + (90 + Math.random() * 90) * 1000 }); saveSaps(); toast('묘목을 심었어요. 조금 지나면 나무로 자라요 (시 1:3)'); }
+      partyAdd('build', 1);
       if (plotAt(bx, bz) === myPlot) { stats.placed++; questCheck(); if (stats.placed >= 30) unlock('house'); }
       if (inCommons(bx, bz)) unlock('commons');
       if (SHAPE[id] && SHAPE[id].type === 'sign') openSignPick(bx, by, bz);
@@ -2532,7 +2533,7 @@
     var dropId = dropOf(old);
     exhaust(0.03);
     if (isCrop(old)) {   // 밀 거두기: 익었으면 밀과 씨, 덜 익었으면 씨만
-      if (old === CROP0 + 3) { dropItem(x + 0.5, y + 0.45, z + 0.5, WHEAT, 1 + (Math.random() < 0.5 ? 1 : 0)); dropItem(x + 0.5, y + 0.45, z + 0.5, SEED, 1 + (Math.random() < 0.6 ? 1 : 0)); unlock('harvest'); }
+      if (old === CROP0 + 3) { dropItem(x + 0.5, y + 0.45, z + 0.5, WHEAT, 1 + (Math.random() < 0.5 ? 1 : 0)); dropItem(x + 0.5, y + 0.45, z + 0.5, SEED, 1 + (Math.random() < 0.6 ? 1 : 0)); unlock('harvest'); partyAdd('harvest', 1); }
       else dropItem(x + 0.5, y + 0.45, z + 0.5, SEED, 1);
       return;
     }
@@ -2549,7 +2550,7 @@
       }
     }
     if (DEX_MATS.indexOf(dropId) >= 0 && !DEX['m' + dropId]) { DEX['m' + dropId] = 1; saveDex(); toast('📖 도감에 「' + B[dropId][0] + '」을(를) 적었어요'); }
-    if (dropId === LOG) { stats.log++; questCheck(); }
+    if (dropId === LOG) { stats.log++; questCheck(); partyAdd('logs', 1); }
   }
   var pickT = null, pickAgg = {};
   function pickup(id, n) {
@@ -3112,7 +3113,7 @@
       if (done > j.g) {
         var got2 = give(j.o, done - j.g);   // 가방이 차면 용광로에 남겨 두었다가 자리가 나면 꺼냄
         for (var k = 0; k < got2 && ui === 'play'; k++) pickup(j.o);
-        j.g += got2; if (got2) changed = true; if (got2 < done - (j.g - got2)) bagFull();
+        j.g += got2; if (got2) changed = true; if (j.o === ING_FE) partyAdd('iron', got2); if (got2 < done - (j.g - got2)) bagFull();
       }
     });
     var fin = JOBS.filter(function (j) { return j.g >= j.n; });
@@ -3209,7 +3210,7 @@
     ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);
-    on('mStory', openStory); on('storyDone', function () { closePanel(); }); on('storyStart', function () { closePanel(); startStory(); });
+    on('mStory', openStory); on('mParty', openParty); on('partyDone', function () { closePanel(); }); on('storyDone', function () { closePanel(); }); on('storyStart', function () { closePanel(); startStory(); });
     on('endingDone', function () { closePanel(); toast('🏙 본향에 이르렀어요 — 성 안을 거닐어 보세요'); });
     on('mAutoJump', function () { S.autoJump = S.autoJump === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('go_visit', openVisit); on('mVisit', openVisit);
@@ -3989,7 +3990,7 @@
           updateCrack(); updateRing();
           hl.visible = !!h; if (h) hl.position.set(h.x + 0.5, h.y + 0.5, h.z + 0.5);
         }
-        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); spawnZoneSigns(); } }
+        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);
           if (ui === 'play' || ui === 'map') {
@@ -4355,6 +4356,132 @@
     try { localStorage.setItem('arkVillage.show', show ? '1' : '0'); } catch (e) {}
     client.rpc('set_ark_showcase', { p_show: show, p_intro: intro }).then(function (r) { toast(r.data ? (show ? '내 집을 친구들에게 보여 줘요' : '내 집을 보여 주지 않아요') : '내 땅이 있어야 해요'); }, function () {});
   }
+  // ── 파티(최대 4명): 초대·수락·나가기, 함께 채우는 파티 퀘스트, 보상은 업적과 칭호뿐 ──
+  var PQ = [   // [키, 이모지, 할 일, 목표, 칭호]
+    ['logs', '🪵', '함께 나무 300개 캐기', 300, '나무꾼'],
+    ['build', '🧱', '함께 블록 400개 놓기', 400, '함께 짓는 사람'],
+    ['harvest', '🌾', '함께 익은 밀 120번 거두기', 120, '추수하는 일꾼'],
+    ['iron', '⚙', '함께 철 덩이 60개 녹이기', 60, '대장장이'],
+    ['shadows', '⚔', '함께 어둠의 그림자 50번 물리치기', 50, '빛의 갑옷'],
+    ['summit', '⛰', '파티원 누구든 아라랏 산 꼭대기에 오르기', 1, '산에 오른 사람']
+  ];
+  var TITLES = PQ.map(function (q) { return q[4]; }).concat(['세 겹 줄']);   // 마지막: 파티 퀘스트를 모두 마치면(전 4:12)
+  var PARTY = { id: null, members: [], invites: [], progress: {}, pend: {}, seenInv: {}, flushT: 0, pollT: 0, busy: false, summitSent: false };
+  var MYTITLE = -1, GOTTITLES = {};
+  try { MYTITLE = +(localStorage.getItem('arkVillage.title') || -1); GOTTITLES = JSON.parse(localStorage.getItem('arkVillage.titles') || '{}') || {}; } catch (e) {}
+  function saveTitles() { try { localStorage.setItem('arkVillage.title', String(MYTITLE)); localStorage.setItem('arkVillage.titles', JSON.stringify(GOTTITLES)); } catch (e) {} stateDirty(); }
+  function inParty() { return !!PARTY.id; }
+  function partyMate(u) { return inParty() && PARTY.members.some(function (m) { return m.id === u; }); }
+  function partyAdd(k, n) { if (!inParty() || !n) return; var p = PARTY.progress[k]; if (p && p.done) return; PARTY.pend[k] = (PARTY.pend[k] || 0) + n; }
+  var PARTY_ERR = { login: '로그인해야 파티를 맺을 수 있어요', self: '나는 초대할 수 없어요', nouser: '없는 사람이에요', busy: '이미 다른 파티에 있어요', full: '파티는 4명까지예요', gone: '초대가 사라졌어요(10분이 지났어요)', notleader: '파티를 이끄는 사람만 할 수 있어요' };
+  function partyApply(d) {
+    if (!d) return;
+    var wasIn = PARTY.id, before = JSON.stringify(PARTY.progress);
+    PARTY.id = d.party || null; PARTY.members = d.members || []; PARTY.invites = d.invites || []; PARTY.progress = d.progress || {};
+    if (!PARTY.id) PARTY.pend = {};
+    PARTY.invites.forEach(function (iv) { if (!PARTY.seenInv[iv.id]) { PARTY.seenInv[iv.id] = 1; toast('🤝 ' + shortName(iv.from, 8) + ' 님이 파티에 초대했어요 — 메뉴 → 🤝 파티에서 받아요'); sfx('click'); } });
+    if (PARTY.id && !wasIn) { unlock('party'); chatSys('🤝 파티를 맺었어요 — 함께 파티 퀘스트를 채워요'); }
+    if (wasIn && !PARTY.id) chatSys('파티에서 나왔어요');
+    // 다 채운 파티 퀘스트 → 칭호와 업적
+    var all = PARTY.id && PQ.every(function (q) { var p = PARTY.progress[q[0]]; return p && p.done; });
+    PQ.forEach(function (q, i) {
+      var p = PARTY.progress[q[0]];
+      if (p && p.done && !GOTTITLES[i]) { GOTTITLES[i] = Date.now(); saveTitles(); unlock('pq'); setTimeout(function () { toast('🏷 칭호 「' + q[4] + '」을 받았어요 — ' + q[2]); }, 1200); }
+    });
+    if (all && !GOTTITLES[PQ.length]) { GOTTITLES[PQ.length] = Date.now(); saveTitles(); unlock('cord'); setTimeout(function () { toast('🏷 칭호 「세 겹 줄」 — 세 겹 줄은 쉽게 끊어지지 아니하느니라(전 4:12)'); }, 2400); }
+    if (JSON.stringify(PARTY.progress) !== before || ui === 'party') { if (ui === 'party') renderParty(); }
+    for (var u in NET.peers) { NET.peers[u].nick = null; peerName(NET.peers[u]); }   // 파티원 이름표 색
+    netPill();
+  }
+  function partyFetch() {
+    if (!client || !me || !NET.ok || PARTY.busy) return Promise.resolve();
+    PARTY.busy = true;
+    return client.rpc('get_my_party').then(function (r) { PARTY.busy = false; if (!r.error) partyApply(r.data); }, function () { PARTY.busy = false; });
+  }
+  function partyTick(dt) {
+    if (!client || !me || !NET.ok) return;
+    PARTY.pollT -= dt; PARTY.flushT -= dt;
+    if (PARTY.pollT <= 0) { PARTY.pollT = ui === 'party' ? 4 : 15; partyFetch(); }
+    // 아라랏 꼭대기
+    if (inParty() && !PARTY.summitSent && P.y >= ARARAT_TOP) { terrain(Math.floor(P.x), Math.floor(P.z)); if (T.reg === 'ararat') { PARTY.summitSent = true; partyAdd('summit', 1); } }
+    if (PARTY.flushT <= 0 && inParty()) {
+      PARTY.flushT = 8;
+      Object.keys(PARTY.pend).forEach(function (k) {
+        var n = Math.min(50, PARTY.pend[k] || 0); if (n <= 0) return;
+        PARTY.pend[k] -= n;
+        client.rpc('party_progress', { p_key: k, p_n: n }).then(function (r) {
+          if (r.error || !r.data) { PARTY.pend[k] = (PARTY.pend[k] || 0) + n; return; }
+          var was = PARTY.progress[k] && PARTY.progress[k].done;
+          PARTY.progress[k] = { n: r.data.n, done: r.data.n >= r.data.target };
+          if (!was && PARTY.progress[k].done) partyFetch();
+          if (ui === 'party') renderParty();
+        }, function () { PARTY.pend[k] = (PARTY.pend[k] || 0) + n; });
+      });
+    }
+  }
+  function partyCall(fn, args, okMsg) {
+    if (!client || !me || !NET.ok) { toast(PARTY_ERR.login); return; }
+    client.rpc(fn, args || {}).then(function (r) {
+      var v = r.data;
+      if (r.error) { toast('하지 못했어요 — 인터넷을 확인해 주세요'); return; }
+      if (v === 'ok') { if (okMsg) toast(okMsg); } else if (v === 'no') toast('초대를 사양했어요'); else toast(PARTY_ERR[v] || '하지 못했어요');
+      PARTY.pollT = 0; partyFetch();
+    }, function () { toast('하지 못했어요 — 인터넷을 확인해 주세요'); });
+  }
+  function openParty() {
+    if (!me) { toast(PARTY_ERR.login); return; }
+    if (!NET.ok) { toast('함께 놀기를 준비하는 중이에요. 조금 뒤에 다시 눌러 주세요'); return; }
+    openPanel('party'); renderParty(); partyFetch(); sfx('click');
+  }
+  function renderParty() {
+    var box = $('partyBody'); if (!box) return; box.innerHTML = '';
+    function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
+    function btn(t, fn) { var b = el('button', 'mc', t); b.addEventListener('click', function (e) { e.stopPropagation(); sfx('click'); fn(); }); return b; }
+    var amLeader = PARTY.members.some(function (m) { return m.id === me.id && m.leader; });
+    // 받은 초대
+    PARTY.invites.forEach(function (iv) {
+      var r = el('div', 'prow pinv'); r.appendChild(el('span', '', '🤝 ' + shortName(iv.from, 8) + ' 님의 파티 초대'));
+      r.appendChild(btn('함께하기', function () { partyCall('party_answer', { p_invite: iv.id, p_yes: true }, '🤝 파티에 들어왔어요'); }));
+      r.appendChild(btn('사양', function () { partyCall('party_answer', { p_invite: iv.id, p_yes: false }); }));
+      box.appendChild(r);
+    });
+    // 내 파티
+    box.appendChild(el('h3', '', inParty() ? '내 파티 (' + PARTY.members.length + '/4)' : '아직 파티가 없어요 — 아래에서 친구를 초대하면 파티가 생겨요'));
+    PARTY.members.forEach(function (m) {
+      var r = el('div', 'prow'); r.appendChild(el('span', '', (m.leader ? '👑 ' : '🧑 ') + shortName(m.nick || '친구', 10) + (m.id === me.id ? ' (나)' : '') + (NET.meta[m.id] ? ' · 접속 중' : '')));
+      if (amLeader && m.id !== me.id) r.appendChild(btn('내보내기', function () { if (window.confirm(shortName(m.nick, 10) + ' 님을 파티에서 내보낼까요?')) partyCall('party_kick', { p_user: m.id }, '내보냈어요'); }));
+      box.appendChild(r);
+    });
+    if (inParty()) { var lv = el('div', 'prow'); lv.appendChild(btn('파티 나가기', function () { if (window.confirm('파티에서 나갈까요? 함께 채운 기록은 파티에 남아요')) partyCall('party_leave', {}, '파티에서 나왔어요'); })); box.appendChild(lv); }
+    // 초대할 수 있는 사람: 지금 접속한 사람
+    if (!inParty() || PARTY.members.length < 4) {
+      box.appendChild(el('h3', '', '지금 함께 있는 사람 초대하기'));
+      var who = Object.keys(NET.meta).filter(function (u) { return u !== me.id && !partyMate(u); });
+      if (!who.length) box.appendChild(el('div', 'empty', '지금 초대할 수 있는 사람이 없어요'));
+      who.forEach(function (u) { var r = el('div', 'prow'); r.appendChild(el('span', '', '🧑 ' + shortName(NET.names[u] || '친구', 10))); r.appendChild(btn('초대', function () { partyCall('party_invite', { p_to: u }, '🤝 초대를 보냈어요 (10분 안에 받아야 해요)'); })); box.appendChild(r); });
+    }
+    // 파티 퀘스트
+    box.appendChild(el('h3', '', '파티 퀘스트 — 두 사람이 한 사람보다 나음은 그들이 수고함으로 좋은 상을 얻을 것임이라 (전 4:9)'));
+    PQ.forEach(function (q) {
+      var p = PARTY.progress[q[0]] || { n: 0 }, n = Math.min(q[3], (p.n || 0) + (PARTY.pend[q[0]] || 0)), r = el('div', 'prow pq' + (p.done ? ' done' : ''));
+      r.appendChild(el('span', '', q[1] + ' ' + q[2]));
+      var bar = el('span', 'sbar'), s = el('s'); s.style.width = Math.round(100 * n / q[3]) + '%'; bar.appendChild(s); r.appendChild(bar);
+      r.appendChild(el('small', '', (p.done ? '✔ ' : '') + n + '/' + q[3] + ' · 칭호 「' + q[4] + '」'));
+      box.appendChild(r);
+    });
+    if (!inParty()) box.appendChild(el('div', 'empty', '파티를 맺어야 파티 퀘스트를 채울 수 있어요'));
+    // 내 칭호
+    box.appendChild(el('h3', '', '내 칭호 — 이름표 위에 보여요'));
+    var tr = el('div', 'prow ptitles');
+    var none = btn(MYTITLE < 0 ? '✔ 칭호 없음' : '칭호 없음', function () { MYTITLE = -1; saveTitles(); trackMe(); renderParty(); }); tr.appendChild(none);
+    TITLES.forEach(function (t, i) {
+      if (!GOTTITLES[i]) { tr.appendChild(el('span', 'tlock', '🔒 ' + t)); return; }
+      tr.appendChild(btn((MYTITLE === i ? '✔ ' : '🏷 ') + t, function () { MYTITLE = i; saveTitles(); trackMe(); renderParty(); toast('🏷 칭호 「' + t + '」을 달았어요'); }));
+    });
+    box.appendChild(tr);
+    box.appendChild(el('div', 'sverse', '너희가 짐을 서로 지라 그리하여 그리스도의 법을 성취하라 (갈라디아서 6:2)'));
+  }
+  function trackMe() { if (NET.chan && NET.on) NET.chan.track({ n: NET.nick, w: wornString(), t: MYTITLE }).catch(function () {}); }
   // ── 업적 ──
   var ACHS = [
     ['log', '🪵', '첫 통나무', '나무를 캐서 통나무를 얻어요'], ['table', '🪚', '제작대', '제작대를 만들어요'], ['tool', '⛏', '첫 도구', '도구를 하나 만들어요'],
@@ -4364,7 +4491,8 @@
     ['wear', '👕', '옷 입기', '만든 옷을 입어요'], ['armor', '🛡', '전신 갑주', '하나님의 전신 갑주를 다 입어요(엡 6:11)'], ['commons', '🏗', '함께 짓기', '함께 짓는 터에 블록을 놓아요'],
     ['sleep', '🛏', '평안한 잠', '침대에서 자고 아침을 맞아요(시 4:8)'], ['shadow', '⚔', '말씀의 검', '어둠의 그림자를 물리쳐요(엡 6:17)'], ['chat', '💬', '첫 인사', '채팅으로 인사해요'], ['lever', '🔘', '레버', '레버로 문을 열어요'],
     ['tokens', '🎖', '믿음의 증표', '일곱 증표를 모두 받아요(히 11)'], ['stones', '💎', '열두 기초석', '기초석 열둘을 성벽 밑에 놓아요(계 21:19-20)'],
-    ['valley', '🕯', '골짜기의 빛', '일곱 등잔대를 모두 밝혀요(시 23:4)'], ['home', '🏙', '본향에 이르다', '거룩한 성에 들어가요(히 11:16)'], ['dex', '📖', '도감 완성', '도감을 다 채워요']
+    ['valley', '🕯', '골짜기의 빛', '일곱 등잔대를 모두 밝혀요(시 23:4)'], ['home', '🏙', '본향에 이르다', '거룩한 성에 들어가요(히 11:16)'],
+    ['party', '🤝', '함께 가는 길', '친구와 파티를 맺어요(시 133:1)'], ['pq', '🏷', '함께 받은 상', '파티 퀘스트 하나를 끝까지 채워요(전 4:9)'], ['cord', '🪢', '세 겹 줄', '파티 퀘스트를 모두 채워요(전 4:12)'], ['dex', '📖', '도감 완성', '도감을 다 채워요']
   ];
   var ACH = {};
   try { ACH = JSON.parse(localStorage.getItem('arkVillage.ach') || '{}') || {}; } catch (e) { ACH = {}; }
@@ -4512,6 +4640,7 @@
       s.dead = true; burst(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z), LAMP); sfx('craft', 1800);
       if (!ACH.shadow) { $('cardEmoji').textContent = '⚔'; $('cardName').textContent = '성령의 검'; $('cardText').textContent = '구원의 투구와 성령의 검 곧 하나님의 말씀을 가지라'; $('cardRef').textContent = '에베소서 6:17'; $('cardNew').textContent = '어둠의 그림자 「' + s.sp.name + '」을(를) 물리쳤어요'; $('card').classList.add('show'); clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, 9000); }
       unlock('shadow');
+      partyAdd('shadows', 1);
       if (STORY.started) { STORY.s.shadows++; if (isNight()) STORY.s.night++; saveStory(); }
     }
     bagChanged();
@@ -4539,7 +4668,7 @@
   function stateDirty() { stateDirtyF = true; }
   function stateGather() {
     var horses = []; try { horses = JSON.parse(localStorage.getItem('arkVillage.horses') || '[]'); } catch (e) {}
-    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, spawn: SPAWN, ach: ACH, quest: { stats: stats, step: qStep }, story: STORY };
+    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, spawn: SPAWN, ach: ACH, quest: { stats: stats, step: qStep }, story: STORY, titles: { t: MYTITLE, got: GOTTITLES } };
   }
   function stateApply(d) {
     if (!d || d.v !== 1) return;
@@ -4551,6 +4680,7 @@
     if (d.crops) CROPS = d.crops; if (d.saps) { SAPS = d.saps; saveSaps(); }
     if (typeof d.hp === 'number') HP = Math.max(1, Math.min(20, d.hp)); if (typeof d.food === 'number') FOOD = Math.max(0, Math.min(20, d.food));
     SPAWN = d.spawn || null; if (d.ach) ACH = d.ach;
+    if (d.titles) { for (var tk in (d.titles.got || {})) if (TITLES[+tk]) GOTTITLES[tk] = d.titles.got[tk]; if (typeof d.titles.t === 'number' && (d.titles.t < 0 || GOTTITLES[d.titles.t])) MYTITLE = d.titles.t; try { localStorage.setItem('arkVillage.title', String(MYTITLE)); localStorage.setItem('arkVillage.titles', JSON.stringify(GOTTITLES)); } catch (e) {} }
     if (d.story) { mergeStory(d.story); try { localStorage.setItem('arkVillage.story', JSON.stringify(STORY)); } catch (e) {} }
     if (d.quest) { stats = d.quest.stats || stats; qStep = d.quest.step || 0; questSave(); }
     saveSettings(); saveCrops();
@@ -4796,9 +4926,11 @@
       scene.remove(p.av); p.av = nav; scene.add(nav);
       if (p.wi) handItem(nav, p.wi);
     }
-    if (n === p.nick) return;
-    p.nick = n; disposeSprite(p.tag);
-    p.tag = textSprite(shortName(n, 8), 'rgba(0,0,0,0.45)', '#ffffff', 0.62); p.tag.position.y = HT + 0.7; p.av.add(p.tag);
+    var ti = m && typeof m.t === 'number' && TITLES[m.t] ? m.t : -1, mate = partyMate(p.u);   // 칭호는 정해진 목록 번호만
+    var key = n + '|' + ti + '|' + mate;
+    if (key === p.nick) return;
+    p.nick = key; disposeSprite(p.tag);
+    p.tag = textSprite((ti >= 0 ? '「' + TITLES[ti] + '」 ' : '') + (mate ? '🤝' : '') + shortName(n, 8), mate ? 'rgba(30,110,40,0.7)' : 'rgba(0,0,0,0.45)', '#ffffff', 0.62); p.tag.position.y = HT + 0.7; p.av.add(p.tag);
   }
   function peerBubble(p, body) {
     disposeSprite(p.bub);
@@ -5015,8 +5147,8 @@
       .subscribe(function (status) {
         if (status === 'SUBSCRIBED') {
           var first = !NET.ch; NET.ch = ch; NET.on = true; NET.joinedAt = performance.now(); NET.sentKey = '';
-          ch.track({ n: NET.nick, w: wornString() }).catch(function () {});
-          netPill(); loadChat();
+          trackMe();
+          netPill(); loadChat(); PARTY.pollT = 0;
           if (first) chatSys('함께 놀기에 들어왔어요 — 💬' + (isTouch ? '' : '(T)') + '로 이야기해요');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') { NET.on = false; netPill(); }
       });
@@ -5163,7 +5295,7 @@
   window.addEventListener('beforeunload', function () { if (dirty) savePlot(); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) { saveEdits(); if (dirty) savePlot(); } });
 
-  window.__arkDebug = { inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+  window.__arkDebug = { PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };

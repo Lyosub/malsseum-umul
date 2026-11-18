@@ -35,6 +35,13 @@
   #netState { color:#b8f0ff; }
   body:not(.adm) .admonly { display:none !important; }
   body:not(.touch) .touchonly { display:none !important; }
+  /* 파티 */
+  #partyBody { max-height:calc(100vh - 150px); overflow:auto; display:flex; flex-direction:column; gap:5px; padding-right:4px; }
+  #partyBody h3 { font-size:13px; font-weight:400; color:#2a2a4a; margin-top:6px; }
+  .prow { display:flex; align-items:center; gap:6px; flex-wrap:wrap; background:#c6c6c6; border:2px solid #8b8b8b; padding:4px 6px; font-size:12px; color:#333; }
+  .prow > span:first-child { flex:1; min-width:150px; } .prow .mc { width:auto; padding:0 10px; height:28px; font-size:12px; }
+  .prow.pinv { background:#f3e9cc; border-color:#c8a850; } .prow.pq.done { background:#c8dcc0; border-color:#5a8a4a; }
+  .prow small { font-size:11px; color:#555; } .ptitles .tlock { font-size:11px; color:#777; padding:0 4px; }
   /* 나그네의 길 */
   .stpanel { width:min(720px, 96vw); }
   #storyBody { max-height:calc(100vh - 150px); overflow:auto; display:flex; flex-direction:column; gap:6px; padding-right:4px; }
@@ -504,6 +511,7 @@
     <button id="mShadow" class="mc">어둠의 그림자: 나옴</button>
     <button id="mAutoJump" class="mc touchonly">자동 점프: 켬</button>
     <button id="mStory" class="mc">📜 나그네의 길</button>
+    <button id="mParty" class="mc">🤝 파티</button>
     <button id="mVisit" class="mc">🏡 친구 집 구경</button>
     <button id="mRevert" class="mc admonly">🧹 함께 짓는 터 되돌리기</button>
     <button id="mForest" class="mc">🌲 동쪽 숲</button>
@@ -572,6 +580,11 @@
   <h2>📜 나그네의 길 — 본향을 향하여 <small>(히 11:13-16)</small></h2>
   <div id="storyBody"></div>
   <div class="pfoot"><button id="storyStart" class="mc" style="width:140px">🧭 길 떠나기</button> <button id="storyDone" class="mc" style="width:120px">닫기</button></div>
+</div></div>
+<div id="party" class="screen dim"><div class="panel stpanel">
+  <h2>🤝 파티 <small>(4명까지 · 보라 형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고, 시 133:1)</small></h2>
+  <div id="partyBody"></div>
+  <div class="pfoot"><button id="partyDone" class="mc" style="width:120px">닫기</button></div>
 </div></div>
 <div id="ending" class="screen"><div class="endbox">
   <h1>🏙 본향에 이르렀어요</h1>
@@ -667,6 +680,7 @@
       🛏 침대(양털 3 + 고페르 나무 3)를 누르면 다시 일어날 자리가 되고, 밤이면 자고 아침이 돼요(시 4:8). 🔘 레버(막대기 + 돌)를 누르면 둘레 문이 함께 열리고 닫혀요. 🪧 표지판은 내 땅에 세우고 글을 골라요. 횃불은 벽에도 붙고, 통나무는 옆면에 놓으면 눕혀져요. 웅크리기(PC: Shift, 휴대폰: 방향키 가운데 2초)로 가장자리에서 떨어지지 않아요.<br>
       🌑 밤 들판과 굴 속에는 「어둠의 그림자」(미움·거짓·교만)가 나와요. 마을·내 땅·함께 짓는 터와 불빛 곁은 안전하고, 횃불을 들면 가까이 못 오고, 햇빛에는 사라져요. 갑옷을 입으면 덜 다치고, 하나님의 전신 갑주 다섯 가지를 다 입으면 다치지 않아요(엡 6:11). 칼이나 성령의 검(철 2 + 금 1 + 막대기, 제작대, 엡 6:17)으로 물리쳐요 — 톡(PC: 클릭). 메뉴에서 안 나오게 할 수 있어요.<br>
       📜 첫 집을 다 지으면 마을 입구의 「안내하는 나그네」에게 말을 걸어 긴 이야기 「본향을 향하여」(히 11:16)를 시작해요 — 1부 믿음의 증표 일곱(히 11장), 2부 땅속 깊이 숨은 열두 보석으로 기초석 만들기(계 21:19-20), 3부 동쪽 사막 땅속 「사망의 음침한 골짜기」 미로에서 일곱 등잔대 밝히기(시 23:4), 4부 동쪽 끝 거룩한 성의 열두 진주 문(계 21:21). 메뉴 → 📜 나그네의 길에서 할 일을 봐요. 아주 어려워요 — 친구들과 함께 가요.<br>
+      🤝 메뉴 → 🤝 파티에서 지금 함께 있는 친구를 초대해 4명까지 파티를 맺어요. 파티원은 이름표가 초록색이고, 함께 나무 캐기·블록 놓기·밀 거두기·철 녹이기·그림자 물리치기·아라랏 산 오르기 파티 퀘스트를 채워 칭호를 받아요(전 4:9). 칭호는 이름표 위에 달 수 있어요.<br>
       🏗 방주 북쪽 「함께 짓는 터」(지도에서 이동)는 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요. 정원·우리·길과 다리·모임터 네 구역 중 맡고 싶은 곳을 골라 지어요. 🏡 지도나 메뉴의 「친구 집 구경」에서 내 집을 보여 줄 수 있고, 친구가 보여 준 집에 가 볼 수 있어요. 🏅 업적은 가방 → 업적에서 봐요. 마을 사람(노아·목자·안내하는 나그네)을 누르면 말씀을 들려줘요.<br>
       📦 궤(고페르 나무 8, 출 25:10)를 내 땅에 놓고 누르면 물건을 넣어 둘 수 있어요. 용광로도 내 땅에 놓을 수 있고, 녹이는 동안 불이 켜져요.<br>
       🔥 용광로(돌 8)에서 땔감으로 광석을 녹여 덩이로 만들어요(욥 28:1-2). 하나 녹는 데 3초 — 넣어 두고 다른 일을 해도 화면 위 막대가 차면 가방에 들어와요. 땔감은 석탄·숯 1개로 8번, 통나무 1개로 1.5번 — 통나무를 녹이면 숯이 돼요(요 21:9). 막대기 + 석탄(또는 숯)으로 횃불 4개(창 15:17), 횃불은 굴 속에도 놓아 밝힐 수 있어요. 덩이·보석 9개는 블록으로 묶고 다시 풀 수 있어요.<br>
