@@ -231,6 +231,8 @@
   .panel { background:#c6c6c6; border:2px solid #000; box-shadow:inset 3px 3px 0 #fff, inset -3px -3px 0 #555; padding:12px 14px 14px; color:#3f3f3f; max-height:100%; overflow:auto; }
   .panel h2 { font-size:14px; font-weight:400; margin-bottom:8px; color:#3f3f3f; }
   #invGrid, #invHot { display:grid; grid-template-columns:repeat(9, 40px); gap:0; }
+  #bagUse { color:#2f5a2f; font-size:11px; }
+  i.inf { font-size:15px !important; color:#ffe680 !important; }
   .islot.empty { background:#8b8b8b; } .islot.pick { background:#d8e8a0; outline:3px solid #2f7a3a; outline-offset:-3px; }
   .islot u.num { position:absolute; left:2px; top:1px; font-size:10px; text-decoration:none; color:#fff; text-shadow:1px 1px 0 #000; line-height:1; pointer-events:none; }
   #bagView h2.hoth { margin-top:8px; margin-bottom:2px; font-size:12px; }
@@ -460,7 +462,7 @@
   <div class="panel">
     <div class="tabs"><button id="tabBag" class="tab on">🎒 가방</button><button id="tabCraft" class="tab">🔨 만들기</button><button id="tabDex" class="tab">📖 도감</button></div>
     <div id="bagView">
-      <h2>🎒 가방 — 눌러서 집고, 다른 칸을 누르면 자리를 바꿔요</h2>
+      <h2>🎒 가방 — 눌러서 집고, 다른 칸을 누르면 자리를 바꿔요 <small id="bagUse"></small> <button id="bagDrop" class="mc" style="display:none;height:26px;font-size:12px;padding:0 8px;">🗑 집은 묶음 버리기</button></h2>
       <div id="invGrid"></div>
       <h2 class="hoth">손에 들 단축 칸 1~9 — 가방에서 집은 것을 여기 눌러 넣어요 · 단축 칸을 집어 가방 칸에 놓으면 비워져요</h2>
       <div id="invHot"></div>

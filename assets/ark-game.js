@@ -707,7 +707,7 @@
   var NEED_TIER = {}; NEED_TIER[ORE_CU] = 0; NEED_TIER[ORE_FE] = 1; NEED_TIER[ORE_AG] = 2; NEED_TIER[ORE_AU] = 3;   // 0=나무 1=돌 2=구리 3=철 곡괭이
   NEED_TIER[ORE_COAL] = 0; NEED_TIER[ORE_ONYX] = 2; NEED_TIER[ORE_SAPH] = 3; NEED_TIER[ORE_DIA] = 3;
   for (var dk3 in DEEPV) NEED_TIER[DEEPV[dk3]] = NEED_TIER[dk3];
-  var HAND_SLOW = 2, TIER_SPEED = [2, 3, 4.5, 6, 8], TOOL_MAX = [60, 130, 200, 300, 1000];
+  var HAND_SLOW = 2, MINE_SLOW = 1.8, TIER_SPEED = [2, 3, 4.5, 6, 8], TOOL_MAX = [60, 130, 200, 300, 1000];
   function isTool(id) { return (id >= TOOL0 && id < TOOL0 + 16) || (id >= TOOL4 && id < TOOL4 + 4); }
   function tierOf(id) { return id >= TOOL4 ? 4 : (id - TOOL0) % 4; }
   function typeOf(id) { return id >= TOOL4 ? id - TOOL4 : Math.floor((id - TOOL0) / 4); }
@@ -725,8 +725,10 @@
       var bt = bestTier('pick');
       return { deny: B[id][0] + '은(는) ' + TIER_NAME[NEED_TIER[id]] + ' 곡괭이 이상을 손에 들어야 캘 수 있어요' + (bt >= NEED_TIER[id] ? ' (가방에 ' + TIER_NAME[bt] + ' 곡괭이가 있어요)' : '') };
     }
-    // 맞는 도구가 없으면(맨손·블록·맞지 않는 도구) 2배 느리게
-    return { t: tier >= 0 ? base / TIER_SPEED[tier] : (cls ? base * HAND_SLOW : base), tool: tool, fit: tier >= 0 };
+    // 맞는 도구가 없으면(맨손·블록·맞지 않는 도구) 2배 느리게. 전체를 1.8배 느리게(전도사님 「캐지는 속도가 너무 빨라」 11/18) — 풀·꽃처럼 톡 캐지는 것은 그대로
+    var t = tier >= 0 ? base / TIER_SPEED[tier] : (cls ? base * HAND_SLOW : base);
+    if (base > 0.1) t *= MINE_SLOW;
+    return { t: t, tool: tool, fit: tier >= 0 };
   }
   function dropOf(id) { return DROP[id] || baseOf(id); }
   // 만들기
@@ -1393,7 +1395,7 @@
   }
 
   // ───────── 사람(네모난 몸, 3인칭에서 보임) ─────────
-  var HW = 0.42, HT = 3.4, EYE = 3.1, REACH = 11;   // 몸 너비 0.84칸: 한 칸짜리 문을 지나갈 수 있게
+  var HW = 0.42, HT = 3.4, EYE = 3.1, REACH = 6;   // 손이 닿는 거리: 눈에서 6.5칸(사람 키의 두 배쯤, 전도사님 「너무 멀리서도 캐져」 11/18)   // 몸 너비 0.84칸: 한 칸짜리 문을 지나갈 수 있게
   var avatarMat;
   function boxGeo(w, h, d, hex) {
     var g = new THREE.BoxGeometry(w, h, d), n = g.attributes.position.count, col = new Float32Array(n * 3);
@@ -1590,14 +1592,36 @@
   var BAG = {};
   try { var bg = JSON.parse(localStorage.getItem('arkVillage.bag') || 'null'); if (bg) for (var bk in bg) if (INV.indexOf(+bk) >= 0) BAG[+bk] = Math.max(0, Math.min(9999, bg[bk] | 0)); } catch (e) {}
   function saveSettings() { try { localStorage.setItem('arkVillage.settings', JSON.stringify(S)); localStorage.setItem('arkVillage.hotbar4', JSON.stringify(HOTBAR)); localStorage.setItem('arkVillage.bagslots', JSON.stringify(BAGSLOT)); } catch (e) {} }
-  // 가방 칸 정리: 다 쓴 것은 빼고, 새로 얻은 것은 빈 칸에(최소 4줄 × 9칸)
+  // 가방: 36칸, 한 칸에 한 묶음(77개, 도구·옷·안장은 1개). 관리자는 끝없음(∞)
+  var STACK = 77, BAG_SLOTS = 36;
+  function stackOf(id) { return isTool(id) || WEARINFO[id] || id === SADDLE ? 1 : STACK; }
+  function slotsFor(id, n) { return n > 0 ? Math.ceil(n / stackOf(id)) : 0; }
+  function usedSlots() { var s = 0; for (var k in BAG) if (BAG[k] > 0) s += slotsFor(+k, BAG[k]); return s; }
+  // 이 물건을 몇 개 더 담을 수 있나(채우다 만 묶음 + 빈 칸)
+  function room(id) {
+    if (isAdm()) return 1e9;
+    var st = stackOf(id), cur = BAG[id] || 0, part = cur % st ? st - cur % st : 0;
+    return Math.min(9999 - cur, part + Math.max(0, BAG_SLOTS - usedSlots()) * st);
+  }
+  function fmtN(n) { return isAdm() ? '∞' : String(n); }
+  var fullT = 0;
+  function bagFull() { var now = performance.now(); if (now - fullT > 4000) { fullT = now; toast('🎒 가방이 가득 찼어요 — 안 쓰는 것을 궤에 넣거나 가방에서 버려요'); } }
+  // 가방 칸 정리: 물건마다 필요한 묶음 수만큼 칸을 두고(넘치면 빼고, 모자라면 빈 칸에), 최소 4줄 × 9칸
   function syncBagSlots() {
-    var i, seenIds = {};
-    for (i = 0; i < BAGSLOT.length; i++) { var v = BAGSLOT[i]; if (!v || have(v) < 1 || seenIds[v]) BAGSLOT[i] = 0; else seenIds[v] = 1; }
-    INV.forEach(function (id) { if (have(id) > 0 && !seenIds[id]) { var e = BAGSLOT.indexOf(0); if (e < 0) { e = BAGSLOT.length; BAGSLOT.push(0); } BAGSLOT[e] = id; seenIds[id] = 1; } });
-    while (BAGSLOT.length < 36) BAGSLOT.push(0);
-    while (BAGSLOT.length > 36 && BAGSLOT.length % 9 === 0 && BAGSLOT.slice(-9).every(function (v) { return !v; })) BAGSLOT.length -= 9;
+    var i, need = {}, cnt = {};
+    if (isAdm()) INV.forEach(function (id) { need[id] = 1; });
+    else for (var k in BAG) if (BAG[k] > 0) need[+k] = slotsFor(+k, BAG[k]);
+    for (i = 0; i < BAGSLOT.length; i++) { var v = BAGSLOT[i]; if (!v) continue; cnt[v] = (cnt[v] || 0) + 1; if (cnt[v] > (need[v] || 0)) { BAGSLOT[i] = 0; cnt[v]--; } }
+    INV.forEach(function (id) { while ((cnt[id] || 0) < (need[id] || 0)) { var e = BAGSLOT.indexOf(0); if (e < 0) { e = BAGSLOT.length; BAGSLOT.push(0); } BAGSLOT[e] = id; cnt[id] = (cnt[id] || 0) + 1; } });
+    while (BAGSLOT.length < BAG_SLOTS) BAGSLOT.push(0);
+    while (BAGSLOT.length > BAG_SLOTS && BAGSLOT.length % 9 === 0 && BAGSLOT.slice(-9).every(function (v) { return !v; })) BAGSLOT.length -= 9;
     while (BAGSLOT.length % 9) BAGSLOT.push(0);
+  }
+  // 칸마다 보여 줄 개수: 같은 물건은 앞 칸부터 77개씩 채우고 마지막 칸이 나머지
+  function slotCounts() {
+    var left = {}, out = [];
+    BAGSLOT.forEach(function (id) { if (!id) { out.push(0); return; } if (left[id] === undefined) left[id] = have(id); var st = isAdm() ? left[id] : Math.min(stackOf(id), left[id]); out.push(st); left[id] -= st; });
+    return out;
   }
   var WEAR = {};
   try { var wr = JSON.parse(localStorage.getItem('arkVillage.wear') || 'null'); if (wr) for (var wk in wr) if (isTool(+wk)) WEAR[+wk] = Math.max(1, Math.min(toolMax(+wk), wr[wk] | 0)); } catch (e) {}
@@ -1625,14 +1649,19 @@
     if (ui === 'chest') renderChest();
     if (me && myPlot >= 0) markDirty();
   }
+  // 담은 개수를 돌려준다(가방이 차면 담을 수 있는 만큼만)
   function give(id, n) {
-    if (INV.indexOf(id) < 0 || isAdm()) return;
-    BAG[id] = Math.min(9999, have(id) + n);
+    if (INV.indexOf(id) < 0) return 0;
+    if (isAdm()) return n;
+    if (n > 0) n = Math.min(n, room(id));
+    if (!n) return 0;
+    BAG[id] = Math.max(0, Math.min(9999, have(id) + n));
     if (n > 0) {
       markSeen(id);
       // 새로 얻은 것은 단축 칸 빈자리에 저절로(이미 있으면 그대로)
       if (HOTBAR.indexOf(id) < 0) { var e = HOTBAR.indexOf(0); if (e >= 0) { HOTBAR[e] = id; saveSettings(); } }
     }
+    return n;
   }
   // ───────── 제작법은 단계별로 열린다: 재료를 한 번이라도 얻으면 그 재료로 만드는 법이 열림 ─────────
   var SEEN = {}, seenQuiet = true, newRecs = [], newRecT = null;
@@ -1721,6 +1750,7 @@
   }
   function unwear(slot) {
     var id = WORN[slot]; if (!id) return;
+    if (room(id) < 1) { bagFull(); return; }
     WORN[slot] = 0; give(id, 1); sfx('click'); bagChanged(); saveWorn();
     if ($('looks').classList.contains('show')) renderLooks();
   }
@@ -2001,7 +2031,7 @@
     var slots = document.querySelectorAll('#hotbar .slot');
     for (var k = 0; k < slots.length; k++) slots[k].classList.toggle('on', k === i);
     if (!quiet) {
-      var el = $('selName'); el.textContent = HOTBAR[i] ? B[HOTBAR[i]][0] + ' · ' + have(HOTBAR[i]) + '개' : '빈 손'; el.classList.add('show');
+      var el = $('selName'); el.textContent = HOTBAR[i] ? B[HOTBAR[i]][0] + ' · ' + fmtN(have(HOTBAR[i])) + '개' : '빈 손'; el.classList.add('show');
       clearTimeout(selNameT); selNameT = setTimeout(function () { el.classList.remove('show'); }, 1600);
     }
     if (heldMesh) setHeld(HOTBAR[i]);
@@ -2028,7 +2058,7 @@
   function withinReach(h) {
     if (!h) return null;
     var d = Math.hypot(h.x + 0.5 - P.x, h.y + 0.5 - (P.y + EYE), h.z + 0.5 - P.z);
-    return d <= REACH + 1 ? h : null;
+    return d <= REACH + 0.5 ? h : null;
   }
   function pickDir(dir) { var o = camera.position; return withinReach(raycast(o.x, o.y, o.z, dir.x, dir.y, dir.z, REACH + camDist + 1)); }
   function pickCenter() { camera.getWorldDirection(tmpV); return pickDir(tmpV); }
@@ -2316,18 +2346,24 @@
   function dropItem(x, y, z, id, n) {
     if (!id || INV.indexOf(id) < 0 || !n) return;
     for (var i = 0; i < DROPS.length; i++) { var o0 = DROPS[i]; if (o0.id === id && !o0.dead && Math.abs(o0.x - x) < 1 && Math.abs(o0.y - y) < 1.2 && Math.abs(o0.z - z) < 1) { o0.n += n; return; } }
-    if (DROPS.length > 60) collectDrop(DROPS[0], true);
+    if (DROPS.length > 60 && !collectDrop(DROPS[0], true)) dropAway(DROPS[0]);
     if (!scene || !atlasTex) { give(id, n); return; }
     dropMats();
     var flat = isFlat(id), geo = dropGeo[id] || (dropGeo[id] = flat ? itemGeometry(id) : blockGeometry(id));
     var m = new THREE.Mesh(geo, flat ? dropMatF : dropMatB); m.scale.setScalar(flat ? 0.5 : 0.3); m.position.set(x, y, z); scene.add(m);
     DROPS.push({ id: id, n: n, x: x, y: y, z: z, vx: (Math.random() - 0.5) * 2.2, vy: 3.5, vz: (Math.random() - 0.5) * 2.2, age: 0, m: m, rot: Math.random() * 6 });
   }
+  // 줍기: 가방에 자리가 없으면 남은 것은 땅에 그대로(잠깐 안 끌려옴)
   function collectDrop(o, quiet) {
-    if (o.dead) return; o.dead = true;
-    give(o.id, o.n); if (!quiet) pickup(o.id, o.n);
+    if (o.dead) return true;
+    var g = give(o.id, o.n);
+    if (g > 0 && !quiet) pickup(o.id, g);
+    if (g < o.n) { o.n -= g; o.full = o.age; bagFull(); return false; }
+    o.dead = true;
     if (o.m) { scene.remove(o.m); o.m = null; }
+    return true;
   }
+  function dropAway(o) { if (o.m) { scene.remove(o.m); o.m = null; } o.dead = true; }
   function collectAll() { DROPS.forEach(function (o) { collectDrop(o, true); }); DROPS = []; bagChanged(); }
   window.addEventListener('pagehide', function () { if (DROPS.length) collectAll(); });
   function stepDrops(dt) {
@@ -2337,11 +2373,13 @@
       var o = DROPS[i]; if (o.dead) continue;
       o.age += dt;
       var dx = px - o.x, dy = py - o.y, dz = pz - o.z, dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.001;
-      if (dist > 28 || o.age > 30) { collectDrop(o, true); got = true; continue; }
-      if (o.age > 0.35 && (dist < 3.4 || o.age > 6)) {
+      var wait = o.full !== undefined && o.age - o.full < 3;   // 가방이 찼거나 버린 것은 잠깐 안 끌려옴
+      if (o.age > 300) { dropAway(o); continue; }   // 5분 지나면 사라짐
+      if (!wait && (dist > 28 || o.age > 30)) { if (collectDrop(o, true)) got = true; continue; }
+      if (!wait && o.age > 0.35 && (dist < 3.4 || o.age > 6)) {
         var spd = Math.min(32, 7 + (3.4 - Math.min(dist, 3.4)) * 9 + (o.age > 6 ? 12 : 0));
         o.x += dx / dist * spd * dt; o.y += dy / dist * spd * dt; o.z += dz / dist * spd * dt;
-        if (dist < 0.9) { collectDrop(o); got = true; continue; }
+        if (dist < 0.9) { got = true; if (!collectDrop(o)) { o.vx = (Math.random() - 0.5) * 3; o.vz = (Math.random() - 0.5) * 3; o.vy = 3; } continue; }
       } else {
         o.vy -= 22 * dt;
         var nx = o.x + o.vx * dt, nz = o.z + o.vz * dt, ny = o.y + o.vy * dt;
@@ -2466,7 +2504,7 @@
       var f = WEAR[id] / toolMax(id);
       bar = '<b class="dur"><s style="width:' + Math.max(4, Math.round(f * 100)) + '%;background:' + (f > 0.5 ? '#4fd14f' : f > 0.2 ? '#e8c53a' : '#e0473a') + '"></s></b>';
     }
-    return '<img alt="" src="' + ICON[id] + '"' + (count === 0 ? ' class="none"' : '') + '>' + bar + (count > 0 && !(isTool(id) && count === 1) ? '<i>' + count + '</i>' : '');
+    return '<img alt="" src="' + ICON[id] + '"' + (count === 0 ? ' class="none"' : '') + '>' + bar + (isAdm() ? '<i class="inf">∞</i>' : (count > 1 || (count === 1 && stackOf(id) > 1) ? '<i>' + count + '</i>' : ''));
   }
   function renderHotbar() {
     var bar = $('hotbar'); bar.innerHTML = '';
@@ -2487,10 +2525,13 @@
     var grid = $('invGrid'), row = $('invHot'), list = $('craftList'); grid.innerHTML = ''; row.innerHTML = ''; list.innerHTML = '';
     // 가방: 가진 것만 칸에. 눌러서 집고 → 다른 가방 칸(자리 바꾸기)이나 아래 단축 칸(넣기)을 누른다
     syncBagSlots();
-    function info(id) { return B[id][0] + ' ' + have(id) + '개' + (isTool(id) ? ' · 남은 힘 ' + wearLeft(id) + '/' + toolMax(id) : ''); }
+    function info(id) { return B[id][0] + ' ' + fmtN(have(id)) + '개' + (isTool(id) && !isAdm() ? ' · 남은 힘 ' + wearLeft(id) + '/' + toolMax(id) : ''); }
+    var SC = slotCounts();
+    $('bagUse').textContent = isAdm() ? '관리자 · 모두 ∞' : usedSlots() + ' / ' + BAG_SLOTS + '칸 · 한 칸에 ' + STACK + '개까지';
+    $('bagDrop').style.display = bagPick && bagPick.from === 'bag' && !isAdm() ? '' : 'none';
     BAGSLOT.forEach(function (id, i) {
       var d = document.createElement('button'), on = bagPick && bagPick.from === 'bag' && bagPick.i === i;
-      d.className = 'islot' + (on ? ' pick' : '') + (id ? '' : ' empty'); d.innerHTML = id ? slotHTML(id, have(id)) : ''; d.title = id ? B[id][0] : '빈 칸';
+      d.className = 'islot' + (on ? ' pick' : '') + (id ? '' : ' empty'); d.innerHTML = id ? slotHTML(id, SC[i]) : ''; d.title = id ? B[id][0] + (isAdm() ? '' : ' ' + SC[i] + '개') : '빈 칸';
       d.addEventListener('click', function () {
         sfx('click');
         if (bagPick && bagPick.from === 'bag') {
@@ -2504,7 +2545,7 @@
           bagPick = null; renderInv(); return;
         }
         if (!id) { $('invName').textContent = '빈 칸이에요'; return; }
-        bagPick = { from: 'bag', i: i, id: id }; renderInv();
+        bagPick = { from: 'bag', i: i, id: id, n: SC[i] }; renderInv();
         $('invName').textContent = info(id) + ' — 집었어요 → 아래 단축 칸을 누르면 넣고, 다른 가방 칸을 누르면 자리를 바꿔요';
       });
       grid.appendChild(d);
@@ -2572,7 +2613,7 @@
       if (!recOpen(rc)) { locked.push(rc); return; }
       var ok = canCraft(rc);
       var r = document.createElement('div'); r.className = 'rec' + (ok ? '' : ' no');
-      r.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('.ri[data-id]'); if (t) { var gid = +t.getAttribute('data-id'); $('invName').textContent = '「' + B[gid][0] + '」 ' + howGet(gid) + ' (지금 ' + have(gid) + '개)'; sfx('click'); } });
+      r.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('.ri[data-id]'); if (t) { var gid = +t.getAttribute('data-id'); $('invName').textContent = '「' + B[gid][0] + '」 ' + howGet(gid) + ' (지금 ' + fmtN(have(gid)) + '개)'; sfx('click'); } });
       var h = '<span class="ins">';
       rc.need.forEach(function (n, k) { h += (k ? '<b>+</b>' : '') + '<span class="ri' + (have(n[0]) >= n[1] ? '' : ' lack') + '" data-id="' + n[0] + '" title="' + B[n[0]][0] + ' — 누르면 얻는 곳"><img src="' + ICON[n[0]] + '" alt=""><i>' + n[1] + '</i></span>'; });
       h += '</span><b class="arr">→</b><span class="ri"><img src="' + ICON[rc.out[0]] + '" alt=""><i>' + rc.out[1] + '</i></span>';
@@ -2588,7 +2629,8 @@
           return;
         }
         var made = 0;
-        while (made < times && canCraft(rc)) {
+        if (!rc.fuel && room(rc.out[0]) < rc.out[1]) { sfx('click'); $('invName').textContent = '🎒 가방이 가득 차서 만들 수 없어요. 안 쓰는 것을 버리거나 궤에 넣어요'; return; }
+        while (made < times && canCraft(rc) && (rc.fuel || room(rc.out[0]) >= rc.out[1])) {
           if (rc.fuel && !burnOne(rc)) break;
           rc.need.forEach(function (n) { take(n[0], n[1]); });
           if (rc.fuel) queueSmelt(rc.out[0], rc.out[1]); else give(rc.out[0], rc.out[1]);
@@ -2658,7 +2700,7 @@
     Object.keys(c).forEach(function (k) {
       var id = +k; if (!(c[id] > 0)) return;
       var d = document.createElement('button'); d.className = 'islot'; d.innerHTML = slotHTML(id, c[id]); d.title = B[id][0];
-      d.addEventListener('click', function () { var n = chestOne ? 1 : c[id]; c[id] -= n; if (c[id] <= 0) delete c[id]; give(id, n); $('chestName').textContent = B[id][0] + ' ' + n + '개를 가방으로'; sfx('click'); markDirty(); bagChanged(); renderChest(); });
+      d.addEventListener('click', function () { var n = give(id, chestOne ? 1 : c[id]); if (!n) { $('chestName').textContent = '🎒 가방이 가득 찼어요'; sfx('click'); return; } c[id] -= n; if (c[id] <= 0) delete c[id]; $('chestName').textContent = B[id][0] + ' ' + n + '개를 가방으로'; sfx('click'); markDirty(); bagChanged(); renderChest(); });
       g1.appendChild(d);
     });
     if (!g1.children.length) g1.innerHTML = '<span class="empty">비어 있어요 — 아래 가방에서 눌러 넣어요</span>';
@@ -2693,7 +2735,11 @@
     var now = Date.now(), changed = false;
     JOBS.forEach(function (j) {
       var done = Math.min(j.n, Math.max(0, Math.floor((now - j.s) / (SMELT_SEC * 1000))));
-      if (done > j.g) { give(j.o, done - j.g); for (var k = j.g; k < done && ui === 'play'; k++) pickup(j.o); j.g = done; changed = true; }
+      if (done > j.g) {
+        var got2 = give(j.o, done - j.g);   // 가방이 차면 용광로에 남겨 두었다가 자리가 나면 꺼냄
+        for (var k = 0; k < got2 && ui === 'play'; k++) pickup(j.o);
+        j.g += got2; if (got2) changed = true; if (got2 < done - (j.g - got2)) bagFull();
+      }
     });
     var fin = JOBS.filter(function (j) { return j.g >= j.n; });
     if (fin.length) { JOBS = JOBS.filter(function (j) { return j.g < j.n; }); fin.forEach(function (j) { toast('🔥 ' + B[j.o][0] + ' ' + j.n + '개가 다 녹았어요'); }); sfx('craft'); }
@@ -2760,6 +2806,17 @@
     ['block', 'shape', 'tool', 'smelt', 'wear'].forEach(function (c) { on('cc_' + c, function () { craftCat = c; renderInv(); sfx('click'); }); });
     on('tLook', function () { openLooks(); });
     on('btnLook', function () { openLooks(); });
+    // 집은 묶음 버리기: 앞쪽 땅에 떨어뜨림(5초 동안은 다시 안 끌려옴, 5분 지나면 사라짐)
+    on('bagDrop', function () {
+      if (!bagPick || bagPick.from !== 'bag' || isAdm()) return;
+      var id = bagPick.id, n = Math.min(bagPick.n || 0, have(id)); if (n < 1) return;
+      take(id, n);
+      var fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw);
+      dropItem(P.x + fx * 2.2, P.y + 2, P.z + fz * 2.2, id, n);
+      var o = DROPS[DROPS.length - 1]; if (o && o.id === id) o.full = 2;
+      bagPick = null; sfx('pop'); bagChanged();
+      $('invName').textContent = B[id][0] + ' ' + n + '개를 앞에 버렸어요 (다시 주우려면 5초 뒤 가까이 가요)';
+    });
     on('tipsDone', function () { try { localStorage.setItem('arkVillage.tips', '1'); } catch (e) {} resume(); });
     var br = $('btnRun');
     br.addEventListener('touchstart', function (e) { setRun(!runLock, 'btn'); e.preventDefault(); }, { passive: false });
@@ -2979,7 +3036,7 @@
       var t = tca - Math.sqrt(r * r - d2);
       if (t < bt && t < maxT && (!best || t < best.t)) best = { kind: kindC, t: t, a: obj };
     }
-    var reach = REACH + camDist + 8;
+    var reach = REACH + camDist + 3;
     animals.forEach(function (a) { if (a.mesh.visible && a !== riding) test(a.kind, a.x, a.y + CR_R[a.kind] * 0.9, a.z, reach, a); });
     birds.forEach(function (b) { test(b.kind, b.mesh.position.x, b.mesh.position.y, b.mesh.position.z, 60); });
     fishes.forEach(function (f) { if (f.mesh.visible) test('fish', f.x, f.y, f.z, reach); });
