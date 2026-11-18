@@ -61,6 +61,16 @@
     <span style="color:var(--text-soft);">›</span>
   </a>
 
+  <!-- 나그네 마을 블록 게임 — 시험 중: 관리자 + 지정한 학생에게만(DB 함수 can_see_ark) -->
+  <a href="ark.html" id="arkCard" class="card" style="display:none;align-items:center;gap:12px;text-decoration:none;margin-top:10px;">
+    <span class="ico-circle">🏕️</span>
+    <div style="flex:1 1 auto;min-width:0;">
+      <div style="font-weight:800;color:var(--well-deep);">나그네 마을 — 블록 게임 <span style="font-size:11px;font-weight:700;color:#b8481f;">시험 중</span></div>
+      <div style="font-size:12px;color:var(--text-soft);">재료를 캐고 옷을 지어 입고, 친구들과 함께 마을을 꾸며요</div>
+    </div>
+    <span style="color:var(--text-soft);">›</span>
+  </a>
+
 <!-- 게임들 -->
   <p class="msg" style="margin:16px 2px 8px;font-size:12px;">
     <span class="pc-badge personal">💠 개인 달란트</span> 내 달란트로 쌓여요 ·
@@ -183,6 +193,17 @@
     getSession().then(function (session) {
       if (!session) return;
       getClient().rpc("can_see_odyssey").then(function (res) {
+        if (res && res.data === true) card.style.display = "flex";
+      });
+    });
+  })();
+  // 나그네 마을 카드: 시험 중이라 관리자 + 지정한 학생에게만(DB 함수 can_see_ark)
+  (function () {
+    var card = document.getElementById("arkCard");
+    if (!card || typeof getClient !== "function" || !getClient()) return;
+    getSession().then(function (session) {
+      if (!session) return;
+      getClient().rpc("can_see_ark").then(function (res) {
         if (res && res.data === true) card.style.display = "flex";
       });
     });
