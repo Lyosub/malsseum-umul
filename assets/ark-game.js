@@ -802,6 +802,19 @@
   B[PEARL] = ['진주 문', 'pearl', 'pearl', 'pearl', 0, 1]; B[SOCKET] = ['기초석 자리', 'socket', 'sbrick', 'sbrick'];
   B[GOLDST] = ['정금 길', 'goldst', 'goldst', 'goldst', 0, 1]; B[CITYWALL] = ['벽옥 성곽', 'citywall', 'citywall', 'citywall'];
   B[LIFELEAF] = ['생명나무 잎', 'lifeleaf', 'lifeleaf', 'lifeleaf'];
+  // 반 블록은 가방에는 아래쪽 번호 하나로, 세계에는 위아래 번호를 따로 저장한다.
+  var SLABS = [[SLAB_G,GOPHER,242],[SLAB_S,STONE,243],[SLAB_B,BRICK,244],
+    [SLAB_L,LIME,245],[SLAB_P,PITCH,246],[218,DIRT,247],[219,20,248],
+    [220,11,249],[221,13,250],[222,22,251],[223,PATH,252],[224,GLASS,253],
+    [225,WOOL_W,254],[226,WOOL_B,255],[227,WOOL_V,43],[228,WOOL_R,57],[229,LOG,58]];
+  var SLAB_TOP = {}, SLAB_MATERIAL = {};
+  SLABS.forEach(function (s) {
+    var id = s[0], mat = s[1], upper = s[2];
+    if (B[upper] || (id >= 218 && B[id])) throw new Error('반 블록 번호가 겹쳐요');
+    if (!SHAPE[id]) regShape(id, B[mat][0] + ' 반 블록', 'slab', id, mat);
+    regShape(upper, B[id][0], 'slab', id, mat, 1);
+    SLAB_TOP[id] = upper; SLAB_MATERIAL[id] = mat;
+  });
   for (var bi = 0; bi < B.length; bi++) if (B[bi] === undefined) B[bi] = null;
   function isShape(id) { return !!SHAPE[id]; }
   function baseOf(id) { return SHAPE[id] ? SHAPE[id].base : id; }
@@ -809,7 +822,7 @@
   var EDGE = [[0, 0, 0, 1, 1, 0.19], [0.81, 0, 0, 1, 1, 1], [0, 0, 0.81, 1, 1, 1], [0, 0, 0, 0.19, 1, 1]];
   function shapeBoxes(id, x, y, z) {
     var s = SHAPE[id];
-    if (s.type === 'slab') return [[0, 0, 0, 1, 0.5, 1]];
+    if (s.type === 'slab') return [s.f ? [0, 0.5, 0, 1, 1, 1] : [0, 0, 0, 1, 0.5, 1]];
     if (s.type === 'stair') return [[0, 0, 0, 1, 0.5, 1], [[0, 0.5, 0, 1, 1, 0.5], [0.5, 0.5, 0, 1, 1, 1], [0, 0.5, 0.5, 1, 1, 1], [0, 0.5, 0, 0.5, 1, 1]][s.f]];
     if (s.type === 'door') return [EDGE[s.open ? (s.f + 1) % 4 : s.f]];
     if (s.type === 'ladder') return [[[0, 0, 0, 1, 1, 0.1], [0.9, 0, 0, 1, 1, 1], [0, 0, 0.9, 1, 1, 1], [0, 0, 0, 0.1, 1, 1]][s.f]];
@@ -896,7 +909,9 @@
   // 캐는 시간(초)과 못 캐는 이유
   // 손에 든 도구로 캔다: 맞는 도구면 빨리, 맞지 않는 도구면 맨손 속도(그래도 닳음)
   function mineInfo(id) {
-    var cls = TCLASS[id], base = BASE_T[id] || 0.5, held = HOTBAR[sel];
+    var material = SHAPE[id] && SHAPE[id].type === 'slab' ? SHAPE[id].base : id;
+    if (!TCLASS[material] && SLAB_MATERIAL[material]) material = SLAB_MATERIAL[material];
+    var cls = TCLASS[material], base = BASE_T[material] || 0.5, held = HOTBAR[sel];
     var tool = isTool(held) && have(held) > 0 ? held : 0;
     var hType = tool ? TOOL_TYPES[typeOf(tool)] : '', hTier = tool ? tierOf(tool) : -1;
     var tier = cls && hType === cls ? hTier : -1;
@@ -1013,6 +1028,10 @@
     if (HEAT < 1) return false;
     HEAT -= 1; return true;
   }
+  SLABS.slice(5).forEach(function (s) {
+    INV.push(s[0]);
+    RECIPES.push({ out: [s[0], 6], need: [[s[1], 3]], cat: 'shape' });
+  });
   RECIPES.forEach(function (r) { if (!r.cat) r.cat = SHAPE[r.out[0]] ? 'shape' : 'block'; });
   function canCraft(rc) { return isAdm() || rc.need.every(function (n) { return have(n[0]) >= n[1]; }) && (!rc.furnace || furnaceOK()) && (!rc.table || tableOK()) && (!rc.fuel || fuelLeft(rc) >= 1); }
   function kind(id) { return B[id] && B[id][6]; }
@@ -1550,7 +1569,7 @@
           }
           if (def[6] === 'shape') {
             // 문·계단·반 블록·울타리: 작은 상자들
-            var sb = shapeBoxes(id, x, y, z), sh0 = SHAPE[id].type === 'wtorch' || SHAPE[id].type === 'lantern' || id === LAMPSTAND + 1 ? 1 : skyLight(x, y + 1, z), bk = SHAPE[id].type === 'ladder' ? 2 : (SHAPE[id].type === 'pane' ? 1 : 0);
+            var sb = shapeBoxes(id, x, y, z), sh0 = SHAPE[id].type === 'wtorch' || SHAPE[id].type === 'lantern' || id === LAMPSTAND + 1 ? 1 : skyLight(x, y + 1, z), bk = SHAPE[id].type === 'ladder' ? 2 : (SHAPE[id].type === 'pane' || SLAB_MATERIAL[baseOf(id)] === GLASS ? 1 : 0);
             for (var bi3 = 0; bi3 < sb.length; bi3++) {
               var bb = sb[bi3];
               for (var f2 = 0; f2 < 6; f2++) {
@@ -1841,7 +1860,7 @@
             var bs = collBoxes(cid, x, y, z);
             for (var bi2 = 0; bi2 < bs.length; bi2++) {
               var b = bs[bi2];
-              if (px + HW > x + b[0] && px - HW < x + b[3] && py + HT > y + b[1] && py < y + b[4] && pz + HW > z + b[2] && pz - HW < z + b[5]) return true;
+              if (px + HW > x + b[0] && px - HW < x + b[3] && py + curHT > y + b[1] && py < y + b[4] && pz + HW > z + b[2] && pz - HW < z + b[5]) return true;
             }
           }
     return false;
@@ -2153,10 +2172,12 @@
   var isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   var lockOn = false, canvasEl;
   function showUI(name) {
-    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
+    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party', 'friends'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
     document.body.classList.toggle('playing', name === 'play');
     document.body.classList.toggle('menu', name !== 'play');
     ui = name;
+    if (name === 'map') tutorialEvent('map');
+    if (name === 'play' && started) renderQuest();
     if (name !== 'play') {
       resetInput();
       // 어떤 창이든 열리면 마우스 잠금을 풀어 커서가 화면에 갇히지 않게
@@ -2183,13 +2204,10 @@
     if (furnaceOK()) SEEN[FURNACE] = 1; if (tableOK()) SEEN[CRAFT] = 1;   // 내 땅에 놓아 둔 용광로·제작대
     SLOTS.forEach(function (s) { if (WORN[s]) SEEN[WORN[s]] = 1; }); saveSeen();
     started = true; seenQuiet = false; lastStage = curStage().n;
+    if ((!me || myPlot < 0) && (tutorialStep === 4 || tutorialStep === 5)) { tutorialStep = 6; tutorialSave(); }
+    if ((!me || !NET.ok) && tutorialStep === 7) { tutorialStep = 8; tutorialSave(); }
     if (myPlot >= 0) goHome(); else { teleport(XM + 0.5, G, PZ0 - 9, Math.PI); toast('숲·산·호수에서 재료를 캐서 모아 보세요. 방주 문은 옆으로 나 있어요(창 6:16)'); }
-    // 처음 한 번: 가운데 ＋로 겨누는 법
-    var aimTip = false; try { aimTip = localStorage.getItem('arkVillage.aimTip') === '1'; localStorage.setItem('arkVillage.aimTip', '1'); } catch (e) {}
-    if (!aimTip) setTimeout(function () { toast(isTouch ? '👆 가운데 ＋를 블록에 맞추고 — 톡 = 놓기, 꾹 = 캐기' : '🖱 가운데 ＋를 블록에 맞추고 — 왼쪽 클릭 꾹 = 캐기, 오른쪽 클릭 = 놓기'); }, 7000);
     if (!me) setTimeout(function () { toast('지금은 구경 모드예요 — 로그인하면 내 땅과 가방이 저장돼요'); }, 15000);
-    var seen = false; try { seen = localStorage.getItem('arkVillage.tips') === '1'; } catch (e) {}
-    if (isTouch && !seen) { showUI('tips'); return; }   // 휴대폰 처음: 조작 안내
     resume();
   }
   function travel(where) {
@@ -2349,6 +2367,7 @@
   }
   function stopHold() { hold = null; mine = null; var r = $('ring'); if (r) r.classList.remove('show'); }
   function look(dx, dy, k) {
+    if (started && ui === 'play' && Math.abs(dx) + Math.abs(dy) >= 2) tutorialEvent('look');
     P.yaw -= dx * k; P.pitch -= dy * k;
     P.pitch = Math.max(-1.53, Math.min(1.53, P.pitch));
   }
@@ -2382,7 +2401,7 @@
     var px = x, py = y, pz = z, t = 0;
     while (t <= maxD) {
       var id = get(x, y, z);
-      if (y >= 0 && id !== AIR && id !== WATER) return { x: x, y: y, z: z, px: px, py: py, pz: pz, t: t };
+      if (y >= 0 && id !== AIR && id !== WATER) return { x: x, y: y, z: z, px: px, py: py, pz: pz, atY: oy + dy * t, t: t };
       px = x; py = y; pz = z;
       if (tx < ty && tx < tz) { x += sx; t = tx; tx += tdx; }
       else if (ty < tz) { y += sy; t = ty; ty += tdy; }
@@ -2446,6 +2465,7 @@
     var p = plotAt(x, z);
     if (p >= 0 && p !== myPlot) return deny('다른 사람 집의 문이에요');
     var c = doorColumn(x, y, z);
+    if (myPlot >= 0 && p === myPlot && !SHAPE[get(x, y, z)].open) tutorialDoor = { x: x, z: z, y: c[0], top: c[1] + 1 };
     for (var yy = c[0]; yy <= c[1]; yy++) { var nid = get(x, yy, z) ^ 1; setRaw(x, yy, z, nid); plotWrite(x, yy, z, nid); }
     for (yy = c[0]; yy <= c[1]; yy++) rebuildAround(x, yy, z);
     if (p === myPlot && myPlot >= 0) markDirty();
@@ -2490,6 +2510,7 @@
       if (have(item) < 1) return deny(B[item][0] + '이(가) 없어요. 캐거나 만들어서 모아요');
       var bx = h.px, by = h.py, bz = h.pz, id = item, ld = lookDir();
       if (SHAPE[id] && SHAPE[id].type === 'stair') id = SHAPE[id].base + ld;
+      if (SLAB_TOP[id] && (by < h.y || (by === h.y && h.atY - by >= 0.5))) id = SLAB_TOP[id];
       if (id === LADDER) {
         var ddx = h.x - h.px, ddz = h.z - h.pz;
         if (ddx || ddz) { if (!isSolid(get(h.x, h.y, h.z)) || SHAPE[get(h.x, h.y, h.z)]) return deny('사닥다리는 벽에 붙여요'); id = LADDER + (ddz < 0 ? 0 : (ddx > 0 ? 1 : (ddz > 0 ? 2 : 3))); }
@@ -2522,6 +2543,7 @@
       if (isGrav(id)) startFall(bx, by, bz);
       if (id === SAPLING) { SAPS.push({ x: bx, y: by, z: bz, t: Date.now() + (90 + Math.random() * 90) * 1000 }); saveSaps(); toast('묘목을 심었어요. 조금 지나면 나무로 자라요 (시 1:3)'); }
       partyAdd('build', 1);
+      tutorialEvent('place');
       if (plotAt(bx, bz) === myPlot) { stats.placed++; questCheck(); if (stats.placed >= 30) unlock('house'); }
       if (inCommons(bx, bz)) unlock('commons');
       if (SHAPE[id] && SHAPE[id].type === 'sign') openSignPick(bx, by, bz);
@@ -3139,6 +3161,7 @@
     });
   }
   function updateMenuLabels() {
+    $('mMapVisible').textContent = '지도에 내 위치: ' + (S.mapVisible === false ? '숨김' : '표시');
     $('mView').textContent = '시점: ' + VIEW_NAMES[S.view];
     $('mSound').textContent = '소리: ' + (S.sound ? '켬' : '끔');
     $('mMusic').textContent = '음악: ' + (S.music === false ? '끔' : '켬');
@@ -3165,6 +3188,17 @@
     on('mBook', function () { openPanel('book'); sfx('click'); });
     on('mHelp', function () { openPanel('help'); sfx('click'); });
     on('mArk', function () { travel('ark'); });
+    on('mFriends', openFriends);
+    on('friendsDone', closePanel);
+    on('friendsSend', function () { friendRequest($('friendsNick').value); });
+    $('friendsNick').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); friendRequest(this.value); }
+    });
+    on('qSkip', function () { if (tutorialStep < 9) finishTutorial(false); });
+    on('mTutorial', function () {
+      tutorialStep = 0; tutorialWalk = tutorialLook = false; tutorialDoor = null;
+      tutorialSave(); resume();
+    });
     on('mHome', function () { resume(); goHome(); });
     on('mForest', function () { travel('forest'); });
     on('mHill', function () { travel('hill'); });
@@ -3204,6 +3238,11 @@
     on('cardClose', function () { $('card').classList.remove('show'); });
     on('mapc', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     on('mapDone', function () { closePanel(); });
+    on('mMapVisible', function () { S.mapVisible = S.mapVisible === false; NET.sentKey = ''; saveSettings(); updateMenuLabels(); });
+    $('bigmapc').addEventListener('click', selectMapPerson);
+    on('mapFriend', function () {
+      var nick = NET.names[selectedMapPeer]; if (nick) friendRequest(nick);
+    });
     on('mMap', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     ['ark', 'forest', 'hill', 'lake'].forEach(function (w) { on('go_' + w, function () { travel(w); }); });
     on('go_home', function () { resume(); goHome(); });
@@ -3415,7 +3454,7 @@
     $('card').classList.add('show'); sfx('pop'); animalCall(kindC);
     clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, 9000);
     if (first) { DEX['c' + kindC] = 1; saveDex(); }
-    stats.tapped++; questCheck();
+    stats.tapped++; tutorialEvent('animal'); questCheck();
   }
   // 화면의 한 점에서 나가는 광선에 맞는 동물(블록보다 가까울 때만)
   var CR_R = { npc: 1.8, shadow: 1.6, sheep: 1.3, goat: 1.2, cow: 1.7, camel: 2.3, rabbit: 0.8, dove: 1.1, raven: 1.1, fish: 0.8, horse: 2.1, donkey: 1.7 };
@@ -3550,6 +3589,67 @@
   // 처음 온 사람 안내(한 번 다 하면 다시 안 나옴)
   var stats = { log: 0, crafted: 0, placed: 0, tapped: 0 }, qStep = 0;
   try { var qs = JSON.parse(localStorage.getItem('arkVillage.quest') || 'null'); if (qs) { stats = qs.stats || stats; qStep = qs.step || 0; } } catch (e) {}
+  var tutorialStored = false, tutorialStep = qStep >= 4 ? 9 : 0, tutorialWalk = false, tutorialLook = false, tutorialDoor = null;
+  var tutorialStartLog = stats.log || 0, tutorialStartCraft = stats.crafted || 0;
+  try {
+    var tut = localStorage.getItem('arkVillage.tutorial');
+    if (tut !== null && /^[0-9]$/.test(tut)) { tutorialStep = +tut; tutorialStored = true; }
+  } catch (e) {}
+  function tutorialSave() {
+    tutorialStored = true;
+    try { localStorage.setItem('arkVillage.tutorial', String(tutorialStep)); } catch (e) {}
+    stateDirty();
+  }
+  function finishTutorial(showMessage) {
+    tutorialStep = 9;
+    // 새 안내가 이전의 처음 네 가지 할 일을 대신한다.
+    if (qStep < 4) { qStep = 4; questSave(); }
+    if (showMessage) toast('첫 안내를 끝냈어요. 위에 나오는 할 일을 따라 첫 집을 지어 보세요!');
+    tutorialSave(); renderQuest();
+  }
+  function tutorialAdvance() {
+    tutorialStep++;
+    if (tutorialStep === 1) tutorialStartLog = stats.log || 0;
+    if (tutorialStep === 2) tutorialStartCraft = stats.crafted || 0;
+    // 로그인 없이 할 수 있는 안내는 끝까지 보여 준다.
+    if (tutorialStep === 4 && (!me || myPlot < 0)) tutorialStep = 6;
+    if (tutorialStep === 7 && (!me || !NET.ok)) tutorialStep = 8;
+    if (tutorialStep === 9) { finishTutorial(true); return; }
+    tutorialSave(); renderQuest();
+  }
+  function tutorialEvent(event) {
+    if (!started || tutorialStep >= 9) return;
+    if (tutorialStep === 0) {
+      if (event === 'walk') tutorialWalk = true;
+      if (event === 'look') tutorialLook = true;
+      if (tutorialWalk && tutorialLook) tutorialAdvance();
+    } else if (['', 'log', 'craft', 'place', 'home', 'door', 'map', 'chat', 'animal'][tutorialStep] === event) {
+      tutorialAdvance();
+    }
+  }
+  function renderTutorial() {
+    var text = [
+      isTouch ? '방향키로 걷고 화면을 밀어 둘러봐요' : 'WASD로 걷고 마우스로 둘러봐요',
+      isTouch ? '통나무를 ＋에 맞추고 화면을 꾹 눌러요' : '통나무에 ＋를 맞추고 왼쪽 버튼을 꾹 눌러요',
+      '가방 → 만들기 → 블록에서 고페르 나무를 만들어요',
+      isTouch ? '단축 칸에서 블록을 고르고 화면을 톡 눌러 놓아요' : '단축 칸에서 블록을 고르고 오른쪽 클릭해 놓아요',
+      '내 땅으로 가요',
+      '나무 문을 놓고 연 다음 문 안으로 걸어가요',
+      isTouch ? '작은 지도를 눌러 큰 지도를 열어요' : 'M 키로 큰 지도를 열어요',
+      isTouch ? '채팅 버튼을 눌러 채팅을 열어요' : 'T 키로 채팅을 열어요',
+      '동물에 ＋를 맞추고 눌러 말씀 카드를 봐요'
+    ];
+    var actions = { 1: ['숲으로', function () { travel('forest'); }],
+      2: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }],
+      4: ['내 땅으로', goHome],
+      5: ['문 만들기', function () { invTab = 'craft'; craftCat = 'shape'; openPanel('inv'); }] };
+    var action = actions[tutorialStep], btn = $('qBtn');
+    $('qHead').textContent = '처음 안내 ' + (tutorialStep + 1) + '/9';
+    $('qText').textContent = text[tutorialStep];
+    btn.style.display = action ? '' : 'none';
+    btn.textContent = action ? action[0] : '';
+    btn.onclick = action ? function (e) { e.stopPropagation(); action[1](); } : null;
+  }
   var QUEST = [
     { text: '🌲 동쪽 숲에서 통나무 5개 캐기', prog: function () { return Math.min(5, stats.log) + '/5'; }, done: function () { return stats.log >= 5; }, btn: ['숲으로', function () { travel('forest'); }] },
     { text: '🔨 가방 → 만들기에서 고페르 나무 만들기', done: function () { return stats.crafted > 0; }, btn: ['가방 열기', function () { invTab = 'craft'; openPanel('inv'); }] },
@@ -3565,6 +3665,8 @@
   ];
   function questSave() { try { localStorage.setItem('arkVillage.quest', JSON.stringify({ stats: stats, step: qStep })); } catch (e) {} }
   function questCheck() {
+    if (tutorialStep === 1 && stats.log > tutorialStartLog) tutorialEvent('log');
+    if (tutorialStep === 2 && stats.crafted > tutorialStartCraft) tutorialEvent('craft');
     var moved = false;
     while (qStep < QUEST.length && QUEST[qStep].done()) { qStep++; moved = true; }
     if (moved) { sfx('craft'); if (qStep >= QUEST.length) toast('🎉 첫 집을 다 지었어요! 이제 함께 짓는 터에서 친구들과 지어 보세요'); else if (qStep === 4) toast('🏠 이제 첫 집을 지어 봐요 — 위의 할 일을 하나씩 따라가요'); }
@@ -3572,6 +3674,9 @@
   }
   function renderQuest() {
     var el = $('quest'); if (!el) return;
+    var tutoring = started && tutorialStep < 9;
+    $('qSkip').hidden = !tutoring;
+    if (tutoring) { el.style.display = ''; renderTutorial(); return; }
     if (qStep >= QUEST.length) {   // 첫 집을 다 지으면: 「본향을 향하여」 지금 할 일
       if (STORY.ended) { el.style.display = 'none'; return; }
       el.style.display = ''; var b2 = $('qBtn'); b2.style.display = '';
@@ -3765,6 +3870,129 @@
   }
   var MAP_LABELS = [['⛵ 방주', XM, AZ0 + AW / 2], ['마을', XM, PZ0 + 112], ['🌲 동쪽 숲', VX1 + 80, PZ0 + 60], ['⛰ 서쪽 산', PX0 - 110, PZ0 + 60], ['🌊 호수', LX, LZ],
     ['역청 구덩이', TARR[0] + 18, TARR[1] - 12], ['🌊 북쪽 바다', XM, SEA_Z - 180], ['🐪 동쪽 사막', DES_X + 260, PZ0 - 80], ['🌴 오아시스', OASX, OASZ + 30], ['🏔 아라랏 산', ARX, ARZ - 30], ['🌾 남쪽 들판', XM, LZ + 260]];
+  var FRIENDS = { accepted: new Set(), hidden: new Set(), rows: [], ready: false, busy: false, seq: 0, poll: 0 };
+  function friendError(code) {
+    return { login: '로그인하면 친구를 맺을 수 있어요', missing: '그 닉네임을 찾을 수 없어요',
+      duplicate: '같은 닉네임이 여러 명이에요. 선생님에게 알려 주세요', self: '나에게는 신청할 수 없어요',
+      existing: '이미 친구이거나 신청이 있어요', blocked: '이 사람에게는 신청할 수 없어요',
+      daily: '오늘은 친구 신청을 다 보냈어요', pending: '기다리는 신청이 너무 많아요',
+      gone: '신청이나 친구 기록이 이미 바뀌었어요' }[code] || '친구 기능을 아직 열 수 없어요. 조금 뒤에 다시 시도해 주세요';
+  }
+  function friendsFetch() {
+    if (!client || !me || !NET.ok) return Promise.resolve();
+    var seq = ++FRIENDS.seq;
+    return client.rpc('get_ark_friends').then(function (r) {
+      if (seq !== FRIENDS.seq) return;
+      var d = r && r.data;
+      FRIENDS.ready = !!d && !r.error && Array.isArray(d.rows);
+      if (FRIENDS.ready) {
+        FRIENDS.rows = d.rows;
+        FRIENDS.accepted = new Set(d.rows.filter(function (v) { return v.status === 'accepted'; }).map(function (v) { return v.id; }));
+        FRIENDS.hidden = new Set(d.hidden || []);
+      }
+      if (ui === 'friends') renderFriends();
+    }, function () {
+      if (seq !== FRIENDS.seq) return;
+      FRIENDS.ready = false;
+      if (ui === 'friends') renderFriends();
+    });
+  }
+  function friendCall(rpc, args, message) {
+    if (!me || !client || !NET.ok) { toast(friendError('login')); return; }
+    if (FRIENDS.busy) return;
+    FRIENDS.busy = true;
+    client.rpc(rpc, args).then(function (r) {
+      FRIENDS.busy = false;
+      var d = r && r.data;
+      if (!d || r.error || !d.ok) { toast(friendError(d && d.error)); friendsFetch(); return; }
+      if (rpc === 'request_ark_friend') $('friendsNick').value = '';
+      if (args.p_action === 'block') {
+        FRIENDS.hidden.add(args.p_user); FRIENDS.accepted.delete(args.p_user);
+        if (selectedMapPeer === args.p_user) { selectedMapPeer = ''; $('mapPerson').hidden = true; }
+      }
+      toast(message); friendsFetch();
+    }, function () { FRIENDS.busy = false; toast(friendError()); });
+  }
+  function friendRequest(nick) {
+    nick = nick.trim();
+    if (!nick) { toast('친구의 닉네임을 적어 주세요'); return; }
+    friendCall('request_ark_friend', { p_nick: nick }, '친구 신청을 보냈어요');
+  }
+  function openFriends() {
+    if (!me) { toast(friendError('login')); return; }
+    openPanel('friends'); renderFriends(); friendsFetch();
+  }
+  function renderFriends() {
+    var body = $('friendsBody');
+    body.replaceChildren();
+    if (!FRIENDS.ready) { body.textContent = '친구 목록을 아직 열 수 없어요'; return; }
+    var actions = { accept: ['받기','친구가 됐어요'], decline: ['거절','신청을 거절했어요'],
+      remove: ['친구 삭제','친구 목록에서 뺐어요'], cancel: ['신청 취소','보낸 신청을 취소했어요'],
+      block: ['차단','이 사람을 차단했어요'], unblock: ['차단 풀기','차단을 풀었어요'] };
+    [['incoming','받은 신청',['accept','decline','block']], ['outgoing','보낸 신청',['cancel','block']],
+     ['accepted','내 친구',['remove','block']], ['blocked','차단한 사람',['unblock']]].forEach(function (group) {
+      var heading = document.createElement('h3'); heading.textContent = group[1]; body.appendChild(heading);
+      var rows = FRIENDS.rows.filter(function (r) { return r.status === group[0]; });
+      if (!rows.length) { var empty = document.createElement('p'); empty.textContent = '아직 없어요'; body.appendChild(empty); }
+      rows.forEach(function (r) {
+        var row = document.createElement('div'); row.className = 'vrow';
+        var name = document.createElement('span'); name.textContent = r.nick; row.appendChild(name);
+        group[2].forEach(function (action) {
+          var b = document.createElement('button'); b.className = 'mc'; b.textContent = actions[action][0];
+          b.addEventListener('click', function () {
+            friendCall('change_ark_friend', { p_user: r.id, p_action: action }, actions[action][1]);
+          });
+          row.appendChild(b);
+        });
+        body.appendChild(row);
+      });
+    });
+  }
+  var mapPeople = [], selectedMapPeer = '';
+  function mapPeerColor(u) {
+    return partyMate(u) ? '#a7e86e' : (FRIENDS.accepted.has(u) ? '#67c6ff' : '#c0c6cd');
+  }
+  function drawMapPeople(ctx, big, ox, oz, scale, w, h) {
+    var now = performance.now(), shown = [];
+    if (NET.on) for (var u in NET.peers) {
+      var p = NET.peers[u];
+      if (!NET.names[u] || p.mapHidden || FRIENDS.hidden.has(u) || now - p.t > 6000 ||
+          !Number.isFinite(p.tx) || !Number.isFinite(p.tz) || Math.hypot(p.tx - P.x, p.tz - P.z) > 160) continue;
+      var x = (Math.round(p.tx / 4) * 4 - ox) * scale;
+      var y = (Math.round(p.tz / 4) * 4 - oz) * scale;
+      if (x < 0 || x > w || y < 0 || y > h) continue;
+      shown.push({ u: u, x: x, y: y, color: mapPeerColor(u) });
+    }
+    shown.sort(function (a, b) {
+      return Math.hypot(a.x - (P.x-ox)*scale, a.y - (P.z-oz)*scale) -
+             Math.hypot(b.x - (P.x-ox)*scale, b.y - (P.z-oz)*scale);
+    });
+    shown = shown.slice(0, 48);
+    shown.forEach(function (dot) {
+      ctx.beginPath(); ctx.arc(dot.x, dot.y, big ? 5 : 3, 0, Math.PI * 2);
+      ctx.fillStyle = dot.color; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = '#26302a'; ctx.stroke();
+    });
+    if (big) {
+      mapPeople = shown;
+      var active = shown.some(function (dot) { return dot.u === selectedMapPeer; });
+      $('mapPerson').hidden = !active;
+      if (!active) selectedMapPeer = '';
+    }
+  }
+  function selectMapPerson(event) {
+    var cv = $('bigmapc'), rect = cv.getBoundingClientRect(), hit = null, best = 16;
+    mapPeople.forEach(function (dot) {
+      var d = Math.hypot(dot.x * rect.width / cv.width + rect.left - event.clientX,
+        dot.y * rect.height / cv.height + rect.top - event.clientY);
+      if (d < best) { best = d; hit = dot; }
+    });
+    selectedMapPeer = hit ? hit.u : '';
+    $('mapPerson').hidden = !hit;
+    if (hit) {
+      $('mapPersonName').textContent = NET.names[hit.u];
+      $('mapFriend').hidden = !FRIENDS.ready || FRIENDS.accepted.has(hit.u);
+    }
+  }
   // 작은 지도: 내 둘레 320칸 / 큰 지도: 온 세계
   function drawMap(cv, big) {
     if (!cv) return;
@@ -3783,6 +4011,7 @@
       MAP_LABELS.forEach(function (l) { var lx = (l[1] - ox) * sc, ly = (l[2] - oz) * sc; x.fillStyle = 'rgba(0,0,0,.55)'; var tw = x.measureText(l[0]).width + 10; x.fillRect(lx - tw / 2, ly - 10, tw, 20); x.fillStyle = '#fff'; x.fillText(l[0], lx, ly); });
       if (mapRow < MAPN) { x.fillStyle = 'rgba(0,0,0,.5)'; x.fillRect(0, h - 22, w, 22); x.fillStyle = '#fff'; x.fillText('지도를 그리는 중… ' + Math.round(mapRow / MAPN * 100) + '%', w / 2, h - 11); }
     }
+    drawMapPeople(x, big, ox, oz, sc, w, h);
     var mx = (P.x - ox) * sc, mz = (P.z - oz) * sc, r = big ? 7 : 5;
     x.save(); x.translate(mx, mz); x.rotate(-P.yaw);
     x.beginPath(); x.moveTo(0, -r * 1.3); x.lineTo(r * 0.8, r); x.lineTo(-r * 0.8, r); x.closePath();
@@ -4019,7 +4248,7 @@
   }
   function goHome() {
     if (myPlot < 0) { toast(me ? '내 땅을 받는 중이에요' : '로그인하면 내 땅을 받을 수 있어요'); return; }
-    var o = plotOrigin(myPlot); teleport(o.x + PLOT / 2, G, o.z - 2, Math.PI); toast('내 땅(' + (myPlot + 1) + '번)이에요. 모은 블록으로 지어 보세요!');
+    var o = plotOrigin(myPlot); teleport(o.x + PLOT / 2, G, o.z - 2, Math.PI); tutorialEvent('home'); toast('내 땅(' + (myPlot + 1) + '번)이에요. 모은 블록으로 지어 보세요!');
   }
   function resize() {
     var w = window.innerWidth, h = window.innerHeight;
@@ -4069,6 +4298,12 @@
     if (P.y < -10) teleport(P.x, surfaceY(P.x | 0, P.z | 0), P.z);
     P.x = clamp(P.x, 40, WS - 40); P.z = clamp(P.z, 40, WS - 40);
     var moved = Math.hypot(P.x - lastX, P.z - lastZ);
+    if (len > 0 && moved > 0.03 && moved < 2) tutorialEvent('walk');
+    if (tutorialStep === 5 && tutorialDoor && Math.floor(P.x) === tutorialDoor.x && Math.floor(P.z) === tutorialDoor.z &&
+        P.y >= tutorialDoor.y - 0.1 && P.y < tutorialDoor.top) {
+      var door = SHAPE[get(tutorialDoor.x, tutorialDoor.y, tutorialDoor.z)];
+      if (door && door.type === 'door' && door.open) tutorialEvent('door');
+    }
     if (riding) stepRide(dt, moved);
     // 떨어짐: 사람 키(3.4칸)의 두 배 넘게 떨어지면 아픔(물·사닥다리·말 위·날기는 괜찮음)
     if (P.fly || P.swim || P.ladder || riding) fallTop = null;
@@ -4668,7 +4903,7 @@
   function stateDirty() { stateDirtyF = true; }
   function stateGather() {
     var horses = []; try { horses = JSON.parse(localStorage.getItem('arkVillage.horses') || '[]'); } catch (e) {}
-    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, spawn: SPAWN, ach: ACH, quest: { stats: stats, step: qStep }, story: STORY, titles: { t: MYTITLE, got: GOTTITLES } };
+    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, spawn: SPAWN, ach: ACH, quest: { stats: stats, step: qStep }, story: STORY, tutorial: tutorialStep, titles: { t: MYTITLE, got: GOTTITLES } };
   }
   function stateApply(d) {
     if (!d || d.v !== 1) return;
@@ -4682,7 +4917,19 @@
     SPAWN = d.spawn || null; if (d.ach) ACH = d.ach;
     if (d.titles) { for (var tk in (d.titles.got || {})) if (TITLES[+tk]) GOTTITLES[tk] = d.titles.got[tk]; if (typeof d.titles.t === 'number' && (d.titles.t < 0 || GOTTITLES[d.titles.t])) MYTITLE = d.titles.t; try { localStorage.setItem('arkVillage.title', String(MYTITLE)); localStorage.setItem('arkVillage.titles', JSON.stringify(GOTTITLES)); } catch (e) {} }
     if (d.story) { mergeStory(d.story); try { localStorage.setItem('arkVillage.story', JSON.stringify(STORY)); } catch (e) {} }
-    if (d.quest) { stats = d.quest.stats || stats; qStep = d.quest.step || 0; questSave(); }
+    if (Number.isInteger(d.tutorial) && d.tutorial >= 0 && d.tutorial <= 9) {
+      tutorialStep = d.tutorial; tutorialWalk = tutorialLook = false; tutorialDoor = null;
+      if (tutorialStep === 4 || tutorialStep === 5) { if (!me || myPlot < 0) tutorialStep = 6; }
+      if (tutorialStep === 7 && (!me || !NET.ok)) tutorialStep = 8;
+      tutorialSave();
+    }
+    if (d.quest) {
+      stats = d.quest.stats || stats; qStep = d.quest.step || 0;
+      if (!tutorialStored && qStep >= 4) { tutorialStep = 9; tutorialSave(); }
+      questSave();
+    }
+    tutorialStartLog = stats.log || 0; tutorialStartCraft = stats.crafted || 0;
+    if (started) renderQuest();
     saveSettings(); saveCrops();
     try { localStorage.setItem('arkVillage.ach', JSON.stringify(ACH)); localStorage.setItem('arkVillage.herd', JSON.stringify(HERD)); } catch (e) {}
   }
@@ -4946,6 +5193,7 @@
   function onPos(m) {
     if (!m || !me || m.u === me.id || typeof m.x !== 'number') return;
     var p = peerGet(m.u);
+    p.mapHidden = m.mapHidden === true;
     p.tx = m.x; p.ty = m.y; p.tz = m.z; p.th = m.h || 0; p.pt = m.p || 0; p.s = m.s ? 1 : 0; p.t = performance.now();
     if (p.fresh) { p.fresh = false; p.x = p.tx; p.y = p.ty; p.z = p.tz; p.h = p.th; }
     var wi = m.i === SWORD || isTool(m.i) ? m.i : 0;
@@ -4959,8 +5207,8 @@
   }
   function sendPos(now) {
     var r = riding ? riding.kind : '', s = (mine && !mine.denied) || swingT > 0 ? 1 : 0;
-    var m = { u: me.id, x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), h: +P.yaw.toFixed(2), p: +P.pitch.toFixed(2), r: r, s: s, i: heldWeapon() };
-    var key = [m.x, m.y, m.z, m.h, m.p, r, s, m.i].join();
+    var m = { u: me.id, x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), h: +P.yaw.toFixed(2), p: +P.pitch.toFixed(2), r: r, s: s, i: heldWeapon(), mapHidden: S.mapVisible === false || (myPlot >= 0 && plotAt(Math.floor(P.x), Math.floor(P.z)) === myPlot) };
+    var key = [m.x, m.y, m.z, m.h, m.p, r, s, m.i, m.mapHidden].join();
     if ((key === NET.sentKey && now - NET.sentAt < 2500) || now - NET.sentAt < 110) return;
     NET.sentKey = key; NET.sentAt = now;
     NET.ch.send({ type: 'broadcast', event: 'pos', payload: m });
@@ -4968,6 +5216,7 @@
   function netTick(dt, now) {
     if (!NET.ch) return;
     if (started) sendPos(now);
+    if (now >= FRIENDS.poll) { FRIENDS.poll = now + 20000; friendsFetch(); }
     var k = Math.min(1, dt * 10);
     for (var u in NET.peers) {
       var p = NET.peers[u];
@@ -5134,11 +5383,16 @@
       .on('presence', { event: 'join' }, function (r) {
         var key3 = r.key; NET.sentKey = '';
         if (key3 === me.id || performance.now() - NET.joinedAt <= 4000) return;
-        setTimeout(function () { chatSys((NET.names[key3] || '친구') + ' 님이 들어왔어요'); }, 600);   // 서버 닉네임을 받은 뒤
+        setTimeout(function () {
+          if (!NET.meta[key3] || FRIENDS.hidden.has(key3)) return;
+          var friend = FRIENDS.accepted.has(key3), n = NET.names[key3];
+          if (!n) return;
+          chatSys((friend ? '💙 친구 ' : '') + n + ' 님이 들어왔어요');
+        }, 600);   // 서버 닉네임을 받은 뒤
       })
       .on('presence', { event: 'leave' }, function (r) {
         var n = NET.names[r.key];
-        if (r.key !== me.id && n && !NET.meta[r.key]) chatSys(n + ' 님이 나갔어요');
+        if (r.key !== me.id && n && !NET.meta[r.key] && !FRIENDS.hidden.has(r.key)) chatSys(n + ' 님이 나갔어요');
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ark_chat' }, function (r) {
         var c = r.new; if (c && c.id) addChat({ id: c.id, nick: c.nick, body: c.body, mine: c.user_id === me.id, uid: c.user_id, reports: 0 }, true);
@@ -5148,6 +5402,7 @@
         if (status === 'SUBSCRIBED') {
           var first = !NET.ch; NET.ch = ch; NET.on = true; NET.joinedAt = performance.now(); NET.sentKey = '';
           trackMe();
+          FRIENDS.poll = 0;
           netPill(); loadChat(); PARTY.pollT = 0;
           if (first) chatSys('함께 놀기에 들어왔어요 — 💬' + (isTouch ? '' : '(T)') + '로 이야기해요');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') { NET.on = false; netPill(); }
@@ -5231,7 +5486,7 @@
   function openChat() {
     if (!me) { toast('로그인하면 친구들과 이야기할 수 있어요'); return; }
     if (!NET.ok) { toast('함께 놀기를 준비하는 중이에요. 조금 뒤에 다시 눌러 주세요'); return; }
-    openPanel('chat'); renderChat(); sfx('click');
+    openPanel('chat'); tutorialEvent('chat'); renderChat(); sfx('click');
     if (!isTouch) setTimeout(function () { $('chatInput').focus(); }, 30);
   }
   var chatBusy = false;
