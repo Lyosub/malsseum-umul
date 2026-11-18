@@ -1576,8 +1576,10 @@
   }
 
   // ───────── 설정·가방(이 기기에 저장, 로그인하면 내 땅 기록에도 저장) ─────────
-  var S = { sens: 1, aim: 'finger', sound: true, view: 0 };
+  var S = { sens: 1, aim: 'cross', sound: true, view: 0 };
   try { var saved = JSON.parse(localStorage.getItem('arkVillage.settings') || 'null'); if (saved) for (var sk in saved) S[sk] = saved[sk]; } catch (e) {}
+  // 2026-11-18: 휴대폰도 기본은 화면 가운데 십자(+)로 겨누기(손가락 자리는 메뉴에서 고를 수 있음) — 한 번 바꿔 줌
+  if (!S.aim2) { S.aim = 'cross'; S.aim2 = 1; }
   // 단축 칸은 처음엔 비어 있고(0 = 빈 칸), 플레이어가 직접 채운다
   HOTBAR = [0, 0, 0, 0, 0, 0, 0, 0, 0];
   try { var hb = JSON.parse(localStorage.getItem('arkVillage.hotbar4') || 'null'); if (hb && hb.length === 9) HOTBAR = hb.map(function (v) { return INV.indexOf(v) >= 0 ? v : 0; }); } catch (e) {}
@@ -1918,11 +1920,8 @@
       if (ui !== 'play') return;
       for (var i = 0; i < e.changedTouches.length; i++) {
         var t = e.changedTouches[i];
-        if (t.clientX < window.innerWidth * 0.4 && !tMove) {
-          tMove = { id: t.identifier, ox: t.clientX, oy: t.clientY };
-          base.classList.add('active'); base.style.left = (t.clientX - 65) + 'px'; base.style.top = (t.clientY - 65) + 'px';
-          knob.style.transform = 'translate(0,0)';
-        } else if (!tLook) {
+        // 걷기는 왼쪽 아래 방향키로 하고, 화면은 어디를 끌어도 둘러보기
+        if (!tLook) {
           tLook = { id: t.identifier, lx: t.clientX, ly: t.clientY, t0: performance.now(), moved: 0 };
           hold = { x: t.clientX, y: t.clientY, t0: performance.now(), dug: false };
         }
@@ -1960,6 +1959,27 @@
       }
     }
     canvas.addEventListener('touchend', end); canvas.addEventListener('touchcancel', end);
+
+    // 방향키(↑ ← → ↓): 누른 채 손가락을 옆으로 밀어도 따라가고, 모서리는 대각선. ↑ 두 번 = 달리기
+    var pad = $('dpad'), padT = null, lastUp = 0, upWas = false;
+    function padAt(t) {
+      var r = pad.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, R = r.width / 2;
+      var dx = (t.clientX - cx) / R, dy = (t.clientY - cy) / R;
+      var x = Math.abs(dx) > 0.33 ? (dx > 0 ? 1 : -1) : 0, y = Math.abs(dy) > 0.33 ? (dy > 0 ? 1 : -1) : 0;
+      if (Math.abs(dx) < 0.33 && Math.abs(dy) < 0.33) { x = 0; y = 0; }
+      joy.x = x; joy.y = y;
+      if (x && y) { joy.x = x * 0.7071; joy.y = y * 0.7071; }
+      var up = y < 0;
+      if (up && !upWas) { var now = performance.now(); if (now - lastUp < 330) setRun(true, 'pad'); lastUp = now; }
+      if (!up && runSrc === 'pad') setRun(false);
+      upWas = up;
+      ['dUp', 'dLeft', 'dRight', 'dDown'].forEach(function (k, i) { $(k).classList.toggle('on', [y < 0, x < 0, x > 0, y > 0][i]); });
+    }
+    function padEnd() { padT = null; joy.x = joy.y = 0; upWas = false; if (runSrc === 'pad') setRun(false); ['dUp', 'dLeft', 'dRight', 'dDown'].forEach(function (k) { $(k).classList.remove('on'); }); }
+    pad.addEventListener('touchstart', function (e) { if (ui !== 'play') return; var t = e.changedTouches[0]; if (!padT) { padT = t.identifier; padAt(t); } e.preventDefault(); e.stopPropagation(); }, { passive: false });
+    pad.addEventListener('touchmove', function (e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) padAt(e.changedTouches[i]); e.preventDefault(); e.stopPropagation(); }, { passive: false });
+    function padUp(e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) padEnd(); e.preventDefault(); }
+    pad.addEventListener('touchend', padUp); pad.addEventListener('touchcancel', padUp);
   }
   function stopHold() { hold = null; mine = null; var r = $('ring'); if (r) r.classList.remove('show'); }
   function look(dx, dy, k) {
@@ -3489,7 +3509,7 @@
     var len = Math.hypot(mx, mz); if (len > 1) { mx /= len; mz /= len; }
     P.swim = !P.fly && inWater();
     P.ladder = !P.fly && onLadder();
-    P.sprint = !P.swim && (keys.ControlLeft || keys.KeyR || runLock || Math.hypot(joy.x, joy.y) > 0.97) && mz < -0.3;
+    P.sprint = !P.swim && (keys.ControlLeft || keys.KeyR || runLock) && mz < -0.3;
     var sp = (P.fly ? 20 : (P.swim ? 5 : (riding ? riding.sp.ride : 8.5))) * (P.sprint && !riding ? 1.5 : 1);
     var sin = Math.sin(P.yaw), cos = Math.cos(P.yaw);
     var wx = (mx * cos + mz * sin) * sp, wz = (-mx * sin + mz * cos) * sp;

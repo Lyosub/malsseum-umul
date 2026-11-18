@@ -174,6 +174,16 @@
   #stickBase { position:fixed; left:calc(46px + var(--sal)); bottom:calc(46px + var(--sab)); width:130px; height:130px; border-radius:50%;
     background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.35); z-index:4; pointer-events:none; opacity:.55; }
   #stickBase.active { bottom:auto; opacity:1; }
+  /* 방향키 */
+  #dpad { position:fixed; left:calc(28px + var(--sal)); bottom:calc(26px + var(--sab)); width:156px; height:156px; z-index:5; touch-action:none; }
+  #dpad .dk { position:absolute; width:52px; height:52px; display:flex; align-items:center; justify-content:center; font-size:20px; color:#fff;
+    background:rgba(40,40,40,.45); border:2px solid rgba(255,255,255,.55); text-shadow:1px 1px 0 #222; pointer-events:none; }
+  #dpad .dk.on { background:rgba(255,255,255,.4); }
+  #dUp { left:52px; top:0; } #dDown { left:52px; bottom:0; } #dLeft { left:0; top:52px; } #dRight { right:0; top:52px; }
+  #dpad .dhint { position:absolute; left:0; right:0; top:-18px; text-align:center; font-size:10px; color:#fff; text-shadow:1px 1px 0 #000; pointer-events:none; }
+  body.running #dUp { background:rgba(120,220,120,.55); }
+  body.touch #cross { width:26px; height:26px; margin:-13px 0 0 -13px; }
+  body.touch #cross:before { left:12px; height:26px; } body.touch #cross:after { top:12px; width:26px; }
   #knob { position:absolute; left:39px; top:39px; width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,.7); border:2px solid rgba(0,0,0,.35); }
   .tbtn { position:fixed; z-index:5; width:62px; height:62px; background:rgba(40,40,40,.45); border:2px solid rgba(255,255,255,.55); color:#fff;
     font-size:22px; display:flex; align-items:center; justify-content:center; text-shadow:2px 2px 0 #222; }
@@ -272,7 +282,47 @@
 
   /* 세로 화면 안내 */
   #rotate { position:fixed; inset:0; z-index:30; background:#2b2b2b; display:none; flex-direction:column; align-items:center; justify-content:center; gap:18px; text-align:center; padding:24px; font-size:15px; line-height:1.7; }
-  @media (orientation:portrait) { body.touch #rotate { display:flex; } }
+  /* 2026-11-18 세로 화면도 그대로 놀 수 있게(자동 회전이 꺼진 휴대폰·아이폰에서 막히던 문제) — 가로 권유는 첫 화면에 작게만 */
+  #portraitTip { display:none; position:absolute; left:50%; transform:translateX(-50%); bottom:calc(34px + var(--sab)); width:min(340px, 92vw); text-align:center; font-size:12px; line-height:1.6; background:rgba(0,0,0,.5); padding:6px 10px; text-shadow:1px 1px 0 #000; }
+  @media (orientation:portrait) {
+    body.touch #portraitTip { display:block; }
+    body.touch .slot { width:34px; height:34px; padding:3px; }
+    body.touch .slot.more small { font-size:9px; }
+    body.touch #bottom { bottom:calc(6px + var(--sab)); }
+    body.touch #topRight { gap:3px; top:calc(6px + var(--sat)); right:calc(6px + var(--sar)); }
+    body.touch .ibtn.lbl { width:40px; height:42px; } body.touch .ibtn.lbl span { font-size:15px; }
+    body.touch #quest { top:calc(54px + var(--sat)) !important; left:calc(8px + var(--sal)) !important; right:calc(108px + var(--sar)); width:auto !important; transform:none !important; padding:4px 7px !important; }
+    body.touch #mapc { top:calc(54px + var(--sat)) !important; width:92px; }
+    body.touch #mapCap { top:calc(148px + var(--sat)); width:92px; right:calc(10px + var(--sar)); }
+    body.touch #info { top:calc(6px + var(--sat)); max-width:calc(100vw - 230px); font-size:11px; }
+    body.touch #place { font-size:13px; }
+    body.touch #chatLog { top:calc(170px + var(--sat)); width:62vw; }
+    body.touch #dpad { width:132px; height:132px; left:calc(12px + var(--sal)); bottom:calc(58px + var(--sab)); }
+    body.touch #dpad .dk { width:44px; height:44px; font-size:17px; }
+    body.touch #dUp, body.touch #dDown { left:44px !important; } body.touch #dLeft, body.touch #dRight { top:44px !important; }
+    body.touch #btnJump { right:calc(14px + var(--sar)); bottom:calc(70px + var(--sab)); }
+    body.touch #btnDown, body.touch #btnRide { right:calc(86px + var(--sar)); bottom:calc(70px + var(--sab)); }
+    body.touch #btnFly { right:calc(14px + var(--sar)); bottom:calc(142px + var(--sab)); }
+    body.touch #btnRun { right:calc(86px + var(--sar)); bottom:calc(142px + var(--sab)); }
+    body.touch #toast { bottom:calc(206px + var(--sab)); max-width:92vw; }
+    body.touch #pickup { bottom:calc(236px + var(--sab)); }
+    body.touch #selName { margin-bottom:2px; }
+    body.touch #smeltHud { top:calc(150px + var(--sat)); }
+    body.touch .lwrap { flex-direction:column; } body.touch .lside { width:100%; flex-direction:row; } body.touch #lookMe { width:96px; height:128px; }
+    body.touch #lookGrid { grid-template-columns:repeat(3, 1fr); }
+    body.touch .tgrid { grid-template-columns:1fr; }
+    body.touch #help .page { grid-template-columns:1fr; }
+    body.touch #invGrid, body.touch #invHot { grid-template-columns:repeat(9, 34px); } body.touch .islot { width:34px; height:34px; padding:3px; }
+    body.touch .cgrid { grid-template-columns:repeat(9, 34px); } body.touch .panel { padding:8px 8px 10px; }
+    body.touch #splash { display:none; }
+    body.touch #quest { top:calc(66px + var(--sat)) !important; } body.touch #mapc { top:calc(66px + var(--sat)) !important; } body.touch #mapCap { top:calc(160px + var(--sat)); }
+    body.touch #chatLog { top:calc(182px + var(--sat)); }
+    body.touch #dpad { bottom:calc(80px + var(--sab)); }
+    body.touch #btnJump { bottom:calc(90px + var(--sab)); } body.touch #btnDown, body.touch #btnRide { bottom:calc(90px + var(--sab)); }
+    body.touch #btnFly, body.touch #btnRun { bottom:calc(162px + var(--sab)); }
+    body.touch #toast { bottom:calc(226px + var(--sab)); } body.touch #pickup { bottom:calc(256px + var(--sab)); }
+    body.touch #map .wrap { flex-direction:column; align-items:center; } body.touch #bigmapc { width:min(92vw, 360px); height:auto; } body.touch #map .side { width:min(92vw, 360px); }
+  }
   #rotate .phone { width:46px; height:78px; border:4px solid #e0e0e0; border-radius:8px; animation:turn 1.8s ease-in-out infinite; }
   @keyframes turn { 0%,25% { transform:rotate(0); } 60%,100% { transform:rotate(-90deg); } }
   #rotate small { color:#bbb; font-size:12px; }
@@ -297,6 +347,9 @@
     #btnJump, #btnDown { bottom:calc(30px + var(--sab)); }
     #btnFly { bottom:calc(100px + var(--sab)); }
     #stickBase { left:calc(30px + var(--sal)); bottom:calc(26px + var(--sab)); }
+    #dpad { width:132px; height:132px; left:calc(22px + var(--sal)); bottom:calc(16px + var(--sab)); }
+    #dpad .dk { width:44px; height:44px; font-size:17px; }
+    #dUp, #dDown { left:44px !important; } #dLeft, #dRight { top:44px !important; }
   }
 </style>
 </head>
@@ -328,10 +381,10 @@
   <div class="panel tpanel">
     <h2>처음이면 이렇게 해요</h2>
     <div class="tgrid">
-      <div><b>👈 왼쪽 화면 끌기</b><br>걷기 · 끝까지 밀거나 🏃 버튼 = 달리기</div>
-      <div><b>👉 오른쪽 화면 끌기</b><br>둘러보기</div>
-      <div><b>☝ 블록을 꾹</b><br>캐기 — 캔 것은 🎒 가방에 들어가요</div>
-      <div><b>👆 톡</b><br>블록 놓기 · 동물·문·궤 누르기</div>
+      <div><b>◀ ▲ ▶ ▼ 왼쪽 아래 방향키</b><br>걷기 · ▲ 두 번 누르고 있기(또는 🏃) = 달리기</div>
+      <div><b>👉 화면 끌기</b><br>둘러보기 — 가운데 <b>＋</b> 표시가 겨누는 곳이에요</div>
+      <div><b>☝ 화면을 꾹</b><br>＋ 자리 블록 캐기 — 캔 것은 🎒 가방에 들어가요</div>
+      <div><b>👆 톡</b><br>＋ 자리에 블록 놓기 · 동물·문·궤 누르기</div>
       <div><b>아래 칸 9개</b><br>손에 들 것 고르기 · ••• = 가방</div>
       <div><b>오른쪽 위 버튼</b><br>💬 채팅 · 🎒 가방·만들기 · 👤 옷 · 👁 시점 · ❚❚ 메뉴</div>
     </div>
@@ -350,7 +403,11 @@
   <div id="hotbar"></div>
 </div>
 <div id="touchPad" class="hud">
-  <div id="stickBase"><div id="knob"></div></div>
+  <div id="stickBase" style="display:none"><div id="knob"></div></div>
+  <div id="dpad" aria-label="방향키 — 위를 두 번 누르면 달리기">
+    <span id="dUp" class="dk">▲</span><span id="dLeft" class="dk">◀</span><span id="dRight" class="dk">▶</span><span id="dDown" class="dk">▼</span>
+    <small class="dhint">▲ 두 번 = 달리기</small>
+  </div>
   <button id="btnFly" class="tbtn">날기</button>
   <button id="btnRun" class="tbtn">🏃<small>달리기</small></button>
   <button id="btnRide" class="tbtn">내리기</button>
@@ -372,6 +429,7 @@
     <button id="tBook" class="mc">📜 창세기 6장</button>
     <button id="tHelp" class="mc">조작 방법</button>
   </div>
+  <div id="portraitTip">📱 휴대폰을 <b>가로</b>로 돌리면 더 넓게 보여요. 세로로도 그대로 할 수 있어요.</div>
   <div id="tFoot"><a href="index.html">← 말씀우물로</a><span id="tWho"></span></div>
 </div>
 
@@ -489,9 +547,9 @@
 <div id="help" class="screen dim">
   <div class="page">
     <div><h3>휴대폰</h3>
-      왼쪽을 끌면 걷기 · 끝까지 밀거나 🏃 버튼 = 달리기<br>
-      오른쪽을 끌면 둘러보기<br>
-      블록을 꾹 = 캐기 · 톡 = 놓기<br>
+      왼쪽 아래 방향키 = 걷기 · ▲ 두 번 누르고 있기(또는 🏃) = 달리기<br>
+      화면을 끌면 둘러보기 · 가운데 ＋가 겨누는 곳<br>
+      꾹 = ＋ 자리 캐기 · 톡 = ＋ 자리에 놓기 (메뉴에서 「겨누기: 손가락 자리」로 바꿀 수 있어요)<br>
       ▲ 점프 · 두 번 톡 = 날기 · 물에선 ▲ 헤엄<br>
       동물·문을 톡 = 말씀 카드 · 문 열고 닫기<br>
       오른쪽 위: 💬 채팅 · 🎒 가방·만들기 · 👤 옷 · 👁 1인칭/3인칭 · ❚❚ 메뉴<br>
