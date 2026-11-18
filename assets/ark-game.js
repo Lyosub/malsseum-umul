@@ -1,4 +1,4 @@
-/* 방주 마을 (1단계 v3) — 블록 월드, 창세기 6장 크기의 방주 구경, 자원 캐기·만들기, 내 땅에 집 짓기.
+/* 나그네 마을(옛 이름 방주 마을) (1단계 v3) — 블록 월드, 창세기 6장 크기의 방주 구경, 자원 캐기·만들기, 내 땅에 집 짓기.
    v2(2026-11-18): 1블록 = 1규빗(사람 키 약 3.4칸) · 픽셀 무늬 블록 · 1인칭/3인칭 · 가로 화면 · 마인크래프트식 화면.
    v3(2026-11-18): 서쪽 돌산 · 동쪽 숲 · 남쪽 호수 · 역청 구덩이(창 14:10), 꾹 눌러 캐기, 가방, 만들기, 지으면 가방에서 줄어듦.
    3D는 In Odyssey의 three-bundle(window.THREE). 무늬는 모두 코드로 그린 말씀우물 고유 그림. */
@@ -814,7 +814,7 @@
     HEAT -= 1; return true;
   }
   RECIPES.forEach(function (r) { if (!r.cat) r.cat = SHAPE[r.out[0]] ? 'shape' : 'block'; });
-  function canCraft(rc) { return rc.need.every(function (n) { return have(n[0]) >= n[1]; }) && (!rc.furnace || furnaceOK()) && (!rc.table || tableOK()) && (!rc.fuel || fuelLeft(rc) >= 1); }
+  function canCraft(rc) { return isAdm() || rc.need.every(function (n) { return have(n[0]) >= n[1]; }) && (!rc.furnace || furnaceOK()) && (!rc.table || tableOK()) && (!rc.fuel || fuelLeft(rc) >= 1); }
   function kind(id) { return B[id] && B[id][6]; }
   function isTrans(id) { return id === AIR || (B[id] && (B[id][4] === 1 || B[id][6] === 'shape')); }
   function isSolid(id) { return id !== AIR && id !== WATER && kind(id) !== 'plant'; }
@@ -1584,11 +1584,13 @@
   function saveSettings() { try { localStorage.setItem('arkVillage.settings', JSON.stringify(S)); localStorage.setItem('arkVillage.hotbar3', JSON.stringify(HOTBAR)); } catch (e) {} }
   var WEAR = {};
   try { var wr = JSON.parse(localStorage.getItem('arkVillage.wear') || 'null'); if (wr) for (var wk in wr) if (isTool(+wk)) WEAR[+wk] = Math.max(1, Math.min(toolMax(+wk), wr[wk] | 0)); } catch (e) {}
-  function have(id) { return BAG[id] || 0; }
+  // 관리자 계정: 모든 자원 무한, 모든 제작법 열림, 날기 가능(서버 get_my_ark_name의 admin)
+  function isAdm() { return typeof NET !== 'undefined' && !!NET.admin; }
+  function have(id) { return isAdm() && INV.indexOf(id) >= 0 ? 9999 : (BAG[id] || 0); }
   function wearLeft(id) { return WEAR[id] !== undefined ? WEAR[id] : toolMax(id); }
   // 한 번 캘 때마다 1씩 닳고, 0이 되면 그 도구 하나가 부서진다(같은 도구가 더 있으면 새것으로)
   function wearTool(tid) {
-    if (!tid || have(tid) < 1) return;
+    if (!tid || have(tid) < 1 || isAdm()) return;
     var left = wearLeft(tid) - 1;
     if (left > 0) { WEAR[tid] = left; if (left === 10) toast(toolName(tid) + '이(가) 곧 부서지려 해요'); return; }
     take(tid, 1); delete WEAR[tid];
@@ -1603,7 +1605,7 @@
     if (ui === 'chest') renderChest();
     if (me && myPlot >= 0) markDirty();
   }
-  function give(id, n) { if (INV.indexOf(id) < 0) return; BAG[id] = Math.min(9999, have(id) + n); if (n > 0) markSeen(id); }
+  function give(id, n) { if (INV.indexOf(id) < 0 || isAdm()) return; BAG[id] = Math.min(9999, have(id) + n); if (n > 0) markSeen(id); }
   // ───────── 제작법은 단계별로 열린다: 재료를 한 번이라도 얻으면 그 재료로 만드는 법이 열림 ─────────
   var SEEN = {}, seenQuiet = true, newRecs = [], newRecT = null;
   try { (localStorage.getItem('arkVillage.seen') || '').split(',').forEach(function (k) { if (+k) SEEN[+k] = 1; }); } catch (e) {}
@@ -1612,7 +1614,7 @@
   function seenString() { return Object.keys(SEEN).join('.'); }
   // 열리는 조건: 재료 + 녹이기는 용광로, 옷은 제작대를 한 번 가져 봐야
   function recIds(rc) { var a = rc.need.map(function (n) { return n[0]; }); if (rc.furnace) a.push(FURNACE); if (rc.table) a.push(CRAFT); return a; }
-  function recOpen(rc) { return recIds(rc).every(function (id) { return SEEN[id]; }); }
+  function recOpen(rc) { return isAdm() || recIds(rc).every(function (id) { return SEEN[id]; }); }
   function markSeen(id) {
     if (SEEN[id]) return;
     SEEN[id] = 1; saveSeen();
@@ -1657,7 +1659,7 @@
     if (rc) return '만들기에서 만들어요: ' + rc.need.map(function (n) { return B[n[0]][0] + ' ' + n[1]; }).join(' + ');
     return '캐서 모아요';
   }
-  function take(id, n) { BAG[id] = Math.max(0, have(id) - n); }
+  function take(id, n) { if (isAdm()) return; BAG[id] = Math.max(0, have(id) - n); }
   // 내 모습(기본 6가지 중 하나)과 입은 옷 — 이 기기와 내 땅 기록(|w:)에 저장, 친구들에게도 보임
   var LOOK = 0, WORN = { head: 0, body: 0, belt: 0, feet: 0, shield: 0 };
   function wornFromString(s) {
@@ -1939,6 +1941,7 @@
     P.pitch = Math.max(-1.53, Math.min(1.53, P.pitch));
   }
   function toggleFly() {
+    if (!isAdm()) { if (P.fly) { P.fly = false; document.body.classList.remove('flying'); } return; }   // 날기는 관리자만
     if (riding) { toast('내린 뒤에 날 수 있어요'); return; }
     P.fly = !P.fly; P.vy = 0;
     document.body.classList.toggle('flying', P.fly);
@@ -2007,9 +2010,8 @@
   function canPlace(x, y, z, id) {
     if (inArk(x, y, z)) return '방주는 3단계에서 다 함께 지어요. 지금은 구경해요!';
     var p = plotAt(x, z);
-    // 횃불은 굴을 밝히도록 내 땅 밖에도(마을 마당·남의 땅 빼고)
-    if ((id === TORCH || id === LADDER || id === SAPLING) && p < 0) return inTown(x, z) && y >= G - 4 ? '마을 마당에는 놓을 수 없어요' : '';
-    if (p < 0) return '블록은 내 땅 안에만 놓을 수 있어요';
+    // 땅 밖(숲·산·호수 같은 자연)에서도 블록을 놓을 수 있다 — 마을 마당·다른 사람 땅·방주만 빼고
+    if (p < 0) return inTown(x, z) && y >= G - 4 ? '마을 마당에는 놓을 수 없어요' : '';
     if (!me) return '로그인하면 내 땅을 받아 집을 지을 수 있어요';
     if (p !== myPlot) return (p + 1) + '번 땅은 다른 사람의 땅이에요';
     if (y < PY0 || y >= G + PH) return '땅 높이 안에서만 지을 수 있어요(아래 3칸 ~ 위 ' + PH + '칸)';
@@ -2401,7 +2403,7 @@
     var reg = region(x, z);
     if (reg === 'tar') return '역청 구덩이 (창 14:10)';
     if (reg === 'lake') return P.swim ? '호수 (헤엄치는 중)' : '남쪽 호숫가';
-    if (inTown(x, z)) return z < AZ1 + 16 && z > AZ0 - 16 ? '방주 앞' : '방주 마을';
+    if (inTown(x, z)) return z < AZ1 + 16 && z > AZ0 - 16 ? '방주 앞' : '나그네 마을';
     if (reg === 'west') return '서쪽 산';
     if (reg === 'east') return '동쪽 숲';
     if (reg === 'sea' || z < SEA_Z + 40) return P.swim ? '북쪽 바다 (헤엄치는 중)' : '북쪽 바닷가';
@@ -2731,7 +2733,12 @@
   function groundAt(x, z, fromY) {
     var ix = Math.floor(x), iz = Math.floor(z);
     if (ix < 1 || iz < 1 || ix >= SX - 1 || iz >= SZ - 1) return null;
-    for (var y = Math.floor(fromY) + 2; y >= 1; y--) { var id = get(ix, y, iz); if (id === WATER) return null; if (isSolid(id)) return y + 1; }
+    // 나뭇잎·통나무는 땅으로 치지 않는다(동물이 나무 꼭대기에 서는 문제) — 통나무 자리는 막힌 곳
+    for (var y = Math.floor(fromY) + 2; y >= 1; y--) {
+      var id = get(ix, y, iz); if (id === WATER) return null;
+      if (id === LEAF || id === LOG) continue;
+      if (isSolid(id)) { var up = get(ix, y + 1, iz); return up === LOG ? null : y + 1; }
+    }
     return null;
   }
   function makeBeast(kindName, x, z) {
@@ -3688,7 +3695,7 @@
   function loadShared() {
     if (!client || !me) return Promise.resolve();
     return Promise.all([
-      client.rpc('get_my_ark_name').then(function (r) { if (!r.error && r.data) { NET.nick = r.data.nick || '친구'; NET.admin = !!r.data.admin; NET.ok = true; } }, function () {}),
+      client.rpc('get_my_ark_name').then(function (r) { if (!r.error && r.data) { NET.nick = r.data.nick || '친구'; NET.admin = !!r.data.admin; NET.ok = true; document.body.classList.toggle('adm', NET.admin); try { bagChanged(); } catch (e) {} } }, function () {}),
       client.rpc('get_ark_edits').then(function (r) { if (!r.error && typeof r.data === 'string') NET.edits = r.data; }, function () {})
     ]).then(function () {
       if (!NET.ok) return;   // DB 준비 전이면 혼자 놀기 그대로
