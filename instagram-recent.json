@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-11-17 13:36",
+  "generated_kst": "2026-11-18 12:44",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 143,
     "follows_count": 110,
-    "media_count": 172
+    "media_count": 174
   },
   "posts": [
+    {
+      "id": "18096922754689774",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-11-17T10:33:13+0000",
+      "permalink": "https://www.instagram.com/p/Df1uZNmlftR/",
+      "caption_first_line": "내가 애쓴 건데, 왜 \"주께서 주신\" 걸까요?",
+      "likes": 9,
+      "comments": 1
+    },
     {
       "id": "17916200418551241",
       "type": "REELS",
@@ -15,7 +25,7 @@
       "timestamp_utc": "2026-11-15T10:32:48+0000",
       "permalink": "https://www.instagram.com/reel/DfwkunIlBvn/",
       "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「감사의 광주리」 (신명기 26장 1-11절)",
-      "likes": 5,
+      "likes": 6,
       "comments": 1
     },
     {
@@ -246,16 +256,6 @@
       "permalink": "https://www.instagram.com/p/DebmjxZFT_0/",
       "caption_first_line": "자리를 내어 주는 것, 그것이 긍휼입니다.",
       "likes": 8,
-      "comments": 1
-    },
-    {
-      "id": "17870868735644117",
-      "type": "REELS",
-      "media_type": "VIDEO",
-      "timestamp_utc": "2026-10-11T02:01:23+0000",
-      "permalink": "https://www.instagram.com/reel/DeViYIVkdKr/",
-      "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「긍휼을 행하는 자」 (야고보서 2장 1-13절)",
-      "likes": 4,
       "comments": 1
     }
   ]
