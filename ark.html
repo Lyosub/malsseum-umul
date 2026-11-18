@@ -33,6 +33,14 @@
   #place { font-size:16px; }
   #saveState, #who { color:#e8e8e8; }
   #netState { color:#b8f0ff; }
+  body:not(.adm) .admonly { display:none !important; }
+  .vpanel { width:min(560px, 94vw); }
+  .vme { display:flex; gap:8px; align-items:center; font-size:13px; color:#3f3f3f; margin-bottom:6px; flex-wrap:wrap; }
+  .vme select { font-family:inherit; font-size:13px; height:30px; }
+  #visitList { display:flex; flex-direction:column; gap:4px; max-height:calc(100vh - 200px); overflow:auto; }
+  .vrow { display:flex; align-items:center; gap:6px; background:#b4b4b4; border:2px solid #8b8b8b; padding:4px 6px; font-size:13px; color:#3f3f3f; }
+  .vrow span { flex:1; } .vrow .mc { height:30px; font-size:13px; }
+  #visitList .empty { font-size:12px; color:#555; padding:8px; }
   /* 버튼 이름·키 */
   .ibtn.lbl { width:50px; height:50px; flex-direction:column; gap:1px; padding:0; line-height:1; }
   .ibtn.lbl span { font-size:17px; line-height:1; }
@@ -469,6 +477,8 @@
     <button id="mSound" class="mc">소리: 켬</button>
     <button id="mMusic" class="mc">음악: 켬</button>
     <button id="mShadow" class="mc">어둠의 그림자: 나옴</button>
+    <button id="mVisit" class="mc">🏡 친구 집 구경</button>
+    <button id="mRevert" class="mc admonly">🧹 함께 짓는 터 되돌리기</button>
     <button id="mForest" class="mc">🌲 동쪽 숲</button>
     <button id="mHill" class="mc">⛰ 서쪽 산</button>
     <button id="mLake" class="mc">🌊 남쪽 호수</button>
@@ -531,6 +541,12 @@
     </div>
   </div>
 </div>
+<div id="visit" class="screen dim"><div class="panel vpanel">
+  <h2>🏡 친구 집 구경 — 친구가 보여 준 집으로 가 볼 수 있어요(구경만)</h2>
+  <div class="vme"><label><input type="checkbox" id="visitShow"> 내 집도 보여 주기</label> <select id="visitIntro"></select></div>
+  <div id="visitList"></div>
+  <div class="pfoot"><button id="visitDone" class="mc" style="width:120px">닫기</button></div>
+</div></div>
 <div id="signs" class="screen dim"><div class="panel"><h2>🪧 표지판에 쓸 글을 골라요</h2><div id="signList" style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow:auto"></div></div></div>
 <div id="chat" class="screen">
   <div class="panel cpanel">
@@ -554,6 +570,7 @@
       <button id="go_desert" class="mc">🐪 동쪽 사막</button>
       <button id="go_ararat" class="mc">🏔 아라랏 산</button>
       <button id="go_commons" class="mc">🏗 함께 짓는 터</button>
+      <button id="go_visit" class="mc">🏡 친구 집 구경</button>
       <button id="mapDone" class="mc">닫기</button>
     </div>
   </div>
@@ -610,7 +627,7 @@
       🌾 풀이나 꽃을 캐면 가끔 밀 씨가 나와요. 흙·풀 위에 심으면 자라요(물이 가까우면 빨리, 막 4:3). 익은 밀을 거둬요. 밀을 들고 있으면 양·소·염소가 따라오고, 둘에게 먹이면 새끼가 태어나요 — 내 땅 안의 동물은 저장돼요.<br>
       🛏 침대(양털 3 + 고페르 나무 3)를 누르면 다시 일어날 자리가 되고, 밤이면 자고 아침이 돼요(시 4:8). 🔘 레버(막대기 + 돌)를 누르면 둘레 문이 함께 열리고 닫혀요. 🪧 표지판은 내 땅에 세우고 글을 골라요. 횃불은 벽에도 붙고, 통나무는 옆면에 놓으면 눕혀져요. 웅크리기(PC: Shift)로 가장자리에서 떨어지지 않아요.<br>
       🌑 밤 들판과 굴 속에는 「어둠의 그림자」(미움·거짓·교만)가 나와요. 마을·내 땅·함께 짓는 터와 불빛 곁은 안전하고, 횃불을 들면 가까이 못 오고, 햇빛에는 사라져요. 갑옷을 입으면 덜 다치고, 하나님의 전신 갑주 다섯 가지를 다 입으면 다치지 않아요(엡 6:11). 칼이나 성령의 검(철 2 + 금 1 + 막대기, 제작대, 엡 6:17)으로 물리쳐요 — 톡(PC: 클릭). 메뉴에서 안 나오게 할 수 있어요.<br>
-      🏗 방주 북쪽 「함께 짓는 터」(지도에서 이동)는 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요. 🏅 업적은 가방 → 업적에서 봐요. 마을 사람(노아·목자·안내하는 나그네)을 누르면 말씀을 들려줘요.<br>
+      🏗 방주 북쪽 「함께 짓는 터」(지도에서 이동)는 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요. 정원·우리·길과 다리·모임터 네 구역 중 맡고 싶은 곳을 골라 지어요. 🏡 지도나 메뉴의 「친구 집 구경」에서 내 집을 보여 줄 수 있고, 친구가 보여 준 집에 가 볼 수 있어요. 🏅 업적은 가방 → 업적에서 봐요. 마을 사람(노아·목자·안내하는 나그네)을 누르면 말씀을 들려줘요.<br>
       📦 궤(고페르 나무 8, 출 25:10)를 내 땅에 놓고 누르면 물건을 넣어 둘 수 있어요. 용광로도 내 땅에 놓을 수 있고, 녹이는 동안 불이 켜져요.<br>
       🔥 용광로(돌 8)에서 땔감으로 광석을 녹여 덩이로 만들어요(욥 28:1-2). 하나 녹는 데 3초 — 넣어 두고 다른 일을 해도 화면 위 막대가 차면 가방에 들어와요. 땔감은 석탄·숯 1개로 8번, 통나무 1개로 1.5번 — 통나무를 녹이면 숯이 돼요(요 21:9). 막대기 + 석탄(또는 숯)으로 횃불 4개(창 15:17), 횃불은 굴 속에도 놓아 밝힐 수 있어요. 덩이·보석 9개는 블록으로 묶고 다시 풀 수 있어요.<br>
       🛠 나무·돌·구리·철·금강석으로 곡괭이·도끼·삽·칼을 만들어요(창 4:22, 렘 17:1). 도구는 단축 칸에서 골라 손에 들고 캐요 — 맞는 도구(돌·광석은 곡괭이, 나무는 도끼, 흙·모래는 삽, 잎·풀은 칼)면 빨리, 맨손·블록·맞지 않는 도구는 2배, 물속에서는 3배 느려요. 광석은 귀할수록 단단해요(석탄 → 구리 → 철 → 은 → 호마노 → 금 → 청옥 → 금강석). 도구는 쓸수록 닳아서(칸 아래 막대) 다 닳으면 부서져요 — 나무 60번·돌 130번·구리 200번·철 300번·금강석 1000번. 닳은 도구는 만들기 ⛏ 칸에서 그 재료 1개로 고쳐요(힘 25%씩).

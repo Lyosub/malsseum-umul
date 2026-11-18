@@ -1757,6 +1757,7 @@
     // 다 쓴 것은 단축 칸에서 빠진다
     var hc = false; for (var hi = 0; hi < 9; hi++) if (HOTBAR[hi] && have(HOTBAR[hi]) < 1) { HOTBAR[hi] = 0; hc = true; }
     syncBagSlots(); if (hc) saveSettings();
+    if (started && qStep < QUEST.length) questCheck();
     try { localStorage.setItem('arkVillage.bag', JSON.stringify(BAG)); localStorage.setItem('arkVillage.wear', JSON.stringify(WEAR)); localStorage.setItem('arkVillage.heat', String(HEAT)); } catch (e) {}
     renderHotbar(); setSel(sel, true);
     if (ui === 'inv') renderInv();
@@ -1964,7 +1965,7 @@
   var isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   var lockOn = false, canvasEl;
   function showUI(name) {
-    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
+    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
     document.body.classList.toggle('playing', name === 'play');
     document.body.classList.toggle('menu', name !== 'play');
     ui = name;
@@ -1991,6 +1992,10 @@
     SLOTS.forEach(function (s) { if (WORN[s]) SEEN[WORN[s]] = 1; }); saveSeen();
     started = true; seenQuiet = false; lastStage = curStage().n;
     if (myPlot >= 0) goHome(); else { teleport(XM + 0.5, G, PZ0 - 9, Math.PI); toast('숲·산·호수에서 재료를 캐서 모아 보세요. 방주 문은 옆으로 나 있어요(창 6:16)'); }
+    // 처음 한 번: 가운데 ＋로 겨누는 법
+    var aimTip = false; try { aimTip = localStorage.getItem('arkVillage.aimTip') === '1'; localStorage.setItem('arkVillage.aimTip', '1'); } catch (e) {}
+    if (!aimTip) setTimeout(function () { toast(isTouch ? '👆 가운데 ＋를 블록에 맞추고 — 톡 = 놓기, 꾹 = 캐기' : '🖱 가운데 ＋를 블록에 맞추고 — 왼쪽 클릭 꾹 = 캐기, 오른쪽 클릭 = 놓기'); }, 7000);
+    if (!me) setTimeout(function () { toast('지금은 구경 모드예요 — 로그인하면 내 땅과 가방이 저장돼요'); }, 15000);
     var seen = false; try { seen = localStorage.getItem('arkVillage.tips') === '1'; } catch (e) {}
     if (isTouch && !seen) { showUI('tips'); return; }   // 휴대폰 처음: 조작 안내
     resume();
@@ -2996,6 +3001,10 @@
     on('go_home', function () { resume(); goHome(); });
     ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
+    on('mRevert', adminRevertCommons);
+    on('go_visit', openVisit); on('mVisit', openVisit);
+    on('visitDone', function () { closePanel(); });
+    $('visitShow').addEventListener('change', saveShowcase); $('visitIntro').addEventListener('change', saveShowcase);
     on('mShadow', function () { S.shadows = S.shadows === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('tabAch', function () { invTab = 'ach'; renderInv(); sfx('click'); });
     var bs = $('btnSneak');
@@ -3334,13 +3343,20 @@
     { text: '🌲 동쪽 숲에서 통나무 5개 캐기', prog: function () { return Math.min(5, stats.log) + '/5'; }, done: function () { return stats.log >= 5; }, btn: ['숲으로', function () { travel('forest'); }] },
     { text: '🔨 가방 → 만들기에서 고페르 나무 만들기', done: function () { return stats.crafted > 0; }, btn: ['가방 열기', function () { invTab = 'craft'; openPanel('inv'); }] },
     { text: '🐑 동물을 눌러 말씀 카드 보기', done: function () { return stats.tapped > 0; } },
-    { text: '🏠 내 땅에 블록 놓기', done: function () { return stats.placed > 0; }, btn: ['내 땅으로', function () { goHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' }
+    { text: '🏠 내 땅에 블록 놓기', done: function () { return stats.placed > 0; }, btn: ['내 땅으로', function () { goHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
+    // 첫 집 짓기: 무엇을 지을지 한 단계씩
+    { text: '🪵 집 지을 고페르 나무 20개 모으기(통나무 1 → 4)', prog: function () { return Math.min(20, have(GOPHER)) + '/20'; }, done: function () { return have(GOPHER) >= 20 || stats.placed >= 30; }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }] },
+    { text: '🧱 내 땅에 바닥과 벽 블록 30개 놓기', prog: function () { return Math.min(30, stats.placed) + '/30'; }, done: function () { return stats.placed >= 30; }, btn: ['내 땅으로', function () { goHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
+    { text: '🚪 문을 만들어 집에 달기(고페르 나무 6)', done: function () { return [60, 61, 62, 63, 64, 65, 66, 67].some(plotHas); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'shape'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
+    { text: '🔥 등불이나 횃불로 집 안 밝히기', done: function () { return plotHas(LAMP) || plotHas(TORCH) || [170, 171, 172, 173].some(plotHas); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
+    { text: '🛏 침대를 놓아 쉴 곳 만들기(양털 3 + 고페르 나무 3)', done: function () { return plotHas(BED); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
+    { text: '🐑 울타리로 우리를 짓고 밀을 들고 양을 데려오기', done: function () { return HERD.length > 0; }, btn: ['내 땅으로', function () { goHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' }
   ];
   function questSave() { try { localStorage.setItem('arkVillage.quest', JSON.stringify({ stats: stats, step: qStep })); } catch (e) {} }
   function questCheck() {
     var moved = false;
     while (qStep < QUEST.length && QUEST[qStep].done()) { qStep++; moved = true; }
-    if (moved) { sfx('craft'); if (qStep >= QUEST.length) toast('🎉 처음 할 일을 모두 해냈어요! 이제 마음껏 지어 보세요'); }
+    if (moved) { sfx('craft'); if (qStep >= QUEST.length) toast('🎉 첫 집을 다 지었어요! 이제 함께 짓는 터에서 친구들과 지어 보세요'); else if (qStep === 4) toast('🏠 이제 첫 집을 지어 봐요 — 위의 할 일을 하나씩 따라가요'); }
     questSave(); renderQuest();
   }
   function renderQuest() {
@@ -3716,7 +3732,7 @@
           updateCrack(); updateRing();
           hl.visible = !!h; if (h) hl.position.set(h.x + 0.5, h.y + 0.5, h.z + 0.5);
         }
-        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); } }
+        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);
           if (ui === 'play' || ui === 'map') {
@@ -3950,7 +3966,8 @@
   function saveHerd() {
     var a = animals.filter(function (x) { return BREEDS[x.kind] && inMyPlot(x.x, x.z); }).slice(0, 16).map(function (x) { return { k: x.kind, x: Math.round(x.x * 10) / 10, z: Math.round(x.z * 10) / 10, b: x.baby ? 1 : 0 }; });
     pendingHerd.forEach(function (o) { if (a.length < 16) a.push(o); });
-    HERD = a; try { localStorage.setItem('arkVillage.herd', JSON.stringify(HERD)); } catch (e) {} stateDirty();
+    var had = HERD.length; HERD = a; try { localStorage.setItem('arkVillage.herd', JSON.stringify(HERD)); } catch (e) {} stateDirty();
+    if (!had && HERD.length) questCheck();
   }
   function stepHerd(dt) {
     var now = Date.now(), lure = HOTBAR[sel] === WHEAT && have(WHEAT) > 0 && ui === 'play';
@@ -4025,6 +4042,52 @@
   // ── 함께 짓는 터: 방주 북쪽 들판 64×64칸, 누구나 함께 짓고 그 자리는 모두에게 남음 ──
   var COMMONS = [XM - 32, AZ0 - 92, XM + 31, AZ0 - 29];
   function inCommons(x, z) { return x >= COMMONS[0] && x <= COMMONS[2] && z >= COMMONS[1] && z <= COMMONS[3]; }
+  // 터를 네 구역으로: 맡고 싶은 곳을 골라 함께 지어요(표지는 땅 위에 떠 있음)
+  var ZONES = [['🌿 정원', 0.25, 0.25], ['🐑 우리', 0.75, 0.25], ['🛤 길과 다리', 0.25, 0.75], ['⛺ 모임터', 0.75, 0.75]], zoneSprites = null;
+  function spawnZoneSigns() {
+    if (zoneSprites || Math.abs(P.x - XM) > 120 || Math.abs(P.z - (COMMONS[1] + COMMONS[3]) / 2) > 120) return;
+    zoneSprites = ZONES.map(function (z) {
+      var s = signSprite(z[0] + ' 구역'), x = COMMONS[0] + (COMMONS[2] - COMMONS[0]) * z[1], zz = COMMONS[1] + (COMMONS[3] - COMMONS[1]) * z[2];
+      s.position.set(x, G + 5, zz); s.scale.multiplyScalar(2.2); scene.add(s); return s;
+    });
+  }
+  // 선생님: 함께 짓는 터를 최근 몇 분만큼 되돌리기(모두의 화면에서 처음 풀밭으로)
+  function adminRevertCommons() {
+    if (!NET.admin || !client) return;
+    var v = window.prompt('함께 짓는 터에서 최근 몇 분 동안 바뀐 것을 되돌릴까요?\n(0 = 지금까지 전부)', '30'); if (v === null) return;
+    client.rpc('admin_revert_commons', { p_minutes: Math.max(0, parseInt(v, 10) || 0) }).then(function (r) {
+      toast(r.error || r.data < 0 ? '되돌리지 못했어요' : '🧹 ' + r.data + '칸을 처음 모습으로 되돌렸어요');
+    }, function () { toast('되돌리지 못했어요'); });
+  }
+  // ── 친구 집 구경: 내 땅을 보여 줄지·한 줄 소개를 정하고, 보여 준 집들로 가 보기 ──
+  var INTROS = ['구경 오세요!', '함께 지은 나그네의 집', '작은 집이에요', '농장이 있어요', '동물 우리가 있어요', '높은 탑을 쌓았어요', '정원을 꾸몄어요', '방주를 닮은 집이에요'];
+  function openVisit() {
+    if (!me || !client || !NET.ok) { toast('로그인하면 친구 집을 구경할 수 있어요'); return; }
+    openPanel('visit'); $('visitList').innerHTML = '<div class="empty">불러오는 중…</div>';
+    client.rpc('get_ark_showcase').then(function (r) {
+      var L = $('visitList'); L.innerHTML = ''; var rows = r.data || [], mine = rows.filter(function (x) { return x.mine; })[0];
+      var sel = $('visitIntro'); sel.innerHTML = ''; INTROS.forEach(function (t, i) { var o = document.createElement('option'); o.value = i; o.textContent = t; sel.appendChild(o); });
+      if (mine) sel.value = mine.intro || 0;
+      $('visitShow').checked = visitShown;
+      var others = rows.filter(function (x) { return !x.mine; });
+      if (!others.length) { L.innerHTML = '<div class="empty">아직 보여 준 친구 집이 없어요. 먼저 내 집을 보여 주세요!</div>'; return; }
+      others.forEach(function (x) {
+        var d = document.createElement('div'); d.className = 'vrow';
+        var t = document.createElement('span'); t.textContent = '🏡 ' + shortName(x.nick, 8) + ' — ' + (INTROS[x.intro] || INTROS[0]) + ' (' + (x.plot_idx + 1) + '번 땅)';
+        var b = document.createElement('button'); b.className = 'mc'; b.textContent = '가 보기';
+        b.addEventListener('click', function () { var o = plotOrigin(x.plot_idx); teleport(o.x + PLOT / 2, G, o.z - 3, Math.PI); resume(); toast('🏡 ' + x.nick + '의 집이에요 — 구경만 할 수 있어요'); });
+        d.appendChild(t); d.appendChild(b); L.appendChild(d);
+      });
+    }, function () { $('visitList').innerHTML = '<div class="empty">불러오지 못했어요</div>'; });
+  }
+  var visitShown = false;
+  try { visitShown = localStorage.getItem('arkVillage.show') === '1'; } catch (e) {}
+  function saveShowcase() {
+    if (!client || !me) return;
+    var show = $('visitShow').checked, intro = +$('visitIntro').value || 0; visitShown = show;
+    try { localStorage.setItem('arkVillage.show', show ? '1' : '0'); } catch (e) {}
+    client.rpc('set_ark_showcase', { p_show: show, p_intro: intro }).then(function (r) { toast(r.data ? (show ? '내 집을 친구들에게 보여 줘요' : '내 집을 보여 주지 않아요') : '내 땅이 있어야 해요'); }, function () {});
+  }
   // ── 업적 ──
   var ACHS = [
     ['log', '🪵', '첫 통나무', '나무를 캐서 통나무를 얻어요'], ['table', '🪚', '제작대', '제작대를 만들어요'], ['tool', '⛏', '첫 도구', '도구를 하나 만들어요'],
@@ -4218,7 +4281,15 @@
     if (!force && str === lastStateStr) { stateDirtyF = false; return; }
     lastStateStr = str; stateDirtyF = false;
     try { localStorage.setItem('arkVillage.state', str); } catch (e) {}
-    if (client && me && NET.ok && str.length < 60000) client.rpc('save_ark_state', { p_data: JSON.parse(str) }).then(function (r) { if (!r.error && r.data) try { localStorage.setItem('arkVillage.stateSrv', r.data); } catch (e) {} }, function () {});
+    if (client && me && NET.ok && str.length < 60000) {
+      var base = null; try { base = localStorage.getItem('arkVillage.stateSrv'); } catch (e) {}
+      // 다른 기기가 그 사이 더 새로 저장했으면 덮지 않고 그 기록을 불러옴
+      client.rpc('save_ark_state2', { p_data: JSON.parse(str), p_base: base }).then(function (r) {
+        var d = r && r.data; if (r.error || !d) return;
+        if (d.conflict) { stateApply(d.data); lastStateStr = JSON.stringify(stateGather()); bagChanged(); renderVitals(); toast('📱 다른 기기에서 더 나중에 한 기록을 불러왔어요'); }
+        try { localStorage.setItem('arkVillage.stateSrv', d.at); localStorage.setItem('arkVillage.state', d.conflict ? JSON.stringify(d.data) : str); } catch (e) {}
+      }, function () {});
+    }
   }
   setInterval(function () { stateSave(false); }, 8000);
   document.addEventListener('visibilitychange', function () { if (document.hidden) stateSave(false); });
@@ -4236,7 +4307,7 @@
   // 실시간 채널 'ark-world'(로그인 회원만, DB 정책)로 위치·블록 바꿈을 주고받고, 내 땅 밖에서 바꾼 자리는 DB(ark_world_edits)에 남긴다.
   // 채팅은 DB 함수(send_ark_chat)로만 써서 이름을 속일 수 없고, 새 글·지운 글은 DB 변경 알림으로 받는다.
   var NET = { ok: false, ready: false, ch: null, on: false, nick: '', admin: false, meta: {}, peers: {}, q: [], pm: {}, flushT: 0, sentAt: 0, sentKey: '', applying: false,
-    chat: [], chatIds: {}, reported: {}, joinedAt: 0, holdUntil: 0, edits: null };
+    chat: [], chatIds: {}, reported: {}, joinedAt: 0, holdUntil: 0, edits: null, pp: {}, names: {}, nameAsk: {} };
   var ROBES = [[0xd8c39a, 0xc0a97e, 0x3f6fae], [0x9fb7d8, 0x7d97bb, 0xc8a040], [0xc98f8f, 0xa86f6f, 0x3a6a3a], [0x9fcf9a, 0x7fae7a, 0x8a4b14],
     [0xd6b0e0, 0xb48fc0, 0x2f5f8f], [0xe0d070, 0xc0b050, 0x7a2a2a], [0x8fd0d0, 0x6fb0b0, 0x6b3d14], [0xe8e8e8, 0xc8c8c8, 0x7a3ea8]];
   var HAIRS = [0x3a2618, 0x1e1410, 0x6b4425, 0x2b1d14, 0x8a5a2a];
@@ -4268,7 +4339,7 @@
     return p;
   }
   function peerName(p) {
-    var m = NET.meta[p.u], n = (m && m.n) || '친구', wk = (m && m.w) || '';
+    var m = NET.meta[p.u], n = NET.names[p.u] || '친구', wk = (m && m.w) || '';   // 이름은 서버의 닉네임만
     if (wk !== p.wk) {   // 친구 모습·옷이 바뀌면 다시 만듦
       p.wk = wk;
       var a = wk.split('.').map(function (v) { return v | 0; }), worn = {};
@@ -4347,14 +4418,36 @@
     if (NET.applying || !NET.ready) return;
     var p = plotAt(x, z);
     if ((p >= 0 && p !== myPlot) || inArk(x, y, z)) return;
-    NET.q.push([x, y, z, id]);
-    if (p < 0) NET.pm[x + ',' + y + ',' + z] = id;
-    if (!NET.flushT) NET.flushT = setTimeout(netFlush, 120);
+    // 친구에게는 서버가 검사해서 받은 것만 전달된다(DB 변경 알림) — 내 땅은 put_plot_edits, 땅 밖은 put_ark_edits
+    if (p >= 0) { NET.pp[x + ',' + y + ',' + z] = id; if (!NET.flushT) NET.flushT = setTimeout(netFlush, 150); }
+    else NET.pm[x + ',' + y + ',' + z] = id;
   }
   function netFlush() {
     NET.flushT = 0;
-    if (NET.ch) for (var i = 0; i < NET.q.length; i += 400) NET.ch.send({ type: 'broadcast', event: 'blk', payload: { u: me.id, e: NET.q.slice(i, i + 400) } });
-    NET.q = [];
+    var ks = Object.keys(NET.pp); if (!ks.length || !client) return;
+    var arr = ks.slice(0, 300).map(function (k) { var a = k.split(','); return [+a[0], +a[1], +a[2], NET.pp[k]]; });
+    ks.slice(0, 300).forEach(function (k) { delete NET.pp[k]; });
+    client.rpc('put_plot_edits', { p_edits: arr }).then(function () {}, function () {});
+    if (ks.length > 300) NET.flushT = setTimeout(netFlush, 300);
+  }
+  // 서버에서 온 바꿈을 잠깐 모아 한꺼번에 그림
+  var inBuf = {}, inT = 0;
+  function queueRemote(u, e) { (inBuf[u] || (inBuf[u] = [])).push(e); if (!inT) inT = setTimeout(function () { inT = 0; var b = inBuf; inBuf = {}; for (var k in b) applyRemote(k, b[k]); }, 80); }
+  // 선생님이 함께 짓는 터를 되돌리면: 지워진 자리를 처음 모습으로(그 기둥을 다시 만듦)
+  var revBuf = {}, revT = 0;
+  function queueRevert(x, y, z) {
+    if (x < 0 || z < 0 || x >= WS || z >= WS) return;
+    var k = (z >> 5) * NC + (x >> 5), li = (y * CS + (z & 31)) * CS + (x & 31);
+    if (EDITS[k]) delete EDITS[k][li];
+    revBuf[k] = 1;
+    if (!revT) revT = setTimeout(function () {
+      revT = 0; var ks = Object.keys(revBuf); revBuf = {}; saveEdits();
+      ks.forEach(function (kk) {
+        kk = +kk; var cx = kk % NC, cz = Math.floor(kk / NC); if (!COLS[kk]) return;
+        var was = meshedCols[kk]; genColumn(cx, cz);
+        if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); }
+      });
+    }, 300);
   }
   var persistBusy = false;
   function requeue(arr) { arr.forEach(function (e) { var k = e[0] + ',' + e[1] + ',' + e[2]; if (!(k in NET.pm)) NET.pm[k] = e[3]; }); }
@@ -4369,7 +4462,7 @@
       if (r.error || r.data === -3) { requeue(arr); NET.holdUntil = performance.now() + (r.data === -3 ? 30000 : 6000); }
     }, function () { persistBusy = false; requeue(arr); NET.holdUntil = performance.now() + 6000; });
   }
-  setInterval(netPersist, 2000);
+  setInterval(netPersist, 600);
   document.addEventListener('visibilitychange', function () { if (document.hidden) { if (NET.flushT) { clearTimeout(NET.flushT); netFlush(); } netPersist(); } });
   function plotPut(p, x, y, z, id) {
     if (y < PY0 || y >= G + PH) return;
@@ -4445,20 +4538,25 @@
     if (!client || !me || NET.chan) return;
     var ch = NET.chan = client.channel('ark-world', { config: { private: true, presence: { key: me.id }, broadcast: { self: false } } });
     ch.on('broadcast', { event: 'pos' }, function (r) { onPos(r.payload); })
-      .on('broadcast', { event: 'blk' }, function (r) { var p = r.payload; if (p && p.u !== me.id && p.e && p.e.length) applyRemote(p.u, p.e.slice(0, 600)); })
+      // 블록 바꿈은 휴대폰끼리 직접 주고받지 않고, 서버가 검사해서 받은 것만(DB 변경 알림)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ark_world_edits' }, function (r) { var w = r.new; if (w && w.user_id !== me.id) queueRemote(w.user_id, [w.x, w.y, w.z, w.id]); })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'ark_world_edits' }, function (r) { var w = r.new; if (w && w.user_id !== me.id) queueRemote(w.user_id, [w.x, w.y, w.z, w.id]); })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'ark_world_edits' }, function (r) { var w = r.old; if (w && w.x !== undefined) queueRevert(w.x, w.y, w.z); })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ark_plot_edits' }, function (r) { var w = r.new; if (w && w.user_id !== me.id) queueRemote(w.user_id, [w.x, w.y, w.z, w.b]); })
       .on('presence', { event: 'sync' }, function () {
         var st = ch.presenceState(); NET.meta = {};
         for (var key in st) if (st[key] && st[key][0]) NET.meta[key] = st[key][0];
+        fetchNames(Object.keys(NET.meta));
         for (var u in NET.peers) { if (!NET.meta[u]) peerRemove(u); else peerName(NET.peers[u]); }
         netPill(); if (ui === 'chat') chatWho();
       })
       .on('presence', { event: 'join' }, function (r) {
-        var n = r.newPresences && r.newPresences[0] && r.newPresences[0].n;
-        if (r.key !== me.id && n && performance.now() - NET.joinedAt > 4000) chatSys(n + ' 님이 들어왔어요');
-        NET.sentKey = '';
+        var key3 = r.key; NET.sentKey = '';
+        if (key3 === me.id || performance.now() - NET.joinedAt <= 4000) return;
+        setTimeout(function () { chatSys((NET.names[key3] || '친구') + ' 님이 들어왔어요'); }, 600);   // 서버 닉네임을 받은 뒤
       })
       .on('presence', { event: 'leave' }, function (r) {
-        var n = r.leftPresences && r.leftPresences[0] && r.leftPresences[0].n;
+        var n = NET.names[r.key];
         if (r.key !== me.id && n && !NET.meta[r.key]) chatSys(n + ' 님이 나갔어요');
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ark_chat' }, function (r) {
@@ -4473,6 +4571,17 @@
           if (first) chatSys('함께 놀기에 들어왔어요 — 💬' + (isTouch ? '' : '(T)') + '로 이야기해요');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') { NET.on = false; netPill(); }
       });
+  }
+  // 이름표에 쓸 닉네임은 서버에서(휴대폰이 보낸 이름을 믿지 않음)
+  function fetchNames(ids) {
+    var need = ids.filter(function (u) { return !NET.names[u] && !NET.nameAsk[u] && /^[0-9a-f-]{36}$/.test(u); }).slice(0, 50);
+    if (!need.length || !client) return;
+    need.forEach(function (u) { NET.nameAsk[u] = 1; });
+    client.rpc('get_ark_names', { p_ids: need }).then(function (r) {
+      (r.data || []).forEach(function (row) { NET.names[row.user_id] = row.nick || '친구'; });
+      for (var u in NET.peers) peerName(NET.peers[u]);
+      if (ui === 'chat') chatWho();
+    }, function () { need.forEach(function (u) { delete NET.nameAsk[u]; }); });
   }
   function netPill() {
     var n = Object.keys(NET.meta).length;
@@ -4515,7 +4624,7 @@
     }, function () {});
   }
   function chatWho() {
-    var names = Object.keys(NET.meta).map(function (k) { return shortName(NET.meta[k].n, 6); });
+    var names = Object.keys(NET.meta).map(function (k) { return shortName(k === (me && me.id) ? NET.nick : (NET.names[k] || '친구'), 6); });
     $('chatWho').textContent = NET.on ? '· 지금 ' + names.length + '명: ' + names.slice(0, 8).join(', ') + (names.length > 8 ? ' …' : '') : (me ? '· 연결하는 중…' : '');
   }
   function renderChat() {
@@ -4605,7 +4714,7 @@
   window.addEventListener('beforeunload', function () { if (dirty) savePlot(); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) { saveEdits(); if (dirty) savePlot(); } });
 
-  window.__arkDebug = { SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
+  window.__arkDebug = { queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
