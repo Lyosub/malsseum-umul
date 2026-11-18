@@ -529,6 +529,27 @@
       for (var g = 0; g < 6; g++) px(2 + g, 8 + g, 0xf0c840);   // 금 손잡이 가로대
       px(3, 12, 0x8a6236); px(2, 13, 0x8a6236); px(1, 14, 0xf0c840); px(14, 1, 0xffffff);
     });
+    tile('shelf', function (px, R) {   // 책장: 위아래 나무 판, 두 칸에 알록달록한 책
+      var BK = [0xb03a3a, 0x3a6ab0, 0x3a8a4a, 0xc8a040, 0x7a3a9a, 0x8a5a32];
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) {
+        if (y === 0 || y === 7 || y === 8 || y === 15 || x === 0 || x === 15) { px(x, y, 0xa77a48, 0.8 + R() * 0.15); continue; }
+        var shelf = y < 7 ? 0 : 1, col = BK[((x * 7 + shelf * 3) / 2 | 0) % BK.length], top = shelf ? 9 : 1;
+        if ((x + shelf) % 5 === 4) { px(x, y, 0x3a2614); continue; }
+        px(x, y, col, y === top ? 1.25 : 0.85 + R() * 0.15);
+      }
+    });
+    tile('sbrick', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) {
+        var row = y >> 3, mortar = y % 8 === 7 || (x + row * 4) % 8 === 7;
+        px(x, y, 0x9a9a96, mortar ? 0.68 : 0.9 + R() * 0.16 - (y % 8 === 0 ? 0 : 0.03));
+      }
+    });
+    tile('lantern', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) {
+        var frame = x < 2 || x > 13 || y < 2 || y > 13;
+        px(x, y, frame ? 0x3a3a3a : (y > 9 ? 0xffd860 : 0xfff0b0), frame ? 0.9 : 0.95 + R() * 0.1);
+      }
+    });
     // 눕힌 통나무 옆면: 세운 통나무 옆면을 돌려서
     tile('logSideH', function (px) {
       var t = TILE.logSide, d = actx.getImageData((t % ACOLS) * TS, Math.floor(t / ACOLS) * TS, TS, TS).data;
@@ -669,6 +690,7 @@
   B[CHEST] = ['궤', 'chestTop', 'chestSide', 'chestTop'];
   var LIGHTS = {}; LIGHTS[LAMP] = 1; LIGHTS[TORCH] = 1; LIGHTS[FURNACE_ON] = 1;   // 빛을 내는 것
   for (var wl = 170; wl < 174; wl++) LIGHTS[wl] = 1;   // 벽 횃불
+  LIGHTS[199] = 1;   // 등롱
   B[DEEP] = ['깊은 돌', 'deepStone', 'deepStone', 'deepStone'];
   [[COAL, '석탄', 'coal'], [CHAR, '숯', 'charcoal'], [GEM_ONYX, '호마노', 'gemOnyx'], [GEM_SAPH, '청옥', 'gemSapphire'], [GEM_DIA, '금강석', 'gemDiamond']].forEach(function (it) { B[it[0]] = [it[1], it[2], it[2], it[2], 0, 0, 'item']; });
   B[ORE_CU] = ['구리 광석', 'oreCopper', 'oreCopper', 'oreCopper']; B[ORE_FE] = ['철 광석', 'oreIron', 'oreIron', 'oreIron'];
@@ -711,6 +733,10 @@
   regShape(SLAB_L, '석회암 반 블록', 'slab', SLAB_L, LIME); regShape(SLAB_P, '역청 나무 반 블록', 'slab', SLAB_P, PITCH);
   for (var sf = 0; sf < 4; sf++) { regShape(STAIR_L + sf, '석회암 계단', 'stair', STAIR_L, LIME, sf); regShape(STAIR_P + sf, '역청 나무 계단', 'stair', STAIR_P, PITCH, sf); }
   var SWORD = 195; B[SWORD] = ['성령의 검', 'sword', 'sword', 'sword', 0, 0, 'item'];   // 엡 6:17 — 어둠의 그림자를 물리침
+  // 집 꾸미기(2026-11-18 대저택): 책장·돌 벽돌·카펫·등롱
+  var SHELF = 196, SBRICK = 197, CARPET = 198, LANTERN = 199;
+  B[SHELF] = ['책장', 'plankG', 'shelf', 'plankG']; B[SBRICK] = ['돌 벽돌', 'sbrick', 'sbrick', 'sbrick'];
+  regShape(CARPET, '카펫', 'carpet', CARPET, WOOL_R); regShape(LANTERN, '등롱', 'lantern', LANTERN, GOPHER); B[LANTERN][1] = B[LANTERN][2] = B[LANTERN][3] = 'lantern'; B[LANTERN][5] = 1;
   for (var bi = 0; bi < B.length; bi++) if (B[bi] === undefined) B[bi] = null;
   function isShape(id) { return !!SHAPE[id]; }
   function baseOf(id) { return SHAPE[id] ? SHAPE[id].base : id; }
@@ -723,6 +749,8 @@
     if (s.type === 'door') return [EDGE[s.open ? (s.f + 1) % 4 : s.f]];
     if (s.type === 'ladder') return [[[0, 0, 0, 1, 1, 0.1], [0.9, 0, 0, 1, 1, 1], [0, 0, 0.9, 1, 1, 1], [0, 0, 0, 0.1, 1, 1]][s.f]];
     if (s.type === 'bed') return [[0, 0, 0, 1, 0.56, 1]];
+    if (s.type === 'carpet') return [[0, 0, 0, 1, 0.07, 1]];
+    if (s.type === 'lantern') return [[0.3, 0.15, 0.3, 0.7, 0.7, 0.7], [0.4, 0.7, 0.4, 0.6, 1, 0.6]];
     if (s.type === 'lever') return [[0.3, 0, 0.3, 0.7, 0.12, 0.7], s.open ? [0.45, 0.12, 0.6, 0.55, 0.62, 0.7] : [0.45, 0.12, 0.3, 0.55, 0.62, 0.4]];
     if (s.type === 'wtorch') return [[[0.43, 0.25, 0, 0.57, 0.85, 0.14], [0.86, 0.25, 0.43, 1, 0.85, 0.57], [0.43, 0.25, 0.86, 0.57, 0.85, 1], [0, 0.25, 0.43, 0.14, 0.85, 0.57]][s.f]];
     if (s.type === 'sign') return [[0.45, 0, 0.45, 0.55, 0.55, 0.55], s.f % 2 ? [0.44, 0.5, 0.04, 0.56, 1, 0.96] : [0.04, 0.5, 0.44, 0.96, 1, 0.56]];
@@ -743,13 +771,13 @@
     });
     return bx;
   }
-  function collBoxes(id, x, y, z) { var s = SHAPE[id]; if (s.type === 'ladder' || s.type === 'wtorch' || s.type === 'lever' || s.type === 'sign') return []; if (s.type === 'fence') return [[0.3, 0, 0.3, 0.7, 1, 0.7]].concat(shapeBoxes(id, x, y, z).slice(1).map(function (b) { return [b[0], 0, b[2], b[3], 1, b[5]]; })); return shapeBoxes(id, x, y, z); }
+  function collBoxes(id, x, y, z) { var s = SHAPE[id]; if (s.type === 'ladder' || s.type === 'wtorch' || s.type === 'lever' || s.type === 'sign' || s.type === 'lantern' || s.type === 'carpet') return []; if (s.type === 'fence') return [[0.3, 0, 0.3, 0.7, 1, 0.7]].concat(shapeBoxes(id, x, y, z).slice(1).map(function (b) { return [b[0], 0, b[2], b[3], 1, b[5]]; })); return shapeBoxes(id, x, y, z); }
   // 가방에 들어가는 것(캐거나 만들어서 모음)
   var INV = [7, 5, 6, 8, 3, 21, 23, 4, 2, 26, 27, 25, 28, 29, 11, 12, 13, 20, 22, 9, 10, 18, 14, 15, 16, 17, SLAB_G, SLAB_S, SLAB_B, STAIR_G, STAIR_S, STAIR_B, FENCE, DOOR,
     ORE_CU, ORE_FE, ORE_AG, ORE_AU, ING_CU, ING_FE, ING_AG, ING_AU, FURNACE, BLK_CU, BLK_FE, BLK_AG, BLK_AU, STICK];
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
-  INV.push(SEED, WHEAT, BREAD, FIG, BED, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD);
+  INV.push(SEED, WHEAT, BREAD, FIG, BED, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   INV.push(ORE_COAL, COAL, CHAR, BLK_COAL, TORCH, DEEP, ORE_ONYX, GEM_ONYX, BLK_ONYX, ORE_SAPH, GEM_SAPH, BLK_SAPH, ORE_DIA, GEM_DIA, BLK_DIA);
   for (var tl = 0; tl < 16; tl++) INV.push(TOOL0 + tl);
   for (tl = 0; tl < 4; tl++) INV.push(TOOL4 + tl);
@@ -774,6 +802,7 @@
   setClass('pick', [FURNACE_ON], 1.6); setClass('axe', [LADDER, LADDER + 1, LADDER + 2, LADDER + 3], 0.4); setClass('axe', [CHEST, CRAFT], 1.2);
   setClass('axe', [BED, SIGN, SIGN + 1, SIGN + 2, SIGN + 3], 0.5); setClass('pick', [LEVER, LEVER + 1], 0.3); setClass('pick', [PANE], 0.25);
   setClass('knife', [WOOL_W, WOOL_B, WOOL_V, WOOL_R], 0.5); setClass('axe', [LOG_X, LOG_Z], 1.4);
+  setClass('axe', [SHELF], 1.0); setClass('pick', [SBRICK], 1.6); setClass('knife', [CARPET], 0.1); setClass('pick', [LANTERN], 0.4);
   setClass('pick', [SLAB_L, STAIR_L, STAIR_L + 1, STAIR_L + 2, STAIR_L + 3], 1.2); setClass('axe', [SLAB_P, STAIR_P, STAIR_P + 1, STAIR_P + 2, STAIR_P + 3], 1.0);
   for (var cb = 0; cb < 4; cb++) { BASE_T[CROP0 + cb] = 0.05; BASE_T[WTORCH + cb] = 0.05; }
   for (var dk2 in DEEPV) { TCLASS[DEEPV[dk2]] = 'pick'; BASE_T[DEEPV[dk2]] = Math.round(BASE_T[dk2] * 1.3 * 10) / 10; }
@@ -858,6 +887,10 @@
   RECIPES.push({ out: [SADDLE, 1], need: [[GOPHER, 3], [ING_FE, 1]], cat: 'tool', ref: '창 22:3' });
   // 농사·침대·레버·유리판·표지판·양털 블록·반 블록과 계단(2026-11-18)
   RECIPES.push({ out: [BREAD, 1], need: [[WHEAT, 3]], cat: 'block', ref: '마 4:4' });
+  RECIPES.push({ out: [SHELF, 1], need: [[GOPHER, 6], [REED, 3]], cat: 'block' });
+  RECIPES.push({ out: [SBRICK, 4], need: [[STONE, 4]], cat: 'block' });
+  RECIPES.push({ out: [CARPET, 3], need: [[WOOL_R, 2]], cat: 'shape' });
+  RECIPES.push({ out: [LANTERN, 1], need: [[ING_FE, 1], [TORCH, 1]], cat: 'shape' });
   RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 2], [ING_AU, 1], [STICK, 1]], cat: 'wear', table: true, ref: '엡 6:17' });
   RECIPES.push({ out: [BED, 1], need: [[WOOL, 3], [GOPHER, 3]], cat: 'block', ref: '시 4:8' });
   RECIPES.push({ out: [LEVER, 1], need: [[STICK, 1], [STONE, 1]], cat: 'shape' });
@@ -1368,7 +1401,7 @@
           }
           if (def[6] === 'shape') {
             // 문·계단·반 블록·울타리: 작은 상자들
-            var sb = shapeBoxes(id, x, y, z), sh0 = SHAPE[id].type === 'wtorch' ? 1 : skyLight(x, y + 1, z), bk = SHAPE[id].type === 'ladder' ? 2 : (SHAPE[id].type === 'pane' ? 1 : 0);
+            var sb = shapeBoxes(id, x, y, z), sh0 = SHAPE[id].type === 'wtorch' || SHAPE[id].type === 'lantern' ? 1 : skyLight(x, y + 1, z), bk = SHAPE[id].type === 'ladder' ? 2 : (SHAPE[id].type === 'pane' ? 1 : 0);
             for (var bi3 = 0; bi3 < sb.length; bi3++) {
               var bb = sb[bi3];
               for (var f2 = 0; f2 < 6; f2++) {
@@ -2454,7 +2487,7 @@
       for (var j = 0; j + 1 < s.length; j += 2) {
         var n = s.charCodeAt(j), v = s.charCodeAt(j + 1);
         if (k + n > PSIZE) return;
-        a.fill(v < B.length && B[v] && v !== WATER ? v : AIR, k, k + n); k += n;
+        a.fill(v < B.length && B[v] ? v : AIR, k, k + n); k += n;   // 물도 그대로(대저택 수영장)
       }
       if (k !== PSIZE) return;
       plotData[i] = a;
@@ -4766,7 +4799,7 @@
   window.addEventListener('beforeunload', function () { if (dirty) savePlot(); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) { saveEdits(); if (dirty) savePlot(); } });
 
-  window.__arkDebug = { queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
+  window.__arkDebug = { regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
