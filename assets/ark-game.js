@@ -1968,7 +1968,7 @@
     document.body.classList.toggle('playing', name === 'play');
     document.body.classList.toggle('menu', name !== 'play');
     ui = name;
-    if (name !== 'play') { joy.x = joy.y = 0; keys = {}; jumpHeld = false; flyDown = false; mouseMining = false; stopHold(); }
+    if (name !== 'play') resetInput();
   }
   function openPanel(name) { bagPick = null; uiBack = ui === 'play' ? 'play' : ui; showUI(name); if (name === 'inv') renderInv(); if (lockOn) document.exitPointerLock(); }
   function closePanel() { if (uiBack === 'play') resume(); else showUI(uiBack); }
@@ -2024,7 +2024,16 @@
     if (now - lastJumpTap < 280) { toggleFly(); lastJumpTap = 0; } else lastJumpTap = now;
     jumpHeld = true;
   }
+  var resetTouchInput = function () {};
+  function resetInput() {
+    keys = {}; jumpHeld = false; flyDown = false; mouseMining = false;
+    joy.x = joy.y = 0; lastW = 0; lastJumpTap = 0;
+    if (runSrc === 'key' || runSrc === 'pad') setRun(false);
+    resetTouchInput(); stopHold();
+  }
   function bindInput(canvas) {
+    window.addEventListener('blur', resetInput);
+    document.addEventListener('visibilitychange', function () { if (document.hidden) resetInput(); });
     window.addEventListener('keydown', function (e) {
       if (ui === 'chat') { if (e.code === 'Escape') { closePanel(); e.preventDefault(); } return; }
       if ((e.code === 'KeyT' || e.code === 'Enter') && ui === 'play' && !e.repeat) { openChat(); e.preventDefault(); return; }
@@ -2106,7 +2115,7 @@
         if (tMove && t.identifier === tMove.id) { tMove = null; joy.x = joy.y = 0; stickHome(); }
         else if (tLook && t.identifier === tLook.id) {
           var tap = tLook.moved < 12 && performance.now() - tLook.t0 < 260 && hold && !hold.dug;
-          if (tap) tapAt(tLook.lx, tLook.ly);
+          if (e.type === 'touchend' && ui === 'play' && tap) tapAt(tLook.lx, tLook.ly);
           stopHold(); tLook = null;
         }
       }
@@ -2129,10 +2138,11 @@
       ['dUp', 'dLeft', 'dRight', 'dDown'].forEach(function (k, i) { $(k).classList.toggle('on', [y < 0, x < 0, x > 0, y > 0][i]); });
     }
     function padEnd() { padT = null; joy.x = joy.y = 0; upWas = false; if (runSrc === 'pad') setRun(false); ['dUp', 'dLeft', 'dRight', 'dDown'].forEach(function (k) { $(k).classList.remove('on'); }); }
-    pad.addEventListener('touchstart', function (e) { if (ui !== 'play') return; var t = e.changedTouches[0]; if (!padT) { padT = t.identifier; padAt(t); } e.preventDefault(); e.stopPropagation(); }, { passive: false });
+    pad.addEventListener('touchstart', function (e) { if (ui !== 'play') return; var t = e.changedTouches[0]; if (padT === null) { padT = t.identifier; padAt(t); } e.preventDefault(); e.stopPropagation(); }, { passive: false });
     pad.addEventListener('touchmove', function (e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) padAt(e.changedTouches[i]); e.preventDefault(); e.stopPropagation(); }, { passive: false });
     function padUp(e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) padEnd(); e.preventDefault(); }
     pad.addEventListener('touchend', padUp); pad.addEventListener('touchcancel', padUp);
+    resetTouchInput = function () { tMove = tLook = null; stickHome(); padEnd(); lastUp = 0; };
   }
   function stopHold() { hold = null; mine = null; var r = $('ring'); if (r) r.classList.remove('show'); }
   function look(dx, dy, k) {
@@ -3636,7 +3646,13 @@
     for (var id = 1; id < B.length; id++) if (B[id]) BT[id] = [TILE[B[id][1]], TILE[B[id][2]], TILE[B[id][3]]];
     makeIcons();
 
-    renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: !isTouch, powerPreference: 'high-performance' });
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: !isTouch, powerPreference: 'high-performance' });
+    } catch (e) {
+      $('loadingBar').hidden = true;
+      $('loadingStatus').textContent = '3D 화면을 열 수 없어요. 브라우저를 다시 열거나 다른 브라우저로 접속해 보세요.';
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.6 : 2));
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x9fcdee);
@@ -3701,7 +3717,17 @@
           hl.visible = !!h; if (h) hl.position.set(h.x + 0.5, h.y + 0.5, h.z + 0.5);
         }
         if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); } }
-        if (started) { updateDay(dt); updateAmbient(dt); mapT -= dt; if (mapT <= 0) { mapT = 0.25; drawMap($('mapc'), false); if (ui === 'map') drawMap($('bigmapc'), true); } }
+        if (started) {
+          updateDay(dt); updateAmbient(dt);
+          if (ui === 'play' || ui === 'map') {
+            mapT -= dt;
+            if (mapT <= 0) {
+              mapT = 0.25;
+              if (ui === 'play') drawMap($('mapc'), false);
+              else drawMap($('bigmapc'), true);
+            }
+          }
+        }
         streamTick(camera.position.x, camera.position.z, dt); mapTick();
         stepBits(dt); stepDrops(dt); stepFalls(dt); stepCreatures(dt, now / 1000); netTick(dt, now);
         renderer.render(scene, camera);
@@ -3713,7 +3739,7 @@
   function teleport(x, y, z, yaw) {
     if (riding) dismount(true);
     ensureAround(x, z, 2);
-    P.x = x; P.z = z; P.y = y; P.vy = 0; P.vx = P.vz = 0;
+    P.x = x; P.z = z; P.y = y; P.vy = 0; P.vx = P.vz = 0; fallTop = null;
     while (collides(P.x, P.y, P.z) && P.y < SY) P.y += 1;
     if (yaw !== undefined) P.yaw = yaw; P.pitch = -0.12; P.camY = 0;
   }
@@ -4074,9 +4100,20 @@
     return false;
   }
   function safeZone(x, z) { return inTown(x, z) || inCommons(x, z) || plotAt(x, z) >= 0 || inArk(x, G + 2, z); }
+  function removeShadow(s) {
+    var materials = new Set();
+    s.mesh.traverse(function (o) {
+      if (o.isSprite) return;
+      if (o.geometry) o.geometry.dispose();
+      if (o.material && o.material !== shadowMat) materials.add(o.material);
+    });
+    s.mesh.children.slice().forEach(function (o) { if (o.isSprite) disposeSprite(o); });
+    materials.forEach(function (m) { m.dispose(); });
+    scene.remove(s.mesh);
+  }
   function stepShadows(dt) {
     var now = performance.now();
-    if (!shadowsOn() || !started) { if (SHADOWS.length) { SHADOWS.forEach(function (s) { scene.remove(s.mesh); }); SHADOWS = []; } return; }
+    if (!shadowsOn() || !started) { if (SHADOWS.length) { SHADOWS.forEach(removeShadow); SHADOWS = []; } return; }
     var px = Math.floor(P.x), pz = Math.floor(P.z), cave = skyLight(px, Math.floor(P.y + 1), pz) < 0.3, dark = cave || isNight();
     // 나타나기
     shadowT -= dt;
@@ -4119,7 +4156,7 @@
       s.op = op;
     });
     if (SHADOWS.length) shadowMat.opacity = Math.max(0.15, Math.min.apply(null, SHADOWS.map(function (s) { return s.op; })));
-    SHADOWS = SHADOWS.filter(function (s) { if (s.fade >= 1) { s.mesh.traverse(function (o) { if (o.isSprite) disposeSprite(o); else if (o.geometry) o.geometry.dispose(); }); scene.remove(s.mesh); return false; } return true; });
+    SHADOWS = SHADOWS.filter(function (s) { if (s.fade >= 1) { removeShadow(s); return false; } return true; });
   }
   function hitShadow(s) {
     if (s.dead) return;
