@@ -1678,10 +1678,15 @@
       var nx = P.x + (axis === 0 ? s : 0), ny = P.y + (axis === 1 ? s : 0), nz = P.z + (axis === 2 ? s : 0);
       if (axis !== 1 && P.sneak && P.ground && !supported(nx, P.y, nz)) return true;
       if (collides(nx, ny, nz)) {
-        if (axis !== 1 && (P.ground || P.swim || P.ladder) && !P.fly) {
-          var up = !collides(nx, ny + 0.51, nz) && !collides(P.x, P.y + 0.51, P.z) ? 0.51 : (!collides(nx, ny + 1.01, nz) && !collides(P.x, P.y + 1.01, P.z) ? 1.01 : 0);
+        // 1칸까지는 계단처럼 저절로 올라감 — 올라선 자리에 몸이 들어가기만 하면 됨(문 아래·나뭇잎 밑·낮은 굴에서도)
+        if (axis !== 1 && (P.ground || P.swim || P.ladder || performance.now() - (P.groundAt || 0) < 150) && !P.fly) {
+          var up = !collides(nx, ny + 0.51, nz) ? 0.51 : (!collides(nx, ny + 1.01, nz) ? 1.01 : 0);
           if (up) { P.y += up; P.camY -= up; P.x = nx; P.z = nz; continue; }
+          // 휴대폰: 2칸 턱이면 저절로 뛰어오름(자동 점프, 메뉴에서 끌 수 있음)
+          if (isTouch && S.autoJump !== false && P.ground && !P.swim && P.vy <= 0 && !riding && !collides(nx, ny + 2.05, nz) && !collides(P.x, P.y + 2.4, P.z)) { P.vy = 15.2; exhaust(0.05); }
         }
+        // 말·나귀를 타고 있을 때도 2칸 턱은 저절로 뛰어넘음
+        if (axis !== 1 && riding && P.ground && P.vy <= 0 && !collides(nx, ny + 2.05, nz)) P.vy = riding.sp.jump;
         return true;
       }
       P.x = nx; P.y = ny; P.z = nz;
@@ -1854,6 +1859,7 @@
     var vis = avatar ? avatar.visible : false;
     if (avatar) scene.remove(avatar);
     avatar = makeAvatar(LOOKS[LOOK]); dressAvatar(avatar, WORN); avatar.visible = vis; scene.add(avatar);
+    if (heldMesh) handItem(avatar, heldWeapon());
   }
   function wearItem(id) {
     var wi = WEARINFO[id]; if (!wi) return;
@@ -2128,12 +2134,18 @@
     canvas.addEventListener('touchend', end); canvas.addEventListener('touchcancel', end);
 
     // 방향키(↑ ← → ↓): 누른 채 손가락을 옆으로 밀어도 따라가고, 모서리는 대각선. ↑ 두 번 = 달리기
-    var pad = $('dpad'), padT = null, lastUp = 0, upWas = false;
+    var pad = $('dpad'), padT = null, lastUp = 0, upWas = false, padHoldT = 0;
     function padAt(t) {
       var r = pad.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, R = r.width / 2;
       var dx = (t.clientX - cx) / R, dy = (t.clientY - cy) / R;
       var x = Math.abs(dx) > 0.33 ? (dx > 0 ? 1 : -1) : 0, y = Math.abs(dy) > 0.33 ? (dy > 0 ? 1 : -1) : 0;
-      if (Math.abs(dx) < 0.33 && Math.abs(dy) < 0.33) { x = 0; y = 0; }
+      var center = Math.abs(dx) < 0.33 && Math.abs(dy) < 0.33;
+      if (center) { x = 0; y = 0; }
+      // 가운데를 2초 누르고 있으면 웅크리기 켜고 끄기
+      if (center && !padHoldT) {
+        $('dMid').classList.add('hold');
+        padHoldT = setTimeout(function () { padHoldT = 0; $('dMid').classList.remove('hold'); sneakLock = !sneakLock; vibrate(); toast(sneakLock ? '🧎 웅크렸어요 — 가장자리에서 떨어지지 않아요. 가운데를 다시 2초 누르면 일어나요' : '🧍 일어났어요'); }, 2000);
+      } else if (!center && padHoldT) { clearTimeout(padHoldT); padHoldT = 0; $('dMid').classList.remove('hold'); }
       joy.x = x; joy.y = y;
       if (x && y) { joy.x = x * 0.7071; joy.y = y * 0.7071; }
       var up = y < 0;
@@ -2142,7 +2154,7 @@
       upWas = up;
       ['dUp', 'dLeft', 'dRight', 'dDown'].forEach(function (k, i) { $(k).classList.toggle('on', [y < 0, x < 0, x > 0, y > 0][i]); });
     }
-    function padEnd() { padT = null; joy.x = joy.y = 0; upWas = false; if (runSrc === 'pad') setRun(false); ['dUp', 'dLeft', 'dRight', 'dDown'].forEach(function (k) { $(k).classList.remove('on'); }); }
+    function padEnd() { if (padHoldT) { clearTimeout(padHoldT); padHoldT = 0; $('dMid').classList.remove('hold'); } padT = null; joy.x = joy.y = 0; upWas = false; if (runSrc === 'pad') setRun(false); ['dUp', 'dLeft', 'dRight', 'dDown'].forEach(function (k) { $(k).classList.remove('on'); }); }
     pad.addEventListener('touchstart', function (e) { if (ui !== 'play') return; var t = e.changedTouches[0]; if (padT === null) { padT = t.identifier; padAt(t); } e.preventDefault(); e.stopPropagation(); }, { passive: false });
     pad.addEventListener('touchmove', function (e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) padAt(e.changedTouches[i]); e.preventDefault(); e.stopPropagation(); }, { passive: false });
     function padUp(e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) padEnd(); e.preventDefault(); }
@@ -2936,6 +2948,7 @@
     $('mSound').textContent = '소리: ' + (S.sound ? '켬' : '끔');
     $('mMusic').textContent = '음악: ' + (S.music === false ? '끔' : '켬');
     $('mShadow').textContent = '어둠의 그림자: ' + (S.shadows === false ? '안 나옴' : '나옴');
+    $('mAutoJump').textContent = '자동 점프: ' + (S.autoJump === false ? '끔' : '켬');
     $('mAim').textContent = '겨누기: ' + (S.aim === 'cross' ? '가운데 십자선' : '손가락 자리');
     $('mSensLabel').textContent = '둘러보기 속도: ' + Math.round(S.sens * 100) + '%';
     $('mSens').value = Math.round(S.sens * 100);
@@ -3002,6 +3015,7 @@
     ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);
+    on('mAutoJump', function () { S.autoJump = S.autoJump === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('go_visit', openVisit); on('mVisit', openVisit);
     on('visitDone', function () { closePanel(); });
     $('visitShow').addEventListener('change', saveShowcase); $('visitIntro').addEventListener('change', saveShowcase);
@@ -3653,7 +3667,36 @@
     g.setIndex([0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2]);   // 앞뒤 두 면
     return g;
   }
-  function setHeld(id) { if (heldMesh.geometry) heldMesh.geometry.dispose(); if (!id) { heldMesh.geometry = new THREE.BufferGeometry(); return; } heldMesh.geometry =isItem(id) || id === TORCH ? itemGeometry(id) : blockGeometry(id); heldMesh.material.alphaTest = isItem(id) || id === TORCH ? 0.5 : 0; heldMesh.material.needsUpdate = true; }
+  // 무기(칼·성령의 검): 손에 들면 크게, 3인칭·친구 화면에서도 손에 쥔 모습
+  function isWeapon(id) { return id === SWORD || isTool(id); }   // 칼·검과 곡괭이·도끼·삽: 손에 든 모습을 크게
+  function heldWeapon() { var id = HOTBAR[sel]; return id && have(id) > 0 && isWeapon(id) ? id : 0; }
+  function handItem(av, id) {
+    var pr = av && av.userData; if (!pr || !pr.armR) return;
+    if (pr.hand) { pr.armR.remove(pr.hand); pr.hand.traverse(function (o) { if (o.geometry) o.geometry.dispose(); }); pr.hand = null; }
+    if (!id) return;
+    // 입체로: 손잡이·가로대·칼날(어느 쪽에서 봐도 보이게). 칼날은 앞쪽으로 조금 들어 올림
+    var u = HT / 32, g = new THREE.Group(), big = id === SWORD, type = big ? 'sword' : TOOL_TYPES[typeOf(id)];
+    var mat = big ? 0xe8eef5 : [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0x6ff0e6][tierOf(id)], wood = 0x7a5430;
+    function bx(w, h, d, hex, y, x) { var m = shadedBox(w * u, h * u, d * u, hex); m.position.set((x || 0) * u, y * u, 0); g.add(m); }
+    if (type === 'sword' || type === 'knife') {
+      var len = big ? 13 : 8;
+      bx(1.4, 3.6, 1.4, 0x6a4628, 0); bx(big ? 5.5 : 3.2, 1, 1.6, big ? 0xf0c840 : 0x5a3a1e, 2.2); bx(big ? 1.8 : 1.4, len, 0.6, mat, 2.7 + len / 2); bx(big ? 1 : 0.8, 1.4, 0.6, mat, 3.3 + len);
+      if (big) bx(0.5, len - 1, 0.7, 0xb8c4d0, 2.7 + len / 2);   // 가운데 홈
+    } else {
+      bx(1.2, 13, 1.2, wood, 4.5);   // 자루
+      if (type === 'pick') { bx(13, 2.4, 2.2, mat, 11.2); bx(2, 2, 2, mat, 9.8, -6.6); bx(2, 2, 2, mat, 9.8, 6.6); }   // 곡괭이 머리(양쪽 뾰족)
+      else if (type === 'axe') { bx(6, 6.4, 1.2, mat, 9.4, 3.2); bx(1.2, 7, 1.4, mat, 9.4, 6.4); }   // 도끼날(한쪽)
+      else if (type === 'shovel') { bx(5, 6, 0.8, mat, 13.4); bx(3.2, 1.4, 0.8, mat, 17); }   // 삽날(끝)
+    }
+    g.position.set(0, -12.5 * u, -0.6 * u); g.rotation.x = -Math.PI / 2 + (type === 'sword' || type === 'knife' ? 0.45 : 0.75);
+    pr.armR.add(g); pr.hand = g; pr.handId = id;
+  }
+  function setHeld(id) {
+    var wpn = isWeapon(id);
+    heldMesh.userData.weapon = wpn; heldMesh.scale.set(wpn ? -(id === SWORD ? 0.72 : 0.62) : (isItem(id) ? 0.5 : 0.34), wpn ? (id === SWORD ? 0.72 : 0.62) : (isItem(id) ? 0.5 : 0.34), isItem(id) ? 0.5 : 0.34);
+    heldMesh.material.side = wpn ? THREE.DoubleSide : THREE.FrontSide;
+    if (avatar) handItem(avatar, heldWeapon() === id ? id : 0);
+    if (heldMesh.geometry) heldMesh.geometry.dispose(); if (!id) { heldMesh.geometry = new THREE.BufferGeometry(); return; } heldMesh.geometry =isItem(id) || id === TORCH ? itemGeometry(id) : blockGeometry(id); heldMesh.material.alphaTest = isItem(id) || id === TORCH ? 0.5 : 0; heldMesh.material.needsUpdate = true; }
   function init() {
     canvasEl = $('game');
     if (isTouch) document.body.classList.add('touch');
@@ -3807,6 +3850,7 @@
     P.ground = false;
     if (hitY) { if (P.vy < 0) P.ground = true; P.vy = 0; }
     else if (!P.fly && collides(P.x, P.y - 0.02, P.z)) P.ground = true;
+    if (P.ground) P.groundAt = performance.now();
     if (P.y < -10) teleport(P.x, surfaceY(P.x | 0, P.z | 0), P.z);
     P.x = clamp(P.x, 40, WS - 40); P.z = clamp(P.z, 40, WS - 40);
     var moved = Math.hypot(P.x - lastX, P.z - lastZ);
@@ -3837,8 +3881,13 @@
       camera.position.set(ex + Math.cos(P.yaw) * sway, ey + Math.abs(bob), ez - Math.sin(P.yaw) * sway);
       camera.lookAt(camera.position.x + fwd.x, camera.position.y + fwd.y, camera.position.z + fwd.z);
       avatar.visible = false; heldMesh.visible = true;
-      heldMesh.position.set(0.52 + Math.cos(P.walk) * 0.02 * bobAmp, -0.46 + Math.abs(Math.sin(P.walk * 2)) * 0.025 * bobAmp - sw * 0.12, -0.82 - sw * 0.1);
-      heldMesh.rotation.set(0.1 - sw * 0.6, 0.72, 0);
+      if (heldMesh.userData.weapon) {   // 칼·검: 오른쪽 아래에서 위로 비스듬히 세워 들고, 휘두르면 내려침
+        heldMesh.position.set(0.48 + Math.cos(P.walk) * 0.02 * bobAmp, -0.38 + Math.abs(Math.sin(P.walk * 2)) * 0.025 * bobAmp - sw * 0.1, -0.8 - sw * 0.12);
+        heldMesh.rotation.set(-0.15 - sw * 0.5, 0.35, sw * 1.1);
+      } else {
+        heldMesh.position.set(0.52 + Math.cos(P.walk) * 0.02 * bobAmp, -0.46 + Math.abs(Math.sin(P.walk * 2)) * 0.025 * bobAmp - sw * 0.12, -0.82 - sw * 0.1);
+        heldMesh.rotation.set(0.1 - sw * 0.6, 0.72, 0);
+      }
     } else {
       var dir = S.view === 1 ? -1 : 1, want = 8.5, d = 0.6;
       while (d < want) {
@@ -4348,6 +4397,7 @@
       nav.position.copy(p.av.position); nav.rotation.y = p.av.rotation.y; nav.visible = p.av.visible;
       if (p.tag) nav.add(p.tag); if (p.bub) nav.add(p.bub);
       scene.remove(p.av); p.av = nav; scene.add(nav);
+      if (p.wi) handItem(nav, p.wi);
     }
     if (n === p.nick) return;
     p.nick = n; disposeSprite(p.tag);
@@ -4369,6 +4419,8 @@
     var p = peerGet(m.u);
     p.tx = m.x; p.ty = m.y; p.tz = m.z; p.th = m.h || 0; p.pt = m.p || 0; p.s = m.s ? 1 : 0; p.t = performance.now();
     if (p.fresh) { p.fresh = false; p.x = p.tx; p.y = p.ty; p.z = p.tz; p.h = p.th; }
+    var wi = m.i === SWORD || isTool(m.i) ? m.i : 0;
+    if (wi !== (p.wi || 0)) { p.wi = wi; handItem(p.av, wi); }
     var rk = BEASTS[m.r] ? m.r : '';
     if (rk !== p.rk) {
       if (p.beast) { scene.remove(p.beast.mesh); p.beast = null; }
@@ -4378,8 +4430,8 @@
   }
   function sendPos(now) {
     var r = riding ? riding.kind : '', s = (mine && !mine.denied) || swingT > 0 ? 1 : 0;
-    var m = { u: me.id, x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), h: +P.yaw.toFixed(2), p: +P.pitch.toFixed(2), r: r, s: s };
-    var key = [m.x, m.y, m.z, m.h, m.p, r, s].join();
+    var m = { u: me.id, x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), h: +P.yaw.toFixed(2), p: +P.pitch.toFixed(2), r: r, s: s, i: heldWeapon() };
+    var key = [m.x, m.y, m.z, m.h, m.p, r, s, m.i].join();
     if ((key === NET.sentKey && now - NET.sentAt < 2500) || now - NET.sentAt < 110) return;
     NET.sentKey = key; NET.sentAt = now;
     NET.ch.send({ type: 'broadcast', event: 'pos', payload: m });
