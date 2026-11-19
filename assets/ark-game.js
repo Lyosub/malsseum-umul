@@ -3398,7 +3398,7 @@
     client.from('ark_village_plots').update({ data: data, updated_at: new Date().toISOString() }).eq('user_id', me.id)
       .then(function (r) { setSave(r.error ? '저장 실패 — 다시 시도해요' : '저장됨'); if (r.error) { dirty = true; saveTimer = setTimeout(savePlot, 4000); } });
   }
-  function setSave(t) { var el = $('saveState'); if (el) el.textContent = t; }
+  function setSave(t) { var el = $('saveState'); if (el) { el.textContent = t; el.classList.toggle('quiet', t === '저장됨'); } }
   function markPlots() {
     for (var i = 0; i < PCOLS * PROWS; i++) {
       var o = plotOrigin(i), id = i === myPlot ? 15 : (plotOwners[i] ? 11 : 0);
@@ -3942,13 +3942,14 @@
       var f = S.fold || {};
       $('topRight').classList.toggle('fold', !!f.top); document.body.classList.toggle('topfold', !!f.top);
       $('btnFold').querySelector('span').textContent = f.top ? '◀' : '▶'; $('btnFold').querySelector('small').textContent = f.top ? '펴기' : '접기';
-      $('quest').classList.toggle('fold', !!f.q); $('qFold').textContent = f.q ? '📜 안내 펴기 ▾' : '▴';
+      document.body.classList.toggle('qfold', !!f.q);   // 안내를 접으면 상자는 숨기고 위쪽 줄의 📜 버튼만
       document.body.classList.toggle('mapfold', !!f.map);
       $('mapCap').innerHTML = f.map ? '🗺 지도 펴기' : '지도<b class="k">M</b>';
     }
     function toggleFold(k) { S.fold = S.fold || {}; S.fold[k] = !S.fold[k]; saveSettings(); applyFold(); sfx('click'); }
     on('btnFold', function () { toggleFold('top'); });
     on('qFold', function () { toggleFold('q'); });
+    on('qMini', function () { toggleFold('q'); });
     on('mapCap', function () { toggleFold('map'); });
     on('btnRotate', rotateScreen);
     applyFold();
@@ -4296,7 +4297,7 @@
     stats.tapped++; tutorialEvent('animal'); questCheck();
   }
   // 화면의 한 점에서 나가는 광선에 맞는 동물(블록보다 가까울 때만)
-  var CR_R = { npc: 1.8, shadow: 1.6, sheep: 1.3, goat: 1.2, cow: 1.7, camel: 2.3, rabbit: 0.8, dove: 1.1, raven: 1.1, fish: 0.8, horse: 2.1, donkey: 1.7 };
+  var CR_R = { peer: 1.6, npc: 1.8, shadow: 1.6, sheep: 1.3, goat: 1.2, cow: 1.7, camel: 2.3, rabbit: 0.8, dove: 1.1, raven: 1.1, fish: 0.8, horse: 2.1, donkey: 1.7 };
   function pickCreature(dir, blockT) {
     var o = camera.position, best = null, bt = blockT === undefined ? 1e9 : blockT;
     function test(kindC, cx, cy, cz, maxT, obj) {
@@ -4311,6 +4312,7 @@
     birds.forEach(function (b) { test(b.kind, b.mesh.position.x, b.mesh.position.y, b.mesh.position.z, 60); });
     fishes.forEach(function (f) { if (f.mesh.visible) test('fish', f.x, f.y, f.z, reach); });
     NPCS.forEach(function (n) { var b0 = best; test('npc', n.x, n.y + 1.7, n.z, reach); if (best !== b0 && best && best.kind === 'npc') best.npc = n; });
+    for (var pu in NET.peers) { var pp = NET.peers[pu]; if (!pp || !pp.av) continue; var b2 = best; test('peer', pp.x, pp.y + 1.7, pp.z, reach); if (best !== b2 && best && best.kind === 'peer') best.peer = pp; }
     SHADOWS.forEach(function (s) { if (s.dead) return; var b0 = best; test('shadow', s.x, s.y + 1.7 * s.sp.h, s.z, REACH + camDist + 1); if (best !== b0 && best && best.kind === 'shadow') best.shadow = s; });
     return best;
   }
@@ -4365,7 +4367,7 @@
     }
     var c = pickCreature(screenDir(), h ? h.t : undefined);
     if (c && !(riding && c.a && c.a.sp.seat)) {
-      return { label: c.npc ? '말 걸기' : (c.shadow ? '막기' : (c.a && c.a.sp.seat ? '타기' : '동물 누르기')) };
+      return { label: c.peer ? '사람 · 두 번 누르기' : c.npc ? '말 걸기' : (c.shadow ? '막기' : (c.a && c.a.sp.seat ? '타기' : '동물 누르기')) };
     }
     if (h) label = blockActionLabel(h, held);
     if (label) return { label: label };
@@ -4402,6 +4404,34 @@
     slabGhost.visible = true;
   }
   // 톡/오른쪽 클릭: 동물이 먼저, 아니면 블록 놓기(문이면 열고 닫기)
+  // 다른 사람 캐릭터: 한 번 누르면 이름, 두 번 누르면 친구·파티 메뉴
+  var peerTap = { u: null, t: 0 }, hintT0 = 0;
+  function tapPeer(p) {
+    var u = p.u, nm = (NET.names && NET.names[u]) || '나그네', now = performance.now();
+    if (peerTap.u === u && now - peerTap.t < 600) { peerTap.u = null; openPeerMenu(u, nm); return; }
+    peerTap = { u: u, t: now }; toast('👤 ' + nm + ' — 한 번 더 누르면 친구·파티 메뉴');
+  }
+  function openPeerMenu(u, nm) {
+    var old = $('peerMenu'); if (old) old.remove();
+    if (lockOn) { try { document.exitPointerLock(); } catch (e) {} }
+    var box = document.createElement('div'); box.id = 'peerMenu';
+    box.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(16,16,24,.94);border:2px solid #000;box-shadow:inset 0 0 0 2px #5a4a8a;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:210px;color:#fff;font-size:15px;text-align:center';
+    var h = document.createElement('b'); h.textContent = '👤 ' + nm; box.appendChild(h);
+    function add(label, fn, off) { var b = document.createElement('button'); b.className = 'mc'; b.textContent = label; b.disabled = !!off; b.addEventListener('click', function (e) { e.stopPropagation(); box.remove(); if (fn) fn(); }); box.appendChild(b); }
+    var isFriend = !!(FRIENDS.accepted && FRIENDS.accepted.has(u));
+    if (!me || !NET.ok) add('로그인하면 친구·파티를 할 수 있어요', null, true);
+    else {
+      if (isFriend) add('✓ 이미 친구예요', null, true);
+      else if (FRIENDS.hidden && FRIENDS.hidden.has(u)) add('친구 신청을 보낼 수 없어요', null, true);
+      else add('🤝 친구 신청', function () { friendRequest(nm); });
+      if (partyMate(u)) add('✓ 같은 파티예요', null, true);
+      else add('🧭 파티 초대', function () { partyCall('party_invite', { p_to: u }, '🤝 초대를 보냈어요 (10분 안에 받아야 해요)'); });
+      if (isFriend) add('🎁 선물 보내기', function () { openVillageWork('gifts'); fetchGifts(true); });
+      if (!FRIENDS.ready) friendsFetch();
+    }
+    add('닫기');
+    document.body.appendChild(box); sfx('pop');
+  }
   function tapAt(sx, sy) {
     if (furnitureRest) return;
     var dir = screenDir(sx, sy), held=HOTBAR[sel];
@@ -4414,6 +4444,7 @@
     var h = pickDir(dir), c = pickCreature(dir, h ? h.t : undefined);
     if (c && riding && c.a && c.a.sp.seat) c = null;
     if (c && c.shadow) return hitShadow(c.shadow);
+    if (c && c.peer) return tapPeer(c.peer);
     if (c && c.npc) {
       var npc=c.npc; showNpc(npc);
       if ((npc.d.name==='목자' || npc.d.name==='빵 굽는 사람') && !held)
@@ -5386,6 +5417,8 @@
         $('seasonInfo').textContent=WEATHER[seasonIndex()]+(rainOn?' · 비':'')+
           (HOTBAR[sel]===COMPASS?' · '+headingName():'');
         fetchFeed(); fetchGifts();
+        if (!hintT0) hintT0 = performance.now();
+        if (tutorialStep >= 9 || performance.now() - hintT0 > 60000) document.body.classList.add('nohint');
       },300);
     });
   }
@@ -6817,7 +6850,7 @@
   }
   function netPill() {
     var n = Object.keys(NET.meta).length;
-    $('netState').textContent = NET.on ? '👥 지금 ' + Math.max(1, n) + '명이 함께 있어요' : (NET.ready ? '👥 연결하는 중…' : '');
+    $('netState').textContent = NET.on ? '👥 ' + Math.max(1, n) + '명 함께' : (NET.ready ? '👥 연결 중…' : '');
   }
 
   // 채팅

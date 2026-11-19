@@ -193,7 +193,13 @@
   #achCount { font-size:13px; color:#3f3f3f; margin-bottom:6px; }
 
   /* 접고 펴기(위쪽 버튼 줄·처음 안내·작은 지도)와 가로/세로 버튼 */
-  #topRight.fold > button:not(#btnFold):not(#btnPause) { display:none !important; }
+  #topRight.fold > button:not(#btnFold):not(#btnPause):not(#qMini) { display:none !important; }
+  body:not(.qfold) #qMini { display:none !important; }
+  body.qfold #quest { display:none !important; }
+  /* 화면 정리: 저장됨은 숨기고(저장 중·실패만), 방향키 설명은 익숙해지면 숨김 */
+  #saveState.quiet { display:none; }
+  body.nohint #dpad .dhint { display:none; }
+  body.touch #info { line-height:1.35; }
   body:not(.touch) #btnRotate { display:none; }
   #quest.fold .qt, #quest.fold #qBtn, #quest.fold #qSkip { display:none !important; }
   #quest.fold { width:auto !important; }
@@ -544,6 +550,7 @@
 </div>
 <button id="restUp" type="button" class="mc hud" hidden>일어나기</button>
 <div id="topRight" class="hud">
+  <button id="qMini" class="mc ibtn lbl" aria-label="안내 펴기"><span>📜</span><small>안내</small></button>
   <button id="btnFold" class="mc ibtn lbl" aria-label="버튼 접기"><span>▶</span><small>접기</small></button>
   <button id="btnChat" class="mc ibtn lbl" aria-label="채팅 (T)"><span>💬</span><small>채팅<b class="k">T</b></small></button>
   <button id="btnBag" class="mc ibtn lbl" aria-label="가방·만들기 (E)"><span>🎒</span><small>가방<b class="k">E</b></small></button>
