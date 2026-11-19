@@ -1043,6 +1043,22 @@
     B[entry[0]][1]=B[entry[0]][2]=B[entry[0]][3]=entry[2];
     SHAPE[entry[0]].boxes=entry[3];
   });
+  var ROPE=520, PULLEY=521, COUNTERWEIGHT=522, PRESS_PLATE=523, LIFT=524, WATERWHEEL=525, SLUICE=526;
+  var STONE_RAIL=534, WOOD_PILLAR=535, ARCH_SIDE=536;
+  var FRONTIER_RECIPES = [
+    [ROPE,'밧줄',GOPHER,[[THREAD,3]],'rope'],
+    [PULLEY,'도르래',GOPHER,[[GOPHER,2],[STICK,1]],'pulley'],
+    [COUNTERWEIGHT,'돌 추',STONE,[[STONE,3],[ROPE,1]],'weight'],
+    [PRESS_PLATE,'밟는 발판',GOPHER,[[GOPHER,2],[STONE,1]],'plate'],
+    [LIFT,'나무 승강대',GOPHER,[[GOPHER,6],[PULLEY,1]],'lift'],
+    [WATERWHEEL,'물레방아',GOPHER,[[GOPHER,5],[STICK,2]],'wheel'],
+    [SLUICE,'수문',GOPHER,[[GOPHER,4],[ROPE,1]],'sluice'],
+    [STONE_RAIL,'돌 난간',STONE,[[STONE,2]],'rail'],
+    [WOOD_PILLAR,'나무 기둥',GOPHER,[[GOPHER,3]],'pillar']
+  ];
+  FRONTIER_RECIPES.forEach(function (r) { regShape(r[0],r[1],r[4],r[0],r[2]); });
+  for (var si=0;si<8;si++) regShape(SLUICE+si,'수문','sluice',SLUICE,GOPHER,si>>1,si%2);
+  regShape(ARCH_SIDE,B[ARCH][0],'arch',ARCH,SHAPE[ARCH].mat,1);
   var WORD_SHELF=480, ALTAR=481, SLING_TARGET=482;
   var WORD_SCROLL=660, STAFF=661, HAND_MAP=662, COMPASS=663, SHOFAR=664, SLING=665, ROUND_STONE=666;
   var WORD_BLOCKS=[[WORD_SHELF,'말씀 서재',0x99693e,'study'],[ALTAR,'돌 제단',0x9b9081,'altar'],
@@ -1079,20 +1095,41 @@
   function baseOf(id) { return SHAPE[id] ? SHAPE[id].base : id; }
   // 모양별 상자들(칸 안 좌표 0~1)
   var EDGE = [[0, 0, 0, 1, 1, 0.19], [0.81, 0, 0, 1, 1, 1], [0, 0, 0.81, 1, 1, 1], [0, 0, 0, 0.19, 1, 1]];
+  function swapBoxAxes(b) { return [b[2],b[1],b[0],b[5],b[4],b[3]]; }
   function shapeBoxes(id, x, y, z) {
     var s = SHAPE[id];
     if (s.type === 'slab') return [s.f ? [0, 0.5, 0, 1, 1, 1] : [0, 0, 0, 1, 0.5, 1]];
     if (s.type === 'stair') return [[0, 0, 0, 1, 0.5, 1], [[0, 0.5, 0, 1, 1, 0.5], [0.5, 0.5, 0, 1, 1, 1], [0, 0.5, 0.5, 1, 1, 1], [0, 0.5, 0, 0.5, 1, 1]][s.f]];
     if (s.type === 'extension') return EXT_BOXES[s.boxes];
     if (s.type === 'pillar') return [[.1,0,.1,.9,.13,.9],[.22,.13,.22,.78,.87,.78],[.1,.87,.1,.9,1,.9]];
-    if (s.type === 'arch') return [[0,0,.12,.17,1,.88],[.83,0,.12,1,1,.88],
-      [.17,.38,.12,.34,1,.88],[.66,.38,.12,.83,1,.88],[.34,.68,.12,.66,1,.88]];
+    if (s.type === 'arch') {
+      var arch=[[0,0,.12,.17,1,.88],[.83,0,.12,1,1,.88],
+        [.17,.38,.12,.34,1,.88],[.66,.38,.12,.83,1,.88],[.34,.68,.12,.66,1,.88]];
+      return s.f ? arch.map(swapBoxAxes) : arch;
+    }
+    if (s.type === 'rope') {
+      var rope=[[.46,0,.46,.54,1,.54]];
+      if(mechanismNeighbor(get(x-1,y,z)))rope.push([0,.53,.46,.46,.61,.54]);
+      if(mechanismNeighbor(get(x+1,y,z)))rope.push([.54,.53,.46,1,.61,.54]);
+      if(mechanismNeighbor(get(x,y,z-1)))rope.push([.46,.53,0,.54,.61,.46]);
+      if(mechanismNeighbor(get(x,y,z+1)))rope.push([.46,.53,.54,.54,.61,1]);
+      return rope;
+    }
+    if (s.type === 'pulley') return [[.14,.38,.34,.86,.74,.66],[.44,.7,.44,.56,1,.56]];
+    if (s.type === 'weight') return [[.24,.14,.24,.76,.76,.76],[.45,.76,.45,.55,1,.55]];
+    if (s.type === 'plate') return [[.08,0,.08,.92,.11,.92]];
+    if (s.type === 'lift') return [[0,0,0,1,.17,1],[.02,.17,.02,.11,.65,.11],[.89,.17,.02,.98,.65,.11]];
+    if (s.type === 'wheel') return [[.43,0,.43,.57,.47,.57],[.27,.43,.27,.73,.57,.73]];
+    if (s.type === 'sluice') {
+      var gateBoxes=s.open ? [[0,0,.4,.12,1,.6],[.88,0,.4,1,1,.6],[.12,.85,.4,.88,1,.6]] : [[0,0,.39,1,1,.61]];
+      return s.f % 2 ? gateBoxes.map(swapBoxAxes) : gateBoxes;
+    }
     if (s.type === 'rail') {
       var rail = [[.2,0,.2,.8,1,.8]];
-      if (get(x-1,y,z) === RAIL) rail.push([0,.48,.36,.2,.9,.64]);
-      if (get(x+1,y,z) === RAIL) rail.push([.8,.48,.36,1,.9,.64]);
-      if (get(x,y,z-1) === RAIL) rail.push([.36,.48,0,.64,.9,.2]);
-      if (get(x,y,z+1) === RAIL) rail.push([.36,.48,.8,.64,.9,1]);
+      if (get(x-1,y,z) === id) rail.push([0,.48,.36,.2,.9,.64]);
+      if (get(x+1,y,z) === id) rail.push([.8,.48,.36,1,.9,.64]);
+      if (get(x,y,z-1) === id) rail.push([.36,.48,0,.64,.9,.2]);
+      if (get(x,y,z+1) === id) rail.push([.36,.48,.8,.64,.9,1]);
       return rail;
     }
     if (s.type === 'roof') return [[0,.64,0,1,1,1]];
@@ -1140,13 +1177,14 @@
     return bx;
   }
   function collBoxes(id, x, y, z) { var s = SHAPE[id]; if ((s.type === 'door' || s.type === 'gate') && s.open) return [];
-    if (s.type === 'flag' || s.type === 'cloth') return [];
+    if (s.type === 'flag' || s.type === 'cloth' || s.type === 'rope' || s.type === 'plate') return [];
     if (s.type === 'gate') return [s.f ? [.43,0,0,.57,1,1] : [0,0,.43,1,1,.57]]; if (s.type === 'ladder' || s.type === 'wtorch' || s.type === 'lever' || s.type === 'sign' || s.type === 'lantern' || s.type === 'carpet' || s.type === 'lampstand') return []; if (s.type === 'fence') return [[0.3, 0, 0.3, 0.7, 1, 0.7]].concat(shapeBoxes(id, x, y, z).slice(1).map(function (b) { return [b[0], 0, b[2], b[3], 1, b[5]]; })); return shapeBoxes(id, x, y, z); }
   // 가방에 들어가는 것(캐거나 만들어서 모음)
   var INV = [7, 5, 6, 8, 3, 21, 23, 4, 2, 26, 27, 25, 28, 29, 11, 12, 13, 20, 22, 9, 10, 18, 14, 15, 16, 17, SLAB_G, SLAB_S, SLAB_B, STAIR_G, STAIR_S, STAIR_B, FENCE, DOOR,
     ORE_CU, ORE_FE, ORE_AG, ORE_AU, ING_CU, ING_FE, ING_AG, ING_AU, FURNACE, BLK_CU, BLK_FE, BLK_AG, BLK_AU, STICK];
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
+  FRONTIER_RECIPES.forEach(function(r){INV.push(r[0]);});
   INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
@@ -1272,6 +1310,7 @@
   RECIPES.push({ out: [CARPET, 3], need: [[WOOL_R, 2]], cat: 'shape' });
   RECIPES.push({ out: [LANTERN, 1], need: [[ING_FE, 1], [TORCH, 1]], cat: 'shape' });
   RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 2], [ING_AU, 1], [STICK, 1]], cat: 'wear', table: true, ref: '엡 6:17' });
+  FRONTIER_RECIPES.forEach(function(r){RECIPES.push({out:[r[0],1],need:r[3],cat:'shape'});});
   RECIPES.push({ out: [CHAIR, 1], need: [[GOPHER, 3], [STICK, 2]], cat: 'shape' });
   RECIPES.push({ out: [BED, 1], need: [[WOOL, 3], [GOPHER, 3]], cat: 'block', ref: '시 4:8' });
   RECIPES.push({ out: [LEVER, 1], need: [[STICK, 1], [STONE, 1]], cat: 'shape' });
@@ -1396,7 +1435,11 @@
   var SX = WS, SZ = WS;
   var COLS = new Array(NC * NC);   // 기둥: { d: 블록, sky: 하늘 그늘, lamps: 등불, mod: 고친 적 있음 }
   function colAt(x, z) { if (x < 0 || z < 0 || x >= WS || z >= WS) return null; return COLS[(z >> 5) * NC + (x >> 5)]; }
-  function get(x, y, z) {
+  function get(x,y,z) {
+    var id=readBlock(x,y,z);
+    return id===AIR && frontierWater.size && frontierWater.has(frontierCell(x,y,z)) ? WATER : id;
+  }
+  function readBlock(x, y, z) {
     if (y < 0) return BASALT;
     if (y >= SY) return AIR;
     var c = colAt(x, z); if (!c) return AIR;
@@ -1663,6 +1706,7 @@
       }
     }
     carveCaves(col, cx, cz, tops, wtops);
+    buildFrontierCave(x0,z0,tops);
     // 나무: 7칸 격자마다 한 그루 후보(옆 기둥 나무도 걸치게)
     for (var gz = Math.floor((z0 - 6) / 7); gz <= Math.floor((z0 + CS + 6) / 7); gz++) for (var gx = Math.floor((x0 - 6) / 7); gx <= Math.floor((x0 + CS + 6) / 7); gx++) {
       var tx = gx * 7 + Math.floor(hash2(gx, gz, 21) * 6), tz = gz * 7 + Math.floor(hash2(gx, gz, 22) * 6);
@@ -1704,10 +1748,18 @@
     }
     markPlots();
     var ed = EDITS[cz * NC + cx]; if (ed) for (var li in ed) col.d[li] = ed[li];
+    col.machines=new Set();
     genCol = null;
     // 하늘 그늘, 등불
     for (lz = 0; lz < CS; lz++) for (lx = 0; lx < CS; lx++) skyScan(col, lx, lz);
-    for (var q = 0; q < col.d.length; q++) if (LIGHTS[col.d[q]]) { var qx = q % CS, r0 = (q - qx) / CS, qz = r0 % CS, qy = (r0 - qz) / CS; col.lamps.push([x0 + qx, qy, z0 + qz]); }
+    for (var q = 0; q < col.d.length; q++) {
+      var bid=col.d[q];
+      if(isFrontierMachine(bid))col.machines.add(q);
+      if (LIGHTS[bid]) {
+        var qx=q%CS,r0=(q-qx)/CS,qz=r0%CS,qy=(r0-qz)/CS;
+        col.lamps.push([x0+qx,qy,z0+qz]);
+      }
+    }
     COLS[cz * NC + cx] = col;
     return col;
   }
@@ -2549,7 +2601,7 @@
   var isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   var lockOn = false, canvasEl;
   function showUI(name) {
-    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party', 'friends', 'practice', 'villageWork'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
+    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party', 'friends', 'practice', 'villageWork', 'frontierChest'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
     document.body.classList.toggle('playing', name === 'play');
     document.body.classList.toggle('menu', name !== 'play');
     ui = name;
@@ -2599,7 +2651,7 @@
       points.push([VX1 + 8, roadZ]);
     }
     points.push(FOREST_ENTRY);
-    forestRoute = points;
+    forestRoute = points; forestDestination=FOREST_ENTRY; forestName='동쪽 숲';
     resume();
     renderForestRoute();
   }
@@ -2616,13 +2668,14 @@
       next = forestRoute[0];
       distance = Math.hypot(next[0] - P.x, next[1] - P.z);
     }
-    var remaining = Math.hypot(FOREST_ENTRY[0] - P.x, FOREST_ENTRY[1] - P.z);
+    var remaining = Math.hypot(forestDestination[0] - P.x, forestDestination[1] - P.z);
     if (remaining <= 6) {
       cancelForestRoute();
-      toast('동쪽 숲에 도착했어요!');
+      toast(forestName+'에 도착했어요!');
       return;
     }
     var angle = Math.atan2(next[0] - P.x, P.z - next[1]) + P.yaw;
+    if ($('forestPlace').textContent !== forestName) $('forestPlace').textContent=forestName;
     $('forestArrow').style.transform = 'rotate(' + angle + 'rad)';
     var distanceLabel = Math.round(remaining) + '칸';
     if ($('forestDistance').textContent !== distanceLabel) $('forestDistance').textContent = distanceLabel;
@@ -2681,6 +2734,8 @@
       keys[e.code] = true;
       if (e.code === 'Space' && !e.repeat) jumpPress();
       if (e.code === 'KeyF') toggleFly();
+      if (e.code === 'KeyG' && !e.repeat) rotateBuild();
+      if (e.code === 'KeyZ' && !e.repeat) undoBuild();
       if (/^Digit[1-9]$/.test(e.code)) setSel(+e.code.slice(5) - 1);
       if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && riding) dismount();
       if (e.code === 'Space' || e.code === 'Tab') e.preventDefault();
@@ -2802,6 +2857,7 @@
   function cycleView() { S.view = (S.view + 1) % 3; saveSettings(); updateMenuLabels(); toast('시점: ' + VIEW_NAMES[S.view]); }
   var selNameT = null;
   function setSel(i, quiet) {
+    if(sel!==i){buildTurn=0; $('buildRotate').textContent='돌리기';}
     sel = i;
     var slots = document.querySelectorAll('#hotbar .slot');
     for (var k = 0; k < slots.length; k++) slots[k].classList.toggle('on', k === i);
@@ -2847,6 +2903,7 @@
   // ───────── 캐기·놓기 권한, 저장 ─────────
   var client = null, me = null, myPlot = -1, plotOwners = {}, plotUser = {}, saveTimer = null, dirty = false, started = false;
   function canMine(x, y, z) {
+    var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
     if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
     if (inArk(x, y, z)) return '방주는 3단계에서 다 함께 지어요. 지금은 구경해요!';
@@ -2863,6 +2920,8 @@
     return '';
   }
   function canPlace(x, y, z, id) {
+    var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
+    if(client && !frontierEnabled && id>=ROPE && id<=ARCH_SIDE) return '개척 도구를 서버에서 준비하는 중이에요';
     if (client && !villageProjectsEnabled && id>=FIND_POT && id<=FEAST_FISH) return '마을 새 재료를 서버에서 준비하는 중이에요';
     if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
@@ -2887,13 +2946,12 @@
     return [y0, y1];
   }
   function toggleDoor(x, y, z) {
-    var p = plotAt(x, z);
-    if (p >= 0 && p !== myPlot) return deny('다른 사람 집의 문이에요');
+    var p = plotAt(x, z), reason=canPlace(x,y,z,DOOR);
+    if (reason) return deny(reason);
     var c = doorColumn(x, y, z);
     if (myPlot >= 0 && p === myPlot && !SHAPE[get(x, y, z)].open) tutorialDoor = { x: x, z: z, y: c[0], top: c[1] + 1 };
-    for (var yy = c[0]; yy <= c[1]; yy++) { var nid = get(x, yy, z) ^ 1; setRaw(x, yy, z, nid); plotWrite(x, yy, z, nid); }
-    for (yy = c[0]; yy <= c[1]; yy++) rebuildAround(x, yy, z);
-    if (p === myPlot && myPlot >= 0) markDirty();
+    for (var yy = c[0]; yy <= c[1]; yy++) if(canPlace(x,yy,z,DOOR))return;
+    for (yy = c[0]; yy <= c[1]; yy++) setBlock(x,yy,z,readBlock(x,yy,z)^1);
     sfx('door'); swingT = 0.25;
   }
   function toggleGate(x, y, z, id) {
@@ -2926,6 +2984,7 @@
       sfx('break', matSound(old)); wearTool(usedTool); bagChanged();
     } else {
       var tgt = get(h.x, h.y, h.z);
+      if (tryFrontierDevice(tgt,h)) return;
       if (SHAPE[tgt] && SHAPE[tgt].type === 'gate') return toggleGate(h.x, h.y, h.z, tgt);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'door') return toggleDoor(h.x, h.y, h.z);
       if (tgt === FURNACE || tgt === FURNACE_ON) { if (plotAt(h.x, h.z) !== myPlot) return deny('다른 사람의 용광로예요'); craftCat = 'smelt'; invTab = 'craft'; openPanel('inv'); return; }
@@ -2954,7 +3013,9 @@
       if (FARM_SEEDS[item]) { if (have(item)>0) plantSeed(h,item); return; }
       if (item === SEED) { if (have(SEED) < 1) return; return plantSeed(h); }
       var bx = h.px, by = h.py, bz = h.pz, id = item, ld = lookDir();
+      ld = (ld + buildTurn) % 4;
       if (SHAPE[id] && SHAPE[id].type === 'stair') id = SHAPE[id].base + ld;
+      id = orientedBuild(item,ld,id);
       if (item === CHAIR) id = CHAIR + (ld + 2) % 4;
       if (item === GATE) id = GATE_STATES[ld % 2][0];
       if (item === STRIKER) {
@@ -3007,12 +3068,19 @@
         }
         var df = (ld + 2) % 4;
         take(DOOR, 1);
-        for (k = 0; k < 4; k++) setBlock(bx, by + k, bz, DOOR + df * 2);
+        var doorUndo=[];
+        for (k = 0; k < 4; k++) {
+          doorUndo.push([bx,by+k,bz,readBlock(bx,by+k,bz),DOOR+df*2]);
+          setBlock(bx, by + k, bz, DOOR + df * 2);
+        }
+        rememberBuild(item,doorUndo);
         sfx('place', matSound(item)); bagChanged(); stats.placed++; questCheck();
         swingT = 0.25; vibrate(); return;
       }
       if ((isSolid(id) && !SHAPE[id] || id === RAIL || item === GATE) && hitsMe(by)) return;
+      var beforeId=readBlock(bx,by,bz);
       take(item, 1); setBlock(bx, by, bz, id); sfx('place', matSound(item)); bagChanged();
+      rememberBuild(item,[[bx,by,bz,beforeId,id]]);
       if (isGrav(id)) startFall(bx, by, bz);
       if (id === SAPLING) { SAPS.push({ x: bx, y: by, z: bz, t: Date.now() + (90 + Math.random() * 90) * 1000 }); saveSaps(); toast('묘목을 심었어요. 조금 지나면 나무로 자라요 (시 1:3)'); }
       partyAdd('build', 1);
@@ -3093,8 +3161,8 @@
   }
   function vibrate() { try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} }
   function setBlock(x, y, z, id) {
-    var was = get(x, y, z), c0 = colAt(x, z);
-    setRaw(x, y, z, id); updateSky(x, z); plotWrite(x, y, z, id);
+    var was = readBlock(x, y, z), c0 = colAt(x, z);
+    setRaw(x, y, z, id); updateFrontierMachine(c0,x,y,z,id); updateSky(x, z); plotWrite(x, y, z, id);
     if (plotAt(x, z) < 0) recordEdit(x, y, z, id);
     if (c0) c0.mod = true;
     if (LIGHTS[was] || LIGHTS[id]) {
@@ -3758,6 +3826,13 @@
     on('btnView', cycleView);
     on('restUp', standFromFurniture);
     on('forestCancel', cancelForestRoute);
+    on('go_frontier', function(){ startFrontierGuide(FRONTIER_ENTRY,'자유 개척지'); });
+    on('go_cave', function(){ startFrontierGuide(FRONTIER_CAVE[0],'바위굴 입구'); });
+    on('buildRotate', rotateBuild);
+    on('buildUndo', undoBuild);
+    on('frontierDeposit',function(){changeFrontierStock(true);});
+    on('frontierTake',function(){changeFrontierStock(false);});
+    on('frontierChestDone',closePanel);
     on('btnBag', function () { openPanel('inv'); sfx('click'); });
     on('btnChat', openChat);
     on('chatSend', sendChat);
@@ -4111,6 +4186,7 @@
   }
   function blockActionLabel(h, held) {
     var id = get(h.x, h.y, h.z), shape = SHAPE[id];
+    var frontierAction=frontierActionLabel(id,h); if(frontierAction) return frontierAction;
     if (shape && (shape.type === 'door' || shape.type === 'gate')) return shape.open ? '문 닫기' : '문 열기';
     if (id>=FIND_MARK && id<=FIND_SEED) return id===FIND_MARK?'살펴보기':'전시 보기';
     if (id===FERRY_POST) return '나룻배 타기';
@@ -4842,6 +4918,7 @@
     }
     drawMapPeople(x, big, ox, oz, sc, w, h);
     drawVillagePins(x, ox, oz, sc, w, h);
+    drawFrontierMap(x,big,ox,oz,sc);
     if (forestRoute) {
       x.save();
       x.strokeStyle = '#ffdb61'; x.lineWidth = big ? 3 : 2; x.setLineDash([5, 4]);
@@ -5079,7 +5156,8 @@
           updateCrack(); updateRing();
           hl.visible = !!h; if (h) hl.position.set(h.x + 0.5, h.y + 0.5, h.z + 0.5);
         }
-        if (started) { updateMobileBuild(now); tickBlueprint(now); }
+        if (started) { updateMobileBuild(now); updateFrontierTools(now); tickBlueprint(now); }
+        if (started) stepFrontier(now,dt);
         if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);
@@ -5110,6 +5188,7 @@
   }
   function teleport(x, y, z, yaw, keepGuide) {
     clearFurnitureRest();
+    clearFrontierLift();
     if (!keepGuide) cancelForestRoute();
     if(ferryRide){ferryRide=null;ferryMesh.visible=false;}
     if (riding) dismount(true);
@@ -5140,6 +5219,7 @@
   var fwd = new THREE.Vector3(), lastX = 0, lastZ = 0;
   function step(dt) {
     if(ferryRide){stepFerry(dt);return;}
+    if(frontierLift){moveFrontierLift(dt);placeCamera(dt,0);return;}
     if (furnitureRest) {
       var rest = furnitureRest;
       if (get(rest.x, rest.y, rest.z) !== rest.id || jumpHeld || joy.x || joy.y ||
@@ -5579,7 +5659,10 @@
   // ── 레버: 누르면 켜고 끄고, 둘레 4칸 안의 문을 함께 여닫음 ──
   function useLever(x, y, z) {
     var id = get(x, y, z), on = id === LEVER;
+    if (canPlace(x,y,z,id)) return;
+    var linked=pulseMechanical(x,y,z,on);
     setBlock(x, y, z, on ? LEVER + 1 : LEVER); sfx('click', 1200);
+    if (linked) { toast(on?'연결한 장치를 열었어요':'연결한 장치를 닫았어요'); return; }
     var done = {}, n = 0;
     for (var dy = -2; dy <= 3; dy++) for (var dz = -4; dz <= 4; dz++) for (var dx = -4; dx <= 4; dx++) {
       var d = get(x + dx, y + dy, z + dz); if (!(SHAPE[d] && SHAPE[d].type === 'door')) continue;
@@ -6390,6 +6473,7 @@
         areas.forEach(syncVillageProject);
         if(areas.length){fetchVillageProjects();toast('그 공사장에는 놓이지 않은 블록이 있어요');}
       }
+      if(!r.error&&r.data>=0&&r.data<arr.length&&frontierEnabled)syncRejectedFrontier(arr);
       if (r.error || r.data === -3) { requeue(arr); NET.holdUntil = performance.now() + (r.data === -3 ? 30000 : 6000); }
     }, function () { persistBusy = false; requeue(arr); NET.holdUntil = performance.now() + 6000; });
   }
@@ -6414,9 +6498,9 @@
           if (p === myPlot || (plotUser[p] && plotUser[p] !== u)) continue;   // 그 땅 주인이 바꾼 것만
           plotUser[p] = u; plotOwners[p] = 1; plotPut(p, x, y, z, id);
         } else recordEdit(x, y, z, id);
-        var was = get(x, y, z); if (was === id) continue;
+        var was = readBlock(x, y, z); if (was === id) continue;
         setRaw(x, y, z, id);
-        var c0 = colAt(x, z); if (!c0) continue;
+        var c0 = colAt(x, z); updateFrontierMachine(c0,x,y,z,id); if (!c0) continue;
         c0.mod = true; updateSky(x, z);
         if (LIGHTS[was] || LIGHTS[id]) {
           if (LIGHTS[id]) c0.lamps.push([x, y, z]); else c0.lamps = c0.lamps.filter(function (l) { return l[0] !== x || l[1] !== y || l[2] !== z; });
@@ -6732,12 +6816,12 @@
     villageBook.plan={kind:kind,plot:myPlot,x:Math.max(1,Math.min(PLOT-d[1]-1,Math.floor(P.x)-o.x)),z:Math.max(1,Math.min(PLOT-d[2]-1,Math.floor(P.z)-o.z))};
     saveVillageBook(); renderVillageWork();
   }
-  var villageTabs = [['build','설계도'],['materials','재료'],['discover','탐험'],['projects','공동 작업'],['neighbors','마을 사람'],['cargo','나귀 짐'],['showcase','집 구경']];
+  var villageTabs = [['build','설계도'],['materials','재료'],['discover','탐험'],['projects','공동 작업'],['neighbors','마을 사람'],['cargo','나귀 짐'],['showcase','집 구경'],['frontier','개척 땅']];
   function openVillageWork(tab) { villageTab=tab; openPanel('villageWork'); renderVillageWork(); if(tab==='projects'||tab==='neighbors')fetchVillageProjects(); }
   function renderVillageWork() {
     var tabs=$('villageTabs'), body=$('villageBody'); tabs.replaceChildren(); body.replaceChildren();
     villageTabs.forEach(function (tab) {
-      var b=villageButton(tabs,tab[1],function () { villageTab=tab[0]; renderVillageWork(); if(villageTab==='projects'||villageTab==='neighbors')fetchVillageProjects(); });
+      var b=villageButton(tabs,tab[1],function () { villageTab=tab[0]; renderVillageWork(); if(villageTab==='projects'||villageTab==='neighbors')fetchVillageProjects(); if(villageTab==='frontier')fetchFrontier(true); });
       b.setAttribute('aria-pressed',String(villageTab===tab[0]));
     });
     if(villageTab==='build') {
@@ -6903,6 +6987,7 @@
       });
       return;
     }
+    if(tab==='frontier') return renderFrontier(body);
     renderVillageCommunity(tab,body);
   }
   var VILLAGE_PROJECTS={
@@ -7121,7 +7206,7 @@
         plotOwners[row.plot_idx] = 1; plotUser[row.plot_idx] = row.user_id;
         if (row.data) decodePlot(row.plot_idx, row.data, me && row.user_id === me.id);
       });
-      return Promise.all([loadShared(),fetchVillageProjects()]);
+      return Promise.all([loadShared(),fetchVillageProjects(),fetchFrontier()]);
     }).then(function () {
       setSave(myPlot >= 0 ? '내 땅 ' + (myPlot + 1) + '번' : '');
       if (me && myPlot >= 0) setTimeout(tryClaimDex, 3000);
@@ -7129,6 +7214,395 @@
   }
   window.addEventListener('beforeunload', function () { if (dirty) savePlot(); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) { saveEdits(); if (dirty) savePlot(); } });
+
+
+  // 개척지 지형은 기존 자연·플레이어 편집을 덮지 않도록 생성 단계에서만 넣는다.
+  var FRONTIER_ENTRY=[1238,1154], FRONTIER_CAVE=[[1242,1176,10],[1296,1198,10]];
+  var FRONTIER_BOUNDS=[1216,1144,1311,1239];
+  var forestDestination=FOREST_ENTRY, forestName='동쪽 숲';
+  var FRONTIER_DIRS=[[0,-1],[1,0],[0,1],[-1,0]];
+  function buildFrontierCave(x0,z0,tops) {
+    if(x0>1304||x0+CS<=1236||z0>1206||z0+CS<=1174)return;
+    fill(1242,10,1174,1296,15,1178,AIR);
+    fill(1294,10,1176,1298,15,1198,AIR);
+    fill(1257,9,1176,1277,17,1191,AIR);
+    fill(1279,7,1183,1296,13,1187,AIR);
+    fill(1273,9,1180,1283,14,1187,AIR);
+    fill(1261,9,1189,1277,9,1191,WATER);
+    fill(1281,7,1184,1292,7,1185,WATER);
+    fill(1246,10,1173,1251,12,1173,ORE_CU);
+    fill(1267,9,1192,1272,11,1192,ORE_FE);
+    fill(1284,6,1184,1290,6,1184,ORE_AG);
+    fill(1296,7,1185,1297,8,1185,ORE_AU);
+    FRONTIER_CAVE.forEach(function(entry){
+      var x=entry[0],z=entry[1];
+      if(x<x0||x>=x0+CS||z<z0||z>=z0+CS)return;
+      var top=tops[(z-z0)*CS+x-x0];
+      fill(x,entry[2],z,x,top+1,z,LADDER+3);
+      setRaw(x,top+2,z,AIR);
+    });
+  }
+  function startFrontierGuide(pos,label) {
+    forestRoute=[];
+    if(P.x<VX1 && P.z>=PZ0-12 && P.z<=VZ1) {
+      startForestRoute();
+      if(!forestRoute) forestRoute=[];
+    }
+    forestRoute.push(pos);
+    forestDestination=pos; forestName=label;
+    resume(); renderForestRoute();
+  }
+  function drawFrontierMap(ctx,big,ox,oz,scale) {
+    function outline(box,color) { ctx.strokeStyle=color; ctx.strokeRect((box[0]-ox)*scale,(box[1]-oz)*scale,(box[2]-box[0]+1)*scale,(box[3]-box[1]+1)*scale); }
+    ctx.save(); ctx.lineWidth=big?2:1;
+    outline(FRONTIER_BOUNDS,'#a7d466');
+    for(var i=0;i<9;i++)outline(frontierBounds(i),frontierPlots[i]?.canEdit?'#84ebc7':'#e6ac60');
+    ctx.fillStyle='#ffee87';
+    FRONTIER_CAVE.forEach(function(point){ctx.fillRect((point[0]-ox)*scale-2,(point[1]-oz)*scale-2,5,5);});
+    ctx.restore();
+  }
+
+  var buildTurn=0, buildUndo=null, blockGhost=null, blockGhostId=-1, blockGhostAt=0;
+  function rotatableBuild(item) {
+    var shape=SHAPE[item];
+    return shape && ['stair','chair','gate','door','arch','sluice','sign','ladder'].indexOf(shape.type)>=0;
+  }
+  function orientedBuild(item,dir,id) {
+    if(item===SLUICE) return SLUICE+dir*2;
+    if(item===ARCH) return dir%2 ? ARCH_SIDE : ARCH;
+    return id;
+  }
+  function rotateBuild() {
+    if(ui!=='play'||!rotatableBuild(HOTBAR[sel]))return;
+    buildTurn=(buildTurn+1)%4; blockGhostAt=0;
+    $('buildRotate').textContent='돌리기 '+buildTurn*90+'°';
+    if(!isTouch)toast('놓을 방향 '+buildTurn*90+'°');
+  }
+  function rememberBuild(item,cells) {
+    buildUndo=null;
+    if(!isGrav(item)&&item!==SAPLING&&myPlot>=0&&cells.every(function(c){return plotAt(c[0],c[2])===myPlot && (c[3]===AIR || kind(c[3])==='plant');})) {
+      buildUndo={item:item,cells:cells};
+    }
+  }
+  function undoBuild() {
+    if(ui!=='play'||!buildUndo)return;
+    var u=buildUndo; buildUndo=null;
+    if(u.cells.some(function(c){return readBlock(c[0],c[1],c[2])!==c[4]||canPlace(c[0],c[1],c[2],u.item);}))return toast('그 자리가 바뀌었어요');
+    if(!isAdm()&&give(u.item,1)!==1)return toast('가방을 한 칸 비워 주세요');
+    u.cells.forEach(function(c){setBlock(c[0],c[1],c[2],c[3]);});
+    bagChanged(); toast('방금 놓은 블록을 되돌렸어요');
+  }
+  function updateFrontierTools(now) {
+    if(!blockGhost) {
+      blockGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:0x9be2b3,transparent:true,opacity:.32,depthWrite:false}));
+      blockGhost.visible=false; scene.add(blockGhost);
+    }
+    if(now<blockGhostAt)return;
+    blockGhostAt=now+80;
+    var item=HOTBAR[sel], rotation=!!rotatableBuild(item), show=ui==='play'&&!furnitureRest&&!frontierLift;
+    $('buildRotate').hidden=!rotation; $('buildUndo').hidden=!buildUndo;
+    $('buildTools').hidden=!show||!rotation&&!buildUndo;
+    blockGhost.visible=false;
+    if(!show||!isTouch||!item||isItem(item)||!have(item)||SLAB_TOP[item])return;
+    var hit=hold&&S.aim==='finger'?pickTouch(hold.x,hold.y):pickCenter();
+    if(!hit||blockActionLabel(hit,item))return;
+    var id=item, dir=(lookDir()+buildTurn)%4, sh=SHAPE[item];
+    if(sh&&sh.type==='stair')id=sh.base+dir;
+    if(item===CHAIR)id=CHAIR+(dir+2)%4;
+    if(item===GATE)id=GATE_STATES[dir%2][0];
+    if(item===DOOR)id=DOOR+((dir+2)%4)*2;
+    if(item===LADDER||item===SIGN)id=item+dir;
+    id=orientedBuild(item,dir,id);
+    if(blockGhostId!==id) { blockGhost.geometry.dispose(); blockGhost.geometry=blockGeometry(id); blockGhostId=id; }
+    var ok=!canPlace(hit.px,hit.py,hit.pz,item)&&!isSolid(readBlock(hit.px,hit.py,hit.pz));
+    if(item===DOOR) for(var i=1;i<4;i++) if(isSolid(readBlock(hit.px,hit.py+i,hit.pz))||canPlace(hit.px,hit.py+i,hit.pz,item))ok=false;
+    blockGhost.material.color.setHex(ok?0x9be2b3:0xff806d);
+    blockGhost.position.set(hit.px+.5,hit.py+.5,hit.pz+.5); blockGhost.visible=true;
+  }
+
+  var frontierLift=null, frontierWater=new Set(), frontierWheels=new Map(), frontierRotors=new Map(), frontierStepAt=0, lastPlate='';
+  function frontierCell(x,y,z) { return ((y*WS+z)*WS+x); }
+  function isFrontierMachine(id) { return id===WATERWHEEL || id>=SLUICE && id<SLUICE+8; }
+  function updateFrontierMachine(col,x,y,z,id) {
+    if(!col || !col.machines)return;
+    var k=(y*CS+(z&31))*CS+(x&31);
+    if(isFrontierMachine(id))col.machines.add(k); else col.machines.delete(k);
+  }
+  function frontierActionLabel(id) {
+    if(id>=SLUICE&&id<SLUICE+8)return SHAPE[id].open?'수문 닫기':'수문 열기';
+    if(id===LIFT)return '승강대 타기';
+    if(id===WATERWHEEL)return '물레방아 보기';
+    return '';
+  }
+  function tryFrontierDevice(id,h) {
+    if(id===LIFT) {beginFrontierLift(h.x,h.y,h.z);return true;}
+    if(id===WATERWHEEL) {toast(frontierWheels.get(frontierCell(h.x,h.y,h.z))?.wet?'물레방아가 돌고 있어요':'물길을 물레방아 옆까지 이어 주세요');return true;}
+    if(id>=SLUICE&&id<SLUICE+8) {setFrontierDevice(h.x,h.y,h.z,id,!SHAPE[id].open);return true;}
+    if(id===CHEST&&frontierEnabled&&frontierSlotAt(h.x,h.z)>=0) {openFrontierStock(h);return true;}
+    return false;
+  }
+  function setFrontierDevice(x,y,z,id,on) {
+    var s=SHAPE[id];
+    if(!s||!['gate','door','sluice'].includes(s.type)||canPlace(x,y,z,id)||s.open===on)return false;
+    if(!on && P.x+HW>x&&P.x-HW<x+1&&P.z+HW>z&&P.z-HW<z+1&&P.y+HT>y&&P.y<y+1)return false;
+    if(s.type==='gate'||s.type==='sluice')setBlock(x,y,z,id^1);
+    else {
+      var c=doorColumn(x,y,z);
+      for(var yy=c[0];yy<=c[1];yy++)if(canPlace(x,yy,z,id))return false;
+      for(yy=c[0];yy<=c[1];yy++)setBlock(x,yy,z,get(x,yy,z)^1);
+    }
+    return true;
+  }
+  function mechanismNeighbor(id) {
+    var s=SHAPE[id];
+    return id===ROPE||id===PULLEY||id===COUNTERWEIGHT||id===PRESS_PLATE||
+      !!s&&['lever','sluice','gate','door'].includes(s.type);
+  }
+  function pulseMechanical(x,y,z,on) {
+    var queue=[[x,y,z]], visited=new Set(), connections=[], hasRope=false, hasPulley=false;
+    for(var i=0;i<queue.length&&i<100;i++) {
+      var a=queue[i];
+      [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]].forEach(function(d){
+        var bx=a[0]+d[0],by=a[1]+d[1],bz=a[2]+d[2],k=frontierCell(bx,by,bz);
+        if(visited.has(k)||by<1||by>=SY||!colAt(bx,bz)||queue.length>=100)return;
+        visited.add(k);
+        var id=get(bx,by,bz), s=SHAPE[id];
+        if(id===ROPE||id===PULLEY||id===COUNTERWEIGHT){hasRope=hasRope||id===ROPE;hasPulley=hasPulley||id===PULLEY;queue.push([bx,by,bz]);}
+        else if(s&&['gate','door','sluice'].includes(s.type))connections.push([bx,by,bz,id]);
+      });
+    }
+    if(!hasRope||!hasPulley)return false;
+    connections.forEach(function(a){setFrontierDevice(a[0],a[1],a[2],get(a[0],a[1],a[2]),on===null?!SHAPE[a[3]].open:on);});
+    return true;
+  }
+  function liftStop(x,y,z) {
+    for(var offset of FRONTIER_DIRS) for(var dir of [1,-1]) {
+      var gx=x+offset[0],gz=z+offset[1],first=get(gx,y,gz);
+      var pulley=first===PULLEY,weight=first===COUNTERWEIGHT,rope=first===ROPE;
+      for(var dy=1;dy<=12;dy++) {
+        var yy=y+dy*dir,gear=get(gx,yy,gz);
+        pulley=pulley||gear===PULLEY; weight=weight||gear===COUNTERWEIGHT; rope=rope||gear===ROPE;
+        if(get(x,yy,z)===LIFT) {
+          if(pulley&&weight&&rope)return yy;
+          break;
+        }
+        if(gear!==ROPE&&gear!==PULLEY&&gear!==COUNTERWEIGHT)break;
+      }
+    }
+    return null;
+  }
+  function beginFrontierLift(x,y,z) {
+    if(frontierLift||riding||ferryRide||P.fly||furnitureRest)return;
+    var to=liftStop(x,y,z);
+    if(to===null)return toast('승강대 두 개 옆으로 밧줄을 잇고, 도르래와 돌 추를 하나씩 달아요');
+    for(var yy=Math.min(y,to);yy<=Math.max(y,to)+Math.ceil(HT);yy++) {
+      if(yy!==y&&yy!==to&&isSolid(readBlock(x,yy,z)))return toast('승강대 사이를 비워 주세요');
+    }
+    resetInput();
+    frontierLift={x:x+.5,z:z+.5,from:y+.18,to:to+.18,t:0,mesh:new THREE.Mesh(new THREE.BoxGeometry(.95,.10,.95),new THREE.MeshLambertMaterial({color:0x976145}))};
+    scene.add(frontierLift.mesh);
+  }
+  function clearFrontierLift() {
+    if(!frontierLift)return;
+    var obj=frontierLift.mesh; scene.remove(obj);obj.geometry.dispose();obj.material.dispose();frontierLift=null;
+  }
+  function moveFrontierLift(dt) {
+    var l=frontierLift;
+    l.t=Math.min(1,l.t+dt/(.6+Math.abs(l.to-l.from)*.15));
+    P.x=l.x;P.z=l.z;P.y=l.from+(l.to-l.from)*l.t;P.vx=P.vy=P.vz=0;fallTop=null;
+    l.mesh.position.set(P.x,P.y-.07,P.z);
+    if(l.t===1){clearFrontierLift();toast('승강대에 도착했어요');}
+  }
+  function collectWater(x,y,z,dir,out) {
+    var f=FRONTIER_DIRS[dir];
+    if(readBlock(x-f[0],y,z-f[1])!==WATER)return;
+    var q=[[x+f[0],y,z+f[1],0]], seen=new Set();
+    for(var i=0;i<q.length&&out.size<480;i++) {
+      var a=q[i],xx=a[0],yy=a[1],zz=a[2],d=a[3],k=frontierCell(xx,yy,zz),raw=readBlock(xx,yy,zz);
+      if(seen.has(k)||!colAt(xx,zz)||yy<1||d>10||raw!==AIR&&raw!==DITCH||Math.abs(xx-x)+Math.abs(zz-z)>9)continue;
+      if(inTown(xx,zz)&&plotAt(xx,zz)<0||protectedExcursion(xx,zz)||villageProjectLocked(xx,zz)||
+          plotAt(xx,zz)!==plotAt(x,z)||frontierSlotAt(xx,zz)!==frontierSlotAt(x,z))continue;
+      seen.add(k);
+      if(raw===AIR)out.add(k);
+      if(readBlock(xx,yy-1,zz)===AIR)q.push([xx,yy-1,zz,d+1]);
+      else FRONTIER_DIRS.forEach(function(t){q.push([xx+t[0],yy,zz+t[1],d+1]);});
+    }
+  }
+  function rebuildWaterChunks(before,after) {
+    var chunks=new Set();
+    function save(k) {
+      var x=k%WS,z=(k/WS|0)%WS;
+      for(var dx of [-1,0,1])for(var dz of [-1,0,1])if(x+dx>=0&&z+dz>=0&&x+dx<WS&&z+dz<WS)chunks.add(((z+dz)>>5)*NC+((x+dx)>>5));
+    }
+    before.forEach(function(k){if(!after.has(k))save(k);});
+    after.forEach(function(k){if(!before.has(k))save(k);});
+    chunks.forEach(function(k){if(meshedCols[k]){var x=k%NC,z=k/NC|0;unmeshColumn(x,z);meshColumn(x,z);}});
+  }
+  function syncFrontierWater() {
+    var old=frontierWater, next=new Set(), wheels=new Map(), cx=P.x>>5,cz=P.z>>5;
+    for(var dz=-1;dz<=1;dz++)for(var dx=-1;dx<=1;dx++) {
+      var xx=cx+dx,zz=cz+dz,c=colAt(xx*CS,zz*CS);
+      if(!c||!c.machines)continue;
+      c.machines.forEach(function(k){
+        var x=xx*CS+k%CS,z=zz*CS+(k/CS|0)%CS,y=k/(CS*CS)|0,id=c.d[k];
+        if(id===WATERWHEEL)wheels.set(frontierCell(x,y,z),{x:x,y:y,z:z,wet:false});
+        else if(SHAPE[id]?.open)collectWater(x,y,z,SHAPE[id].f,next);
+      });
+    }
+    frontierWater=next;
+    rebuildWaterChunks(old,next);
+    wheels.forEach(function(w){w.wet=FRONTIER_DIRS.some(function(d){return get(w.x+d[0],w.y,w.z+d[1])===WATER || get(w.x+d[0],w.y-1,w.z+d[1])===WATER;});});
+    frontierWheels=wheels;
+    frontierRotors.forEach(function(obj,k){if(!wheels.has(k)){scene.remove(obj);obj.children.forEach(function(mesh){mesh.geometry.dispose();});obj.userData.mat.dispose();frontierRotors.delete(k);}});
+    wheels.forEach(function(w,k) {
+      if(frontierRotors.has(k))return;
+      var rotor=new THREE.Group(), mat=new THREE.MeshLambertMaterial({color:0xa87a4c});
+      for(var i=0;i<4;i++) {
+        var bar=new THREE.Mesh(new THREE.BoxGeometry(.77,.12,.14),mat);
+        bar.rotation.z=i*Math.PI/4;rotor.add(bar);
+      }
+      rotor.userData.mat=mat;rotor.position.set(w.x+.5,w.y+.54,w.z+.5);scene.add(rotor);frontierRotors.set(k,rotor);
+    });
+  }
+  function stepFrontier(now,dt) {
+    if(now>=frontierStepAt) {
+      frontierStepAt=now+300;
+      syncFrontierWater();
+    }
+    var x=Math.floor(P.x),y=Math.floor(P.y+.11),z=Math.floor(P.z);
+    if(ui==='play'&&P.ground&&!frontierLift&&!furnitureRest&&get(x,y,z)===PRESS_PLATE) {
+      var key=frontierCell(x,y,z);
+      if(lastPlate!==key&&!canPlace(x,y,z,PRESS_PLATE)){lastPlate=key;pulseMechanical(x,y,z,null);}
+    } else lastPlate='';
+    if(now>=frontierPollAt&&(frontierSlotAt(x,z)>=0||ui==='frontierChest'||ui==='villageWork'&&villageTab==='frontier')) {
+      frontierPollAt=now+6000; fetchFrontier();
+    }
+    frontierRotors.forEach(function(obj,k){if(frontierWheels.get(k)?.wet)obj.rotation.z+=dt*2.5;});
+  }
+
+  var frontierEnabled=false, frontierPlots={}, frontierFetchBusy=false, frontierStock=null, frontierStockBusy=false, frontierPollAt=0, frontierPendingStock=null;
+  function frontierBounds(slot) { var x=916+(slot%3)*72,z=1252+Math.floor(slot/3)*72;return [x,z,x+47,z+47]; }
+  function frontierSlotAt(x,z) {
+    var a=x-916,b=z-1252;
+    return a>=0&&b>=0&&a<216&&b<216&&a%72<48&&b%72<48?Math.floor(b/72)*3+Math.floor(a/72):-1;
+  }
+  function frontierEditReason(x,z) {
+    var slot=frontierSlotAt(x,z), area=frontierPlots[slot];
+    if(slot<0 || !frontierEnabled)return '';
+    if(!area?.claimed)return '마을 수첩에서 먼저 개척 땅을 맡아요';
+    return area.canEdit?'':'이 개척 땅에서는 구경만 할 수 있어요';
+  }
+  function syncRejectedFrontier(arr) {
+    var cells=arr.filter(function(e){return frontierSlotAt(e[0],e[2])>=0;});
+    if(!cells.length)return;
+    fetchFrontier(ui==='villageWork'&&villageTab==='frontier');
+    client.rpc('get_ark_frontier_cells',{p_cells:cells}).then(function(r){
+      if(r.error||!Array.isArray(r.data))return;
+      r.data.forEach(function(e) {
+        var x=e[0],y=e[1],z=e[2],k=x+','+y+','+z;
+        if(k in NET.pm)return;
+        if(e[3]===null)queueRevert(x,y,z);
+        else applyRemote(null,[e]);
+      });
+    }).catch(function(){});
+  }
+  function fetchFrontier(redraw) {
+    if(!client||frontierFetchBusy)return Promise.resolve();
+    frontierFetchBusy=true;
+    return client.rpc('get_ark_frontier',{}, {get:true}).then(function(r){
+      if(r.error||!Array.isArray(r.data))return;
+      frontierEnabled=true;
+      frontierPlots={};
+      r.data.forEach(function(row){frontierPlots[row.slot]=row;});
+      if(redraw&&ui==='villageWork'&&villageTab==='frontier')renderVillageWork();
+    }).catch(function(){}).finally(function(){frontierFetchBusy=false;});
+  }
+  function changeFrontier(slot,action,user,role) {
+    if(!client||!me||frontierStockBusy)return;
+    frontierStockBusy=true;
+    client.rpc('change_ark_frontier',{p_slot:slot,p_action:action,p_friend:user||null,p_role:role||null}).then(function(r){
+      if(r.error||r.data!==true){toast('바꾸지 못했어요. 친구 상태와 개척 땅을 다시 확인해 주세요');return;}
+      return fetchFrontier(true);
+    }).catch(function(){toast('연결이 끊겼어요. 다시 확인해 주세요');}).finally(function(){frontierStockBusy=false;});
+  }
+  function renderFrontier(body) {
+    villageButton(body,'자유 개척지 길 안내',function(){startFrontierGuide(FRONTIER_ENTRY,'자유 개척지');});
+    villageButton(body,'바위굴 입구 길 안내',function(){startFrontierGuide(FRONTIER_CAVE[0],'바위굴 입구');});
+    villageText(body,'자유 개척지는 모두 함께 지어요. 남쪽 친구 개척 땅은 주인이 편집과 창고 권한을 정해요.');
+    villageText(body,'레버나 밟는 발판에 밧줄과 도르래를 이어 문을 움직여요. 물을 등진 수문을 열면 앞쪽으로 흘러요.');
+    villageText(body,'승강대는 위아래로 두 개 놓아요. 사이를 비우고 옆에 밧줄·도르래·돌 추를 이은 뒤 승강대를 눌러 타요.');
+    if(!me||!frontierEnabled)return villageText(body,'친구 개척 땅과 공동 창고를 쓰려면 로그인하고 서버에 연결해요.');
+    if(!FRIENDS.ready&&!FRIENDS.busy)friendsFetch().then(function(){if(ui==='villageWork'&&villageTab==='frontier'&&FRIENDS.ready)renderVillageWork();});
+    for(var i=0;i<9;i++) (function(slot){
+      var a=frontierPlots[slot]||{}, box=frontierBounds(slot), row=document.createElement('div'); row.className='vme';
+      body.appendChild(row);
+      villageText(row,(slot+1)+'번 · '+(a.own?'내 개척 땅':a.canEdit?'친구와 함께 짓는 땅':a.canStock?'창고를 함께 쓰는 땅':a.claimed?'구경 가능':'비어 있음'));
+      villageButton(row,'길 안내',function(){startFrontierGuide([(box[0]+box[2])/2,box[1]-2],'개척 땅 '+(slot+1)+'번');});
+      if(!a.claimed&&!Object.values(frontierPlots).some(function(it){return it.own;}))
+        villageButton(row,'땅 맡기',function(){changeFrontier(slot,'claim');});
+      if(!a.own)return;
+      FRIENDS.rows.filter(function(f){return f.status==='accepted';}).forEach(function(f){
+        var line=document.createElement('div');line.className='vme';body.appendChild(line);
+        villageText(line,f.nick);
+        villageButton(line,'편집·창고 허용',function(){changeFrontier(slot,'grant',f.id,'build');});
+        villageButton(line,'창고만 허용',function(){changeFrontier(slot,'grant',f.id,'stock');});
+        villageButton(line,'허용 취소',function(){changeFrontier(slot,'revoke',f.id);});
+      });
+      villageText(body,'이 땅에 놓은 궤는 허용된 친구들과 재료를 같이 넣고 꺼낼 수 있어요.');
+    })(i);
+  }
+  function openFrontierStock(h) {
+    var slot=frontierSlotAt(h.x,h.z);
+    if(!client||!me||!frontierPlots[slot]?.canStock)return deny('허용된 친구만 함께 쓰는 궤예요');
+    frontierStock={slot:slot,x:h.x,y:h.y,z:h.z};
+    openPanel('frontierChest'); renderFrontierStock(); if(frontierPendingStock)sendFrontierStock();
+  }
+  function renderFrontierStock() {
+    var box=frontierStock;
+    client.rpc('ark_frontier_stock',{p_slot:box.slot,p_item:0,p_delta:0}).then(function(r){
+      if(r.error||r.data?.error||ui!=='frontierChest'||box!==frontierStock)return;
+      var contents=r.data.items||{}, stored=$('frontierStored'), bag=$('frontierBag');
+      stored.replaceChildren();bag.replaceChildren();
+      function add(select,id,n){var option=document.createElement('option');option.value=id;option.textContent=nameOf(+id)+' · '+n+'개';select.appendChild(option);}
+      Object.keys(contents).forEach(function(id){if(B[id])add(stored,id,contents[id]);});
+      INV.forEach(function(id){if(frontierStockItem(id)&&have(id)>0 && !isAdm())add(bag,id,have(id));});
+    }).catch(function(){});
+  }
+  function frontierStockItem(id) { return !!B[id]&&!isItem(id)&&id!==WATER&&baseOf(id)===id; }
+  function changeFrontierStock(deposit) {
+    var box=frontierStock;
+    if(!box||frontierStockBusy||!client||isAdm())return;
+    if(readBlock(box.x,box.y,box.z)!==CHEST)return toast('궤 자리가 바뀌었어요');
+    var id=+$(deposit?'frontierBag':'frontierStored').value;
+    if(frontierPendingStock)return sendFrontierStock();
+    if(!id||!frontierStockItem(id)||deposit&&have(id)<1)return;
+    if(!deposit&&room(id)<1)return toast('가방에 빈 자리가 없어요');
+    if(!window.crypto?.randomUUID)return toast('보안 연결에서 공동 창고를 열어 주세요');
+    frontierPendingStock={p_slot:box.slot,p_item:id,p_delta:deposit?1:-1,p_op:crypto.randomUUID()};
+    if(deposit){take(id,1);bagChanged();}
+    sendFrontierStock();
+  }
+  function sendFrontierStock() {
+    if(!frontierPendingStock||frontierStockBusy)return;
+    var args=frontierPendingStock;
+    frontierStockBusy=true;
+    client.rpc('ark_frontier_stock',args).then(function(r){
+      if(r.error)throw r.error;
+      frontierPendingStock=null;
+      if(r.data?.ok) {if(args.p_delta<0)settleFrontierItem(args.p_item);}
+      else {
+        if(args.p_delta>0)settleFrontierItem(args.p_item);
+        toast('아직 옮기지 못했어요');
+      }
+      if(ui==='frontierChest')renderFrontierStock();
+    }).catch(function(){
+      toast('연결 확인 중이에요. 조금 뒤에 창고를 다시 열어 주세요');
+    }).finally(function(){frontierStockBusy=false;});
+  }
+  function settleFrontierItem(id) {
+    if(give(id,1)!==1)dropItem(P.x,P.y+.4,P.z,id,1);
+    bagChanged();
+  }
 
   window.__arkDebug = { PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },

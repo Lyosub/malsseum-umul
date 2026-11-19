@@ -457,7 +457,14 @@
   #mapPins { grid-column:1/-1; }
   #mapPinLabel { min-width:0; min-height:40px; font:inherit; }
   #trailGuide:empty { display:none; }
-  #restUp[hidden], #forestGuide[hidden] { display:none; }
+  #restUp[hidden], #forestGuide[hidden], #buildTools[hidden], #buildTools button[hidden] { display:none; }
+  #buildTools { display:flex; gap:5px; pointer-events:auto; }
+  #buildTools .mc { min-height:36px; height:auto; font-size:11px; padding:3px 7px; }
+  body:not(.touch) #buildTools { display:none; }
+  body.touch:not(.aimcross) #buildTools { display:flex; }
+  body.touch #buildTools[hidden] { display:none; }
+  .frontierStock { display:flex; flex-direction:column; gap:4px; }
+  .frontierStock select { min-height:38px; max-width:100%; }
   #restUp { left:50%; bottom:calc(92px + var(--sab)); transform:translateX(-50%); min-height:44px; z-index:8; }
   body.sleep:before { opacity:0; animation:bedFadeIn .55s .55s forwards; }
   @keyframes bedFadeIn { to { opacity:.85; } }
@@ -521,8 +528,8 @@
 <div id="info" class="hud sh"><div id="place">나그네 마을</div><div id="seasonInfo"></div><div id="trailGuide"></div><div id="saveState"></div><div id="who"></div><div id="netState"></div></div>
 <div id="chatLog" class="hud"></div>
 <div id="forestGuide" class="hud sh" hidden>
-  <span id="forestArrow" aria-hidden="true">⬆</span><span>동쪽 숲 <span id="forestDistance"></span></span>
-  <button id="forestCancel" type="button" aria-label="숲 길 안내 끄기">×</button>
+  <span id="forestArrow" aria-hidden="true">⬆</span><span><span id="forestPlace">동쪽 숲</span> <span id="forestDistance"></span></span>
+  <button id="forestCancel" type="button" aria-label="길 안내 끄기">×</button>
 </div>
 <button id="restUp" type="button" class="mc hud" hidden>일어나기</button>
 <div id="topRight" class="hud">
@@ -566,6 +573,7 @@
 <div id="bottom" class="hud">
   <div id="vitals"></div>
   <div id="selName" class="sh"></div>
+  <div id="buildTools" hidden><button id="buildRotate" type="button" class="mc">돌리기</button><button id="buildUndo" type="button" class="mc" hidden>방금 놓기 취소</button></div>
   <div id="hotbar"></div>
 </div>
 <div id="touchPad" class="hud">
@@ -673,6 +681,14 @@
     <div class="pfoot"><button id="chestSort" class="mc">재료 정리</button><button id="chestTakeAll" class="mc">한꺼번에 꺼내기</button><button id="chestOne" class="mc" style="width:150px">한 개씩: 끔</button> <button id="chestDone" class="mc" style="width:120px">완료</button></div>
   </div>
 </div>
+<div id="frontierChest" class="screen dim"><div class="panel frontierStock">
+  <h2>개척 땅 공동 창고</h2>
+  <label for="frontierStored">창고에 있는 재료</label><select id="frontierStored"></select>
+  <button id="frontierTake" class="mc">한 개 꺼내기</button>
+  <label for="frontierBag">내 가방의 건축 재료</label><select id="frontierBag"></select>
+  <button id="frontierDeposit" class="mc">한 개 넣기</button>
+  <button id="frontierChestDone" class="mc">닫기</button>
+</div></div>
 <div id="looks" class="screen dim">
   <div class="panel lpanel">
     <div class="lwrap">
@@ -755,6 +771,7 @@
       <button id="go_home" class="mc">🏠 내 땅</button>
       <button id="go_forest" class="mc">🌲 동쪽 숲으로 걷기</button>
       <button id="go_hill" class="mc">⛰ 서쪽 산</button>
+      <button id="go_frontier" class="mc">자유 개척지</button><button id="go_cave" class="mc">바위굴 입구</button>
       <button id="go_lake" class="mc">🌊 남쪽 호수</button>
       <button id="go_sea" class="mc">🏖 북쪽 바다</button>
       <button id="go_desert" class="mc">🐪 동쪽 사막</button>
@@ -841,6 +858,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=20261119-furniture-trail"></script>
+<script src="assets/ark-game.js?v=20261119-frontier"></script>
 </body>
 </html>
