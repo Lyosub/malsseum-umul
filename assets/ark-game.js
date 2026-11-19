@@ -919,7 +919,8 @@
   [[OVEN,'화덕과 솥','oven2'], [MILL,'맷돌','mill2'], [WINE_PRESS,'포도주 틀','wine2'], [OIL_PRESS,'기름 짜는 틀','oil2'],[COOK_POT,'솥','pot2']]
     .forEach(function(d) { expansionBlock(d[0],d[1],d[2]); });
   var VILLAGE_FISH={ '강':680, '호수':681, '바다':682 };
-  var FOOD_ART = [[680,'강의 은빛 물고기',0x84b1ac],[681,'호수의 줄무늬 물고기',0x76a495],[682,'바다의 푸른 물고기',0x527b9c],
+  var MANNA = 545;   // 광야의 만나(출 16장)
+  var FOOD_ART = [[MANNA,'만나',0xf3efdc],[680,'강의 은빛 물고기',0x84b1ac],[681,'호수의 줄무늬 물고기',0x76a495],[682,'바다의 푸른 물고기',0x527b9c],
     [HOE,'괭이',0x92754c],[FISH_ROD,'낚싯대',0xa98555],[FISH_NET,'그물',0xc8b787],
     [RAW_FISH,'물고기',0x8a9fa9],[RAW_LAMB,'손질한 양고기',0xc77968],[HONEY,'꿀',0xdfa437],
     [POMEGRANATE,'석류',0xb64643],[STEW,'렌틸콩죽',0xaa5c3d],[COOKED_FISH,'구운 생선',0xb77b41],
@@ -1768,6 +1769,7 @@
       if (po.x + PLOT <= x0 || po.x >= x0 + CS || po.z + PLOT <= z0 || po.z >= z0 + CS) continue;
       if (plotData[i]) { var a = plotData[i], k = 0; for (y = PY0; y < G + PH; y++) for (z = 0; z < PLOT; z++) for (x = 0; x < PLOT; x++) setRaw(po.x + x, y, po.z + z, a[k++]); }
     }
+    if (HOREB_X >= x0 - 2 && HOREB_X < x0 + CS + 2 && HOREB_Z >= z0 - 2 && HOREB_Z < z0 + CS + 2) buildHoreb();
     markPlots();
     var ed = EDITS[cz * NC + cx]; if (ed) for (var li in ed) col.d[li] = ed[li];
     col.machines=new Set();
@@ -1875,6 +1877,24 @@
     setRaw(x0 + 1, y, z0 + 1, 22); setRaw(x0 + 1, y + 1, z0 + 1, 22); setRaw(x0 + 1, y, z1 - 1, 22); setRaw(x0 + 2, y, z1 - 1, 22);
     setRaw(x0 + 2, y, z0 + 2, OIL_LAMP); setRaw(x0 + 2, y, z1 - 2, OIL_LAMP);
     for (var z = AZ1 + 2; z < PZ0 - 1; z += 4) { setRaw(XM - 5, y, z, LANTERN); setRaw(XM + 4, y, z, LANTERN); }   // 마을 길 등불
+  }
+  // ── 광야(출 13·16·17장): 호렙의 반석 · 구름 기둥과 불 기둥 · 아침 만나 ──
+  var HOREB_X = DES_X + 120, HOREB_Z = OASZ - 40, HOREB_Y = -1;
+  function horebY() { if (HOREB_Y < 0) { terrain(HOREB_X, HOREB_Z); HOREB_Y = T.h + 1; } return HOREB_Y; }
+  function buildHoreb() {
+    var y = horebY();
+    fill(HOREB_X - 1, y, HOREB_Z - 1, HOREB_X + 1, y + 2, HOREB_Z + 1, BASALT);
+    setRaw(HOREB_X, y + 3, HOREB_Z, BASALT);
+  }
+  function inHoreb(x, y, z) { var hy = horebY(); return Math.abs(x - HOREB_X) <= 1 && Math.abs(z - HOREB_Z) <= 1 && y >= hy && y <= hy + 3; }
+  function strikeRock() {
+    if (HOTBAR[sel] === STAFF && have(STAFF)) {
+      var y = horebY(), sx = HOREB_X + 2, sz = HOREB_Z;
+      if (get(sx, y, sz) === AIR) setBlock(sx, y, sz, WATER);
+      if (get(sx + 1, y, sz) === AIR) setBlock(sx + 1, y, sz, WATER);
+      swingT = 0.25; sfx('break', 1); unlock('rock');
+      showVerseCard('💧', '호렙의 반석', '내가 호렙 산에 있는 그 반석 위 거기서 네 앞에 서리니 너는 그 반석을 치라 그것에서 물이 나오리니 백성이 마시리라 모세가 이스라엘 장로들의 목전에서 그대로 행하니라', '출애굽기 17:6', '반석에서 물이 솟았어요');
+    } else showVerseCard('🪨', '호렙의 반석', '내가 호렙 산에 있는 그 반석 위 거기서 네 앞에 서리니 너는 그 반석을 치라 그것에서 물이 나오리니 백성이 마시리라 모세가 이스라엘 장로들의 목전에서 그대로 행하니라', '출애굽기 17:6', '지팡이를 들고 반석을 쳐 보세요');
   }
   function buildTown() {
     fill(AX0 - 4, G - 1, AZ0 - 4, AX1 + 4, G - 1, AZ1 + 4, SAND);
@@ -3210,6 +3230,7 @@
       if (tgt === PEARL) return toast(STORY.done ? '문이 열려 있어요' : '진주 문은 닫혀 있어요 — 📜 나그네의 길을 끝까지 걸어야 열려요(계 21:21)');
       if (tgt === LEVER || tgt === LEVER + 1) return useLever(h.x, h.y, h.z);
       if (INSTR[tgt]) return playInstrument(tgt, h.x, h.y, h.z);
+      if (inHoreb(h.x, h.y, h.z) && get(h.x, h.y, h.z) === BASALT) return strikeRock();
       if (tgt === MANGER) return showVerseCard('🌟', '구유', '첫아들을 낳아 강보로 싸서 구유에 뉘었으니 이는 여관에 있을 곳이 없음이러라', '누가복음 2:7', '오늘 다윗의 동네에 너희를 위하여 구주가 나셨으니 곧 그리스도 주시니라 (눅 2:11)');
       if (SHAPE[tgt] && SHAPE[tgt].type === 'sign' && plotAt(h.x, h.z) === myPlot && myPlot >= 0) return openSignPick(h.x, h.y, h.z);
       var item = HOTBAR[sel];
@@ -3362,6 +3383,7 @@
   }
   var pickT = null, pickAgg = {};
   function pickup(id, n) {
+    if (id === MANNA) unlock('manna');
     pickAgg[id] = (pickAgg[id] || 0) + (n || 1);
     var el = $('pickup'), parts = [];
     for (var k in pickAgg) parts.push('+' + pickAgg[k] + ' ' + B[k][0]);
@@ -3690,6 +3712,7 @@
       var dx = px - o.x, dy = py - o.y, dz = pz - o.z, dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.001;
       var wait = o.full !== undefined && o.age - o.full < 3;   // 가방이 찼거나 버린 것은 잠깐 안 끌려옴
       if (o.age > 300) { dropAway(o); continue; }   // 5분 지나면 사라짐
+      if (o.manna && (dayT % DAY_LEN) / DAY_LEN > 0.3) { dropAway(o); continue; }   // 햇볕이 뜨겁게 쬐면 스러짐(출 16:21)
       if (!wait && !o.thrown && (dist > 28 || o.age > 30)) { if (collectDrop(o, true)) got = true; continue; }
       if (!wait && o.age > 0.35 && (o.thrown ? dist < 1.4 : (dist < 3.4 || o.age > 6))) {
         var spd = Math.min(32, 7 + (3.4 - Math.min(dist, 3.4)) * 9 + (o.age > 6 ? 12 : 0));
@@ -5140,6 +5163,32 @@
     bStar.position.set(NAT_X + 5, G + 28, NAT_Z + 4); bStar.scale.set(12, 12, 1); bStar.renderOrder = 2; scene.add(bStar);
   }
   var snowNow = false, snowRegT = 0, snowRegOK = true;
+  var pillar = null, pillarTold = false, mannaDay = -1, mannaTold = false, wildRegT = 0, inWild = false;
+  function makePillar() {
+    if (pillar) return;
+    pillar = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 4.2, 70, 14, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }));
+    pillar.position.set(HOREB_X + 0.5, horebY() + 40, HOREB_Z + 0.5); pillar.renderOrder = 2; scene.add(pillar);
+  }
+  var C_CLOUDP = new THREE.Color(0xf4f4f0), C_FIREP = new THREE.Color(0xff8a30);
+  function stepWilderness(dt, dayF) {
+    if (!started) return;
+    if (!pillar) makePillar();
+    pillar.material.color.copy(C_CLOUDP).lerp(C_FIREP, 1 - dayF); pillar.material.opacity = 0.42 + 0.35 * (1 - dayF);
+    var dx = P.x - HOREB_X, dz = P.z - HOREB_Z;
+    if (!pillarTold && dx * dx + dz * dz < 45 * 45) { pillarTold = true; showVerseCard(dayF > 0.5 ? '☁' : '🔥', dayF > 0.5 ? '구름 기둥' : '불 기둥', '여호와께서 그들 앞에서 가시며 낮에는 구름 기둥으로 그들의 길을 인도하시고 밤에는 불 기둥을 그들에게 비추사 낮이나 밤이나 진행하게 하시니', '출애굽기 13:21'); }
+    wildRegT -= dt;
+    if (wildRegT <= 0) { wildRegT = 1; var r0 = T.reg; terrain(Math.floor(P.x), Math.floor(P.z)); inWild = T.reg === 'desert' || T.reg === 'oasis'; T.reg = r0; }
+    var p = (dayT % DAY_LEN) / DAY_LEN, day = Math.floor(dayT / DAY_LEN);
+    if (inWild && p > 0.02 && p < 0.2 && mannaDay !== day && ui === 'play') {   // 아침에 광야에 있으면 만나가 내림(하루 한 번)
+      mannaDay = day;
+      for (var i = 0; i < 10; i++) {
+        var a = Math.random() * 6.28, r = 3 + Math.random() * 9, mx = P.x + Math.cos(a) * r, mz = P.z + Math.sin(a) * r, gy = groundAt(mx, mz, SY - 3);
+        if (gy === null) continue;
+        dropItem(mx, gy + 0.2, mz, MANNA, 1); var o = DROPS[DROPS.length - 1]; if (o && o.id === MANNA) { o.thrown = true; o.manna = true; o.full = o.age; o.vy = 0; }
+      }
+      if (!mannaTold) { mannaTold = true; showVerseCard('🍯', '만나', '이스라엘 자손이 보고 그것이 무엇인지 알지 못하여 서로 이르되 이것이 무엇이냐 하니 모세가 그들에게 이르되 이는 여호와께서 너희에게 주어 먹게 하신 양식이라', '출애굽기 16:15', '깟씨 같이 희고 맛은 꿀 섞은 과자 같았더라 (출 16:31) — 땅에 내린 만나를 주워요'); }
+    }
+  }
   function updateDay(dt) {
     dayT += dt; LU.uTime.value = (LU.uTime.value + dt) % 600;
     var p = (dayT % DAY_LEN) / DAY_LEN, ang = p < 0.62 ? p / 0.62 * Math.PI : Math.PI + (p - 0.62) / 0.38 * Math.PI;
@@ -5186,6 +5235,7 @@
     });
     stars.position.copy(cp); stars.material.opacity = (1 - dayF) * (1 - rain);
     if (bStar) bStar.material.opacity = 0.35 + 0.65 * (1 - dayF);
+    stepWilderness(dt, dayF);
     if (brightStars) { brightStars.position.copy(cp); brightStars.material.opacity = Math.min(1, (1 - dayF) * 1.2) * (1 - rain); }
     // 밤에 하늘을 2초쯤 올려다보면 별 말씀 하나(밤마다 하나씩)
     var nightN = Math.floor(dayT / DAY_LEN);
@@ -5951,7 +6001,7 @@
   // ════════ 2026-11-18 생존·농사·기르기·침대·레버·업적·함께 짓는 터·마을 사람·음악·이어 하기 ════════
   // ── 체력(♥ 20)·기운(◆ 20, 배고픔)·숨 — 관리자는 안 닳음. 쓰러져도 가진 것은 그대로 ──
   var HP = 20, FOOD = 20, AIRV = 10, EXH = 0, regenT = 0, starveT = 0, drownT = 0, fallTop = null, SPAWN = null, vitT = 0;
-  var FOODS = {}; FOODS[BREAD] = 6; FOODS[FIG] = 3;
+  var FOODS = {}; FOODS[BREAD] = 6; FOODS[FIG] = 3; FOODS[MANNA] = 4;
   [[613,3],[614,2],[616,2],[617,4],[618,1],[619,2],[620,1],[622,4],
    [HONEY,3],[POMEGRANATE,4],[STEW,7],[COOKED_FISH,6],[COOKED_LAMB,8],[FLATBREAD,4]]
     .forEach(function(d){FOODS[d[0]]=d[1];});
@@ -6510,7 +6560,8 @@
     ['tokens', '🎖', '믿음의 증표', '일곱 증표를 모두 받아요(히 11)'], ['stones', '💎', '열두 기초석', '기초석 열둘을 성벽 밑에 놓아요(계 21:19-20)'],
     ['valley', '🕯', '골짜기의 빛', '일곱 등잔대를 모두 밝혀요(시 23:4)'], ['home', '🏙', '본향에 이르다', '거룩한 성에 들어가요(히 11:16)'],
     ['party', '🤝', '함께 가는 길', '친구와 파티를 맺어요(시 133:1)'], ['pq', '🏷', '함께 받은 상', '파티 퀘스트 하나를 끝까지 채워요(전 4:9)'], ['cord', '🪢', '세 겹 줄', '파티 퀘스트를 모두 채워요(전 4:12)'], ['dex', '📖', '도감 완성', '도감을 다 채워요'],
-    ['loaves', '🧺', '열두 바구니', '보리떡 다섯과 물고기 둘을 아이와 나눠요(요 6:13)']
+    ['loaves', '🧺', '열두 바구니', '보리떡 다섯과 물고기 둘을 아이와 나눠요(요 6:13)'],
+    ['rock', '💧', '반석의 물', '지팡이로 호렙의 반석을 쳐요(출 17:6)'], ['manna', '🍯', '일용할 만나', '광야에서 아침 만나를 거둬요(출 16:15)']
   ];
   var ACH = {};
   try { ACH = JSON.parse(localStorage.getItem('arkVillage.ach') || '{}') || {}; } catch (e) { ACH = {}; }
