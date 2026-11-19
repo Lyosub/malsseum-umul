@@ -2922,6 +2922,7 @@
       keys[e.code] = true;
       if (e.code === 'Space' && !e.repeat) jumpPress();
       if (e.code === 'KeyF') toggleFly();
+      if (e.code === 'KeyG' && ui === 'play' && !e.repeat) waveHand();   // G: 손 흔들기
       if (e.code === 'KeyQ' && ui === 'play' && !e.repeat) throwItem(HOTBAR[sel], e.shiftKey ? Math.min(64, have(HOTBAR[sel])) : 1);   // Q 버리기, Shift+Q 모두
       if (e.code === 'KeyG' && !e.repeat) rotateBuild();
       if (e.code === 'KeyZ' && !e.repeat) undoBuild();
@@ -4202,6 +4203,7 @@
       saveSettings(); bagPick = null; renderInv(); sfx('click'); $('invName').textContent = '가방을 정리했어요';
     });
     on('mTour', function () { startTour(); });
+    on('chatWave', function () { closePanel(); waveHand(); });
     if (FESTIVE) { var adv = document.createElement('button'); adv.id = 'mAdvent'; adv.className = 'mc'; adv.textContent = '🕯 대림절 말씀 달력'; var grid0 = document.querySelector('#pause .grid3'), last = grid0 && grid0.querySelector('a'); if (grid0) grid0.insertBefore(adv, last); on('mAdvent', function () { window.open('advent.html', '_blank'); }); }
     // 게임 메뉴: 버튼을 묶음 탭(게임·이동·함께·설정)으로 — 돌아가기·나가기는 늘 보임
     (function () {
@@ -4708,6 +4710,8 @@
     add('닫기');
     document.body.appendChild(box); sfx('pop');
   }
+  var waveUntil = 0;
+  function waveHand() { waveUntil = performance.now() + 2000; sfx('pop'); if (S.view === 0) toast('👋 손을 흔들었어요 — 다른 사람에게 보여요'); }
   function tapAt(sx, sy) {
     if (furnitureRest) return;
     var dir = screenDir(sx, sy), held=HOTBAR[sel];
@@ -5866,7 +5870,9 @@
       var pr = avatar.userData, swing = riding ? 0 : Math.sin(P.walk * 1.6) * 0.75 * bobAmp;
       pr.legL.rotation.x = swing; pr.legR.rotation.x = -swing;
       pr.legL.rotation.z = riding ? -0.45 : 0; pr.legR.rotation.z = riding ? 0.45 : 0;   // 걸터앉기
-      pr.armL.rotation.x = -swing * 0.8; pr.armR.rotation.x = swing * 0.8 - sw * 1.2;
+      var waving = performance.now() < waveUntil;
+      pr.armL.rotation.x = -swing * 0.8; pr.armR.rotation.x = waving ? -2.7 : swing * 0.8 - sw * 1.2;
+      pr.armR.rotation.z = waving ? Math.sin(performance.now() / 110) * 0.45 : 0;
       pr.head.rotation.x = P.pitch * 0.7;
       if (furnitureRest) poseFurnitureAvatar(avatar, furnitureRest.pose, P.x, P.y, P.z, furnitureRest.yaw);
     }
@@ -6922,7 +6928,7 @@
     p.mapHidden = m.mapHidden === true;
     p.restPose = m.rest === 'sit' || m.rest === 'lie' ? m.rest : '';
     p.restYaw = typeof m.restYaw === 'number' && Number.isFinite(m.restYaw) ? m.restYaw : 0;
-    p.tx = m.x; p.ty = m.y; p.tz = m.z; p.th = m.h || 0; p.pt = m.p || 0; p.s = m.s ? 1 : 0; p.t = performance.now();
+    p.tx = m.x; p.ty = m.y; p.tz = m.z; p.th = m.h || 0; p.pt = m.p || 0; p.s = m.s ? 1 : 0; p.w = m.w ? 1 : 0; p.t = performance.now();
     if (p.fresh) { p.fresh = false; p.x = p.tx; p.y = p.ty; p.z = p.tz; p.h = p.th; }
     var wi = m.i === SWORD || isTool(m.i) ? m.i : 0;
     if (wi !== (p.wi || 0)) { p.wi = wi; handItem(p.av, wi); }
@@ -6934,10 +6940,11 @@
     }
   }
   function sendPos(now) {
-    var r = riding ? riding.kind : '', s = (mine && !mine.denied) || swingT > 0 ? 1 : 0;
+    var r = riding ? riding.kind : '', s = (mine && !mine.denied) || swingT > 0 ? 1 : 0, wv = performance.now() < waveUntil ? 1 : 0;
     var m = { u: me.id, x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), h: +P.yaw.toFixed(2), p: +P.pitch.toFixed(2), r: r, s: s, i: heldWeapon(), mapHidden: S.mapVisible === false || (myPlot >= 0 && plotAt(Math.floor(P.x), Math.floor(P.z)) === myPlot) };
     if (furnitureRest) { m.rest = furnitureRest.pose; m.restYaw = furnitureRest.yaw; }
-    var key = [m.x, m.y, m.z, m.h, m.p, r, s, m.i, m.mapHidden, m.rest, m.restYaw].join();
+    if (wv) m.w = 1;
+    var key = [m.x, m.y, m.z, m.h, m.p, r, s, wv, m.i, m.mapHidden, m.rest, m.restYaw].join();
     if ((key === NET.sentKey && now - NET.sentAt < 2500) || now - NET.sentAt < 110) return;
     NET.sentKey = key; NET.sentAt = now;
     NET.ch.send({ type: 'broadcast', event: 'pos', payload: m });
@@ -6960,7 +6967,8 @@
       var pr = p.av.userData, sw = p.rk || mv < 0.003 ? 0 : Math.sin(p.walk * 1.6) * 0.75;
       pr.legL.rotation.x = sw; pr.legR.rotation.x = -sw;
       pr.legL.rotation.z = p.rk ? -0.45 : 0; pr.legR.rotation.z = p.rk ? 0.45 : 0;
-      pr.armL.rotation.x = -sw * 0.8; pr.armR.rotation.x = sw * 0.8 - (p.s ? 0.9 + Math.sin(now / 70) * 0.5 : 0);
+      pr.armL.rotation.x = -sw * 0.8; pr.armR.rotation.x = p.w ? -2.7 : sw * 0.8 - (p.s ? 0.9 + Math.sin(now / 70) * 0.5 : 0);
+      pr.armR.rotation.z = p.w ? Math.sin(now / 110) * 0.45 : 0;   // 손 흔들기
       pr.head.rotation.x = p.pt * 0.7;
       if (p.restPose && !p.rk) poseFurnitureAvatar(p.av, p.restPose, p.x, p.y, p.z, p.restYaw);
       if (p.beast) {
