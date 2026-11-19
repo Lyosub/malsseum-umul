@@ -1735,7 +1735,8 @@
     if (x0 + CS > DUN.x0 && x0 < DUN.x0 + DUN.n * DUN.cs && z0 + CS > DUN.z0 && z0 < DUN.z0 + DUN.n * DUN.cs) buildDungeon();
     if (x0 + CS > CITY.x0 - 4 && x0 < CITY.x1 + 4 && z0 + CS > CITY.z0 - 4 && z0 < CITY.z1 + 4) buildCity();
     // 마을·방주(그 기둥에 걸친 부분만)
-    if (x0 + CS > TOWN[0][0] - 6 && x0 < TOWN[1][2] + 6 && z0 + CS > TOWN[0][1] - 6 && z0 < LZ - LRZ) buildTown();
+    // 동쪽 끝은 마을 땅과 방주 중 더 먼 쪽까지(마을 땅만 보면 방주 동쪽 끝 기둥이 빠져 뚫렸었다)
+    if (x0 + CS > Math.min(TOWN[0][0], TOWN[1][0]) - 6 && x0 < Math.max(TOWN[0][2], TOWN[1][2]) + 6 && z0 + CS > TOWN[0][1] - 6 && z0 < LZ - LRZ) buildTown();
     if (x0 + CS > TARR[0] && x0 < TARR[2] + 6 && z0 + CS > TARR[1] && z0 < TARR[3] + 6)
       TARPITS.forEach(function (t) { fill(t[0], G - 1, t[1], t[0] + t[2] - 1, G - 1, t[1] + t[2] - 1, AIR); fill(t[0], G - 3, t[1], t[0] + t[2] - 1, G - 2, t[1] + t[2] - 1, TAR); });
     buildExcursions(x0,z0);
@@ -1879,6 +1880,60 @@
     stairs(AX0 + 40, AY0 + 10, 1); stairs(AX1 - 40, AY0 + 10, -1);
     var zc = AZ0 + Math.floor(AW / 2);
     [AY0, AY0 + 10, AY0 + 20].forEach(function (y) { for (x = AX0 + 5; x < AX1; x += 10) setRaw(x, y, zc, LAMP); });
+    // ── 완성된 방주 안(창 6:14·19·21, 7:13) ──
+    var LOW = AY0 + 1, MID = AY0 + 11, TOP = AY0 + 21;
+    // 아래·가운데 층 칸: 앞은 울타리(가운데 세 칸은 드나드는 곳), 안쪽 벽에 짚더미와 물 항아리
+    [LOW, MID].forEach(function (y) {
+      for (var x0 = AX0 + 1; x0 < AX1; x0 += 25) {
+        var x1 = Math.min(x0 + 23, AX1 - 1), mid = (x0 + x1) >> 1;
+        [[AZ0 + 18, AZ0 + 1, 1], [AZ1 - 18, AZ1 - 1, -1]].forEach(function (s) {
+          if (s[2] < 0 && y === LOW && x1 >= XM - 8 && x0 <= XM + 8) return;   // 문 앞 넓은 마당은 비워 둔다
+          for (var fx = x0; fx <= x1; fx++) if (Math.abs(fx - mid) > 1) setRaw(fx, y, s[0], FENCE);
+          setRaw(x0 + 1, y, s[1], 22); setRaw(x0 + 2, y, s[1], 22); setRaw(x0 + 1, y + 1, s[1], 22);   // 짚더미
+          setRaw(x1 - 1, y, s[1], JAR);   // 물 항아리
+        });
+      }
+    });
+    // 위층 서쪽: 노아와 아들 셋 부부의 방 넷(창 7:13)
+    for (var r = 0; r < 4; r++) {
+      var rx = AX0 + 3 + r * 11, rz0 = AZ0 + 1, rz1 = AZ0 + 11;
+      fill(rx, TOP, rz0, rx, TOP + 2, rz1, GOPHER);
+      fill(rx + 10, TOP, rz0, rx + 10, TOP + 2, rz1, GOPHER);
+      fill(rx, TOP, rz1, rx + 10, TOP + 2, rz1, GOPHER);
+      fill(rx + 4, TOP, rz1, rx + 6, TOP + 1, rz1, AIR);   // 방 문
+      setRaw(rx + 2, TOP, rz0 + 1, BED); setRaw(rx + 8, TOP, rz0 + 1, BED);
+      fill(rx + 3, TOP, rz0 + 4, rx + 7, TOP, rz0 + 7, CARPET);
+      setRaw(rx + 5, TOP, rz0 + 1, OIL_LAMP);
+      setRaw(rx + 2, TOP, rz0 + 8, CHAIR); setRaw(rx + 8, TOP, rz0 + 8, CHAIR);
+    }
+    // 위층 동쪽: 먹을 모든 양식을 저축한 곳간(창 6:21)
+    var sx0 = AX1 - 42;
+    fill(sx0, TOP, AZ0 + 1, sx0, TOP + 2, AZ0 + 16, GOPHER);
+    fill(sx0, TOP, AZ0 + 16, AX1 - 1, TOP + 2, AZ0 + 16, GOPHER);
+    fill(sx0 + 18, TOP, AZ0 + 16, sx0 + 21, TOP + 1, AZ0 + 16, AIR);   // 곳간 문
+    for (x = sx0 + 2; x < AX1 - 2; x += 3) {
+      setRaw(x, TOP, AZ0 + 2, JAR); setRaw(x, TOP, AZ0 + 4, (x & 1) ? OIL_JAR : JAR);
+      setRaw(x + 1, TOP, AZ0 + 8, 22); setRaw(x + 1, TOP + 1, AZ0 + 8, 22);
+      setRaw(x, TOP, AZ0 + 12, LOG_X);
+    }
+    fill(AX1 - 1, TOP, AZ0 + 1, AX1 - 1, TOP + 2, AZ0 + 15, SHELF);
+  }
+  // 방주 안 동물: 혈육 있는 생물을 암수 한 쌍씩(창 6:19). 가까이 오면 불러오고, 멀어지면 다른 동물처럼 정리된다
+  var ARK_PAIRS = [['camel', XM - 13, 0, 0], ['cow', XM + 12, 0, 0], ['horse', XM - 38, 1, 0], ['donkey', XM + 37, 1, 0],
+    ['sheep', XM - 13, 0, 1], ['goat', XM + 12, 0, 1], ['rabbit', XM - 38, 1, 1]];
+  function arkBeasts(px, pz) {
+    if (px < AX0 - 60 || px > AX1 + 60 || pz < AZ0 - 60 || pz > AZ1 + 60) return;
+    if (animals.some(function (a) { return a.arkPet; })) return;
+    ARK_PAIRS.forEach(function (p) {
+      var z = (p[2] ? AZ1 - 9 : AZ0 + 9) + 0.5, y = p[3] ? AY0 + 11 : AY0 + 1;
+      [-2, 2].forEach(function (dx) {
+        var x = p[1] + dx + 0.5;
+        if (!colAt(x | 0, z | 0) || !isSolid(get(x | 0, y - 1, z | 0))) return;
+        var a = makeBeast(p[0], x, z);
+        a.arkPet = true; a.y = a.ty = y; a.mesh.position.y = y; a.h = p[2] ? 0 : Math.PI;
+        animals.push(a);
+      });
+    });
   }
 
   var plotData = {};   // 필지 번호 → 그 땅 블록(Uint16Array)
@@ -2906,7 +2961,7 @@
     var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
     if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
-    if (inArk(x, y, z)) return '방주는 3단계에서 다 함께 지어요. 지금은 구경해요!';
+    if (inArk(x, y, z)) return '노아의 방주는 다 지어져 있어요. 안으로 들어가 둘러보세요! (창 6:22)';
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
     if (inDungeon(x, y, z) && get(x, y, z) !== TORCH && !(get(x, y, z) >= 170 && get(x, y, z) < 174) && get(x, y, z) !== LADDER + 3) return '골짜기의 벽은 깨지지 않아요 — 길을 찾아 지나가요(시 23:4)';
     if (y <= 0) return '맨 아래 바닥은 캘 수 없어요';
@@ -2925,7 +2980,7 @@
     if (client && !villageProjectsEnabled && id>=FIND_POT && id<=FEAST_FISH) return '마을 새 재료를 서버에서 준비하는 중이에요';
     if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
-    if (inArk(x, y, z)) return '방주는 3단계에서 다 함께 지어요. 지금은 구경해요!';
+    if (inArk(x, y, z)) return '노아의 방주는 다 지어져 있어요. 안으로 들어가 둘러보세요! (창 6:22)';
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
     if (inDungeon(x, y, z) && id !== TORCH) return '골짜기에는 횃불만 놓을 수 있어요';
     var p = plotAt(x, z);
@@ -5920,12 +5975,18 @@
       text:'여행자에게 대접할 빵과 올리브, 구운 생선을 함께 차려 주세요.',ref:'마을 사람의 부탁',emoji:'🍞' },
     { name: '노아', x: XM + 7, z: AZ1 + 7, look: { robe: 0xd8cfb8, robe2: 0xc4b89a, belt: 0x6b4425, trim: 0x8a5a32, skin: 0xd9a67a, hair: 0xe8e4dc, sandal: 0x6b4425, style: 'long', fit: { beard: 0xe8e4dc, cloak: 0x7a5a3a } }, text: '노아가 그와 같이 하여 하나님이 자기에게 명하신 대로 다 준행하였더라', ref: '창세기 6:22', emoji: '⛵' },
     { name: '목자', x: XM + 46, z: PZ0 - 10, look: { robe: 0xddd0b0, robe2: 0xcfc09c, belt: 0x6b4425, trim: 0x7a5a3a, skin: 0xc98f62, hair: 0x2b1d14, sandal: 0x6b4425, style: 'scarf', scarf: 0xeee8d8, fit: { stripes: 0x7a5a3a, agal: 0x2a2018, staff: 0x8a6236 } }, text: '여호와는 나의 목자시니 내게 부족함이 없으리로다', ref: '시편 23:1', emoji: '🐑' },
+    // 방주 안의 노아 가족(층마다 바닥 높이 y를 따로 준다)
+    { name: '야벳', x: XM, z: AZ1 - 12, y: AY0 + 1, look: { robe: 0xc9b48c, robe2: 0xb8a27a, belt: 0x5a3a20, trim: 0x7a5a3a, skin: 0xd2a07a, hair: 0x3a2a1c, sandal: 0x6b4425, style: 'short', fit: { beard: 0x3a2a1c } }, text: '들어간 것들은 모든 것의 암수라 하나님이 그에게 명하신 대로 들어가매 여호와께서 그를 들여보내고 문을 닫으시니라', ref: '창세기 7:16', emoji: '🚪' },
+    { name: '셈', x: XM - 13, z: AZ0 + 20, y: AY0 + 11, look: { robe: 0xb9c2a4, robe2: 0xa4ad8e, belt: 0x5a3a20, trim: 0x6a7050, skin: 0xd6a67e, hair: 0x2a1e14, sandal: 0x6b4425, style: 'long', fit: { beard: 0x2a1e14 } }, text: '혈육 있는 모든 생물을 너는 각기 암수 한 쌍씩 방주로 이끌어들여 너와 함께 생명을 보존하게 하되', ref: '창세기 6:19', emoji: '🐑' },
+    { name: '함', x: AX1 - 22, z: AZ0 + 18, y: AY0 + 21, look: { robe: 0xc79a6a, robe2: 0xb58858, belt: 0x4a2e18, trim: 0x8a5a32, skin: 0xb27a52, hair: 0x1e1610, sandal: 0x6b4425, style: 'scarf', scarf: 0xe8d8b8, fit: { beard: 0x1e1610 } }, text: '너는 먹을 모든 양식을 네게로 가져다가 저축하라 이것이 너와 그들의 먹을 것이 되리라', ref: '창세기 6:21', emoji: '🏺' },
+    { name: '노아의 아내', x: AX0 + 20, z: AZ0 + 14, y: AY0 + 21, look: { robe: 0x9a7aa0, robe2: 0x86688c, belt: 0x5a3a20, trim: 0x6a4a70, skin: 0xd9a67a, hair: 0xb8b2a8, sandal: 0x6b4425, style: 'scarf', scarf: 0xe4dccf }, text: '곧 그 날에 노아와 그의 아들 셈, 함, 야벳과 노아의 아내와 세 며느리가 다 방주로 들어갔고', ref: '창세기 7:13', emoji: '🏠' },
     { name: '안내하는 나그네', x: XM - 6, z: PZ0 - 7, look: { robe: 0xe8e4da, robe2: 0xd8d2c4, belt: 0x8a4b14, trim: 0x8a4b14, skin: 0xe5b98f, hair: 0x3a2618, sandal: 0x6b4425, style: 'short', fit: { cloak: 0x3f4f6a, sash: 0x8a4b14, bag: 0x8a5a32 } }, text: '이 사람들은 다 믿음을 따라 죽었으며 약속을 받지 못하였으되 그것들을 멀리서 보고 환영하며 또 땅에서는 외국인과 나그네임을 증언하였으니', ref: '히브리서 11:13', emoji: '🧭' }
   ];
   function spawnNpcs() {
+    arkBeasts(P.x, P.z);
     NPC_DEFS.forEach(function (d) {
       if (NPCS.some(function (n) { return n.d === d; }) || !colAt(d.x, d.z)) return;
-      var y = groundAt(d.x + 0.5, d.z + 0.5, SY - 3); if (y === null) return;
+      var y = d.y !== undefined ? d.y : groundAt(d.x + 0.5, d.z + 0.5, SY - 3); if (y === null) return;
       var av = makeAvatar(d.look); dressAvatar(av, {}); av.position.set(d.x + 0.5, y, d.z + 0.5); av.rotation.y = Math.PI; scene.add(av);
       var tag = textSprite(d.name, 'rgba(60,40,10,0.6)', '#ffe9a0', 0.62); tag.position.y = HT + 0.7; av.add(tag);
       NPCS.push({ d: d, av: av, x: d.x + 0.5, y: y, z: d.z + 0.5 });
