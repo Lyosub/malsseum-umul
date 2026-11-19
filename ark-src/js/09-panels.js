@@ -77,56 +77,72 @@
     if (SHAPE[id] || LIGHTS[id] || k === 'plant') return 'deco';
     return 'block';
   }
+  // ── 가방·만들기 한 화면(11/20): 왼쪽 세로 그림 탭 · 가운데 칸 · 오른쪽 자세히 · 아래 단축 칸 ──
+  var invSel = null, lastBC = 'bag';
+  var CRAFT_TABS = [['all', '🔍', '모두'], ['block', '🧱', '블록'], ['shape', '🚪', '모양'], ['tool', '⛏', '도구'], ['smelt', '🔥', '녹이기'], ['wear', '👕', '옷']];
+  var REP_MAT_T = function (tid) { return [GOPHER, STONE, ING_CU, ING_FE, GEM_DIA][tierOf(tid)]; };
+  function craftTimes(rc) { if (isAdm()) return 99; var t = 999; rc.need.forEach(function (n) { t = Math.min(t, Math.floor(have(n[0]) / n[1])); }); return t; }
+  function invInfo(id) { return B[id][0] + ' ' + fmtN(have(id)) + '개' + (isTool(id) && !isAdm() ? ' · 남은 힘 ' + wearLeft(id) + '/' + toolMax(id) : ''); }
   function renderInv() {
-    var dr = $('dropRow'); if (dr) dr.hidden = !(bagPick && bagPick.id && INV.indexOf(bagPick.id) >= 0);
-    $('tabBag').classList.toggle('on', invTab === 'bag'); $('tabCraft').classList.toggle('on', invTab === 'craft'); $('tabDex').classList.toggle('on', invTab === 'dex');
-    $('bagView').style.display = invTab === 'bag' ? '' : 'none'; $('craftView').style.display = invTab === 'craft' ? '' : 'none'; $('dexView').style.display = invTab === 'dex' ? '' : 'none';
-    $('achView').style.display = invTab === 'ach' ? '' : 'none'; $('tabAch').classList.toggle('on', invTab === 'ach'); if (invTab === 'ach') renderAch();
-    $('hotClear').style.display = bagPick && bagPick.from === 'hot' ? '' : 'none';
+    var inBC = invTab === 'bag' || invTab === 'craft';
+    if (inBC) lastBC = invTab;
+    $('tabBag').classList.toggle('on', inBC); $('tabDex').classList.toggle('on', invTab === 'dex'); $('tabAch').classList.toggle('on', invTab === 'ach');
+    $('bagView').style.display = invTab === 'bag' ? '' : 'none'; $('craftView').style.display = invTab === 'craft' ? '' : 'none';
+    $('dexView').style.display = invTab === 'dex' ? '' : 'none'; $('achView').style.display = invTab === 'ach' ? '' : 'none';
+    $('invSide').style.display = inBC ? '' : 'none'; $('invDetail').style.display = inBC ? '' : 'none'; $('invHot').style.display = inBC ? '' : 'none';
+    $('invBody').classList.toggle('solo', !inBC);
+    if (invTab === 'ach') renderAch();
     renderDex();
-    var grid = $('invGrid'), row = $('invHot'), list = $('craftList'); grid.innerHTML = ''; row.innerHTML = ''; list.innerHTML = '';
-    setTimeout(function () { if (showCat !== 'all' && !shown && grid.children.length === 0) { var e = document.createElement('div'); e.className = 'bagEmpty'; e.textContent = '이 분류에 든 것이 없어요'; grid.appendChild(e); } }, 0);
-    // 가방: 가진 것만 칸에. 눌러서 집고 → 다른 가방 칸(자리 바꾸기)이나 아래 단축 칸(넣기)을 누른다
+    // 왼쪽 세로 탭: 만들기 분류 여섯 + 가방(맨 아래)
+    var side = $('invSide'); side.innerHTML = '';
+    function sideBtn(on, icon, label, fn) {
+      var b = document.createElement('button'); b.className = 'vtab' + (on ? ' on' : ''); b.innerHTML = '<span>' + icon + '</span><small>' + label + '</small>'; b.title = label;
+      b.addEventListener('click', function (e) { e.stopPropagation(); sfx('click'); fn(); }); side.appendChild(b);
+    }
+    sideBtn(invTab === 'bag', '🎒', '가방', function () { invTab = 'bag'; invSel = null; renderInv(); });
+    var sp = document.createElement('i'); sp.className = 'vsep'; side.appendChild(sp);
+    CRAFT_TABS.forEach(function (c) { sideBtn(invTab === 'craft' && craftCat === c[0], c[1], c[2], function () { invTab = 'craft'; craftCat = c[0]; invSel = null; bagPick = null; renderInv(); }); });
     syncBagSlots();
-    function info(id) { return B[id][0] + ' ' + fmtN(have(id)) + '개' + (isTool(id) && !isAdm() ? ' · 남은 힘 ' + wearLeft(id) + '/' + toolMax(id) : ''); }
     var SC = slotCounts();
-    $('bagUse').textContent = isAdm() ? '관리자 · 모두 ∞' : usedSlots() + ' / ' + BAG_SLOTS + '칸 · 한 칸에 ' + STACK + '개까지';
-    $('bagDrop').style.display = bagPick && bagPick.from === 'bag' && !isAdm() ? '' : 'none';
-    // 가방 분류(11/19): 전체·블록·도구·먹을 것·재료·꾸미기 — 고른 분류의 칸만 보임(자리 바꾸기는 그대로)
-    var cats = $('bagCats');
-    if (cats) {
-      cats.innerHTML = '';
+    // 가방
+    var grid = $('invGrid'); grid.innerHTML = '';
+    if (invTab === 'bag') {
+      $('bagUse').textContent = isAdm() ? '관리자 · 모두 ∞' : usedSlots() + ' / ' + BAG_SLOTS + '칸';
+      var cats = $('bagCats'); cats.innerHTML = '';
       BAG_CATS.forEach(function (c) {
         var n = c[0] === 'all' ? 0 : BAGSLOT.filter(function (id) { return id && bagCat(id) === c[0]; }).length;
         var b = document.createElement('button'); b.className = 'mc' + ((S.bagCat || 'all') === c[0] ? ' on' : ''); b.textContent = c[1] + (n ? ' ' + n : '');
-        b.addEventListener('click', function (e) { e.stopPropagation(); S.bagCat = c[0]; saveSettings(); sfx('click'); renderInv(); });
+        b.addEventListener('click', function (e) { e.stopPropagation(); S.bagCat = c[0]; saveSettings(); sfx('click'); bagPick = null; renderInv(); });
         cats.appendChild(b);
       });
-    }
-    var showCat = S.bagCat || 'all', shown = 0;
-    BAGSLOT.forEach(function (id, i) {
-      if (showCat !== 'all' && (!id || bagCat(id) !== showCat)) return;
-      shown++;
-      var d = document.createElement('button'), on = bagPick && bagPick.from === 'bag' && bagPick.i === i;
-      d.className = 'islot' + (on ? ' pick' : '') + (id ? '' : ' empty'); d.innerHTML = id ? slotHTML(id, SC[i]) : ''; d.title = id ? B[id][0] + (isAdm() ? '' : ' ' + SC[i] + '개') : '빈 칸';
-      d.addEventListener('click', function () {
-        sfx('click');
-        if (bagPick && bagPick.from === 'bag') {
-          if (bagPick.i !== i) { var t = BAGSLOT[i]; BAGSLOT[i] = BAGSLOT[bagPick.i]; BAGSLOT[bagPick.i] = t; saveSettings(); $('invName').textContent = '자리를 옮겼어요'; }
-          else $('invName').textContent = '내려놓았어요';
-          bagPick = null; renderInv(); return;
-        }
-        if (bagPick && bagPick.from === 'hot') {   // 단축 칸에서 집은 것을 가방에 놓으면 단축 칸이 빈다
-          var hid = HOTBAR[bagPick.i]; HOTBAR[bagPick.i] = 0; saveSettings(); renderHotbar(); setSel(sel, true);
-          $('invName').textContent = (bagPick.i + 1) + '번 단축 칸을 비웠어요' + (hid ? ' (' + jo(B[hid][0], '은', '는') + ' 가방에 그대로 있어요)' : '');
-          bagPick = null; renderInv(); return;
-        }
-        if (!id) { $('invName').textContent = '빈 칸이에요'; return; }
-        bagPick = { from: 'bag', i: i, id: id, n: SC[i] }; renderInv();
-        $('invName').textContent = info(id) + ' — 집었어요 → 아래 단축 칸을 누르면 넣고, 다른 가방 칸을 누르면 자리를 바꿔요';
+      var showCat = S.bagCat || 'all', shown = 0;
+      BAGSLOT.forEach(function (id, i) {
+        if (showCat !== 'all' && (!id || bagCat(id) !== showCat)) return;
+        shown++;
+        var d = document.createElement('button'), on = bagPick && bagPick.from === 'bag' && bagPick.i === i;
+        d.className = 'islot' + (on ? ' pick' : '') + (id ? '' : ' empty'); d.innerHTML = id ? slotHTML(id, SC[i]) : ''; d.title = id ? B[id][0] + (isAdm() ? '' : ' ' + SC[i] + '개') : '빈 칸';
+        d.addEventListener('click', function () {
+          sfx('click');
+          if (bagPick && bagPick.from === 'bag') {
+            if (bagPick.i !== i) { var t = BAGSLOT[i]; BAGSLOT[i] = BAGSLOT[bagPick.i]; BAGSLOT[bagPick.i] = t; saveSettings(); $('invName').textContent = '자리를 옮겼어요'; }
+            else $('invName').textContent = '내려놓았어요';
+            bagPick = null; renderInv(); return;
+          }
+          if (bagPick && bagPick.from === 'hot') {   // 단축 칸에서 집은 것을 가방에 놓으면 단축 칸이 빈다
+            var hid = HOTBAR[bagPick.i]; HOTBAR[bagPick.i] = 0; saveSettings(); renderHotbar(); setSel(sel, true);
+            $('invName').textContent = (bagPick.i + 1) + '번 단축 칸을 비웠어요' + (hid ? ' (' + jo(B[hid][0], '은', '는') + ' 가방에 그대로 있어요)' : '');
+            bagPick = null; renderInv(); return;
+          }
+          if (!id) { $('invName').textContent = '빈 칸이에요'; return; }
+          bagPick = { from: 'bag', i: i, id: id, n: SC[i] }; renderInv();
+          $('invName').textContent = B[id][0] + ' — 아래 단축 칸을 누르면 손에 들고, 다른 가방 칸을 누르면 자리를 바꿔요';
+        });
+        grid.appendChild(d);
       });
-      grid.appendChild(d);
-    });
+      if (showCat !== 'all' && !shown) { var e0 = document.createElement('div'); e0.className = 'bagEmpty'; e0.textContent = '이 분류에 든 것이 없어요'; grid.appendChild(e0); }
+    }
+    // 아래 단축 칸(가방·만들기 모두)
+    var row = $('invHot'); row.innerHTML = '';
     HOTBAR.forEach(function (id, i) {
       var on = bagPick && bagPick.from === 'hot' && bagPick.i === i;
       var d = document.createElement('button'); d.className = 'islot' + (i === sel ? ' on' : '') + (on ? ' pick' : '') + (id ? '' : ' empty'); d.innerHTML = (id ? slotHTML(id, hotCount(id)) : '') + '<u class="num">' + (i + 1) + '</u>'; d.title = (i + 1) + '번 칸: ' + nameOf(id);
@@ -143,101 +159,146 @@
           bagPick = null; setSel(i, true); renderHotbar(); renderInv(); return;
         }
         setSel(i, true); renderHotbar();
-        if (id) { bagPick = { from: 'hot', i: i, id: id }; $('invName').textContent = (i + 1) + '번 칸 ' + info(id) + ' — 집었어요 → 다른 단축 칸을 누르면 자리 바꾸기, 가방 칸을 누르면 이 칸 비우기'; }
-        else $('invName').textContent = (i + 1) + '번 칸은 비어 있어요. 가방에서 넣을 것을 먼저 눌러요';
+        if (id) { bagPick = { from: 'hot', i: i, id: id }; if (invTab !== 'bag') invTab = 'bag'; $('invName').textContent = (i + 1) + '번 칸 — 다른 단축 칸을 누르면 자리 바꾸기, 가방 칸을 누르면 이 칸 비우기'; }
+        else $('invName').textContent = (i + 1) + '번 칸은 비어 있어요. 가방 칸을 먼저 누르고 여기를 눌러요';
         renderInv();
       });
       row.appendChild(d);
     });
-    ['block', 'shape', 'tool', 'smelt', 'wear'].forEach(function (c) { var b = $('cc_' + c); if (b) b.classList.toggle('on', craftCat === c); });
-    if (craftCat === 'wear') {
-      var wi = document.createElement('div'); wi.className = 'fuelinfo';
-      wi.innerHTML = '🪚 옷은 <b>제작대</b>가 가방에 있거나 내 땅에 놓여 있어야 만들어요' + (tableOK() ? ' — <b>지금 만들 수 있어요</b>' : '') + '. 가죽은 소·염소·낙타를, 양털은 양을 칼을 들고 누르면 얻어요. 만든 옷은 손에 들고 누르거나 「👤 내 모습」에서 입어요.';
-      list.appendChild(wi);
-    }
-    if (craftCat === 'smelt') {
-      var fi = document.createElement('div'); fi.className = 'fuelinfo';
-      var fl = Math.floor(fuelLeft() * 2) / 2;
-      fi.innerHTML = '🔥 땔감: 석탄·숯 1개 = 8번 · 통나무 1개 = 1.5번 · 석탄 블록 = 72번 — <b>지금 ' + fl + '번 녹일 수 있어요</b>' + (HEAT > 0 ? ' (용광로에 남은 불 ' + HEAT + ')' : '');
-      list.appendChild(fi);
-      var sj = document.createElement('div'); sj.id = 'smeltJobs'; list.appendChild(sj); updateSmeltUI();
-    }
-    if (craftCat === 'tool') {
-      var REP_MAT = [GOPHER, STONE, ING_CU, ING_FE, GEM_DIA];
-      Object.keys(WEAR).forEach(function (k) {
-        var tid = +k; if (have(tid) < 1) return;
-        var mat = REP_MAT[tierOf(tid)], mx = toolMax(tid), w = WEAR[tid], nw = Math.min(mx, w + Math.ceil(mx / 4)), okR = have(mat) >= 1;
-        var r = document.createElement('div'); r.className = 'rec rep' + (okR ? '' : ' no');
-        r.innerHTML = '<span class="ins"><span class="ri"><img src="' + ICON[tid] + '" alt=""></span><b>+</b><span class="ri' + (okR ? '' : ' lack') + '"><img src="' + ICON[mat] + '" alt=""><i>1</i></span></span><b class="arr">→</b><span class="ri"><img src="' + ICON[tid] + '" alt=""></span>'
-          + '<span class="rname">' + toolName(tid) + ' 고치기 <small>힘 ' + w + ' → ' + nw + ' / ' + mx + '</small></span>';
-        var bt = document.createElement('button'); bt.className = 'mc mk'; bt.textContent = '고치기';
-        bt.addEventListener('click', function () {
-          if (have(mat) < 1) { $('invName').textContent = B[mat][0] + '이(가) 1개 있어야 고칠 수 있어요'; sfx('click'); return; }
-          take(mat, 1); if (nw >= mx) delete WEAR[tid]; else WEAR[tid] = nw;
-          sfx('craft'); $('invName').textContent = toolName(tid) + '을(를) 고쳤어요 (힘 ' + nw + '/' + mx + ')'; bagChanged();
-        });
-        r.appendChild(bt); list.appendChild(r);
-      });
-    }
-    // 단계·열린 제작법 수
-    var st = curStage(), allN = RECIPES.length, openN = RECIPES.filter(recOpen).length;
-    var sb = document.createElement('div'); sb.className = 'stagebar';
-    sb.innerHTML = '📜 제작법 <b>' + openN + '/' + allN + '</b> 열림 · 지금 <b>' + st.n + '단계 「' + st.name + '」</b>' + (STAGE_NEXT[st.n] ? ' — 다음: ' + STAGE_NEXT[st.n] : ' — 마지막 단계예요') + '<br><small>재료를 처음 얻으면 그 재료로 만드는 법이 열려요. 재료 그림을 누르면 어디서 얻는지 알려 줘요.</small>';
-    list.appendChild(sb);
-    var qBox = document.createElement('input'); qBox.id = 'craftQ'; qBox.placeholder = '🔍 이름으로 찾기'; qBox.value = craftQuery; qBox.setAttribute('aria-label', '만들 것 이름으로 찾기');
-    qBox.addEventListener('input', function () { craftQuery = qBox.value.trim(); renderInv(); var q2 = $('craftQ'); if (q2) { q2.focus(); q2.setSelectionRange(q2.value.length, q2.value.length); } });
-    list.insertBefore(qBox, list.firstChild);
-    var locked = [];
+    if (invTab === 'craft') renderCraftGrid();
+    renderInvDetail();
+    if (!$('invName').textContent && !S.invHint) { $('invName').textContent = '가방 칸을 누르고 → 아래 단축 칸을 누르면 손에 들어요'; S.invHint = 1; saveSettings(); }
+  }
+  // 제작법 그림 칸: 만들 수 있으면 회색(몇 개 만들 수 있는지 숫자), 재료가 모자라면 빨강, 아직 모르면 어둡게
+  function renderCraftGrid() {
+    var list = $('craftList'); list.innerHTML = '';
+    var q = $('craftQ'); if (q && document.activeElement !== q) q.value = craftQuery;
+    var st = curStage(), allN = RECIPES.length, openN = RECIPES.filter(recOpen).length, sb = $('craftStage');
+    sb.innerHTML = '📜 제작법 <b>' + openN + '/' + allN + '</b> · <b>' + st.n + '단계</b> 「' + st.name + '」';
+    sb.title = STAGE_NEXT[st.n] ? '다음: ' + STAGE_NEXT[st.n] : '마지막 단계예요';
+    var items = [];
     RECIPES.forEach(function (rc) {
-      if (craftQuery && B[rc.out[0]][0].indexOf(craftQuery) < 0) return;
-      if (rc.cat !== craftCat && !craftQuery) return;
-      if (!recOpen(rc)) { if (!craftQuery) locked.push(rc); return; }   // 찾는 중엔 잠긴 제작법 이름을 드러내지 않음
-      var ok = canCraft(rc);
-      var r = document.createElement('div'); r.className = 'rec' + (ok ? '' : ' no');
-      r.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('.ri[data-id]'); if (t) { var gid = +t.getAttribute('data-id'); $('invName').textContent = '「' + B[gid][0] + '」 ' + howGet(gid) + ' (지금 ' + fmtN(have(gid)) + '개)'; sfx('click'); } });
-      var h = '<span class="ins">';
-      rc.need.forEach(function (n, k) { h += (k ? '<b>+</b>' : '') + '<span class="ri' + (have(n[0]) >= n[1] ? '' : ' lack') + '" data-id="' + n[0] + '" title="' + B[n[0]][0] + ' — 누르면 얻는 곳"><img src="' + ICON[n[0]] + '" alt=""><i>' + n[1] + '</i></span>'; });
-      h += '</span><b class="arr">→</b><span class="ri"><img src="' + ICON[rc.out[0]] + '" alt=""><i>' + rc.out[1] + '</i></span>';
-      h += '<span class="rname">' + B[rc.out[0]][0] + (rc.ref ? ' <small>' + rc.ref + '</small>' : '') + (rc.furnace ? ' <small class="fz' + (furnaceOK() ? '' : ' lack') + '">🔥용광로</small>' : '') + (rc.fuel ? ' <small class="fz' + (fuelLeft(rc) >= 1 ? '' : ' lack') + '">땔감</small>' : '') + (rc.station ? ' <small>' + B[rc.station][0] + '</small>' : '') + (rc.table ? ' <small class="fz' + (tableOK() ? '' : ' lack') + '">🪚제작대</small>' : '') + '</span>';
-      r.innerHTML = h;
-      var btn = document.createElement('button'); btn.className = 'mc mk'; btn.textContent = '만들기';
-      function craftN(times) {
-        if (!canCraft(rc)) {
-          sfx('click');
-          if (rc.furnace && !furnaceOK()) $('invName').textContent = '녹이려면 용광로가 있어야 해요. 돌 8개로 만들어 가방에 넣거나 내 땅에 놓아요';
-          else if (rc.fuel && fuelLeft(rc) < 1) $('invName').textContent = '땔감이 없어요. 석탄·숯·통나무를 모아요';
-          else if (rc.station) $('invName').textContent = B[rc.station][0]+' 가까이에서 만들어요';
-          else if (rc.table && !tableOK()) $('invName').textContent = '이 물건은 제작대가 있어야 만들어요. 고페르 나무 4개로 제작대를 만들어 가방에 넣거나 내 땅에 놓아요';
-          return;
-        }
-        var made = 0;
-        if (!rc.fuel && room(rc.out[0]) < rc.out[1]) { sfx('click'); $('invName').textContent = '🎒 가방이 가득 차서 만들 수 없어요. 안 쓰는 것을 버리거나 궤에 넣어요'; return; }
-        while (made < times && canCraft(rc) && (rc.fuel || room(rc.out[0]) >= rc.out[1])) {
-          if (rc.fuel && !burnOne(rc)) break;
-          rc.need.forEach(function (n) { take(n[0], n[1]); });
-          if (rc.fuel) queueSmelt(rc.out[0], rc.out[1]); else give(rc.out[0], rc.out[1]);
-          made++;
-          if (rc.out[0] === GOPHER) { stats.crafted++; questCheck(); }
-          if (rc.out[0] === PITCH && STORY.started) { STORY.s.pitch += rc.out[1]; saveStory(); }
-        }
-        sfx('craft'); $('invName').textContent = rc.fuel ? '용광로에 넣었어요 — ' + B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개가 하나에 ' + SMELT_SEC + '초씩 녹아요' : B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개를 만들었어요';
-        bagChanged();
+      if (craftQuery) { if (!recOpen(rc) || B[rc.out[0]][0].indexOf(craftQuery) < 0) return; }   // 찾는 중엔 잠긴 제작법 이름을 드러내지 않음
+      else if (craftCat !== 'all' && rc.cat !== craftCat) return;
+      if (!recOpen(rc)) { if (craftCat !== 'all') items.push({ k: 'lock', rc: rc, o: 3 + recStage(rc) / 100 }); return; }   // 「모두」에는 아는 제작법만
+      var ok = canCraft(rc); items.push({ k: 'rec', rc: rc, ok: ok, o: ok ? 0 : 2 });
+    });
+    if (craftCat === 'tool' && !craftQuery) Object.keys(WEAR).forEach(function (k) {
+      var tid = +k; if (have(tid) < 1) return;
+      items.push({ k: 'rep', id: tid, ok: have(REP_MAT_T(tid)) >= 1, o: have(REP_MAT_T(tid)) >= 1 ? 1 : 2.5 });
+    });
+    items.forEach(function (it, i) { it.i = i; });
+    items.sort(function (a, b) { return a.o - b.o || a.i - b.i; });
+    function same(a, b) { return a && b && a.k === b.k && (a.k === 'rep' ? a.id === b.id : a.rc === b.rc); }
+    if (!items.some(function (it) { return same(it, invSel); })) invSel = items[0] || null;
+    items.forEach(function (it) {
+      var d = document.createElement('button'), out = it.k === 'rep' ? it.id : it.rc.out[0];
+      d.className = 'rtile' + (it.k === 'lock' ? ' lockd' : (it.ok ? '' : ' no')) + (it.k === 'rep' ? ' rep' : '') + (same(it, invSel) ? ' pick' : '');
+      var h = '<img src="' + ICON[out] + '" alt="">';
+      if (it.k === 'rec' && it.ok && !isAdm()) { var n = craftTimes(it.rc) * it.rc.out[1]; if (n > 0) h += '<i>' + (n > 99 ? '99+' : n) + '</i>'; }
+      if (it.k === 'rep') h += '<em>🔧</em>'; if (it.k === 'lock') h += '<em>🔒</em>';
+      d.innerHTML = h; d.title = it.k === 'lock' ? '아직 모르는 제작법' : (it.k === 'rep' ? toolName(it.id) + ' 고치기' : B[out][0]);
+      d.addEventListener('click', function (e) { e.stopPropagation(); sfx('click'); invSel = it; renderInv(); });
+      list.appendChild(d);
+    });
+    if (!items.length) { var e = document.createElement('div'); e.className = 'bagEmpty'; e.textContent = craftQuery ? '찾는 제작법이 없어요' : '아직 이 분류의 제작법이 없어요'; list.appendChild(e); }
+  }
+  // 오른쪽 자세히: 가방에서 고른 것 / 고른 제작법
+  function renderInvDetail() {
+    var det = $('invDetail'); det.innerHTML = '';
+    function add(tag, cls, html) { var el = document.createElement(tag); if (cls) el.className = cls; if (html !== undefined) el.innerHTML = html; det.appendChild(el); return el; }
+    function btn(label, fn, parent) { var b = document.createElement('button'); b.className = 'mc'; b.textContent = label; b.addEventListener('click', function (e) { e.stopPropagation(); fn(e); }); (parent || det).appendChild(b); return b; }
+    function top(id, name, sub) { add('div', 'dtop', '<span class="big"><img src="' + ICON[id] + '" alt=""></span><span><b>' + name + '</b><small>' + (sub || '') + '</small></span>'); }
+    function fuelLine() { var fl = Math.floor(fuelLeft() * 2) / 2; add('div', 'dhint', '🔥 땔감: 석탄·숯 1개 = 8번 · 통나무 1개 = 1.5번 · 석탄 블록 = 72번<br><b>지금 ' + fl + '번 녹일 수 있어요</b>' + (HEAT > 0 ? ' (남은 불 ' + HEAT + ')' : '')); }
+    if (invTab === 'bag') {
+      var p = bagPick;
+      if (!p || !p.id || !B[p.id]) {
+        add('div', 'dempty', '🎒 가방 칸을 누르면 여기에 자세히 나와요.<br><br>누른 다음 <b>아래 단축 칸</b>을 누르면 손에 들 수 있어요.');
+        btn('↕ 가방 정리', function () { $('bagSort').click(); });
+        return;
       }
-      btn.addEventListener('click', function () { craftN(1); });
-      r.appendChild(btn);
-      addRecipePin(r,rc);
-      if (rc.fuel) { var b8 = document.createElement('button'); b8.className = 'mc mk mk8'; b8.textContent = '×8'; b8.title = '8번 한꺼번에'; b8.addEventListener('click', function () { craftN(8); }); r.appendChild(b8); }
-      list.appendChild(r);
-    });
-    // 아직 잠긴 제작법: 단계 순서로, 무엇을 얻으면 열리는지
-    locked.sort(function (a, b) { return recStage(a) - recStage(b); }).forEach(function (rc) {
+      var id = p.id, kind = { block: '블록', tool: '도구·옷', food: '먹을 것', item: '재료', deco: '꾸미기' }[bagCat(id)];
+      top(id, B[id][0], kind + ' · ' + fmtN(have(id)) + '개');
+      if (isTool(id) && WEAR[id] !== undefined && !isAdm()) { var f = WEAR[id] / toolMax(id); add('div', 'ddur', '<s style="width:' + Math.max(4, Math.round(f * 100)) + '%;background:' + (f > 0.5 ? '#4fd14f' : f > 0.2 ? '#e8c53a' : '#e0473a') + '"></s>'); add('div', 'dhint', '남은 힘 ' + wearLeft(id) + ' / ' + toolMax(id) + ' — 만들기 → ⛏ 도구에서 고쳐요'); }
+      if (FOODS[id] !== undefined && vitalsOn()) btn('🍞 먹기 (기운 +' + FOODS[id] + ')', function () { eatItem(id); bagPick = null; renderInv(); });
+      if (p.from === 'bag') {
+        add('div', 'dhint', '⬇ 아래 단축 칸을 누르면 손에 들어요');
+        if (!isAdm()) {
+          var r = add('div', 'drow');
+          btn('1개 버리기', function () { bagPick = null; throwItem(id, 1); $('invName').textContent = B[id][0] + ' 1개를 앞에 버렸어요 — 다시 가까이 가면 주워요'; renderInv(); }, r);
+          btn('묶음 버리기', function () { var n = Math.min(p.n || 1, have(id), 64); bagPick = null; throwItem(id, n); $('invName').textContent = B[id][0] + ' ' + n + '개를 앞에 버렸어요 — 다시 가까이 가면 주워요'; renderInv(); }, r);
+        }
+      } else {
+        add('div', 'dhint', '다른 단축 칸을 누르면 자리를 바꿔요');
+        btn('단축 칸 비우기', function () { HOTBAR[p.i] = 0; bagPick = null; saveSettings(); renderHotbar(); setSel(sel, true); $('invName').textContent = '단축 칸을 비웠어요'; renderInv(); });
+      }
+      add('div', 'dhint', '📍 ' + howGet(id));
+      return;
+    }
+    var it = invSel;
+    if (!it) { add('div', 'dempty', '왼쪽 제작법 그림을 누르면 재료가 여기에 나와요'); if (craftCat === 'smelt') fuelLine(); return; }
+    if (it.k === 'rep') {
+      var tid = it.id, mat = REP_MAT_T(tid), mx = toolMax(tid), w = WEAR[tid], nw = Math.min(mx, w + Math.ceil(mx / 4)), okR = have(mat) >= 1;
+      top(tid, toolName(tid) + ' 고치기', '힘 ' + w + ' → ' + nw + ' / ' + mx);
+      add('div', 'dneed' + (okR ? '' : ' lack'), '<img src="' + ICON[mat] + '" alt=""><span>' + B[mat][0] + '</span><em>' + fmtN(have(mat)) + ' / 1</em>');
+      btn('🔧 고치기', function () {
+        if (have(mat) < 1) { $('invName').textContent = jo(B[mat][0], '이', '가') + ' 1개 있어야 고칠 수 있어요'; sfx('click'); return; }
+        take(mat, 1); if (nw >= mx) delete WEAR[tid]; else WEAR[tid] = nw;
+        sfx('craft'); $('invName').textContent = toolName(tid) + '을(를) 고쳤어요 (힘 ' + nw + '/' + mx + ')'; bagChanged();
+      });
+      return;
+    }
+    var rc = it.rc;
+    if (it.k === 'lock') {
       var miss = recIds(rc).filter(function (id) { return !SEEN[id]; });
-      var r = document.createElement('div'); r.className = 'rec lockd';
-      r.innerHTML = '<span class="ri"><img src="' + ICON[rc.out[0]] + '" alt=""></span><span class="rname">🔒 <b class="stg">' + recStage(rc) + '단계</b> ??? <small>— ' + miss.map(function (id) { return '「' + B[id][0] + '」'; }).join(', ') + '을(를) 얻으면 열려요</small></span>';
-      r.addEventListener('click', function () { $('invName').textContent = miss.map(function (id) { return '「' + B[id][0] + '」 ' + howGet(id); }).join(' / '); sfx('click'); });
-      addRecipePin(r,rc);
-      list.appendChild(r);
+      add('div', 'dtop', '<span class="big lockd"><img src="' + ICON[rc.out[0]] + '" alt=""></span><span><b>🔒 아직 몰라요</b><small>' + recStage(rc) + '단계 제작법</small></span>');
+      add('div', 'dhint', '이 재료를 처음 얻으면 열려요:');
+      miss.forEach(function (id) { add('div', 'dneed lack', '<img src="' + ICON[id] + '" alt=""><span>' + B[id][0] + '<br><small>' + howGet(id) + '</small></span>'); });
+      addRecipePin(det, rc);
+      return;
+    }
+    top(rc.out[0], B[rc.out[0]][0] + (rc.out[1] > 1 ? ' ×' + rc.out[1] : ''), rc.ref || '');
+    rc.need.forEach(function (n) {
+      var r = add('div', 'dneed' + (have(n[0]) >= n[1] ? '' : ' lack'), '<img src="' + ICON[n[0]] + '" alt=""><span>' + B[n[0]][0] + '</span><em>' + fmtN(have(n[0])) + ' / ' + n[1] + '</em>');
+      r.title = '누르면 얻는 곳';
+      r.addEventListener('click', function () { $('invName').textContent = '「' + B[n[0]][0] + '」 ' + howGet(n[0]) + ' (지금 ' + fmtN(have(n[0])) + '개)'; sfx('click'); });
     });
+    var req = '';
+    if (rc.furnace) req += '<span class="dreq' + (furnaceOK() ? '' : ' lack') + '">🔥 용광로</span>';
+    if (rc.fuel) req += '<span class="dreq' + (fuelLeft(rc) >= 1 ? '' : ' lack') + '">🪵 땔감</span>';
+    if (rc.table) req += '<span class="dreq' + (tableOK() ? '' : ' lack') + '">🪚 제작대</span>';
+    if (rc.station) req += '<span class="dreq">' + B[rc.station][0] + ' 가까이</span>';
+    if (req) add('div', '', req);
+    function craftN(times) {
+      if (!canCraft(rc)) {
+        sfx('click');
+        if (rc.furnace && !furnaceOK()) $('invName').textContent = '녹이려면 용광로가 있어야 해요. 돌 8개로 만들어 가방에 넣거나 내 땅에 놓아요';
+        else if (rc.fuel && fuelLeft(rc) < 1) $('invName').textContent = '땔감이 없어요. 석탄·숯·통나무를 모아요';
+        else if (rc.station) $('invName').textContent = B[rc.station][0] + ' 가까이에서 만들어요';
+        else if (rc.table && !tableOK()) $('invName').textContent = '이 물건은 제작대가 있어야 만들어요. 고페르 나무 4개로 제작대를 만들어 가방에 넣거나 내 땅에 놓아요';
+        else $('invName').textContent = '재료가 모자라요 — 빨간 재료를 누르면 얻는 곳을 알려 줘요';
+        return;
+      }
+      var made = 0;
+      if (!rc.fuel && room(rc.out[0]) < rc.out[1]) { sfx('click'); $('invName').textContent = '🎒 가방이 가득 차서 만들 수 없어요. 안 쓰는 것을 버리거나 궤에 넣어요'; return; }
+      while (made < times && canCraft(rc) && (rc.fuel || room(rc.out[0]) >= rc.out[1])) {
+        if (rc.fuel && !burnOne(rc)) break;
+        rc.need.forEach(function (n) { take(n[0], n[1]); });
+        if (rc.fuel) queueSmelt(rc.out[0], rc.out[1]); else give(rc.out[0], rc.out[1]);
+        made++;
+        if (rc.out[0] === GOPHER) { stats.crafted++; questCheck(); }
+        if (rc.out[0] === PITCH && STORY.started) { STORY.s.pitch += rc.out[1]; saveStory(); }
+      }
+      sfx('craft'); $('invName').textContent = rc.fuel ? '용광로에 넣었어요 — ' + B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개가 하나에 ' + SMELT_SEC + '초씩 녹아요' : B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개를 만들었어요';
+      bagChanged();
+    }
+    var ok = canCraft(rc), times = craftTimes(rc);
+    var mk = btn(rc.fuel ? '🔥 녹이기' : '🔨 만들기', function () { craftN(1); }); mk.classList.add('dmake'); if (!ok) mk.classList.add('off');
+    if (rc.fuel) btn('×8 한꺼번에', function () { craftN(8); });
+    else if (ok && times >= 2 && !isAdm()) btn('모두 만들기 (×' + Math.min(times, 64) + ')', function () { craftN(Math.min(times, 64)); });
+    if (rc.fuel) fuelLine();
+    if (rc.cat === 'wear') add('div', 'dhint', '가죽은 소·염소·낙타를, 양털은 양을 칼을 들고 누르면 얻어요. 만든 옷은 「👤 내 모습」에서 입어요.');
+    addRecipePin(det, rc);
   }
   function addRecipePin(row,recipe) {
     villageButton(row,'재료 표시',function(e){
@@ -314,17 +375,27 @@
       g1.appendChild(d);
     });
     if (!g1.children.length) g1.innerHTML = '<span class="empty">비어 있어요 — 아래 가방에서 눌러 넣어요</span>';
+    function put(id) {
+      if (have(id) < 1) return;
+      if (isTool(id)) { $('chestName').textContent = '도구는 가방에 넣고 다녀요'; sfx('click'); return; }
+      if (!c[id] && Object.keys(c).length >= 27) { $('chestName').textContent = '궤가 가득 찼어요(27가지)'; return; }
+      var n = chestOne ? 1 : have(id); take(id, n); c[id] = (c[id] || 0) + n; CHESTS[curChest] = c;
+      $('chestName').textContent = B[id][0] + ' ' + n + '개를 궤에'; sfx('click'); markDirty(); bagChanged(); renderChest();
+    }
     INV.forEach(function (id) {
       if (have(id) < 1) return;
       var d = document.createElement('button'); d.className = 'islot'; d.innerHTML = slotHTML(id, have(id)); d.title = B[id][0];
-      d.addEventListener('click', function () {
-        if (isTool(id)) { $('chestName').textContent = '도구는 가방에 넣고 다녀요'; sfx('click'); return; }
-        if (!c[id] && Object.keys(c).length >= 27) { $('chestName').textContent = '궤가 가득 찼어요(27가지)'; return; }
-        var n = chestOne ? 1 : have(id); take(id, n); c[id] = (c[id] || 0) + n; CHESTS[curChest] = c;
-        $('chestName').textContent = B[id][0] + ' ' + n + '개를 궤에'; sfx('click'); markDirty(); bagChanged(); renderChest();
-      });
+      d.addEventListener('click', function () { put(id); });
       g2.appendChild(d);
     });
+    if (!g2.children.length) g2.innerHTML = '<span class="empty">가방이 비어 있어요</span>';
+    var g3 = $('chestHot'); if (g3) { g3.innerHTML = '';
+      HOTBAR.forEach(function (id, i) {
+        var d = document.createElement('button'); d.className = 'islot' + (i === sel ? ' on' : '') + (id ? '' : ' empty'); d.innerHTML = (id ? slotHTML(id, hotCount(id)) : '') + '<u class="num">' + (i + 1) + '</u>'; d.title = (i + 1) + '번 칸: ' + nameOf(id);
+        d.addEventListener('click', function () { if (id) put(id); else sfx('click'); });
+        g3.appendChild(d);
+      });
+    }
   }
   function smeltState() {
     var now = Date.now(), j = JOBS[0]; if (!j) return null;
@@ -458,8 +529,6 @@
       });
       grid.parentNode.insertBefore(tabs, grid); pick(G[S.pauseTab] ? S.pauseTab : 'game');
     })();
-    on('drop1', function () { var id = bagPick && bagPick.id; bagPick = null; closePanel(); throwItem(id, 1); });
-    on('dropAll', function () { var id = bagPick && bagPick.id; bagPick = null; closePanel(); throwItem(id, Math.min(64, have(id))); });
     on('mapCap', function () { toggleFold('map'); });
     on('btnRotate', rotateScreen);
     applyFold();
@@ -541,23 +610,12 @@
     on('invDone', function () { closePanel(); });
     on('chestDone', function () { closePanel(); });
     on('chestOne', function () { chestOne = !chestOne; renderChest(); sfx('click'); });
-    on('tabBag', function () { invTab = 'bag'; renderInv(); sfx('click'); });
-    on('tabCraft', function () { invTab = 'craft'; renderInv(); sfx('click'); });
+    on('tabBag', function () { invTab = lastBC; renderInv(); sfx('click'); });
     on('tabDex', function () { invTab = 'dex'; renderInv(); sfx('click'); });
-    ['block', 'shape', 'tool', 'smelt', 'wear'].forEach(function (c) { on('cc_' + c, function () { craftCat = c; renderInv(); sfx('click'); }); });
+    $('craftQ').addEventListener('input', function () { craftQuery = this.value.trim(); invSel = null; renderInv(); });
+    $('craftStage').addEventListener('click', function () { $('invName').textContent = this.title + ' · 재료를 처음 얻으면 그 재료로 만드는 법이 열려요'; sfx('click'); });
     on('tLook', function () { openLooks(); });
     on('btnLook', function () { openLooks(); });
-    // 집은 묶음 버리기: 앞쪽 땅에 떨어뜨림(5초 동안은 다시 안 끌려옴, 5분 지나면 사라짐)
-    on('bagDrop', function () {
-      if (!bagPick || bagPick.from !== 'bag' || isAdm()) return;
-      var id = bagPick.id, n = Math.min(bagPick.n || 0, have(id)); if (n < 1) return;
-      take(id, n);
-      var fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw);
-      dropItem(P.x + fx * 2.2, P.y + 2, P.z + fz * 2.2, id, n);
-      var o = DROPS[DROPS.length - 1]; if (o && o.id === id) o.full = 2;
-      bagPick = null; sfx('pop'); bagChanged();
-      $('invName').textContent = B[id][0] + ' ' + n + '개를 앞에 버렸어요 (다시 주우려면 5초 뒤 가까이 가요)';
-    });
     on('tipsDone', function () { try { localStorage.setItem('arkVillage.tips', '1'); } catch (e) {} resume(); });
     var br = $('btnRun');
     br.addEventListener('touchstart', function (e) { setRun(!runLock, 'btn'); e.preventDefault(); }, { passive: false });
@@ -590,7 +648,6 @@
     var bs = $('btnSneak');
     bs.addEventListener('touchstart', function (e) { sneakLock = !sneakLock; e.preventDefault(); }, { passive: false });
     bs.addEventListener('click', function () { sneakLock = !sneakLock; });
-    on('hotClear', function () { if (bagPick && bagPick.from === 'hot') { HOTBAR[bagPick.i] = 0; bagPick = null; saveSettings(); renderHotbar(); setSel(sel, true); renderInv(); $('invName').textContent = '단축 칸을 비웠어요'; } });
     var bj = $('btnJump'), bd = $('btnDown');
     bj.addEventListener('touchstart', function (e) { jumpPress(); e.preventDefault(); }, { passive: false });
     bj.addEventListener('touchend', function (e) { jumpHeld = false; e.preventDefault(); });

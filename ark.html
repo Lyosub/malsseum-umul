@@ -310,20 +310,20 @@
   /* 블록 고르기(인벤토리) */
   .panel { background:#c6c6c6; border:2px solid #000; box-shadow:inset 3px 3px 0 #fff, inset -3px -3px 0 #555; padding:12px 14px 14px; color:#3f3f3f; max-height:100%; overflow:auto; }
   .panel h2 { font-size:14px; font-weight:400; margin-bottom:8px; color:#3f3f3f; }
-  #invGrid, #invHot { display:grid; grid-template-columns:repeat(9, 40px); gap:0; }
+  :root { --slot:40px; }
+  #invGrid, #invHot, #chestHot { display:grid; grid-template-columns:repeat(auto-fill, var(--slot)); gap:0; }
   #bagUse { color:#2f5a2f; font-size:11px; }
   i.inf { font-size:15px !important; color:#ffe680 !important; }
   .islot.empty { background:#8b8b8b; } .islot.pick { background:#d8e8a0; outline:3px solid #2f7a3a; outline-offset:-3px; }
   .islot u.num { position:absolute; left:2px; top:1px; font-size:10px; text-decoration:none; color:#fff; text-shadow:1px 1px 0 #000; line-height:1; pointer-events:none; }
-  #bagView h2.hoth { margin-top:8px; margin-bottom:2px; font-size:12px; }
-  #invGrid { max-height:calc(100vh - 250px); min-height:80px; overflow:auto; }
-  #invHot { grid-template-columns:repeat(9, 40px); margin-top:10px; }
-  .islot { width:40px; height:40px; padding:4px; border:none; background:#8b8b8b; box-shadow:inset 2px 2px 0 #373737, inset -2px -2px 0 #fff; cursor:pointer; position:relative; }
+  #invGrid { align-content:start; }
+  #invHot, #chestHot { grid-template-columns:repeat(9, var(--slot)); margin:6px auto 0; width:max-content; }
+  .islot { width:var(--slot); height:var(--slot); padding:4px; border:none; background:#8b8b8b; box-shadow:inset 2px 2px 0 #373737, inset -2px -2px 0 #fff; cursor:pointer; position:relative; }
   .islot img { width:100%; height:100%; image-rendering:pixelated; display:block; pointer-events:none; }
   .islot:hover { background:#a7a7a7; }
   .islot.on:after { content:''; position:absolute; inset:0; border:2px solid #fff; }
   #invName { font-size:12px; min-height:16px; margin-top:6px; color:#3f3f3f; }
-  .cgrid { display:grid; grid-template-columns:repeat(10, 40px); min-height:40px; max-height:calc(50vh - 90px); overflow:auto; background:#8b8b8b; }
+  .cgrid { display:grid; grid-template-columns:repeat(auto-fill, var(--slot)); align-content:start; min-height:var(--slot); overflow:auto; background:#8b8b8b; }
   .cgrid .empty { grid-column:1 / -1; font-size:12px; color:#eee; padding:12px 6px; }
   #chestName { font-size:12px; min-height:16px; margin-top:6px; color:#3f3f3f; }
   .rec.rep { background:#d6dccb; }
@@ -337,7 +337,7 @@
   .tabs { display:flex; gap:4px; margin-bottom:8px; }
   .tab { height:30px; padding:0 14px; border:2px solid #000; background:#8b8b8b; color:#e8e8e8; font-size:13px; text-shadow:1px 1px 0 #3f3f3f; cursor:pointer; box-shadow:inset 2px 2px 0 #aaa, inset -2px -2px 0 #555; }
   .tab.on { background:#c6c6c6; color:#3f3f3f; text-shadow:none; box-shadow:inset 2px 2px 0 #fff, inset -2px -2px 0 #888; }
-  #craftList { display:flex; flex-direction:column; gap:4px; max-height:calc(100vh - 220px); overflow:auto; padding-right:4px; }
+  #craftList { display:grid; grid-template-columns:repeat(auto-fill, calc(var(--slot) + 8px)); align-content:start; gap:0; }
   .rec { display:flex; align-items:center; gap:6px; background:#b4b4b4; border:2px solid #8b8b8b; padding:3px 6px; }
   .rec.no { opacity:.6; }
   .rec .ins { display:flex; align-items:center; gap:3px; }
@@ -394,8 +394,8 @@
     body.touch #lookGrid { grid-template-columns:repeat(3, 1fr); }
     body.touch .tgrid { grid-template-columns:1fr; }
     body.touch #help .page { grid-template-columns:1fr; }
-    body.touch #invGrid, body.touch #invHot { grid-template-columns:repeat(9, 34px); } body.touch .islot { width:34px; height:34px; padding:3px; }
-    body.touch .cgrid { grid-template-columns:repeat(9, 34px); } body.touch .panel { padding:8px 8px 10px; }
+    body.touch { --slot:34px; } body.touch .islot { padding:3px; }
+    body.touch .panel { padding:8px 8px 10px; }
     body.touch #splash { display:none; }
     body.touch #quest { top:calc(66px + var(--sat)) !important; } body.touch #mapc { top:calc(66px + var(--sat)) !important; } body.touch #mapCap { top:calc(160px + var(--sat)); }
     body.touch #chatLog { top:calc(182px + var(--sat)); }
@@ -422,8 +422,8 @@
     .scrTitle { margin-bottom:6px; } .grid2 { gap:5px 8px; }
     #logo h1 { font-size:40px; } #logo { margin-bottom:12px; } #splash { top:-24px; font-size:13px; }
     .slot { width:40px; height:40px; padding:4px; }
-    #invGrid, #invHot { grid-template-columns:repeat(9, 34px); } #invHot { grid-template-columns:repeat(9, 34px); } .cgrid { grid-template-columns:repeat(10, 34px); }
-    .islot { width:34px; height:34px; padding:3px; }
+    body { --slot:34px; }
+    .islot { padding:3px; }
     .panel { padding:8px 10px 10px; }
     #toast { bottom:calc(74px + var(--sab)); }
     #btnJump, #btnDown { bottom:calc(30px + var(--sab)); }
@@ -476,8 +476,8 @@
   /* 게임 메뉴 묶음 탭 */
   #pauseTabs { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin:0 0 8px; }
   #pause .grid3 > [data-g]:not(.gon) { display:none !important; }
-  .bagCats { display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 6px; }
-  .bagCats button { height:30px; font-size:12px; padding:0 9px; min-width:0; }
+  .bagCats { display:flex; flex-wrap:wrap; gap:3px; margin:0 0 4px; }
+  .bagCats button { height:28px !important; font-size:12px !important; padding:0 7px; min-width:0; }
   .bagCats button.on { background:#3f5fae; color:#fff; box-shadow:inset 0 0 0 2px #9fb7ff; }
   .bagEmpty { color:#bbb; font-size:13px; padding:10px 4px; }
   .goalCard { grid-column:1 / -1; background:rgba(0,0,0,.35); border:2px solid #000; box-shadow:inset 0 0 0 2px #8a6a2a; padding:8px 10px; color:#fff; font-size:13px; line-height:1.45; text-align:left; }
@@ -539,12 +539,8 @@
   @media (orientation:portrait) {
     body.touch .grid3 { grid-template-columns:repeat(2, minmax(0, 1fr)); }
     body.touch #portraitTip { position:static; transform:none; margin-top:10px; }
-    body.touch #invGrid, body.touch #invHot, body.touch #chestBag { grid-template-columns:repeat(9, minmax(0, 1fr)); }
-    body.touch #chestGrid { grid-template-columns:repeat(10, minmax(0, 1fr)); }
     body.touch #clothGrid { grid-template-columns:repeat(9, minmax(0, 1fr)); }
-    body.touch #invGrid, body.touch #invHot, body.touch .cgrid { width:min(100%, 360px); }
-    body.touch #inv .panel, body.touch #chest .panel { width:min(100%, 490px); }
-    body.touch .islot { width:100%; height:auto; aspect-ratio:1; }
+    body.touch #inv .panel, body.touch #chest .panel { width:100%; }
     body.touch #hotbar { width:min(calc(100vw - var(--sal) - var(--sar) - 12px), 348px); }
     body.touch #hotbar .slot { flex:1; min-width:0; width:auto; }
     body.touch #topRight { max-width:calc(100vw - var(--sal) - var(--sar) - 100px); }
@@ -572,7 +568,65 @@
   #tour .trow { display:flex; align-items:center; gap:6px; justify-content:flex-end; }
   #tour .trow small { margin-right:auto; opacity:.75; }
   #tour .tnext { background:#4f7d3c; color:#fff; }
-  #craftQ { width:100%; box-sizing:border-box; height:32px; margin:0 0 6px; padding:0 8px; font-size:14px; border:2px solid #373737; }
+  #craftQ { width:100%; box-sizing:border-box; height:30px; margin:0 0 4px; padding:0 8px; font-size:14px; border:2px solid #373737; flex:none; }
+  /* 가방·만들기 한 화면(11/20): 왼쪽 세로 탭 · 가운데 칸 · 오른쪽 자세히 · 아래 단축 칸 */
+  #inv .panel.invPanel { width:min(980px, 100%); display:flex; flex-direction:column; }
+  .invTop { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .invTop .tabs { margin:0; flex:1; } .invTop h2 { margin:0; flex:1; }
+  .mc.xbtn { width:38px; min-width:38px; height:30px; padding:0; font-size:16px; flex:none; }
+  .invBody { display:flex; gap:8px; height:min(420px, calc(100dvh - 150px)); min-height:180px; }
+  .invBody.solo { display:block; height:auto; }
+  #invSide { display:flex; flex-direction:column; gap:3px; width:54px; flex:none; overflow:auto; }
+  .vtab { flex:1 1 40px; min-height:30px; max-height:46px; padding:0; border:2px solid #000; background:#8b8b8b; color:#fff; box-shadow:inset 2px 2px 0 #aaa, inset -2px -2px 0 #555; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; font-family:inherit; }
+  .vtab span { font-size:18px; line-height:1; } .vtab small { font-size:10px; line-height:1.1; margin-top:2px; text-shadow:1px 1px 0 #333; white-space:nowrap; }
+  .vtab.on { background:#4f8a34; box-shadow:inset 2px 2px 0 #8fd06a, inset -2px -2px 0 #2f5a1e; }
+  .vsep { flex:none; height:4px; display:block; }
+  .invMain { flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; }
+  .invBody.solo .invMain { display:block; }
+  #bagView, #craftView { display:flex; flex-direction:column; flex:1; min-height:0; }
+  .invHead { display:flex; align-items:center; gap:6px; font-size:13px; margin-bottom:4px; flex:none; }
+  .invHead b { font-weight:400; } #bagUse { font-size:11px; opacity:.8; flex:1; }
+  .invHead .mc { height:26px; font-size:12px; padding:0 8px; }
+  #invGrid, #craftList { flex:1; min-height:0; overflow:auto; background:#8b8b8b; overscroll-behavior:contain; }
+  #craftStage { flex:none; font-size:11px; color:#2a2a4a; background:#e6e0f4; border:2px solid #7a6aa8; padding:2px 6px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+  #craftStage b { color:#4a2a8a; font-weight:400; }
+  #smeltJobs:empty { display:none; } #smeltJobs { flex:none; font-size:12px; margin-bottom:4px; }
+  .rtile { width:calc(var(--slot) + 8px); height:calc(var(--slot) + 8px); padding:6px; border:none; background:#a0a0a0; box-shadow:inset 2px 2px 0 #373737, inset -2px -2px 0 #fff; position:relative; cursor:pointer; }
+  .rtile img { width:100%; height:100%; image-rendering:pixelated; display:block; pointer-events:none; }
+  .rtile.no { background:#c4554e; } .rtile.rep { background:#7d9a6a; }
+  .rtile.lockd { background:#555; } .rtile.lockd img, .big.lockd img { filter:brightness(0) opacity(.5); }
+  .rtile.pick { outline:3px solid #ffe27a; outline-offset:-3px; }
+  .rtile i { position:absolute; right:2px; bottom:0; font-style:normal; font-size:12px; color:#fff; text-shadow:2px 2px 0 #3f3f3f; line-height:1; }
+  .rtile em { position:absolute; left:1px; top:0; font-style:normal; font-size:11px; line-height:1; }
+  #invDetail { width:220px; flex:none; overflow:auto; background:#d8d8d8; border:2px solid #8b8b8b; padding:8px; font-size:12px; line-height:1.45; color:#3f3f3f; overscroll-behavior:contain; }
+  .dtop { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .dtop .big { width:50px; height:50px; flex:none; background:#8b8b8b; box-shadow:inset 2px 2px 0 #373737, inset -2px -2px 0 #fff; padding:7px; }
+  .dtop .big img { width:100%; height:100%; image-rendering:pixelated; display:block; }
+  .dtop b { font-size:14px; font-weight:400; display:block; } .dtop small { opacity:.75; }
+  .dneed { display:flex; align-items:center; gap:6px; padding:2px 4px; margin:2px 0; background:#c6c6c6; cursor:pointer; }
+  .dneed img { width:22px; height:22px; image-rendering:pixelated; flex:none; } .dneed span { flex:1; min-width:0; } .dneed em { font-style:normal; }
+  .dneed.lack { background:#ebb7b2; } .dneed.lack em { color:#a01e14; }
+  .dreq { display:inline-block; font-size:11px; padding:1px 5px; margin:3px 3px 0 0; background:#c6c6c6; border:1px solid #8b8b8b; } .dreq.lack { background:#ebb7b2; }
+  #invDetail .mc { display:block; width:100%; height:auto; min-height:34px; margin-top:5px; font-size:13px; white-space:normal; line-height:1.2; padding:4px 6px; }
+  #invDetail .mc.dmake { background:#4f8a34; color:#fff; } #invDetail .mc.dmake.off { filter:grayscale(1); opacity:.7; }
+  #invDetail .drow { display:flex; gap:4px; } #invDetail .drow .mc { flex:1; min-width:0; font-size:12px; padding:4px 2px; }
+  .dhint { opacity:.8; font-size:11px; margin-top:6px; } .dempty { opacity:.8; padding:6px 2px; }
+  .ddur { height:5px; background:#000; margin:4px 0; } .ddur s { display:block; height:100%; }
+  #invName { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:18px; }
+  .bagEmpty { grid-column:1 / -1; font-size:12px; color:#eee; padding:12px 6px; }
+  #chest .panel.chestPanel { width:min(900px, 100%); }
+  .chestCols { display:flex; gap:10px; }
+  .ccol { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .ccol h3 { font-size:12px; font-weight:400; margin:0 0 3px; }
+  .chestCols .cgrid { height:min(300px, calc(100dvh - 200px)); }
+  .chestPanel .pfoot { align-items:center; gap:4px; } #chestName { flex:1; min-width:0; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  @media (orientation:portrait) {
+    .invBody { flex-wrap:wrap; height:auto; }
+    .invMain { flex:1 1 calc(100% - 62px); height:44dvh; }
+    #invSide { height:44dvh; }
+    #invDetail { width:100%; max-height:28dvh; }
+    .chestCols { flex-direction:column; } .chestCols .cgrid { height:24dvh; }
+  }
   @media (orientation:landscape) { body.touch #toast { bottom:calc(112px + var(--sab)); } }
   /* ⑫ 손가락으로 누르기 쉬운 크기(작게 나오던 것만) */
   body.touch #mapCap { padding:6px 0 5px; }
@@ -719,39 +773,45 @@
 
 <!-- 가방·만들기 -->
 <div id="inv" class="screen dim">
-  <div class="panel">
-    <div class="tabs"><button id="tabBag" class="tab on">🎒 가방</button><button id="tabCraft" class="tab">🔨 만들기</button><button id="tabDex" class="tab">📖 도감</button><button id="tabAch" class="tab">🏅 업적</button></div>
-    <div id="bagView">
-      <h2>🎒 가방 — 눌러서 집고, 다른 칸을 누르면 자리를 바꿔요 <small id="bagUse"></small> <button id="bagSort" class="mc" style="height:26px;font-size:12px;padding:0 8px;">↕ 정렬</button> <button id="bagDrop" class="mc" style="display:none;height:26px;font-size:12px;padding:0 8px;">🗑 집은 묶음 버리기</button><button id="hotClear" class="mc" style="display:none;height:26px;font-size:12px;padding:0 8px;">집은 단축 칸 비우기</button></h2>
-      <div id="bagCats" class="bagCats"></div>
-      <div id="invGrid"></div>
-      <h2 class="hoth">손에 들 단축 칸 1~9 — 가방에서 집은 것을 여기 눌러 넣어요 · 단축 칸을 집어 가방 칸에 놓으면 비워져요</h2>
-      <div id="invHot"></div>
+  <div class="panel invPanel">
+    <div class="invTop"><div class="tabs"><button id="tabBag" class="tab on">🎒 가방·만들기</button><button id="tabDex" class="tab">📖 도감</button><button id="tabAch" class="tab">🏅 업적</button></div><button id="invDone" class="mc xbtn" title="닫기 (E)" aria-label="닫기">✕</button></div>
+    <div id="invBody" class="invBody">
+      <div id="invSide"></div>
+      <div class="invMain">
+        <div id="bagView">
+          <div class="invHead"><b>🎒 가방</b> <small id="bagUse"></small> <button id="bagSort" class="mc">↕ 정리</button></div>
+          <div id="bagCats" class="bagCats"></div>
+          <div id="invGrid"></div>
+        </div>
+        <div id="craftView" style="display:none">
+          <input id="craftQ" placeholder="🔍 이름으로 찾기" aria-label="만들 것 이름으로 찾기">
+          <div id="craftStage"></div>
+          <div id="smeltJobs"></div>
+          <div id="craftList"></div>
+        </div>
+        <div id="achView" style="display:none"><div id="achCount"></div><div id="achGrid"></div></div>
+        <div id="dexView" style="display:none">
+          <div id="dexCount"></div>
+          <div id="dexGrid"></div>
+        </div>
+      </div>
+      <div id="invDetail"></div>
     </div>
-    <div id="craftView" style="display:none">
-      <div class="ccats"><button id="cc_block" class="tab on">🧱 블록</button><button id="cc_shape" class="tab">🚪 모양</button><button id="cc_tool" class="tab">⛏ 도구</button><button id="cc_smelt" class="tab">🔥 녹이기</button><button id="cc_wear" class="tab">👕 옷</button></div>
-      <div id="craftList"></div>
-    </div>
-    <div id="achView" style="display:none"><div id="achCount"></div><div id="achGrid"></div></div>
-    <div id="dexView" style="display:none">
-      <div id="dexCount"></div>
-      <div id="dexGrid"></div>
-    </div>
+    <div id="invHot"></div>
     <div id="invName"></div>
-    <div id="dropRow" hidden><button id="drop1" class="mc">🫳 1개 버리기</button> <button id="dropAll" class="mc">모두 버리기</button></div>
-    <div class="pfoot"><button id="invDone" class="mc" style="width:120px">완료</button></div>
   </div>
 </div>
 
 <!-- 큰 지도 -->
 <div id="chest" class="screen dim">
-  <div class="panel">
-    <h2>📦 궤 — 위는 궤 안, 아래는 가방이에요. 누르면 옮겨요 <small>(출 25:10)</small></h2>
-    <div id="chestGrid" class="cgrid"></div>
-    <h2 style="margin-top:8px">🎒 가방</h2>
-    <div id="chestBag" class="cgrid"></div>
-    <div id="chestName"></div>
-    <div class="pfoot"><button id="chestSort" class="mc">재료 정리</button><button id="chestTakeAll" class="mc">한꺼번에 꺼내기</button><button id="chestOne" class="mc" style="width:150px">한 개씩: 끔</button> <button id="chestDone" class="mc" style="width:120px">완료</button></div>
+  <div class="panel chestPanel">
+    <div class="invTop"><h2>📦 궤 <small>(출 25:10)</small></h2><button id="chestDone" class="mc xbtn" title="닫기" aria-label="닫기">✕</button></div>
+    <div class="chestCols">
+      <div class="ccol"><h3>궤 안 — 누르면 가방으로</h3><div id="chestGrid" class="cgrid"></div></div>
+      <div class="ccol"><h3>🎒 내 가방 — 누르면 궤에</h3><div id="chestBag" class="cgrid"></div></div>
+    </div>
+    <div id="chestHot"></div>
+    <div class="pfoot"><span id="chestName"></span><button id="chestSort" class="mc">재료 정리</button><button id="chestTakeAll" class="mc">한꺼번에 꺼내기</button><button id="chestOne" class="mc" style="width:150px">한 개씩: 끔</button></div>
   </div>
 </div>
 <div id="frontierChest" class="screen dim"><div class="panel frontierStock">
@@ -931,6 +991,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=917ff5a2f2"></script>
+<script src="assets/ark-game.js?v=1b6ec1acc5"></script>
 </body>
 </html>
