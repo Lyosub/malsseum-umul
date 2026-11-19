@@ -2920,6 +2920,20 @@
     P.yaw -= dx * k; P.pitch -= dy * k;
     P.pitch = Math.max(-1.53, Math.min(1.53, P.pitch));
   }
+  // 가로/세로 바꾸기: 말씀우물 앱은 세로로 묶여 있어서(manifest) 게임에서만 방향을 바꿔 준다
+  function rotateScreen() {
+    var so = screen.orientation, cur = (so && so.type) || (innerWidth > innerHeight ? 'landscape' : 'portrait');
+    var want = cur.indexOf('portrait') === 0 ? 'landscape' : 'portrait';
+    function done() { toast(want === 'landscape' ? '📱 가로 화면으로 바꿨어요' : '📱 세로 화면으로 바꿨어요'); }
+    function fail() { toast('이 휴대폰에서는 버튼으로 돌릴 수 없어요. 휴대폰 자동 회전을 켜고 직접 돌려 주세요'); }
+    if (!so || !so.lock) return fail();
+    so.lock(want).then(done, function () {
+      var el = document.documentElement, rf = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (!rf) return fail();
+      Promise.resolve(rf.call(el)).then(function () { return so.lock(want); }).then(done, fail);
+    });
+  }
+  window.addEventListener('pagehide', function () { try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {} });
   function toggleFly() {
     if (!isAdm()) { if (P.fly) { P.fly = false; document.body.classList.remove('flying'); } return; }   // 날기는 관리자만
     if (furnitureRest) return;
@@ -3923,6 +3937,21 @@
     on('tHelp', function () { openPanel('help'); sfx('click'); });
     on('btnPause', function () { openPanel('pause'); sfx('click'); });
     on('btnView', cycleView);
+    // 접고 펴기: 위쪽 버튼 줄 · 처음 안내 · 작은 지도(이 기기에 기억)
+    function applyFold() {
+      var f = S.fold || {};
+      $('topRight').classList.toggle('fold', !!f.top); document.body.classList.toggle('topfold', !!f.top);
+      $('btnFold').querySelector('span').textContent = f.top ? '◀' : '▶'; $('btnFold').querySelector('small').textContent = f.top ? '펴기' : '접기';
+      $('quest').classList.toggle('fold', !!f.q); $('qFold').textContent = f.q ? '📜 안내 펴기 ▾' : '▴';
+      document.body.classList.toggle('mapfold', !!f.map);
+      $('mapCap').innerHTML = f.map ? '🗺 지도 펴기' : '지도<b class="k">M</b>';
+    }
+    function toggleFold(k) { S.fold = S.fold || {}; S.fold[k] = !S.fold[k]; saveSettings(); applyFold(); sfx('click'); }
+    on('btnFold', function () { toggleFold('top'); });
+    on('qFold', function () { toggleFold('q'); });
+    on('mapCap', function () { toggleFold('map'); });
+    on('btnRotate', rotateScreen);
+    applyFold();
     on('restUp', standFromFurniture);
     on('forestCancel', cancelForestRoute);
     on('go_frontier', function(){ startFrontierGuide(FRONTIER_ENTRY,'자유 개척지'); });
