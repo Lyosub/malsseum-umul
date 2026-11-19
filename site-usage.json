@@ -1,6 +1,6 @@
 {
-  "members": 52,
-  "new_members_7d": 3,
+  "members": 49,
+  "new_members_7d": 0,
   "active_today": 3,
   "active_7d": 13,
   "active_prev_7d": 18,
@@ -129,6 +129,6 @@
       "attendance_count": 13
     }
   ],
-  "generated_kst": "2026-11-19 21:40",
+  "generated_kst": "2026-11-19 23:40",
   "ok": true
 }
