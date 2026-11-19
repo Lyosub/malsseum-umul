@@ -4805,8 +4805,63 @@
   function waveHand() { waveUntil = performance.now() + 2000; sfx('pop'); if (S.view === 0) toast('👋 손을 흔들었어요 — 다른 사람에게 보여요'); }
   // ── 마을 사람 할 일(모두 선택): 상인 물물 교환, 농부 씨앗, 어부 낚싯대, 오병이어(요 6장) ──
   var TRADES = [[[LOG, 16], [ING_AG, 1]], [[STONE, 32], [ING_AG, 1]], [[WOOL, 4], [THREAD, 6]], [[ING_AG, 1], [POMEGRANATE, 3]], [[ING_AG, 1], [610, 1]], [[ING_AG, 2], [OLIVE_OIL, 2]]];
+  // ── 노아의 부탁(창 6~9장): 다섯 가지를 마치면 창 9:1 복과 함께 남쪽 개척 땅을 맡을 수 있다(서버: 2026-11-19-ark-noah-quest.sql)
+  // 노아는 지어낸 말을 하지 않는다 — 부탁은 게임 안내문으로, 말은 성경 구절로만
+  var NOAH = { step: 0, rainbow: 0, done: 0 };
+  try { var noahLs = JSON.parse(localStorage.getItem('arkVillage.noah') || 'null'); if (noahLs && typeof noahLs.step === 'number') NOAH = noahLs; } catch (e) {}
+  function noahSave() { try { localStorage.setItem('arkVillage.noah', JSON.stringify(NOAH)); } catch (e) {} stateDirty(); }
+  function noahPairs() { return CREATURE_KEYS.filter(function (k) { return DEX['c' + k]; }).length; }
+  var NOAH_STEPS = [
+    { e: '🪵', t: '고페르 나무 10개를 가져다 드리기', v: '너는 고페르 나무로 너를 위하여 방주를 만들되 그 안에 칸들을 막고 역청을 그 안팎에 칠하라', r: '창세기 6:14', prog: function () { return Math.min(10, have(GOPHER)) + '/10'; }, ok: function () { return have(GOPHER) >= 10; }, give: function () { take(GOPHER, 10); }, go: ['숲으로', function () { travel('forest'); }] },
+    { e: '⚫', t: '역청 3개를 가져다 드리기 — 남쪽 호수 동쪽 역청 구덩이에서 삽으로 캐요', v: '너는 고페르 나무로 너를 위하여 방주를 만들되 그 안에 칸들을 막고 역청을 그 안팎에 칠하라', r: '창세기 6:14', prog: function () { return Math.min(3, have(TAR)) + '/3'; }, ok: function () { return have(TAR) >= 3; }, give: function () { take(TAR, 3); }, go: ['호수로', function () { travel('lake'); }] },
+    { e: '🌾', t: '먹을 양식 가져다 드리기 — 밀 5개 또는 빵 2개', v: '너는 먹을 모든 양식을 네게로 가져다가 저축하라 이것이 너와 그들의 먹을 것이 되리라', r: '창세기 6:21', prog: function () { return '밀 ' + Math.min(5, have(WHEAT)) + '/5 · 빵 ' + Math.min(2, have(BREAD)) + '/2'; }, ok: function () { return have(WHEAT) >= 5 || have(BREAD) >= 2; }, give: function () { if (have(WHEAT) >= 5) take(WHEAT, 5); else take(BREAD, 2); } },
+    { e: '🐑', t: '여러 동물을 눌러 말씀 카드 보기 — 다섯 종류', v: '혈육 있는 모든 생물을 너는 각기 암수 한 쌍씩 방주로 이끌어들여 너와 함께 생명을 보존하게 하되', r: '창세기 6:19', prog: function () { return Math.min(5, noahPairs()) + '/5'; }, ok: function () { return noahPairs() >= 5; }, give: null },
+    { e: '🌈', t: '낮에 비가 그친 뒤 하늘의 무지개 보기 — 곧 비가 와요', v: '내가 내 무지개를 구름 속에 두었나니 이것이 나와 세상 사이의 언약의 증거니라', r: '창세기 9:13', prog: function () { return NOAH.rainbow ? '봤어요' : '아직'; }, ok: function () { return !!NOAH.rainbow; }, give: null }
+  ];
+  function noahWantsRain() { return started && !NOAH.done && NOAH.step === 4 && !NOAH.rainbow; }
+  function noahSawRainbow() { if (noahWantsRain()) { NOAH.rainbow = 1; noahSave(); toast('🌈 무지개를 봤어요 — 방주 앞 노아에게 가요'); } }
+  function noahFinish() {
+    NOAH.done = 1; noahSave(); unlock('noah');
+    if (client && me) client.rpc('finish_ark_noah').then(function () { fetchFrontier(true); }, function () {});
+    showVerseCard('🌈', '하나님이 복을 주셨어요', '하나님이 노아와 그 아들들에게 복을 주시며 그들에게 이르시되 생육하고 번성하여 땅에 충만하라', '창세기 9:1', '노아의 부탁을 다 마쳤어요 — 이제 남쪽 개척 땅을 맡을 수 있어요 (메뉴 → 마을 수첩 → 개척 땅)');
+  }
+  function openNoah() {
+    var old = $('noahBox'); if (old) old.remove();
+    $('card').classList.remove('show');   // 노아를 누르면 뜨는 구절 카드 대신 부탁 상자(구절이 들어 있음)
+    if (lockOn) { try { document.exitPointerLock(); } catch (e) {} }
+    var box = document.createElement('div'); box.id = 'noahBox';
+    box.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(16,16,24,.95);border:2px solid #000;box-shadow:inset 0 0 0 2px #c8a860;padding:12px 14px;color:#fff;font-size:14px;width:min(380px,92vw);max-height:86vh;overflow:auto';
+    function add(tag, text, css) { var el = document.createElement(tag); el.textContent = text; el.style.cssText = css || ''; box.appendChild(el); return el; }
+    function btn(label, fn, dis) { var b = document.createElement('button'); b.className = 'mc'; b.textContent = label; b.disabled = !!dis; b.style.cssText = 'display:block;width:100%;margin-top:6px;white-space:normal;height:auto;min-height:38px'; b.addEventListener('click', function (e) { e.stopPropagation(); fn(); }); box.appendChild(b); return b; }
+    if (NOAH.done) {
+      add('b', '🕊 노아의 부탁 — 다 마쳤어요', 'display:block;font-size:16px;color:#ffe27a;margin-bottom:6px');
+      add('p', '「하나님이 노아와 그 아들들에게 복을 주시며 그들에게 이르시되 생육하고 번성하여 땅에 충만하라」 (창세기 9:1)', 'margin:0 0 8px;font-size:13px;opacity:.9');
+      add('div', '남쪽 개척 땅을 맡아 넓혀 가요. 친구와 함께 짓고 창고도 함께 쓸 수 있어요.', 'font-size:13px');
+      btn('🗺 개척 땅 보기(마을 수첩)', function () { box.remove(); openVillageWork('frontier'); });
+    } else {
+      var s = NOAH_STEPS[NOAH.step], ready = s.ok() || isAdm();
+      add('b', '🕊 노아의 부탁 ' + (NOAH.step + 1) + '/5', 'display:block;font-size:16px;color:#ffe27a;margin-bottom:4px');
+      add('p', '「' + s.v + '」 (' + s.r + ')', 'margin:0 0 8px;font-size:12px;opacity:.85');
+      add('div', s.e + ' ' + s.t, 'font-size:14px;margin-bottom:4px');
+      add('div', '지금: ' + s.prog(), 'font-size:13px;color:#bfe0a0');
+      if (NOAH.step === 4 && !NOAH.rainbow) rainTimer = Math.min(rainTimer, 20);   // 무지개 부탁을 들으면 곧 비가 온다
+      btn(s.give ? '가져다 드리기' : '마쳤어요', function () {
+        if (!(s.ok() || isAdm())) return;
+        if (s.give && !isAdm()) s.give();
+        bagChanged(); sfx('craft');
+        NOAH.step++; noahSave(); box.remove();
+        if (NOAH.step >= NOAH_STEPS.length) noahFinish();
+        else { toast('🕊 다음 부탁: ' + NOAH_STEPS[NOAH.step].t); openNoah(); }
+      }, !ready);
+      if (s.go) btn('🧭 ' + s.go[0], function () { box.remove(); s.go[1](); });
+      add('div', '다 마치면 남쪽 개척 땅을 맡을 수 있어요 (창 9:1)', 'font-size:12px;opacity:.7;margin-top:8px');
+    }
+    btn('닫기', function () { box.remove(); });
+    document.body.appendChild(box); sfx('pop');
+  }
   function villageNpcTap(npc) {
     var nm = npc.d.name;
+    if (nm === '노아') { openNoah(); return true; }
     if (nm === '상인') { openTrade(); return true; }
     if (nm === '농부') {
       var hasSeed = Object.keys(FARM_SEEDS).some(function (k) { return have(+k) > 0; }) || have(SEED) > 0, dayN = Math.floor(dayT / DAY_LEN);
@@ -5111,6 +5166,7 @@
     { text: '🚪 문을 만들어 집에 달기(고페르 나무 6)', done: function () { return [60, 61, 62, 63, 64, 65, 66, 67].some(plotHas); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'shape'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
     { text: '🔥 등불이나 횃불로 집 안 밝히기', done: function () { return plotHas(LAMP) || plotHas(TORCH) || [170, 171, 172, 173].some(plotHas); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
     { text: '🛏 침대를 놓아 쉴 곳 만들기(양털 3 + 고페르 나무 3)', done: function () { return plotHas(BED); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
+    { text: '🕊 방주 문 앞 노아의 부탁 다섯 가지 마치기 → 개척 땅', prog: function () { return (NOAH.done ? 5 : NOAH.step) + '/5'; }, done: function () { return !!NOAH.done; }, btn: ['노아에게', function () { travel('ark'); }], guest: '🏠 로그인하면 노아의 부탁을 받고 개척 땅을 맡을 수 있어요' },
     { text: '🐑 울타리로 우리를 짓고 밀을 들고 양을 데려오기', done: function () { return HERD.length > 0; }, btn: ['내 땅으로', function () { goHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' }
   ];
   function questSave() { try { localStorage.setItem('arkVillage.quest', JSON.stringify({ stats: stats, step: qStep })); } catch (e) {} }
@@ -5277,7 +5333,7 @@
     }
     if (rainTimer<=0) {
       if (rainOn) { rainOn=false;rainTimer=150+Math.random()*150;if(dayF>.6)rainbowUntil=dayT+44; }
-      else if (Math.random()<[.63,.20,.55,.06][season]) {rainOn=true;rainTimer=55+Math.random()*65;}
+      else if (noahWantsRain() || Math.random()<[.63,.20,.55,.06][season]) {rainOn=true;rainTimer=noahWantsRain()?30:55+Math.random()*65;}
       else rainTimer=65;
     }
     rain += ((rainOn ? 1 : 0) - rain) * Math.min(1, dt * 0.25);
@@ -5305,7 +5361,7 @@
     sunM.position.set(cp.x + dx * 250, cp.y + dy * 250, cp.z - 70); sunM.lookAt(cp); sunM.visible = dy > -0.2 && rain < 0.7;
     moonM.position.set(cp.x - dx * 250, cp.y - dy * 250, cp.z + 70); moonM.lookAt(cp); moonM.visible = dy < 0.2; moonM.material.opacity = 1 - rain * 0.8;
     rainbow.forEach(function(line){
-      line.visible=dayT<rainbowUntil&&rain<.32&&dayF>.55&&caveK<.3;
+      line.visible=dayT<rainbowUntil&&rain<.32&&dayF>.55&&caveK<.3; if (line.visible) noahSawRainbow();
       if(line.visible)line.position.set(cp.x,Math.max(G+3,cp.y-26),cp.z-155);
     });
     stars.position.copy(cp); stars.material.opacity = (1 - dayF) * (1 - rain);
@@ -6687,6 +6743,7 @@
     ['valley', '🕯', '골짜기의 빛', '일곱 등잔대를 모두 밝혀요(시 23:4)'], ['home', '🏙', '본향에 이르다', '거룩한 성에 들어가요(히 11:16)'],
     ['party', '🤝', '함께 가는 길', '친구와 파티를 맺어요(시 133:1)'], ['pq', '🏷', '함께 받은 상', '파티 퀘스트 하나를 끝까지 채워요(전 4:9)'], ['cord', '🪢', '세 겹 줄', '파티 퀘스트를 모두 채워요(전 4:12)'], ['dex', '📖', '도감 완성', '도감을 다 채워요'],
     ['loaves', '🧺', '열두 바구니', '보리떡 다섯과 물고기 둘을 아이와 나눠요(요 6:13)'],
+    ['noah', '🕊', '노아의 부탁', '노아의 부탁 다섯 가지를 마쳐요(창 6:22)'],
     ['together', '🤝', '함께 지었어요', '이번 주 마을 목표를 함께 채워요(느 2:18)'],
     ['rock', '💧', '반석의 물', '지팡이로 호렙의 반석을 쳐요(출 17:6)'], ['tabernacle', '⛺', '성막 모형', '내 땅에 성막 모형을 다 지어요(출 40:34)'], ['manna', '🍯', '일용할 만나', '광야에서 아침 만나를 거둬요(출 16:15)']
   ];
@@ -6885,7 +6942,7 @@
   function stateDirty() { stateDirtyF = true; }
   function stateGather() {
     var horses = []; try { horses = JSON.parse(localStorage.getItem('arkVillage.horses') || '[]'); } catch (e) {}
-    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, spawn: SPAWN, ach: ACH, quest: { stats: stats, step: qStep }, story: STORY, tutorial: tutorialStep, titles: { t: MYTITLE, got: GOTTITLES } };
+    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, spawn: SPAWN, ach: ACH, noah: NOAH, quest: { stats: stats, step: qStep }, story: STORY, tutorial: tutorialStep, titles: { t: MYTITLE, got: GOTTITLES } };
   }
   function stateApply(d) {
     if (!d || d.v !== 1) return;
@@ -6897,6 +6954,7 @@
     if (d.crops) CROPS = d.crops; if (d.saps) { SAPS = d.saps; saveSaps(); }
     if (typeof d.hp === 'number') HP = Math.max(1, Math.min(20, d.hp)); if (typeof d.food === 'number') FOOD = Math.max(0, Math.min(20, d.food));
     SPAWN = d.spawn || null; if (d.ach) ACH = d.ach;
+    if (d.noah && typeof d.noah.step === 'number' && ((d.noah.done || 0) > (NOAH.done || 0) || d.noah.step > NOAH.step)) { NOAH = d.noah; try { localStorage.setItem('arkVillage.noah', JSON.stringify(NOAH)); } catch (e) {} }
     if (d.titles) { for (var tk in (d.titles.got || {})) if (TITLES[+tk]) GOTTITLES[tk] = d.titles.got[tk]; if (typeof d.titles.t === 'number' && (d.titles.t < 0 || GOTTITLES[d.titles.t])) MYTITLE = d.titles.t; try { localStorage.setItem('arkVillage.title', String(MYTITLE)); localStorage.setItem('arkVillage.titles', JSON.stringify(GOTTITLES)); } catch (e) {} }
     if (d.story) { mergeStory(d.story); try { localStorage.setItem('arkVillage.story', JSON.stringify(STORY)); } catch (e) {} }
     if (Number.isInteger(d.tutorial) && d.tutorial >= 0 && d.tutorial <= 9) {
@@ -8675,8 +8733,10 @@
       body.appendChild(row);
       villageText(row,(slot+1)+'번 · '+(a.own?'내 개척 땅':a.canEdit?'친구와 함께 짓는 땅':a.canStock?'창고를 함께 쓰는 땅':a.claimed?'구경 가능':'비어 있음'));
       villageButton(row,'길 안내',function(){startFrontierGuide([(box[0]+box[2])/2,box[1]-2],'개척 땅 '+(slot+1)+'번');});
-      if(!a.claimed&&!Object.values(frontierPlots).some(function(it){return it.own;}))
-        villageButton(row,'땅 맡기',function(){changeFrontier(slot,'claim');});
+      if(!a.claimed&&!Object.values(frontierPlots).some(function(it){return it.own;})) {
+        if(NOAH.done||isAdm()) villageButton(row,'땅 맡기',function(){ if(NOAH.done&&!isAdm()) client.rpc('finish_ark_noah').then(function(){changeFrontier(slot,'claim');},function(){changeFrontier(slot,'claim');}); else changeFrontier(slot,'claim'); });
+        else if(slot===0) { villageText(row,'🕊 방주 앞 노아의 부탁 다섯 가지를 마치면 맡을 수 있어요 (창 9:1)'); villageButton(row,'노아에게 가기',function(){travel('ark');}); }
+      }
       if(!a.own)return;
       FRIENDS.rows.filter(function(f){return f.status==='accepted';}).forEach(function(f){
         var line=document.createElement('div');line.className='vme';body.appendChild(line);
@@ -8790,7 +8850,7 @@
     scene.add(goalDeco);
   }
   // 점검 함수: 내 컴퓨터(시험 서버)와 선생님 계정에서만 연다 — 학생이 개발자 창에서 물건을 만들어 내지 못하게
-  var ARK_DBG = { goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+  var ARK_DBG = { dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };

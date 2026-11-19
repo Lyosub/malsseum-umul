@@ -119,7 +119,7 @@
     }
     if (rainTimer<=0) {
       if (rainOn) { rainOn=false;rainTimer=150+Math.random()*150;if(dayF>.6)rainbowUntil=dayT+44; }
-      else if (Math.random()<[.63,.20,.55,.06][season]) {rainOn=true;rainTimer=55+Math.random()*65;}
+      else if (noahWantsRain() || Math.random()<[.63,.20,.55,.06][season]) {rainOn=true;rainTimer=noahWantsRain()?30:55+Math.random()*65;}
       else rainTimer=65;
     }
     rain += ((rainOn ? 1 : 0) - rain) * Math.min(1, dt * 0.25);
@@ -147,7 +147,7 @@
     sunM.position.set(cp.x + dx * 250, cp.y + dy * 250, cp.z - 70); sunM.lookAt(cp); sunM.visible = dy > -0.2 && rain < 0.7;
     moonM.position.set(cp.x - dx * 250, cp.y - dy * 250, cp.z + 70); moonM.lookAt(cp); moonM.visible = dy < 0.2; moonM.material.opacity = 1 - rain * 0.8;
     rainbow.forEach(function(line){
-      line.visible=dayT<rainbowUntil&&rain<.32&&dayF>.55&&caveK<.3;
+      line.visible=dayT<rainbowUntil&&rain<.32&&dayF>.55&&caveK<.3; if (line.visible) noahSawRainbow();
       if(line.visible)line.position.set(cp.x,Math.max(G+3,cp.y-26),cp.z-155);
     });
     stars.position.copy(cp); stars.material.opacity = (1 - dayF) * (1 - rain);

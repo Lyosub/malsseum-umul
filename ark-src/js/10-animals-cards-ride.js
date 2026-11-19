@@ -341,8 +341,63 @@
   function waveHand() { waveUntil = performance.now() + 2000; sfx('pop'); if (S.view === 0) toast('👋 손을 흔들었어요 — 다른 사람에게 보여요'); }
   // ── 마을 사람 할 일(모두 선택): 상인 물물 교환, 농부 씨앗, 어부 낚싯대, 오병이어(요 6장) ──
   var TRADES = [[[LOG, 16], [ING_AG, 1]], [[STONE, 32], [ING_AG, 1]], [[WOOL, 4], [THREAD, 6]], [[ING_AG, 1], [POMEGRANATE, 3]], [[ING_AG, 1], [610, 1]], [[ING_AG, 2], [OLIVE_OIL, 2]]];
+  // ── 노아의 부탁(창 6~9장): 다섯 가지를 마치면 창 9:1 복과 함께 남쪽 개척 땅을 맡을 수 있다(서버: 2026-11-19-ark-noah-quest.sql)
+  // 노아는 지어낸 말을 하지 않는다 — 부탁은 게임 안내문으로, 말은 성경 구절로만
+  var NOAH = { step: 0, rainbow: 0, done: 0 };
+  try { var noahLs = JSON.parse(localStorage.getItem('arkVillage.noah') || 'null'); if (noahLs && typeof noahLs.step === 'number') NOAH = noahLs; } catch (e) {}
+  function noahSave() { try { localStorage.setItem('arkVillage.noah', JSON.stringify(NOAH)); } catch (e) {} stateDirty(); }
+  function noahPairs() { return CREATURE_KEYS.filter(function (k) { return DEX['c' + k]; }).length; }
+  var NOAH_STEPS = [
+    { e: '🪵', t: '고페르 나무 10개를 가져다 드리기', v: '너는 고페르 나무로 너를 위하여 방주를 만들되 그 안에 칸들을 막고 역청을 그 안팎에 칠하라', r: '창세기 6:14', prog: function () { return Math.min(10, have(GOPHER)) + '/10'; }, ok: function () { return have(GOPHER) >= 10; }, give: function () { take(GOPHER, 10); }, go: ['숲으로', function () { travel('forest'); }] },
+    { e: '⚫', t: '역청 3개를 가져다 드리기 — 남쪽 호수 동쪽 역청 구덩이에서 삽으로 캐요', v: '너는 고페르 나무로 너를 위하여 방주를 만들되 그 안에 칸들을 막고 역청을 그 안팎에 칠하라', r: '창세기 6:14', prog: function () { return Math.min(3, have(TAR)) + '/3'; }, ok: function () { return have(TAR) >= 3; }, give: function () { take(TAR, 3); }, go: ['호수로', function () { travel('lake'); }] },
+    { e: '🌾', t: '먹을 양식 가져다 드리기 — 밀 5개 또는 빵 2개', v: '너는 먹을 모든 양식을 네게로 가져다가 저축하라 이것이 너와 그들의 먹을 것이 되리라', r: '창세기 6:21', prog: function () { return '밀 ' + Math.min(5, have(WHEAT)) + '/5 · 빵 ' + Math.min(2, have(BREAD)) + '/2'; }, ok: function () { return have(WHEAT) >= 5 || have(BREAD) >= 2; }, give: function () { if (have(WHEAT) >= 5) take(WHEAT, 5); else take(BREAD, 2); } },
+    { e: '🐑', t: '여러 동물을 눌러 말씀 카드 보기 — 다섯 종류', v: '혈육 있는 모든 생물을 너는 각기 암수 한 쌍씩 방주로 이끌어들여 너와 함께 생명을 보존하게 하되', r: '창세기 6:19', prog: function () { return Math.min(5, noahPairs()) + '/5'; }, ok: function () { return noahPairs() >= 5; }, give: null },
+    { e: '🌈', t: '낮에 비가 그친 뒤 하늘의 무지개 보기 — 곧 비가 와요', v: '내가 내 무지개를 구름 속에 두었나니 이것이 나와 세상 사이의 언약의 증거니라', r: '창세기 9:13', prog: function () { return NOAH.rainbow ? '봤어요' : '아직'; }, ok: function () { return !!NOAH.rainbow; }, give: null }
+  ];
+  function noahWantsRain() { return started && !NOAH.done && NOAH.step === 4 && !NOAH.rainbow; }
+  function noahSawRainbow() { if (noahWantsRain()) { NOAH.rainbow = 1; noahSave(); toast('🌈 무지개를 봤어요 — 방주 앞 노아에게 가요'); } }
+  function noahFinish() {
+    NOAH.done = 1; noahSave(); unlock('noah');
+    if (client && me) client.rpc('finish_ark_noah').then(function () { fetchFrontier(true); }, function () {});
+    showVerseCard('🌈', '하나님이 복을 주셨어요', '하나님이 노아와 그 아들들에게 복을 주시며 그들에게 이르시되 생육하고 번성하여 땅에 충만하라', '창세기 9:1', '노아의 부탁을 다 마쳤어요 — 이제 남쪽 개척 땅을 맡을 수 있어요 (메뉴 → 마을 수첩 → 개척 땅)');
+  }
+  function openNoah() {
+    var old = $('noahBox'); if (old) old.remove();
+    $('card').classList.remove('show');   // 노아를 누르면 뜨는 구절 카드 대신 부탁 상자(구절이 들어 있음)
+    if (lockOn) { try { document.exitPointerLock(); } catch (e) {} }
+    var box = document.createElement('div'); box.id = 'noahBox';
+    box.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(16,16,24,.95);border:2px solid #000;box-shadow:inset 0 0 0 2px #c8a860;padding:12px 14px;color:#fff;font-size:14px;width:min(380px,92vw);max-height:86vh;overflow:auto';
+    function add(tag, text, css) { var el = document.createElement(tag); el.textContent = text; el.style.cssText = css || ''; box.appendChild(el); return el; }
+    function btn(label, fn, dis) { var b = document.createElement('button'); b.className = 'mc'; b.textContent = label; b.disabled = !!dis; b.style.cssText = 'display:block;width:100%;margin-top:6px;white-space:normal;height:auto;min-height:38px'; b.addEventListener('click', function (e) { e.stopPropagation(); fn(); }); box.appendChild(b); return b; }
+    if (NOAH.done) {
+      add('b', '🕊 노아의 부탁 — 다 마쳤어요', 'display:block;font-size:16px;color:#ffe27a;margin-bottom:6px');
+      add('p', '「하나님이 노아와 그 아들들에게 복을 주시며 그들에게 이르시되 생육하고 번성하여 땅에 충만하라」 (창세기 9:1)', 'margin:0 0 8px;font-size:13px;opacity:.9');
+      add('div', '남쪽 개척 땅을 맡아 넓혀 가요. 친구와 함께 짓고 창고도 함께 쓸 수 있어요.', 'font-size:13px');
+      btn('🗺 개척 땅 보기(마을 수첩)', function () { box.remove(); openVillageWork('frontier'); });
+    } else {
+      var s = NOAH_STEPS[NOAH.step], ready = s.ok() || isAdm();
+      add('b', '🕊 노아의 부탁 ' + (NOAH.step + 1) + '/5', 'display:block;font-size:16px;color:#ffe27a;margin-bottom:4px');
+      add('p', '「' + s.v + '」 (' + s.r + ')', 'margin:0 0 8px;font-size:12px;opacity:.85');
+      add('div', s.e + ' ' + s.t, 'font-size:14px;margin-bottom:4px');
+      add('div', '지금: ' + s.prog(), 'font-size:13px;color:#bfe0a0');
+      if (NOAH.step === 4 && !NOAH.rainbow) rainTimer = Math.min(rainTimer, 20);   // 무지개 부탁을 들으면 곧 비가 온다
+      btn(s.give ? '가져다 드리기' : '마쳤어요', function () {
+        if (!(s.ok() || isAdm())) return;
+        if (s.give && !isAdm()) s.give();
+        bagChanged(); sfx('craft');
+        NOAH.step++; noahSave(); box.remove();
+        if (NOAH.step >= NOAH_STEPS.length) noahFinish();
+        else { toast('🕊 다음 부탁: ' + NOAH_STEPS[NOAH.step].t); openNoah(); }
+      }, !ready);
+      if (s.go) btn('🧭 ' + s.go[0], function () { box.remove(); s.go[1](); });
+      add('div', '다 마치면 남쪽 개척 땅을 맡을 수 있어요 (창 9:1)', 'font-size:12px;opacity:.7;margin-top:8px');
+    }
+    btn('닫기', function () { box.remove(); });
+    document.body.appendChild(box); sfx('pop');
+  }
   function villageNpcTap(npc) {
     var nm = npc.d.name;
+    if (nm === '노아') { openNoah(); return true; }
     if (nm === '상인') { openTrade(); return true; }
     if (nm === '농부') {
       var hasSeed = Object.keys(FARM_SEEDS).some(function (k) { return have(+k) > 0; }) || have(SEED) > 0, dayN = Math.floor(dayT / DAY_LEN);
@@ -647,6 +702,7 @@
     { text: '🚪 문을 만들어 집에 달기(고페르 나무 6)', done: function () { return [60, 61, 62, 63, 64, 65, 66, 67].some(plotHas); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'shape'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
     { text: '🔥 등불이나 횃불로 집 안 밝히기', done: function () { return plotHas(LAMP) || plotHas(TORCH) || [170, 171, 172, 173].some(plotHas); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
     { text: '🛏 침대를 놓아 쉴 곳 만들기(양털 3 + 고페르 나무 3)', done: function () { return plotHas(BED); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
+    { text: '🕊 방주 문 앞 노아의 부탁 다섯 가지 마치기 → 개척 땅', prog: function () { return (NOAH.done ? 5 : NOAH.step) + '/5'; }, done: function () { return !!NOAH.done; }, btn: ['노아에게', function () { travel('ark'); }], guest: '🏠 로그인하면 노아의 부탁을 받고 개척 땅을 맡을 수 있어요' },
     { text: '🐑 울타리로 우리를 짓고 밀을 들고 양을 데려오기', done: function () { return HERD.length > 0; }, btn: ['내 땅으로', function () { goHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' }
   ];
   function questSave() { try { localStorage.setItem('arkVillage.quest', JSON.stringify({ stats: stats, step: qStep })); } catch (e) {} }
