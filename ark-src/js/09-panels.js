@@ -390,7 +390,7 @@
     on('tStart', startGame);
     on('tBook', function () { openPanel('book'); sfx('click'); });
     on('tHelp', function () { openPanel('help'); sfx('click'); });
-    on('btnPause', function () { openPanel('pause'); sfx('click'); });
+    on('btnPause', function () { openPanel('pause'); renderGoal(); fetchGoal(true); sfx('click'); });
     on('btnView', cycleView);
     // 접고 펴기: 위쪽 버튼 줄 · 처음 안내 · 작은 지도(이 기기에 기억)
     function applyFold() {
@@ -418,7 +418,7 @@
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
       var G = { game: ['mBook', 'mStory', 'mVillageWork', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
-        together: ['mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch'], settings: ['mLight', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
+        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch'], settings: ['mLight', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
       var sl = grid.querySelector('.slider'); if (sl) sl.setAttribute('data-g', 'settings');

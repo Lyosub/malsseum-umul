@@ -476,6 +476,11 @@
   /* 게임 메뉴 묶음 탭 */
   #pauseTabs { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin:0 0 8px; }
   #pause .grid3 > [data-g]:not(.gon) { display:none !important; }
+  .goalCard { grid-column:1 / -1; background:rgba(0,0,0,.35); border:2px solid #000; box-shadow:inset 0 0 0 2px #8a6a2a; padding:8px 10px; color:#fff; font-size:13px; line-height:1.45; text-align:left; }
+  .goalCard b { color:#ffe27a; font-size:14px; }
+  .goalBar { height:12px; background:#2a2a30; border:1px solid #000; margin:5px 0 3px; }
+  .goalBar i { display:block; height:100%; background:linear-gradient(#8fd06a,#4f9a3a); }
+  .goalTxt { font-size:12px; opacity:.9; }
   #villageWork .mc, #mapPinNow, #mapPins { min-height:40px; }
   #villageBody .vrow { flex-wrap:wrap; }
   #villageBody select, #mapPins { max-width:100%; font:inherit; }
@@ -675,6 +680,7 @@
   <div class="scrTitle sh">게임 메뉴</div>
   <div class="grid3">
     <button id="mResume" class="mc wide">게임으로 돌아가기</button>
+    <div id="goalCard" class="goalCard"></div>
     <button id="mBook" class="mc">📜 창세기 6장</button>
     <button id="mHelp" class="mc">조작 방법</button>
     <button id="mTour" class="mc">🧭 화면 안내 다시 보기</button>
@@ -920,6 +926,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=4d68f01308"></script>
+<script src="assets/ark-game.js?v=7ce9a2020d"></script>
 </body>
 </html>

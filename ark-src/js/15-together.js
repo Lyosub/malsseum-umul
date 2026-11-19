@@ -93,6 +93,7 @@
     if (!NET.ch) return;
     if (started) sendPos(now);
     if (now >= FRIENDS.poll) { FRIENDS.poll = now + 20000; friendsFetch(); }
+    if (started) fetchGoal();
     var k = Math.min(1, dt * 10);
     for (var u in NET.peers) {
       var p = NET.peers[u];
