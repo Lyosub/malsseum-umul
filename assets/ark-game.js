@@ -2564,15 +2564,6 @@
   }
   function startGame() {
     audioOn(); sfx('click');
-    if (isTouch) {
-      try {
-        var de = document.documentElement, rq = de.requestFullscreen || de.webkitRequestFullscreen;
-        if (rq) {
-          var pr = rq.call(de, { navigationUI: 'hide' });
-          if (pr && pr.catch) pr.catch(function () {});
-        }
-      } catch (e) {}
-    }
     if (furnaceOK()) SEEN[FURNACE] = 1; if (tableOK()) SEEN[CRAFT] = 1;   // 내 땅에 놓아 둔 용광로·제작대
     SLOTS.forEach(function (s) { if (WORN[s]) SEEN[WORN[s]] = 1; }); saveSeen();
     started = true; seenQuiet = false; lastStage = curStage().n;
@@ -3760,7 +3751,9 @@
       $('slabMode').textContent = '반 블록: ' + SLAB_NAMES[slabMode];
       mobileHudAt = 0;
     });
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', fitFriendKeyboard);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', fitMobileKeyboard);
+    }
     on('mHome', function () { resume(); goHome(); });
     on('mForest', function () { travel('forest'); });
     on('mHill', function () { travel('hill'); });
@@ -4649,11 +4642,13 @@
   }
   function openFriends() {
     if (!me) { toast(friendError('login')); return; }
-    openPanel('friends'); fitFriendKeyboard(); renderFriends(); friendsFetch();
+    openPanel('friends'); fitMobileKeyboard(); renderFriends(); friendsFetch();
   }
   var recentPlayers = new Map();
-  function fitFriendKeyboard() {
-    if (window.visualViewport) $('friends').style.setProperty('--friends-height', window.visualViewport.height + 'px');
+  function fitMobileKeyboard() {
+    if (isTouch && window.visualViewport) {
+      document.body.style.setProperty('--game-visible-height', window.visualViewport.height + 'px');
+    }
   }
   function rememberNearby(now) {
     if (!NET.on) return;
@@ -4975,7 +4970,15 @@
     }
 
     bindInput(canvasEl); bindUI(); renderHotbar();
-    window.addEventListener('resize', resize); applyLightMode(); fitFriendKeyboard();
+    window.addEventListener('resize', queueGameResize);
+    if (window.screen.orientation && window.screen.orientation.addEventListener) {
+      window.screen.orientation.addEventListener('change', queueGameResize);
+    } else {
+      window.addEventListener('orientationchange', queueGameResize);
+    }
+    if (window.ResizeObserver) new ResizeObserver(queueGameResize).observe(canvasEl);
+    applyLightMode();
+    fitMobileKeyboard();
 
     loadOnline().then(function () {
       ensureAround(XM, AZ0 + 60, 3);
@@ -5047,8 +5050,18 @@
     if (myPlot < 0) { toast(me ? '내 땅을 받는 중이에요' : '로그인하면 내 땅을 받을 수 있어요'); return; }
     var o = plotOrigin(myPlot); teleport(o.x + OLD_PLOT / 2, G, o.z - 2, Math.PI); tutorialEvent('home'); toast('내 땅(' + (myPlot + 1) + '번)이에요. 모은 블록으로 지어 보세요!');
   }
+  var gameResizeFrame = 0;
+  function queueGameResize() {
+    if (gameResizeFrame) return;
+    gameResizeFrame = requestAnimationFrame(function () {
+      gameResizeFrame = 0;
+      resize();
+      fitMobileKeyboard();
+    });
+  }
   function resize() {
-    var w = window.innerWidth, h = window.innerHeight;
+    var w = canvasEl.clientWidth, h = canvasEl.clientHeight;
+    if (!w || !h) return;
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
   }
 

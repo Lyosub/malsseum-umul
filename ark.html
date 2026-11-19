@@ -444,7 +444,6 @@
   #practiceTile.placed::before { opacity:.9; }
   #practiceTile span { position:relative; }
   #practiceMapView { border:2px solid #365e4b; background:#d7e6a0; padding:10px; }
-  body.touch #friends { bottom:auto; height:var(--friends-height,100dvh); }
   body.touch #friends .vpanel { display:flex; flex-direction:column; max-height:100%; min-height:0; }
   body.touch #friends .vme { flex-shrink:0; }
   body.touch #friendsNick { flex:1 1 120px; min-width:0; min-height:44px; font-size:16px; }
@@ -458,6 +457,49 @@
   #mapPins { grid-column:1/-1; }
   #mapPinLabel { min-width:0; min-height:40px; font:inherit; }
   #trailGuide:empty { display:none; }
+
+  body.touch .screen { bottom:auto; height:100vh; height:100dvh;
+    padding:calc(8px + var(--sat)) calc(8px + var(--sar)) calc(8px + var(--sab)) calc(8px + var(--sal));
+    overflow:auto; overscroll-behavior:contain; justify-content:flex-start; justify-content:safe center; }
+  body.touch .screen > * { flex-shrink:0; min-width:0; max-width:100%; }
+  body.touch .screen > .panel, body.touch .screen > .page { max-width:100%; max-height:100%; }
+  body.touch #friends.screen, body.touch #chat.screen { height:var(--game-visible-height, 100dvh); }
+  body.touch #chatList { min-height:36px; }
+  body.touch .crow, body.touch .vme, body.touch .pfoot, body.touch .tabs, body.touch .ccats { flex-wrap:wrap; gap:4px; }
+  body.touch #chatInput { font-size:16px; }
+  body.touch .grid2 { grid-template-columns:repeat(2, minmax(0, 1fr)); width:min(100%, 430px); }
+  body.touch .grid3 { grid-template-columns:repeat(3, minmax(0, 1fr)); width:min(100%, 526px); }
+  body.touch .grid2 .mc, body.touch .grid3 .mc, body.touch #map .side .mc { white-space:normal; text-align:center; height:auto; min-height:40px; padding:4px 6px; line-height:1.2; }
+  body.touch #title #tFoot { position:static; width:min(100%, 430px); margin-top:14px; }
+  body.touch #logo h1 { font-size:clamp(32px, 9vw, 52px); }
+  body.touch #pause.show { min-height:0; }
+  body.touch .rec { flex-wrap:wrap; }
+  body.touch #dexGrid { grid-template-columns:repeat(auto-fit, minmax(43px, 1fr)); }
+  body.touch .dslot { min-width:0; }
+  body.touch .dslot small { max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+  body.touch #map .wrap { width:min(100%, 880px); min-height:0; max-height:none; align-items:center; }
+  body.touch #map .side { max-width:100%; min-width:0; grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  @media (orientation:landscape) {
+    body.touch #map .wrap { max-height:100%; height:100%; justify-content:center; }
+    body.touch #bigmapc { width:min(42vw, calc(100dvh - var(--sat) - var(--sab) - 24px), 520px); height:auto; flex:none; }
+    body.touch #map .side { max-height:100%; max-width:53%; overflow:auto; overscroll-behavior:contain; padding:2px; }
+  }
+  @media (orientation:portrait) {
+    body.touch .grid3 { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    body.touch #portraitTip { position:static; transform:none; margin-top:10px; }
+    body.touch #invGrid, body.touch #invHot, body.touch #chestBag { grid-template-columns:repeat(9, minmax(0, 1fr)); }
+    body.touch #chestGrid { grid-template-columns:repeat(10, minmax(0, 1fr)); }
+    body.touch #clothGrid { grid-template-columns:repeat(9, minmax(0, 1fr)); }
+    body.touch #invGrid, body.touch #invHot, body.touch .cgrid { width:min(100%, 360px); }
+    body.touch #inv .panel, body.touch #chest .panel { width:min(100%, 490px); }
+    body.touch .islot { width:100%; height:auto; aspect-ratio:1; }
+    body.touch #hotbar { width:min(calc(100vw - var(--sal) - var(--sar) - 12px), 348px); }
+    body.touch #hotbar .slot { flex:1; min-width:0; width:auto; }
+    body.touch #topRight { max-width:calc(100vw - var(--sal) - var(--sar) - 100px); }
+    body.touch #topRight .ibtn { min-width:0; }
+    body.touch #map .wrap { width:min(100%, 360px); }
+    body.touch #bigmapc, body.touch #map .side { width:100%; }
+  }
 </style>
 </head>
 <body class="menu">
@@ -541,7 +583,7 @@
     <button id="tBook" class="mc">📜 창세기 6장</button>
     <button id="tHelp" class="mc">조작 방법</button>
   </div>
-  <div id="portraitTip">📱 휴대폰을 <b>가로</b>로 돌리면 더 넓게 보여요. 세로로도 그대로 할 수 있어요.</div>
+  <div id="portraitTip">📱 휴대폰을 <b>가로</b>로 돌리면 더 넓게 보여요. 세로로도 할 수 있어요. 안 돌아가면 휴대폰에서 자동 회전을 켜 주세요.</div>
   <div id="tFoot"><a href="index.html">← 말씀우물로</a><span id="tWho"></span></div>
 </div>
 
@@ -783,6 +825,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=20261119-village"></script>
+<script src="assets/ark-game.js?v=20261119-mobile-layout"></script>
 </body>
 </html>
