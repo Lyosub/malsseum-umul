@@ -4943,7 +4943,7 @@
   var stats = { log: 0, crafted: 0, placed: 0, tapped: 0 }, qStep = 0;
   try { var qs = JSON.parse(localStorage.getItem('arkVillage.quest') || 'null'); if (qs) { stats = qs.stats || stats; qStep = qs.step || 0; } } catch (e) {}
   var tutorialStored = false, tutorialStep = qStep >= 4 ? 9 : 0, tutorialWalk = false, tutorialLook = false, tutorialDoor = null;
-  var tutorialStartLog = stats.log || 0, tutorialStartCraft = stats.crafted || 0;
+  var tutorialStartLog = stats.log || 0, tutorialStartCraft = stats.crafted || 0, tutorialOneLogTold = false, tutorialOneCraftTold = false;
   try {
     var tut = localStorage.getItem('arkVillage.tutorial');
     if (tut !== null && /^[0-9]$/.test(tut)) { tutorialStep = +tut; tutorialStored = true; }
@@ -5012,8 +5012,8 @@
   function renderTutorial() {
     var text = [
       isTouch ? '방향키로 걷고 화면을 밀어 둘러봐요' : 'WASD로 걷고 마우스로 둘러봐요',
-      isTouch ? '통나무를 ＋에 맞추고 화면을 꾹 눌러요' : '통나무에 ＋를 맞추고 왼쪽 버튼을 꾹 눌러요',
-      '가방 → 만들기 → 블록에서 고페르 나무를 만들어요',
+      isTouch ? '통나무 2개를 캐요 — ＋에 맞추고 화면을 꾹 눌러요' : '통나무 2개를 캐요 — ＋를 맞추고 왼쪽 버튼을 꾹 눌러요',
+      '가방 → 만들기 → 블록에서 고페르 나무를 두 번 만들어요',
       isTouch ? '단축 칸에서 블록을 고르고 화면을 톡 눌러 놓아요' : '단축 칸에서 블록을 고르고 오른쪽 클릭해 놓아요',
       '내 땅으로 가요',
       '나무 문을 놓고 연 다음 문 안으로 걸어가요',
@@ -5047,8 +5047,11 @@
   ];
   function questSave() { try { localStorage.setItem('arkVillage.quest', JSON.stringify({ stats: stats, step: qStep })); } catch (e) {} }
   function questCheck() {
-    if (tutorialStep === 1 && stats.log > tutorialStartLog) tutorialEvent('log');
-    if (tutorialStep === 2 && stats.crafted > tutorialStartCraft) tutorialEvent('craft');
+    // 문까지 만들려면 고페르 나무 7개(놓기 1 + 문 6)가 필요 → 통나무 2개를 캐면 넘어감
+    if (tutorialStep === 1 && stats.log - tutorialStartLog >= 2) tutorialEvent('log');
+    else if (tutorialStep === 1 && stats.log - tutorialStartLog === 1 && !tutorialOneLogTold) { tutorialOneLogTold = true; toast('🪵 하나 더! 문까지 만들려면 통나무가 2개 필요해요'); }
+    if (tutorialStep === 2 && stats.crafted - tutorialStartCraft >= 2) tutorialEvent('craft');   // 통나무 2개 → 고페르 나무 8개(놓기 1 + 문 6)
+    else if (tutorialStep === 2 && stats.crafted - tutorialStartCraft === 1 && !tutorialOneCraftTold) { tutorialOneCraftTold = true; toast('🪵 한 번 더 만들어요 — 문을 만들려면 고페르 나무가 더 필요해요'); }
     var moved = false;
     while (qStep < QUEST.length && QUEST[qStep].done()) { qStep++; moved = true; }
     if (moved) { sfx('craft'); if (qStep >= QUEST.length) toast('🎉 첫 집을 다 지었어요! 이제 함께 짓는 터에서 친구들과 지어 보세요'); else if (qStep === 4) toast('🏠 이제 첫 집을 지어 봐요 — 위의 할 일을 하나씩 따라가요'); }
