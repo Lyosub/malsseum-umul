@@ -604,13 +604,15 @@
       "id": "2026-11-15-cartoon",
       "type": "image",
       "publish_at": "2026-11-19 19:30",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-11-15-cartoon.txt",
       "first_comment_file": "instagram/captions/2026-11-15-cartoon.tags.txt",
       "images": [
         "instagram/2026-11-15-cartoon.jpg"
       ],
-      "note": "말씀카툰 #009 「같이 먹자」 — 11/15 설교. 점심시간 지호가 엄마가 챙겨 준 귤을 혼자 앉은 민준과 나눈다. 하단 띠 신 26:11. 전도사님 컨펌 2026-11-15."
+      "note": "말씀카툰 #009 「같이 먹자」 — 11/15 설교. 점심시간 지호가 엄마가 챙겨 준 귤을 혼자 앉은 민준과 나눈다. 하단 띠 신 26:11. 전도사님 컨펌 2026-11-15.",
+      "media_id": "18128480356927641",
+      "posted_at": "2026-11-19 19:32"
     },
     {
       "id": "2026-11-21-preview",
