@@ -1701,7 +1701,7 @@
           var ci = pk * (SY >> 1) + (y >> 1), cl = CLC[ci];
           if (cl !== cl) cl = CLC[ci] = hash2((x >> 1) * 7 + (y >> 1) * 131, (z >> 1) * 11 - (y >> 1) * 17, 13);
           if (o < 0.035) id = y < 7 || o < 0.008 ? BASALT : LIME;
-          else if (cl < 0.0695 && hash2(x * 3 + y * 7, z * 5 - y, 14) < 0.7) {   // cl이 크면 광석이 될 수 없으니 이 난수는 건너뜀
+          else if (cl < 0.0695 && hash2(x * 3 + y * 7, z * 5 - y, 14) < 0.35) {   // 11/19 광석 절반으로(전도사님 「광물이 너무 잘 나와」)   // cl이 크면 광석이 될 수 없으니 이 난수는 건너뜀
             if (cl < 0.006 && y <= 12) id = ORE_AU;
             else if (cl >= 0.006 && cl < 0.014 && y <= 18) id = ORE_AG;
             else if (cl >= 0.014 && cl < 0.034 && y <= 48) id = ORE_FE;
@@ -1711,7 +1711,7 @@
             else if (cl >= 0.067 && cl < 0.0695 && y <= 8) id = ORE_DIA;
           }
           // 석탄: 큰 덩이(3칸씩)로 흔하게, 산 속 높은 곳까지
-          if (id === STONE && y <= 72) { var fx3 = Math.floor(x / 3), fz3 = Math.floor(z / 3), fy3 = Math.floor(y / 3), cci = ((fz3 - Math.floor(z0 / 3)) * 12 + (fx3 - Math.floor(x0 / 3))) * 28 + fy3, cc = CCC[cci]; if (cc !== cc) cc = CCC[cci] = hash2(fx3 * 13 + fy3 * 71, fz3 * 17 - fy3 * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.75) id = ORE_COAL; }
+          if (id === STONE && y <= 72) { var fx3 = Math.floor(x / 3), fz3 = Math.floor(z / 3), fy3 = Math.floor(y / 3), cci = ((fz3 - Math.floor(z0 / 3)) * 12 + (fx3 - Math.floor(x0 / 3))) * 28 + fy3, cc = CCC[cci]; if (cc !== cc) cc = CCC[cci] = hash2(fx3 * 13 + fy3 * 71, fz3 * 17 - fy3 * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.375) id = ORE_COAL; }
           // 열두 보석 광석: 곳마다·깊이마다 다르고 아주 드묾(계 21:19-20)
           if (id === STONE && y >= gemLo && y <= gemHi) {
             var gv = hash2(x * 7 + y * 131, z * 11 - y * 17, 41), gb = 0.3;
@@ -2977,7 +2977,7 @@
   function jumpPress() {
     if (furnitureRest) return standFromFurniture();
     var now = performance.now();
-    if (now - lastJumpTap < 280) { toggleFly(); lastJumpTap = 0; } else lastJumpTap = now;
+    lastJumpTap = now;   // 점프 두 번으로 날기를 켜지 않는다 — 굴에서 턱을 넘다 모르게 켜졌음(11/19), 날기는 「날기」 버튼·F 키로만
     jumpHeld = true;
   }
   var resetTouchInput = function () {};
@@ -3136,7 +3136,7 @@
     if (riding) { toast('내린 뒤에 날 수 있어요'); return; }
     P.fly = !P.fly; P.vy = 0;
     document.body.classList.toggle('flying', P.fly);
-    toast(P.fly ? '날기 켬 — 점프 두 번 누르면 꺼져요' : '날기 끔');
+    toast(P.fly ? '🕊 날기 켬 — 「날기」 버튼(F)을 다시 누르면 꺼져요' : '날기 끔');
   }
   var VIEW_NAMES = ['1인칭', '3인칭(뒤)', '3인칭(앞)'];
   function cycleView() { S.view = (S.view + 1) % 3; saveSettings(); updateMenuLabels(); toast('시점: ' + VIEW_NAMES[S.view]); }
@@ -3949,6 +3949,15 @@
     bar.appendChild(more);
   }
   var invTab = 'bag', craftCat = 'block', bagPick = null, craftQuery = '';
+  var BAG_CATS = [['all', '전체'], ['block', '🧱 블록'], ['tool', '⛏ 도구·옷'], ['food', '🍞 먹을 것'], ['item', '💎 재료'], ['deco', '🪑 꾸미기']];
+  function bagCat(id) {
+    var k = B[id] && B[id][6];
+    if (k === 'tool' || isWeapon(id) || WEARINFO[id] || id === SADDLE || id === FISH_ROD || id === FISH_NET || id === HOE || id === STAFF || id === SLING || id === COMPASS || id === HAND_MAP || id === SHOFAR) return 'tool';
+    if (FOODS[id] !== undefined) return 'food';
+    if (k === 'item') return 'item';
+    if (SHAPE[id] || LIGHTS[id] || k === 'plant') return 'deco';
+    return 'block';
+  }
   function renderInv() {
     var dr = $('dropRow'); if (dr) dr.hidden = !(bagPick && bagPick.id && INV.indexOf(bagPick.id) >= 0);
     $('tabBag').classList.toggle('on', invTab === 'bag'); $('tabCraft').classList.toggle('on', invTab === 'craft'); $('tabDex').classList.toggle('on', invTab === 'dex');
@@ -3957,13 +3966,28 @@
     $('hotClear').style.display = bagPick && bagPick.from === 'hot' ? '' : 'none';
     renderDex();
     var grid = $('invGrid'), row = $('invHot'), list = $('craftList'); grid.innerHTML = ''; row.innerHTML = ''; list.innerHTML = '';
+    setTimeout(function () { if (showCat !== 'all' && !shown && grid.children.length === 0) { var e = document.createElement('div'); e.className = 'bagEmpty'; e.textContent = '이 분류에 든 것이 없어요'; grid.appendChild(e); } }, 0);
     // 가방: 가진 것만 칸에. 눌러서 집고 → 다른 가방 칸(자리 바꾸기)이나 아래 단축 칸(넣기)을 누른다
     syncBagSlots();
     function info(id) { return B[id][0] + ' ' + fmtN(have(id)) + '개' + (isTool(id) && !isAdm() ? ' · 남은 힘 ' + wearLeft(id) + '/' + toolMax(id) : ''); }
     var SC = slotCounts();
     $('bagUse').textContent = isAdm() ? '관리자 · 모두 ∞' : usedSlots() + ' / ' + BAG_SLOTS + '칸 · 한 칸에 ' + STACK + '개까지';
     $('bagDrop').style.display = bagPick && bagPick.from === 'bag' && !isAdm() ? '' : 'none';
+    // 가방 분류(11/19): 전체·블록·도구·먹을 것·재료·꾸미기 — 고른 분류의 칸만 보임(자리 바꾸기는 그대로)
+    var cats = $('bagCats');
+    if (cats) {
+      cats.innerHTML = '';
+      BAG_CATS.forEach(function (c) {
+        var n = c[0] === 'all' ? 0 : BAGSLOT.filter(function (id) { return id && bagCat(id) === c[0]; }).length;
+        var b = document.createElement('button'); b.className = 'mc' + ((S.bagCat || 'all') === c[0] ? ' on' : ''); b.textContent = c[1] + (n ? ' ' + n : '');
+        b.addEventListener('click', function (e) { e.stopPropagation(); S.bagCat = c[0]; saveSettings(); sfx('click'); renderInv(); });
+        cats.appendChild(b);
+      });
+    }
+    var showCat = S.bagCat || 'all', shown = 0;
     BAGSLOT.forEach(function (id, i) {
+      if (showCat !== 'all' && (!id || bagCat(id) !== showCat)) return;
+      shown++;
       var d = document.createElement('button'), on = bagPick && bagPick.from === 'bag' && bagPick.i === i;
       d.className = 'islot' + (on ? ' pick' : '') + (id ? '' : ' empty'); d.innerHTML = id ? slotHTML(id, SC[i]) : ''; d.title = id ? B[id][0] + (isAdm() ? '' : ' ' + SC[i] + '개') : '빈 칸';
       d.addEventListener('click', function () {
@@ -6049,7 +6073,8 @@
     P.sneak = !P.fly && !riding && !P.swim && (keys.ShiftLeft || keys.ShiftRight || sneakLock);
     P.sprint = !P.swim && !P.sneak && (keys.ControlLeft || keys.KeyR || runLock) && mz < -0.3 && (FOOD > 6 || !vitalsOn());
     if (!P.sprint && (keys.ControlLeft || runLock) && mz < -0.3 && FOOD <= 6 && vitalsOn() && !sprintTold) { sprintTold = true; toast('기운이 없어서 달릴 수 없어요 — 떡이나 무화과를 먹어요'); }
-    var sp = (P.fly ? 20 : (P.swim ? (has('moses') ? 8 : 5) : (riding ? riding.sp.ride : 8.5 * (has('enoch') ? 1.1 : 1)))) * (P.sprint && !riding ? 1.5 : 1) * (P.sneak ? 0.35 : 1);
+    // 걷기 8.5→6.5칸/초(11/19 전도사님 「이동하는 속도가 너무 빨라」), 달리기는 1.5배
+    var sp = (P.fly ? 20 : (P.swim ? (has('moses') ? 8 : 5) : (riding ? riding.sp.ride : 6.5 * (has('enoch') ? 1.1 : 1)))) * (P.sprint && !riding ? 1.5 : 1) * (P.sneak ? 0.35 : 1);
     document.body.classList.toggle('sneaking', !!P.sneak);
     var sin = Math.sin(P.yaw), cos = Math.cos(P.yaw);
     var wx = (mx * cos + mz * sin) * sp, wz = (-mx * sin + mz * cos) * sp;

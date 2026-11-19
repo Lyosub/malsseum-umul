@@ -261,7 +261,7 @@
           var ci = pk * (SY >> 1) + (y >> 1), cl = CLC[ci];
           if (cl !== cl) cl = CLC[ci] = hash2((x >> 1) * 7 + (y >> 1) * 131, (z >> 1) * 11 - (y >> 1) * 17, 13);
           if (o < 0.035) id = y < 7 || o < 0.008 ? BASALT : LIME;
-          else if (cl < 0.0695 && hash2(x * 3 + y * 7, z * 5 - y, 14) < 0.7) {   // cl이 크면 광석이 될 수 없으니 이 난수는 건너뜀
+          else if (cl < 0.0695 && hash2(x * 3 + y * 7, z * 5 - y, 14) < 0.35) {   // 11/19 광석 절반으로(전도사님 「광물이 너무 잘 나와」)   // cl이 크면 광석이 될 수 없으니 이 난수는 건너뜀
             if (cl < 0.006 && y <= 12) id = ORE_AU;
             else if (cl >= 0.006 && cl < 0.014 && y <= 18) id = ORE_AG;
             else if (cl >= 0.014 && cl < 0.034 && y <= 48) id = ORE_FE;
@@ -271,7 +271,7 @@
             else if (cl >= 0.067 && cl < 0.0695 && y <= 8) id = ORE_DIA;
           }
           // 석탄: 큰 덩이(3칸씩)로 흔하게, 산 속 높은 곳까지
-          if (id === STONE && y <= 72) { var fx3 = Math.floor(x / 3), fz3 = Math.floor(z / 3), fy3 = Math.floor(y / 3), cci = ((fz3 - Math.floor(z0 / 3)) * 12 + (fx3 - Math.floor(x0 / 3))) * 28 + fy3, cc = CCC[cci]; if (cc !== cc) cc = CCC[cci] = hash2(fx3 * 13 + fy3 * 71, fz3 * 17 - fy3 * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.75) id = ORE_COAL; }
+          if (id === STONE && y <= 72) { var fx3 = Math.floor(x / 3), fz3 = Math.floor(z / 3), fy3 = Math.floor(y / 3), cci = ((fz3 - Math.floor(z0 / 3)) * 12 + (fx3 - Math.floor(x0 / 3))) * 28 + fy3, cc = CCC[cci]; if (cc !== cc) cc = CCC[cci] = hash2(fx3 * 13 + fy3 * 71, fz3 * 17 - fy3 * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.375) id = ORE_COAL; }
           // 열두 보석 광석: 곳마다·깊이마다 다르고 아주 드묾(계 21:19-20)
           if (id === STONE && y >= gemLo && y <= gemHi) {
             var gv = hash2(x * 7 + y * 131, z * 11 - y * 17, 41), gb = 0.3;

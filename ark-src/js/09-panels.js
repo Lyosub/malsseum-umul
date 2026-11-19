@@ -68,6 +68,15 @@
     bar.appendChild(more);
   }
   var invTab = 'bag', craftCat = 'block', bagPick = null, craftQuery = '';
+  var BAG_CATS = [['all', '전체'], ['block', '🧱 블록'], ['tool', '⛏ 도구·옷'], ['food', '🍞 먹을 것'], ['item', '💎 재료'], ['deco', '🪑 꾸미기']];
+  function bagCat(id) {
+    var k = B[id] && B[id][6];
+    if (k === 'tool' || isWeapon(id) || WEARINFO[id] || id === SADDLE || id === FISH_ROD || id === FISH_NET || id === HOE || id === STAFF || id === SLING || id === COMPASS || id === HAND_MAP || id === SHOFAR) return 'tool';
+    if (FOODS[id] !== undefined) return 'food';
+    if (k === 'item') return 'item';
+    if (SHAPE[id] || LIGHTS[id] || k === 'plant') return 'deco';
+    return 'block';
+  }
   function renderInv() {
     var dr = $('dropRow'); if (dr) dr.hidden = !(bagPick && bagPick.id && INV.indexOf(bagPick.id) >= 0);
     $('tabBag').classList.toggle('on', invTab === 'bag'); $('tabCraft').classList.toggle('on', invTab === 'craft'); $('tabDex').classList.toggle('on', invTab === 'dex');
@@ -76,13 +85,28 @@
     $('hotClear').style.display = bagPick && bagPick.from === 'hot' ? '' : 'none';
     renderDex();
     var grid = $('invGrid'), row = $('invHot'), list = $('craftList'); grid.innerHTML = ''; row.innerHTML = ''; list.innerHTML = '';
+    setTimeout(function () { if (showCat !== 'all' && !shown && grid.children.length === 0) { var e = document.createElement('div'); e.className = 'bagEmpty'; e.textContent = '이 분류에 든 것이 없어요'; grid.appendChild(e); } }, 0);
     // 가방: 가진 것만 칸에. 눌러서 집고 → 다른 가방 칸(자리 바꾸기)이나 아래 단축 칸(넣기)을 누른다
     syncBagSlots();
     function info(id) { return B[id][0] + ' ' + fmtN(have(id)) + '개' + (isTool(id) && !isAdm() ? ' · 남은 힘 ' + wearLeft(id) + '/' + toolMax(id) : ''); }
     var SC = slotCounts();
     $('bagUse').textContent = isAdm() ? '관리자 · 모두 ∞' : usedSlots() + ' / ' + BAG_SLOTS + '칸 · 한 칸에 ' + STACK + '개까지';
     $('bagDrop').style.display = bagPick && bagPick.from === 'bag' && !isAdm() ? '' : 'none';
+    // 가방 분류(11/19): 전체·블록·도구·먹을 것·재료·꾸미기 — 고른 분류의 칸만 보임(자리 바꾸기는 그대로)
+    var cats = $('bagCats');
+    if (cats) {
+      cats.innerHTML = '';
+      BAG_CATS.forEach(function (c) {
+        var n = c[0] === 'all' ? 0 : BAGSLOT.filter(function (id) { return id && bagCat(id) === c[0]; }).length;
+        var b = document.createElement('button'); b.className = 'mc' + ((S.bagCat || 'all') === c[0] ? ' on' : ''); b.textContent = c[1] + (n ? ' ' + n : '');
+        b.addEventListener('click', function (e) { e.stopPropagation(); S.bagCat = c[0]; saveSettings(); sfx('click'); renderInv(); });
+        cats.appendChild(b);
+      });
+    }
+    var showCat = S.bagCat || 'all', shown = 0;
     BAGSLOT.forEach(function (id, i) {
+      if (showCat !== 'all' && (!id || bagCat(id) !== showCat)) return;
+      shown++;
       var d = document.createElement('button'), on = bagPick && bagPick.from === 'bag' && bagPick.i === i;
       d.className = 'islot' + (on ? ' pick' : '') + (id ? '' : ' empty'); d.innerHTML = id ? slotHTML(id, SC[i]) : ''; d.title = id ? B[id][0] + (isAdm() ? '' : ' ' + SC[i] + '개') : '빈 칸';
       d.addEventListener('click', function () {

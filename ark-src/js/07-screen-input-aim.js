@@ -199,7 +199,7 @@
   function jumpPress() {
     if (furnitureRest) return standFromFurniture();
     var now = performance.now();
-    if (now - lastJumpTap < 280) { toggleFly(); lastJumpTap = 0; } else lastJumpTap = now;
+    lastJumpTap = now;   // 점프 두 번으로 날기를 켜지 않는다 — 굴에서 턱을 넘다 모르게 켜졌음(11/19), 날기는 「날기」 버튼·F 키로만
     jumpHeld = true;
   }
   var resetTouchInput = function () {};
@@ -358,7 +358,7 @@
     if (riding) { toast('내린 뒤에 날 수 있어요'); return; }
     P.fly = !P.fly; P.vy = 0;
     document.body.classList.toggle('flying', P.fly);
-    toast(P.fly ? '날기 켬 — 점프 두 번 누르면 꺼져요' : '날기 끔');
+    toast(P.fly ? '🕊 날기 켬 — 「날기」 버튼(F)을 다시 누르면 꺼져요' : '날기 끔');
   }
   var VIEW_NAMES = ['1인칭', '3인칭(뒤)', '3인칭(앞)'];
   function cycleView() { S.view = (S.view + 1) % 3; saveSettings(); updateMenuLabels(); toast('시점: ' + VIEW_NAMES[S.view]); }
