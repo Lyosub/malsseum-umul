@@ -18,7 +18,8 @@
   function openPanel(name) { bagPick = null; uiBack = ui === 'play' ? 'play' : ui; showUI(name); if (name === 'inv') renderInv(); if (lockOn) document.exitPointerLock(); }
   function closePanel() { if (uiBack === 'play') resume(); else showUI(uiBack); }
   function requestGamePointerLock() {
-    if (isTouch || !canvasEl || !canvasEl.requestPointerLock ||
+    // 자동 시험 브라우저(navigator.webdriver)는 잠그지 않는다 — 윈도우에서는 숨은 창이라도 실제 마우스 커서를 가둠(11/19)
+    if (isTouch || navigator.webdriver || !canvasEl || !canvasEl.requestPointerLock ||
         !document.hasFocus() || document.pointerLockElement === canvasEl) return;
     try {
       var request = canvasEl.requestPointerLock();

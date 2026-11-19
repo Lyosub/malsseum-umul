@@ -2774,7 +2774,8 @@
   function openPanel(name) { bagPick = null; uiBack = ui === 'play' ? 'play' : ui; showUI(name); if (name === 'inv') renderInv(); if (lockOn) document.exitPointerLock(); }
   function closePanel() { if (uiBack === 'play') resume(); else showUI(uiBack); }
   function requestGamePointerLock() {
-    if (isTouch || !canvasEl || !canvasEl.requestPointerLock ||
+    // 자동 시험 브라우저(navigator.webdriver)는 잠그지 않는다 — 윈도우에서는 숨은 창이라도 실제 마우스 커서를 가둠(11/19)
+    if (isTouch || navigator.webdriver || !canvasEl || !canvasEl.requestPointerLock ||
         !document.hasFocus() || document.pointerLockElement === canvasEl) return;
     try {
       var request = canvasEl.requestPointerLock();
@@ -7209,7 +7210,8 @@
   }
   // 서버에서 온 바꿈을 잠깐 모아 한꺼번에 그림
   var inBuf = {}, inT = 0;
-  function queueRemote(u, e) { (inBuf[u] || (inBuf[u] = [])).push(e); if (!inT) inT = setTimeout(function () { inT = 0; var b = inBuf; inBuf = {}; for (var k in b) applyRemote(k, b[k]); }, 80); }
+  function queueRemote(u, e) { if (NET.testMute) return;   // 시험: 끊긴 동안 못 받은 것처럼
+ (inBuf[u] || (inBuf[u] = [])).push(e); if (!inT) inT = setTimeout(function () { inT = 0; var b = inBuf; inBuf = {}; for (var k in b) applyRemote(k, b[k]); }, 80); }
   // 선생님이 함께 짓는 터를 되돌리면: 지워진 자리를 처음 모습으로(그 기둥을 다시 만듦)
   var revBuf = {}, revT = 0;
   function queueRevert(x, y, z) {
@@ -7286,6 +7288,53 @@
     lit.forEach(function (l) { lampChanged(l[0], l[1], l[2]); });
     if (bb) rebuildBox(bb[0] - 1, bb[1] - 1, bb[2] - 1, bb[3] + 1, bb[4] + 1, bb[5] + 1);
   }
+
+  // 다시 연결되면(휴대폰 화면이 꺼졌다 켜짐·인터넷이 잠깐 끊김) 그동안 다른 사람이 바꾼 것을 받아 온다
+  // — 실시간 알림은 끊겨 있던 동안의 것을 다시 보내 주지 않기 때문(11/19 「A가 판 게 B에게 안 보여요」)
+  var resyncBusy = false, plotSeen = {}, hiddenAt = 0;
+  function resyncWorld() {
+    if (resyncBusy || !client || !me || !NET.ready) return;
+    resyncBusy = true;
+    var jobs = [];
+    var p1 = client.rpc('get_ark_edits').then(function (r) {
+      if (!r || r.error || typeof r.data !== 'string' || !r.data) return;
+      var byCol = {};
+      r.data.split(';').forEach(function (s) {
+        var a = s.split(','); if (a.length !== 4) return;
+        var x = +a[0], y = +a[1], z = +a[2], id = +a[3];
+        if (x < 0 || z < 0 || x >= WS || z >= WS || y < 1 || y >= SY || plotAt(x, z) >= 0) return;
+        if (NET.pm[x + ',' + y + ',' + z] !== undefined) return;   // 내가 아직 보내는 중인 것은 그대로
+        var k = (z >> 5) * NC + (x >> 5), li = (y * CS + (z & 31)) * CS + (x & 31);
+        if (EDITS[k] && EDITS[k][li] === id && (!COLS[k] || readBlock(x, y, z) === id)) return;
+        (byCol[k] || (byCol[k] = [])).push([x, y, z, id]);
+      });
+      for (var k in byCol) jobs.push(byCol[k]);
+    });
+    var p2 = client.from('ark_village_plots').select('plot_idx,data,user_id,updated_at').then(function (r) {
+      (r && r.data || []).forEach(function (row) {
+        if (!row.data || row.user_id === me.id || plotSeen[row.plot_idx] === row.updated_at) return;
+        plotSeen[row.plot_idx] = row.updated_at; plotOwners[row.plot_idx] = 1; plotUser[row.plot_idx] = row.user_id;
+        decodePlot(row.plot_idx, row.data, false); jobs.push({ plot: row.plot_idx });
+      });
+    });
+    Promise.all([p1, p2]).then(function () {
+      (function step() {   // 한 번에 한 기둥씩(휴대폰이 멈추지 않게)
+        var j = jobs.shift(); if (!j) { resyncBusy = false; return; }
+        if (j.plot !== undefined) regenPlotCols(j.plot); else applyRemote('sync', j);
+        setTimeout(step, 30);
+      })();
+    }, function () { resyncBusy = false; });
+  }
+  function regenPlotCols(p) {
+    var o = plotOrigin(p);
+    for (var cz = (o.z - 1) >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = (o.x - 1) >> 5; cx <= (o.x + PLOT) >> 5; cx++) {
+      var k = cz * NC + cx; if (!inWorldC(cx, cz) || !COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); }
+    }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) hiddenAt = performance.now();
+    else if (hiddenAt && performance.now() - hiddenAt > 15000) { hiddenAt = 0; setTimeout(resyncWorld, 1500); }
+  });
 
   // 처음 들어올 때: 이름·관리자 여부, 함께 쓰는 세계의 바뀐 자리
   function uploadLocalOnce() {
@@ -7364,6 +7413,7 @@
           FRIENDS.poll = 0;
           netPill(); loadChat(); PARTY.pollT = 0;
           if (first) chatSys('함께 놀기에 들어왔어요 — 💬' + (isTouch ? '' : '(T)') + '로 이야기해요');
+          else resyncWorld();   // 끊겼다가 다시 붙음: 그동안 바뀐 것 받아 오기
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') { NET.on = false; netPill(); }
       });
   }
@@ -8240,6 +8290,7 @@
       (res && res.data || []).forEach(function (row) {
         plotOwners[row.plot_idx] = 1; plotUser[row.plot_idx] = row.user_id;
         if (me && row.user_id === me.id) plotSrvAt = row.updated_at;
+        plotSeen[row.plot_idx] = row.updated_at;
         if (row.data) decodePlot(row.plot_idx, row.data, me && row.user_id === me.id);
       });
       return Promise.all([loadShared(),fetchVillageProjects(),fetchFrontier()]);
@@ -8641,7 +8692,7 @@
   }
 
   // 점검 함수: 내 컴퓨터(시험 서버)와 선생님 계정에서만 연다 — 학생이 개발자 창에서 물건을 만들어 내지 못하게
-  var ARK_DBG = { rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+  var ARK_DBG = { sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };
