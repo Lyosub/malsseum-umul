@@ -1495,29 +1495,39 @@
   function inTown(x, z) { for (var i = 0; i < TOWN.length; i++) { var r = TOWN[i]; if (x >= r[0] && x <= r[2] && z >= r[1] && z <= r[3]) return true; } return false; }
   function rnd(s) { s = Math.sin(s * 127.1) * 43758.5453; return s - Math.floor(s); }
   function hash2(x, z, seed) { return rnd(x * 0.12989 + z * 0.78233 + seed * 3.7719); }
+  // 노이즈 격자점 값은 같은 점을 수없이 다시 계산하므로 기억해 둔다(값은 rnd 그대로라 땅 모양은 한 비트도 바뀌지 않음)
+  var VN_N = 1 << 14, vnK = new Int32Array(VN_N).fill(-1), vnV = new Float64Array(VN_N);
+  function vlat(ix, iz, seed) {
+    if ((ix | iz) >>> 10 || seed > 63) return rnd(ix * 57.31 + iz * 131.73 + seed * 17.13);   // 범위 밖은 그냥 계산
+    var key = (ix << 16) | (iz << 6) | seed, h = (Math.imul(ix, 73856093) ^ Math.imul(iz, 19349663) ^ Math.imul(seed, 83492791)) & (VN_N - 1);
+    if (vnK[h] === key) return vnV[h];
+    var v = rnd(ix * 57.31 + iz * 131.73 + seed * 17.13); vnK[h] = key; vnV[h] = v; return v;
+  }
   function vnoise(x, z, s, seed) {
     var gx = x / s, gz = z / s, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
     fx = fx * fx * (3 - 2 * fx); fz = fz * fz * (3 - 2 * fz);
-    var a = rnd(ix * 57.31 + iz * 131.73 + seed * 17.13), b = rnd((ix + 1) * 57.31 + iz * 131.73 + seed * 17.13);
-    var c = rnd(ix * 57.31 + (iz + 1) * 131.73 + seed * 17.13), d = rnd((ix + 1) * 57.31 + (iz + 1) * 131.73 + seed * 17.13);
+    var a = vlat(ix, iz, seed), b = vlat(ix + 1, iz, seed);
+    var c = vlat(ix, iz + 1, seed), d = vlat(ix + 1, iz + 1, seed);
     return a + (b - a) * fx + (c - a) * fz + (a - b - c + d) * fx * fz;
   }
   function sstep(a, b, v) { var t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); }
   function lakeE(x, z) { var dx = (x - LX) / LRX, dz = (z - LZ) / LRZ; return dx * dx + dz * dz; }
   // 강: 서쪽 산 골짜기 → 남쪽 호수(마을은 비켜 감)
   var RIV = [[XM - 180, AZ0 + 60], [XM - 164, AZ0 + 136], [XM - 150, AZ0 + 216], [XM - 136, AZ0 + 286], [XM - 110, AZ0 + 320], [LX - LRX + 6, LZ]];
+  var RIV_LEN = RIV.slice(1).map(function (b, s) { return Math.hypot(b[0] - RIV[s][0], b[1] - RIV[s][1]); });   // 구간 길이는 한 번만
   function riverDist(x, z) {
     var best = 99;
     for (var s = 0; s + 1 < RIV.length; s++) {
-      var a = RIV[s], b = RIV[s + 1], vx = b[0] - a[0], vz = b[1] - a[1], len = Math.hypot(vx, vz);
+      var a = RIV[s], b = RIV[s + 1], vx = b[0] - a[0], vz = b[1] - a[1], len = RIV_LEN[s];
       var u = clamp01(((x - a[0]) * vx + (z - a[1]) * vz) / (len * len)) * len;
       var px = a[0] + vx * u / len + Math.sin(u * 0.08 + s) * 4, pz = a[1] + vz * u / len;
       var d = Math.hypot(x - px, z - pz); if (d < best) best = d;
     }
     return best;
   }
+  var DO_RECTS = null;   // 마을·역청 구덩이 둘레(상수라 한 번만 만든다)
   function distOut(x, z) {
-    var best = 1e9, rects = TOWN.concat([[TARR[0] - 4, TARR[1] - 4, TARR[2] + 4, TARR[3] + 4]]);
+    var best = 1e9, rects = DO_RECTS || (DO_RECTS = TOWN.concat([[TARR[0] - 4, TARR[1] - 4, TARR[2] + 4, TARR[3] + 4]]));
     for (var i = 0; i < rects.length; i++) {
       var r = rects[i], dx = Math.max(r[0] - x, 0, x - r[2]), dz = Math.max(r[1] - z, 0, z - r[3]);
       best = Math.min(best, Math.hypot(dx, dz));
@@ -1666,6 +1676,9 @@
       terrain(x, z);
       var h = T.h, d = col.d;
       d[(0 * CS + lz) * CS + lx] = BASALT;
+      // 칸마다 한 번만: 깊은 돌 높이, 이 지역 보석이 나올 수 있는 높이 범위(그 밖은 보석 계산을 건너뛴다 — 결과는 같음)
+      var deepY = 4 + Math.floor(hash2(x >> 2, z >> 2, 17) * 3), gemLo = 99, gemHi = -1;
+      for (var gq = 0; gq < 12; gq++) { var gr = GEMS[gq]; if (gr && gr[3] === T.reg) { if (gr[4] < gemLo) gemLo = gr[4]; if (gr[5] > gemHi) gemHi = gr[5]; } }
       for (y = 1; y <= h; y++) {
         var id = y === h ? T.top : (y > h - 4 ? T.sub : STONE);
         if (id === STONE && y < h - 2) {
@@ -1685,12 +1698,12 @@
           // 석탄: 큰 덩이(3칸씩)로 흔하게, 산 속 높은 곳까지
           if (id === STONE && y <= 72) { var cc = hash2(Math.floor(x / 3) * 13 + Math.floor(y / 3) * 71, Math.floor(z / 3) * 17 - Math.floor(y / 3) * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.75) id = ORE_COAL; }
           // 열두 보석 광석: 곳마다·깊이마다 다르고 아주 드묾(계 21:19-20)
-          if (id === STONE) {
+          if (id === STONE && y >= gemLo && y <= gemHi) {
             var gv = hash2(x * 7 + y * 131, z * 11 - y * 17, 41), gb = 0.3;
             for (var gi = 0; gi < 12; gi++) { var gg = GEMS[gi]; if (gg && gg[3] === T.reg && y >= gg[4] && y <= gg[5] && gv >= gb && gv < gb + gg[6]) { id = gemOre(gi); break; } gb += 0.002; }
           }
           // 맨 아래 몇 칸은 깊은 돌(더 단단함)
-          if (y <= 4 + Math.floor(hash2(x >> 2, z >> 2, 17) * 3)) { if (id === STONE) id = DEEP; else if (DEEPV[id]) id = DEEPV[id]; }
+          if (y <= deepY) { if (id === STONE) id = DEEP; else if (DEEPV[id]) id = DEEPV[id]; }
         }
         d[(y * CS + lz) * CS + lx] = id;
       }
