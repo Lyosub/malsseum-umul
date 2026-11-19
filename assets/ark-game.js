@@ -4643,7 +4643,7 @@
       if (held === SHOFAR) return { label: '나팔 불기' };
       if (held === SLING) return { label: '물매 연습' };
     }
-    var c = pickCreature(screenDir(), h ? h.t : undefined);
+    var c = pickCreature(screenDir(), blockCover(h));
     if (c && !(riding && c.a && c.a.sp.seat)) {
       return { label: c.peer ? '두 번: 친구' : c.npc ? '말 걸기' : (c.shadow ? '막기' : (c.a && c.a.sp.seat ? '타기' : '동물 누르기')) };
     }
@@ -4712,21 +4712,88 @@
   }
   var waveUntil = 0;
   function waveHand() { waveUntil = performance.now() + 2000; sfx('pop'); if (S.view === 0) toast('👋 손을 흔들었어요 — 다른 사람에게 보여요'); }
+  // ── 마을 사람 할 일(모두 선택): 상인 물물 교환, 농부 씨앗, 어부 낚싯대, 오병이어(요 6장) ──
+  var TRADES = [[[LOG, 16], [ING_AG, 1]], [[STONE, 32], [ING_AG, 1]], [[WOOL, 4], [THREAD, 6]], [[ING_AG, 1], [POMEGRANATE, 3]], [[ING_AG, 1], [610, 1]], [[ING_AG, 2], [OLIVE_OIL, 2]]];
+  function villageNpcTap(npc) {
+    var nm = npc.d.name;
+    if (nm === '상인') { openTrade(); return true; }
+    if (nm === '농부') {
+      var hasSeed = Object.keys(FARM_SEEDS).some(function (k) { return have(+k) > 0; }) || have(SEED) > 0, dayN = Math.floor(dayT / DAY_LEN);
+      if (!hasSeed && villageBook.farmerDay !== dayN) {
+        var ks = Object.keys(FARM_SEEDS); for (var i = 0; i < 3; i++) give(+ks[Math.floor(Math.random() * ks.length)], 1);
+        villageBook.farmerDay = dayN; saveVillageBook(); bagChanged(); $('cardNew').textContent = '🌱 농부가 씨앗 3개를 나눠 줬어요. 괭이로 간 밭에 심어 보세요';
+      }
+      return true;
+    }
+    if (nm === '어부') {
+      if (!have(FISH_ROD) && !villageBook.gotRod) { give(FISH_ROD, 1); villageBook.gotRod = 1; saveVillageBook(); bagChanged(); $('cardNew').textContent = '🎣 어부가 낚싯대를 줬어요. 낚싯대를 들고 물을 누르면 낚시해요'; }
+      return true;
+    }
+    if (nm === '한 아이') { loavesQuest(); return true; }
+    return false;
+  }
+  function openTrade() {
+    var old = $('tradeBox'); if (old) old.remove();
+    if (lockOn) { try { document.exitPointerLock(); } catch (e) {} }
+    var box = document.createElement('div'); box.id = 'tradeBox';
+    box.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(16,16,24,.95);border:2px solid #000;box-shadow:inset 0 0 0 2px #b88a3a;padding:12px 14px;color:#fff;font-size:14px;width:min(340px,92vw);max-height:86vh;overflow:auto';
+    var h = document.createElement('b'); h.textContent = '⚖ 상인과 물물 교환'; h.style.cssText = 'display:block;font-size:16px;color:#ffe27a;margin-bottom:4px';
+    var v = document.createElement('p'); v.textContent = '「속이는 저울은 여호와께서 미워하시나 공평한 추는 그가 기뻐하시느니라」 (잠 11:1)'; v.style.cssText = 'margin:0 0 8px;font-size:12px;opacity:.85';
+    box.appendChild(h); box.appendChild(v);
+    TRADES.forEach(function (t) {
+      var give0 = t[0], get0 = t[1], ok = isAdm() || have(give0[0]) >= give0[1];
+      var b = document.createElement('button'); b.className = 'mc'; b.style.cssText = 'display:block;width:100%;margin:4px 0;text-align:left;white-space:normal;height:auto;min-height:38px;padding:4px 8px';
+      b.textContent = nameOf(give0[0]) + ' ' + give0[1] + '개 → ' + nameOf(get0[0]) + ' ' + get0[1] + '개' + (ok ? '' : '  (모자라요: ' + have(give0[0]) + '/' + give0[1] + ')');
+      b.disabled = !ok;
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!isAdm() && have(give0[0]) < give0[1]) return;
+        if (!isAdm() && room(get0[0]) < get0[1]) { bagFull(); return; }
+        take(give0[0], give0[1]); give(get0[0], get0[1]); bagChanged(); sfx('craft');
+        toast('⚖ ' + nameOf(give0[0]) + ' ' + give0[1] + '개를 ' + nameOf(get0[0]) + ' ' + get0[1] + '개로 바꿨어요'); box.remove(); openTrade();
+      });
+      box.appendChild(b);
+    });
+    var c = document.createElement('button'); c.className = 'mc'; c.textContent = '닫기'; c.style.cssText = 'display:block;width:100%;margin-top:6px';
+    c.addEventListener('click', function (e) { e.stopPropagation(); box.remove(); }); box.appendChild(c);
+    document.body.appendChild(box); sfx('pop');
+  }
+  function fishCount() { var n = have(RAW_FISH) + have(COOKED_FISH); for (var k in VILLAGE_FISH) n += have(VILLAGE_FISH[k]); return n; }
+  function takeFish(n) {
+    [COOKED_FISH, RAW_FISH].concat(Object.keys(VILLAGE_FISH).map(function (k) { return VILLAGE_FISH[k]; })).forEach(function (id) { var t = Math.min(n, have(id)); if (t > 0) { take(id, t); n -= t; } });
+  }
+  function loavesQuest() {
+    var breads = have(BREAD) + have(FLATBREAD);
+    if (ACH.loaves && !isAdm()) { $('cardNew').textContent = '🧺 남은 조각이 열두 바구니에 찼어요 (요 6:13)'; return; }
+    if (breads < 5 || fishCount() < 2) { $('cardNew').textContent = '빵 다섯 개와 물고기 두 마리를 가져와 함께 나눠 보세요 (지금 빵 ' + breads + '/5 · 물고기 ' + fishCount() + '/2)'; return; }
+    var nb = 5; [BREAD, FLATBREAD].forEach(function (id) { var t = Math.min(nb, have(id)); if (t > 0) { take(id, t); nb -= t; } });
+    takeFish(2); give(FLATBREAD, 12); bagChanged(); sfx('craft');
+    showVerseCard('🧺', '열두 바구니', '이에 거두니 보리떡 다섯 개로 먹고 남은 조각이 열두 바구니에 찼더라', '요한복음 6:13', '예수께서 떡을 가져 축사하신 후에 앉아 있는 자들에게 나눠 주시고 물고기도 그렇게 그들의 원대로 주시니라 (요 6:11) — 빵 12개를 받았어요');
+    unlock('loaves');
+  }
+  // 풀·꽃·갈대 같은 식물은 사람·동물을 가리지 않는다(누르는 광선이 갈대에 먼저 걸려 사람을 못 누르던 것)
+  function blockCover(h) { return h && kind(get(h.x, h.y, h.z)) !== 'plant' ? h.t : undefined; }
   function tapAt(sx, sy) {
     if (furnitureRest) return;
     var dir = screenDir(sx, sy), held=HOTBAR[sel];
-    if(held===FISH_ROD||held===FISH_NET) return useFishing(held,dir);
-    if(held===WORD_SCROLL && have(held)) return showWordCard(false);
-    if(held===HAND_MAP && have(held)) {openPanel('map');drawMap($('bigmapc'),true);return;}
-    if(held===COMPASS && have(held)) return toast('지금 보는 방향: '+headingName());
-    if(held===SHOFAR && have(held)) return callShofar();
-    if(held===SLING && have(held)) return slingPractice(pickDir(dir));
-    var h = pickDir(dir), c = pickCreature(dir, h ? h.t : undefined);
+    // 사람(마을 사람·다른 나그네)을 겨눴으면 손에 든 물건보다 먼저 — 낚싯대를 들고 물가 사람을 눌러도 말을 걸 수 있게
+    var hPre = pickDir(dir), cPre = pickCreature(dir, blockCover(hPre));
+    var personFirst = cPre && (cPre.npc || cPre.peer);
+    if(!personFirst && (held===FISH_ROD||held===FISH_NET)) return useFishing(held,dir);
+    if(!personFirst) {
+      if(held===WORD_SCROLL && have(held)) return showWordCard(false);
+      if(held===HAND_MAP && have(held)) {openPanel('map');drawMap($('bigmapc'),true);return;}
+      if(held===COMPASS && have(held)) return toast('지금 보는 방향: '+headingName());
+      if(held===SHOFAR && have(held)) return callShofar();
+      if(held===SLING && have(held)) return slingPractice(pickDir(dir));
+    }
+    var h = pickDir(dir), c = pickCreature(dir, blockCover(h));
     if (c && riding && c.a && c.a.sp.seat) c = null;
     if (c && c.shadow) return hitShadow(c.shadow);
     if (c && c.peer) return tapPeer(c.peer);
     if (c && c.npc) {
       var npc=c.npc; showNpc(npc);
+      if (villageNpcTap(npc)) return;
       if ((npc.d.name==='목자' || npc.d.name==='빵 굽는 사람') && !held)
         $('cardNew').textContent='마을 수첩 → 마을 사람에서 부탁을 볼 수 있어요';
       if (npc.d.name==='목자' && held===STAFF && have(STAFF)) return shepherdVisit(npc);
@@ -6442,7 +6509,8 @@
     ['sleep', '🛏', '평안한 잠', '침대에서 자고 아침을 맞아요(시 4:8)'], ['shadow', '⚔', '말씀의 검', '어둠의 그림자를 물리쳐요(엡 6:17)'], ['chat', '💬', '첫 인사', '채팅으로 인사해요'], ['lever', '🔘', '레버', '레버로 문을 열어요'],
     ['tokens', '🎖', '믿음의 증표', '일곱 증표를 모두 받아요(히 11)'], ['stones', '💎', '열두 기초석', '기초석 열둘을 성벽 밑에 놓아요(계 21:19-20)'],
     ['valley', '🕯', '골짜기의 빛', '일곱 등잔대를 모두 밝혀요(시 23:4)'], ['home', '🏙', '본향에 이르다', '거룩한 성에 들어가요(히 11:16)'],
-    ['party', '🤝', '함께 가는 길', '친구와 파티를 맺어요(시 133:1)'], ['pq', '🏷', '함께 받은 상', '파티 퀘스트 하나를 끝까지 채워요(전 4:9)'], ['cord', '🪢', '세 겹 줄', '파티 퀘스트를 모두 채워요(전 4:12)'], ['dex', '📖', '도감 완성', '도감을 다 채워요']
+    ['party', '🤝', '함께 가는 길', '친구와 파티를 맺어요(시 133:1)'], ['pq', '🏷', '함께 받은 상', '파티 퀘스트 하나를 끝까지 채워요(전 4:9)'], ['cord', '🪢', '세 겹 줄', '파티 퀘스트를 모두 채워요(전 4:12)'], ['dex', '📖', '도감 완성', '도감을 다 채워요'],
+    ['loaves', '🧺', '열두 바구니', '보리떡 다섯과 물고기 둘을 아이와 나눠요(요 6:13)']
   ];
   var ACH = {};
   try { ACH = JSON.parse(localStorage.getItem('arkVillage.ach') || '{}') || {}; } catch (e) { ACH = {}; }
@@ -6475,6 +6543,10 @@
     { name: '동방 박사', x: NAT_X + 14, z: NAT_Z - 1, y: G, season: 1, look: { robe: 0x7a3a8a, robe2: 0x6a2a7a, belt: 0xe0b040, trim: 0xe0b040, skin: 0xb27a52, hair: 0x1e1610, sandal: 0x6b4425, style: 'scarf', scarf: 0xe0b040 }, text: '유대인의 왕으로 나신 이가 어디 계시냐 우리가 동방에서 그의 별을 보고 그에게 경배하러 왔노라 하니', ref: '마태복음 2:2', emoji: '👑' },
     { name: '동방 박사', x: NAT_X + 13, z: NAT_Z + 4, y: G, season: 1, look: { robe: 0x2a6a5a, robe2: 0x1f5a4a, belt: 0xe0b040, trim: 0xd0a030, skin: 0xd2a07a, hair: 0x3a2a1c, sandal: 0x6b4425, style: 'long', fit: { beard: 0x3a2a1c } }, text: '그들이 별을 보고 매우 크게 기뻐하고 기뻐하더라', ref: '마태복음 2:10', emoji: '⭐' },
     { name: '동방 박사', x: NAT_X + 14, z: NAT_Z + 9, y: G, season: 1, look: { robe: 0xa04030, robe2: 0x8a3428, belt: 0xe0b040, trim: 0xe0b040, skin: 0x9a6440, hair: 0x1e1610, sandal: 0x6b4425, style: 'scarf', scarf: 0xf0d080 }, text: '집에 들어가 아기와 그의 어머니 마리아가 함께 있는 것을 보고 엎드려 아기께 경배하고 보배합을 열어 황금과 유향과 몰약을 예물로 드리니라', ref: '마태복음 2:11', emoji: '🎁' },
+    { name: '상인', x: XM + 32, z: AZ1 + 8, look: { robe: 0xb88a3a, robe2: 0xa27830, belt: 0x5a3a20, trim: 0x7a5228, skin: 0xc68a60, hair: 0x2b1d14, sandal: 0x6b4425, style: 'scarf', scarf: 0xd8b060, fit: { beard: 0x2b1d14, bag: 0x8a5a32 } }, text: '속이는 저울은 여호와께서 미워하시나 공평한 추는 그가 기뻐하시느니라', ref: '잠언 11:1', emoji: '⚖' },
+    { name: '농부', x: XM - 12, z: VZ1 + 6, look: { robe: 0xa89a6a, robe2: 0x948858, belt: 0x5a3a20, trim: 0x6a5a38, skin: 0xb27a52, hair: 0x3a2a1c, sandal: 0x6b4425, style: 'short', fit: { beard: 0x3a2a1c } }, text: '더러는 좋은 땅에 떨어지매 자라 무성하여 결실하였으니 삼십 배나 육십 배나 백 배가 되었느니라 하시고', ref: '마가복음 4:8', emoji: '🌾' },
+    { name: '어부', x: XM + 20, z: LZ - LRZ - 3, look: { robe: 0x6a8aa0, robe2: 0x5a7a90, belt: 0x4a3a28, trim: 0x4a6a80, skin: 0xb27a52, hair: 0x2b1d14, sandal: 0x6b4425, style: 'short', fit: { beard: 0x2b1d14 } }, text: '말씀하시되 나를 따라오라 내가 너희를 사람을 낚는 어부가 되게 하리라 하시니', ref: '마태복음 4:19', emoji: '🎣' },
+    { name: '한 아이', x: XM - 20, z: LZ - LRZ - 3, look: { robe: 0xd8c8a0, robe2: 0xc8b890, belt: 0x8a5a32, trim: 0x8a5a32, skin: 0xd9a67a, hair: 0x3a2618, sandal: 0x6b4425, style: 'short' }, text: '여기 한 아이가 있어 보리떡 다섯 개와 물고기 두 마리를 가지고 있나이다 그러나 그것이 이 많은 사람에게 얼마나 되겠사옵나이까', ref: '요한복음 6:9', emoji: '🧺' },
     { name: '안내하는 나그네', x: XM - 6, z: PZ0 - 7, look: { robe: 0xe8e4da, robe2: 0xd8d2c4, belt: 0x8a4b14, trim: 0x8a4b14, skin: 0xe5b98f, hair: 0x3a2618, sandal: 0x6b4425, style: 'short', fit: { cloak: 0x3f4f6a, sash: 0x8a4b14, bag: 0x8a5a32 } }, text: '이 사람들은 다 믿음을 따라 죽었으며 약속을 받지 못하였으되 그것들을 멀리서 보고 환영하며 또 땅에서는 외국인과 나그네임을 증언하였으니', ref: '히브리서 11:13', emoji: '🧭' }
   ];
   function spawnNpcs() {
@@ -8405,7 +8477,7 @@
     bagChanged();
   }
 
-  window.__arkDebug = { PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+  window.__arkDebug = { pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };
