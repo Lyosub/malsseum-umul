@@ -6561,7 +6561,7 @@
     ['valley', '🕯', '골짜기의 빛', '일곱 등잔대를 모두 밝혀요(시 23:4)'], ['home', '🏙', '본향에 이르다', '거룩한 성에 들어가요(히 11:16)'],
     ['party', '🤝', '함께 가는 길', '친구와 파티를 맺어요(시 133:1)'], ['pq', '🏷', '함께 받은 상', '파티 퀘스트 하나를 끝까지 채워요(전 4:9)'], ['cord', '🪢', '세 겹 줄', '파티 퀘스트를 모두 채워요(전 4:12)'], ['dex', '📖', '도감 완성', '도감을 다 채워요'],
     ['loaves', '🧺', '열두 바구니', '보리떡 다섯과 물고기 둘을 아이와 나눠요(요 6:13)'],
-    ['rock', '💧', '반석의 물', '지팡이로 호렙의 반석을 쳐요(출 17:6)'], ['manna', '🍯', '일용할 만나', '광야에서 아침 만나를 거둬요(출 16:15)']
+    ['rock', '💧', '반석의 물', '지팡이로 호렙의 반석을 쳐요(출 17:6)'], ['tabernacle', '⛺', '성막 모형', '내 땅에 성막 모형을 다 지어요(출 40:34)'], ['manna', '🍯', '일용할 만나', '광야에서 아침 만나를 거둬요(출 16:15)']
   ];
   var ACH = {};
   try { ACH = JSON.parse(localStorage.getItem('arkVillage.ach') || '{}') || {}; } catch (e) { ACH = {}; }
@@ -7459,13 +7459,14 @@
     if (r) text.push(nameOf(r.out[0])+' · '+r.need.map(function (n) {return nameOf(n[0])+' '+Math.min(have(n[0]),n[1])+'/'+n[1];}).join(' · '));
     $('trailGuide').textContent=text.join(' / ');
   }
-  var BLUEPRINTS=[['작은 집',7,6],['양 우리',9,7],['빵집',8,7]], blueprintMesh, blueprintAt=0;
+  var BLUEPRINTS=[['작은 집',7,6],['양 우리',9,7],['빵집',8,7],['성막 모형',22,12]], blueprintMesh, blueprintAt=0;
   function blueprintCells(plan) {
     if (plan && plan.kind === 'custom') return customPlanCells(plan);
     if (!plan || !BLUEPRINTS[plan.kind] || plan.plot!==myPlot) return [];
     var def=BLUEPRINTS[plan.kind], w=def[1], l=def[2], p=plotOrigin(plan.plot), a=[];
     var ox=p.x+plan.x, oz=p.z+plan.z;
     function add(x,y,z,id) { a.push([ox+x,G+y,oz+z,id]); }
+    if (plan.kind===3) { tabernacleCells(add); return a; }
     for (var z=0; z<l; z++) for (var x=0; x<w; x++) {
       var border=x===0||z===0||x===w-1||z===l-1, entry=z===0&&x===Math.floor(w/2);
       if (plan.kind===1) { if (border&&!entry) add(x,0,z,FENCE); else if(entry) add(x,0,z,GATE); continue; }
@@ -7502,12 +7503,37 @@
       blueprintMesh.setMatrixAt(count++,blueprintMatrix);
     });
     blueprintMesh.count=count; if(count) blueprintMesh.instanceMatrix.needsUpdate=true;
+    if (plan && plan.kind===3 && cells.length && count===0 && !ACH.tabernacle && plotAt(Math.floor(P.x),Math.floor(P.z))===myPlot) {
+      unlock('tabernacle'); showVerseCard('☁', '성막을 다 지었어요', '구름이 회막에 덮이고 여호와의 영광이 성막에 충만하매', '출애굽기 40:34', '성막 모형을 완성했어요');
+    }
+  }
+  // 성막 모형(출 25~40장): 바깥 뜰 휘장, 동쪽 뜰 문(청·자·홍, 출 27:16), 놋 제단, 물두멍, 성막(성소·지성소, 언약궤·촛대)
+  function tabernacleCells(add) {
+    var W = 22, L = 12, x, y, z;
+    for (x = 0; x < W; x++) for (z = 0; z < L; z++) {
+      var edge = x === 0 || z === 0 || x === W - 1 || z === L - 1; if (!edge) continue;
+      for (y = 0; y < 2; y++) {
+        if (x === W - 1 && z >= 4 && z <= 7) add(x, y, z, [WOOL_B, WOOL_V, WOOL_R, WOOL_W][z - 4]);   // 뜰 문 휘장
+        else add(x, y, z, WOOL_W);   // 세마포 휘장
+      }
+    }
+    add(16, 0, 5, BLK_CU); add(17, 0, 5, BLK_CU); add(16, 0, 6, BLK_CU); add(17, 0, 6, BLK_CU);   // 놋 제단
+    add(13, 0, 5, JAR);   // 물두멍
+    for (x = 2; x <= 9; x++) for (z = 4; z <= 7; z++) {
+      var wall = x === 2 || x === 9 || z === 4 || z === 7;
+      if (wall) for (y = 0; y < 4; y++) { if (x === 9 && (z === 5 || z === 6)) { if (y < 3) add(x, y, z, WOOL_V); } else add(x, y, z, GOPHER); }
+      add(x, 4, z, WOOL_R);   // 붉은 덮개(출 26:14)
+    }
+    for (y = 0; y < 3; y++) { add(5, y, 5, WOOL_B); add(5, y, 6, WOOL_B); }   // 성소와 지성소 사이 휘장
+    add(3, 0, 5, BLK_AU);   // 언약궤
+    add(8, 0, 5, CANDLESTICK);   // 촛대
   }
   function startBlueprint(kind) {
     if(myPlot<0) return toast('로그인하고 내 땅을 먼저 받아요');
     var o=plotOrigin(myPlot), d=BLUEPRINTS[kind];
     villageBook.plan={kind:kind,plot:myPlot,x:Math.max(1,Math.min(PLOT-d[1]-1,Math.floor(P.x)-o.x)),z:Math.max(1,Math.min(PLOT-d[2]-1,Math.floor(P.z)-o.z))};
     saveVillageBook(); renderVillageWork();
+    if (kind===3) showVerseCard('⛺', '성막 모형', '내가 그들 중에 거할 성소를 그들이 나를 위하여 짓되', '출애굽기 25:8', '무릇 내가 네게 보이는 모양대로 장막을 짓고 기구들도 그 모양을 따라 지을지니라 (출 25:9) — 반투명 윤곽을 따라 지어요');
   }
   var villageTabs = [['build','설계도'],['materials','재료'],['discover','탐험'],['projects','공동 작업'],['neighbors','마을 사람'],['cargo','나귀 짐'],['showcase','집 구경'],['frontier','개척 땅'],['feed','마을 소식'],['gifts','선물'],['photos','사진']];
   function openVillageWork(tab) { villageTab=tab; openPanel('villageWork'); renderVillageWork(); if(tab==='projects'||tab==='neighbors')fetchVillageProjects(); }
@@ -8528,7 +8554,7 @@
     bagChanged();
   }
 
-  window.__arkDebug = { pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+  window.__arkDebug = { vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };
