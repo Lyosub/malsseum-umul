@@ -977,7 +977,8 @@
   }
   // 3묶음. 우물·베틀·그릇·조명·식물은 같은 설치/저장 규칙을 쓴다.
   var WELL=460, LOOM=461, JAR=462, OIL_JAR=463, ALABASTER_JAR=464, OIL_LAMP=465,
-      CANDLESTICK=466, CAMPFIRE=467, THORN=468, THISTLE=469, LILY=470;
+      CANDLESTICK=466, CAMPFIRE=467, THORN=468, THISTLE=469, LILY=470,
+      LYRE=540, HARP=541, TIMBREL=542, CYMBAL=543;   // 악기(시 150:3-5)
   var BUCKET=640, WATER_BUCKET=641, WATER_JAR=642, FULL_JAR=643, THREAD=644,
       LINEN=645, WOOL_CLOTH=646, RED_DYE=647, BLUE_DYE=648, GOLD_DYE=649, WELL_BUCKET=650;
   var LIFE_BLOCKS=[
@@ -985,7 +986,8 @@
     [JAR,'항아리',0xb46e52,'jar'], [OIL_JAR,'기름 항아리',0x998451,'jar'],
     [ALABASTER_JAR,'옥합',0xe2bb91,'jar'],[OIL_LAMP,'기름 등잔',0xe89e40,'lamp',1],
     [CANDLESTICK,'촛대',0xd8a258,'stand',1],[CAMPFIRE,'모닥불',0xe57c39,'camp',1],
-    [THORN,'가시나무',0x656838,'plant'],[THISTLE,'엉겅퀴',0x884d8b,'plant'],[LILY,'백합',0xf5e4a4,'plant']
+    [THORN,'가시나무',0x656838,'plant'],[THISTLE,'엉겅퀴',0x884d8b,'plant'],[LILY,'백합',0xf5e4a4,'plant'],
+    [LYRE,'수금',0xb8874a,'lyre'],[HARP,'비파',0x8f5f34,'harp'],[TIMBREL,'소고',0xd9b27a,'drum'],[CYMBAL,'제금',0xd2ad3c,'cymbal']
   ];
   var LIFE_ITEMS=[
     [BUCKET,'빈 양동이',0x9e7745],[WATER_BUCKET,'물이 든 양동이',0x4698c8],
@@ -1003,7 +1005,11 @@
     jar:[[.24,0,.24,.76,.18,.76],[.15,.18,.15,.85,.66,.85],[.31,.66,.31,.69,.9,.69]],
     lamp:[[.2,0,.22,.8,.14,.78],[.34,.14,.34,.66,.23,.66],[.45,.23,.45,.55,.41,.55]],
     stand:[[.19,0,.19,.81,.12,.81],[.43,.12,.43,.57,.6,.57],[.24,.6,.24,.76,.7,.76],[.44,.7,.44,.56,.94,.56]],
-    camp:[[.08,0,.08,.92,.12,.92],[.23,.12,.25,.76,.24,.75],[.32,.24,.33,.68,.6,.67]]
+    camp:[[.08,0,.08,.92,.12,.92],[.23,.12,.25,.76,.24,.75],[.32,.24,.33,.68,.6,.67]],
+    lyre:[[.28,0,.38,.72,.1,.62],[.28,.1,.44,.38,.86,.56],[.62,.1,.44,.72,.86,.56],[.28,.78,.44,.72,.88,.56],[.46,.1,.48,.54,.78,.52]],
+    harp:[[.2,0,.34,.8,.12,.66],[.2,.12,.42,.32,.96,.58],[.2,.86,.42,.8,.96,.58],[.68,.12,.42,.8,.86,.58]],
+    drum:[[.16,0,.16,.84,.2,.84],[.22,.2,.22,.78,.24,.78]],
+    cymbal:[[.45,0,.45,.55,.5,.55],[.2,.5,.2,.8,.56,.8],[.26,.62,.26,.74,.66,.74]]
   };
   LIFE_BLOCKS.forEach(function(d){
     var id=d[0], art='life'+id;
@@ -1404,7 +1410,8 @@
     [RED_DYE,2,[[FLOWER,1],[RED_EARTH,1]]],[BLUE_DYE,2,[[THISTLE,2]]],[GOLD_DYE,2,[[CLAY,1],[SALT,1]]],
     [16,2,[[LINEN,2],[RED_DYE,1]],LOOM],[14,2,[[LINEN,2],[BLUE_DYE,1]],LOOM],
     [15,2,[[LINEN,2],[GOLD_DYE,1]],LOOM],[PATTERN_CLOTH,2,[[WOOL_CLOTH,2],[BLUE_DYE,1]],LOOM],
-    [WELL_BUCKET,1,[[GOPHER,2],[THREAD,2]]]
+    [WELL_BUCKET,1,[[GOPHER,2],[THREAD,2]]],
+    [LYRE,1,[[GOPHER,3],[THREAD,3]]],[HARP,1,[[GOPHER,4],[THREAD,4]]],[TIMBREL,1,[[LEATHER,1],[GOPHER,1]]],[CYMBAL,1,[[ING_CU,2]]]
   ].forEach(function(d){RECIPES.push({out:[d[0],d[1]],need:d[2],station:d[3],cat:'block'});});
   DROP[FEAST_BREAD]=FLATBREAD; DROP[FEAST_OLIVE]=614; DROP[FEAST_FISH]=COOKED_FISH;
   Object.values(VILLAGE_FISH).forEach(function (id) {
@@ -3071,6 +3078,7 @@
       if (tgt === SOCKET) return useSocket(h.x, h.y, h.z);
       if (tgt === PEARL) return toast(STORY.done ? '문이 열려 있어요' : '진주 문은 닫혀 있어요 — 📜 나그네의 길을 끝까지 걸어야 열려요(계 21:21)');
       if (tgt === LEVER || tgt === LEVER + 1) return useLever(h.x, h.y, h.z);
+      if (INSTR[tgt]) return playInstrument(tgt, h.x, h.y, h.z);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'sign' && plotAt(h.x, h.z) === myPlot && myPlot >= 0) return openSignPick(h.x, h.y, h.z);
       var item = HOTBAR[sel];
       if (!item) return deny('손에 든 것이 없어요. 아래 칸을 고르거나 🎒 가방에서 단축 칸에 넣어요');
@@ -3106,7 +3114,7 @@
           take(item, 1); setBlock(h.x, h.y, h.z, SLAB_MATERIAL[id]); sfx('place', matSound(item)); bagChanged();
           partyAdd('build', 1);
           tutorialEvent('place');
-          if (plotAt(h.x, h.z) === myPlot) { stats.placed++; questCheck(); if (stats.placed >= 30) unlock('house'); }
+          if (plotAt(h.x, h.z) === myPlot) { stats.placed++; questCheck(); if (stats.placed >= 30) unlock('house'); buildMilestone(); }
           if (inCommons(h.x, h.z)) unlock('commons');
           swingT = 0.25; vibrate(); exhaust(0.02);
           return;
@@ -3153,7 +3161,7 @@
       if (id === SAPLING) { SAPS.push({ x: bx, y: by, z: bz, t: Date.now() + (90 + Math.random() * 90) * 1000 }); saveSaps(); toast('묘목을 심었어요. 조금 지나면 나무로 자라요 (시 1:3)'); }
       partyAdd('build', 1);
       tutorialEvent('place');
-      if (plotAt(bx, bz) === myPlot) { stats.placed++; questCheck(); if (stats.placed >= 30) unlock('house'); }
+      if (plotAt(bx, bz) === myPlot) { stats.placed++; questCheck(); if (stats.placed >= 30) unlock('house'); buildMilestone(); }
       if (inCommons(bx, bz)) unlock('commons');
       if (SHAPE[id] && SHAPE[id].type === 'sign') openSignPick(bx, by, bz);
     }
@@ -3185,7 +3193,7 @@
     if (FARM_PLANTS[old]) {
       var farm = FARM_PLANTS[old], ripe = old === farm.base+3;
       if (ripe) {
-        dropItem(x+.5,y+.4,z+.5,farm.harvest,2);
+        dropItem(x+.5,y+.4,z+.5,farm.harvest,2); dexMore('p' + farm.harvest, B[farm.harvest][0]);
         unlock('harvest'); partyAdd('harvest',1);
         if (farm.perennial && get(x,y-1,z)===FARM_SOIL) {
           setBlock(x,y,z,farm.base+1); trackCrop(x,y,z,farm.base,1); return;
@@ -3216,6 +3224,7 @@
       }
     }
     if (DEX_MATS.indexOf(dropId) >= 0 && !DEX['m' + dropId]) { DEX['m' + dropId] = 1; saveDex(); toast('📖 도감에 「' + B[dropId][0] + '」을(를) 적었어요'); }
+    dexMined(old);
     if (old >= THORN && old <= LILY) recordVillagePlant(old,x,z);
     if (dropId === LOG) { stats.log++; questCheck(); partyAdd('logs', 1); }
   }
@@ -3870,6 +3879,28 @@
       d.addEventListener('click', function () { $('invName').textContent = got ? B[m][0] + ' — 캐서 모았어요' : '숲·산·호수에서 캐 보면 도감에 적혀요'; });
       g.appendChild(d);
     });
+    // 넓힌 도감: 광석 · 보석 · 식물과 열매 · 성경 인물 · 밤하늘
+    var more = 0, moreAll = 0;
+    function slot(key, gotHtml, unkLabel, hint, onGot) {
+      var got = !!DEX[key], d = document.createElement('button'); moreAll++; if (got) more++;
+      d.className = 'dslot' + (got ? '' : ' unk'); d.innerHTML = got ? gotHtml : '<span class="em">?</span><small>' + unkLabel + '</small>';
+      d.addEventListener('click', function () { if (got && onGot) { closePanel(); onGot(); } else $('invName').textContent = hint; });
+      g.appendChild(d);
+    }
+    function head(t) { var h = document.createElement('div'); h.className = 'dhead'; h.textContent = t; h.style.cssText = 'grid-column:1/-1;flex-basis:100%;width:100%;margin:8px 0 2px;font-size:12px;opacity:.8'; g.appendChild(h); }
+    head('⛏ 광석');
+    dexOres().forEach(function (o) { slot('o' + o, '<img src="' + ICON[o] + '" alt=""><small>' + B[o][0] + '</small>', '광석', '땅속 깊이 곡괭이로 캐 보면 적혀요'); });
+    head('💎 열두 보석(계 21:19-20)');
+    dexGems().forEach(function (i) { var it = gemItem(i); slot('g' + i, '<img src="' + (ICON[it] || ICON[gemOre(i)]) + '" alt=""><small>' + GEMS[i][0] + '</small>', '보석', '지역마다 다른 깊이에 아주 드물게 있어요'); });
+    head('🌿 식물과 열매');
+    dexPlants().forEach(function (pId) { slot('p' + pId, '<img src="' + ICON[pId] + '" alt=""><small>' + B[pId][0] + '</small>', '식물', '들에서 캐거나 밭에서 거두면 적혀요'); });
+    head('👤 방주의 사람들');
+    DEX_PEOPLE.forEach(function (nm, i) {
+      slot('n' + i, '<span class="em">👤</span><small>' + nm + '</small>', '사람', '방주 둘레와 방주 안에서 말을 걸어 보세요', function () { var n = NPCS.filter(function (x) { return x.d.name === nm; })[0]; if (n) showNpc(n); });
+    });
+    head('🌌 밤하늘');
+    STAR_VERSES.forEach(function (v, i) { slot('s' + i, '<span class="em">' + v[0] + '</span><small>' + v[1] + '</small>', '별', '밤에 하늘을 한참 올려다보면 적혀요', function () { showVerseCard(v[0], v[1], v[3], v[2]); }); });
+    $('dexCount').textContent += '  ·  넓힌 도감 ' + more + ' / ' + moreAll;
   }
   function updateMenuLabels() {
     $('mLight').textContent = '가벼운 화면: ' + (S.lightMode ? '켬' : '끔');
@@ -4176,8 +4207,29 @@
   var DEX = {};
   try { DEX = JSON.parse(localStorage.getItem('arkVillage.dex') || '{}') || {}; } catch (e) { DEX = {}; }
   function dexString() { return Object.keys(DEX).filter(function (k) { return DEX[k] && k !== 'done'; }).join(','); }
-  function dexFromString(str) { (str || '').split(',').forEach(function (k) { if (/^(c[a-z]+|m\d+)$/.test(k)) DEX[k] = 1; }); }
+  function dexFromString(str) { (str || '').split(',').forEach(function (k) { if (/^(c[a-z]+|[mopgns]\d+)$/.test(k)) DEX[k] = 1; }); }
   function dexCount() { var n = 0; CREATURE_KEYS.forEach(function (k) { if (DEX['c' + k]) n++; }); DEX_MATS.forEach(function (m) { if (DEX['m' + m]) n++; }); return n; }
+  // 넓힌 도감(달란트 보상과는 별개): o광석 · g보석 · p식물/열매 · n성경 인물 · s밤하늘
+  var STAR_VERSES = [['🌌', '뭇별', '창세기 15:5', '그를 이끌고 밖으로 나가 이르시되 하늘을 우러러 뭇별을 셀 수 있나 보라 또 그에게 이르시되 네 자손이 이와 같으리라'],
+    ['✨', '별들의 이름', '시편 147:4', '그가 별들의 수효를 세시고 그것들을 다 이름대로 부르시는도다'],
+    ['⭐', '북두성과 삼성과 묘성', '욥기 9:9', '북두성과 삼성과 묘성과 남방의 밀실을 만드셨으며'],
+    ['🔭', '만상', '이사야 40:26', '너희는 눈을 높이 들어 누가 이 모든 것을 창조하였나 보라 주께서는 수효대로 만상을 이끌어 내시고 그들의 모든 이름을 부르시나니 그의 권세가 크고 그의 능력이 강하므로 하나도 빠짐이 없느니라']];
+  var DEX_PEOPLE = ['노아', '셈', '함', '야벳', '노아의 아내'];
+  function dexOres() { return [ORE_COAL, ORE_CU, ORE_FE, ORE_AG, ORE_AU, ORE_ONYX, ORE_SAPH, ORE_DIA]; }
+  function dexGems() { var a = []; GEMS.forEach(function (g, i) { if (g) a.push(i); }); return a; }
+  function dexPlants() { var a = [LILY, THORN, THISTLE]; Object.keys(FARM_SEEDS).forEach(function (k) { var h = FARM_SEEDS[k].harvest; if (a.indexOf(h) < 0) a.push(h); }); return a; }
+  function dexMore(key, label) { if (DEX[key]) return; DEX[key] = 1; saveDex(); toast('📖 도감에 「' + label + '」을(를) 적었어요'); }
+  function dexMined(old) {
+    var base = old; for (var k in DEEPV) if (DEEPV[k] === old) base = +k;
+    if (dexOres().indexOf(base) >= 0) dexMore('o' + base, B[base][0]);
+    for (var gi = 0; gi < 12; gi++) if (GEMS[gi] && base === gemOre(gi)) dexMore('g' + gi, GEMS[gi][0]);
+    if (old === LILY || old === THORN || old === THISTLE) dexMore('p' + old, B[old][0]);
+  }
+  function showStarVerse(n) {
+    var i = n % STAR_VERSES.length, v = STAR_VERSES[i], first = !DEX['s' + i];
+    showVerseCard(v[0], v[1], v[3], v[2], first ? '📖 도감 「밤하늘」에 새로 적었어요' : '');
+    if (first) { DEX['s' + i] = 1; saveDex(); }
+  }
   function saveDex() {
     if (dexCount() === CREATURE_KEYS.length + DEX_MATS.length && !DEX.done) { DEX.done = 1; unlock('dex'); toast('📖 도감을 다 채웠어요! 하나님이 지으신 모든 것을 만났어요'); }
     try { localStorage.setItem('arkVillage.dex', JSON.stringify(DEX)); } catch (e) {}
@@ -4614,6 +4666,7 @@
         '#if defined( USE_COLOR )\n diffuseColor.rgb *= max(vColor.r * uDay * uTint, vColor.g * vec3(1.0, 0.86, 0.62));\n#endif');
     };
   }
+  var brightStars = null, starLook = 0, starNight = -1;
   var clouds = [], sunM, moonM, stars, cloudMat, rainLines, rainPos, RAIN_N = 900;
   var C_DAY = new THREE.Color(0x9fcdee), C_NIGHT = new THREE.Color(0x0c1430), C_DUSK = new THREE.Color(0xf09a5a), C_RAIN = new THREE.Color(0x8792a0);
   var C_WHITE = new THREE.Color(1, 1, 1), C_NTINT = new THREE.Color(0.72, 0.8, 1), C_DTINT = new THREE.Color(1, 0.84, 0.68), skyC = new THREE.Color(), fogC = new THREE.Color();
@@ -4626,6 +4679,19 @@
     var sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
     stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 2, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false }));
     stars.frustumCulled = false; scene.add(stars);
+    // 북두성·삼성·묘성(욥 9:9): 밝게 보이는 별 무리
+    var cps = [];
+    [[22, 52, [[0, 0], [5, 1], [9, 0], [13, -1], [14, -6], [19, -7], [19, -1]]],
+     [205, 32, [[0, 0], [7, 1], [3, -5], [4, -6], [5, -7], [1, -12], [8, -11]]],
+     [118, 62, [[0, 0], [1.4, .6], [2.3, -.2], [1, -1], [2.1, -1.3], [3, -.7], [.4, -1.8]]]].forEach(function (gp) {
+      gp[2].forEach(function (o) {
+        var az = (gp[0] + o[0]) * Math.PI / 180, el = (gp[1] + o[1]) * Math.PI / 180, r = 255;
+        cps.push(Math.cos(az) * Math.cos(el) * r, Math.sin(el) * r, Math.sin(az) * Math.cos(el) * r);
+      });
+    });
+    var cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.Float32BufferAttribute(cps, 3));
+    brightStars = new THREE.Points(cg, new THREE.PointsMaterial({ color: 0xfff4d6, size: 4, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false }));
+    brightStars.frustumCulled = false; scene.add(brightStars);
     rainPos = new Float32Array(RAIN_N * 6);
     var rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
     rainLines = new THREE.LineSegments(rg, new THREE.LineBasicMaterial({ color: 0xaabbd4, transparent: true, opacity: 0 }));
@@ -4662,7 +4728,7 @@
     rainTimer -= dt;
     var season=seasonIndex();
     if(lastSeason!==season){
-      if(lastSeason!==-1)rainTimer=Math.min(rainTimer,18);
+      if(lastSeason!==-1){rainTimer=Math.min(rainTimer,18);if(started)toast(['🌧 이른 비 철이에요 — 밭 작물이 빨리 자라요','☀ 맑은 철이에요','🌧 늦은 비 철이에요 — 작물이 가장 빨리 여물어요','🏜 가뭄이에요 — 물가 밭이 아니면 작물이 더디 자라요'][season]);}
       lastSeason=season;
     }
     if (rainTimer<=0) {
@@ -4696,6 +4762,12 @@
       if(line.visible)line.position.set(cp.x,Math.max(G+3,cp.y-26),cp.z-155);
     });
     stars.position.copy(cp); stars.material.opacity = (1 - dayF) * (1 - rain);
+    if (brightStars) { brightStars.position.copy(cp); brightStars.material.opacity = Math.min(1, (1 - dayF) * 1.2) * (1 - rain); }
+    // 밤에 하늘을 2초쯤 올려다보면 별 말씀 하나(밤마다 하나씩)
+    var nightN = Math.floor(dayT / DAY_LEN);
+    if (nightN !== starNight) { starNight = nightN; starLook = 0; }
+    if (started && ui === 'play' && P.pitch > 0.7 && dayF < 0.3 && rain < 0.3 && caveK < 0.3) { if (starLook >= 0) { starLook += dt; if (starLook > 2) { starLook = -1; showStarVerse(nightN); } } }
+    else if (starLook > 0) starLook = 0;
     // 빗줄기
     rainLines.visible = rain > 0.03; rainLines.material.opacity = 0.5 * rain;
     if (rainLines.visible) {
@@ -4734,6 +4806,22 @@
       if (trem) { var l = AC.createOscillator(), lg = AC.createGain(); l.frequency.value = trem; lg.gain.value = vol * 0.6; l.connect(lg); lg.connect(g.gain); l.start(t); l.stop(t + dur); }
       o.start(t); o.stop(t + dur + 0.02);
     } catch (e) {}
+  }
+  // ── 악기: 놓은 높이에 따라 음이 달라진다(계단처럼 쌓으면 음계). 처음 연주하면 시편 150편 ──
+  var INSTR = {}; INSTR[LYRE] = 1; INSTR[HARP] = 1; INSTR[TIMBREL] = 1; INSTR[CYMBAL] = 1;
+  var INSTR_SCALE = [0, 2, 4, 7, 9, 12, 14, 16], instrTold = false;
+  function playInstrument(id, x, y, z) {
+    var note = INSTR_SCALE[((y % 8) + 8) % 8], f = 261.63 * Math.pow(2, note / 12);
+    if (id === LYRE) { tone('triangle', f, f, 0.9, 0.16); tone('sine', f * 2, f * 2, 0.6, 0.05); }
+    else if (id === HARP) { tone('triangle', f / 2, f / 2, 1.3, 0.16); tone('sine', f, f, 0.9, 0.05); }
+    else if (id === TIMBREL) { tone('square', 180 + note * 6, 70, 0.16, 0.2); tone('sawtooth', 2400, 1800, 0.12, 0.03, 30); }
+    else if (id === CYMBAL) { tone('sawtooth', 3600 + note * 40, 2600, 0.7, 0.05, 37); tone('square', 5200, 4200, 0.5, 0.025, 53); }
+    swingT = 0.25;
+    if (!instrTold) { instrTold = true; showVerseCard('🎵', B[id][0], '나팔 소리로 찬양하며 비파와 수금으로 찬양할지어다', '시편 150:3', '놓은 높이마다 음이 달라요. 계단처럼 쌓아 노래해 보세요'); }
+  }
+  function showVerseCard(emoji, name, text, ref, note) {
+    $('cardEmoji').textContent = emoji; $('cardName').textContent = name; $('cardText').textContent = text; $('cardRef').textContent = ref; $('cardNew').textContent = note || '';
+    $('card').classList.add('show'); sfx('pop'); clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, 10000);
   }
   function animalCall(k, vol) {
     vol = vol || 0.12;
@@ -5268,6 +5356,7 @@
         if(((ui==='villageWork'&&(villageTab==='projects'||villageTab==='neighbors'))||(villageProjectsEnabled&&inCommons(P.x,P.z)))&&Date.now()>villageProjectAt){villageProjectAt=Date.now()+6000;fetchVillageProjects();}
         $('seasonInfo').textContent=WEATHER[seasonIndex()]+(rainOn?' · 비':'')+
           (HOTBAR[sel]===COMPASS?' · '+headingName():'');
+        fetchFeed(); fetchGifts();
       },300);
     });
   }
@@ -5485,7 +5574,8 @@
   function cropTime(x, y, z) {
     var wet = false;
     for (var dz = -4; dz <= 4 && !wet; dz++) for (var dx = -4; dx <= 4; dx++) if (get(x + dx, y - 1, z + dz) === WATER || get(x + dx, y - 2, z + dz) === WATER) { wet = true; break; }
-    return (40 + Math.random() * 30) * (wet || ditchWaterNear(x,y,z) ? 0.6 : 1) * 1000;
+    var watered = wet || ditchWaterNear(x,y,z), sk = [0.8, 1, 0.7, watered ? 1 : 1.5][seasonIndex()];   // 이른 비·맑은 철·늦은 비·가뭄
+    return (40 + Math.random() * 30) * (watered ? 0.6 : 1) * sk * 1000;
   }
   function plantHeight(id) { var farm = FARM_PLANTS[id]; return farm ? 1 + (farm.height-1)*(id-farm.base)/3 : 1; }
   var STATION_BITS = {401:1,402:2,403:4,404:8,405:1,461:16};
@@ -5991,6 +6081,7 @@
   function unlock(k) {
     if (ACH[k] || isAdm()) return; var a = ACHS.filter(function (x) { return x[0] === k; })[0]; if (!a) return;
     ACH[k] = Date.now(); try { localStorage.setItem('arkVillage.ach', JSON.stringify(ACH)); } catch (e) {} stateDirty();
+    feedPost('ach', ACHS.indexOf(a));
     setTimeout(function () { toast('🏅 업적: ' + a[1] + ' ' + a[2] + ' — ' + a[3]); sfx('craft', 1600); }, 900);
   }
   function renderAch() {
@@ -6024,7 +6115,7 @@
     NPCS.forEach(function (n) { var dx = P.x - n.x, dz = P.z - n.z; if (Math.hypot(dx, dz) < 12) n.av.rotation.y = Math.atan2(-dx, -dz) + Math.PI; });
   }
   function showNpc(n) {
-    var d = n.d;
+    var d = n.d, pi = DEX_PEOPLE.indexOf(d.name); if (pi >= 0) dexMore('n' + pi, d.name);
     if (d.name === '안내하는 나그네' && (!STORY.started || STORY.ended === false)) { if (!STORY.started) return startStory(); } $('cardEmoji').textContent = d.emoji; $('cardName').textContent = d.name; $('cardText').textContent = d.text; $('cardRef').textContent = d.ref; $('cardNew').textContent = '';
     $('card').classList.add('show'); sfx('pop'); clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, 10000);
   }
@@ -6860,6 +6951,7 @@
   }
   var BLUEPRINTS=[['작은 집',7,6],['양 우리',9,7],['빵집',8,7]], blueprintMesh, blueprintAt=0;
   function blueprintCells(plan) {
+    if (plan && plan.kind === 'custom') return customPlanCells(plan);
     if (!plan || !BLUEPRINTS[plan.kind] || plan.plot!==myPlot) return [];
     var def=BLUEPRINTS[plan.kind], w=def[1], l=def[2], p=plotOrigin(plan.plot), a=[];
     var ox=p.x+plan.x, oz=p.z+plan.z;
@@ -6882,7 +6974,7 @@
   }
   function createBlueprintMesh() {
     blueprintMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(.98,.98,.98),
-      new THREE.MeshBasicMaterial({color:0x7bccea,transparent:true,opacity:.25,depthWrite:false}),260);
+      new THREE.MeshBasicMaterial({color:0x7bccea,transparent:true,opacity:.25,depthWrite:false}),600);
     blueprintMesh.frustumCulled=false; blueprintMesh.count=0; scene.add(blueprintMesh);
   }
   var blueprintMatrix = new THREE.Matrix4();
@@ -6895,7 +6987,7 @@
     if(project && villageProjectsEnabled && inCommons(P.x,P.z)) cells=projectCells(villageBook.project);
     var count=0;
     cells.forEach(function (c) {
-      if(matchesPlan(c[3],get(c[0],c[1],c[2])) || count>=260) return;
+      if(matchesPlan(c[3],get(c[0],c[1],c[2])) || count>=600) return;
       blueprintMatrix.makeTranslation(c[0]+.5,c[1]+.5,c[2]+.5);
       blueprintMesh.setMatrixAt(count++,blueprintMatrix);
     });
@@ -6907,12 +6999,12 @@
     villageBook.plan={kind:kind,plot:myPlot,x:Math.max(1,Math.min(PLOT-d[1]-1,Math.floor(P.x)-o.x)),z:Math.max(1,Math.min(PLOT-d[2]-1,Math.floor(P.z)-o.z))};
     saveVillageBook(); renderVillageWork();
   }
-  var villageTabs = [['build','설계도'],['materials','재료'],['discover','탐험'],['projects','공동 작업'],['neighbors','마을 사람'],['cargo','나귀 짐'],['showcase','집 구경'],['frontier','개척 땅']];
+  var villageTabs = [['build','설계도'],['materials','재료'],['discover','탐험'],['projects','공동 작업'],['neighbors','마을 사람'],['cargo','나귀 짐'],['showcase','집 구경'],['frontier','개척 땅'],['feed','마을 소식'],['gifts','선물'],['photos','사진']];
   function openVillageWork(tab) { villageTab=tab; openPanel('villageWork'); renderVillageWork(); if(tab==='projects'||tab==='neighbors')fetchVillageProjects(); }
   function renderVillageWork() {
     var tabs=$('villageTabs'), body=$('villageBody'); tabs.replaceChildren(); body.replaceChildren();
     villageTabs.forEach(function (tab) {
-      var b=villageButton(tabs,tab[1],function () { villageTab=tab[0]; renderVillageWork(); if(villageTab==='projects'||villageTab==='neighbors')fetchVillageProjects(); if(villageTab==='frontier')fetchFrontier(true); });
+      var b=villageButton(tabs,tab[1],function () { villageTab=tab[0]; renderVillageWork(); if(villageTab==='projects'||villageTab==='neighbors')fetchVillageProjects(); if(villageTab==='frontier')fetchFrontier(true); if(villageTab==='feed')fetchFeed(true); if(villageTab==='gifts')fetchGifts(true); if(villageTab==='photos')fetchPhotos(true); if(villageTab==='build')fetchPlans(true); });
       b.setAttribute('aria-pressed',String(villageTab===tab[0]));
     });
     if(villageTab==='build') {
@@ -6926,6 +7018,14 @@
         Object.keys(remaining).forEach(function (id) { villageText(body,nameOf(+id)+' '+(id==DOOR?Math.ceil(remaining[id]/4):remaining[id])+'개 · '+howGet(+id)); });
         villageButton(body,'설계도 지우기',function () {delete villageBook.plan; saveVillageBook(); renderVillageWork();});
       }
+      if(plan&&plan.kind==='custom'&&plan.plot===myPlot) {
+        var cc=customPlanCells(plan), left=0, need={};
+        cc.forEach(function (c) { if(!matchesPlan(c[3],get(c[0],c[1],c[2]))) { left++; need[c[3]]=(need[c[3]]||0)+1; } });
+        villageText(body,(plan.nick?plan.nick+'님의 ':'')+plan.name+' '+(cc.length-left)+'/'+cc.length);
+        Object.keys(need).slice(0,12).forEach(function (id) { villageText(body,nameOf(+id)+' '+need[id]+'개 · '+howGet(+id)); });
+        villageButton(body,'설계도 지우기',function () {delete villageBook.plan; saveVillageBook(); renderVillageWork();});
+      }
+      renderPlanShare(body);
     } else if(villageTab==='materials') {
       var r=pinnedRecipe();
       if(!r) return villageText(body,'가방의 만들기 목록에서 「재료 표시」를 눌러요.');
@@ -7066,7 +7166,218 @@
       toast('호수 건너편에 도착했어요');
     }
   }
+  // ── 마을 소식 · 선물 · 건축 사진 · 설계도 나누기(서버: sql-migrations/2026-11-19-ark-village-social.sql) ──
+  // 자유 글은 쓰지 않는다: 소식은 종류+숫자, 사진 제목과 설계도 이름은 고르기
+  var SOCIAL = { feed: [], feedAt: 0, lastSeen: 0, gifts: [], giftAt: 0, giftN: -1, photos: [], photoAt: 0, plans: null, planAt: 0, imgs: {}, busy: {} };
+  var PLAN_NAMES = ['우리 집', '작은 집', '큰 집', '탑', '정원', '다리', '양 우리', '가게', '성막 모형', '그 밖의 건물'];
+  var PHOTO_CAPS = ['우리 집', '함께 지은 것', '멋진 경치', '밤하늘', '농장', '동물들', '방주', '개척 땅', '동굴', '마을'];
+  function socialOn() { return !!(client && me && NET.ok); }
+  function feedPost(kind, n) { if (!socialOn()) return; client.rpc('post_ark_feed', { p_kind: kind, p_n: n | 0 }).then(function () { SOCIAL.feedAt = 0; }, function () {}); }
+  function feedLine(f) {
+    var who = f.nick + '님이 ';
+    if (f.kind === 'ach') { var a = ACHS[f.n]; return a ? a[1] + ' ' + who + '「' + a[2] + '」 업적을 받았어요' : null; }
+    if (f.kind === 'build') return '🏠 ' + who + '내 땅에 블록 ' + f.n + '개를 놓았어요';
+    if (f.kind === 'photo') return '📷 ' + who + '건축 사진을 올렸어요';
+    if (f.kind === 'plan') return '📐 ' + who + '설계도를 나눴어요';
+    if (f.kind === 'gift') return '🎁 ' + who + '친구에게 선물을 보냈어요';
+    return null;
+  }
+  function timeAgo(t) { var m = Math.max(0, Math.round((Date.now() - new Date(t).getTime()) / 60000)); return m < 1 ? '방금' : (m < 60 ? m + '분 전' : (m < 1440 ? Math.floor(m / 60) + '시간 전' : Math.floor(m / 1440) + '일 전')); }
+  function socialRerender(tab) { if (ui === 'villageWork' && villageTab === tab) renderVillageWork(); }
+  function fetchFeed(force) {
+    if (!socialOn() || SOCIAL.busy.feed || (!force && Date.now() < SOCIAL.feedAt)) return;
+    SOCIAL.feedAt = Date.now() + 60000; SOCIAL.busy.feed = 1;
+    client.rpc('get_ark_feed').then(function (r) {
+      SOCIAL.busy.feed = 0;
+      if (!r || r.error || !Array.isArray(r.data)) return;
+      SOCIAL.feed = r.data;
+      var news = r.data.filter(function (f) { return !f.mine && f.id > SOCIAL.lastSeen; });
+      if (SOCIAL.lastSeen && news.length && ui === 'play') { var t = feedLine(news[0]); if (t) toast('📣 ' + t + (news.length > 1 ? ' 외 ' + (news.length - 1) + '개 소식' : '')); }
+      if (r.data.length) SOCIAL.lastSeen = Math.max(SOCIAL.lastSeen, r.data[0].id);
+      socialRerender('feed');
+    }, function () { SOCIAL.busy.feed = 0; });
+  }
+  function buildMilestone() { if ([50, 100, 300, 1000].indexOf(stats.placed) >= 0) feedPost('build', stats.placed); }
+  // 선물: 손에 든 것을 친구에게 1·4·8개
+  function giftError(c) { return { login: '로그인하면 선물을 보낼 수 있어요', friend: '친구에게만 보낼 수 있어요', item: '이건 보낼 수 없어요', daily: '오늘은 선물을 다 보냈어요(하루 10번)', full: '친구의 선물함이 가득 찼어요' }[c] || '선물을 보내지 못했어요. 조금 뒤에 다시 해 주세요'; }
+  function fetchGifts(force) {
+    if (!socialOn() || SOCIAL.busy.gift || (!force && Date.now() < SOCIAL.giftAt)) return;
+    SOCIAL.giftAt = Date.now() + 90000; SOCIAL.busy.gift = 1;
+    client.rpc('get_ark_gifts').then(function (r) {
+      SOCIAL.busy.gift = 0;
+      if (!r || r.error || !Array.isArray(r.data)) return;
+      if (SOCIAL.giftN >= 0 && r.data.length > SOCIAL.giftN && ui === 'play') toast('🎁 선물이 왔어요 — 📒 마을 수첩 「선물」에서 받아요');
+      SOCIAL.gifts = r.data; SOCIAL.giftN = r.data.length;
+      socialRerender('gifts');
+    }, function () { SOCIAL.busy.gift = 0; });
+  }
+  function sendGift(friendId, nick, amount) {
+    var item = HOTBAR[sel];
+    if (!item || INV.indexOf(item) < 0) return toast('보낼 것을 손에 들어요(단축 칸에서 고르기)');
+    if (have(item) < amount) return toast(nameOf(item) + '이(가) ' + amount + '개 없어요');
+    if (SOCIAL.busy.send) return; SOCIAL.busy.send = 1;
+    client.rpc('send_ark_gift', { p_to: friendId, p_item: item, p_amount: amount }).then(function (r) {
+      SOCIAL.busy.send = 0;
+      var d = r && r.data;
+      if (!d || !d.ok) return toast(giftError(d && d.error));
+      take(item, amount); bagChanged(); sfx('craft');
+      toast('🎁 ' + nick + '님에게 ' + nameOf(item) + ' ' + amount + '개를 보냈어요(행 20:35)');
+      feedPost('gift', 0);
+    }, function () { SOCIAL.busy.send = 0; toast(giftError()); });
+  }
+  function claimGift(g) {
+    client.rpc('claim_ark_gift', { p_id: g.id }).then(function (r) {
+      var d = r && r.data;
+      if (d && d.item) { give(d.item, d.amount); bagChanged(); sfx('pop'); toast('🎁 ' + g.nick + '님이 보낸 ' + nameOf(d.item) + ' ' + d.amount + '개를 받았어요'); }
+      fetchGifts(true);
+    }, function () { toast('선물을 받지 못했어요. 조금 뒤에 다시 해 주세요'); });
+  }
+  // 건축 사진: 게임 화면만 작게 찍는다(한 사람 3장, 제목은 고르기)
+  var photoCap = 0;
+  function takePhoto() {
+    if (!socialOn()) return toast('로그인하면 사진을 올릴 수 있어요');
+    resume();
+    setTimeout(function () {
+      try {
+        renderer.render(scene, camera);
+        var src = canvasEl, W = 480, H = Math.max(1, Math.round(480 * src.height / src.width)), c = document.createElement('canvas');
+        c.width = W; c.height = H; c.getContext('2d').drawImage(src, 0, 0, W, H);
+        var url = c.toDataURL('image/jpeg', 0.62); if (url.length > 118000) url = c.toDataURL('image/jpeg', 0.4);
+        if (url.length > 118000) return toast('사진이 너무 커요. 다시 찍어 주세요');
+        sfx('click'); toast('📷 찰칵! 올리는 중…');
+        client.rpc('post_ark_photo', { p_img: url, p_caption: photoCap }).then(function (r) {
+          var d = r && r.data;
+          if (!d || !d.ok) return toast(d && d.error === 'wait' ? '사진은 2분에 한 장씩 올릴 수 있어요' : '사진을 올리지 못했어요');
+          toast('📷 「' + PHOTO_CAPS[photoCap] + '」 사진을 올렸어요 — 📒 마을 수첩 「사진」에서 볼 수 있어요');
+          SOCIAL.photoAt = 0; feedPost('photo', 0);
+        }, function () { toast('사진을 올리지 못했어요'); });
+      } catch (e) { toast('이 기기에서는 사진을 찍을 수 없어요'); }
+    }, 450);
+  }
+  function fetchPhotos(force) {
+    if (!socialOn() || SOCIAL.busy.photo || (!force && Date.now() < SOCIAL.photoAt)) return;
+    SOCIAL.photoAt = Date.now() + 30000; SOCIAL.busy.photo = 1;
+    client.rpc('get_ark_photos').then(function (r) {
+      SOCIAL.busy.photo = 0;
+      if (!r || r.error || !Array.isArray(r.data)) return;
+      SOCIAL.photos = r.data; socialRerender('photos');
+    }, function () { SOCIAL.busy.photo = 0; });
+  }
+  function showPhoto(p, holder) {
+    if (SOCIAL.imgs[p.id]) { holder.src = SOCIAL.imgs[p.id]; holder.hidden = false; return; }
+    client.rpc('get_ark_photo_img', { p_id: p.id }).then(function (r) { if (r && typeof r.data === 'string') { SOCIAL.imgs[p.id] = r.data; holder.src = r.data; holder.hidden = false; } }, function () {});
+  }
+  // 설계도 나누기: 내 땅에 지은 모양을 저장하고, 친구 설계도를 내 땅에 반투명으로 띄운다
+  var planName = 0;
+  function capturePlan() {
+    if (myPlot < 0) return toast('로그인하고 내 땅을 먼저 받아요');
+    var o = plotOrigin(myPlot), raw = [], x0 = 99, z0 = 99, x1 = -1, z1 = -1, hMax = 0;
+    for (var y = G - 1; y < G + PH && y < SY; y++) for (var z = 0; z < PLOT; z++) for (var x = 0; x < PLOT; x++) {
+      var id = get(o.x + x, y, o.z + z);
+      if (!id || id === WATER || kind(id) === 'plant' || id > 999) continue;
+      if (y === G - 1 && (id === GRASS || id === DIRT || id === SAND)) continue;   // 원래 땅은 빼고 지은 것만
+      raw.push([x, y - (G - 1), z, id]); x0 = Math.min(x0, x); z0 = Math.min(z0, z); x1 = Math.max(x1, x); z1 = Math.max(z1, z); hMax = Math.max(hMax, y - (G - 1));
+    }
+    if (!raw.length) return toast('내 땅에 지은 것이 없어요. 먼저 지어 보세요');
+    var str = raw.map(function (c) { return (c[0] - x0) + '.' + c[1] + '.' + (c[2] - z0) + '.' + c[3]; }).join(';');
+    if (str.length > 40000) return toast('설계도로 담기에는 너무 커요(블록을 조금 줄여 주세요)');
+    client.rpc('save_ark_plan', { p_name: planName, p_cells: str, p_w: x1 - x0 + 1, p_l: z1 - z0 + 1, p_h: Math.min(40, hMax + 1) }).then(function (r) {
+      var d = r && r.data;
+      if (!d || !d.ok) return toast('설계도를 저장하지 못했어요');
+      toast('📐 「' + PLAN_NAMES[planName] + '」 설계도를 저장했어요 — 친구들이 따라 지을 수 있어요(블록 ' + raw.length + '개)');
+      SOCIAL.planAt = 0; feedPost('plan', 0); socialRerender('build');
+    }, function () { toast('설계도를 저장하지 못했어요'); });
+  }
+  function fetchPlans(force) {
+    if (!socialOn() || SOCIAL.busy.plan || (!force && Date.now() < SOCIAL.planAt)) return;
+    SOCIAL.planAt = Date.now() + 30000; SOCIAL.busy.plan = 1;
+    client.rpc('get_ark_plans').then(function (r) {
+      SOCIAL.busy.plan = 0;
+      if (!r || r.error || !Array.isArray(r.data)) return;
+      SOCIAL.plans = r.data; socialRerender('build');
+    }, function () { SOCIAL.busy.plan = 0; if (!SOCIAL.plans) SOCIAL.plans = []; });
+  }
+  function loadPlan(row) {
+    if (myPlot < 0) return toast('로그인하고 내 땅을 먼저 받아요');
+    client.rpc('get_ark_plan', { p_owner: row.owner }).then(function (r) {
+      if (!r || typeof r.data !== 'string' || !r.data) return toast('설계도를 불러오지 못했어요');
+      var cells = r.data.split(';').map(function (s) { return s.split('.').map(Number); }).filter(function (c) { return c.length === 4 && B[c[3]]; });
+      var o = plotOrigin(myPlot);
+      villageBook.plan = { kind: 'custom', plot: myPlot, name: PLAN_NAMES[row.name] || '설계도', nick: row.nick, cells: cells,
+        x: Math.max(0, Math.min(PLOT - row.w, Math.floor(P.x) - o.x)), z: Math.max(0, Math.min(PLOT - row.l, Math.floor(P.z) - o.z)) };
+      saveVillageBook(); resume(); toast('📐 ' + row.nick + '님의 「' + villageBook.plan.name + '」 설계도를 내 땅에 띄웠어요. 반투명 윤곽을 따라 지어요');
+    }, function () { toast('설계도를 불러오지 못했어요'); });
+  }
+  function customPlanCells(plan) {
+    if (!plan || plan.kind !== 'custom' || plan.plot !== myPlot || !plan.cells) return [];
+    var o = plotOrigin(plan.plot);
+    return plan.cells.map(function (c) { return [o.x + plan.x + c[0], G - 1 + c[1], o.z + plan.z + c[2], c[3]]; });
+  }
+  function selectRow(body, label, names, cur, onPick) {
+    var wrap = document.createElement('p'), lab = document.createElement('span'), s = document.createElement('select');
+    lab.textContent = label + ' ';
+    names.forEach(function (n, i) { var op = document.createElement('option'); op.value = i; op.textContent = n; if (i === cur) op.selected = true; s.appendChild(op); });
+    s.addEventListener('change', function () { onPick(+s.value); });
+    wrap.appendChild(lab); wrap.appendChild(s); body.appendChild(wrap);
+  }
+  function renderSocialTab(tab, body) {
+    if (tab !== 'feed' && tab !== 'gifts' && tab !== 'photos') return false;
+    if (!socialOn()) { villageText(body, '로그인하면 마을 소식·선물·사진을 함께 나눌 수 있어요.'); return true; }
+    if (tab === 'feed') {
+      fetchFeed();
+      villageText(body, '최근 사흘 동안 마을에서 있었던 일이에요.');
+      var lines = SOCIAL.feed.map(function (f) { var t = feedLine(f); return t ? t + ' · ' + timeAgo(f.at) : null; }).filter(Boolean);
+      if (!lines.length) villageText(body, '아직 소식이 없어요. 집을 짓거나 사진을 올리면 여기에 나와요.');
+      lines.forEach(function (t) { villageText(body, t); });
+      villageButton(body, '새로 고침', function () { fetchFeed(true); });
+    } else if (tab === 'gifts') {
+      fetchGifts();
+      villageText(body, '받은 선물', 'h3');
+      if (!SOCIAL.gifts.length) villageText(body, '받은 선물이 없어요.');
+      SOCIAL.gifts.forEach(function (g) { villageButton(body, '🎁 ' + g.nick + '님 · ' + nameOf(g.item) + ' ' + g.amount + '개 받기', function () { claimGift(g); }); });
+      villageText(body, '선물 보내기', 'h3');
+      var held = HOTBAR[sel];
+      villageText(body, '손에 든 것: ' + (held && INV.indexOf(held) >= 0 ? nameOf(held) + ' (' + have(held) + '개)' : '없음') + ' · 친구에게 1·4·8개를 보낼 수 있어요(하루 10번).');
+      if (!FRIENDS.ready) { friendsFetch(); villageText(body, '친구 목록을 불러오는 중…'); }
+      var fr = FRIENDS.rows.filter(function (v) { return v.status === 'accepted'; });
+      if (FRIENDS.ready && !fr.length) villageText(body, '아직 친구가 없어요. 친구를 맺으면 선물을 보낼 수 있어요.');
+      fr.forEach(function (f) {
+        var p = villageText(body, f.nick + ' ');
+        [1, 4, 8].forEach(function (n) { villageButton(p, n + '개', function () { sendGift(f.id, f.nick, n); }); });
+      });
+    } else if (tab === 'photos') {
+      fetchPhotos();
+      villageText(body, '지금 보고 있는 게임 화면을 찍어 마을에 전시해요(한 사람 3장까지).');
+      selectRow(body, '사진 제목', PHOTO_CAPS, photoCap, function (i) { photoCap = i; });
+      villageButton(body, '📷 지금 화면 찍어 올리기', takePhoto);
+      villageText(body, '마을 사진첩', 'h3');
+      if (!SOCIAL.photos.length) villageText(body, '아직 올라온 사진이 없어요.');
+      SOCIAL.photos.forEach(function (p) {
+        var row = villageText(body, p.nick + ' · ' + (PHOTO_CAPS[p.caption] || '사진') + ' · ' + timeAgo(p.at) + ' · ♥ ' + p.likes + ' ');
+        var img = document.createElement('img'); img.hidden = true; img.alt = PHOTO_CAPS[p.caption] || '사진'; img.style.cssText = 'display:block;max-width:100%;margin:4px 0;image-rendering:auto';
+        villageButton(row, '보기', function () { showPhoto(p, img); });
+        if (!p.mine) villageButton(row, p.liked ? '♥ 취소' : '♥ 좋아요', function () { client.rpc('like_ark_photo', { p_id: p.id }).then(function () { fetchPhotos(true); }); });
+        if (p.mine || NET.admin) villageButton(row, '지우기', function () { client.rpc('remove_ark_photo', { p_id: p.id }).then(function () { fetchPhotos(true); }); });
+        row.appendChild(img);
+      });
+    }
+    return true;
+  }
+  function renderPlanShare(body) {
+    villageText(body, '설계도 나누기', 'h3');
+    if (!socialOn()) { villageText(body, '로그인하면 내 설계도를 친구와 나눌 수 있어요.'); return; }
+    villageText(body, '내 땅에 지은 모양을 설계도로 저장하면 친구들이 자기 땅에서 따라 지을 수 있어요(한 사람 하나).');
+    selectRow(body, '설계도 이름', PLAN_NAMES, planName, function (i) { planName = i; });
+    villageButton(body, '📐 내 땅 모양을 설계도로 저장', capturePlan);
+    fetchPlans();
+    if (SOCIAL.plans === null) { villageText(body, '설계도 목록을 불러오는 중…'); return; }
+    if (!SOCIAL.plans.length) villageText(body, '아직 나눈 설계도가 없어요. 친구가 저장하면 여기에 나와요.');
+    SOCIAL.plans.forEach(function (row) {
+      villageButton(body, (row.mine ? '내 설계도' : row.nick + '님') + ' · ' + (PLAN_NAMES[row.name] || '설계도') + ' (' + row.w + '×' + row.l + ', 높이 ' + row.h + ')', function () { loadPlan(row); });
+    });
+  }
   function renderVillageExtras(tab,body) {
+    if (renderSocialTab(tab, body)) return;
     if(tab==='discover') {
       villageText(body,'가까운 옛터를 찾으면 살펴보고 발견물을 내 땅에 전시할 수 있어요.');
       VILLAGE_SITES.forEach(function (s) { villageText(body, (villageBook.found&&villageBook.found[s.item]?'✓ ':'')+s.name+' · '+s.clue); });
