@@ -396,6 +396,10 @@
       if (r.error || !d) { toast('보내지 못했어요 — 인터넷을 확인해 주세요'); return; }
       if (d.error) {
         if (d.error === 'muted') { var u = new Date(d.until); toast('선생님이 잠시 채팅을 멈췄어요 (' + u.getHours() + ':' + ('0' + u.getMinutes()).slice(-2) + '까지)'); }
+        else if (d.error === 'bad') {   // 서버가 욕설을 막음 — 보낸 사람에게만 보임
+          toast('🕊 이 글은 보내지 않았어요 — 고운 말로 다시 써 볼까요?');
+          chatSys('🕊 「무릇 더러운 말은 너희 입 밖에도 내지 말고 오직 덕을 세우는 데 소용되는 대로 선한 말을 하여 듣는 자들에게 은혜를 끼치게 하라」 (에베소서 4:29)');
+        }
         else toast(CHAT_ERR[d.error] || '보내지 못했어요');
         return;
       }
