@@ -4030,6 +4030,26 @@
     on('btnFold', function () { toggleFold('top'); });
     on('qFold', function () { toggleFold('q'); });
     on('qMini', function () { toggleFold('q'); });
+    // 게임 메뉴: 버튼을 묶음 탭(게임·이동·함께·설정)으로 — 돌아가기·나가기는 늘 보임
+    (function () {
+      var grid = document.querySelector('#pause .grid3'); if (!grid) return;
+      var G = { game: ['mBook', 'mStory', 'mVillageWork', 'mLook', 'mMap', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
+        together: ['mParty', 'mFriends', 'mVisit', 'mRevert'], settings: ['mLight', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
+      var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
+      Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
+      var sl = grid.querySelector('.slider'); if (sl) sl.setAttribute('data-g', 'settings');
+      Array.prototype.forEach.call(grid.children, function (el) { if (!el.hasAttribute('data-g') && el.id !== 'mResume' && el.tagName !== 'A') el.setAttribute('data-g', 'game'); });
+      var tabs = document.createElement('div'); tabs.id = 'pauseTabs';
+      function pick(g) {
+        S.pauseTab = g; Array.prototype.forEach.call(grid.children, function (el) { el.classList.toggle('gon', el.getAttribute('data-g') === g); });
+        Array.prototype.forEach.call(tabs.children, function (b) { b.classList.toggle('on', b.getAttribute('data-g') === g); });
+      }
+      Object.keys(NAMES).forEach(function (g) {
+        var b = document.createElement('button'); b.className = 'tab'; b.setAttribute('data-g', g); b.textContent = NAMES[g];
+        b.addEventListener('click', function (e) { e.stopPropagation(); pick(g); saveSettings(); sfx('click'); }); tabs.appendChild(b);
+      });
+      grid.parentNode.insertBefore(tabs, grid); pick(G[S.pauseTab] ? S.pauseTab : 'game');
+    })();
     on('drop1', function () { var id = bagPick && bagPick.id; bagPick = null; closePanel(); throwItem(id, 1); });
     on('dropAll', function () { var id = bagPick && bagPick.id; bagPick = null; closePanel(); throwItem(id, Math.min(64, have(id))); });
     on('mapCap', function () { toggleFold('map'); });
@@ -7155,10 +7175,21 @@
   }
   var villageTabs = [['build','설계도'],['materials','재료'],['discover','탐험'],['projects','공동 작업'],['neighbors','마을 사람'],['cargo','나귀 짐'],['showcase','집 구경'],['frontier','개척 땅'],['feed','마을 소식'],['gifts','선물'],['photos','사진']];
   function openVillageWork(tab) { villageTab=tab; openPanel('villageWork'); renderVillageWork(); if(tab==='projects'||tab==='neighbors')fetchVillageProjects(); }
+  var VILLAGE_GROUPS=[['🔨 짓기',['build','materials','projects','frontier']],['🏘 마을',['neighbors','cargo','discover']],['🤝 함께',['showcase','feed','gifts','photos']]];
   function renderVillageWork() {
     var tabs=$('villageTabs'), body=$('villageBody'); tabs.replaceChildren(); body.replaceChildren();
+    // 탭은 두 줄: 위는 묶음(짓기·마을·함께), 아래는 고른 묶음의 탭만
+    function tabFetch() { if(villageTab==='projects'||villageTab==='neighbors')fetchVillageProjects(); if(villageTab==='frontier')fetchFrontier(true); if(villageTab==='feed')fetchFeed(true); if(villageTab==='gifts')fetchGifts(true); if(villageTab==='photos')fetchPhotos(true); if(villageTab==='build')fetchPlans(true); }
+    var curG=VILLAGE_GROUPS.filter(function (g) { return g[1].indexOf(villageTab)>=0; })[0]||VILLAGE_GROUPS[0];
+    var gRow=document.createElement('div'); gRow.className='vgroups'; tabs.appendChild(gRow);
+    VILLAGE_GROUPS.forEach(function (g) {
+      var b=villageButton(gRow,g[0],function () { if(g===curG) return; villageTab=g[1][0]; renderVillageWork(); tabFetch(); });
+      b.setAttribute('aria-pressed',String(g===curG));
+    });
+    var sRow=document.createElement('div'); sRow.className='vsub'; tabs.appendChild(sRow);
     villageTabs.forEach(function (tab) {
-      var b=villageButton(tabs,tab[1],function () { villageTab=tab[0]; renderVillageWork(); if(villageTab==='projects'||villageTab==='neighbors')fetchVillageProjects(); if(villageTab==='frontier')fetchFrontier(true); if(villageTab==='feed')fetchFeed(true); if(villageTab==='gifts')fetchGifts(true); if(villageTab==='photos')fetchPhotos(true); if(villageTab==='build')fetchPlans(true); });
+      if(curG[1].indexOf(tab[0])<0) return;
+      var b=villageButton(sRow,tab[1],function () { villageTab=tab[0]; renderVillageWork(); tabFetch(); });
       b.setAttribute('aria-pressed',String(villageTab===tab[0]));
     });
     if(villageTab==='build') {

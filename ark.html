@@ -468,6 +468,14 @@
   #friendsRecent .vrow { margin-bottom:4px; }
   #villageWork .panel { width:min(560px,95vw); max-height:calc(100dvh - 24px); overflow:auto; }
   #villageTabs, #villageBody .vme { display:flex; flex-wrap:wrap; gap:6px; }
+  #villageTabs { flex-direction:column; flex-wrap:nowrap; }
+  #villageTabs .vgroups, #villageTabs .vsub { display:flex; flex-wrap:wrap; gap:6px; }
+  #villageTabs .vgroups button { font-weight:bold; }
+  #villageTabs button[aria-pressed="true"] { background:#4f7d3c; color:#fff; box-shadow:inset 2px 2px 0 #2c4a20, inset -2px -2px 0 #8fc070; }
+  #villageTabs .vsub { padding-top:6px; border-top:2px solid rgba(0,0,0,.25); }
+  /* 게임 메뉴 묶음 탭 */
+  #pauseTabs { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin:0 0 8px; }
+  #pause .grid3 > [data-g]:not(.gon) { display:none !important; }
   #villageWork .mc, #mapPinNow, #mapPins { min-height:40px; }
   #villageBody .vrow { flex-wrap:wrap; }
   #villageBody select, #mapPins { max-width:100%; font:inherit; }
