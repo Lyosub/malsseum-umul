@@ -2073,7 +2073,7 @@
               start = P[2].length / 3;
               for (k = 0; k < 4; k++) {
                 v = CROSS[q][k]; P[2].push(x + v[0], y + v[1] * (FARM_PLANTS[id] && id >= 410 ? plantHeight(id) : 1), z + v[2]);
-                uv = tileUV(tp, k < 2 ? 0 : 1, v[1]); U[2].push(uv[0], uv[1]); C[2].push(ps, def[5] || LIGHTS[id] ? 1 : blk(x + v[0], y + v[1], z + v[2]), 0);
+                uv = tileUV(tp, k < 2 ? 0 : 1, v[1]); U[2].push(uv[0], uv[1]); C[2].push(ps, def[5] || LIGHTS[id] ? 1 : blk(x + v[0], y + v[1], z + v[2]), (v[1] > 0.5 && !def[5] && !LIGHTS[id]) ? 1 : 0);
               }
               I[2].push(start, start + 1, start + 2, start, start + 2, start + 3);
             }
@@ -2128,7 +2128,7 @@
                 ao = 1 - occ * 0.15;
               }
               var m = Math.min(1, shade * ao);
-              C2.push(m, lit ? 1 : blk(x + v[0], y + v[1], z + v[2]) * ao * F.s, 0);
+              C2.push(m, lit ? 1 : blk(x + v[0], y + v[1], z + v[2]) * ao * F.s, water ? 2 : 0);
             }
             I2.push(start, start + 1, start + 2, start, start + 2, start + 3);
           }
@@ -4994,10 +4994,14 @@
   // ───────── 해·밤, 비 ─────────
   var FOG_FAR = (isTouch ? 5 : 7) * 32 - 12;
   var DAY_LEN = 900, dayT = DAY_LEN * 0.06, rain = 0, rainOn = false, rainTimer = 100;
-  var LU = { uDay: { value: 1 }, uTint: { value: new THREE.Color(1, 1, 1) } };
+  var LU = { uDay: { value: 1 }, uTint: { value: new THREE.Color(1, 1, 1) }, uTime: { value: 0 } };
   function lightPatch(mat) {
     mat.onBeforeCompile = function (sh) {
-      sh.uniforms.uDay = LU.uDay; sh.uniforms.uTint = LU.uTint;
+      sh.uniforms.uDay = LU.uDay; sh.uniforms.uTint = LU.uTint; sh.uniforms.uTime = LU.uTime;
+      sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+        '#include <begin_vertex>\n#ifdef USE_COLOR\n float swayW = color.b;\n if (swayW > 0.5) { vec4 wpS = modelMatrix * vec4(position, 1.0);\n' +
+        '  if (swayW < 1.5) { transformed.x += sin(uTime * 1.7 + wpS.x * 0.7 + wpS.z * 0.5) * 0.07; transformed.z += cos(uTime * 1.3 + wpS.z * 0.6 + wpS.x * 0.2) * 0.05; }\n' +
+        '  else { transformed.y += sin(uTime * 1.6 + wpS.x * 0.8 + wpS.z * 0.6) * 0.035 - 0.035; } }\n#endif');
       sh.fragmentShader = 'uniform float uDay;\nuniform vec3 uTint;\n' + sh.fragmentShader.replace('#include <color_fragment>',
         '#if defined( USE_COLOR )\n diffuseColor.rgb *= max(vColor.r * uDay * uTint, vColor.g * vec3(1.0, 0.86, 0.62));\n#endif');
     };
@@ -5066,7 +5070,7 @@
   }
   var snowNow = false, snowRegT = 0, snowRegOK = true;
   function updateDay(dt) {
-    dayT += dt;
+    dayT += dt; LU.uTime.value = (LU.uTime.value + dt) % 600;
     var p = (dayT % DAY_LEN) / DAY_LEN, ang = p < 0.62 ? p / 0.62 * Math.PI : Math.PI + (p - 0.62) / 0.38 * Math.PI;
     var elev = Math.sin(ang), dayF = clamp01((elev + 0.12) / 0.34); dayF = dayF * dayF * (3 - 2 * dayF);
     var dusk = elev > -0.2 ? clamp01(1 - Math.abs(elev) / 0.28) : 0;
@@ -5216,7 +5220,7 @@
     }
     var on = S.sound && started ? 1 : 0;
     if (amb.water) amb.water.gain.value = 0.05 * nearWater * on;
-    if (amb.rain) amb.rain.gain.value = 0.07 * rain * on * (underRoof ? 0.4 : 1);
+    if (amb.rain) amb.rain.gain.value = snowNow ? 0 : 0.07 * rain * on * (underRoof ? 0.4 : 1);   // 눈은 조용히
   }
 
   // ───────── 지도(공식으로 그려 두고, 조금씩 채운다) ─────────
