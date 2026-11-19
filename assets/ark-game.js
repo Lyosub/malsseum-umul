@@ -5009,39 +5009,56 @@
     for (var dz = -1; dz <= 1; dz++) for (var dx = -1; dx <= 1; dx++) { var x = cx + dx, z = cz + dz; if (inWorldC(x, z) && !COLS[z * NC + x]) return false; }
     return true;
   }
-  function meshColumn(cx, cz) { for (var cy = 0; cy < CY; cy++) buildChunk(cx, cy, cz); meshedCols[cz * NC + cx] = 1; }
+  function meshColumn(cx, cz) { for (var cy = 0; cy < CY; cy++) buildChunk(cx, cy, cz); meshedCols[cz * NC + cx] = 1; delete meshProg[cz * NC + cx]; }
+  // 걸어 다닐 때는 기둥 하나를 높이 조각(3개)으로 나눠 프레임마다 한 조각씩 그린다(느린 휴대폰에서 끊기지 않게)
+  var meshProg = {};
+  function meshStep(cx, cz) { var k = cz * NC + cx, c = meshProg[k] || 0; buildChunk(cx, c, cz); if (++c >= CY) { meshedCols[k] = 1; delete meshProg[k]; } else meshProg[k] = c; }
   function unmeshColumn(cx, cz) {
     for (var cy = 0; cy < CY; cy++) { var key = cx + ',' + cy + ',' + cz, old = chunks[key]; if (old) { old.forEach(function (m) { scene.remove(m); m.geometry.dispose(); }); delete chunks[key]; } }
-    meshedCols[cz * NC + cx] = 0;
+    meshedCols[cz * NC + cx] = 0; delete meshProg[cz * NC + cx];
   }
   function newColumn(cx, cz) { genColumn(cx, cz); spawnColumn(cx, cz); }
   // 바로 필요할 때(처음, 순간 이동): 그 둘레를 한꺼번에
   function ensureAround(x, z, r) {
+    if (isTouch) r = Math.max(1, r - 1);   // 휴대폰: 바로 밟을 곳만 먼저 만들고 나머지는 걸으며 채운다(한꺼번에 만들면 몇 초씩 멈춤)
     var pcx = Math.floor(x / CS), pcz = Math.floor(z / CS), dx, dz;
     for (dz = -r - 1; dz <= r + 1; dz++) for (dx = -r - 1; dx <= r + 1; dx++) { var cx = pcx + dx, cz = pcz + dz; if (inWorldC(cx, cz) && !COLS[cz * NC + cx]) newColumn(cx, cz); }
     for (dz = -r; dz <= r; dz++) for (dx = -r; dx <= r; dx++) { var mx = pcx + dx, mz = pcz + dz; if (inWorldC(mx, mz) && !meshedCols[mz * NC + mx] && columnReady(mx, mz)) meshColumn(mx, mz); }
   }
   var dropT = 0;
+  var streamFlip = false;
   function streamTick(px, pz, dt) {
-    var pcx = Math.floor(px / CS), pcz = Math.floor(pz / CS), t0 = performance.now(), i, o, cx, cz;
-    for (i = 0; i < OFFS.length; i++) {
-      o = OFFS[i]; if (o[2] > R_GEN * R_GEN) break;
-      cx = pcx + o[0]; cz = pcz + o[1];
-      if (inWorldC(cx, cz) && !COLS[cz * NC + cx]) { newColumn(cx, cz); if (performance.now() - t0 > 6) break; }
+    var pcx = Math.floor(px / CS), pcz = Math.floor(pz / CS), t0, i, o, cx, cz;
+    // 땅 만들기와 모양 만들기를 한 프레임에 같이 하지 않고 번갈아 한다(둘 다 하면 느린 폰에서 한 프레임이 100ms를 넘음)
+    function genPass() {
+      var did = false; t0 = performance.now();
+      for (i = 0; i < OFFS.length; i++) {
+        o = OFFS[i]; if (o[2] > R_GEN * R_GEN) break;
+        cx = pcx + o[0]; cz = pcz + o[1];
+        if (inWorldC(cx, cz) && !COLS[cz * NC + cx]) { newColumn(cx, cz); did = true; if (performance.now() - t0 > 6) break; }
+      }
+      return did;
     }
-    t0 = performance.now();
-    for (i = 0; i < OFFS.length; i++) {
-      o = OFFS[i]; if (o[2] > R_MESH * R_MESH) break;
-      cx = pcx + o[0]; cz = pcz + o[1];
-      if (inWorldC(cx, cz) && !meshedCols[cz * NC + cx] && COLS[cz * NC + cx] && columnReady(cx, cz)) { meshColumn(cx, cz); if (performance.now() - t0 > 7) break; }
+    function meshPass() {
+      var did = false; t0 = performance.now();
+      for (i = 0; i < OFFS.length; i++) {
+        o = OFFS[i]; if (o[2] > R_MESH * R_MESH) break;
+        cx = pcx + o[0]; cz = pcz + o[1];
+        if (inWorldC(cx, cz) && !meshedCols[cz * NC + cx] && COLS[cz * NC + cx] && columnReady(cx, cz)) { meshStep(cx, cz); did = true; if (performance.now() - t0 > 7) break; }
+      }
+      return did;
     }
+    streamFlip = !streamFlip;
+    var didGen = streamFlip ? genPass() : false;
+    var didMesh = didGen ? false : meshPass();
+    if (!streamFlip && !didMesh) genPass();
     dropT -= dt;
     if (dropT <= 0) {
       dropT = 1;
       for (var k = 0; k < NC * NC; k++) {
         if (!COLS[k] && !meshedCols[k]) continue;
         var kx = k % NC, kz = (k - kx) / NC, d2 = (kx - pcx) * (kx - pcx) + (kz - pcz) * (kz - pcz);
-        if (meshedCols[k] && d2 > (R_MESH + 2) * (R_MESH + 2)) unmeshColumn(kx, kz);
+        if ((meshedCols[k] || meshProg[k]) && d2 > (R_MESH + 2) * (R_MESH + 2)) unmeshColumn(kx, kz);
         if (COLS[k] && d2 > R_DROP * R_DROP) COLS[k] = null;   // 고친 자리는 EDITS에 있어 다시 만들 때 살아남
       }
       despawnFar(px, pz);
