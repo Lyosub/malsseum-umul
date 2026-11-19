@@ -814,6 +814,9 @@
   B[WOOL_W] = ['흰 양털 블록', 'woolW', 'woolW', 'woolW']; B[WOOL_B] = ['청색 양털 블록', 'woolB', 'woolB', 'woolB'];
   B[WOOL_V] = ['자색 양털 블록', 'woolV', 'woolV', 'woolV']; B[WOOL_R] = ['홍색 양털 블록', 'woolR', 'woolR', 'woolR'];
   B[LOG_X] = ['통나무', 'logTop', 'logSideH', 'logSideH']; B[LOG_Z] = ['통나무', 'logTop', 'logSideH', 'logSideH'];
+  var CHAIR = 510;
+  var CHAIR_SEAT = .56;
+  for (var cf = 0; cf < 4; cf++) regShape(CHAIR + cf, '나무 의자', 'chair', CHAIR, GOPHER, cf);
   regShape(BED, '침대', 'bed', BED, GOPHER); B[BED][1] = 'bedTop'; B[BED][2] = 'bedSide'; B[BED][3] = 'plankG';
   regShape(LEVER, '레버', 'lever', LEVER, STONE); regShape(LEVER + 1, '레버', 'lever', LEVER, STONE, 0, true); B[LEVER][1] = B[LEVER][2] = B[LEVER][3] = B[LEVER + 1][1] = B[LEVER + 1][2] = B[LEVER + 1][3] = 'lever';
   for (var wt = 0; wt < 4; wt++) { regShape(WTORCH + wt, '횃불', 'wtorch', TORCH, GOPHER, wt); B[WTORCH + wt][1] = B[WTORCH + wt][2] = B[WTORCH + wt][3] = 'wtorch'; B[WTORCH + wt][5] = 1; }
@@ -1102,6 +1105,16 @@
     }
     if (s.type === 'door') return [EDGE[s.open ? (s.f + 1) % 4 : s.f]];
     if (s.type === 'ladder') return [[[0, 0, 0, 1, 1, 0.1], [0.9, 0, 0, 1, 1, 1], [0, 0, 0.9, 1, 1, 1], [0, 0, 0, 0.1, 1, 1]][s.f]];
+    if (s.type === 'chair') {
+      var boxes = [[.1,.42,.1,.9,CHAIR_SEAT,.9],[.1,0,.1,.23,.42,.23],[.77,0,.1,.9,.42,.23],
+        [.1,0,.77,.23,.42,.9],[.77,0,.77,.9,.42,.9],[.1,CHAIR_SEAT,.77,.9,1,.9]];
+      if (!s.f) return boxes;
+      return boxes.map(function (b) {
+        if (s.f === 1) return [1-b[5],b[1],b[0],1-b[2],b[4],b[3]];
+        if (s.f === 2) return [1-b[3],b[1],1-b[5],1-b[0],b[4],1-b[2]];
+        return [b[2],b[1],1-b[3],b[5],b[4],1-b[0]];
+      });
+    }
     if (s.type === 'bed') return [[0, 0, 0, 1, 0.56, 1]];
     if (s.type === 'carpet') return [[0, 0, 0, 1, 0.07, 1]];
     if (s.type === 'lampstand') return [[0.25, 0, 0.25, 0.75, 0.15, 0.75], [0.44, 0.15, 0.44, 0.56, 0.85, 0.56], [0.3, 0.85, 0.3, 0.7, 1, 0.7]];
@@ -1134,7 +1147,7 @@
     ORE_CU, ORE_FE, ORE_AG, ORE_AU, ING_CU, ING_FE, ING_AG, ING_AU, FURNACE, BLK_CU, BLK_FE, BLK_AG, BLK_AU, STICK];
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
-  INV.push(SEED, WHEAT, BREAD, FIG, BED, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
+  INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
   INV.push(ORE_COAL, COAL, CHAR, BLK_COAL, TORCH, DEEP, ORE_ONYX, GEM_ONYX, BLK_ONYX, ORE_SAPH, GEM_SAPH, BLK_SAPH, ORE_DIA, GEM_DIA, BLK_DIA);
@@ -1159,7 +1172,7 @@
   setClass('pick', [DEEP], 3.0); setClass('pick', [BLK_COAL], 2.4); setClass('pick', [BLK_ONYX], 4.0); setClass('pick', [BLK_SAPH], 4.8); setClass('pick', [BLK_DIA], 5.2);
   BASE_T[TORCH] = 0.05; BASE_T[SAPLING] = 0.05;
   setClass('pick', [FURNACE_ON], 1.6); setClass('axe', [LADDER, LADDER + 1, LADDER + 2, LADDER + 3], 0.4); setClass('axe', [CHEST, CRAFT], 1.2);
-  setClass('axe', [BED, SIGN, SIGN + 1, SIGN + 2, SIGN + 3], 0.5); setClass('pick', [LEVER, LEVER + 1], 0.3); setClass('pick', [PANE], 0.25);
+  setClass('axe', [BED, CHAIR, CHAIR + 1, CHAIR + 2, CHAIR + 3, SIGN, SIGN + 1, SIGN + 2, SIGN + 3], 0.5); setClass('pick', [LEVER, LEVER + 1], 0.3); setClass('pick', [PANE], 0.25);
   setClass('knife', [WOOL_W, WOOL_B, WOOL_V, WOOL_R], 0.5); setClass('axe', [LOG_X, LOG_Z], 1.4);
   GEMS.forEach(function (g, i) { if (!g) return; setClass('pick', [gemOre(i)], 5.2 + g[7] * 0.3); DROP[gemOre(i)] = gemItem(i); });
   for (var fsj = 0; fsj < 12; fsj++) setClass('pick', [FSTONE0 + fsj], 3.0);
@@ -1259,6 +1272,7 @@
   RECIPES.push({ out: [CARPET, 3], need: [[WOOL_R, 2]], cat: 'shape' });
   RECIPES.push({ out: [LANTERN, 1], need: [[ING_FE, 1], [TORCH, 1]], cat: 'shape' });
   RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 2], [ING_AU, 1], [STICK, 1]], cat: 'wear', table: true, ref: '엡 6:17' });
+  RECIPES.push({ out: [CHAIR, 1], need: [[GOPHER, 3], [STICK, 2]], cat: 'shape' });
   RECIPES.push({ out: [BED, 1], need: [[WOOL, 3], [GOPHER, 3]], cat: 'block', ref: '시 4:8' });
   RECIPES.push({ out: [LEVER, 1], need: [[STICK, 1], [STONE, 1]], cat: 'shape' });
   RECIPES.push({ out: [PANE, 16], need: [[GLASS, 6]], cat: 'shape' });
@@ -2574,10 +2588,50 @@
     resume();
     if (isTouch && !S.practiceSeen) openPractice();
   }
+  var forestRoute = null;
+  var FOREST_ENTRY = [VX1 + 14, PZ0 + 60];
+  function startForestRoute() {
+    var points = [];
+    if (P.x <= VX1 && P.x >= PX0 - 10 && P.z >= PZ0 - 12 && P.z <= VZ1 + 6) {
+      var row = Math.max(0, Math.min(PROWS, Math.round((P.z - PZ0 + 1) / PSTEP)));
+      var roadZ = PZ0 + row * PSTEP - 1;
+      if (Math.abs(P.z - roadZ) > 2) points.push([P.x, roadZ]);
+      points.push([VX1 + 8, roadZ]);
+    }
+    points.push(FOREST_ENTRY);
+    forestRoute = points;
+    resume();
+    renderForestRoute();
+  }
+  function cancelForestRoute() {
+    forestRoute = null;
+    $('forestGuide').hidden = true;
+  }
+  function renderForestRoute() {
+    if (!forestRoute) return;
+    var next = forestRoute[0];
+    var distance = Math.hypot(next[0] - P.x, next[1] - P.z);
+    while (forestRoute.length > 1 && distance <= 2) {
+      forestRoute.shift();
+      next = forestRoute[0];
+      distance = Math.hypot(next[0] - P.x, next[1] - P.z);
+    }
+    var remaining = Math.hypot(FOREST_ENTRY[0] - P.x, FOREST_ENTRY[1] - P.z);
+    if (remaining <= 6) {
+      cancelForestRoute();
+      toast('동쪽 숲에 도착했어요!');
+      return;
+    }
+    var angle = Math.atan2(next[0] - P.x, P.z - next[1]) + P.yaw;
+    $('forestArrow').style.transform = 'rotate(' + angle + 'rad)';
+    var distanceLabel = Math.round(remaining) + '칸';
+    if ($('forestDistance').textContent !== distanceLabel) $('forestDistance').textContent = distanceLabel;
+    $('forestGuide').hidden = false;
+  }
   function travel(where) {
+    if (where === 'forest') return startForestRoute();
     var spots = {
       ark: [XM + 0.5, AZ1 + 8, 0, '방주 문 앞이에요 — 문은 옆으로(창 6:16)'],
-      forest: [VX1 + 14, PZ0 + 60, -Math.PI / 2, '동쪽 숲이에요. 나무를 꾹 눌러 통나무를 모아요'],
       hill: [PX0 - 14, PZ0 + 60, Math.PI / 2, '서쪽 산이에요. 위쪽 바위에서 돌·석회암·검은 돌을 캘 수 있어요'],
       lake: [XM + 0.5, LZ - LRZ - 6, Math.PI, '남쪽 호수예요. 물가에서 진흙과 갈대를, 동쪽에서 역청을 캐요(창 14:10)'],
       sea: [XM + 0.5, SEA_Z + 24, 0, '북쪽 바다예요. 모래사장과 바닷속 물고기를 만나 보세요'],
@@ -2599,6 +2653,7 @@
     if (on && src === 'btn' && !runTold) { runTold = true; toast('🏃 달리기 켬 — 앞으로 걸으면 더 빨리 가요. 한 번 더 누르면 꺼져요'); }
   }
   function jumpPress() {
+    if (furnitureRest) return standFromFurniture();
     var now = performance.now();
     if (now - lastJumpTap < 280) { toggleFly(); lastJumpTap = 0; } else lastJumpTap = now;
     jumpHeld = true;
@@ -2737,6 +2792,7 @@
   }
   function toggleFly() {
     if (!isAdm()) { if (P.fly) { P.fly = false; document.body.classList.remove('flying'); } return; }   // 날기는 관리자만
+    if (furnitureRest) return;
     if (riding) { toast('내린 뒤에 날 수 있어요'); return; }
     P.fly = !P.fly; P.vy = 0;
     document.body.classList.toggle('flying', P.fly);
@@ -2852,7 +2908,7 @@
     sfx('door'); swingT = .25;
   }
   function act(kindA, h) {
-    if (!h) return;
+    if (!h || furnitureRest) return;
     if (kindA === 'break') {
       var why = canMine(h.x, h.y, h.z); if (why) return deny(why);
       var old = get(h.x, h.y, h.z), usedTool = mineInfo(old).tool || 0;
@@ -2883,6 +2939,7 @@
         craftCat = 'block'; invTab = 'craft'; openPanel('inv'); return;
       }
       if (tgt === BED) return useBed(h.x, h.y, h.z);
+      if (SHAPE[tgt] && SHAPE[tgt].type === 'chair') return beginFurnitureRest('sit', h.x, h.y, h.z, tgt);
       if (tgt === LAMPSTAND || tgt === LAMPSTAND + 1) return useLampstand(h.x, h.y, h.z);
       if (tgt === SOCKET) return useSocket(h.x, h.y, h.z);
       if (tgt === PEARL) return toast(STORY.done ? '문이 열려 있어요' : '진주 문은 닫혀 있어요 — 📜 나그네의 길을 끝까지 걸어야 열려요(계 21:21)');
@@ -2898,6 +2955,7 @@
       if (item === SEED) { if (have(SEED) < 1) return; return plantSeed(h); }
       var bx = h.px, by = h.py, bz = h.pz, id = item, ld = lookDir();
       if (SHAPE[id] && SHAPE[id].type === 'stair') id = SHAPE[id].base + ld;
+      if (item === CHAIR) id = CHAIR + (ld + 2) % 4;
       if (item === GATE) id = GATE_STATES[ld % 2][0];
       if (item === STRIKER) {
         if (!have(STRIKER)) return deny('먼저 부시를 만들어요');
@@ -3051,7 +3109,7 @@
   // 캐는 중(꾹 누르기/왼쪽 클릭 누르고 있기)
   var mine = null, crackMesh = null, crackGeo = [];
   function mineTick(h, dt) {
-    if (!h) { mine = null; return; }
+    if (!h || furnitureRest) { mine = null; return; }
     if (!mine || mine.x !== h.x || mine.y !== h.y || mine.z !== h.z) {
       var why = canMine(h.x, h.y, h.z);
       if (why) { deny(why); mine = { x: h.x, y: h.y, z: h.z, t: 0, need: 1, denied: true }; return; }
@@ -3698,6 +3756,8 @@
     on('tHelp', function () { openPanel('help'); sfx('click'); });
     on('btnPause', function () { openPanel('pause'); sfx('click'); });
     on('btnView', cycleView);
+    on('restUp', standFromFurniture);
+    on('forestCancel', cancelForestRoute);
     on('btnBag', function () { openPanel('inv'); sfx('click'); });
     on('btnChat', openChat);
     on('chatSend', sendChat);
@@ -4058,7 +4118,8 @@
     if (id === WELL) return held === BUCKET || held === WATER_JAR ? '물 긷기' : '우물 쓰기';
     if (id === ALTAR) return '기도하기';
     if (id === WORD_SHELF) return '말씀 읽기';
-    if (id === BED) return '잠들기';
+    if (id === BED) return '눕기';
+    if (shape && shape.type === 'chair') return '앉기';
     if (id === CHEST) return '궤 열기';
     if (id === CRAFT || id === FURNACE || id === FURNACE_ON ||
         (STATION_BITS[id] && !FARM_SEEDS[held])) return '만들기';
@@ -4095,7 +4156,7 @@
   }
   function updateMobileBuild(now) {
     var action = $('touchAction'), toggle = $('slabMode');
-    if (!isTouch || ui !== 'play') {
+    if (!isTouch || ui !== 'play' || furnitureRest) {
       if (!action.hidden) action.hidden = true;
       if (!toggle.hidden) toggle.hidden = true;
       slabGhost.visible = false;
@@ -4117,6 +4178,7 @@
   }
   // 톡/오른쪽 클릭: 동물이 먼저, 아니면 블록 놓기(문이면 열고 닫기)
   function tapAt(sx, sy) {
+    if (furnitureRest) return;
     var dir = screenDir(sx, sy), held=HOTBAR[sel];
     if(held===FISH_ROD||held===FISH_NET) return useFishing(held,dir);
     if(held===WORD_SCROLL && have(held)) return showWordCard(false);
@@ -4780,6 +4842,13 @@
     }
     drawMapPeople(x, big, ox, oz, sc, w, h);
     drawVillagePins(x, ox, oz, sc, w, h);
+    if (forestRoute) {
+      x.save();
+      x.strokeStyle = '#ffdb61'; x.lineWidth = big ? 3 : 2; x.setLineDash([5, 4]);
+      x.beginPath(); x.moveTo((P.x - ox) * sc, (P.z - oz) * sc);
+      forestRoute.forEach(function (point) { x.lineTo((point[0] - ox) * sc, (point[1] - oz) * sc); });
+      x.stroke(); x.restore();
+    }
     var mx = (P.x - ox) * sc, mz = (P.z - oz) * sc, r = big ? 7 : 5;
     x.save(); x.translate(mx, mz); x.rotate(-P.yaw);
     x.beginPath(); x.moveTo(0, -r * 1.3); x.lineTo(r * 0.8, r); x.lineTo(-r * 0.8, r); x.closePath();
@@ -5025,6 +5094,7 @@
         }
         streamTick(camera.position.x, camera.position.z, dt); mapTick();
         stepBits(dt); stepDrops(dt); stepFalls(dt); stepCreatures(dt, now / 1000); netTick(dt, now);
+        if (forestRoute && ui === 'play') renderForestRoute();
         renderer.render(scene, camera);
         requestAnimationFrame(loop);
       })(last);
@@ -5038,7 +5108,9 @@
       },300);
     });
   }
-  function teleport(x, y, z, yaw) {
+  function teleport(x, y, z, yaw, keepGuide) {
+    clearFurnitureRest();
+    if (!keepGuide) cancelForestRoute();
     if(ferryRide){ferryRide=null;ferryMesh.visible=false;}
     if (riding) dismount(true);
     ensureAround(x, z, 2);
@@ -5068,6 +5140,16 @@
   var fwd = new THREE.Vector3(), lastX = 0, lastZ = 0;
   function step(dt) {
     if(ferryRide){stepFerry(dt);return;}
+    if (furnitureRest) {
+      var rest = furnitureRest;
+      if (get(rest.x, rest.y, rest.z) !== rest.id || jumpHeld || joy.x || joy.y ||
+          keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD || keys.ArrowUp || keys.ArrowLeft || keys.ArrowDown || keys.ArrowRight ||
+          keys.ShiftLeft || keys.ShiftRight) {
+        standFromFurniture();
+      }
+      placeCamera(dt, 0);
+      return;
+    }
     var mx = 0, mz = 0;
     if (keys.KeyW || keys.ArrowUp) mz -= 1; if (keys.KeyS || keys.ArrowDown) mz += 1;
     if (keys.KeyA || keys.ArrowLeft) mx -= 1; if (keys.KeyD || keys.ArrowRight) mx += 1;
@@ -5137,7 +5219,8 @@
     bobAmp += ((P.ground && speed > 1 ? 1 : 0) - bobAmp) * Math.min(1, 8 * dt);
     swingT = Math.max(0, swingT - dt);
     var sw = Math.sin((swingT / 0.25) * Math.PI);
-    if (S.view === 0) {
+    if (furnitureRest) ey = P.y + (furnitureRest.pose === 'lie' ? .35 : .85);
+    if (S.view === 0 && !furnitureRest) {
       camDist = 0;
       var bob = Math.sin(P.walk * 2) * 0.07 * bobAmp, sway = Math.cos(P.walk) * 0.05 * bobAmp;
       camera.position.set(ex + Math.cos(P.yaw) * sway, ey + Math.abs(bob), ez - Math.sin(P.yaw) * sway);
@@ -5151,7 +5234,8 @@
         heldMesh.rotation.set(0.1 - sw * 0.6, 0.72, 0);
       }
     } else {
-      var dir = S.view === 1 ? -1 : 1, want = 8.5, d = 0.6;
+      var dir = furnitureRest || S.view === 1 ? -1 : 1;
+      var want = furnitureRest ? 5.4 : 8.5, d = 0.6;
       while (d < want) {
         var qx = ex + fwd.x * dir * d, qy = ey + fwd.y * dir * d, qz = ez + fwd.z * dir * d;
         if (isSolid(get(Math.floor(qx), Math.floor(qy), Math.floor(qz)))) { d -= 0.45; break; }
@@ -5162,12 +5246,13 @@
       camera.lookAt(ex, ey, ez);
       avatar.visible = true; heldMesh.visible = false;
       avatar.position.set(P.x, P.y + P.camY + (riding ? riding.sp.seat - 1.2 : 0), P.z);
-      avatar.rotation.y = P.yaw;
+      avatar.rotation.set(0, P.yaw, 0, 'YXZ');
       var pr = avatar.userData, swing = riding ? 0 : Math.sin(P.walk * 1.6) * 0.75 * bobAmp;
       pr.legL.rotation.x = swing; pr.legR.rotation.x = -swing;
       pr.legL.rotation.z = riding ? -0.45 : 0; pr.legR.rotation.z = riding ? 0.45 : 0;   // 걸터앉기
       pr.armL.rotation.x = -swing * 0.8; pr.armR.rotation.x = swing * 0.8 - sw * 1.2;
       pr.head.rotation.x = P.pitch * 0.7;
+      if (furnitureRest) poseFurnitureAvatar(avatar, furnitureRest.pose, P.x, P.y, P.z, furnitureRest.yaw);
     }
     // 물속이면 화면을 푸르게
     var under = get(Math.floor(camera.position.x), Math.floor(camera.position.y), Math.floor(camera.position.z)) === WATER;
@@ -5426,15 +5511,70 @@
     });
     herdT -= dt; if (herdT <= 0) { herdT = 5; if (myPlot >= 0 && !pendingHerd.length) saveHerd(); }
   }
-  // ── 침대: 누르면 다시 일어날 자리가 되고, 밤이면 자고 아침이 됨(시 4:8) ──
+  // 의자와 침대는 같은 자리 고정·일어나기 동작을 쓴다.
+  var furnitureRest = null;
   function isNight() { var p = (dayT % DAY_LEN) / DAY_LEN; return p > 0.6 && p < 0.97; }
+  function beginFurnitureRest(pose, x, y, z, id) {
+    if (furnitureRest || riding || ferryRide || P.fly) return false;
+    var facing = pose === 'sit' ? SHAPE[id].f : 2;
+    var yaw = -facing * Math.PI / 2;
+    var centerX = x + .5, centerZ = z + .5;
+    var seatY = y + (pose === 'sit' ? CHAIR_SEAT : .56);
+    furnitureRest = { pose:pose, x:x, y:y, z:z, id:id, yaw:yaw,
+      standX:P.x, standY:P.y, standZ:P.z, standYaw:P.yaw, standPitch:P.pitch, standCamY:P.camY, timer:0 };
+    resetInput();
+    P.x = centerX; P.y = seatY; P.z = centerZ;
+    P.vx = P.vy = P.vz = 0;
+    P.yaw = yaw + Math.PI * .42; P.pitch = -.35; P.camY = 0;
+    fallTop = null;
+    $('restUp').hidden = false;
+    toast(pose === 'sit' ? '의자에 앉았어요' : '침대에 누웠어요');
+    return true;
+  }
+  function clearFurnitureRest() {
+    if (!furnitureRest) return;
+    clearTimeout(furnitureRest.timer);
+    furnitureRest = null;
+    document.body.classList.remove('sleep');
+    $('restUp').hidden = true;
+  }
+  function standFromFurniture() {
+    var rest = furnitureRest;
+    if (!rest) return;
+    resetInput();
+    teleport(rest.standX, rest.standY, rest.standZ, rest.standYaw, true);
+    P.pitch = rest.standPitch; P.camY = rest.standCamY;
+  }
+  function poseFurnitureAvatar(av, pose, x, y, z, yaw) {
+    var parts = av.userData;
+    av.rotation.set(pose === 'lie' ? Math.PI / 2 : 0, yaw, 0, 'YXZ');
+    if (pose === 'lie') {
+      var half = HT * .47;
+      av.position.set(x - Math.sin(yaw) * half, y + HT * .13, z - Math.cos(yaw) * half);
+    } else {
+      av.position.set(x, y - HT * .375, z);
+    }
+    parts.legL.rotation.set(pose === 'sit' ? 1.06 : 0, 0, 0);
+    parts.legR.rotation.copy(parts.legL.rotation);
+    parts.armL.rotation.x = parts.armR.rotation.x = pose === 'sit' ? .26 : 0;
+    parts.head.rotation.x = 0;
+  }
   function useBed(x, y, z) {
+    if (!beginFurnitureRest('lie', x, y, z, BED)) return;
     SPAWN = { x: x, y: y + 1, z: z }; stateDirty();
-    var bday = Math.floor(dayT / DAY_LEN);
-    if (isNight() && STORY.started && !inTown(x, z) && plotAt(x, z) < 0 && STORY.s.bedDay !== bday) { STORY.s.bedDay = bday; STORY.s.bedsOut++; saveStory(); toast('⛺ 마을 밖에서 장막을 치고 자요 (' + Math.min(7, STORY.s.bedsOut) + '/7, 히 11:9)'); }
-    if (!isNight()) { toast('🛏 여기서 다시 일어나요. 밤이 되면 누워서 잘 수 있어요'); return; }
+    if (!isNight()) return;
+    var rest = furnitureRest, bday = Math.floor(dayT / DAY_LEN);
     document.body.classList.add('sleep');
-    setTimeout(function () { dayT = Math.ceil(dayT / DAY_LEN) * DAY_LEN + DAY_LEN * 0.02; document.body.classList.remove('sleep'); toast('🌅 아침이에요 — 내가 평안히 눕고 자기도 하리니 나를 안전히 살게 하시는 이는 오직 여호와이시니이다 (시 4:8)'); unlock('sleep'); }, 1600);
+    rest.timer = setTimeout(function () {
+      if (furnitureRest !== rest || get(x,y,z) !== BED) return;
+      if (STORY.started && !inTown(x, z) && plotAt(x, z) < 0 && STORY.s.bedDay !== bday) {
+        STORY.s.bedDay = bday; STORY.s.bedsOut++; saveStory();
+      }
+      dayT = (bday + 1.02) * DAY_LEN;
+      standFromFurniture();
+      toast('🌅 아침이에요 — 내가 평안히 눕고 자기도 하리니 나를 안전히 살게 하시는 이는 오직 여호와이시니이다 (시 4:8)');
+      unlock('sleep');
+    }, 1900);
   }
   // ── 레버: 누르면 켜고 끄고, 둘레 4칸 안의 문을 함께 여닫음 ──
   function useLever(x, y, z) {
@@ -6146,6 +6286,8 @@
     if (!m || !me || m.u === me.id || typeof m.x !== 'number') return;
     var p = peerGet(m.u);
     p.mapHidden = m.mapHidden === true;
+    p.restPose = m.rest === 'sit' || m.rest === 'lie' ? m.rest : '';
+    p.restYaw = typeof m.restYaw === 'number' && Number.isFinite(m.restYaw) ? m.restYaw : 0;
     p.tx = m.x; p.ty = m.y; p.tz = m.z; p.th = m.h || 0; p.pt = m.p || 0; p.s = m.s ? 1 : 0; p.t = performance.now();
     if (p.fresh) { p.fresh = false; p.x = p.tx; p.y = p.ty; p.z = p.tz; p.h = p.th; }
     var wi = m.i === SWORD || isTool(m.i) ? m.i : 0;
@@ -6160,7 +6302,8 @@
   function sendPos(now) {
     var r = riding ? riding.kind : '', s = (mine && !mine.denied) || swingT > 0 ? 1 : 0;
     var m = { u: me.id, x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), h: +P.yaw.toFixed(2), p: +P.pitch.toFixed(2), r: r, s: s, i: heldWeapon(), mapHidden: S.mapVisible === false || (myPlot >= 0 && plotAt(Math.floor(P.x), Math.floor(P.z)) === myPlot) };
-    var key = [m.x, m.y, m.z, m.h, m.p, r, s, m.i, m.mapHidden].join();
+    if (furnitureRest) { m.rest = furnitureRest.pose; m.restYaw = furnitureRest.yaw; }
+    var key = [m.x, m.y, m.z, m.h, m.p, r, s, m.i, m.mapHidden, m.rest, m.restYaw].join();
     if ((key === NET.sentKey && now - NET.sentAt < 2500) || now - NET.sentAt < 110) return;
     NET.sentKey = key; NET.sentAt = now;
     NET.ch.send({ type: 'broadcast', event: 'pos', payload: m });
@@ -6179,12 +6322,13 @@
       var d = p.th - p.h; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; p.h += d * k;
       var mv = Math.hypot(p.x - ox, p.z - oz); p.walk += mv;
       var seat = p.rk ? BEASTS[p.rk].seat - 1.2 : 0;
-      p.av.position.set(p.x, p.y + seat, p.z); p.av.rotation.y = p.h;
+      p.av.position.set(p.x, p.y + seat, p.z); p.av.rotation.set(0, p.h, 0, 'YXZ');
       var pr = p.av.userData, sw = p.rk || mv < 0.003 ? 0 : Math.sin(p.walk * 1.6) * 0.75;
       pr.legL.rotation.x = sw; pr.legR.rotation.x = -sw;
       pr.legL.rotation.z = p.rk ? -0.45 : 0; pr.legR.rotation.z = p.rk ? 0.45 : 0;
       pr.armL.rotation.x = -sw * 0.8; pr.armR.rotation.x = sw * 0.8 - (p.s ? 0.9 + Math.sin(now / 70) * 0.5 : 0);
       pr.head.rotation.x = p.pt * 0.7;
+      if (p.restPose && !p.rk) poseFurnitureAvatar(p.av, p.restPose, p.x, p.y, p.z, p.restYaw);
       if (p.beast) {
         var b = p.beast; b.mesh.position.set(p.x, p.y, p.z); b.mesh.rotation.y = p.h; b.walk += mv * 1.1;
         var s2 = mv > 0.003 ? Math.sin(b.walk * 2) * 0.75 : 0;

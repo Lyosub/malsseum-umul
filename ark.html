@@ -457,6 +457,17 @@
   #mapPins { grid-column:1/-1; }
   #mapPinLabel { min-width:0; min-height:40px; font:inherit; }
   #trailGuide:empty { display:none; }
+  #restUp[hidden], #forestGuide[hidden] { display:none; }
+  #restUp { left:50%; bottom:calc(92px + var(--sab)); transform:translateX(-50%); min-height:44px; z-index:8; }
+  body.sleep:before { opacity:0; animation:bedFadeIn .55s .55s forwards; }
+  @keyframes bedFadeIn { to { opacity:.85; } }
+  #forestGuide { left:50%; top:calc(116px + var(--sat)); transform:translateX(-50%); display:flex; align-items:center; gap:8px;
+    padding:3px 5px 3px 8px; border:1px solid #786543; border-radius:4px; background:rgba(28,22,12,.81);
+    color:#ffe594; font-size:12px; white-space:nowrap; }
+  #forestArrow { display:inline-block; font-family:sans-serif; font-size:26px; }
+  #forestCancel { min-width:36px; min-height:36px; color:#fff; border:0; background:transparent; font-size:18px; cursor:pointer; }
+  @media (orientation:portrait) { body.touch #forestGuide { top:calc(179px + var(--sat)); } }
+  @media (max-height:430px) { body.touch #restUp { bottom:calc(68px + var(--sab)); } }
 
   body.touch .screen { bottom:auto; height:100vh; height:100dvh;
     padding:calc(8px + var(--sat)) calc(8px + var(--sar)) calc(8px + var(--sab)) calc(8px + var(--sal));
@@ -509,6 +520,11 @@
 <!-- 놀이 화면 -->
 <div id="info" class="hud sh"><div id="place">나그네 마을</div><div id="seasonInfo"></div><div id="trailGuide"></div><div id="saveState"></div><div id="who"></div><div id="netState"></div></div>
 <div id="chatLog" class="hud"></div>
+<div id="forestGuide" class="hud sh" hidden>
+  <span id="forestArrow" aria-hidden="true">⬆</span><span>동쪽 숲 <span id="forestDistance"></span></span>
+  <button id="forestCancel" type="button" aria-label="숲 길 안내 끄기">×</button>
+</div>
+<button id="restUp" type="button" class="mc hud" hidden>일어나기</button>
 <div id="topRight" class="hud">
   <button id="btnChat" class="mc ibtn lbl" aria-label="채팅 (T)"><span>💬</span><small>채팅<b class="k">T</b></small></button>
   <button id="btnBag" class="mc ibtn lbl" aria-label="가방·만들기 (E)"><span>🎒</span><small>가방<b class="k">E</b></small></button>
@@ -610,7 +626,7 @@
     <button id="mFriends" class="mc">💙 친구</button>
     <button id="mVisit" class="mc">🏡 친구 집 구경</button>
     <button id="mRevert" class="mc admonly">🧹 함께 짓는 터 되돌리기</button>
-    <button id="mForest" class="mc">🌲 동쪽 숲</button>
+    <button id="mForest" class="mc">🌲 동쪽 숲으로 걷기</button>
     <button id="mHill" class="mc">⛰ 서쪽 산</button>
     <button id="mLake" class="mc">🌊 남쪽 호수</button>
     <button id="mMap" class="mc">🗺 지도</button>
@@ -737,7 +753,7 @@
       <div class="sh" style="font-size:14px">어디로 갈까요?</div>
       <button id="go_ark" class="mc">⛵ 방주</button>
       <button id="go_home" class="mc">🏠 내 땅</button>
-      <button id="go_forest" class="mc">🌲 동쪽 숲</button>
+      <button id="go_forest" class="mc">🌲 동쪽 숲으로 걷기</button>
       <button id="go_hill" class="mc">⛰ 서쪽 산</button>
       <button id="go_lake" class="mc">🌊 남쪽 호수</button>
       <button id="go_sea" class="mc">🏖 북쪽 바다</button>
@@ -805,7 +821,7 @@
       👕 첫 화면이나 메뉴의 「👤 내 모습」에서 나그네 6명 중 하나를 골라요(히 11:13). 칼을 들고 양을 누르면 양털, 소·염소·낙타를 누르면 가죽을 얻어요. 제작대(고페르 나무 4)를 가방에 넣거나 내 땅에 놓고 🔨 만들기 → 👕 옷에서 가죽옷(창 3:21)·채색옷(창 37:3)·놋 투구(삼상 17:38)·순금 관(시 21:3)·방패·신을 만들어요. 손에 들고 누르거나 「내 모습」에서 입어요. 하나님의 전신 갑주 다섯 가지를 다 입으면 말씀 카드가 나와요(엡 6:11-17).<br>
       ♥ 체력과 ◆ 기운: 걷고 달리고 캐면 기운이 줄어요. 떡(밀 3, 마 4:4)이나 무화과(나뭇잎에서 가끔)를 들고 누르면 먹어요. 기운이 넉넉하면 체력이 차오르고, 기운이 없으면 달릴 수 없어요. 높은 곳에서 떨어지거나 물속에 오래 있으면 다쳐요. 쓰러져도 가진 것은 그대로예요.<br>
       🌾 풀이나 꽃을 캐면 가끔 밀 씨가 나와요. 흙·풀 위에 심으면 자라요(물이 가까우면 빨리, 막 4:3). 익은 밀을 거둬요. 밀을 들고 있으면 양·소·염소가 따라오고, 둘에게 먹이면 새끼가 태어나요 — 내 땅 안의 동물은 저장돼요.<br>
-      🛏 침대(양털 3 + 고페르 나무 3)를 누르면 다시 일어날 자리가 되고, 밤이면 자고 아침이 돼요(시 4:8). 🔘 레버(막대기 + 돌)를 누르면 둘레 문이 함께 열리고 닫혀요. 🪧 표지판은 내 땅에 세우고 글을 골라요. 횃불은 벽에도 붙고, 통나무는 옆면에 놓으면 눕혀져요. 웅크리기(PC: Shift, 휴대폰: 방향키 가운데 2초)로 가장자리에서 떨어지지 않아요.<br>
+      🪑 나무 의자를 누르면 앉고, 🛏 침대를 누르면 누워요. 「일어나기」를 누르거나 움직이면 일어나요. 침대는 다시 일어날 자리로 저장되고, 밤이면 자고 아침이 돼요(시 4:8). 🔘 레버(막대기 + 돌)를 누르면 둘레 문이 함께 열리고 닫혀요. 🪧 표지판은 내 땅에 세우고 글을 골라요. 횃불은 벽에도 붙고, 통나무는 옆면에 놓으면 눕혀져요. 웅크리기(PC: Shift, 휴대폰: 방향키 가운데 2초)로 가장자리에서 떨어지지 않아요.<br>
       🌑 밤 들판과 굴 속에는 「어둠의 그림자」(미움·거짓·교만)가 나와요. 마을·내 땅·함께 짓는 터와 불빛 곁은 안전하고, 횃불을 들면 가까이 못 오고, 햇빛에는 사라져요. 갑옷을 입으면 덜 다치고, 하나님의 전신 갑주 다섯 가지를 다 입으면 다치지 않아요(엡 6:11). 칼이나 성령의 검(철 2 + 금 1 + 막대기, 제작대, 엡 6:17)으로 물리쳐요 — 톡(PC: 클릭). 메뉴에서 안 나오게 할 수 있어요.<br>
       📜 첫 집을 다 지으면 마을 입구의 「안내하는 나그네」에게 말을 걸어 긴 이야기 「본향을 향하여」(히 11:16)를 시작해요 — 1부 믿음의 증표 일곱(히 11장), 2부 땅속 깊이 숨은 열두 보석으로 기초석 만들기(계 21:19-20), 3부 동쪽 사막 땅속 「사망의 음침한 골짜기」 미로에서 일곱 등잔대 밝히기(시 23:4), 4부 동쪽 끝 거룩한 성의 열두 진주 문(계 21:21). 메뉴 → 📜 나그네의 길에서 할 일을 봐요. 아주 어려워요 — 친구들과 함께 가요.<br>
       🤝 메뉴 → 🤝 파티에서 지금 함께 있는 친구를 초대해 4명까지 파티를 맺어요. 파티원은 이름표가 초록색이고, 함께 나무 캐기·블록 놓기·밀 거두기·철 녹이기·그림자 물리치기·아라랏 산 오르기 파티 퀘스트를 채워 칭호를 받아요(전 4:9). 칭호는 이름표 위에 달 수 있어요.<br>
@@ -825,6 +841,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=20261119-mobile-layout"></script>
+<script src="assets/ark-game.js?v=20261119-furniture-trail"></script>
 </body>
 </html>
