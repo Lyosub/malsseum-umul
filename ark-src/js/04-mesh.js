@@ -107,12 +107,13 @@
           }
           var tr = def[4] === 1 ? 1 : 0, lit = def[5] === 1, water = id === WATER;
           var lowTop = water && get(x, y + 1, z) !== WATER;
-          var jitter = water ? 1 : 0.97 + rnd(x * 7.1 + y * 13.3 + z * 3.7) * 0.06;
+          var jitter = water ? 1 : -1;   // 보이는 면이 있을 때만 계산
           for (var f = 0; f < 6; f++) {
             var F = FACES[f], nx = x + F.n[0], ny = y + F.n[1], nz = z + F.n[2], nb = get(nx, ny, nz);
             if (!(nb === AIR || (isTrans(nb) && nb !== id))) continue;
             if (water && f === 3) continue;
             var t = faceTile(id, f);
+            if (jitter < 0) jitter = 0.97 + rnd(x * 7.1 + y * 13.3 + z * 3.7) * 0.06;
             var shade = lit ? 1 : F.s * jitter;
             if (!lit && ny >= 0) shade *= skyLight(nx, ny, nz);
             var P2 = P[tr], C2 = C[tr], U2 = U[tr], I2 = I[tr];

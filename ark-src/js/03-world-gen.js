@@ -236,7 +236,10 @@
       for (var ly = G + 4; ly <= G + 7; ly++) { var r = ly >= G + 7 ? 1 : 2; for (var dz = -r; dz <= r; dz++) for (var dx = -r; dx <= r; dx++) { if (r === 2 && Math.abs(dx) === 2 && Math.abs(dz) === 2) continue; if (dx === 0 && dz === 0 && ly <= G + 5) continue; fill(tx + dx, ly, tz + dz, tx + dx, ly, tz + dz, LIFELEAF); } }
     });
   }
+  // 광석 난수는 2칸·3칸 덩이마다 같은 값이라 덩이마다 한 번만 계산해 둔다(값은 hash2 그대로 — 세상 모양은 한 칸도 안 바뀜)
+  var OC = new Float64Array(16 * 16 * SY), CLC = new Float64Array(16 * 16 * (SY >> 1) + 256), CCC = new Float64Array(12 * 12 * 28);
   function genColumn(cx, cz) {
+    OC.fill(NaN); CLC.fill(NaN); CCC.fill(NaN);
     var col = { d: new Uint16Array(CS * SY * CS), sky: new Int16Array(CS * CS), lamps: [], mod: false };
     genCol = col; genCX = cx; genCZ = cz;
     var x0 = cx * CS, z0 = cz * CS, lx, lz, x, z, y;
@@ -253,10 +256,12 @@
         var id = y === h ? T.top : (y > h - 4 ? T.sub : STONE);
         if (id === STONE && y < h - 2) {
           // 돌 속 석회암·검은 돌(2칸씩 뭉쳐서)
-          var o = hash2((x >> 1) * 3 + y, (z >> 1) * 5 - (y >> 1), 7);
+          var pk = ((lz >> 1) * 16 + (lx >> 1)), oi = pk * SY + y, o = OC[oi];
+          if (o !== o) o = OC[oi] = hash2((x >> 1) * 3 + y, (z >> 1) * 5 - (y >> 1), 7);
+          var ci = pk * (SY >> 1) + (y >> 1), cl = CLC[ci];
+          if (cl !== cl) cl = CLC[ci] = hash2((x >> 1) * 7 + (y >> 1) * 131, (z >> 1) * 11 - (y >> 1) * 17, 13);
           if (o < 0.035) id = y < 7 || o < 0.008 ? BASALT : LIME;
-          else if (hash2(x * 3 + y * 7, z * 5 - y, 14) < 0.7) {
-            var cl = hash2((x >> 1) * 7 + (y >> 1) * 131, (z >> 1) * 11 - (y >> 1) * 17, 13);
+          else if (cl < 0.0695 && hash2(x * 3 + y * 7, z * 5 - y, 14) < 0.7) {   // cl이 크면 광석이 될 수 없으니 이 난수는 건너뜀
             if (cl < 0.006 && y <= 12) id = ORE_AU;
             else if (cl >= 0.006 && cl < 0.014 && y <= 18) id = ORE_AG;
             else if (cl >= 0.014 && cl < 0.034 && y <= 48) id = ORE_FE;
@@ -266,7 +271,7 @@
             else if (cl >= 0.067 && cl < 0.0695 && y <= 8) id = ORE_DIA;
           }
           // 석탄: 큰 덩이(3칸씩)로 흔하게, 산 속 높은 곳까지
-          if (id === STONE && y <= 72) { var cc = hash2(Math.floor(x / 3) * 13 + Math.floor(y / 3) * 71, Math.floor(z / 3) * 17 - Math.floor(y / 3) * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.75) id = ORE_COAL; }
+          if (id === STONE && y <= 72) { var fx3 = Math.floor(x / 3), fz3 = Math.floor(z / 3), fy3 = Math.floor(y / 3), cci = ((fz3 - Math.floor(z0 / 3)) * 12 + (fx3 - Math.floor(x0 / 3))) * 28 + fy3, cc = CCC[cci]; if (cc !== cc) cc = CCC[cci] = hash2(fx3 * 13 + fy3 * 71, fz3 * 17 - fy3 * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.75) id = ORE_COAL; }
           // 열두 보석 광석: 곳마다·깊이마다 다르고 아주 드묾(계 21:19-20)
           if (id === STONE && y >= gemLo && y <= gemHi) {
             var gv = hash2(x * 7 + y * 131, z * 11 - y * 17, 41), gb = 0.3;
