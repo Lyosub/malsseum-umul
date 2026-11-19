@@ -915,7 +915,9 @@
   expansionBlock(FARM_SOIL, '경작지', 'tilled');
   [[OVEN,'화덕과 솥','oven2'], [MILL,'맷돌','mill2'], [WINE_PRESS,'포도주 틀','wine2'], [OIL_PRESS,'기름 짜는 틀','oil2'],[COOK_POT,'솥','pot2']]
     .forEach(function(d) { expansionBlock(d[0],d[1],d[2]); });
-  var FOOD_ART = [[HOE,'괭이',0x92754c],[FISH_ROD,'낚싯대',0xa98555],[FISH_NET,'그물',0xc8b787],
+  var VILLAGE_FISH={ '강':680, '호수':681, '바다':682 };
+  var FOOD_ART = [[680,'강의 은빛 물고기',0x84b1ac],[681,'호수의 줄무늬 물고기',0x76a495],[682,'바다의 푸른 물고기',0x527b9c],
+    [HOE,'괭이',0x92754c],[FISH_ROD,'낚싯대',0xa98555],[FISH_NET,'그물',0xc8b787],
     [RAW_FISH,'물고기',0x8a9fa9],[RAW_LAMB,'손질한 양고기',0xc77968],[HONEY,'꿀',0xdfa437],
     [POMEGRANATE,'석류',0xb64643],[STEW,'렌틸콩죽',0xaa5c3d],[COOKED_FISH,'구운 생선',0xb77b41],
     [COOKED_LAMB,'구운 양고기',0x9e5940],[FLATBREAD,'누룩 없는 빵',0xddb475],
@@ -990,6 +992,9 @@
     [WELL_BUCKET,'두레박',0x856746]
   ];
   var EXT_BOXES={
+    ditch:[[0,0,0,1,.10,1]],
+    feast:[[.08,.64,.08,.92,.78,.92],[.12,0,.12,.27,.64,.27],[.73,0,.12,.88,.64,.27],
+      [.12,0,.73,.27,.64,.88],[.73,0,.73,.88,.64,.88]],
     well:[[0,0,0,1,.22,1],[0,.22,0,.21,.72,1],[.79,.22,0,1,.72,1],[.21,.22,0,.79,.72,.21],[.21,.22,.79,.79,.72,1]],
     loom:[[.12,0,.26,.22,1,.63],[.78,0,.26,.88,1,.63],[.22,.22,.40,.78,.73,.49],[.22,.84,.34,.78,1,.57]],
     jar:[[.24,0,.24,.76,.18,.76],[.15,.18,.15,.85,.66,.85],[.31,.66,.31,.69,.9,.69]],
@@ -1021,6 +1026,20 @@
     drawWordTiles();
   }
   // 4묶음. 말씀·양 돌보기·길 찾기.
+  var FIND_MARK=500, FIND_POT=501, FIND_LAMP=502, FIND_SEED=503, DITCH=504, FEAST_TABLE=505,
+      FEAST_BREAD=506, FEAST_OLIVE=507, FEAST_FISH=508, FERRY_POST=509;
+  var VILLAGE_ART = [
+    [FIND_MARK,'발굴 자리','sand','target'], [FIND_POT,'토기 조각 전시','stone','jar'],
+    [FIND_LAMP,'옛 등잔 전시','clay','lamp'], [FIND_SEED,'옛 씨앗 전시','sand','jar'],
+    [DITCH,'물길','water','ditch'], [FEAST_TABLE,'공동 식탁','plankG','feast'],
+    [FEAST_BREAD,'차린 빵','sand','camp'], [FEAST_OLIVE,'차린 올리브','grassTop','camp'],
+    [FEAST_FISH,'차린 생선','stone','camp'], [FERRY_POST,'나룻배 표지','plankG','study']
+  ];
+  VILLAGE_ART.forEach(function (entry) {
+    regShape(entry[0],entry[1],'extension',entry[0],STONE,0);
+    B[entry[0]][1]=B[entry[0]][2]=B[entry[0]][3]=entry[2];
+    SHAPE[entry[0]].boxes=entry[3];
+  });
   var WORD_SHELF=480, ALTAR=481, SLING_TARGET=482;
   var WORD_SCROLL=660, STAFF=661, HAND_MAP=662, COMPASS=663, SHOFAR=664, SLING=665, ROUND_STONE=666;
   var WORD_BLOCKS=[[WORD_SHELF,'말씀 서재',0x99693e,'study'],[ALTAR,'돌 제단',0x9b9081,'altar'],
@@ -1334,6 +1353,13 @@
     [15,2,[[LINEN,2],[GOLD_DYE,1]],LOOM],[PATTERN_CLOTH,2,[[WOOL_CLOTH,2],[BLUE_DYE,1]],LOOM],
     [WELL_BUCKET,1,[[GOPHER,2],[THREAD,2]]]
   ].forEach(function(d){RECIPES.push({out:[d[0],d[1]],need:d[2],station:d[3],cat:'block'});});
+  DROP[FEAST_BREAD]=FLATBREAD; DROP[FEAST_OLIVE]=614; DROP[FEAST_FISH]=COOKED_FISH;
+  Object.values(VILLAGE_FISH).forEach(function (id) {
+    RECIPES.push({out:[COOKED_FISH,1],need:[[id,1],[CHAR,1]],station:OVEN,cat:'block'});
+  });
+  [FIND_POT,FIND_LAMP,FIND_SEED,DITCH,FEAST_TABLE].forEach(function (id) { INV.push(id); });
+  RECIPES.push({out:[DITCH,4],need:[[STONE,2],[CLAY,1]],cat:'shape'});
+  RECIPES.push({out:[FEAST_TABLE,1],need:[[GOPHER,4],[REED,1]],cat:'shape'});
   WORD_BLOCKS.forEach(function(d){INV.push(d[0]);});
   WORD_ITEMS.forEach(function(d){INV.push(d[0]);});
   [
@@ -1383,8 +1409,8 @@
   var AL = 300, AW = 50, AH = 30, XM = 1024, AX0 = XM - 150, AZ0 = 846;
   var AX1 = AX0 + AL - 1, AZ1 = AZ0 + AW - 1, AY0 = G, AY1 = G + AH - 1;
   // 마을 땅: 방주 남쪽, 24×24칸, 8줄 × 8칸 = 64필지
-  var PLOT = 24, PGAP = 4, PCOLS = 8, PROWS = 8, PH = 32, PSTEP = PLOT + PGAP;
-  var PX0 = XM - Math.floor((PCOLS * PSTEP - PGAP) / 2), PZ0 = AZ1 + 17;
+  var OLD_PLOT = 24, WIDE_PLOT = 26, PLOT = OLD_PLOT, PGAP = 4, PCOLS = 8, PROWS = 8, PH = 32, PSTEP = 28;
+  var PX0 = XM - Math.floor((PCOLS * PSTEP - 4) / 2), PZ0 = AZ1 + 17;
   var VX1 = PX0 + PCOLS * PSTEP - 1, VZ1 = PZ0 + PROWS * PSTEP - 1;
   // 남쪽 호수, 그 동쪽 역청 구덩이(창 14:10)
   var LX = XM, LZ = AZ0 + 328, LRX = 78, LRZ = 20;
@@ -1401,6 +1427,11 @@
   }
   var PY0 = G - 3;
   var PSIZE = PLOT * PLOT * (G + PH - PY0);
+  function enableWidePlots() {
+    PLOT = WIDE_PLOT;
+    PGAP = PSTEP - PLOT;
+    PSIZE = PLOT * PLOT * (G + PH - PY0);
+  }
   function inArk(x, y, z) { return x >= AX0 - 1 && x <= AX1 + 1 && z >= AZ0 - 1 && z <= AZ1 + 1 && y >= AY0 - 1 && y <= AY1 + 1; }
   // 마을·방주 마당(길과 마당은 캐지 않음)
   var TOWN = [[AX0 - 8, AZ0 - 8, AX1 + 8, AZ1 + 8], [PX0 - 8, AZ1, VX1 + 8, VZ1 + 6]];
@@ -1613,7 +1644,7 @@
         var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), hh = hash2(x, z, 11);
         if (((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 && h + 1 < SY) d[((h + 1) * CS + lz) * CS + lx] = REED;
         else if (T.top===GRASS && hh>.92 && hh<=.955 && !inTown(x,z) && !inCommons(x,z) && h+1<SY)
-          d[((h+1)*CS+lz)*CS+lx]=hh<.932?THORN:(hh<.944?THISTLE:LILY);
+          d[((h+1)*CS+lz)*CS+lx]=le<2.1 || T.rd<12?LILY:(z>1210||x>VX1+70?THORN:THISTLE);
         else if (T.top === GRASS && hh > 0.955 && plotAt(x, z) < 0 && !(z > AZ0 - 5 && z < AZ1 + 5 && x > AX0 - 5 && x < AX1 + 5)) d[((h + 1) * CS + lz) * CS + lx] = FLOWER;
       }
     }
@@ -1649,6 +1680,8 @@
     if (x0 + CS > TOWN[0][0] - 6 && x0 < TOWN[1][2] + 6 && z0 + CS > TOWN[0][1] - 6 && z0 < LZ - LRZ) buildTown();
     if (x0 + CS > TARR[0] && x0 < TARR[2] + 6 && z0 + CS > TARR[1] && z0 < TARR[3] + 6)
       TARPITS.forEach(function (t) { fill(t[0], G - 1, t[1], t[0] + t[2] - 1, G - 1, t[1] + t[2] - 1, AIR); fill(t[0], G - 3, t[1], t[0] + t[2] - 1, G - 2, t[1] + t[2] - 1, TAR); });
+    buildExcursions(x0,z0);
+    if(villageProjectsEnabled)buildBridgeGround(x0,z0);
     // 학생 집
     for (var i = 0; i < PCOLS * PROWS; i++) {
       var po = plotOrigin(i);
@@ -2502,11 +2535,11 @@
   var isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   var lockOn = false, canvasEl;
   function showUI(name) {
-    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party', 'friends', 'practice'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
+    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party', 'friends', 'practice', 'villageWork'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
     document.body.classList.toggle('playing', name === 'play');
     document.body.classList.toggle('menu', name !== 'play');
     ui = name;
-    if (name === 'map') { tutorialEvent('map'); if (!FRIENDS.ready) friendsFetch(); }
+    if (name === 'map') { tutorialEvent('map'); renderPins(); if (!FRIENDS.ready) friendsFetch(); }
     if (name === 'play' && started) renderQuest();
     if (name !== 'play') {
       resetInput();
@@ -2758,6 +2791,8 @@
   // ───────── 캐기·놓기 권한, 저장 ─────────
   var client = null, me = null, myPlot = -1, plotOwners = {}, plotUser = {}, saveTimer = null, dirty = false, started = false;
   function canMine(x, y, z) {
+    if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
+    if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
     if (inArk(x, y, z)) return '방주는 3단계에서 다 함께 지어요. 지금은 구경해요!';
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
     if (inDungeon(x, y, z) && get(x, y, z) !== TORCH && !(get(x, y, z) >= 170 && get(x, y, z) < 174) && get(x, y, z) !== LADDER + 3) return '골짜기의 벽은 깨지지 않아요 — 길을 찾아 지나가요(시 23:4)';
@@ -2772,6 +2807,9 @@
     return '';
   }
   function canPlace(x, y, z, id) {
+    if (client && !villageProjectsEnabled && id>=FIND_POT && id<=FEAST_FISH) return '마을 새 재료를 서버에서 준비하는 중이에요';
+    if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
+    if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
     if (inArk(x, y, z)) return '방주는 3단계에서 다 함께 지어요. 지금은 구경해요!';
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
     if (inDungeon(x, y, z) && id !== TORCH) return '골짜기에는 횃불만 놓을 수 있어요';
@@ -2837,6 +2875,7 @@
       if (tgt === FURNACE || tgt === FURNACE_ON) { if (plotAt(h.x, h.z) !== myPlot) return deny('다른 사람의 용광로예요'); craftCat = 'smelt'; invTab = 'craft'; openPanel('inv'); return; }
       if (tgt === CHEST) return openChest(h.x, h.y, h.z);
       if (tgt === CRAFT) { craftCat = 'wear'; invTab = 'craft'; openPanel('inv'); sfx('click'); return; }
+      if (tgt>=FIND_MARK && tgt<=FIND_SEED || tgt===FERRY_POST || tgt===FEAST_TABLE) return useVillageBlock(tgt,h);
       if (tgt===WORD_SHELF) return showWordCard(false);
       if (tgt===ALTAR) return showWordCard(true);
       if (tgt===WELL) return drawWell(HOTBAR[sel]);
@@ -2969,6 +3008,7 @@
       }
     }
     if (DEX_MATS.indexOf(dropId) >= 0 && !DEX['m' + dropId]) { DEX['m' + dropId] = 1; saveDex(); toast('📖 도감에 「' + B[dropId][0] + '」을(를) 적었어요'); }
+    if (old >= THORN && old <= LILY) recordVillagePlant(old,x,z);
     if (dropId === LOG) { stats.log++; questCheck(); partyAdd('logs', 1); }
   }
   var pickT = null, pickAgg = {};
@@ -3024,7 +3064,7 @@
     r.style.setProperty('--p', (Math.min(1, mine.t / mine.need) * 100) + '%');
   }
 
-  // 땅 한 필지 = 24×24×(PH+3)칸 → (개수, 블록) 묶음 → base64, 뒤에 |i:가방 |d:도감
+  // 땅 한 필지 = PLOT×PLOT×(PH+3)칸 → (개수, 블록) 묶음 → base64, 뒤에 |i:가방 |d:도감
   function plotDefault() {
     var a = new Uint16Array(PSIZE), k = 0;
     for (var y = PY0; y < G + PH; y++) { var id = y < G - 1 ? DIRT : (y === G - 1 ? GRASS : AIR); for (var j = 0; j < PLOT * PLOT; j++) a[k++] = id; }
@@ -3036,8 +3076,30 @@
     if (!plotData[p]) plotData[p] = plotDefault();
     var o = plotOrigin(p); plotData[p][((y - PY0) * PLOT + (z - o.z)) * PLOT + (x - o.x)] = id;
   }
+  var expandedPlotFormats={};
+  function compactLegacyPlot(a) {
+    if(!a||PLOT===OLD_PLOT)return a;
+    for(var layer=0;layer<G+PH-PY0;layer++){
+      var y=layer+PY0, base=y<G-1?DIRT:(y===G-1?GRASS:AIR);
+      for(var z=0;z<PLOT;z++)for(var x=(z<OLD_PLOT?OLD_PLOT:0);x<PLOT;x++){
+        if(a[(layer*PLOT+z)*PLOT+x]!==base)return null;
+      }
+    }
+    var legacy=new Uint16Array(OLD_PLOT*OLD_PLOT*(G+PH-PY0));
+    for(layer=0;layer<G+PH-PY0;layer++)for(z=0;z<OLD_PLOT;z++){
+      var from=(layer*PLOT+z)*PLOT;
+      legacy.set(a.subarray(from,from+OLD_PLOT),(layer*OLD_PLOT+z)*OLD_PLOT);
+    }
+    return legacy;
+  }
   function encodePlot(i) {
-    var a = plotData[i], out = '', k, wide = a && a.some(function (id) { return id > 255; });
+    var a=plotData[i], out='', k, expanded=!!expandedPlotFormats[i];
+    if(a&&PLOT===WIDE_PLOT&&!expanded){
+      var compact=compactLegacyPlot(a);
+      if(compact)a=compact;
+      else expanded=expandedPlotFormats[i]=true;
+    }
+    var wide=expanded||(a&&a.some(function(id){return id>255;}));
     if (a) {
       for (k = 0; k < a.length;) {
         var v = a[k], n = 1;
@@ -3046,7 +3108,7 @@
       }
     }
     var cs = chestString();
-    return (a ? (wide ? 'r2:' : 'r1:') + btoa(out) : 'r0:') + '|i:' + bagString() + '|d:' + dexString() + (cs ? '|c:' + cs : '') + '|w:' + wornString() + '|s:' + seenString() + (signString() ? '|g:' + signString() : '');
+    return (a ? (expanded ? 'r3:' : (wide ? 'r2:' : 'r1:')) + btoa(out) : 'r0:') + '|i:' + bagString() + '|d:' + dexString() + (cs ? '|c:' + cs : '') + '|w:' + wornString() + '|s:' + seenString() + (signString() ? '|g:' + signString() : '');
   }
   function decodePlot(i, data, mine) {
     try {
@@ -3063,16 +3125,30 @@
         if (mine) { SIGNS = {}; signFromString(seg.slice(2), SIGNS); } else { OTHER_SIGNS[i] = {}; signFromString(seg.slice(2), OTHER_SIGNS[i]); }
       });
       var format = body.slice(0, 3);
-      if (format !== 'r1:' && format !== 'r2:') return;
-      var s = atob(body.slice(3)), a = new Uint16Array(PSIZE), k = 0, stride = format === 'r2:' ? 3 : 2;
+      if (format !== 'r1:' && format !== 'r2:' && format !== 'r3:') return;
+      var size = format === 'r3:' ? WIDE_PLOT : OLD_PLOT;
+      if (size > PLOT) return;
+      var volume = size * size * (G + PH - PY0);
+      var s = atob(body.slice(3)), a = new Uint16Array(volume), k = 0, stride = format === 'r1:' ? 2 : 3;
       if (s.length % stride) return;
       for (var j = 0; j < s.length; j += stride) {
         var n = s.charCodeAt(j), v = s.charCodeAt(j + 1) + (stride === 3 ? s.charCodeAt(j + 2) * 256 : 0);
-        if (!n || k + n > PSIZE) return;
+        if (!n || k + n > volume) return;
         a.fill(v < B.length && B[v] ? v : AIR, k, k + n); k += n;   // 물도 그대로(대저택 수영장)
       }
-      if (k !== PSIZE) return;
+      if (k !== volume) return;
+      if (size < PLOT) {
+        var expanded = plotDefault();
+        for (var layer = 0; layer < G + PH - PY0; layer++) {
+          for (var row = 0; row < size; row++) {
+            var offset = (layer * size + row) * size;
+            expanded.set(a.subarray(offset, offset + size), (layer * PLOT + row) * PLOT);
+          }
+        }
+        a = expanded;
+      }
       plotData[i] = a;
+      expandedPlotFormats[i]=format==='r3:';
     } catch (e) {}
   }
   function savePlotNow() {
@@ -3439,6 +3515,7 @@
       }
       btn.addEventListener('click', function () { craftN(1); });
       r.appendChild(btn);
+      addRecipePin(r,rc);
       if (rc.fuel) { var b8 = document.createElement('button'); b8.className = 'mc mk mk8'; b8.textContent = '×8'; b8.title = '8번 한꺼번에'; b8.addEventListener('click', function () { craftN(8); }); r.appendChild(b8); }
       list.appendChild(r);
     });
@@ -3448,7 +3525,17 @@
       var r = document.createElement('div'); r.className = 'rec lockd';
       r.innerHTML = '<span class="ri"><img src="' + ICON[rc.out[0]] + '" alt=""></span><span class="rname">🔒 <b class="stg">' + recStage(rc) + '단계</b> ??? <small>— ' + miss.map(function (id) { return '「' + B[id][0] + '」'; }).join(', ') + '을(를) 얻으면 열려요</small></span>';
       r.addEventListener('click', function () { $('invName').textContent = miss.map(function (id) { return '「' + B[id][0] + '」 ' + howGet(id); }).join(' / '); sfx('click'); });
+      addRecipePin(r,rc);
       list.appendChild(r);
+    });
+  }
+  function addRecipePin(row,recipe) {
+    villageButton(row,'재료 표시',function(e){
+      e.stopPropagation();
+      var index=RECIPES.indexOf(recipe);
+      if(index<0)return;
+      villageBook.recipe={id:recipe.out[0],index:index};saveVillageBook();renderMaterialGuide();
+      toast('마을 수첩에 '+nameOf(recipe.out[0])+' 재료를 표시했어요');
     });
   }
   function plotHas(id) { var a = myPlot >= 0 && plotData[myPlot]; return !!a && a.indexOf(id) >= 0; }
@@ -3491,10 +3578,26 @@
     for (var id in c) dropItem(x + 0.5, y + 0.6, z + 0.5, +id, c[id]);
     delete CHESTS[key]; markDirty();
   }
+  function chestItemKeys(c) {
+    var keys = Object.keys(c);
+    if (S.chestSorted) keys.sort(function (a,b) { return nameOf(+a).localeCompare(nameOf(+b),'ko'); });
+    return keys;
+  }
+  function withdrawChest() {
+    var c = CHESTS[curChest], moved = 0;
+    if (!c || isAdm()) return;
+    chestItemKeys(c).forEach(function (id) {
+      var n = give(+id, c[id]);
+      c[id] -= n; moved += n;
+      if (c[id] <= 0) delete c[id];
+    });
+    $('chestName').textContent = moved ? moved + '개를 가방으로 옮겼어요' : '가방에 빈 자리가 없거나 궤가 비어 있어요';
+    if (moved) { bagChanged(); markDirty(); renderChest(); }
+  }
   function renderChest() {
     var c = CHESTS[curChest] || {}, g1 = $('chestGrid'), g2 = $('chestBag'); g1.innerHTML = ''; g2.innerHTML = '';
     $('chestOne').textContent = '한 개씩: ' + (chestOne ? '켬' : '끔');
-    Object.keys(c).forEach(function (k) {
+    chestItemKeys(c).forEach(function (k) {
       var id = +k; if (!(c[id] > 0)) return;
       var d = document.createElement('button'); d.className = 'islot'; d.innerHTML = slotHTML(id, c[id]); d.title = B[id][0];
       d.addEventListener('click', function () { var n = give(id, chestOne ? 1 : c[id]); if (!n) { $('chestName').textContent = '🎒 가방이 가득 찼어요'; sfx('click'); return; } c[id] -= n; if (c[id] <= 0) delete c[id]; $('chestName').textContent = B[id][0] + ' ' + n + '개를 가방으로'; sfx('click'); markDirty(); bagChanged(); renderChest(); });
@@ -3602,6 +3705,24 @@
       tutorialSave(); resume();
     });
     on('mPractice', openPractice);
+    on('mVillageWork', function () { openVillageWork('build'); });
+    on('villageDone', function () { closePanel(); });
+    on('mapPinNow', function () {
+      var field=$('mapPinLabel'), name=field.value.trim();
+      if(addVillagePin(name||placeName(),P.x,P.z)) {field.value='';drawMap($('bigmapc'),true);}
+    });
+    on('mapPinRemove', function () {
+      if (!villageBook.target) return;
+      villageBook.pins = villageBook.pins.filter(function (pin) { return pin.id !== villageBook.target; });
+      villageBook.target = ''; saveVillageBook(); renderPins();
+    });
+    $('mapPins').addEventListener('change', function () { villageBook.target = this.value; saveVillageBook(); renderPins(); });
+    on('chestSort', function () {
+      var items = BAGSLOT.filter(Boolean);
+      items.sort(function (a,b) { return nameOf(a).localeCompare(nameOf(b),'ko'); });
+      BAGSLOT = items; S.chestSorted = true; saveSettings(); renderChest();
+    });
+    on('chestTakeAll', function () { withdrawChest(); });
     on('practiceDoor', function () { practiceStep = 1; renderPractice(); });
     on('practiceWalk', function () { practiceStep = 2; renderPractice(); });
     on('practiceHalf', function () { practiceUpper = !practiceUpper; renderPractice(); });
@@ -3907,6 +4028,9 @@
   function blockActionLabel(h, held) {
     var id = get(h.x, h.y, h.z), shape = SHAPE[id];
     if (shape && (shape.type === 'door' || shape.type === 'gate')) return shape.open ? '문 닫기' : '문 열기';
+    if (id>=FIND_MARK && id<=FIND_SEED) return id===FIND_MARK?'살펴보기':'전시 보기';
+    if (id===FERRY_POST) return '나룻배 타기';
+    if (id===FEAST_TABLE) return '음식 놓기';
     if (id === WELL) return held === BUCKET || held === WATER_JAR ? '물 긷기' : '우물 쓰기';
     if (id === ALTAR) return '기도하기';
     if (id === WORD_SHELF) return '말씀 읽기';
@@ -3980,6 +4104,8 @@
     if (c && c.shadow) return hitShadow(c.shadow);
     if (c && c.npc) {
       var npc=c.npc; showNpc(npc);
+      if ((npc.d.name==='목자' || npc.d.name==='빵 굽는 사람') && !held)
+        $('cardNew').textContent='마을 수첩 → 마을 사람에서 부탁을 볼 수 있어요';
       if (npc.d.name==='목자' && held===STAFF && have(STAFF)) return shepherdVisit(npc);
       if (npc.d.name==='목자' && have(RAW_LAMB)===0 && room(RAW_LAMB)>0) {
         give(RAW_LAMB,1);bagChanged();toast('목자가 요리할 양고기를 나눠 줬어요');
@@ -4015,8 +4141,19 @@
   var riding = null, curHT = HT, saddleGeo = {}, HORSES = [], horseSaveT = 0;
   try { HORSES = (JSON.parse(localStorage.getItem('arkVillage.horses') || '[]') || []).filter(function (o) { return o && BEASTS[o.k]; }).slice(0, 6); } catch (e) { HORSES = []; }
   var pendingHorses = HORSES.slice();
+  function readCargo(items) {
+    return [0,1].map(function (i) {
+      var slot=Array.isArray(items)&&items[i], id=slot&&Number(slot[0]), n=slot&&Math.floor(slot[1]);
+      return id&&n>0&&INV.indexOf(id)>=0&&!isTool(id)?[id,Math.min(STACK,n)]:null;
+    });
+  }
+  function horseSaveRow(x) {
+    var row={k:x.kind,x:Math.round(x.x*10)/10,z:Math.round(x.z*10)/10,h:Math.round(x.h*100)/100};
+    if(x.kind==='donkey')row.cargo=readCargo(x.cargo);
+    return row;
+  }
   function saveHorses() {
-    var a = animals.filter(function (x) { return x.saddled; }).slice(-6).map(function (x) { return { k: x.kind, x: Math.round(x.x * 10) / 10, z: Math.round(x.z * 10) / 10, h: Math.round(x.h * 100) / 100 }; });
+    var a = animals.filter(function (x) { return x.saddled; }).slice(-6).map(horseSaveRow);
     pendingHorses.forEach(function (o) { if (a.length < 6) a.push(o); });
     try { localStorage.setItem('arkVillage.horses', JSON.stringify(a)); } catch (e) {}
   }
@@ -4085,7 +4222,7 @@
     if (!pendingHorses.length) return;
     pendingHorses = pendingHorses.filter(function (o) {
       if (!colAt(o.x | 0, o.z | 0) || groundAt(o.x, o.z, SY - 3) === null) return true;
-      var a = makeBeast(o.k, o.x, o.z); a.h = o.h || 0; a.mesh.rotation.y = a.h; putSaddle(a); animals.push(a); return false;
+      var a = makeBeast(o.k, o.x, o.z); a.h = o.h || 0; a.mesh.rotation.y = a.h; a.cargo=readCargo(o.cargo); putSaddle(a); animals.push(a); return false;
     });
   }
 
@@ -4615,6 +4752,7 @@
       if (mapRow < MAPN) { x.fillStyle = 'rgba(0,0,0,.5)'; x.fillRect(0, h - 22, w, 22); x.fillStyle = '#fff'; x.fillText('지도를 그리는 중… ' + Math.round(mapRow / MAPN * 100) + '%', w / 2, h - 11); }
     }
     drawMapPeople(x, big, ox, oz, sc, w, h);
+    drawVillagePins(x, ox, oz, sc, w, h);
     var mx = (P.x - ox) * sc, mz = (P.z - oz) * sc, r = big ? 7 : 5;
     x.save(); x.translate(mx, mz); x.rotate(-P.yaw);
     x.beginPath(); x.moveTo(0, -r * 1.3); x.lineTo(r * 0.8, r); x.lineTo(-r * 0.8, r); x.closePath();
@@ -4790,6 +4928,7 @@
     slabGhost = new THREE.Mesh(new THREE.BoxGeometry(.996, .494, .996),
       new THREE.MeshBasicMaterial({ transparent: true, opacity: .45, depthWrite: false }));
     slabGhost.visible = false; slabGhost.renderOrder = 4; scene.add(slabGhost);
+    createBlueprintMesh();
     for (var st = 1; st <= 8; st++) (function (t) { crackGeo.push(cubeGeometry(function () { return t; }, false)); })(TILE['crack' + st]);
     crackMesh = new THREE.Mesh(crackGeo[0], new THREE.MeshBasicMaterial({ map: atlasTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
     crackMesh.scale.setScalar(1.004); crackMesh.visible = false; crackMesh.renderOrder = 3; scene.add(crackMesh);
@@ -4836,7 +4975,7 @@
           updateCrack(); updateRing();
           hl.visible = !!h; if (h) hl.position.set(h.x + 0.5, h.y + 0.5, h.z + 0.5);
         }
-        if (started) updateMobileBuild(now);
+        if (started) { updateMobileBuild(now); tickBlueprint(now); }
         if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);
@@ -4857,12 +4996,15 @@
       setInterval(function () {
         if (!started) return;
         $('place').textContent=placeName();
+        renderMaterialGuide();
+        if(((ui==='villageWork'&&(villageTab==='projects'||villageTab==='neighbors'))||(villageProjectsEnabled&&inCommons(P.x,P.z)))&&Date.now()>villageProjectAt){villageProjectAt=Date.now()+6000;fetchVillageProjects();}
         $('seasonInfo').textContent=WEATHER[seasonIndex()]+(rainOn?' · 비':'')+
           (HOTBAR[sel]===COMPASS?' · '+headingName():'');
       },300);
     });
   }
   function teleport(x, y, z, yaw) {
+    if(ferryRide){ferryRide=null;ferryMesh.visible=false;}
     if (riding) dismount(true);
     ensureAround(x, z, 2);
     P.x = x; P.z = z; P.y = y; P.vy = 0; P.vx = P.vz = 0; fallTop = null;
@@ -4871,7 +5013,7 @@
   }
   function goHome() {
     if (myPlot < 0) { toast(me ? '내 땅을 받는 중이에요' : '로그인하면 내 땅을 받을 수 있어요'); return; }
-    var o = plotOrigin(myPlot); teleport(o.x + PLOT / 2, G, o.z - 2, Math.PI); tutorialEvent('home'); toast('내 땅(' + (myPlot + 1) + '번)이에요. 모은 블록으로 지어 보세요!');
+    var o = plotOrigin(myPlot); teleport(o.x + OLD_PLOT / 2, G, o.z - 2, Math.PI); tutorialEvent('home'); toast('내 땅(' + (myPlot + 1) + '번)이에요. 모은 블록으로 지어 보세요!');
   }
   function resize() {
     var w = window.innerWidth, h = window.innerHeight;
@@ -4880,6 +5022,7 @@
 
   var fwd = new THREE.Vector3(), lastX = 0, lastZ = 0;
   function step(dt) {
+    if(ferryRide){stepFerry(dt);return;}
     var mx = 0, mz = 0;
     if (keys.KeyW || keys.ArrowUp) mz -= 1; if (keys.KeyS || keys.ArrowDown) mz += 1;
     if (keys.KeyA || keys.ArrowLeft) mx -= 1; if (keys.KeyD || keys.ArrowRight) mx += 1;
@@ -5010,7 +5153,7 @@
   function respawn() {
     if (riding) dismount(true);
     if (SPAWN) teleport(SPAWN.x + 0.5, SPAWN.y, SPAWN.z + 0.5);
-    else if (myPlot >= 0) { var o = plotOrigin(myPlot); teleport(o.x + PLOT / 2, G, o.z - 2, Math.PI); }
+    else if (myPlot >= 0) { var o = plotOrigin(myPlot); teleport(o.x + OLD_PLOT / 2, G, o.z - 2, Math.PI); }
     else teleport(XM + 0.5, G, PZ0 - 9, Math.PI);
   }
   function stepVitals(dt) {
@@ -5047,7 +5190,7 @@
   function cropTime(x, y, z) {
     var wet = false;
     for (var dz = -4; dz <= 4 && !wet; dz++) for (var dx = -4; dx <= 4; dx++) if (get(x + dx, y - 1, z + dz) === WATER || get(x + dx, y - 2, z + dz) === WATER) { wet = true; break; }
-    return (40 + Math.random() * 30) * (wet ? 0.6 : 1) * 1000;
+    return (40 + Math.random() * 30) * (wet || ditchWaterNear(x,y,z) ? 0.6 : 1) * 1000;
   }
   function plantHeight(id) { var farm = FARM_PLANTS[id]; return farm ? 1 + (farm.height-1)*(id-farm.base)/3 : 1; }
   var STATION_BITS = {401:1,402:2,403:4,404:8,405:1,461:16};
@@ -5094,18 +5237,19 @@
     if (fishing && fishing.item===item && now<fishing.ready) return deny('물고기가 물 때까지 기다려요');
     if (fishing && fishing.item===item && now<=fishing.until && Math.hypot(P.x-fishing.x,P.z-fishing.z)<5) {
       var count=item===FISH_NET ? 2 : 1;
-      if (room(RAW_FISH)<count) return bagFull();
-      give(RAW_FISH,count); bagChanged(); fishing=null; toast('물고기 '+count+'마리를 건졌어요'); return;
+      var caught=VILLAGE_FISH[fishing.region]||RAW_FISH;
+      if (room(caught)<count) return bagFull();
+      give(caught,count); bagChanged(); recordVillageFish(fishing.region,count); fishing=null; toast(nameOf(caught)+' '+count+'마리를 건졌어요'); return;
     }
-    var origin=camera.position, water=false;
+    var origin=camera.position, water=false, fishRegion=null;
     for(var t=.25;t<=REACH+camDist+.5;t+=.25) {
       var x=origin.x+dir.x*t,y=origin.y+dir.y*t,z=origin.z+dir.z*t;
       var id=get(Math.floor(x),Math.floor(y),Math.floor(z));
-      if(id===WATER&&Math.hypot(x-P.x,y-(P.y+EYE),z-P.z)<=REACH+.5){water=true;break;}
+      if(id===WATER&&Math.hypot(x-P.x,y-(P.y+EYE),z-P.z)<=REACH+.5){water=true;fishRegion=villageWaterRegion(x,z);break;}
       if(isSolid(id))break;
     }
     if (!water) return deny('가까운 물을 겨누고 눌러요');
-    var line={item:item,x:P.x,z:P.z,ready:now+2200,until:now+8500}; fishing=line;
+    var line={item:item,x:P.x,z:P.z,region:fishRegion,ready:now+2200,until:now+8500}; fishing=line;
     toast(item===FISH_NET?'그물을 던졌어요':'낚싯줄을 던졌어요');
     setTimeout(function(){if(fishing===line&&ui==='play')toast('물고기가 왔어요! 다시 눌러 건져요');},2200);
   }
@@ -5316,7 +5460,8 @@
   function openVisit() {
     if (!me || !client || !NET.ok) { toast('로그인하면 친구 집을 구경할 수 있어요'); return; }
     openPanel('visit'); $('visitList').innerHTML = '<div class="empty">불러오는 중…</div>';
-    client.rpc('get_ark_showcase').then(function (r) {
+    Promise.all([client.rpc('get_ark_showcase'),client.rpc('get_ark_showcase_details').catch(function(){return {data:[]};})]).then(function (ans) {
+      var r=ans[0],details = Array.isArray(ans[1].data)?ans[1].data:[];
       var L = $('visitList'); L.innerHTML = ''; var rows = r.data || [], mine = rows.filter(function (x) { return x.mine; })[0];
       var sel = $('visitIntro'); sel.innerHTML = ''; INTROS.forEach(function (t, i) { var o = document.createElement('option'); o.value = i; o.textContent = t; sel.appendChild(o); });
       if (mine) sel.value = mine.intro || 0;
@@ -5325,9 +5470,19 @@
       if (!others.length) { L.innerHTML = '<div class="empty">아직 보여 준 친구 집이 없어요. 먼저 내 집을 보여 주세요!</div>'; return; }
       others.forEach(function (x) {
         var d = document.createElement('div'); d.className = 'vrow';
-        var t = document.createElement('span'); t.textContent = '🏡 ' + shortName(x.nick, 8) + ' — ' + (INTROS[x.intro] || INTROS[0]) + ' (' + (x.plot_idx + 1) + '번 땅)';
+        var detail=details.find(function(d){return d.plot_idx===x.plot_idx;});
+        var t = document.createElement('span'); t.textContent = '🏡 ' + shortName(x.nick, 8) + ' — ' + (INTROS[x.intro] || INTROS[0]) +
+          (detail&&detail.theme?' · '+HOUSE_THEMES[detail.theme]:'')+' (' + (x.plot_idx + 1) + '번 땅)';
         var b = document.createElement('button'); b.className = 'mc'; b.textContent = '가 보기';
-        b.addEventListener('click', function () { var o = plotOrigin(x.plot_idx); teleport(o.x + PLOT / 2, G, o.z - 3, Math.PI); resume(); toast('🏡 ' + x.nick + '의 집이에요 — 구경만 할 수 있어요'); });
+        b.addEventListener('click', function () {
+          var o = plotOrigin(x.plot_idx);
+          visitMarks=(detail&&Array.isArray(detail.marks)?detail.marks:[]).map(function(mark,i){
+            return {id:'tour-'+i,label:'집 볼거리 '+(i+1),x:o.x+mark[0],z:o.z+mark[1]};
+          });
+          if(visitMarks.length)villageBook.target=visitMarks[0].id;
+          teleport(o.x + OLD_PLOT / 2, G, o.z - 3, Math.PI); resume();
+          toast('🏡 ' + x.nick + '의 집이에요 — '+(visitMarks.length?'지도에 볼거리가 있어요':'구경만 할 수 있어요'));
+        });
         d.appendChild(t); d.appendChild(b); L.appendChild(d);
       });
     }, function () { $('visitList').innerHTML = '<div class="empty">불러오지 못했어요</div>'; });
@@ -5492,6 +5647,9 @@
   }
   // ── 마을 사람(말씀으로만 말함) ──
   var NPCS = [], NPC_DEFS = [
+    { name:'빵 굽는 사람',x:XM+19,z:PZ0-9,look:{robe:0xd6ad77,robe2:0xe4cb9f,belt:0x70442c,
+      trim:0x865636,skin:0xc68a60,hair:0x33251e,sandal:0x653c23,style:'scarf',scarf:0xe3cbab},
+      text:'여행자에게 대접할 빵과 올리브, 구운 생선을 함께 차려 주세요.',ref:'마을 사람의 부탁',emoji:'🍞' },
     { name: '노아', x: XM + 7, z: AZ1 + 7, look: { robe: 0xd8cfb8, robe2: 0xc4b89a, belt: 0x6b4425, trim: 0x8a5a32, skin: 0xd9a67a, hair: 0xe8e4dc, sandal: 0x6b4425, style: 'long', fit: { beard: 0xe8e4dc, cloak: 0x7a5a3a } }, text: '노아가 그와 같이 하여 하나님이 자기에게 명하신 대로 다 준행하였더라', ref: '창세기 6:22', emoji: '⛵' },
     { name: '목자', x: XM + 46, z: PZ0 - 10, look: { robe: 0xddd0b0, robe2: 0xcfc09c, belt: 0x6b4425, trim: 0x7a5a3a, skin: 0xc98f62, hair: 0x2b1d14, sandal: 0x6b4425, style: 'scarf', scarf: 0xeee8d8, fit: { stripes: 0x7a5a3a, agal: 0x2a2018, staff: 0x8a6236 } }, text: '여호와는 나의 목자시니 내게 부족함이 없으리로다', ref: '시편 23:1', emoji: '🐑' },
     { name: '안내하는 나그네', x: XM - 6, z: PZ0 - 7, look: { robe: 0xe8e4da, robe2: 0xd8d2c4, belt: 0x8a4b14, trim: 0x8a4b14, skin: 0xe5b98f, hair: 0x3a2618, sandal: 0x6b4425, style: 'short', fit: { cloak: 0x3f4f6a, sash: 0x8a4b14, bag: 0x8a5a32 } }, text: '이 사람들은 다 믿음을 따라 죽었으며 약속을 받지 못하였으되 그것들을 멀리서 보고 환영하며 또 땅에서는 외국인과 나그네임을 증언하였으니', ref: '히브리서 11:13', emoji: '🧭' }
@@ -6038,6 +6196,11 @@
     persistBusy = true;
     client.rpc('put_ark_edits', { p_edits: arr }).then(function (r) {
       persistBusy = false;
+      if (!r.error && r.data>=0 && r.data<arr.length && villageProjectsEnabled) {
+        var areas=Object.keys(VILLAGE_PROJECTS).filter(function(k){return arr.some(function(e){return inProject(VILLAGE_PROJECTS[k],e[0],e[2]);});});
+        areas.forEach(syncVillageProject);
+        if(areas.length){fetchVillageProjects();toast('그 공사장에는 놓이지 않은 블록이 있어요');}
+      }
       if (r.error || r.data === -3) { requeue(arr); NET.holdUntil = performance.now() + (r.data === -3 ? 30000 : 6000); }
     }, function () { persistBusy = false; requeue(arr); NET.holdUntil = performance.now() + 6000; });
   }
@@ -6275,6 +6438,475 @@
     }, function () { toast('지우지 못했어요'); });
   }
 
+  var villageBook = loadVillageBook('guest'), villageTab = 'build', visitMarks = [];
+  function villageBookKey(id) { return 'arkVillage.notebook.' + id; }
+  function loadVillageBook(id) {
+    var data;
+    try { data=JSON.parse(localStorage.getItem(villageBookKey(id))||'null'); } catch(e){}
+    if(!data||typeof data!=='object')data={};
+    if(!Array.isArray(data.pins))data.pins=[];
+    return data;
+  }
+  function saveVillageBook() {
+    try { localStorage.setItem(villageBookKey(me ? me.id : 'guest'), JSON.stringify(villageBook)); } catch (e) {}
+  }
+  function allVillagePins(){return villageBook.pins.concat(visitMarks);}
+  function villageButton(parent, label, action) {
+    var button = document.createElement('button');
+    button.className = 'mc'; button.textContent = label;
+    button.addEventListener('click', action); parent.appendChild(button);
+    return button;
+  }
+  function villageText(parent, text, tag) {
+    var node = document.createElement(tag || 'p'); node.textContent = text; parent.appendChild(node); return node;
+  }
+  function addVillagePin(label,x,z) {
+    if (villageBook.pins.length >= 12) { toast('표시는 12곳까지 남길 수 있어요'); return false; }
+    var pin = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5), label: label, x: Math.floor(x), z: Math.floor(z) };
+    villageBook.pins.push(pin); villageBook.target = pin.id; saveVillageBook(); renderPins(); return true;
+  }
+  function renderPins() {
+    var sel = $('mapPins'); sel.replaceChildren();
+    [['','따라갈 장소 고르기']].concat(allVillagePins().map(function (p) { return [p.id,p.label]; })).forEach(function (pair) {
+      var choice = document.createElement('option'); choice.value=pair[0]; choice.textContent=pair[1]; sel.appendChild(choice);
+    });
+    sel.value = villageBook.target || '';
+    $('mapPinRemove').disabled=!villageBook.pins.some(function(p){return p.id===villageBook.target;});
+  }
+  function drawVillagePins(ctx,ox,oz,sc,w,h) {
+    allVillagePins().forEach(function (p) {
+      var x=(p.x-ox)*sc,y=(p.z-oz)*sc;
+      if (x < 0 || y < 0 || x > w || y > h) return;
+      ctx.fillStyle=p.id===villageBook.target?'#ffdb61':'#77dac1';
+      ctx.beginPath(); ctx.moveTo(x,y+5); ctx.lineTo(x-5,y-4); ctx.lineTo(x+5,y-4); ctx.closePath(); ctx.fill();
+    });
+  }
+  function pinnedRecipe() {
+    var p=villageBook.recipe, r=p&&RECIPES[p.index];
+    return r && r.out[0]===p.id ? r : null;
+  }
+  function renderMaterialGuide() {
+    var p=allVillagePins().find(function (x) { return x.id===villageBook.target; }), r=pinnedRecipe(), text=[];
+    if (p) {
+      var bearing=Math.atan2(p.x-P.x,-(p.z-P.z)), direction=['북','북동','동','남동','남','남서','서','북서'][(Math.round(bearing/(Math.PI/4))+8)%8];
+      var dist=Math.round(Math.hypot(p.x-P.x,p.z-P.z)); text.push(p.label+' '+(dist<=2?'도착':direction+'쪽 '+dist+'칸'));
+    }
+    if (r) text.push(nameOf(r.out[0])+' · '+r.need.map(function (n) {return nameOf(n[0])+' '+Math.min(have(n[0]),n[1])+'/'+n[1];}).join(' · '));
+    $('trailGuide').textContent=text.join(' / ');
+  }
+  var BLUEPRINTS=[['작은 집',7,6],['양 우리',9,7],['빵집',8,7]], blueprintMesh, blueprintAt=0;
+  function blueprintCells(plan) {
+    if (!plan || !BLUEPRINTS[plan.kind] || plan.plot!==myPlot) return [];
+    var def=BLUEPRINTS[plan.kind], w=def[1], l=def[2], p=plotOrigin(plan.plot), a=[];
+    var ox=p.x+plan.x, oz=p.z+plan.z;
+    function add(x,y,z,id) { a.push([ox+x,G+y,oz+z,id]); }
+    for (var z=0; z<l; z++) for (var x=0; x<w; x++) {
+      var border=x===0||z===0||x===w-1||z===l-1, entry=z===0&&x===Math.floor(w/2);
+      if (plan.kind===1) { if (border&&!entry) add(x,0,z,FENCE); else if(entry) add(x,0,z,GATE); continue; }
+      add(x,-1,z,plan.kind===2?BRICK:GOPHER);
+      if (border) for (var y=0;y<4;y++) {
+        if(entry) add(x,y,z,DOOR); else add(x,y,z,plan.kind===2?BRICK:GOPHER);
+      }
+      add(x,4,z,FLAT_ROOF);
+    }
+    if(plan.kind===2) add(w-2,0,l-2,OVEN);
+    return a;
+  }
+  function matchesPlan(expected,id) {
+    var s=SHAPE[id]; return id===expected || (s && s.base===expected) ||
+      (expected===GATE && s && s.type==='gate');
+  }
+  function createBlueprintMesh() {
+    blueprintMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(.98,.98,.98),
+      new THREE.MeshBasicMaterial({color:0x7bccea,transparent:true,opacity:.25,depthWrite:false}),260);
+    blueprintMesh.frustumCulled=false; blueprintMesh.count=0; scene.add(blueprintMesh);
+  }
+  var blueprintMatrix = new THREE.Matrix4();
+  function tickBlueprint(now) {
+    if(now<blueprintAt) return;
+    blueprintAt=now+350;
+    if(!blueprintMesh) return;
+    var plan=villageBook.plan, cells=plotAt(Math.floor(P.x),Math.floor(P.z))===myPlot?blueprintCells(plan):[];
+    var project=VILLAGE_PROJECTS[villageBook.project];
+    if(project && villageProjectsEnabled && inCommons(P.x,P.z)) cells=projectCells(villageBook.project);
+    var count=0;
+    cells.forEach(function (c) {
+      if(matchesPlan(c[3],get(c[0],c[1],c[2])) || count>=260) return;
+      blueprintMatrix.makeTranslation(c[0]+.5,c[1]+.5,c[2]+.5);
+      blueprintMesh.setMatrixAt(count++,blueprintMatrix);
+    });
+    blueprintMesh.count=count; if(count) blueprintMesh.instanceMatrix.needsUpdate=true;
+  }
+  function startBlueprint(kind) {
+    if(myPlot<0) return toast('로그인하고 내 땅을 먼저 받아요');
+    var o=plotOrigin(myPlot), d=BLUEPRINTS[kind];
+    villageBook.plan={kind:kind,plot:myPlot,x:Math.max(1,Math.min(PLOT-d[1]-1,Math.floor(P.x)-o.x)),z:Math.max(1,Math.min(PLOT-d[2]-1,Math.floor(P.z)-o.z))};
+    saveVillageBook(); renderVillageWork();
+  }
+  var villageTabs = [['build','설계도'],['materials','재료'],['discover','탐험'],['projects','공동 작업'],['neighbors','마을 사람'],['cargo','나귀 짐'],['showcase','집 구경']];
+  function openVillageWork(tab) { villageTab=tab; openPanel('villageWork'); renderVillageWork(); if(tab==='projects'||tab==='neighbors')fetchVillageProjects(); }
+  function renderVillageWork() {
+    var tabs=$('villageTabs'), body=$('villageBody'); tabs.replaceChildren(); body.replaceChildren();
+    villageTabs.forEach(function (tab) {
+      var b=villageButton(tabs,tab[1],function () { villageTab=tab[0]; renderVillageWork(); if(villageTab==='projects'||villageTab==='neighbors')fetchVillageProjects(); });
+      b.setAttribute('aria-pressed',String(villageTab===tab[0]));
+    });
+    if(villageTab==='build') {
+      villageText(body,'내 땅에 설계도를 표시하고 반투명 윤곽을 따라 지어 봐요.');
+      BLUEPRINTS.forEach(function (row,i) { villageButton(body,row[0],function () { startBlueprint(i); }); });
+      var plan=villageBook.plan;
+      if(plan&&BLUEPRINTS[plan.kind]&&plan.plot===myPlot) {
+        var remaining={}, cells=blueprintCells(plan), total=0;
+        cells.forEach(function (c) { if(!matchesPlan(c[3],get(c[0],c[1],c[2]))) { remaining[c[3]]=(remaining[c[3]]||0)+1; total++; } });
+        villageText(body, BLUEPRINTS[plan.kind][0]+' '+(cells.length-total)+'/'+cells.length);
+        Object.keys(remaining).forEach(function (id) { villageText(body,nameOf(+id)+' '+(id==DOOR?Math.ceil(remaining[id]/4):remaining[id])+'개 · '+howGet(+id)); });
+        villageButton(body,'설계도 지우기',function () {delete villageBook.plan; saveVillageBook(); renderVillageWork();});
+      }
+    } else if(villageTab==='materials') {
+      var r=pinnedRecipe();
+      if(!r) return villageText(body,'가방의 만들기 목록에서 「재료 표시」를 눌러요.');
+      villageText(body,nameOf(r.out[0]),'h3');
+      r.need.forEach(function (n) { villageText(body,nameOf(n[0])+' '+Math.min(n[1],have(n[0]))+'/'+n[1]+' · '+howGet(n[0])); });
+      villageButton(body,'재료 표시 끄기',function () {delete villageBook.recipe; saveVillageBook(); renderVillageWork();});
+    } else {
+      renderVillageExtras(villageTab,body);
+    }
+  }
+  var VILLAGE_SITES = [
+    { name:'사막의 옛 우물',x:1510,z:811,r:7,style:'well',item:FIND_POT,clue:'동쪽 사막의 북쪽에서 돌 테두리를 찾아요.' },
+    { name:'서쪽 언덕의 옛집',x:779,z:1038,r:7,style:'house',item:FIND_LAMP,clue:'서쪽 산에서 남쪽으로 이어지는 바위 언덕을 찾아요.' },
+    { name:'바위틈 샘',x:1160,z:1210,r:7,style:'spring',item:FIND_SEED,clue:'남쪽 호수의 동남쪽, 낮은 바위 사이를 찾아요.' }
+  ];
+  var VILLAGE_EXHIBITS = {
+    501:['토기 조각','흙으로 만든 그릇에는 물과 곡식, 기름을 담았어요. 조각의 모양을 보면 그릇이 얼마나 컸는지 짐작할 수 있어요.'],
+    502:['기름 등잔','작은 그릇에 기름을 담고 심지를 밝혀 어두운 방을 비췄어요.'],
+    503:['옛 씨앗','사람들은 다음 철에 심을 씨앗을 따로 보관했어요. 씨앗은 무엇을 길렀는지 알려 줘요.']
+  };
+  function protectedExcursion(x,z) {
+    return ferryPiers.some(function(p){return p.x===x&&p.z===z;}) ||
+      VILLAGE_SITES.some(function (s) {return Math.abs(x-s.x)<=s.r && Math.abs(z-s.z)<=s.r;});
+  }
+  function buildExcursions(x0,z0) {
+    VILLAGE_SITES.forEach(function (s) {
+      if(s.x+s.r<x0||s.z+s.r<z0||s.x-s.r>=x0+CS||s.z-s.r>=z0+CS) return;
+      terrain(s.x,s.z); var y=T.h+1, x=s.x,z=s.z;
+      fill(x-4,y-1,z-4,x+4,y-1,z+4,PATH);
+      fill(x-4,y,z-4,x+4,y+3,z+4,AIR);
+      if(s.style==='well') {
+        fill(x-3,y,z-3,x+3,y,z+3,STONE);
+        fill(x-2,y,z-2,x+2,y,z+2,WATER);
+        setRaw(x,y+1,z-3,FIND_MARK);
+      } else if(s.style==='house') {
+        fill(x-3,y,z-3,x+3,y+1,z-3,BRICK);
+        fill(x-3,y,z-3,x-3,y+1,z+2,BRICK);
+        fill(x+1,y,z+1,x+3,y,z+3,STONE);
+        setRaw(x,y,z,FIND_MARK);
+      } else {
+        fill(x-3,y,z-3,x+3,y+3,z-2,STONE);
+        fill(x-3,y,z-2,x-2,y+2,z+3,STONE);
+        fill(x-2,y+3,z-2,x+3,y+4,z+2,STONE);
+        fill(x+3,y,z-2,x+3,y+2,z+1,STONE);
+        fill(x-1,y,z-1,x+1,y,z+1,WATER);
+        setRaw(x+2,y,z+2,FIND_MARK);
+      }
+    });
+    ferryPiers.forEach(function (p) {
+      if (p.x<x0||p.x>=x0+CS||p.z<z0||p.z>=z0+CS) return;
+      setRaw(p.x, surfaceY(p.x,p.z), p.z, FERRY_POST);
+    });
+  }
+  function showVillageFind(id) {
+    var entry=VILLAGE_EXHIBITS[id];
+    $('cardEmoji').textContent='🏺'; $('cardName').textContent=entry[0]; $('cardText').textContent=entry[1];
+    $('cardRef').textContent='고대 마을 전시'; $('cardNew').textContent=''; $('card').classList.add('show');
+    clearTimeout(cardT); cardT=setTimeout(function () {$('card').classList.remove('show');},12000);
+  }
+  function useVillageBlock(id,h) {
+    if(id===FERRY_POST) return startFerry(h);
+    if(id===FEAST_TABLE) {
+      var held=HOTBAR[sel], serving=held===FLATBREAD||held===BREAD?FEAST_BREAD:(held===614?FEAST_OLIVE:(held===COOKED_FISH?FEAST_FISH:0));
+      if(!serving||!have(held)) return toast('빵이나 올리브, 구운 생선을 들고 식탁을 눌러요');
+      if(!inMyPlot(h.x,h.z)&&!inCommons(h.x,h.z)) return deny('내 땅이나 함께 짓는 터에서 차려요');
+      var why=canPlace(h.x,h.y+1,h.z,serving);
+      if(why) return deny(why);
+      if(get(h.x,h.y+1,h.z)!==AIR) return toast('이미 음식이 놓여 있어요');
+      take(held,1); setBlock(h.x,h.y+1,h.z,serving); bagChanged(); return toast('함께 먹을 음식을 차렸어요');
+    }
+    if(id!==FIND_MARK) return showVillageFind(id);
+    var find=VILLAGE_SITES.find(function (s) {return Math.abs(h.x-s.x)<=s.r&&Math.abs(h.z-s.z)<=s.r;});
+    if(!find) return;
+    var found=villageBook.found || (villageBook.found={});
+    if(!found[find.item]) {
+      if(!give(find.item,1)) return bagFull();
+      found[find.item]=true; saveVillageBook(); bagChanged();
+    }
+    showVillageFind(find.item);
+  }
+  function villageWaterRegion(x,z) {
+    if(z<SEA_Z+8) return '바다';
+    if(lakeE(x,z)<1.2) return '호수';
+    if(riverDist(x,z)<9) return '강';
+    return null;
+  }
+  function recordVillageFish(region,count) {
+    if(!region) return;
+    var fish=villageBook.fish || (villageBook.fish={}); fish[region]=(fish[region]||0)+count; saveVillageBook();
+  }
+  function recordVillagePlant(id,x,z) {
+    var plants=villageBook.plants || (villageBook.plants={});
+    if(!plants[id]) { plants[id]=placeName(); saveVillageBook(); }
+  }
+  function ditchWaterNear(x,y,z) {
+    return ditchHasSource(x,y-1,z) || ditchHasSource(x,y,z);
+  }
+  function ditchHasSource(x,yy,z) {
+    var todo=[], visited=new Set(), steps=[[1,0],[-1,0],[0,1],[0,-1]];
+    for(var dx=-4;dx<=4;dx++)for(var dz=-4;dz<=4;dz++)if(get(x+dx,yy,z+dz)===DITCH)todo.push([x+dx,z+dz,0]);
+    for(var i=0;i<todo.length && i<180;i++){
+      var q=todo[i],key=q[0]+','+q[1];
+      if(visited.has(key))continue;
+      visited.add(key);
+      if(get(q[0],yy-1,q[1])===WATER)return true;
+      for(var j=0;j<4;j++){
+        var ax=q[0]+steps[j][0],az=q[1]+steps[j][1],b=get(ax,yy,az);
+        if(b===WATER||get(ax,yy-1,az)===WATER)return true;
+        if(b===DITCH && q[2]<12 && !visited.has(ax+','+az))todo.push([ax,az,q[2]+1]);
+      }
+    }
+    return false;
+  }
+  var ferryPiers=[{x:1024,z:1150},{x:1024,z:1199}], ferryRide=null, ferryMesh;
+  function startFerry(h) {
+    if(ferryRide) return;
+    var p=ferryPiers[0], q=ferryPiers[1];
+    if(Math.abs(h.z-q.z)<Math.abs(h.z-p.z)){p=ferryPiers[1];q=ferryPiers[0];}
+    if(riding)dismount(true);
+    if(!ferryMesh){
+      ferryMesh=new THREE.Mesh(mergedBoxes([[2.1,.25,3.6,0x7a4e2e,0,0,0],[.18,.5,3.4,0x96603a,-1,.26,0],[.18,.5,3.4,0x96603a,1,.26,0],[1.8,.45,.22,0x865630,0,.25,1.6],[1.8,.45,.22,0x865630,0,.25,-1.6]]),avatarMat);
+      scene.add(ferryMesh);
+    }
+    ferryMesh.visible=true; ferryRide={from:p,to:q,t:0};
+    P.yaw=q.z>p.z?Math.PI:0; P.pitch=-.08; toast('나룻배로 호수를 건너요');
+  }
+  function stepFerry(dt) {
+    var ride=ferryRide; ride.t+=dt;
+    var progress=Math.min(1,ride.t/7),x=ride.from.x+.5,z=ride.from.z+.5+(ride.to.z-ride.from.z)*progress;
+    P.x=x;P.z=z;P.y=surfaceY(Math.floor(x),Math.floor(z))+.14;
+    P.vx=P.vy=P.vz=0;P.swim=false;
+    ferryMesh.position.set(x,P.y-.45,z);
+    ferryMesh.rotation.y=P.yaw; placeCamera(dt);
+    if(progress>=1){
+      ferryMesh.visible=false; ferryRide=null;
+      var shore=ride.to.z+(ride.to.z>ride.from.z?2:-2);
+      teleport(ride.to.x+.5,surfaceY(ride.to.x,shore),shore,P.yaw);
+      toast('호수 건너편에 도착했어요');
+    }
+  }
+  function renderVillageExtras(tab,body) {
+    if(tab==='discover') {
+      villageText(body,'가까운 옛터를 찾으면 살펴보고 발견물을 내 땅에 전시할 수 있어요.');
+      VILLAGE_SITES.forEach(function (s) { villageText(body, (villageBook.found&&villageBook.found[s.item]?'✓ ':'')+s.name+' · '+s.clue); });
+      villageText(body,'낚시 도감','h3');
+      ['강','호수','바다'].forEach(function (r) { villageText(body,nameOf(VILLAGE_FISH[r])+' · '+(villageBook.fish&&villageBook.fish[r]||0)+'마리'); });
+      villageText(body,'자연 도감','h3');
+      [[THORN,'남쪽 들판이나 동쪽 숲 끝'],[THISTLE,'서쪽 언덕이나 열린 들판'],[LILY,'강이나 호수 가까이']].forEach(function (item) {
+        villageText(body,nameOf(item[0])+' · '+(villageBook.plants&&villageBook.plants[item[0]]||item[1]));
+      });
+      return;
+    }
+    renderVillageCommunity(tab,body);
+  }
+  var VILLAGE_PROJECTS={
+    bridge:['돌다리',996,790,1008,797],
+    well:['공동 우물',1030,765,1036,772],
+    shelter:['여행자 쉼터',1031,790,1041,800],
+    pen:['목자의 양 우리',1030,775,1039,785],
+    meal:['함께 차리는 식탁',1042,790,1053,800]
+  };
+  var VILLAGE_ROLES=['재료 모으기','재료 다듬기','블록 놓기'];
+  var villageProjectsEnabled=false, villageProjectState={}, villageProjectFetch=false, villageProjectAt=0;
+  function projectCells(key) {
+    var out=[];
+    function put(x,y,z,id){out.push([x,y,z,id]);}
+    if(key==='bridge'){
+      for(var x=998;x<=1006;x++)for(var z=793;z<=795;z++)put(x,G,z,SBRICK);
+      for(x=998;x<=1006;x++){put(x,G+1,793,RAIL);put(x,G+1,795,RAIL);}
+    }else if(key==='well'){
+      put(1033,G,768,WELL);
+      for(var dx=-1;dx<=1;dx++)for(var dz=-1;dz<=1;dz++)if(dx||dz)put(1033+dx,G,768+dz,SBRICK);
+    }else if(key==='shelter'){
+      for(x=1033;x<=1039;x++)for(z=792;z<=798;z++)put(x,G+4,z,FLAT_ROOF);
+      [1033,1039].forEach(function(a){[792,798].forEach(function(b){for(var y=G;y<G+4;y++)put(a,y,b,PILLAR);});});
+    }else if(key==='pen'){
+      for(x=1032;x<=1037;x++)for(z=777;z<=782;z++)if(x===1032||x===1037||z===777||z===782)
+        put(x,G,z,x===1034&&z===782?GATE:FENCE);
+    }else if(key==='meal'){
+      [FEAST_BREAD,FEAST_OLIVE,FEAST_FISH].forEach(function(id,i){put(1045+i*2,G,795,FEAST_TABLE);put(1045+i*2,G+1,795,id);});
+    }
+    return out;
+  }
+  function buildBridgeGround(x0,z0) {
+    if(x0+CS<=1001||x0>1003||z0+CS<=790||z0>797)return;
+    fill(1001,G-2,790,1003,G-2,797,STONE);
+    fill(1001,G-1,790,1003,G-1,797,WATER);
+    fill(1001,G,790,1003,G,797,AIR);
+  }
+  function inProject(p,x,z) { return !!p&&x>=p[1]&&x<=p[3]&&z>=p[2]&&z<=p[4]; }
+  function villageProjectLocked(x,z) {
+    return Object.keys(villageProjectState).some(function(key){
+      return villageProjectState[key].locked&&inProject(VILLAGE_PROJECTS[key],x,z);
+    });
+  }
+  function syncVillageProject(key) {
+    var p=VILLAGE_PROJECTS[key];
+    if(!p||!client)return;
+    client.rpc('ark_village_project_blocks',{p_key:key}).then(function(r){
+      if(r.error||!Array.isArray(r.data))return;
+      var data=new Map();
+      r.data.forEach(function(row){data.set(row.x+','+row.y+','+row.z,row);});
+      for(var z=p[2];z<=p[4];z++)for(var x=p[1];x<=p[3];x++)for(var y=1;y<SY;y++){
+        var place=x+','+y+','+z;
+        if(Object.hasOwn(NET.pm,place))continue;
+        var index=(z>>5)*NC+(x>>5), block=(y*CS+(z&31))*CS+(x&31), current=EDITS[index];
+        if(!data.has(place)&&current&&Object.hasOwn(current,block))queueRevert(x,y,z);
+      }
+      data.forEach(function(row,place){
+        if(!Object.hasOwn(NET.pm,place))queueRemote('project-'+key,[row.x,row.y,row.z,row.id]);
+      });
+    },function(){});
+  }
+  function fetchVillageProjects() {
+    if(!client||villageProjectFetch)return Promise.resolve();
+    villageProjectFetch=true;
+    return client.rpc('ark_village_project_status',{}, {get:true}).then(function(r){
+      if(!Array.isArray(r.data)||r.error)return;
+      villageProjectsEnabled=true; villageProjectState={};
+      r.data.forEach(function(row){villageProjectState[row.key]=row;});
+      if(ui==='villageWork'&&(villageTab==='projects'||villageTab==='neighbors'))renderVillageWork();
+    }).catch(function(){}).finally(function(){villageProjectFetch=false;});
+  }
+  function focusProject(key) {
+    var p=VILLAGE_PROJECTS[key];
+    villageBook.project=key; saveVillageBook(); saveProjectRole();
+    teleport((p[1]+p[3])/2+.5,surfaceY((p[1]+p[3])>>1,p[4]+2),p[4]+2,0);
+    resume(); toast(p[0]+' 설계도를 보여 줘요');
+  }
+  function saveProjectRole() {
+    var k=villageBook.project, i=VILLAGE_ROLES.indexOf(villageBook.role);
+    if(!client||!me||!VILLAGE_PROJECTS[k]||i<0)return;
+    client.rpc('set_ark_village_role',{p_key:k,p_role:i}).then(function(r){
+      if(r.data===true)fetchVillageProjects();
+    },function(){});
+  }
+  function projectAdmin(key,action) {
+    if(!NET.admin||!client)return;
+    if(action==='restore'&&!window.confirm(VILLAGE_PROJECTS[key][0]+'만 마지막 저장 상태로 되돌릴까요?'))return;
+    client.rpc('ark_village_project_admin',{p_key:key,p_action:action}).then(function(r){
+      toast(!r.error&&r.data===true?'공사장 상태를 바꿨어요':'공사장 상태를 바꾸지 못했어요');
+      if(!r.error&&r.data===true&&action==='restore')syncVillageProject(key);
+      fetchVillageProjects();
+    }, function(){toast('공사장 상태를 바꾸지 못했어요');});
+  }
+  function renderOneProject(body,key) {
+    var d=VILLAGE_PROJECTS[key], state=villageProjectState[key], cells=projectCells(key);
+    var line=document.createElement('div'); line.className='vrow'; body.appendChild(line);
+    var available=!!state, count=available?state.done:0, done=available&&count>=cells.length;
+    villageText(line,d[0]+(available?' '+count+'/'+cells.length:' · 연결 중')+(done?' · 완성':'')+(state&&state.locked?' · 보호 중':''),'span');
+    if(!available)return;
+    if(Array.isArray(state.roles))villageText(line,VILLAGE_ROLES.map(function(role,i){return role+' '+state.roles[i]+'명';}).join(' · '),'small');
+    villageButton(line,'공사장으로',function(){focusProject(key);});
+    if(NET.admin){
+      if(done||state.locked)villageButton(line,state.locked?'잠금 풀기':'완성한 곳 보호',function(){projectAdmin(key,state.locked?'unlock':'lock');});
+      if(state.snapshot)villageButton(line,'이곳만 되돌리기',function(){projectAdmin(key,'restore');});
+    }
+  }
+  function renderDonkeyCargo(body) {
+    var a=riding&&riding.kind==='donkey'?riding:animals.find(function(animal){return animal.kind==='donkey'&&animal.saddled&&Math.hypot(animal.x-P.x,animal.z-P.z)<=6;});
+    if(!a)return villageText(body,'안장을 얹은 나귀 가까이에서 짐을 실어요.');
+    a.cargo=readCargo(a.cargo);
+    a.cargo.forEach(function(slot,i){
+      var line=document.createElement('div'); line.className='vrow'; body.appendChild(line);
+      villageText(line,(i+1)+'번 짐 · '+(slot?nameOf(slot[0])+' '+slot[1]+'개':'빈 자리'),'span');
+      if(slot){
+        villageButton(line,'꺼내기',function(){
+          var n=give(slot[0],slot[1]); if(!n)return bagFull();
+          slot[1]-=n; if(!slot[1])a.cargo[i]=null;
+          saveHorses(); stateDirty(); bagChanged(); renderVillageWork();
+        });
+      }else{
+        var select=document.createElement('select'); select.setAttribute('aria-label',(i+1)+'번 짐에 실을 물건');
+        INV.filter(function(id){return !isTool(id)&&have(id)>0;}).forEach(function(id){
+          var o=document.createElement('option');o.value=id;o.textContent=nameOf(id)+' '+have(id)+'개';select.appendChild(o);
+        });
+        line.appendChild(select);
+        villageButton(line,'실어 두기',function(){
+          var id=Number(select.value),n=Math.min(STACK,have(id));
+          if(!id||!n||isAdm())return;
+          take(id,n); a.cargo[i]=[id,n]; saveHorses(); stateDirty(); bagChanged(); renderVillageWork();
+        });
+      }
+    });
+  }
+  var HOUSE_THEMES=['주제 없음','목장','쉼터','정원','빵집'];
+  function renderShowcaseSetup(body) {
+    if(myPlot<0||!client)return villageText(body,'로그인하고 내 땅을 받은 뒤 꾸밀 수 있어요.');
+    villageText(body,'친구 집 구경에서 보여 줄 집의 주제와 두 군데의 볼거리를 정해요.');
+    var profile=villageBook.house || (villageBook.house={theme:0,marks:[]});
+    var row=document.createElement('div');row.className='vme';body.appendChild(row);
+    HOUSE_THEMES.forEach(function(t,i){
+      var b=villageButton(row,t,function(){profile.theme=i;profile.edited=true;saveVillageBook();renderVillageWork();});
+      b.setAttribute('aria-pressed',String(profile.theme===i));
+    });
+    if (profile.loading!==true&&!profile.ready) {
+      profile.loading=true;
+      client.rpc('get_ark_showcase_details').then(function(r){
+        var own=Array.isArray(r.data)&&r.data.find(function(d){return d.plot_idx===myPlot;});
+        if(own&&!profile.edited){profile.theme=own.theme;profile.marks=own.marks;}
+        profile.ready=true;delete profile.loading;
+        if(ui==='villageWork'&&villageTab==='showcase')renderVillageWork();
+      },function(){profile.ready=true;delete profile.loading;});
+    }
+    profile.marks.forEach(function (mark,i) {
+      var line=document.createElement('div');line.className='vrow';body.appendChild(line);
+      villageText(line,'볼거리 '+(i+1)+' · 내 땅 '+(mark[0]+1)+', '+(mark[1]+1),'span');
+      villageButton(line,'빼기',function (){profile.edited=true;profile.marks.splice(i,1);saveVillageBook();renderVillageWork();});
+    });
+    villageButton(body,'지금 선 자리를 볼거리로',function(){
+      var x=Math.floor(P.x),z=Math.floor(P.z);
+      if(plotAt(x,z)!==myPlot)return toast('내 땅 안에서 다시 눌러요');
+      if(profile.marks.length>=2)return toast('볼거리는 두 군데까지 둘 수 있어요');
+      var o=plotOrigin(myPlot);
+      if(profile.marks.some(function(m){return m[0]===x-o.x&&m[1]===z-o.z;}))return toast('이미 표시한 곳이에요');
+      profile.edited=true;profile.marks.push([x-o.x,z-o.z]);saveVillageBook();renderVillageWork();
+    });
+    villageButton(body,'집 구경 정보 저장',function(){
+      client.rpc('set_ark_showcase_details',{p_theme:profile.theme,p_marks:profile.marks}).then(function(r){
+        toast(r.data===true?'집 구경 정보를 저장했어요':'집 구경 정보를 저장하지 못했어요');
+      },function(){toast('집 구경 정보를 저장하지 못했어요');});
+    });
+    villageButton(body,'공개 설정과 친구 집',openVisit);
+  }
+  function renderVillageCommunity(tab,body) {
+    if(tab==='cargo')return renderDonkeyCargo(body);
+    if(tab==='showcase')return renderShowcaseSetup(body);
+    if(tab==='projects'){
+      villageText(body,'함께 짓는 터의 공사장에서는 설계도에 맞게 놓은 블록을 모두의 진행에 더해요.');
+      var row=document.createElement('div'); row.className='vme'; body.appendChild(row);
+      VILLAGE_ROLES.forEach(function(role){
+        var btn=villageButton(row,role,function(){villageBook.role=role; saveVillageBook(); saveProjectRole(); renderVillageWork();});
+        btn.setAttribute('aria-pressed',String(villageBook.role===role));
+      });
+      if(villageBook.role)villageText(body,'내가 맡은 일 · '+villageBook.role);
+      ['bridge','well','shelter'].forEach(function(key){renderOneProject(body,key);});
+    }else{
+      villageText(body,'목자가 부탁했어요. 양들이 안전하게 쉴 수 있도록 울타리와 문을 고쳐 주세요.');
+      renderOneProject(body,'pen');
+      villageText(body,'여행자에게 대접할 빵과 올리브, 구운 생선을 식탁에 차려 주세요.');
+      renderOneProject(body,'meal');
+      if(villageProjectState.meal&&villageProjectState.meal.done>=6)villageText(body,'따뜻한 식탁이 준비됐어요. 함께 먹을 자리가 생겼어요.');
+    }
+  }
+
   function loadOnline() {
     try {
       if (window.supabase && window.SUPABASE_URL) client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
@@ -6282,15 +6914,25 @@
     if (!client) return Promise.resolve();
     return client.auth.getSession().then(function (r) {
       me = r && r.data && r.data.session ? r.data.session.user : null;
+      villageBook=loadVillageBook(me ? me.id : 'guest');
       $('who').textContent = me ? '' : '구경 중 · 로그인하면 저장돼요';
       var claim = me ? client.rpc('claim_village_plot').then(function (c) { if (!c.error && c.data !== null) myPlot = c.data; }) : Promise.resolve();
       return claim.then(function () { return client.from('ark_village_plots').select('plot_idx,data,user_id'); });
+    }).then(function (res) {
+      var hasExpandedRows=(res&&res.data||[]).some(function(row){
+        return typeof row.data==='string'&&row.data.startsWith('r3:');
+      });
+      function usePlotLayout(layout) {
+        if (hasExpandedRows || (layout && layout.data===WIDE_PLOT)) enableWidePlots();
+        return res;
+      }
+      return client.rpc('ark_plot_width', {}, { get: true }).then(usePlotLayout,function(){return usePlotLayout(null);});
     }).then(function (res) {
       (res && res.data || []).forEach(function (row) {
         plotOwners[row.plot_idx] = 1; plotUser[row.plot_idx] = row.user_id;
         if (row.data) decodePlot(row.plot_idx, row.data, me && row.user_id === me.id);
       });
-      return loadShared();
+      return Promise.all([loadShared(),fetchVillageProjects()]);
     }).then(function () {
       setSave(myPlot >= 0 ? '내 땅 ' + (myPlot + 1) + '번' : '');
       if (me && myPlot >= 0) setTimeout(tryClaimDex, 3000);
