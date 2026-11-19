@@ -1,16 +1,17 @@
   // ───────── 해·밤, 비 ─────────
   var FOG_FAR = (isTouch ? 5 : 7) * 32 - 12;
   var DAY_LEN = 900, dayT = DAY_LEN * 0.06, rain = 0, rainOn = false, rainTimer = 100;
-  var LU = { uDay: { value: 1 }, uTint: { value: new THREE.Color(1, 1, 1) }, uTime: { value: 0 } };
+  var LU = { uDay: { value: 1 }, uTint: { value: new THREE.Color(1, 1, 1) }, uTime: { value: 0 }, uHand: { value: new THREE.Vector4(0, -999, 0, 0) } };   // uHand: 손에 든 횃불(위치, 세기)
   function lightPatch(mat) {
     mat.onBeforeCompile = function (sh) {
-      sh.uniforms.uDay = LU.uDay; sh.uniforms.uTint = LU.uTint; sh.uniforms.uTime = LU.uTime;
-      sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>',
-        '#include <begin_vertex>\n#ifdef USE_COLOR\n float swayW = color.b;\n if (swayW > 0.5) { vec4 wpS = modelMatrix * vec4(position, 1.0);\n' +
+      sh.uniforms.uDay = LU.uDay; sh.uniforms.uTint = LU.uTint; sh.uniforms.uTime = LU.uTime; sh.uniforms.uHand = LU.uHand;
+      sh.vertexShader = 'uniform float uTime;\nvarying vec3 vWpL;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+        '#include <begin_vertex>\n vWpL = (modelMatrix * vec4(position, 1.0)).xyz;\n#ifdef USE_COLOR\n float swayW = color.b;\n if (swayW > 0.5) { vec4 wpS = modelMatrix * vec4(position, 1.0);\n' +
         '  if (swayW < 1.5) { transformed.x += sin(uTime * 1.7 + wpS.x * 0.7 + wpS.z * 0.5) * 0.07; transformed.z += cos(uTime * 1.3 + wpS.z * 0.6 + wpS.x * 0.2) * 0.05; }\n' +
         '  else { transformed.y += sin(uTime * 1.6 + wpS.x * 0.8 + wpS.z * 0.6) * 0.035 - 0.035; } }\n#endif');
-      sh.fragmentShader = 'uniform float uDay;\nuniform vec3 uTint;\n' + sh.fragmentShader.replace('#include <color_fragment>',
-        '#if defined( USE_COLOR )\n diffuseColor.rgb *= max(vColor.r * uDay * uTint, vColor.g * vec3(1.0, 0.86, 0.62));\n#endif');
+      sh.fragmentShader = 'uniform float uDay;\nuniform vec3 uTint;\nuniform vec4 uHand;\nvarying vec3 vWpL;\n' + sh.fragmentShader.replace('#include <color_fragment>',
+        '#if defined( USE_COLOR )\n float handL = uHand.w * clamp(1.0 - distance(vWpL, uHand.xyz) / 7.0, 0.0, 1.0) * (0.55 + 0.45 * vColor.r);\n' +
+        ' diffuseColor.rgb *= max(vColor.r * uDay * uTint, max(vColor.g, handL) * vec3(1.0, 0.86, 0.62));\n#endif');
     };
   }
   var brightStars = null, starLook = 0, starNight = -1;
@@ -127,6 +128,9 @@
     fogC.copy(skyC).lerp(C_WHITE, 0.18 * dayF);
     scene.fog.color.copy(fogC); scene.fog.near = FOG_FAR * 0.4 * (1 - 0.45 * rain); scene.fog.far = FOG_FAR * (1 - 0.3 * rain);
     LU.uDay.value = (0.24 + 0.76 * dayF) * (1 - 0.22 * rain);
+    // 횃불·등을 손에 들면 내 둘레 7칸이 밝아짐(밤·굴에서)
+    var hId = started ? HOTBAR[sel] : 0, hOn = hId && have(hId) > 0 && (hId === TORCH || (hId >= WTORCH && hId < WTORCH + 4) || hId === LANTERN || hId === LAMPSTAND + 1) ? 1 : 0;
+    var hu = LU.uHand.value; hu.w += (hOn - hu.w) * Math.min(1, dt * 6); hu.x = P.x; hu.y = P.y + 2.4; hu.z = P.z;
     LU.uTint.value.copy(C_WHITE).lerp(C_NTINT, 1 - dayF).lerp(C_DTINT, dusk * 0.6);
     var ccx = Math.floor(camera.position.x), ccy = Math.floor(camera.position.y), ccz = Math.floor(camera.position.z);
     var cvT = started && skyLight(ccx, ccy, ccz) < 0.3 ? 1 : 0; caveK += (cvT - caveK) * Math.min(1, dt * 1.5);

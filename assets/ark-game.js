@@ -2071,6 +2071,30 @@
       for (var cy = Math.max(0, Math.floor((y - 8) / CS)); cy <= Math.min(CY - 1, Math.floor((y + 8) / CS)); cy++) buildChunk(cx, cy, cz);
     }
   }
+  // 등불마다 빈칸을 따라 퍼지며(벽은 못 지나감) 닿는 칸을 표시 — 칸마다 등불 32개까지 비트로
+  var LR = CS + 16, LMASK = new Int32Array(LR * LR * LR), LQ = new Int32Array(4096 * 3);
+  function lightPass(id) { return isTrans(id) || !isSolid(id); }
+  function lampReach(lamps, x0, y0, z0) {
+    LMASK.fill(0);
+    for (var i = 0; i < lamps.length; i++) {
+      var l = lamps[i], bit = 1 << i, lx = l[0], ly = l[1], lz = l[2], qh = 0, qt = 0;
+      var r0 = ((ly - y0 + 8) * LR + (lz - z0 + 8)) * LR + (lx - x0 + 8);
+      if (lx - x0 + 8 < 0 || ly - y0 + 8 < 0 || lz - z0 + 8 < 0 || lx - x0 + 8 >= LR || ly - y0 + 8 >= LR || lz - z0 + 8 >= LR) continue;
+      LMASK[r0] |= bit; LQ[qt++] = lx; LQ[qt++] = ly; LQ[qt++] = lz;
+      while (qh < qt && qt < LQ.length - 18) {
+        var x = LQ[qh++], y = LQ[qh++], z = LQ[qh++];
+        for (var f = 0; f < 6; f++) {
+          var nx = x + (f === 0 ? 1 : f === 1 ? -1 : 0), ny = y + (f === 2 ? 1 : f === 3 ? -1 : 0), nz = z + (f === 4 ? 1 : f === 5 ? -1 : 0);
+          var dx = nx - lx, dy = ny - ly, dz = nz - lz; if (dx * dx + dy * dy + dz * dz > 64) continue;
+          var rx = nx - x0 + 8, ry = ny - y0 + 8, rz = nz - z0 + 8;
+          if (rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR || ny < 0 || ny >= SY) continue;
+          var ri = (ry * LR + rz) * LR + rx; if (LMASK[ri] & bit) continue;
+          LMASK[ri] |= bit;   // 벽 칸도 빛은 받음(그 면은 빈칸 쪽에서 계산), 지나가지는 못함
+          if (lightPass(get(nx, ny, nz))) { LQ[qt++] = nx; LQ[qt++] = ny; LQ[qt++] = nz; }
+        }
+      }
+    }
+  }
   function buildChunk(cx, cy, cz) {
     var key = cx + ',' + cy + ',' + cz, old = chunks[key];
     if (old) { old.forEach(function (m) { scene.remove(m); m.geometry.dispose(); }); }
@@ -2078,10 +2102,17 @@
     var x0 = cx * CS, y0 = cy * CS, z0 = cz * CS;
     var colm = COLS[cz * NC + cx]; if (!colm) { delete chunks[key]; return; } var cd = colm.d;
     var lamps = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8);
-    function blk(px, py, pz) {
+    if (lamps.length > 32) { var mcx = x0 + 16, mcy = y0 + 16, mcz = z0 + 16; lamps.sort(function (a, b) { return (Math.abs(a[0] - mcx) + Math.abs(a[1] - mcy) + Math.abs(a[2] - mcz)) - (Math.abs(b[0] - mcx) + Math.abs(b[1] - mcy) + Math.abs(b[2] - mcz)); }); lamps.length = 32; }
+    if (lamps.length) lampReach(lamps, x0, y0, z0);
+    // 등불 빛은 벽에 막힌다: 등불에서 빈칸을 따라 닿는 칸에만(cx,cy,cz = 빛을 받는 빈칸)
+    function blk(px, py, pz, cx, cy, cz) {
       if (!lamps.length) return 0;
+      var rx = cx - x0 + 8, ry = cy - y0 + 8, rz = cz - z0 + 8;
+      var mask = (rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR) ? -1 : LMASK[(ry * LR + rz) * LR + rx];
+      if (!mask) return 0;
       var best = 0;
       for (var i = 0; i < lamps.length; i++) {
+        if (!(mask & (1 << i))) continue;
         var l = lamps[i], dx = px - l[0] - 0.5, dy = py - l[1] - 0.5, dz = pz - l[2] - 0.5, d2 = dx * dx + dy * dy + dz * dz;
         if (d2 < 56.25) { var vv = 1 - Math.sqrt(d2) / 7.5; if (vv > best) best = vv; }
       }
@@ -2099,7 +2130,7 @@
               start = P[2].length / 3;
               for (k = 0; k < 4; k++) {
                 v = CROSS[q][k]; P[2].push(x + v[0], y + v[1] * (FARM_PLANTS[id] && id >= 410 ? plantHeight(id) : 1), z + v[2]);
-                uv = tileUV(tp, k < 2 ? 0 : 1, v[1]); U[2].push(uv[0], uv[1]); C[2].push(ps, def[5] || LIGHTS[id] ? 1 : blk(x + v[0], y + v[1], z + v[2]), (v[1] > 0.5 && !def[5] && !LIGHTS[id]) ? 1 : 0);
+                uv = tileUV(tp, k < 2 ? 0 : 1, v[1]); U[2].push(uv[0], uv[1]); C[2].push(ps, def[5] || LIGHTS[id] ? 1 : blk(x + v[0], y + v[1], z + v[2], x, y, z), (v[1] > 0.5 && !def[5] && !LIGHTS[id]) ? 1 : 0);
               }
               I[2].push(start, start + 1, start + 2, start, start + 2, start + 3);
             }
@@ -2120,7 +2151,7 @@
                   var vx = v[0] ? bb[3] : bb[0], vy = v[1] ? bb[4] : bb[1], vz = v[2] ? bb[5] : bb[2];
                   P[bk].push(x + vx, y + vy, z + vz);
                   var luv2 = F2.uv([vx, vy, vz]); uv = tileUV(faceTile(id, f2), luv2[0], luv2[1]); U[bk].push(uv[0], uv[1]);
-                  C[bk].push(F2.s * sh0, blk(x + vx, y + vy, z + vz) * F2.s, 0);
+                  C[bk].push(F2.s * sh0, blk(x + vx, y + vy, z + vz, x, y, z) * F2.s, 0);
                 }
                 I[bk].push(start, start + 1, start + 2, start, start + 2, start + 3);
               }
@@ -2152,10 +2183,10 @@
                 else if (F.n[1] !== 0) { s1 = solidAO(x + ax, ny, z); s2 = solidAO(x, ny, z + az); s3 = solidAO(x + ax, ny, z + az); }
                 else { s1 = solidAO(x + ax, y, nz); s2 = solidAO(x, y + ay, nz); s3 = solidAO(x + ax, y + ay, nz); }
                 var occ = (s1 && s2) ? 3 : s1 + s2 + s3;
-                ao = 1 - occ * 0.15;
+                ao = 1 - occ * 0.18;   // 모서리 그늘(조금 진하게)
               }
               var m = Math.min(1, shade * ao);
-              C2.push(m, lit ? 1 : blk(x + v[0], y + v[1], z + v[2]) * ao * F.s, water ? 2 : 0);
+              C2.push(m, lit ? 1 : blk(x + v[0], y + v[1], z + v[2], nx, ny, nz) * ao * F.s, water ? 2 : 0);
             }
             I2.push(start, start + 1, start + 2, start, start + 2, start + 3);
           }
@@ -5104,16 +5135,17 @@
   // ───────── 해·밤, 비 ─────────
   var FOG_FAR = (isTouch ? 5 : 7) * 32 - 12;
   var DAY_LEN = 900, dayT = DAY_LEN * 0.06, rain = 0, rainOn = false, rainTimer = 100;
-  var LU = { uDay: { value: 1 }, uTint: { value: new THREE.Color(1, 1, 1) }, uTime: { value: 0 } };
+  var LU = { uDay: { value: 1 }, uTint: { value: new THREE.Color(1, 1, 1) }, uTime: { value: 0 }, uHand: { value: new THREE.Vector4(0, -999, 0, 0) } };   // uHand: 손에 든 횃불(위치, 세기)
   function lightPatch(mat) {
     mat.onBeforeCompile = function (sh) {
-      sh.uniforms.uDay = LU.uDay; sh.uniforms.uTint = LU.uTint; sh.uniforms.uTime = LU.uTime;
-      sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>',
-        '#include <begin_vertex>\n#ifdef USE_COLOR\n float swayW = color.b;\n if (swayW > 0.5) { vec4 wpS = modelMatrix * vec4(position, 1.0);\n' +
+      sh.uniforms.uDay = LU.uDay; sh.uniforms.uTint = LU.uTint; sh.uniforms.uTime = LU.uTime; sh.uniforms.uHand = LU.uHand;
+      sh.vertexShader = 'uniform float uTime;\nvarying vec3 vWpL;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+        '#include <begin_vertex>\n vWpL = (modelMatrix * vec4(position, 1.0)).xyz;\n#ifdef USE_COLOR\n float swayW = color.b;\n if (swayW > 0.5) { vec4 wpS = modelMatrix * vec4(position, 1.0);\n' +
         '  if (swayW < 1.5) { transformed.x += sin(uTime * 1.7 + wpS.x * 0.7 + wpS.z * 0.5) * 0.07; transformed.z += cos(uTime * 1.3 + wpS.z * 0.6 + wpS.x * 0.2) * 0.05; }\n' +
         '  else { transformed.y += sin(uTime * 1.6 + wpS.x * 0.8 + wpS.z * 0.6) * 0.035 - 0.035; } }\n#endif');
-      sh.fragmentShader = 'uniform float uDay;\nuniform vec3 uTint;\n' + sh.fragmentShader.replace('#include <color_fragment>',
-        '#if defined( USE_COLOR )\n diffuseColor.rgb *= max(vColor.r * uDay * uTint, vColor.g * vec3(1.0, 0.86, 0.62));\n#endif');
+      sh.fragmentShader = 'uniform float uDay;\nuniform vec3 uTint;\nuniform vec4 uHand;\nvarying vec3 vWpL;\n' + sh.fragmentShader.replace('#include <color_fragment>',
+        '#if defined( USE_COLOR )\n float handL = uHand.w * clamp(1.0 - distance(vWpL, uHand.xyz) / 7.0, 0.0, 1.0) * (0.55 + 0.45 * vColor.r);\n' +
+        ' diffuseColor.rgb *= max(vColor.r * uDay * uTint, max(vColor.g, handL) * vec3(1.0, 0.86, 0.62));\n#endif');
     };
   }
   var brightStars = null, starLook = 0, starNight = -1;
@@ -5230,6 +5262,9 @@
     fogC.copy(skyC).lerp(C_WHITE, 0.18 * dayF);
     scene.fog.color.copy(fogC); scene.fog.near = FOG_FAR * 0.4 * (1 - 0.45 * rain); scene.fog.far = FOG_FAR * (1 - 0.3 * rain);
     LU.uDay.value = (0.24 + 0.76 * dayF) * (1 - 0.22 * rain);
+    // 횃불·등을 손에 들면 내 둘레 7칸이 밝아짐(밤·굴에서)
+    var hId = started ? HOTBAR[sel] : 0, hOn = hId && have(hId) > 0 && (hId === TORCH || (hId >= WTORCH && hId < WTORCH + 4) || hId === LANTERN || hId === LAMPSTAND + 1) ? 1 : 0;
+    var hu = LU.uHand.value; hu.w += (hOn - hu.w) * Math.min(1, dt * 6); hu.x = P.x; hu.y = P.y + 2.4; hu.z = P.z;
     LU.uTint.value.copy(C_WHITE).lerp(C_NTINT, 1 - dayF).lerp(C_DTINT, dusk * 0.6);
     var ccx = Math.floor(camera.position.x), ccy = Math.floor(camera.position.y), ccz = Math.floor(camera.position.z);
     var cvT = started && skyLight(ccx, ccy, ccz) < 0.3 ? 1 : 0; caveK += (cvT - caveK) * Math.min(1, dt * 1.5);
@@ -8571,7 +8606,7 @@
   }
 
   // 점검 함수: 내 컴퓨터(시험 서버)와 선생님 계정에서만 연다 — 학생이 개발자 창에서 물건을 만들어 내지 못하게
-  var ARK_DBG = { vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+  var ARK_DBG = { reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };

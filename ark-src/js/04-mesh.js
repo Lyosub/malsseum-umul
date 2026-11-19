@@ -49,6 +49,30 @@
       for (var cy = Math.max(0, Math.floor((y - 8) / CS)); cy <= Math.min(CY - 1, Math.floor((y + 8) / CS)); cy++) buildChunk(cx, cy, cz);
     }
   }
+  // 등불마다 빈칸을 따라 퍼지며(벽은 못 지나감) 닿는 칸을 표시 — 칸마다 등불 32개까지 비트로
+  var LR = CS + 16, LMASK = new Int32Array(LR * LR * LR), LQ = new Int32Array(4096 * 3);
+  function lightPass(id) { return isTrans(id) || !isSolid(id); }
+  function lampReach(lamps, x0, y0, z0) {
+    LMASK.fill(0);
+    for (var i = 0; i < lamps.length; i++) {
+      var l = lamps[i], bit = 1 << i, lx = l[0], ly = l[1], lz = l[2], qh = 0, qt = 0;
+      var r0 = ((ly - y0 + 8) * LR + (lz - z0 + 8)) * LR + (lx - x0 + 8);
+      if (lx - x0 + 8 < 0 || ly - y0 + 8 < 0 || lz - z0 + 8 < 0 || lx - x0 + 8 >= LR || ly - y0 + 8 >= LR || lz - z0 + 8 >= LR) continue;
+      LMASK[r0] |= bit; LQ[qt++] = lx; LQ[qt++] = ly; LQ[qt++] = lz;
+      while (qh < qt && qt < LQ.length - 18) {
+        var x = LQ[qh++], y = LQ[qh++], z = LQ[qh++];
+        for (var f = 0; f < 6; f++) {
+          var nx = x + (f === 0 ? 1 : f === 1 ? -1 : 0), ny = y + (f === 2 ? 1 : f === 3 ? -1 : 0), nz = z + (f === 4 ? 1 : f === 5 ? -1 : 0);
+          var dx = nx - lx, dy = ny - ly, dz = nz - lz; if (dx * dx + dy * dy + dz * dz > 64) continue;
+          var rx = nx - x0 + 8, ry = ny - y0 + 8, rz = nz - z0 + 8;
+          if (rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR || ny < 0 || ny >= SY) continue;
+          var ri = (ry * LR + rz) * LR + rx; if (LMASK[ri] & bit) continue;
+          LMASK[ri] |= bit;   // 벽 칸도 빛은 받음(그 면은 빈칸 쪽에서 계산), 지나가지는 못함
+          if (lightPass(get(nx, ny, nz))) { LQ[qt++] = nx; LQ[qt++] = ny; LQ[qt++] = nz; }
+        }
+      }
+    }
+  }
   function buildChunk(cx, cy, cz) {
     var key = cx + ',' + cy + ',' + cz, old = chunks[key];
     if (old) { old.forEach(function (m) { scene.remove(m); m.geometry.dispose(); }); }
@@ -56,10 +80,17 @@
     var x0 = cx * CS, y0 = cy * CS, z0 = cz * CS;
     var colm = COLS[cz * NC + cx]; if (!colm) { delete chunks[key]; return; } var cd = colm.d;
     var lamps = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8);
-    function blk(px, py, pz) {
+    if (lamps.length > 32) { var mcx = x0 + 16, mcy = y0 + 16, mcz = z0 + 16; lamps.sort(function (a, b) { return (Math.abs(a[0] - mcx) + Math.abs(a[1] - mcy) + Math.abs(a[2] - mcz)) - (Math.abs(b[0] - mcx) + Math.abs(b[1] - mcy) + Math.abs(b[2] - mcz)); }); lamps.length = 32; }
+    if (lamps.length) lampReach(lamps, x0, y0, z0);
+    // 등불 빛은 벽에 막힌다: 등불에서 빈칸을 따라 닿는 칸에만(cx,cy,cz = 빛을 받는 빈칸)
+    function blk(px, py, pz, cx, cy, cz) {
       if (!lamps.length) return 0;
+      var rx = cx - x0 + 8, ry = cy - y0 + 8, rz = cz - z0 + 8;
+      var mask = (rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR) ? -1 : LMASK[(ry * LR + rz) * LR + rx];
+      if (!mask) return 0;
       var best = 0;
       for (var i = 0; i < lamps.length; i++) {
+        if (!(mask & (1 << i))) continue;
         var l = lamps[i], dx = px - l[0] - 0.5, dy = py - l[1] - 0.5, dz = pz - l[2] - 0.5, d2 = dx * dx + dy * dy + dz * dz;
         if (d2 < 56.25) { var vv = 1 - Math.sqrt(d2) / 7.5; if (vv > best) best = vv; }
       }
@@ -77,7 +108,7 @@
               start = P[2].length / 3;
               for (k = 0; k < 4; k++) {
                 v = CROSS[q][k]; P[2].push(x + v[0], y + v[1] * (FARM_PLANTS[id] && id >= 410 ? plantHeight(id) : 1), z + v[2]);
-                uv = tileUV(tp, k < 2 ? 0 : 1, v[1]); U[2].push(uv[0], uv[1]); C[2].push(ps, def[5] || LIGHTS[id] ? 1 : blk(x + v[0], y + v[1], z + v[2]), (v[1] > 0.5 && !def[5] && !LIGHTS[id]) ? 1 : 0);
+                uv = tileUV(tp, k < 2 ? 0 : 1, v[1]); U[2].push(uv[0], uv[1]); C[2].push(ps, def[5] || LIGHTS[id] ? 1 : blk(x + v[0], y + v[1], z + v[2], x, y, z), (v[1] > 0.5 && !def[5] && !LIGHTS[id]) ? 1 : 0);
               }
               I[2].push(start, start + 1, start + 2, start, start + 2, start + 3);
             }
@@ -98,7 +129,7 @@
                   var vx = v[0] ? bb[3] : bb[0], vy = v[1] ? bb[4] : bb[1], vz = v[2] ? bb[5] : bb[2];
                   P[bk].push(x + vx, y + vy, z + vz);
                   var luv2 = F2.uv([vx, vy, vz]); uv = tileUV(faceTile(id, f2), luv2[0], luv2[1]); U[bk].push(uv[0], uv[1]);
-                  C[bk].push(F2.s * sh0, blk(x + vx, y + vy, z + vz) * F2.s, 0);
+                  C[bk].push(F2.s * sh0, blk(x + vx, y + vy, z + vz, x, y, z) * F2.s, 0);
                 }
                 I[bk].push(start, start + 1, start + 2, start, start + 2, start + 3);
               }
@@ -130,10 +161,10 @@
                 else if (F.n[1] !== 0) { s1 = solidAO(x + ax, ny, z); s2 = solidAO(x, ny, z + az); s3 = solidAO(x + ax, ny, z + az); }
                 else { s1 = solidAO(x + ax, y, nz); s2 = solidAO(x, y + ay, nz); s3 = solidAO(x + ax, y + ay, nz); }
                 var occ = (s1 && s2) ? 3 : s1 + s2 + s3;
-                ao = 1 - occ * 0.15;
+                ao = 1 - occ * 0.18;   // 모서리 그늘(조금 진하게)
               }
               var m = Math.min(1, shade * ao);
-              C2.push(m, lit ? 1 : blk(x + v[0], y + v[1], z + v[2]) * ao * F.s, water ? 2 : 0);
+              C2.push(m, lit ? 1 : blk(x + v[0], y + v[1], z + v[2], nx, ny, nz) * ao * F.s, water ? 2 : 0);
             }
             I2.push(start, start + 1, start + 2, start, start + 2, start + 3);
           }
