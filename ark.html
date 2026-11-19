@@ -543,6 +543,26 @@
     body.touch #map .wrap { width:min(100%, 360px); }
     body.touch #bigmapc, body.touch #map .side { width:100%; }
   }
+  /* 가로 화면: 「놓기」 버튼이 날기·지도 글자와 겹치지 않게 */
+  @media (orientation:landscape) {
+    body.touch #touchAction { right:calc(14px + var(--sar)); bottom:calc(152px + var(--sab)); max-width:150px; overflow:hidden; text-overflow:ellipsis; }
+    body.touch #slabMode { right:calc(14px + var(--sar)); bottom:calc(200px + var(--sab)); }
+    body.touch #touchAction:not([hidden]) ~ #btnRun { right:calc(94px + var(--sar)); }
+  }
+  @media (orientation:landscape) and (max-height:430px) {
+    body.touch #touchAction { bottom:calc(140px + var(--sab)); }
+    body.touch #slabMode { right:calc(170px + var(--sar)); bottom:calc(140px + var(--sab)); }
+  }
+  /* 화면 안내 */
+  #tour { position:fixed; inset:0; z-index:90; }
+  #tour.dim { background:rgba(0,0,0,.55); }
+  #tour .thole { position:fixed; border:3px solid #ffd54a; border-radius:6px; box-shadow:0 0 0 9999px rgba(0,0,0,.55); pointer-events:none; transition:all .2s; }
+  #tour .tbub { position:fixed; background:#1d1d2b; color:#fff; border:2px solid #000; box-shadow:inset 0 0 0 2px #ffd54a; padding:10px 12px; font-size:14px; line-height:1.45; }
+  #tour .tbub b { display:block; font-size:16px; margin-bottom:4px; color:#ffe27a; }
+  #tour .tbub p { margin:0 0 8px; }
+  #tour .trow { display:flex; align-items:center; gap:6px; justify-content:flex-end; }
+  #tour .trow small { margin-right:auto; opacity:.75; }
+  #tour .tnext { background:#4f7d3c; color:#fff; }
 </style>
 </head>
 <body class="menu">
@@ -646,6 +666,7 @@
     <button id="mResume" class="mc wide">게임으로 돌아가기</button>
     <button id="mBook" class="mc">📜 창세기 6장</button>
     <button id="mHelp" class="mc">조작 방법</button>
+    <button id="mTour" class="mc">🧭 화면 안내 다시 보기</button>
     <button id="mTutorial" class="mc">튜토리얼 다시 보기</button>
     <button id="mPractice" class="mc">첫 집 연습터</button>
     <button id="mVillageWork" class="mc">마을 수첩</button>

@@ -2703,6 +2703,79 @@
     showUI('play'); sfx('click');
     requestGamePointerLock();
   }
+  // ── 화면 안내(처음 한 번): 버튼이 어디 있고 무엇을 하는지 노란 테두리로 차례로 짚어 준다 ──
+  var TOUR_STEPS = [
+    [null, '👋 나그네 마을에 온 것을 환영해요!', '화면에 있는 것들을 하나씩 짚어 줄게요. 언제든 「건너뛰기」를 누를 수 있어요.'],
+    ['#dpad', '🕹 방향키', '눌러서 걸어요. ▲를 두 번 누르면 달리고, 가운데를 2초 누르면 웅크려요.', 'touch'],
+    ['#keys', '⌨ 걷기', 'W A S D로 걷고 마우스로 둘러봐요. 스페이스는 점프, W를 두 번 누르면 달리기예요.', 'pc'],
+    [null, '👀 둘러보기', '화면의 빈 곳을 손가락으로 끌면 둘러봐요. 가운데 + 표시가 겨누는 곳이에요.', 'touch'],
+    ['#btnJump', '⬆ 점프', '한 칸 높이는 저절로 올라가고, 더 높으면 점프를 눌러요.', 'touch'],
+    ['#btnRun', '🏃 달리기', '누르면 달리기가 켜지고, 다시 누르면 꺼져요.', 'touch'],
+    ['#hotbar', '🧰 단축 칸', '손에 들 것을 고르는 곳이에요. 칸을 눌러 바꾸고, 맨 오른쪽은 가방이에요.'],
+    [null, '⛏ 캐기와 놓기', '겨눈 블록을 꾹 누르면 캐고, 톡 누르면 손에 든 블록을 놓아요. 오른쪽에 「놓기」 「캐기」 버튼도 나와요.', 'touch'],
+    [null, '⛏ 캐기와 놓기', '왼쪽 클릭을 누르고 있으면 캐고, 오른쪽 클릭으로 놓아요.', 'pc'],
+    ['#btnBag', '🎒 가방', '모은 것을 보고 만들기·도감·업적을 열어요. 집은 물건은 땅에 버릴 수도 있어요.'],
+    ['#btnChat', '💬 채팅', '함께 있는 나그네들과 이야기해요.'],
+    ['#btnLook', '👤 옷', '내 모습과 입을 옷을 골라요.'],
+    ['#btnView', '👁 시점', '1인칭 · 3인칭(뒤) · 3인칭(앞)을 바꿔요.'],
+    ['#btnRotate', '🔄 화면', '가로 · 세로를 바꿔요.', 'touch'],
+    ['#btnFold', '▶ 접기', '위쪽 버튼들을 접어 화면을 넓게 써요. 다시 누르면 펴져요.'],
+    ['#btnPause', '❚❚ 메뉴', '게임 · 이동 · 함께 · 설정 탭이 있어요. 마을 수첩 · 지도 · 친구 · 파티도 여기서 열어요.'],
+    ['#mapc', '🗺 작은 지도', '누르면 큰 지도가 열려요. 아래 「지도」 글자를 누르면 접혀요.'],
+    ['#quest', '📜 할 일 안내', '지금 해 볼 일을 알려 줘요. ▴를 누르면 접혀요.'],
+    ['#info', '📍 지금 있는 곳', '장소 · 계절 · 함께 있는 사람 수가 나와요.'],
+    [null, '🤝 다른 나그네', '다른 사람을 두 번 누르면 친구 신청 · 파티 초대를 할 수 있어요.'],
+    [null, '✅ 준비 끝!', '이제 할 일 안내를 따라 해 보세요. 메뉴 → 게임 → 「화면 안내 다시 보기」로 언제든 다시 볼 수 있어요.']
+  ];
+  var tourBox = null;
+  function tourVisible(el) { if (!el) return false; var r = el.getBoundingClientRect(), cs = getComputedStyle(el); return r.width > 0 && r.height > 0 && cs.display !== 'none' && cs.visibility !== 'hidden'; }
+  function startTour(done) {
+    if (tourBox) return;
+    if (ui !== 'play') showUI('play');
+    if (lockOn) { try { document.exitPointerLock(); } catch (e) {} }
+    var steps = TOUR_STEPS.filter(function (s) {
+      if (s[3] === 'touch' && !isTouch) return false;
+      if (s[3] === 'pc' && isTouch) return false;
+      return !s[0] || tourVisible(document.querySelector(s[0]));
+    });
+    var i = 0;
+    tourBox = document.createElement('div'); tourBox.id = 'tour';
+    var hole = document.createElement('div'); hole.className = 'thole';
+    var bub = document.createElement('div'); bub.className = 'tbub';
+    tourBox.appendChild(hole); tourBox.appendChild(bub); document.body.appendChild(tourBox);
+    function finish() { if (!tourBox) return; tourBox.remove(); tourBox = null; S.tourDone = 1; saveSettings(); if (done) done(); }
+    function show() {
+      var s = steps[i], el = s[0] && document.querySelector(s[0]);
+      bub.innerHTML = '';
+      var h = document.createElement('b'); h.textContent = s[1];
+      var p = document.createElement('p'); p.textContent = s[2];
+      var row = document.createElement('div'); row.className = 'trow';
+      var n = document.createElement('small'); n.textContent = (i + 1) + ' / ' + steps.length;
+      var skip = document.createElement('button'); skip.className = 'mc'; skip.textContent = '건너뛰기';
+      var next = document.createElement('button'); next.className = 'mc tnext'; next.textContent = i === steps.length - 1 ? '시작하기' : '다음 ▶';
+      skip.addEventListener('click', function (e) { e.stopPropagation(); finish(); });
+      next.addEventListener('click', function (e) { e.stopPropagation(); sfx('click'); if (++i >= steps.length) finish(); else show(); });
+      row.appendChild(n); if (i < steps.length - 1) row.appendChild(skip); row.appendChild(next);
+      bub.appendChild(h); bub.appendChild(p); bub.appendChild(row);
+      var W = innerWidth, H = innerHeight;
+      if (el && tourVisible(el)) {
+        var r = el.getBoundingClientRect(), pad = 6;
+        hole.style.display = 'block'; tourBox.classList.remove('dim');
+        hole.style.left = (r.left - pad) + 'px'; hole.style.top = (r.top - pad) + 'px'; hole.style.width = (r.width + pad * 2) + 'px'; hole.style.height = (r.height + pad * 2) + 'px';
+        var bw = Math.min(300, W - 24); bub.style.width = bw + 'px';
+        var bh = bub.offsetHeight || 120;
+        var top = r.bottom + 14; if (top + bh > H - 8) top = r.top - bh - 14; if (top < 8) top = Math.max(8, Math.min(H - bh - 8, r.top));
+        var left = r.left + r.width / 2 - bw / 2;
+        if (top === Math.max(8, Math.min(H - bh - 8, r.top)) && (r.top - bh - 14 < 8)) left = r.right + 14 + bw < W ? r.right + 14 : r.left - bw - 14;   // 위·아래 자리가 없으면 옆으로
+        bub.style.left = Math.max(8, Math.min(W - bw - 8, left)) + 'px'; bub.style.top = top + 'px';
+      } else {
+        hole.style.display = 'none'; tourBox.classList.add('dim');
+        var bw2 = Math.min(340, W - 24); bub.style.width = bw2 + 'px';
+        bub.style.left = (W - bw2) / 2 + 'px'; bub.style.top = Math.max(8, (H - (bub.offsetHeight || 140)) / 2) + 'px';
+      }
+    }
+    show();
+  }
   function startGame() {
     audioOn(); sfx('click');
     if (furnaceOK()) SEEN[FURNACE] = 1; if (tableOK()) SEEN[CRAFT] = 1;   // 내 땅에 놓아 둔 용광로·제작대
@@ -2713,7 +2786,9 @@
     if (myPlot >= 0) goHome(); else { teleport(XM + 0.5, G, PZ0 - 9, Math.PI); toast('숲·산·호수에서 재료를 캐서 모아 보세요. 방주 문은 옆으로 나 있어요(창 6:16)'); }
     if (!me) setTimeout(function () { toast('지금은 구경 모드예요 — 로그인하면 내 땅과 가방이 저장돼요'); }, 15000);
     resume();
-    if (isTouch && !S.practiceSeen) openPractice();
+    // 처음이면 화면 안내부터, 끝나면 (휴대폰) 첫 집 연습터
+    if (!S.tourDone) setTimeout(function () { startTour(function () { if (isTouch && !S.practiceSeen) openPractice(); }); }, 900);
+    else if (isTouch && !S.practiceSeen) openPractice();
   }
   var forestRoute = null;
   var FOREST_ENTRY = [VX1 + 14, PZ0 + 60];
@@ -4030,10 +4105,11 @@
     on('btnFold', function () { toggleFold('top'); });
     on('qFold', function () { toggleFold('q'); });
     on('qMini', function () { toggleFold('q'); });
+    on('mTour', function () { startTour(); });
     // 게임 메뉴: 버튼을 묶음 탭(게임·이동·함께·설정)으로 — 돌아가기·나가기는 늘 보임
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
-      var G = { game: ['mBook', 'mStory', 'mVillageWork', 'mLook', 'mMap', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
+      var G = { game: ['mBook', 'mStory', 'mVillageWork', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
         together: ['mParty', 'mFriends', 'mVisit', 'mRevert'], settings: ['mLight', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
@@ -4469,7 +4545,7 @@
     }
     var c = pickCreature(screenDir(), h ? h.t : undefined);
     if (c && !(riding && c.a && c.a.sp.seat)) {
-      return { label: c.peer ? '사람 · 두 번 누르기' : c.npc ? '말 걸기' : (c.shadow ? '막기' : (c.a && c.a.sp.seat ? '타기' : '동물 누르기')) };
+      return { label: c.peer ? '두 번: 친구' : c.npc ? '말 걸기' : (c.shadow ? '막기' : (c.a && c.a.sp.seat ? '타기' : '동물 누르기')) };
     }
     if (h) label = blockActionLabel(h, held);
     if (label) return { label: label };
