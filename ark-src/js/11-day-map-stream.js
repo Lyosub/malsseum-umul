@@ -180,7 +180,7 @@
   }
 
   // ───────── 배경 소리 ─────────
-  var amb = null, ambTick = 0, nearWater = 0, underRoof = false;
+  var amb = null, ambTick = 0, nearWater = 0, underRoof = false, ambReg = '', ambSand = false, ambGrass = false, inCave = false, ambT = 0;
   function noiseLoop(type, freq, q) {
     var len = AC.sampleRate * 2, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
     for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
@@ -234,7 +234,8 @@
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function updateAmbient(dt) {
     if (!AC) return;
-    if (!amb) { try { amb = { water: noiseLoop('bandpass', 520, 0.7), rain: noiseLoop('lowpass', 2400) }; } catch (e) { amb = {}; return; } }
+    if (!amb) { try { amb = { water: noiseLoop('bandpass', 520, 0.7), rain: noiseLoop('lowpass', 2400), wind: noiseLoop('lowpass', 380), leaves: noiseLoop('highpass', 3600), surf: noiseLoop('lowpass', 850) }; } catch (e) { amb = {}; return; } }
+    ambT += dt;
     ambTick -= dt;
     if (ambTick <= 0) {
       ambTick = 0.5;
@@ -245,6 +246,9 @@
       }
       nearWater = clamp01(1 - best / 18);
       underRoof = skyAt(px, pz) > P.y + HT;
+      var r0 = T.reg; terrain(px, pz); ambReg = T.reg; ambSand = T.top === SAND && T.reg !== 'sea' && T.reg !== 'lake'; ambGrass = T.top === GRASS; T.reg = r0;
+      inCave = skyAt(px, pz) > P.y + HT + 3 && P.y < G - 2;   // 땅속 굴
+      if (S.sound && started && ui === 'play' && inCave && Math.random() < 0.22) { var df = 1100 + Math.random() * 700; tone('sine', df, df * 0.6, 0.14, 0.035); }   // 굴 속 물방울
       // 새소리(낮), 풀벌레(밤), 가까운 동물 울음
       if (S.sound && started && ui === 'play') {
         if (skyState.dayF > 0.6 && rain < 0.3 && !underRoof && Math.random() < 0.09) chirp();
@@ -256,8 +260,16 @@
         }
       }
     }
-    var on = S.sound && started ? 1 : 0;
-    if (amb.water) amb.water.gain.value = 0.05 * nearWater * on;
+    var on = S.sound && started ? 1 : 0, out = !inCave && !underRoof ? 1 : 0, high = clamp01((P.y - G - 14) / 30);
+    // 지역마다 바람·나뭇잎·파도(천천히 바뀜)
+    var tWind = on * (inCave ? 0 : (ambReg === 'desert' || ambReg === 'oasis' || ambSand ? 0.05 : 0.012 + 0.05 * high) * (underRoof ? 0.3 : 1));
+    var tLeaves = on * out * (ambReg === 'east' && ambGrass && skyState.dayF > 0.3 && rain < 0.3 ? 0.016 : 0);
+    var tSurf = on * (ambReg === 'sea' ? 0.07 * nearWater * (0.5 + 0.5 * Math.sin(ambT * 0.55)) : 0) * (inCave ? 0 : 1);
+    var ka = Math.min(1, dt * 1.5);
+    if (amb.wind) amb.wind.gain.value += (tWind - amb.wind.gain.value) * ka;
+    if (amb.leaves) amb.leaves.gain.value += (tLeaves - amb.leaves.gain.value) * ka;
+    if (amb.surf) amb.surf.gain.value += (tSurf - amb.surf.gain.value) * ka;
+    if (amb.water) amb.water.gain.value = 0.05 * nearWater * on * (ambReg === 'sea' ? 0.4 : 1);
     if (amb.rain) amb.rain.gain.value = snowNow ? 0 : 0.07 * rain * on * (underRoof ? 0.4 : 1);   // 눈은 조용히
   }
 

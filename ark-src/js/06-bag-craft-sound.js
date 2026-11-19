@@ -269,6 +269,28 @@
   }
   var DIG_F = { pick: 2200, axe: 700, shovel: 420, knife: 1600 };
   function matSound(id) { if (id === SAND || id === SNOW || id === 18) return 1300; if (id === GRASS || id === LEAF || kind(id) === 'plant') return 1700; return DIG_F[TCLASS[id]] || 900; }   // 돌은 딱딱, 나무는 둔탁, 흙은 사각
+  // 발소리: 밟은 것마다 다르게(모래·눈은 사각, 풀·흙은 부드럽게, 나무는 통통, 돌은 딱딱, 물은 첨벙) + 걸음마다 조금씩 다른 높이
+  var STEP_CFG = { soft: [0.11, 'bandpass', 1100, 0.085, 1.2], grass: [0.07, 'lowpass', 650, 0.09, 2.2], wood: [0.05, 'bandpass', 420, 0.15, 4], stone: [0.045, 'highpass', 1300, 0.06, 4.5], water: [0.16, 'bandpass', 620, 0.1, 1] };
+  function stepKind(id) {
+    if (id === WATER) return 'water';
+    if (id === SAND || id === SNOW || id === PATH) return 'soft';
+    if (id === GRASS || id === DIRT || id === CLAY || id === LEAF || kind(id) === 'plant') return 'grass';
+    if (TCLASS[id] === 'axe' || (SHAPE[id] && TCLASS[SHAPE[id].mat] === 'axe')) return 'wood';
+    return 'stone';
+  }
+  function stepSound(id) {
+    if (!AC || !S.sound) return;
+    try {
+      var k = stepKind(id), c = STEP_CFG[k], v = 0.85 + Math.random() * 0.3;
+      var len = Math.floor(AC.sampleRate * c[0]), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+      for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, c[4]);
+      var src = AC.createBufferSource(); src.buffer = buf; src.playbackRate.value = v;
+      var f = AC.createBiquadFilter(); f.type = c[1]; f.frequency.value = c[2] * v;
+      var g = AC.createGain(); g.gain.value = c[3];
+      src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+      if (k === 'wood') tone('sine', 190 * v, 140 * v, 0.07, 0.05);   // 나무 바닥은 통통
+    } catch (e) {}
+  }
   function sfx(kindS, freq) {
     if (!AC || !S.sound) return;
     try {

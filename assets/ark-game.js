@@ -2740,6 +2740,28 @@
   }
   var DIG_F = { pick: 2200, axe: 700, shovel: 420, knife: 1600 };
   function matSound(id) { if (id === SAND || id === SNOW || id === 18) return 1300; if (id === GRASS || id === LEAF || kind(id) === 'plant') return 1700; return DIG_F[TCLASS[id]] || 900; }   // 돌은 딱딱, 나무는 둔탁, 흙은 사각
+  // 발소리: 밟은 것마다 다르게(모래·눈은 사각, 풀·흙은 부드럽게, 나무는 통통, 돌은 딱딱, 물은 첨벙) + 걸음마다 조금씩 다른 높이
+  var STEP_CFG = { soft: [0.11, 'bandpass', 1100, 0.085, 1.2], grass: [0.07, 'lowpass', 650, 0.09, 2.2], wood: [0.05, 'bandpass', 420, 0.15, 4], stone: [0.045, 'highpass', 1300, 0.06, 4.5], water: [0.16, 'bandpass', 620, 0.1, 1] };
+  function stepKind(id) {
+    if (id === WATER) return 'water';
+    if (id === SAND || id === SNOW || id === PATH) return 'soft';
+    if (id === GRASS || id === DIRT || id === CLAY || id === LEAF || kind(id) === 'plant') return 'grass';
+    if (TCLASS[id] === 'axe' || (SHAPE[id] && TCLASS[SHAPE[id].mat] === 'axe')) return 'wood';
+    return 'stone';
+  }
+  function stepSound(id) {
+    if (!AC || !S.sound) return;
+    try {
+      var k = stepKind(id), c = STEP_CFG[k], v = 0.85 + Math.random() * 0.3;
+      var len = Math.floor(AC.sampleRate * c[0]), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+      for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, c[4]);
+      var src = AC.createBufferSource(); src.buffer = buf; src.playbackRate.value = v;
+      var f = AC.createBiquadFilter(); f.type = c[1]; f.frequency.value = c[2] * v;
+      var g = AC.createGain(); g.gain.value = c[3];
+      src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+      if (k === 'wood') tone('sine', 190 * v, 140 * v, 0.07, 0.05);   // 나무 바닥은 통통
+    } catch (e) {}
+  }
   function sfx(kindS, freq) {
     if (!AC || !S.sound) return;
     try {
@@ -5316,7 +5338,7 @@
   }
 
   // ───────── 배경 소리 ─────────
-  var amb = null, ambTick = 0, nearWater = 0, underRoof = false;
+  var amb = null, ambTick = 0, nearWater = 0, underRoof = false, ambReg = '', ambSand = false, ambGrass = false, inCave = false, ambT = 0;
   function noiseLoop(type, freq, q) {
     var len = AC.sampleRate * 2, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
     for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
@@ -5370,7 +5392,8 @@
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function updateAmbient(dt) {
     if (!AC) return;
-    if (!amb) { try { amb = { water: noiseLoop('bandpass', 520, 0.7), rain: noiseLoop('lowpass', 2400) }; } catch (e) { amb = {}; return; } }
+    if (!amb) { try { amb = { water: noiseLoop('bandpass', 520, 0.7), rain: noiseLoop('lowpass', 2400), wind: noiseLoop('lowpass', 380), leaves: noiseLoop('highpass', 3600), surf: noiseLoop('lowpass', 850) }; } catch (e) { amb = {}; return; } }
+    ambT += dt;
     ambTick -= dt;
     if (ambTick <= 0) {
       ambTick = 0.5;
@@ -5381,6 +5404,9 @@
       }
       nearWater = clamp01(1 - best / 18);
       underRoof = skyAt(px, pz) > P.y + HT;
+      var r0 = T.reg; terrain(px, pz); ambReg = T.reg; ambSand = T.top === SAND && T.reg !== 'sea' && T.reg !== 'lake'; ambGrass = T.top === GRASS; T.reg = r0;
+      inCave = skyAt(px, pz) > P.y + HT + 3 && P.y < G - 2;   // 땅속 굴
+      if (S.sound && started && ui === 'play' && inCave && Math.random() < 0.22) { var df = 1100 + Math.random() * 700; tone('sine', df, df * 0.6, 0.14, 0.035); }   // 굴 속 물방울
       // 새소리(낮), 풀벌레(밤), 가까운 동물 울음
       if (S.sound && started && ui === 'play') {
         if (skyState.dayF > 0.6 && rain < 0.3 && !underRoof && Math.random() < 0.09) chirp();
@@ -5392,8 +5418,16 @@
         }
       }
     }
-    var on = S.sound && started ? 1 : 0;
-    if (amb.water) amb.water.gain.value = 0.05 * nearWater * on;
+    var on = S.sound && started ? 1 : 0, out = !inCave && !underRoof ? 1 : 0, high = clamp01((P.y - G - 14) / 30);
+    // 지역마다 바람·나뭇잎·파도(천천히 바뀜)
+    var tWind = on * (inCave ? 0 : (ambReg === 'desert' || ambReg === 'oasis' || ambSand ? 0.05 : 0.012 + 0.05 * high) * (underRoof ? 0.3 : 1));
+    var tLeaves = on * out * (ambReg === 'east' && ambGrass && skyState.dayF > 0.3 && rain < 0.3 ? 0.016 : 0);
+    var tSurf = on * (ambReg === 'sea' ? 0.07 * nearWater * (0.5 + 0.5 * Math.sin(ambT * 0.55)) : 0) * (inCave ? 0 : 1);
+    var ka = Math.min(1, dt * 1.5);
+    if (amb.wind) amb.wind.gain.value += (tWind - amb.wind.gain.value) * ka;
+    if (amb.leaves) amb.leaves.gain.value += (tLeaves - amb.leaves.gain.value) * ka;
+    if (amb.surf) amb.surf.gain.value += (tSurf - amb.surf.gain.value) * ka;
+    if (amb.water) amb.water.gain.value = 0.05 * nearWater * on * (ambReg === 'sea' ? 0.4 : 1);
     if (amb.rain) amb.rain.gain.value = snowNow ? 0 : 0.07 * rain * on * (underRoof ? 0.4 : 1);   // 눈은 조용히
   }
 
@@ -6003,7 +6037,7 @@
     else if (fallTop !== null) { var fd = fallTop - P.y; fallTop = null; if (fd > 8) hurt(Math.floor((fd - 8) / 2) + 1, '높은 곳에서 떨어졌어요'); }
     if (P.ground && !riding) exhaust(moved * (P.sprint ? 0.03 : 0.004));
     storyStep(dt, moved);
-    if (P.ground) { P.walk += moved * 0.55; P.stepAcc += moved; if (P.stepAcc > 2.6) { P.stepAcc = 0; sfx('step', matSound(get(Math.floor(P.x), Math.floor(P.y - 0.1), Math.floor(P.z)))); } }
+    if (P.ground) { P.walk += moved * 0.55; P.stepAcc += moved; if (P.stepAcc > 2.6) { P.stepAcc = 0; var fx0 = Math.floor(P.x), fz0 = Math.floor(P.z), feet = get(fx0, Math.floor(P.y + 0.1), fz0); stepSound(feet === WATER ? WATER : get(fx0, Math.floor(P.y - 0.1), fz0)); } }
     else P.walk += moved * 0.2;
     P.camY += (0 - P.camY) * Math.min(1, 12 * dt);
     placeCamera(dt, moved / Math.max(dt, 1e-4));
@@ -8706,7 +8740,7 @@
   }
 
   // 점검 함수: 내 컴퓨터(시험 서버)와 선생님 계정에서만 연다 — 학생이 개발자 창에서 물건을 만들어 내지 못하게
-  var ARK_DBG = { sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+  var ARK_DBG = { amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };

@@ -271,7 +271,7 @@
     else if (fallTop !== null) { var fd = fallTop - P.y; fallTop = null; if (fd > 8) hurt(Math.floor((fd - 8) / 2) + 1, '높은 곳에서 떨어졌어요'); }
     if (P.ground && !riding) exhaust(moved * (P.sprint ? 0.03 : 0.004));
     storyStep(dt, moved);
-    if (P.ground) { P.walk += moved * 0.55; P.stepAcc += moved; if (P.stepAcc > 2.6) { P.stepAcc = 0; sfx('step', matSound(get(Math.floor(P.x), Math.floor(P.y - 0.1), Math.floor(P.z)))); } }
+    if (P.ground) { P.walk += moved * 0.55; P.stepAcc += moved; if (P.stepAcc > 2.6) { P.stepAcc = 0; var fx0 = Math.floor(P.x), fz0 = Math.floor(P.z), feet = get(fx0, Math.floor(P.y + 0.1), fz0); stepSound(feet === WATER ? WATER : get(fx0, Math.floor(P.y - 0.1), fz0)); } }
     else P.walk += moved * 0.2;
     P.camY += (0 - P.camY) * Math.min(1, 12 * dt);
     placeCamera(dt, moved / Math.max(dt, 1e-4));
