@@ -2809,6 +2809,7 @@
       keys[e.code] = true;
       if (e.code === 'Space' && !e.repeat) jumpPress();
       if (e.code === 'KeyF') toggleFly();
+      if (e.code === 'KeyQ' && ui === 'play' && !e.repeat) throwItem(HOTBAR[sel], e.shiftKey ? Math.min(64, have(HOTBAR[sel])) : 1);   // Q 버리기, Shift+Q 모두
       if (e.code === 'KeyG' && !e.repeat) rotateBuild();
       if (e.code === 'KeyZ' && !e.repeat) undoBuild();
       if (/^Digit[1-9]$/.test(e.code)) setSel(+e.code.slice(5) - 1);
@@ -2992,6 +2993,7 @@
   // ───────── 캐기·놓기 권한, 저장 ─────────
   var client = null, me = null, myPlot = -1, plotOwners = {}, plotUser = {}, saveTimer = null, dirty = false, started = false;
   function canMine(x, y, z) {
+    if (isAdm()) return y <= 0 ? '맨 아래 바닥은 캘 수 없어요' : '';   // 관리자는 어디서든(다른 사람 땅·방주 포함)
     var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
     if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
@@ -3009,6 +3011,7 @@
     return '';
   }
   function canPlace(x, y, z, id) {
+    if (isAdm()) return '';
     var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
     if(client && !frontierEnabled && id>=ROPE && id<=ARCH_SIDE) return '개척 도구를 서버에서 준비하는 중이에요';
     if (client && !villageProjectsEnabled && id>=FIND_POT && id<=FEAST_FISH) return '마을 새 재료를 서버에서 준비하는 중이에요';
@@ -3303,7 +3306,7 @@
   }
   function plotWrite(x, y, z, id) {
     var p = plotAt(x, z);
-    if (p < 0 || p !== myPlot || y < PY0 || y >= G + PH) return;
+    if (p < 0 || (p !== myPlot && !isAdm()) || y < PY0 || y >= G + PH) return;
     if (!plotData[p]) plotData[p] = plotDefault();
     var o = plotOrigin(p); plotData[p][((y - PY0) * PLOT + (z - o.z)) * PLOT + (x - o.x)] = id;
   }
@@ -3465,6 +3468,82 @@
   function dropAway(o) { if (o.m) { scene.remove(o.m); o.m = null; } o.dead = true; }
   function collectAll() { DROPS.forEach(function (o) { collectDrop(o, true); }); DROPS = []; bagChanged(); }
   window.addEventListener('pagehide', function () { if (DROPS.length) collectAll(); });
+  // ── 버리기·줍기: 버린 물건은 근처 사람 모두에게 보이고 먼저 닿는 사람이 줍는다(서버 ark_drops, 15분 뒤 사라짐) ──
+  var SDROPS = {}, sdropAt = 0, sdropBusy = false, takeBusy = {};
+  function throwItem(id, n) {
+    if (!id || INV.indexOf(id) < 0) { toast('버릴 것을 골라요'); return; }
+    n = Math.min(n, have(id), 64); if (n < 1) { toast(nameOf(id) + '이(가) 없어요'); return; }
+    var fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), x = P.x + fx * 1.6, z = P.z + fz * 1.6, y = P.y + 1.2;
+    take(id, n); bagChanged(); sfx('pop');
+    if (socialOn()) {
+      client.rpc('drop_ark_item', { p_x: x, p_y: y, p_z: z, p_item: id, p_amount: n }).then(function (r) {
+        var nid = r && r.data;
+        if (!nid || nid < 0) { give(id, n); bagChanged(); toast(nid === -3 ? '버린 물건이 너무 많아요. 조금 뒤에 다시 해요' : '버리지 못했어요'); return; }
+        addSDrop({ id: nid, x: x, y: y, z: z, item: id, amount: n, mine: true });
+        toast('🫳 ' + nameOf(id) + ' ' + n + '개를 버렸어요 — 다른 사람도 주울 수 있어요');
+      }, function () { give(id, n); bagChanged(); toast('버리지 못했어요'); });
+    } else {
+      dropItem(x, y, z, id, n);
+      var o = DROPS[DROPS.length - 1]; if (o && o.id === id) { o.thrown = true; o.full = o.age; }
+      toast('🫳 ' + nameOf(id) + ' ' + n + '개를 버렸어요');
+    }
+  }
+  function addSDrop(d) {
+    if (SDROPS[d.id] || !scene || !atlasTex || !B[d.item]) return;
+    dropMats();
+    var flat = isFlat(d.item), geo = dropGeo[d.item] || (dropGeo[d.item] = flat ? itemGeometry(d.item) : blockGeometry(d.item));
+    var m = new THREE.Mesh(geo, flat ? dropMatF : dropMatB); m.scale.setScalar(flat ? 0.5 : 0.3);
+    var ix = Math.floor(d.x), iz = Math.floor(d.z), gy = d.y;
+    for (var yy = Math.min(SY - 1, Math.floor(d.y)); yy > 0; yy--) { if (isSolid(get(ix, yy - 1, iz))) { gy = yy + 0.18; break; } }
+    m.position.set(d.x, gy, d.z); scene.add(m);
+    SDROPS[d.id] = { id: d.id, item: d.item, n: d.amount, x: d.x, y: gy, z: d.z, m: m, hold: d.mine ? performance.now() + 3000 : 0, rot: Math.random() * 6, fullT: 0 };
+  }
+  function removeSDrop(id) { var s = SDROPS[id]; if (!s) return; if (s.m) scene.remove(s.m); delete SDROPS[id]; }
+  function fetchSDrops() {
+    if (!socialOn() || sdropBusy || performance.now() < sdropAt) return;
+    sdropAt = performance.now() + 4000; sdropBusy = true;
+    client.rpc('get_ark_drops', { p_x: P.x, p_z: P.z }).then(function (r) {
+      sdropBusy = false; if (!r || r.error || !Array.isArray(r.data)) return;
+      var seen = {}; r.data.forEach(function (d) { seen[d.id] = 1; addSDrop(d); });
+      for (var k in SDROPS) { var s = SDROPS[k]; if (!seen[k] && !takeBusy[k] && Math.abs(s.x - P.x) <= 60 && Math.abs(s.z - P.z) <= 60) removeSDrop(k); }
+    }, function () { sdropBusy = false; });
+  }
+  function stepSDrops(dt) {
+    fetchSDrops();
+    var now = performance.now();
+    for (var k in SDROPS) {
+      var s = SDROPS[k]; s.rot += dt * 1.8;
+      s.m.position.y = s.y + Math.sin(now / 330 + s.id) * 0.06; s.m.rotation.y = s.rot;
+      var dx = P.x - s.x, dy = (P.y + 0.6) - s.y, dz = P.z - s.z;
+      if (Math.abs(dx) > 90 || Math.abs(dz) > 90) { removeSDrop(k); continue; }
+      if (now < s.hold || takeBusy[k] || dx * dx + dy * dy + dz * dz > 2.6) continue;
+      if (!isAdm() && room(s.item) < s.n) { if (now > s.fullT) { s.fullT = now + 5000; bagFull(); } continue; }
+      takeSDrop(s);
+    }
+  }
+  function takeSDrop(s) {
+    takeBusy[s.id] = 1;
+    client.rpc('take_ark_drop', { p_id: s.id }).then(function (r) {
+      delete takeBusy[s.id]; removeSDrop(s.id);
+      var d = r && r.data;
+      if (d && d.item) { give(d.item, d.amount); bagChanged(); pickup(d.item, d.amount); }
+    }, function () { delete takeBusy[s.id]; });
+  }
+  // 관리자가 다른 사람 땅을 고치면: 그 땅의 블록 부분만 서버에 저장(가방·도감 같은 주인 기록은 그대로)
+  var adminPlots = {}, adminPlotT = 0;
+  function adminPlotDirty(p) {
+    adminPlots[p] = 1; clearTimeout(adminPlotT);
+    adminPlotT = setTimeout(function () {
+      var ps = Object.keys(adminPlots); adminPlots = {};
+      ps.forEach(function (k) {
+        var blocks = encodePlot(+k).split('|')[0];
+        client.rpc('admin_set_plot_blocks', { p_plot: +k, p_blocks: blocks }).then(function (r) {
+          if (r && r.data === true) toast('🛠 ' + (+k + 1) + '번 땅을 고쳐 저장했어요(관리자)');
+          else toast((+k + 1) + '번 땅을 저장하지 못했어요');
+        }, function () { toast((+k + 1) + '번 땅을 저장하지 못했어요'); });
+      });
+    }, 1500);
+  }
   function stepDrops(dt) {
     if (!DROPS.length) return;
     var got = false, px = P.x, py = P.y + 1.3, pz = P.z;
@@ -3474,8 +3553,8 @@
       var dx = px - o.x, dy = py - o.y, dz = pz - o.z, dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.001;
       var wait = o.full !== undefined && o.age - o.full < 3;   // 가방이 찼거나 버린 것은 잠깐 안 끌려옴
       if (o.age > 300) { dropAway(o); continue; }   // 5분 지나면 사라짐
-      if (!wait && (dist > 28 || o.age > 30)) { if (collectDrop(o, true)) got = true; continue; }
-      if (!wait && o.age > 0.35 && (dist < 3.4 || o.age > 6)) {
+      if (!wait && !o.thrown && (dist > 28 || o.age > 30)) { if (collectDrop(o, true)) got = true; continue; }
+      if (!wait && o.age > 0.35 && (o.thrown ? dist < 1.4 : (dist < 3.4 || o.age > 6))) {
         var spd = Math.min(32, 7 + (3.4 - Math.min(dist, 3.4)) * 9 + (o.age > 6 ? 12 : 0));
         o.x += dx / dist * spd * dt; o.y += dy / dist * spd * dt; o.z += dz / dist * spd * dt;
         if (dist < 0.9) { got = true; if (!collectDrop(o)) { o.vx = (Math.random() - 0.5) * 3; o.vz = (Math.random() - 0.5) * 3; o.vy = 3; } continue; }
@@ -3619,6 +3698,7 @@
   }
   var invTab = 'bag', craftCat = 'block', bagPick = null;
   function renderInv() {
+    var dr = $('dropRow'); if (dr) dr.hidden = !(bagPick && bagPick.id && INV.indexOf(bagPick.id) >= 0);
     $('tabBag').classList.toggle('on', invTab === 'bag'); $('tabCraft').classList.toggle('on', invTab === 'craft'); $('tabDex').classList.toggle('on', invTab === 'dex');
     $('bagView').style.display = invTab === 'bag' ? '' : 'none'; $('craftView').style.display = invTab === 'craft' ? '' : 'none'; $('dexView').style.display = invTab === 'dex' ? '' : 'none';
     $('achView').style.display = invTab === 'ach' ? '' : 'none'; $('tabAch').classList.toggle('on', invTab === 'ach'); if (invTab === 'ach') renderAch();
@@ -3950,6 +4030,8 @@
     on('btnFold', function () { toggleFold('top'); });
     on('qFold', function () { toggleFold('q'); });
     on('qMini', function () { toggleFold('q'); });
+    on('drop1', function () { var id = bagPick && bagPick.id; bagPick = null; closePanel(); throwItem(id, 1); });
+    on('dropAll', function () { var id = bagPick && bagPick.id; bagPick = null; closePanel(); throwItem(id, Math.min(64, have(id))); });
     on('mapCap', function () { toggleFold('map'); });
     on('btnRotate', rotateScreen);
     applyFold();
@@ -5404,7 +5486,7 @@
           }
         }
         streamTick(camera.position.x, camera.position.z, dt); mapTick();
-        stepBits(dt); stepDrops(dt); stepFalls(dt); stepCreatures(dt, now / 1000); netTick(dt, now);
+        stepBits(dt); stepDrops(dt); stepSDrops(dt); stepFalls(dt); stepCreatures(dt, now / 1000); netTick(dt, now);
         if (forestRoute && ui === 'play') renderForestRoute();
         renderer.render(scene, camera);
         requestAnimationFrame(loop);
@@ -6669,8 +6751,12 @@
   // 블록 바꿈: 내 땅·땅 밖에서 바꾼 것을 알리고, 땅 밖은 DB에도 남김
   function netEdit(x, y, z, id) {
     if (NET.applying || !NET.ready) return;
-    var p = plotAt(x, z);
-    if ((p >= 0 && p !== myPlot) || inArk(x, y, z)) return;
+    var p = plotAt(x, z), adm = isAdm();
+    if (p >= 0 && p !== myPlot) {   // 다른 사람 땅은 관리자만: 블록 부분 저장 + 실시간으로 주인·다른 사람에게
+      if (!adm) return;
+      adminPlotDirty(p); NET.pp[x + ',' + y + ',' + z] = id; if (!NET.flushT) NET.flushT = setTimeout(netFlush, 150); return;
+    }
+    if (inArk(x, y, z) && !adm) return;
     // 친구에게는 서버가 검사해서 받은 것만 전달된다(DB 변경 알림) — 내 땅은 put_plot_edits, 땅 밖은 put_ark_edits
     if (p >= 0) { NET.pp[x + ',' + y + ',' + z] = id; if (!NET.flushT) NET.flushT = setTimeout(netFlush, 150); }
     else NET.pm[x + ',' + y + ',' + z] = id;
@@ -6729,18 +6815,22 @@
     var o = plotOrigin(p); plotData[p][((y - PY0) * PLOT + (z - o.z)) * PLOT + (x - o.x)] = id;
   }
   // 친구가 바꾼 블록을 내 세계에 반영(그림은 한 번에 다시 그림)
+  var ARK_ADMINS = {}, adminTouchedMine = false;
   function applyRemote(u, list) {
-    var bb = null, lit = [];
+    var bb = null, lit = []; adminTouchedMine = false;
     NET.applying = true;
     try {
       for (var i = 0; i < list.length; i++) {
         var e = list[i]; if (!e || e.length !== 4) continue;
         var x = e[0] | 0, y = e[1] | 0, z = e[2] | 0, id = e[3] | 0;
-        if (y < 1 || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS || (id !== AIR && !B[id]) || inArk(x, y, z)) continue;
+        if (y < 1 || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS || (id !== AIR && !B[id])) continue;
         var p = plotAt(x, z);
         if (p >= 0) {
-          if (p === myPlot || (plotUser[p] && plotUser[p] !== u)) continue;   // 그 땅 주인이 바꾼 것만
-          plotUser[p] = u; plotOwners[p] = 1; plotPut(p, x, y, z, id);
+          if (ARK_ADMINS[u]) { plotPut(p, x, y, z, id); if (p === myPlot) adminTouchedMine = true; }   // 관리자가 고친 것은 주인 기기에도 반영
+          else {
+            if (p === myPlot || (plotUser[p] && plotUser[p] !== u)) continue;   // 그 땅 주인이 바꾼 것만
+            plotUser[p] = u; plotOwners[p] = 1; plotPut(p, x, y, z, id);
+          }
         } else recordEdit(x, y, z, id);
         var was = readBlock(x, y, z); if (was === id) continue;
         setRaw(x, y, z, id);
@@ -6754,6 +6844,7 @@
         else { bb[0] = Math.min(bb[0], x); bb[1] = Math.min(bb[1], y); bb[2] = Math.min(bb[2], z); bb[3] = Math.max(bb[3], x); bb[4] = Math.max(bb[4], y); bb[5] = Math.max(bb[5], z); }
       }
     } finally { NET.applying = false; }
+    if (adminTouchedMine && myPlot >= 0) markDirty();   // 관리자가 내 땅을 고쳤으면 그 모습으로 저장(덮어쓰지 않게)
     lit.forEach(function (l) { lampChanged(l[0], l[1], l[2]); });
     if (bb) rebuildBox(bb[0] - 1, bb[1] - 1, bb[2] - 1, bb[3] + 1, bb[4] + 1, bb[5] + 1);
   }
@@ -6775,6 +6866,7 @@
   function loadShared() {
     if (!client || !me) return Promise.resolve();
     return Promise.all([
+      client.rpc('get_ark_admin_ids').then(function (r) { if (r && Array.isArray(r.data)) r.data.forEach(function (id) { ARK_ADMINS[id] = 1; }); }, function () {}),
       client.rpc('get_my_ark_name').then(function (r) { if (!r.error && r.data) { NET.nick = r.data.nick || '친구'; NET.admin = !!r.data.admin; NET.ok = true; document.body.classList.toggle('adm', NET.admin); try { bagChanged(); } catch (e) {} } }, function () {}),
       client.rpc('get_ark_edits').then(function (r) { if (!r.error && typeof r.data === 'string') NET.edits = r.data; }, function () {})
     ]).then(function () {
@@ -6783,7 +6875,7 @@
       if (NET.edits) NET.edits.split(';').forEach(function (s) {
         var a = s.split(','); if (a.length !== 4) return;
         var x = +a[0], y = +a[1], z = +a[2];
-        if (plotAt(x, z) >= 0 || inArk(x, y, z)) return;
+        if (plotAt(x, z) >= 0) return;   // 방주 안 고침도 받는다(서버가 관리자만 허용)
         recordEdit(x, y, z, +a[3]); delete NET.pm[x + ',' + y + ',' + z];
       });
       NET.edits = null; NET.ready = true;
