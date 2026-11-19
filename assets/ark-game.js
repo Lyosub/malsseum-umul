@@ -2549,9 +2549,18 @@
   }
   function openPanel(name) { bagPick = null; uiBack = ui === 'play' ? 'play' : ui; showUI(name); if (name === 'inv') renderInv(); if (lockOn) document.exitPointerLock(); }
   function closePanel() { if (uiBack === 'play') resume(); else showUI(uiBack); }
+  function requestGamePointerLock() {
+    if (isTouch || !canvasEl || !canvasEl.requestPointerLock ||
+        !document.hasFocus() || document.pointerLockElement === canvasEl) return;
+    try {
+      var request = canvasEl.requestPointerLock();
+      // Chrome can reject asynchronously when the user leaves the window during a request.
+      if (request && typeof request.catch === 'function') request.catch(function () {});
+    } catch (e) {}
+  }
   function resume() {
     showUI('play'); sfx('click');
-    if (!isTouch && canvasEl.requestPointerLock) { try { canvasEl.requestPointerLock(); } catch (e) {} }
+    requestGamePointerLock();
   }
   function startGame() {
     audioOn(); sfx('click');
@@ -2633,7 +2642,7 @@
     window.addEventListener('keyup', function (e) { keys[e.code] = false; if (e.code === 'Space') jumpHeld = false; if (e.code === 'KeyW' && runSrc === 'key') setRun(false); });
     canvas.addEventListener('mousedown', function (e) {
       if (isTouch || ui !== 'play') return;
-      if (!lockOn) { canvas.requestPointerLock && canvas.requestPointerLock(); return; }
+      if (!lockOn) { requestGamePointerLock(); return; }
       if (e.button === 0) {
         // 왼쪽 클릭: 그림자를 겨누고 있으면 치기, 아니면 캐기
         var cs2 = pickCreature(screenDir(), (pickCenter() || {}).t);
