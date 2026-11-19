@@ -2213,7 +2213,7 @@
   }
 
   // ───────── 설정·가방(이 기기에 저장, 로그인하면 내 땅 기록에도 저장) ─────────
-  var S = { sens: 1, aim: 'cross', sound: true, view: 0 };
+  var S = { sens: 1, aim: 'cross', sound: true, view: 0, lightMode: false };
   try { var saved = JSON.parse(localStorage.getItem('arkVillage.settings') || 'null'); if (saved) for (var sk in saved) S[sk] = saved[sk]; } catch (e) {}
   // 2026-11-18: 휴대폰도 기본은 화면 가운데 십자(+)로 겨누기(손가락 자리는 메뉴에서 고를 수 있음) — 한 번 바꿔 줌
   if (!S.aim2) { S.aim = 'cross'; S.aim2 = 1; }
@@ -2502,11 +2502,11 @@
   var isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   var lockOn = false, canvasEl;
   function showUI(name) {
-    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party', 'friends'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
+    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party', 'friends', 'practice'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
     document.body.classList.toggle('playing', name === 'play');
     document.body.classList.toggle('menu', name !== 'play');
     ui = name;
-    if (name === 'map') tutorialEvent('map');
+    if (name === 'map') { tutorialEvent('map'); if (!FRIENDS.ready) friendsFetch(); }
     if (name === 'play' && started) renderQuest();
     if (name !== 'play') {
       resetInput();
@@ -2527,7 +2527,7 @@
         var de = document.documentElement, rq = de.requestFullscreen || de.webkitRequestFullscreen;
         if (rq) {
           var pr = rq.call(de, { navigationUI: 'hide' });
-          if (pr && pr.then) pr.then(function () { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () {}); }).catch(function () {});
+          if (pr && pr.catch) pr.catch(function () {});
         }
       } catch (e) {}
     }
@@ -2539,6 +2539,7 @@
     if (myPlot >= 0) goHome(); else { teleport(XM + 0.5, G, PZ0 - 9, Math.PI); toast('숲·산·호수에서 재료를 캐서 모아 보세요. 방주 문은 옆으로 나 있어요(창 6:16)'); }
     if (!me) setTimeout(function () { toast('지금은 구경 모드예요 — 로그인하면 내 땅과 가방이 저장돼요'); }, 15000);
     resume();
+    if (isTouch && !S.practiceSeen) openPractice();
   }
   function travel(where) {
     var spots = {
@@ -2871,7 +2872,7 @@
       var why2 = canPlace(h.px, h.py, h.pz, item); if (why2) return deny(why2);
       if (isItem(item)) return deny('「' + B[item][0] + '」은(는) 놓는 블록이 아니에요. 블록을 골라 주세요');
       if (have(item) < 1) return deny(B[item][0] + '이(가) 없어요. 캐거나 만들어서 모아요');
-      if (SLAB_TOP[id] && (by < h.y || (by === h.y && h.atY - by >= 0.5))) id = SLAB_TOP[id];
+      if (SLAB_TOP[id]) id = slabPlacement(id, h);
       if (id === LADDER) {
         var ddx = h.x - h.px, ddz = h.z - h.pz;
         if (ddx || ddz) { if (!isSolid(get(h.x, h.y, h.z)) || SHAPE[get(h.x, h.y, h.z)]) return deny('사닥다리는 벽에 붙여요'); id = LADDER + (ddz < 0 ? 0 : (ddx > 0 ? 1 : (ddz > 0 ? 2 : 3))); }
@@ -3560,6 +3561,8 @@
     });
   }
   function updateMenuLabels() {
+    $('mLight').textContent = '가벼운 화면: ' + (S.lightMode ? '켬' : '끔');
+    $('mLight').setAttribute('aria-pressed', String(!!S.lightMode));
     $('mMapVisible').textContent = '지도에 내 위치: ' + (S.mapVisible === false ? '숨김' : '표시');
     $('mView').textContent = '시점: ' + VIEW_NAMES[S.view];
     $('mSound').textContent = '소리: ' + (S.sound ? '켬' : '끔');
@@ -3598,6 +3601,22 @@
       tutorialStep = 0; tutorialWalk = tutorialLook = false; tutorialDoor = null;
       tutorialSave(); resume();
     });
+    on('mPractice', openPractice);
+    on('practiceDoor', function () { practiceStep = 1; renderPractice(); });
+    on('practiceWalk', function () { practiceStep = 2; renderPractice(); });
+    on('practiceHalf', function () { practiceUpper = !practiceUpper; renderPractice(); });
+    on('practiceTile', function () { practiceHalves |= practiceUpper ? 2 : 1; if (practiceHalves === 3) practiceStep = 3; renderPractice(); });
+    on('practiceMap', function () { practiceStep = 4; renderPractice(); });
+    on('practiceSkip', finishPractice);
+    on('practiceDone', finishPractice);
+    on('mLight', function () { S.lightMode = !S.lightMode; applyLightMode(); saveSettings(); updateMenuLabels(); });
+    on('touchAction', function () { if (isTouch && ui === 'play') { tapAt(); mobileHudAt = 0; } });
+    on('slabMode', function () {
+      slabMode = (slabMode + 1) % SLAB_NAMES.length;
+      $('slabMode').textContent = '반 블록: ' + SLAB_NAMES[slabMode];
+      mobileHudAt = 0;
+    });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', fitFriendKeyboard);
     on('mHome', function () { resume(); goHome(); });
     on('mForest', function () { travel('forest'); });
     on('mHill', function () { travel('hill'); });
@@ -3640,7 +3659,7 @@
     on('mMapVisible', function () { S.mapVisible = S.mapVisible === false; NET.sentKey = ''; saveSettings(); updateMenuLabels(); });
     $('bigmapc').addEventListener('click', selectMapPerson);
     on('mapFriend', function () {
-      var nick = NET.names[selectedMapPeer]; if (nick) friendRequest(nick);
+      var nick = NET.names[selectedMapPeer]; if (nick && canRequestMapFriend(selectedMapPeer)) friendRequest(nick);
     });
     on('mMap', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     ['ark', 'forest', 'hill', 'lake'].forEach(function (w) { on('go_' + w, function () { travel(w); }); });
@@ -3879,6 +3898,74 @@
     if (sx === undefined || S.aim === 'cross') { camera.getWorldDirection(tmpV); return tmpV.clone(); }
     return new THREE.Vector3(sx / window.innerWidth * 2 - 1, -(sy / window.innerHeight) * 2 + 1, 0.5).unproject(camera).sub(camera.position).normalize();
   }
+  var slabMode = 0, slabGhost, mobileHudAt = 0;
+  var SLAB_NAMES = ['자동', '아래쪽', '위쪽'];
+  function slabPlacement(id, h) {
+    if (isTouch && slabMode) return slabMode === 2 ? SLAB_TOP[id] : id;
+    return h.py < h.y || (h.py === h.y && h.atY - h.py >= 0.5) ? SLAB_TOP[id] : id;
+  }
+  function blockActionLabel(h, held) {
+    var id = get(h.x, h.y, h.z), shape = SHAPE[id];
+    if (shape && (shape.type === 'door' || shape.type === 'gate')) return shape.open ? '문 닫기' : '문 열기';
+    if (id === WELL) return held === BUCKET || held === WATER_JAR ? '물 긷기' : '우물 쓰기';
+    if (id === ALTAR) return '기도하기';
+    if (id === WORD_SHELF) return '말씀 읽기';
+    if (id === BED) return '잠들기';
+    if (id === CHEST) return '궤 열기';
+    if (id === CRAFT || id === FURNACE || id === FURNACE_ON ||
+        (STATION_BITS[id] && !FARM_SEEDS[held])) return '만들기';
+    if (id === LEVER || id === LEVER + 1 || id === LAMPSTAND || id === LAMPSTAND + 1 ||
+        id === SOCKET || id === PEARL) return '사용';
+    if (shape && shape.type === 'sign' && myPlot >= 0 && plotAt(h.x, h.z) === myPlot) return '표지판 고치기';
+    return '';
+  }
+  function mobileTarget() {
+    var held = HOTBAR[sel], h = pickCenter(), label = '';
+    if (held === FISH_ROD || held === FISH_NET) return { label: '낚시' };
+    if (have(held)) {
+      if (held === WORD_SCROLL) return { label: '말씀 읽기' };
+      if (held === HAND_MAP) return { label: '지도 열기' };
+      if (held === COMPASS) return { label: '방향 보기' };
+      if (held === SHOFAR) return { label: '나팔 불기' };
+      if (held === SLING) return { label: '물매 연습' };
+    }
+    var c = pickCreature(screenDir(), h ? h.t : undefined);
+    if (c && !(riding && c.a && c.a.sp.seat)) {
+      return { label: c.npc ? '말 걸기' : (c.shadow ? '막기' : (c.a && c.a.sp.seat ? '타기' : '동물 누르기')) };
+    }
+    if (h) label = blockActionLabel(h, held);
+    if (label) return { label: label };
+    if (WEARINFO[held]) return { label: '입기' };
+    if (!h || !have(held)) return { label: '' };
+    if (FOODS[held]) return { label: '먹기' };
+    if (held === WATER_BUCKET || held === FULL_JAR) return { label: '물 붓기' };
+    if (held === HOE) return { label: '밭 갈기' };
+    if (held === SEED || FARM_SEEDS[held]) return { label: '심기' };
+    if (held === STRIKER) return { label: '불붙이기' };
+    if (isItem(held)) return { label: '' };
+    return { label: '놓기', hit: h };
+  }
+  function updateMobileBuild(now) {
+    var action = $('touchAction'), toggle = $('slabMode');
+    if (!isTouch || ui !== 'play') {
+      if (!action.hidden) action.hidden = true;
+      if (!toggle.hidden) toggle.hidden = true;
+      slabGhost.visible = false;
+      return;
+    }
+    var held = HOTBAR[sel], slab = SLAB_TOP[held] && have(held);
+    if (now < mobileHudAt) return;
+    mobileHudAt = now + (slab ? 50 : 100);
+    var target = mobileTarget(), h = target.hit;
+    action.hidden = !target.label;
+    if (action.textContent !== target.label) action.textContent = target.label;
+    toggle.hidden = !slab;
+    if (!slab || !h) { slabGhost.visible = false; return; }
+    var id = slabPlacement(held, h), valid = !canPlace(h.px, h.py, h.pz, held);
+    slabGhost.position.set(h.px + .5, h.py + (id === held ? .25 : .75), h.pz + .5);
+    slabGhost.material.color.setHex(valid ? 0x91edb3 : 0xff806d);
+    slabGhost.visible = true;
+  }
   // 톡/오른쪽 클릭: 동물이 먼저, 아니면 블록 놓기(문이면 열고 닫기)
   function tapAt(sx, sy) {
     var dir = screenDir(sx, sy), held=HOTBAR[sel];
@@ -4042,6 +4129,35 @@
     } else if (['', 'log', 'craft', 'place', 'home', 'door', 'map', 'chat', 'animal'][tutorialStep] === event) {
       tutorialAdvance();
     }
+  }
+  var practiceStep = 0, practiceUpper = false, practiceHalves = 0;
+  function openPractice() {
+    practiceStep = practiceHalves = 0;
+    practiceUpper = false;
+    renderPractice();
+    openPanel('practice');
+  }
+  function finishPractice() {
+    S.practiceSeen = true;
+    saveSettings();
+    resume();
+  }
+  function renderPractice() {
+    $('practiceHint').textContent = ['문을 눌러 열어 봐요.', '열린 문을 지나가 봐요.',
+      '아래쪽과 위쪽에 반 블록을 한 번씩 놓아 봐요.', '지도를 열어 내 땅을 찾아봐요.',
+      '연습 끝! 마을에서 직접 지어 봐요.'][practiceStep];
+    $('practiceDoor').hidden = practiceStep > 1;
+    $('practiceDoor').disabled = practiceStep === 1;
+    $('practiceDoor').classList.toggle('open', practiceStep === 1);
+    $('practiceDoor').textContent = practiceStep === 1 ? '열린 문' : '문 열기';
+    $('practiceWalk').hidden = practiceStep !== 1;
+    $('practiceHalf').hidden = $('practiceTile').hidden = practiceStep !== 2;
+    $('practiceHalf').textContent = practiceUpper ? '위쪽' : '아래쪽';
+    $('practiceTile').classList.toggle('upper', practiceUpper);
+    $('practiceTile').classList.toggle('placed', !!(practiceHalves & (practiceUpper ? 2 : 1)));
+    $('practiceMap').hidden = practiceStep !== 3;
+    $('practiceMapView').hidden = $('practiceDone').hidden = practiceStep !== 4;
+    $('practiceSkip').hidden = practiceStep === 4;
   }
   function renderTutorial() {
     var text = [
@@ -4215,7 +4331,8 @@
     // 빗줄기
     rainLines.visible = rain > 0.03; rainLines.material.opacity = 0.5 * rain;
     if (rainLines.visible) {
-      for (var i = 0; i < RAIN_N; i++) {
+      var rainCount = S.lightMode ? 240 : RAIN_N;
+      for (var i = 0; i < rainCount; i++) {
         var o = i * 6;
         if (!rainPos[o + 1] && !rainPos[o]) respawnDrop(i, false);
         rainPos[o + 1] -= 42 * dt; rainPos[o + 4] -= 42 * dt;
@@ -4363,9 +4480,47 @@
   }
   function openFriends() {
     if (!me) { toast(friendError('login')); return; }
-    openPanel('friends'); renderFriends(); friendsFetch();
+    openPanel('friends'); fitFriendKeyboard(); renderFriends(); friendsFetch();
+  }
+  var recentPlayers = new Map();
+  function fitFriendKeyboard() {
+    if (window.visualViewport) $('friends').style.setProperty('--friends-height', window.visualViewport.height + 'px');
+  }
+  function rememberNearby(now) {
+    if (!NET.on) return;
+    for (var id in NET.peers) {
+      var peer = NET.peers[id], nick = NET.names[id];
+      if (peer.mapHidden || FRIENDS.hidden.has(id)) { recentPlayers.delete(id); continue; }
+      if (nick && now - peer.t <= 6000 && Math.hypot(peer.tx - P.x, peer.tz - P.z) <= 160) {
+        recentPlayers.delete(id);
+        recentPlayers.set(id, { nick: nick, at: now });
+      }
+    }
+    while (recentPlayers.size > 8) recentPlayers.delete(recentPlayers.keys().next().value);
+  }
+  function renderRecentPlayers() {
+    var wrap = $('friendsRecent'), now = performance.now();
+    var busy = new Set(FRIENDS.rows.map(function (row) { return row.id; }));
+    var rows = Array.from(recentPlayers).reverse().filter(function (row) {
+      return now - row[1].at <= 900000 && !busy.has(row[0]) && !FRIENDS.hidden.has(row[0]) &&
+        !(NET.peers[row[0]] && NET.peers[row[0]].mapHidden);
+    });
+    wrap.replaceChildren();
+    wrap.hidden = !FRIENDS.ready || !rows.length;
+    if (wrap.hidden) return;
+    var heading = document.createElement('h3'); heading.textContent = '최근 만난 사람'; wrap.appendChild(heading);
+    rows.forEach(function (row) {
+      var line = document.createElement('div'); line.className = 'vrow';
+      var name = document.createElement('span'); name.textContent = row[1].nick;
+      var button = document.createElement('button'); button.className = 'mc'; button.textContent = '신청';
+      button.addEventListener('click', function () {
+        if (!FRIENDS.hidden.has(row[0]) && !(NET.peers[row[0]] && NET.peers[row[0]].mapHidden)) friendRequest(row[1].nick);
+      });
+      line.append(name, button); wrap.appendChild(line);
+    });
   }
   function renderFriends() {
+    renderRecentPlayers();
     var body = $('friendsBody');
     body.replaceChildren();
     if (!FRIENDS.ready) { body.textContent = '친구 목록을 아직 열 수 없어요'; return; }
@@ -4420,10 +4575,14 @@
       var active = shown.some(function (dot) { return dot.u === selectedMapPeer; });
       $('mapPerson').hidden = !active;
       if (!active) selectedMapPeer = '';
+      else $('mapFriend').hidden = !canRequestMapFriend(selectedMapPeer);
     }
   }
+  function canRequestMapFriend(id) {
+    return FRIENDS.ready && !FRIENDS.hidden.has(id) && !FRIENDS.rows.some(function (row) { return row.id === id; });
+  }
   function selectMapPerson(event) {
-    var cv = $('bigmapc'), rect = cv.getBoundingClientRect(), hit = null, best = 16;
+    var cv = $('bigmapc'), rect = cv.getBoundingClientRect(), hit = null, best = isTouch ? 23 : 16;
     mapPeople.forEach(function (dot) {
       var d = Math.hypot(dot.x * rect.width / cv.width + rect.left - event.clientX,
         dot.y * rect.height / cv.height + rect.top - event.clientY);
@@ -4433,7 +4592,7 @@
     $('mapPerson').hidden = !hit;
     if (hit) {
       $('mapPersonName').textContent = NET.names[hit.u];
-      $('mapFriend').hidden = !FRIENDS.ready || FRIENDS.accepted.has(hit.u);
+      $('mapFriend').hidden = !canRequestMapFriend(hit.u);
     }
   }
   // 작은 지도: 내 둘레 320칸 / 큰 지도: 온 세계
@@ -4441,6 +4600,7 @@
     if (!cv) return;
     var x = cv.getContext('2d'), w = cv.width, h = cv.height;
     x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = false;
+    rememberNearby(performance.now());
     var span = big ? WS : 320, ox = big ? 0 : P.x - span / 2, oz = big ? 0 : P.z - span / 2, sc = w / span;
     x.fillStyle = '#26302a'; x.fillRect(0, 0, w, h);
     x.drawImage(mapBase, ox / MSC, oz / MSC, span / MSC, span / MSC, 0, 0, w, h);
@@ -4463,8 +4623,20 @@
 
   // ───────── 가까운 곳 만들고 지우기 ─────────
   var R_MESH = isTouch ? 5 : 7, R_GEN = R_MESH + 1, R_DROP = R_MESH + 4;
+  function applyLightMode() {
+    var radius = S.lightMode ? 3 : (isTouch ? 5 : 7);
+    R_MESH = radius; R_GEN = radius + 1; R_DROP = radius + 4;
+    FOG_FAR = radius * CS - 12;
+    if (!renderer || !camera) return;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, S.lightMode ? 1 : (isTouch ? 1.6 : 2)));
+    scene.fog.near = FOG_FAR * .4;
+    scene.fog.far = FOG_FAR;
+    camera.far = FOG_FAR + 60;
+    if (rainLines) rainLines.geometry.setDrawRange(0, (S.lightMode ? 240 : RAIN_N) * 2);
+    resize();
+  }
   var meshedCols = new Uint8Array(NC * NC), OFFS = [];
-  for (var odz = -R_DROP; odz <= R_DROP; odz++) for (var odx = -R_DROP; odx <= R_DROP; odx++) OFFS.push([odx, odz, odx * odx + odz * odz]);
+  for (var odz = -11; odz <= 11; odz++) for (var odx = -11; odx <= 11; odx++) OFFS.push([odx, odz, odx * odx + odz * odz]);
   OFFS.sort(function (a, b) { return a[2] - b[2]; });
   function inWorldC(cx, cz) { return cx >= 0 && cz >= 0 && cx < NC && cz < NC; }
   function columnReady(cx, cz) {
@@ -4599,7 +4771,6 @@
       $('loadingStatus').textContent = '3D 화면을 열 수 없어요. 브라우저를 다시 열거나 다른 브라우저로 접속해 보세요.';
       return;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.6 : 2));
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x9fcdee);
     scene.fog = new THREE.Fog(0xc4e2f4, FOG_FAR * 0.4, FOG_FAR);
@@ -4616,6 +4787,9 @@
     bitGeo = new THREE.BoxGeometry(0.22, 0.22, 0.22);
     hl = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.006, 1.006, 1.006)), new THREE.LineBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.6 }));
     hl.visible = false; scene.add(hl);
+    slabGhost = new THREE.Mesh(new THREE.BoxGeometry(.996, .494, .996),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: .45, depthWrite: false }));
+    slabGhost.visible = false; slabGhost.renderOrder = 4; scene.add(slabGhost);
     for (var st = 1; st <= 8; st++) (function (t) { crackGeo.push(cubeGeometry(function () { return t; }, false)); })(TILE['crack' + st]);
     crackMesh = new THREE.Mesh(crackGeo[0], new THREE.MeshBasicMaterial({ map: atlasTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
     crackMesh.scale.setScalar(1.004); crackMesh.visible = false; crackMesh.renderOrder = 3; scene.add(crackMesh);
@@ -4630,7 +4804,7 @@
     }
 
     bindInput(canvasEl); bindUI(); renderHotbar();
-    window.addEventListener('resize', resize); resize();
+    window.addEventListener('resize', resize); applyLightMode(); fitFriendKeyboard();
 
     loadOnline().then(function () {
       ensureAround(XM, AZ0 + 60, 3);
@@ -4662,6 +4836,7 @@
           updateCrack(); updateRing();
           hl.visible = !!h; if (h) hl.position.set(h.x + 0.5, h.y + 0.5, h.z + 0.5);
         }
+        if (started) updateMobileBuild(now);
         if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);

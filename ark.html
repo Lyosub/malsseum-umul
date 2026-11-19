@@ -416,6 +416,40 @@
     #dpad .dk { width:44px; height:44px; font-size:17px; }
     #dUp, #dDown { left:44px !important; } #dLeft, #dRight { top:44px !important; } #dpad .dmid { left:44px; top:44px; }
   }
+  #touchAction[hidden], #slabMode[hidden], #practice [hidden], #friendsRecent[hidden] { display:none; }
+  #touchAction, #slabMode { position:fixed; z-index:6; min-height:44px; right:calc(14px + var(--sar)); padding:0 10px; white-space:nowrap; touch-action:manipulation; }
+  #touchAction { bottom:calc(108px + var(--sab)); min-width:88px; }
+  #slabMode { bottom:calc(157px + var(--sab)); }
+  #touchAction:not([hidden]) ~ #btnRun { right:calc(156px + var(--sar)); }
+  @media (orientation:portrait) {
+    #touchAction { bottom:calc(140px + var(--sab)); }
+    #slabMode { bottom:calc(190px + var(--sab)); }
+  }
+  @media (max-width:420px) and (orientation:portrait) {
+    #touchAction { bottom:calc(178px + var(--sab)); }
+    #slabMode { bottom:calc(228px + var(--sab)); }
+  }
+  @media (max-width:355px) and (orientation:portrait) { #touchAction:not([hidden]) ~ #btnRun { bottom:calc(238px + var(--sab)); right:calc(148px + var(--sar)); width:44px; } }
+  body.touch #pause.show { overflow:auto; }
+  @media (max-height:460px) { body.touch #pause.show { justify-content:flex-start; } }
+  #practice .panel { width:min(430px, 94vw); max-height:calc(100dvh - 24px); overflow:auto; }
+  #practice .mc, body.touch #friends .mc, body.touch #mapPerson .mc { min-height:44px; }
+  #practiceScene { position:relative; min-height:108px; padding:14px; background:linear-gradient(#91c3e2 55%,#7fa950 55%); border:2px solid #43594b; display:flex; align-items:center; justify-content:center; gap:12px; }
+  #practiceDoor { min-height:88px !important; position:relative; padding-right:22px; background:#896344; color:white; }
+  #practiceDoor::after { content:''; position:absolute; right:8px; top:50%; width:6px; height:6px; background:#efd07a; }
+  #practiceDoor.open { background:#345046; }
+  #practiceTile { min-width:82px; height:72px; position:relative; overflow:hidden; }
+  #practiceTile::before { content:''; position:absolute; inset:50% 0 0; background:#ba8e56; opacity:.36; pointer-events:none; }
+  #practiceTile.upper::before { inset:0 0 50%; }
+  #practiceTile.placed::before { opacity:.9; }
+  #practiceTile span { position:relative; }
+  #practiceMapView { border:2px solid #365e4b; background:#d7e6a0; padding:10px; }
+  body.touch #friends { bottom:auto; height:var(--friends-height,100dvh); }
+  body.touch #friends .vpanel { display:flex; flex-direction:column; max-height:100%; min-height:0; }
+  body.touch #friends .vme { flex-shrink:0; }
+  body.touch #friendsNick { flex:1 1 120px; min-width:0; min-height:44px; font-size:16px; }
+  #friendsScroll { min-height:0; overflow:auto; max-height:55vh; overscroll-behavior:contain; }
+  #friendsRecent .vrow { margin-bottom:4px; }
 </style>
 </head>
 <body class="menu">
@@ -475,6 +509,8 @@
     <span id="dMid" class="dk dmid">🧎</span>
     <small class="dhint">▲ 두 번 = 달리기 · 가운데 2초 = 웅크리기</small>
   </div>
+  <button id="touchAction" class="mc" hidden></button>
+  <button id="slabMode" class="mc" hidden>반 블록: 자동</button>
   <button id="btnFly" class="tbtn">날기</button>
   <button id="btnRun" class="tbtn">🏃<small>달리기</small></button>
   <button id="btnSneak" class="tbtn" style="display:none">웅크리기</button>
@@ -509,6 +545,8 @@
     <button id="mBook" class="mc">📜 창세기 6장</button>
     <button id="mHelp" class="mc">조작 방법</button>
     <button id="mTutorial" class="mc">튜토리얼 다시 보기</button>
+    <button id="mPractice" class="mc">첫 집 연습터</button>
+    <button id="mLight" class="mc" aria-pressed="false">가벼운 화면: 끔</button>
     <button id="mView" class="mc">시점: 1인칭</button>
     <button id="mArk" class="mc">⛵ 방주 앞</button>
     <button id="mHome" class="mc">🏠 내 땅</button>
@@ -589,10 +627,23 @@
   <div id="storyBody"></div>
   <div class="pfoot"><button id="storyStart" class="mc" style="width:140px">🧭 길 떠나기</button> <button id="storyDone" class="mc" style="width:120px">닫기</button></div>
 </div></div>
+<div id="practice" class="screen dim"><div class="panel">
+  <h2 id="practiceTitle">첫 집 연습터</h2>
+  <p id="practiceHint" aria-live="polite"></p>
+  <div id="practiceScene">
+    <button id="practiceDoor" class="mc">문 열기</button>
+    <button id="practiceWalk" class="mc" hidden>앞으로 가기</button>
+    <button id="practiceHalf" class="mc" hidden>아래쪽</button>
+    <button id="practiceTile" class="mc" hidden><span>놓기</span></button>
+    <button id="practiceMap" class="mc" hidden>지도 열기</button>
+    <div id="practiceMapView" hidden>📍 내 땅 · 숲 · 호수</div>
+  </div>
+  <div class="pfoot"><button id="practiceSkip" class="mc">건너뛰기</button><button id="practiceDone" class="mc" hidden>마을로 가기</button></div>
+</div></div>
 <div id="friends" class="screen dim"><div class="panel vpanel">
   <h2>💙 친구</h2>
   <div class="vme"><label for="friendsNick">친구 닉네임</label> <input id="friendsNick" maxlength="60" autocomplete="off"> <button id="friendsSend" class="mc">친구 신청</button></div>
-  <div id="friendsBody" style="max-height:55vh;overflow:auto" aria-live="polite"></div>
+  <div id="friendsScroll"><section id="friendsRecent" hidden></section><div id="friendsBody" aria-live="polite"></div></div>
   <div class="pfoot"><button id="friendsDone" class="mc">닫기</button></div>
 </div></div>
 <div id="party" class="screen dim"><div class="panel stpanel">
@@ -713,6 +764,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js"></script>
+<script src="assets/ark-game.js?v=20261119-mobile"></script>
 </body>
 </html>
