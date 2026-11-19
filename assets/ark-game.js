@@ -5666,6 +5666,9 @@
           (HOTBAR[sel]===COMPASS?' · '+headingName():'');
         fetchFeed(); fetchGifts();
         if (!hintT0) hintT0 = performance.now();
+        // 세로 화면: 장소 글자를 안내 상자(접었으면 위쪽 버튼 줄) 바로 아래로
+        var inf = $('info');
+        if (inf) { if (isTouch && innerHeight > innerWidth) { var qe = $('quest'), qr = qe && getComputedStyle(qe).display !== 'none' ? qe.getBoundingClientRect() : null, tr = $('topRight').getBoundingClientRect(); inf.style.top = Math.round(Math.max(qr && qr.height ? qr.bottom : 0, tr.bottom) + 6) + 'px'; } else if (inf.style.top) inf.style.top = ''; }
         if (tutorialStep >= 9 || performance.now() - hintT0 > 60000) document.body.classList.add('nohint');
       },300);
     });

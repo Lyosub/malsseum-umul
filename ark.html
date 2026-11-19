@@ -565,6 +565,15 @@
   #tour .tnext { background:#4f7d3c; color:#fff; }
   #craftQ { width:100%; box-sizing:border-box; height:32px; margin:0 0 6px; padding:0 8px; font-size:14px; border:2px solid #373737; }
   @media (orientation:landscape) { body.touch #toast { bottom:calc(112px + var(--sab)); } }
+  /* ⑫ 손가락으로 누르기 쉬운 크기(작게 나오던 것만) */
+  body.touch #mapCap { padding:6px 0 5px; }
+  body.touch #qSkip, body.touch #qFold { min-height:36px; }
+  body.touch #btnRun, body.touch #btnFly { height:40px; }
+  @media (orientation:landscape) { body.touch #touchAction { bottom:calc(160px + var(--sab)); } body.touch #slabMode { bottom:calc(208px + var(--sab)); } }
+  @media (orientation:landscape) and (max-height:430px) { body.touch #touchAction { bottom:calc(146px + var(--sab)); } body.touch #slabMode { bottom:calc(146px + var(--sab)); } }
+  @media (orientation:landscape) and (max-height:390px) { body.touch #touchAction { right:calc(162px + var(--sar)); bottom:calc(100px + var(--sab)); } body.touch #slabMode { right:calc(162px + var(--sar)); bottom:calc(150px + var(--sab)); } }
+  /* ⑮ 세로 화면: 장소 글자가 위쪽 버튼 줄에 깔리지 않게 안내·지도 아래로 */
+  @media (orientation:portrait) { body.touch #info { left:calc(8px + var(--sal)); max-width:60vw; } }   /* 높이는 게임이 안내 상자 바로 아래로 맞춤 */
 </style>
 </head>
 <body class="menu">
