@@ -2920,7 +2920,21 @@
       var why2 = canPlace(h.px, h.py, h.pz, item); if (why2) return deny(why2);
       if (isItem(item)) return deny('「' + B[item][0] + '」은(는) 놓는 블록이 아니에요. 블록을 골라 주세요');
       if (have(item) < 1) return deny(B[item][0] + '이(가) 없어요. 캐거나 만들어서 모아요');
-      if (SLAB_TOP[id]) id = slabPlacement(id, h);
+      if (SLAB_TOP[id]) {
+        // 같은 재료 반 블록의 빈 반쪽을 겨누면 한 칸 전체 블록으로 합친다
+        if (slabMergeTarget(id, h)) {
+          var mwhy = canPlace(h.x, h.y, h.z, item); if (mwhy) return deny(mwhy);
+          if (isSolid(SLAB_MATERIAL[id]) && h.x + 1 > P.x - HW && h.x < P.x + HW && h.y + 1 > P.y && h.y < P.y + HT && h.z + 1 > P.z - HW && h.z < P.z + HW) return;
+          take(item, 1); setBlock(h.x, h.y, h.z, SLAB_MATERIAL[id]); sfx('place', matSound(item)); bagChanged();
+          partyAdd('build', 1);
+          tutorialEvent('place');
+          if (plotAt(h.x, h.z) === myPlot) { stats.placed++; questCheck(); if (stats.placed >= 30) unlock('house'); }
+          if (inCommons(h.x, h.z)) unlock('commons');
+          swingT = 0.25; vibrate(); exhaust(0.02);
+          return;
+        }
+        id = slabPlacement(id, h);
+      }
       if (id === LADDER) {
         var ddx = h.x - h.px, ddz = h.z - h.pz;
         if (ddx || ddz) { if (!isSolid(get(h.x, h.y, h.z)) || SHAPE[get(h.x, h.y, h.z)]) return deny('사닥다리는 벽에 붙여요'); id = LADDER + (ddz < 0 ? 0 : (ddx > 0 ? 1 : (ddz > 0 ? 2 : 3))); }
@@ -4030,6 +4044,14 @@
   }
   var slabMode = 0, slabGhost, mobileHudAt = 0;
   var SLAB_NAMES = ['자동', '아래쪽', '위쪽'];
+  // 겨눈 칸이 같은 재료 반 블록이고, 누른 면이 그 반 블록의 비어 있는 반쪽 쪽이면 합칠 수 있다
+  function slabMergeTarget(id, h) {
+    if (!SLAB_TOP[id] || !h) return false;
+    var cur = get(h.x, h.y, h.z), side = h.py === h.y, half = h.atY - h.y >= 0.5;
+    if (cur === id) return h.py > h.y || (side && half);                 // 아래 반 블록: 윗면이나 옆면 윗반쪽
+    if (cur === SLAB_TOP[id]) return h.py < h.y || (side && !half);      // 위 반 블록: 아랫면이나 옆면 아랫반쪽
+    return false;
+  }
   function slabPlacement(id, h) {
     if (isTouch && slabMode) return slabMode === 2 ? SLAB_TOP[id] : id;
     return h.py < h.y || (h.py === h.y && h.atY - h.py >= 0.5) ? SLAB_TOP[id] : id;
@@ -4094,8 +4116,9 @@
     if (action.textContent !== target.label) action.textContent = target.label;
     toggle.hidden = !slab;
     if (!slab || !h) { slabGhost.visible = false; return; }
-    var id = slabPlacement(held, h), valid = !canPlace(h.px, h.py, h.pz, held);
-    slabGhost.position.set(h.px + .5, h.py + (id === held ? .25 : .75), h.pz + .5);
+    var merge = slabMergeTarget(held, h), id = slabPlacement(held, h), valid = merge ? !canPlace(h.x, h.y, h.z, held) : !canPlace(h.px, h.py, h.pz, held);
+    if (merge) slabGhost.position.set(h.x + .5, h.y + (get(h.x, h.y, h.z) === held ? .75 : .25), h.z + .5);
+    else slabGhost.position.set(h.px + .5, h.py + (id === held ? .25 : .75), h.pz + .5);
     slabGhost.material.color.setHex(valid ? 0x91edb3 : 0xff806d);
     slabGhost.visible = true;
   }
