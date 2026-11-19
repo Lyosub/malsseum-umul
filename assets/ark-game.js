@@ -978,7 +978,7 @@
   // 3묶음. 우물·베틀·그릇·조명·식물은 같은 설치/저장 규칙을 쓴다.
   var WELL=460, LOOM=461, JAR=462, OIL_JAR=463, ALABASTER_JAR=464, OIL_LAMP=465,
       CANDLESTICK=466, CAMPFIRE=467, THORN=468, THISTLE=469, LILY=470,
-      LYRE=540, HARP=541, TIMBREL=542, CYMBAL=543;   // 악기(시 150:3-5)
+      LYRE=540, HARP=541, TIMBREL=542, CYMBAL=543, MANGER=548;   // 악기(시 150:3-5) · 구유(성탄)
   var BUCKET=640, WATER_BUCKET=641, WATER_JAR=642, FULL_JAR=643, THREAD=644,
       LINEN=645, WOOL_CLOTH=646, RED_DYE=647, BLUE_DYE=648, GOLD_DYE=649, WELL_BUCKET=650;
   var LIFE_BLOCKS=[
@@ -987,7 +987,7 @@
     [ALABASTER_JAR,'옥합',0xe2bb91,'jar'],[OIL_LAMP,'기름 등잔',0xe89e40,'lamp',1],
     [CANDLESTICK,'촛대',0xd8a258,'stand',1],[CAMPFIRE,'모닥불',0xe57c39,'camp',1],
     [THORN,'가시나무',0x656838,'plant'],[THISTLE,'엉겅퀴',0x884d8b,'plant'],[LILY,'백합',0xf5e4a4,'plant'],
-    [LYRE,'수금',0xb8874a,'lyre'],[HARP,'비파',0x8f5f34,'harp'],[TIMBREL,'소고',0xd9b27a,'drum'],[CYMBAL,'제금',0xd2ad3c,'cymbal']
+    [MANGER,'구유',0xb38550,'manger',1],[LYRE,'수금',0xb8874a,'lyre'],[HARP,'비파',0x8f5f34,'harp'],[TIMBREL,'소고',0xd9b27a,'drum'],[CYMBAL,'제금',0xd2ad3c,'cymbal']
   ];
   var LIFE_ITEMS=[
     [BUCKET,'빈 양동이',0x9e7745],[WATER_BUCKET,'물이 든 양동이',0x4698c8],
@@ -1006,6 +1006,7 @@
     lamp:[[.2,0,.22,.8,.14,.78],[.34,.14,.34,.66,.23,.66],[.45,.23,.45,.55,.41,.55]],
     stand:[[.19,0,.19,.81,.12,.81],[.43,.12,.43,.57,.6,.57],[.24,.6,.24,.76,.7,.76],[.44,.7,.44,.56,.94,.56]],
     camp:[[.08,0,.08,.92,.12,.92],[.23,.12,.25,.76,.24,.75],[.32,.24,.33,.68,.6,.67]],
+    manger:[[.12,.3,.22,.88,.62,.78],[.14,0,.26,.24,.3,.36],[.76,0,.26,.86,.3,.36],[.14,0,.64,.24,.3,.74],[.76,0,.64,.86,.3,.74],[.2,.62,.3,.8,.7,.7]],
     lyre:[[.28,0,.38,.72,.1,.62],[.28,.1,.44,.38,.86,.56],[.62,.1,.44,.72,.86,.56],[.28,.78,.44,.72,.88,.56],[.46,.1,.48,.54,.78,.52]],
     harp:[[.2,0,.34,.8,.12,.66],[.2,.12,.42,.32,.96,.58],[.2,.86,.42,.8,.96,.58],[.68,.12,.42,.8,.86,.58]],
     drum:[[.16,0,.16,.84,.2,.84],[.22,.2,.22,.78,.24,.78]],
@@ -1852,6 +1853,29 @@
     if (genCol && (x >> 5) === genCX && (z >> 5) === genCZ) { if (y < 0 || y >= SY) return AIR; return genCol.d[(y * CS + (z & 31)) * CS + (x & 31)]; }
     return get(x, y, z);
   }
+  // ── 절기: 대림절 첫 주일 ~ 주현절(1/6)은 성탄 장식, 12~2월은 눈(사막 빼고). 주소에 ?season=christmas 를 붙이면 미리 보기 ──
+  function adventStart(y) { var c = new Date(y, 11, 25), back = (c.getDay() || 7) + 21; return new Date(y, 11, 25 - back); }
+  function festiveOn() {
+    if (/season=christmas/.test(location.search)) return true;
+    var d = new Date(), y = d.getFullYear(), t = new Date(y, d.getMonth(), d.getDate());
+    return t >= adventStart(y) || t <= new Date(y, 0, 6);
+  }
+  function winterOn() { var m = new Date().getMonth() + 1; return /season=(christmas|winter)/.test(location.search) || m === 12 || m <= 2; }
+  var FESTIVE = festiveOn(), WINTER = winterOn();
+  var NAT_X = XM - 68, NAT_Z = AZ1 + 3;   // 베들레헴 마구간(마을 남쪽 광장 서쪽, 마을 구역이라 캘 수 없음)
+  function buildNativity() {
+    if (!FESTIVE) return;
+    var x0 = NAT_X, z0 = NAT_Z, x1 = x0 + 10, z1 = z0 + 8, y = G;
+    fill(x0, G - 1, z0, x1, G - 1, z1, 22);                                   // 짚 바닥
+    [[x0, z0], [x1, z0], [x0, z1], [x1, z1], [x0, z0 + 4], [x1, z0 + 4]].forEach(function (c) { fill(c[0], y, c[1], c[0], y + 3, c[1], LOG); });
+    fill(x0, y, z0 + 1, x0, y + 2, z1 - 1, GOPHER);                           // 뒷벽(서쪽)
+    fill(x0 + 1, y, z0, x1 - 1, y + 1, z0, GOPHER); fill(x0 + 1, y, z1, x1 - 1, y + 1, z1, GOPHER);   // 옆 낮은 벽
+    fill(x0 - 1, y + 4, z0 - 1, x1 + 1, y + 4, z1 + 1, 22);                   // 짚 지붕
+    setRaw(x0 + 4, y, z0 + 4, MANGER);                                        // 구유(눅 2:7)
+    setRaw(x0 + 1, y, z0 + 1, 22); setRaw(x0 + 1, y + 1, z0 + 1, 22); setRaw(x0 + 1, y, z1 - 1, 22); setRaw(x0 + 2, y, z1 - 1, 22);
+    setRaw(x0 + 2, y, z0 + 2, OIL_LAMP); setRaw(x0 + 2, y, z1 - 2, OIL_LAMP);
+    for (var z = AZ1 + 2; z < PZ0 - 1; z += 4) { setRaw(XM - 5, y, z, LANTERN); setRaw(XM + 4, y, z, LANTERN); }   // 마을 길 등불
+  }
   function buildTown() {
     fill(AX0 - 4, G - 1, AZ0 - 4, AX1 + 4, G - 1, AZ1 + 4, SAND);
     fill(XM - 3, G - 1, AZ1 + 1, XM + 2, G - 1, PZ0 - 1, PATH);
@@ -1861,6 +1885,7 @@
     // 마을 땅 위 꽃·풀은 치운다
     fill(PX0 - PGAP, G, PZ0 - PGAP, VX1, G, VZ1, AIR);
     buildArk();
+    buildNativity();
   }
 
   function buildArk() {
@@ -3184,6 +3209,7 @@
       if (tgt === PEARL) return toast(STORY.done ? '문이 열려 있어요' : '진주 문은 닫혀 있어요 — 📜 나그네의 길을 끝까지 걸어야 열려요(계 21:21)');
       if (tgt === LEVER || tgt === LEVER + 1) return useLever(h.x, h.y, h.z);
       if (INSTR[tgt]) return playInstrument(tgt, h.x, h.y, h.z);
+      if (tgt === MANGER) return showVerseCard('🌟', '구유', '첫아들을 낳아 강보로 싸서 구유에 뉘었으니 이는 여관에 있을 곳이 없음이러라', '누가복음 2:7', '오늘 다윗의 동네에 너희를 위하여 구주가 나셨으니 곧 그리스도 주시니라 (눅 2:11)');
       if (SHAPE[tgt] && SHAPE[tgt].type === 'sign' && plotAt(h.x, h.z) === myPlot && myPlot >= 0) return openSignPick(h.x, h.y, h.z);
       var item = HOTBAR[sel];
       if (!item) return deny('손에 든 것이 없어요. 아래 칸을 고르거나 🎒 가방에서 단축 칸에 넣어요');
@@ -4176,6 +4202,7 @@
       saveSettings(); bagPick = null; renderInv(); sfx('click'); $('invName').textContent = '가방을 정리했어요';
     });
     on('mTour', function () { startTour(); });
+    if (FESTIVE) { var adv = document.createElement('button'); adv.id = 'mAdvent'; adv.className = 'mc'; adv.textContent = '🕯 대림절 말씀 달력'; var grid0 = document.querySelector('#pause .grid3'), last = grid0 && grid0.querySelector('a'); if (grid0) grid0.insertBefore(adv, last); on('mAdvent', function () { window.open('advent.html', '_blank'); }); }
     // 게임 메뉴: 버튼을 묶음 탭(게임·이동·함께·설정)으로 — 돌아가기·나가기는 늘 보임
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
@@ -4504,6 +4531,7 @@
     if (old === LILY || old === THORN || old === THISTLE) dexMore('p' + old, B[old][0]);
   }
   function showStarVerse(n) {
+    if (FESTIVE && Math.abs(P.x - (NAT_X + 5)) < 60 && Math.abs(P.z - (NAT_Z + 4)) < 60) { showVerseCard('🌟', '베들레헴의 별', '박사들이 왕의 말을 듣고 갈새 동방에서 보던 그 별이 문득 앞서 인도하여 가다가 아기 있는 곳 위에 머물러 서 있는지라', '마태복음 2:9'); return; }
     var i = n % STAR_VERSES.length, v = STAR_VERSES[i], first = !DEX['s' + i];
     showVerseCard(v[0], v[1], v[3], v[2], first ? '📖 도감 「밤하늘」에 새로 적었어요' : '');
     if (first) { DEX['s' + i] = 1; saveDex(); }
@@ -5025,6 +5053,18 @@
       line.visible=false;scene.add(line);rainbow.push(line);
     });
   }
+  // 베들레헴의 별(마 2:9): 성탄 절기에 마구간 위에 머무는 큰 별
+  var bStar = null;
+  function makeBethlehemStar() {
+    if (!FESTIVE || bStar) return;
+    var c = document.createElement('canvas'); c.width = c.height = 128; var x = c.getContext('2d');
+    var g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,255,245,1)'); g.addColorStop(.18, 'rgba(255,244,190,.95)'); g.addColorStop(.45, 'rgba(255,224,130,.35)'); g.addColorStop(1, 'rgba(255,210,100,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+    x.fillStyle = 'rgba(255,255,235,.9)'; x.fillRect(62, 0, 4, 128); x.fillRect(0, 62, 128, 4);
+    bStar = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, fog: false }));
+    bStar.position.set(NAT_X + 5, G + 28, NAT_Z + 4); bStar.scale.set(12, 12, 1); bStar.renderOrder = 2; scene.add(bStar);
+  }
+  var snowNow = false, snowRegT = 0, snowRegOK = true;
   function updateDay(dt) {
     dayT += dt;
     var p = (dayT % DAY_LEN) / DAY_LEN, ang = p < 0.62 ? p / 0.62 * Math.PI : Math.PI + (p - 0.62) / 0.38 * Math.PI;
@@ -5070,6 +5110,7 @@
       if(line.visible)line.position.set(cp.x,Math.max(G+3,cp.y-26),cp.z-155);
     });
     stars.position.copy(cp); stars.material.opacity = (1 - dayF) * (1 - rain);
+    if (bStar) bStar.material.opacity = 0.35 + 0.65 * (1 - dayF);
     if (brightStars) { brightStars.position.copy(cp); brightStars.material.opacity = Math.min(1, (1 - dayF) * 1.2) * (1 - rain); }
     // 밤에 하늘을 2초쯤 올려다보면 별 말씀 하나(밤마다 하나씩)
     var nightN = Math.floor(dayT / DAY_LEN);
@@ -5077,13 +5118,17 @@
     if (started && ui === 'play' && P.pitch > 0.7 && dayF < 0.3 && rain < 0.3 && caveK < 0.3) { if (starLook >= 0) { starLook += dt; if (starLook > 2) { starLook = -1; showStarVerse(nightN); } } }
     else if (starLook > 0) starLook = 0;
     // 빗줄기
-    rainLines.visible = rain > 0.03; rainLines.material.opacity = 0.5 * rain;
+    snowRegT -= dt; if (snowRegT <= 0) { snowRegT = 1; if (WINTER) { var reg0 = T.reg; terrain(Math.floor(cp.x), Math.floor(cp.z)); snowRegOK = T.reg !== 'desert' && T.reg !== 'oasis'; T.reg = reg0; } }
+    var snowing = WINTER && snowRegOK;
+    if (snowing !== snowNow) { snowNow = snowing; rainLines.material.color.setHex(snowing ? 0xffffff : 0xaabbd4); }
+    rainLines.visible = rain > 0.03; rainLines.material.opacity = (snowing ? 0.95 : 0.5) * rain;
     if (rainLines.visible) {
       var rainCount = S.lightMode ? 240 : RAIN_N;
       for (var i = 0; i < rainCount; i++) {
         var o = i * 6;
         if (!rainPos[o + 1] && !rainPos[o]) respawnDrop(i, false);
-        rainPos[o + 1] -= 42 * dt; rainPos[o + 4] -= 42 * dt;
+        var fall = snowNow ? 6 : 42; rainPos[o + 1] -= fall * dt; rainPos[o + 4] = snowNow ? rainPos[o + 1] - 0.14 : rainPos[o + 4] - fall * dt;
+        if (snowNow) { rainPos[o] += Math.sin(dayT * 1.3 + i) * 0.8 * dt; rainPos[o + 3] = rainPos[o] + 0.12; }
         var gx = Math.floor(rainPos[o]), gz = Math.floor(rainPos[o + 2]), top = skyAt(gx, gz);
         if (rainPos[o + 4] < top + 1 || rainPos[o + 4] < cp.y - 22 || Math.abs(rainPos[o] - cp.x) > 40 || Math.abs(rainPos[o + 2] - cp.z) > 40) respawnDrop(i, true);
       }
@@ -5589,7 +5634,7 @@
     heldMesh = new THREE.Mesh(HOTBAR[0] ? blockGeometry(HOTBAR[0]) : new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({ map: atlasTex, vertexColors: true, depthTest: false, depthWrite: false, transparent: true }));
     lightPatch(heldMesh.material); heldMesh.renderOrder = 10; heldMesh.scale.setScalar(0.34); camera.add(heldMesh);
     refreshMyAvatar(); avatar.visible = false;
-    makeSky(); makeRainbow();
+    makeSky(); makeRainbow(); makeBethlehemStar();
     cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.88, fog: false });
     for (var c = 0; c < 26; c++) {
       var cl = new THREE.Mesh(new THREE.BoxGeometry(20 + rnd(c) * 30, 3, 12 + rnd(c + 5) * 16), cloudMat);
@@ -5662,7 +5707,7 @@
         $('place').textContent=placeName();
         renderMaterialGuide();
         if(((ui==='villageWork'&&(villageTab==='projects'||villageTab==='neighbors'))||(villageProjectsEnabled&&inCommons(P.x,P.z)))&&Date.now()>villageProjectAt){villageProjectAt=Date.now()+6000;fetchVillageProjects();}
-        $('seasonInfo').textContent=WEATHER[seasonIndex()]+(rainOn?' · 비':'')+
+        $('seasonInfo').textContent=(FESTIVE?'🌟 성탄 절기 · ':'')+WEATHER[seasonIndex()]+(rainOn?(snowNow?' · 눈':' · 비'):'')+
           (HOTBAR[sel]===COMPASS?' · '+headingName():'');
         fetchFeed(); fetchGifts();
         if (!hintT0) hintT0 = performance.now();
@@ -6414,11 +6459,18 @@
     { name: '셈', x: XM - 13, z: AZ0 + 20, y: AY0 + 11, look: { robe: 0xb9c2a4, robe2: 0xa4ad8e, belt: 0x5a3a20, trim: 0x6a7050, skin: 0xd6a67e, hair: 0x2a1e14, sandal: 0x6b4425, style: 'long', fit: { beard: 0x2a1e14 } }, text: '혈육 있는 모든 생물을 너는 각기 암수 한 쌍씩 방주로 이끌어들여 너와 함께 생명을 보존하게 하되', ref: '창세기 6:19', emoji: '🐑' },
     { name: '함', x: AX1 - 22, z: AZ0 + 18, y: AY0 + 21, look: { robe: 0xc79a6a, robe2: 0xb58858, belt: 0x4a2e18, trim: 0x8a5a32, skin: 0xb27a52, hair: 0x1e1610, sandal: 0x6b4425, style: 'scarf', scarf: 0xe8d8b8, fit: { beard: 0x1e1610 } }, text: '너는 먹을 모든 양식을 네게로 가져다가 저축하라 이것이 너와 그들의 먹을 것이 되리라', ref: '창세기 6:21', emoji: '🏺' },
     { name: '노아의 아내', x: AX0 + 20, z: AZ0 + 14, y: AY0 + 21, look: { robe: 0x9a7aa0, robe2: 0x86688c, belt: 0x5a3a20, trim: 0x6a4a70, skin: 0xd9a67a, hair: 0xb8b2a8, sandal: 0x6b4425, style: 'scarf', scarf: 0xe4dccf }, text: '곧 그 날에 노아와 그의 아들 셈, 함, 야벳과 노아의 아내와 세 며느리가 다 방주로 들어갔고', ref: '창세기 7:13', emoji: '🏠' },
+    { name: '마리아', x: NAT_X + 3, z: NAT_Z + 5, y: G, season: 1, look: { robe: 0x5b7fb8, robe2: 0x4a6aa0, belt: 0xd8cfb8, trim: 0x3a5488, skin: 0xd9a67a, hair: 0x3a2618, sandal: 0x6b4425, style: 'scarf', scarf: 0x7fa0d0 }, text: '마리아는 이 모든 말을 마음에 새기어 생각하니라', ref: '누가복음 2:19', emoji: '🤍' },
+    { name: '요셉', x: NAT_X + 5, z: NAT_Z + 2, y: G, season: 1, look: { robe: 0x8a6a48, robe2: 0x765a3c, belt: 0x4a2e18, trim: 0x5a4028, skin: 0xc68a60, hair: 0x2b1d14, sandal: 0x6b4425, style: 'short', fit: { beard: 0x2b1d14 } }, text: '요셉이 잠에서 깨어 일어나 주의 사자의 분부대로 행하여 그의 아내를 데려왔으나', ref: '마태복음 1:24', emoji: '🪚' },
+    { name: '천사', x: NAT_X + 12, z: NAT_Z + 10, y: G, season: 1, look: { robe: 0xf4f2ea, robe2: 0xe8e4d8, belt: 0xe0c060, trim: 0xe0c060, skin: 0xe5b98f, hair: 0xd8b878, sandal: 0xf0e8d0, style: 'long' }, text: '천사가 이르되 무서워하지 말라 보라 내가 온 백성에게 미칠 큰 기쁨의 좋은 소식을 너희에게 전하노라', ref: '누가복음 2:10', emoji: '👼' },
+    { name: '동방 박사', x: NAT_X + 14, z: NAT_Z - 1, y: G, season: 1, look: { robe: 0x7a3a8a, robe2: 0x6a2a7a, belt: 0xe0b040, trim: 0xe0b040, skin: 0xb27a52, hair: 0x1e1610, sandal: 0x6b4425, style: 'scarf', scarf: 0xe0b040 }, text: '유대인의 왕으로 나신 이가 어디 계시냐 우리가 동방에서 그의 별을 보고 그에게 경배하러 왔노라 하니', ref: '마태복음 2:2', emoji: '👑' },
+    { name: '동방 박사', x: NAT_X + 13, z: NAT_Z + 4, y: G, season: 1, look: { robe: 0x2a6a5a, robe2: 0x1f5a4a, belt: 0xe0b040, trim: 0xd0a030, skin: 0xd2a07a, hair: 0x3a2a1c, sandal: 0x6b4425, style: 'long', fit: { beard: 0x3a2a1c } }, text: '그들이 별을 보고 매우 크게 기뻐하고 기뻐하더라', ref: '마태복음 2:10', emoji: '⭐' },
+    { name: '동방 박사', x: NAT_X + 14, z: NAT_Z + 9, y: G, season: 1, look: { robe: 0xa04030, robe2: 0x8a3428, belt: 0xe0b040, trim: 0xe0b040, skin: 0x9a6440, hair: 0x1e1610, sandal: 0x6b4425, style: 'scarf', scarf: 0xf0d080 }, text: '집에 들어가 아기와 그의 어머니 마리아가 함께 있는 것을 보고 엎드려 아기께 경배하고 보배합을 열어 황금과 유향과 몰약을 예물로 드리니라', ref: '마태복음 2:11', emoji: '🎁' },
     { name: '안내하는 나그네', x: XM - 6, z: PZ0 - 7, look: { robe: 0xe8e4da, robe2: 0xd8d2c4, belt: 0x8a4b14, trim: 0x8a4b14, skin: 0xe5b98f, hair: 0x3a2618, sandal: 0x6b4425, style: 'short', fit: { cloak: 0x3f4f6a, sash: 0x8a4b14, bag: 0x8a5a32 } }, text: '이 사람들은 다 믿음을 따라 죽었으며 약속을 받지 못하였으되 그것들을 멀리서 보고 환영하며 또 땅에서는 외국인과 나그네임을 증언하였으니', ref: '히브리서 11:13', emoji: '🧭' }
   ];
   function spawnNpcs() {
     arkBeasts(P.x, P.z);
     NPC_DEFS.forEach(function (d) {
+      if (d.season && !FESTIVE) return;   // 성탄 인물은 절기에만
       if (NPCS.some(function (n) { return n.d === d; }) || !colAt(d.x, d.z)) return;
       var y = d.y !== undefined ? d.y : groundAt(d.x + 0.5, d.z + 0.5, SY - 3); if (y === null) return;
       var av = makeAvatar(d.look); dressAvatar(av, {}); av.position.set(d.x + 0.5, y, d.z + 0.5); av.rotation.y = Math.PI; scene.add(av);
