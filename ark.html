@@ -563,6 +563,8 @@
   #tour .trow { display:flex; align-items:center; gap:6px; justify-content:flex-end; }
   #tour .trow small { margin-right:auto; opacity:.75; }
   #tour .tnext { background:#4f7d3c; color:#fff; }
+  #craftQ { width:100%; box-sizing:border-box; height:32px; margin:0 0 6px; padding:0 8px; font-size:14px; border:2px solid #373737; }
+  @media (orientation:landscape) { body.touch #toast { bottom:calc(112px + var(--sab)); } }
 </style>
 </head>
 <body class="menu">
@@ -700,7 +702,7 @@
   <div class="panel">
     <div class="tabs"><button id="tabBag" class="tab on">🎒 가방</button><button id="tabCraft" class="tab">🔨 만들기</button><button id="tabDex" class="tab">📖 도감</button><button id="tabAch" class="tab">🏅 업적</button></div>
     <div id="bagView">
-      <h2>🎒 가방 — 눌러서 집고, 다른 칸을 누르면 자리를 바꿔요 <small id="bagUse"></small> <button id="bagDrop" class="mc" style="display:none;height:26px;font-size:12px;padding:0 8px;">🗑 집은 묶음 버리기</button><button id="hotClear" class="mc" style="display:none;height:26px;font-size:12px;padding:0 8px;">집은 단축 칸 비우기</button></h2>
+      <h2>🎒 가방 — 눌러서 집고, 다른 칸을 누르면 자리를 바꿔요 <small id="bagUse"></small> <button id="bagSort" class="mc" style="height:26px;font-size:12px;padding:0 8px;">↕ 정렬</button> <button id="bagDrop" class="mc" style="display:none;height:26px;font-size:12px;padding:0 8px;">🗑 집은 묶음 버리기</button><button id="hotClear" class="mc" style="display:none;height:26px;font-size:12px;padding:0 8px;">집은 단축 칸 비우기</button></h2>
       <div id="invGrid"></div>
       <h2 class="hoth">손에 들 단축 칸 1~9 — 가방에서 집은 것을 여기 눌러 넣어요 · 단축 칸을 집어 가방 칸에 놓으면 비워져요</h2>
       <div id="invHot"></div>

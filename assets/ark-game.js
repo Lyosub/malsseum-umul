@@ -2776,7 +2776,20 @@
     }
     show();
   }
+  // 느린 휴대폰이면 「가벼운 화면」을 한 번 자동으로 켠다(시작 뒤 20초 평균 26fps 미만)
+  function watchLowSpec() {
+    if (!isTouch || S.lightMode || S.lightAuto) return;
+    var n = 0, t0 = 0;
+    (function f(now) {
+      if (!t0) t0 = now; n++;
+      if (now - t0 < 20000) { requestAnimationFrame(f); return; }
+      var fps = n / ((now - t0) / 1000); S.lightAuto = 1;
+      if (fps < 26 && !S.lightMode) { S.lightMode = true; applyLightMode(); updateMenuLabels(); toast('📱 기기가 느려서 「가벼운 화면」을 켰어요 — 메뉴 → 설정에서 끌 수 있어요'); }
+      saveSettings();
+    })(performance.now());
+  }
   function startGame() {
+    setTimeout(watchLowSpec, 8000);
     audioOn(); sfx('click');
     if (furnaceOK()) SEEN[FURNACE] = 1; if (tableOK()) SEEN[CRAFT] = 1;   // 내 땅에 놓아 둔 용광로·제작대
     SLOTS.forEach(function (s) { if (WORN[s]) SEEN[WORN[s]] = 1; }); saveSeen();
@@ -3460,21 +3473,43 @@
       expandedPlotFormats[i]=format==='r3:';
     } catch (e) {}
   }
+  // 내 땅 저장: 서버 기록이 내가 마지막으로 본 것 그대로일 때만 덮는다.
+  // 그 사이 다른 기기·선생님이 먼저 저장했으면 덮지 않고 서버의 최신 내 땅을 불러온다(두 기기로 번갈아 해도 기록이 사라지지 않게)
+  var plotSrvAt = null;   // 내 땅 서버 기록의 마지막 저장 시각(이름 주의: plotAt은 「몇 번 땅인지」 함수)
+  function plotWriteServer(data) {
+    var now = new Date().toISOString(), q = client.from('ark_village_plots').update({ data: data, updated_at: now }).eq('user_id', me.id);
+    if (plotSrvAt) q = q.eq('updated_at', plotSrvAt);
+    return q.select('updated_at').then(function (r) {
+      if (r.error) { setSave('저장 실패 — 다시 시도해요'); dirty = true; saveTimer = setTimeout(savePlot, 4000); return; }
+      if (r.data && r.data.length) { plotSrvAt = r.data[0].updated_at; setSave('저장됨'); return; }
+      return reloadMyPlot();   // 다른 곳에서 더 나중에 저장함
+    });
+  }
+  function reloadMyPlot() {
+    return client.from('ark_village_plots').select('data,updated_at').eq('user_id', me.id).maybeSingle().then(function (r) {
+      var row = r && r.data; if (!row) { setSave('저장 실패 — 다시 시도해요'); return; }
+      plotSrvAt = row.updated_at; dirty = false; clearTimeout(saveTimer);
+      if (row.data) decodePlot(myPlot, row.data, true);
+      var o = plotOrigin(myPlot);
+      for (var cz = (o.z - 1) >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = (o.x - 1) >> 5; cx <= (o.x + PLOT) >> 5; cx++) {
+        var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); }
+      }
+      bagChanged(); setSave('저장됨'); toast('📱 다른 기기(또는 선생님)가 더 나중에 바꾼 내 땅을 불러왔어요');
+    });
+  }
   function savePlotNow() {
     if (!client || !me || myPlot < 0) return Promise.resolve();
     clearTimeout(saveTimer); dirty = false;
     var data = encodePlot(myPlot);
     if (data.length > 20000) return Promise.resolve();
-    return client.from('ark_village_plots').update({ data: data, updated_at: new Date().toISOString() }).eq('user_id', me.id)
-      .then(function (r) { setSave(r.error ? '저장 실패 — 다시 시도해요' : '저장됨'); if (r.error) { dirty = true; saveTimer = setTimeout(savePlot, 4000); } });
+    return plotWriteServer(data);
   }
   function savePlot() {
     if (!client || !me || myPlot < 0 || !dirty) return;
     var data = encodePlot(myPlot);
     if (data.length > 20000) { setSave('저장 안 됨'); toast('집이 너무 복잡해서 저장할 수 없어요. 블록을 조금 정리해 주세요'); return; }
     dirty = false;
-    client.from('ark_village_plots').update({ data: data, updated_at: new Date().toISOString() }).eq('user_id', me.id)
-      .then(function (r) { setSave(r.error ? '저장 실패 — 다시 시도해요' : '저장됨'); if (r.error) { dirty = true; saveTimer = setTimeout(savePlot, 4000); } });
+    plotWriteServer(data);
   }
   function setSave(t) { var el = $('saveState'); if (el) { el.textContent = t; el.classList.toggle('quiet', t === '저장됨'); } }
   function markPlots() {
@@ -3729,7 +3764,32 @@
 
   // ───────── 화면 글·패널 ─────────
   var toastT = null;
-  function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { el.classList.remove('show'); }, 2600); }
+  // 알림은 차례로 보여 준다(빨리 덮이지 않게): 같은 말은 한 번, 기다리는 것은 3개까지
+  var toastQ = [], toastCur = '';
+  function toast(t) {
+    if (!t || t === toastCur || toastQ.indexOf(t) >= 0) return;
+    if (toastCur) { toastQ.push(t); if (toastQ.length > 3) toastQ.shift(); return; }
+    toastShow(t);
+  }
+  function toastShow(t) {
+    var el = $('toast'); toastCur = t; el.textContent = t; el.classList.add('show'); clearTimeout(toastT);
+    toastT = setTimeout(function () {
+      el.classList.remove('show'); toastCur = '';
+      if (toastQ.length) setTimeout(function () { if (!toastCur && toastQ.length) toastShow(toastQ.shift()); }, 250);
+    }, toastQ.length ? 2000 : 2600);
+  }
+  // 게임 오류는 말씀우물 오류 기록(client_errors)에 남긴다 — 한 번 들어올 때 6건까지, 같은 말은 한 번(auth.js와 같은 규칙)
+  (function () {
+    var sent = 0, seen = {}, pend = [];
+    function send(msg, stack) {
+      msg = String(msg || 'script error'); if (sent >= 6 || seen[msg]) return; seen[msg] = 1; sent++;
+      var go = function () { try { client.rpc('log_client_error', { p_page: location.pathname + location.search, p_message: msg.slice(0, 1000), p_stack: String(stack || '').slice(0, 4000), p_ua: navigator.userAgent }).then(function () {}, function () {}); } catch (e) {} };
+      if (typeof client !== 'undefined' && client && client.rpc) go(); else pend.push(go);
+    }
+    setInterval(function () { if (pend.length && client && client.rpc) { var q = pend; pend = []; q.forEach(function (f) { f(); }); } }, 5000);
+    window.addEventListener('error', function (e) { send(e.message, (e.error && e.error.stack) || ((e.filename || '') + ':' + (e.lineno || '') + ':' + (e.colno || ''))); });
+    window.addEventListener('unhandledrejection', function (e) { var r = e.reason; send('unhandledrejection: ' + (r && r.message ? r.message : String(r)), (r && r.stack) || ''); });
+  })();
   placeName = function () {
     var x = Math.floor(P.x), y = Math.floor(P.y), z = Math.floor(P.z);
     if (x >= AX0 && x <= AX1 && z >= AZ0 && z <= AZ1 && y >= AY0 && y <= AY1 + 1) {
@@ -3771,7 +3831,7 @@
     more.addEventListener('click', function () { openPanel('inv'); sfx('click'); });
     bar.appendChild(more);
   }
-  var invTab = 'bag', craftCat = 'block', bagPick = null;
+  var invTab = 'bag', craftCat = 'block', bagPick = null, craftQuery = '';
   function renderInv() {
     var dr = $('dropRow'); if (dr) dr.hidden = !(bagPick && bagPick.id && INV.indexOf(bagPick.id) >= 0);
     $('tabBag').classList.toggle('on', invTab === 'bag'); $('tabCraft').classList.toggle('on', invTab === 'craft'); $('tabDex').classList.toggle('on', invTab === 'dex');
@@ -3864,10 +3924,14 @@
     var sb = document.createElement('div'); sb.className = 'stagebar';
     sb.innerHTML = '📜 제작법 <b>' + openN + '/' + allN + '</b> 열림 · 지금 <b>' + st.n + '단계 「' + st.name + '」</b>' + (STAGE_NEXT[st.n] ? ' — 다음: ' + STAGE_NEXT[st.n] : ' — 마지막 단계예요') + '<br><small>재료를 처음 얻으면 그 재료로 만드는 법이 열려요. 재료 그림을 누르면 어디서 얻는지 알려 줘요.</small>';
     list.appendChild(sb);
+    var qBox = document.createElement('input'); qBox.id = 'craftQ'; qBox.placeholder = '🔍 이름으로 찾기'; qBox.value = craftQuery; qBox.setAttribute('aria-label', '만들 것 이름으로 찾기');
+    qBox.addEventListener('input', function () { craftQuery = qBox.value.trim(); renderInv(); var q2 = $('craftQ'); if (q2) { q2.focus(); q2.setSelectionRange(q2.value.length, q2.value.length); } });
+    list.insertBefore(qBox, list.firstChild);
     var locked = [];
     RECIPES.forEach(function (rc) {
-      if (rc.cat !== craftCat) return;
-      if (!recOpen(rc)) { locked.push(rc); return; }
+      if (craftQuery && B[rc.out[0]][0].indexOf(craftQuery) < 0) return;
+      if (rc.cat !== craftCat && !craftQuery) return;
+      if (!recOpen(rc)) { if (!craftQuery) locked.push(rc); return; }   // 찾는 중엔 잠긴 제작법 이름을 드러내지 않음
       var ok = canCraft(rc);
       var r = document.createElement('div'); r.className = 'rec' + (ok ? '' : ' no');
       r.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('.ri[data-id]'); if (t) { var gid = +t.getAttribute('data-id'); $('invName').textContent = '「' + B[gid][0] + '」 ' + howGet(gid) + ' (지금 ' + fmtN(have(gid)) + '개)'; sfx('click'); } });
@@ -4105,6 +4169,12 @@
     on('btnFold', function () { toggleFold('top'); });
     on('qFold', function () { toggleFold('q'); });
     on('qMini', function () { toggleFold('q'); });
+    on('bagSort', function () {   // 블록 → 모양 → 재료 → 도구 순, 같은 종류는 번호 순
+      var ids = BAGSLOT.filter(function (v) { return v; }), rank = function (id) { return isTool(id) ? 3 : (isItem(id) ? 2 : (isShape(id) ? 1 : 0)); };
+      ids.sort(function (a, b) { return rank(a) - rank(b) || a - b; });
+      for (var i = 0; i < BAGSLOT.length; i++) BAGSLOT[i] = ids[i] || 0;
+      saveSettings(); bagPick = null; renderInv(); sfx('click'); $('invName').textContent = '가방을 정리했어요';
+    });
     on('mTour', function () { startTour(); });
     // 게임 메뉴: 버튼을 묶음 탭(게임·이동·함께·설정)으로 — 돌아가기·나가기는 늘 보임
     (function () {
@@ -7854,7 +7924,7 @@
       villageBook=loadVillageBook(me ? me.id : 'guest');
       $('who').textContent = me ? '' : '구경 중 · 로그인하면 저장돼요';
       var claim = me ? client.rpc('claim_village_plot').then(function (c) { if (!c.error && c.data !== null) myPlot = c.data; }) : Promise.resolve();
-      return claim.then(function () { return client.from('ark_village_plots').select('plot_idx,data,user_id'); });
+      return claim.then(function () { return client.from('ark_village_plots').select('plot_idx,data,user_id,updated_at'); });
     }).then(function (res) {
       var hasExpandedRows=(res&&res.data||[]).some(function(row){
         return typeof row.data==='string'&&row.data.startsWith('r3:');
@@ -7867,6 +7937,7 @@
     }).then(function (res) {
       (res && res.data || []).forEach(function (row) {
         plotOwners[row.plot_idx] = 1; plotUser[row.plot_idx] = row.user_id;
+        if (me && row.user_id === me.id) plotSrvAt = row.updated_at;
         if (row.data) decodePlot(row.plot_idx, row.data, me && row.user_id === me.id);
       });
       return Promise.all([loadShared(),fetchVillageProjects(),fetchFrontier()]);
