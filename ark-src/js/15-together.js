@@ -70,7 +70,7 @@
     p.restYaw = typeof m.restYaw === 'number' && Number.isFinite(m.restYaw) ? m.restYaw : 0;
     p.tx = m.x; p.ty = m.y; p.tz = m.z; p.th = m.h || 0; p.pt = m.p || 0; p.s = m.s ? 1 : 0; p.w = m.w ? 1 : 0; p.t = performance.now();
     if (p.fresh) { p.fresh = false; p.x = p.tx; p.y = p.ty; p.z = p.tz; p.h = p.th; }
-    var wi = m.i === SWORD || isTool(m.i) ? m.i : 0;
+    var wi = typeof m.i === 'number' && m.i > 0 && B[m.i] ? m.i : 0;
     if (wi !== (p.wi || 0)) { p.wi = wi; handItem(p.av, wi); }
     var rk = BEASTS[m.r] ? m.r : '';
     if (rk !== p.rk) {
@@ -81,7 +81,7 @@
   }
   function sendPos(now) {
     var r = riding ? riding.kind : '', s = (mine && !mine.denied) || swingT > 0 ? 1 : 0, wv = performance.now() < waveUntil ? 1 : 0;
-    var m = { u: me.id, x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), h: +P.yaw.toFixed(2), p: +P.pitch.toFixed(2), r: r, s: s, i: heldWeapon(), mapHidden: S.mapVisible === false || (myPlot >= 0 && plotAt(Math.floor(P.x), Math.floor(P.z)) === myPlot) };
+    var m = { u: me.id, x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), h: +P.yaw.toFixed(2), p: +P.pitch.toFixed(2), r: r, s: s, i: heldShown(), mapHidden: S.mapVisible === false || (myPlot >= 0 && plotAt(Math.floor(P.x), Math.floor(P.z)) === myPlot) };
     if (furnitureRest) { m.rest = furnitureRest.pose; m.restYaw = furnitureRest.yaw; }
     if (wv) m.w = 1;
     var key = [m.x, m.y, m.z, m.h, m.p, r, s, wv, m.i, m.mapHidden, m.rest, m.restYaw].join();
@@ -194,6 +194,7 @@
     var bb = null, lit = []; adminTouchedMine = false;
     NET.applying = true;
     try {
+      var fxN = 0;
       for (var i = 0; i < list.length; i++) {
         var e = list[i]; if (!e || e.length !== 4) continue;
         var x = e[0] | 0, y = e[1] | 0, z = e[2] | 0, id = e[3] | 0;
@@ -207,6 +208,10 @@
           }
         } else recordEdit(x, y, z, id);
         var was = readBlock(x, y, z); if (was === id) continue;
+        if (u !== 'sync' && fxN < 3 && colAt(x, z)) {   // 가까이에서 다른 사람이 캐거나 놓으면 조각·소리
+          var fdx = x + 0.5 - P.x, fdz = z + 0.5 - P.z, fd2 = fdx * fdx + fdz * fdz;
+          if (fd2 < 400) { fxN++; if (id === AIR && was !== AIR && B[was]) { burst(x, y, z, was, fd2 > 100); if (fd2 < 144) sfx('break', matSound(was)); } else if (id !== AIR && fd2 < 144) sfx('place', matSound(id)); }
+        }
         setRaw(x, y, z, id);
         var c0 = colAt(x, z); updateFrontierMachine(c0,x,y,z,id); if (!c0) continue;
         c0.mod = true; updateSky(x, z);
