@@ -418,7 +418,7 @@
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
       var G = { game: ['mBook', 'mStory', 'mVillageWork', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
-        together: ['mParty', 'mFriends', 'mVisit', 'mRevert'], settings: ['mLight', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
+        together: ['mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch'], settings: ['mLight', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
       var sl = grid.querySelector('.slider'); if (sl) sl.setAttribute('data-g', 'settings');
@@ -554,6 +554,7 @@
     ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);
+    on('mWatch', openAdminWatch);
     on('mStory', openStory); on('mParty', openParty); on('partyDone', function () { closePanel(); }); on('storyDone', function () { closePanel(); }); on('storyStart', function () { closePanel(); startStory(); });
     on('endingDone', function () { closePanel(); toast('🏙 본향에 이르렀어요 — 성 안을 거닐어 보세요'); });
     on('mAutoJump', function () { S.autoJump = S.autoJump === false; saveSettings(); updateMenuLabels(); sfx('click'); });

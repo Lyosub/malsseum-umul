@@ -4276,7 +4276,7 @@
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
       var G = { game: ['mBook', 'mStory', 'mVillageWork', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
-        together: ['mParty', 'mFriends', 'mVisit', 'mRevert'], settings: ['mLight', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
+        together: ['mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch'], settings: ['mLight', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
       var sl = grid.querySelector('.slider'); if (sl) sl.setAttribute('data-g', 'settings');
@@ -4412,6 +4412,7 @@
     ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);
+    on('mWatch', openAdminWatch);
     on('mStory', openStory); on('mParty', openParty); on('partyDone', function () { closePanel(); }); on('storyDone', function () { closePanel(); }); on('storyStart', function () { closePanel(); startStory(); });
     on('endingDone', function () { closePanel(); toast('🏙 본향에 이르렀어요 — 성 안을 거닐어 보세요'); });
     on('mAutoJump', function () { S.autoJump = S.autoJump === false; saveSettings(); updateMenuLabels(); sfx('click'); });
@@ -6426,7 +6427,37 @@
       s.position.set(x, G + 5, zz); s.scale.multiplyScalar(2.2); scene.add(s); return s;
     });
   }
-  // 선생님: 함께 짓는 터를 최근 몇 분만큼 되돌리기(모두의 화면에서 처음 풀밭으로)
+  // 관리자(전도사님 계정만): 막힌 채팅 · 가방 숫자 의심 기록 보기
+  function openAdminWatch() {
+    if (!NET.admin || !client) return;
+    var old = $('watchBox'); if (old) old.remove();
+    if (lockOn) { try { document.exitPointerLock(); } catch (e) {} }
+    var box = document.createElement('div'); box.id = 'watchBox';
+    box.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(16,16,24,.96);border:2px solid #000;box-shadow:inset 0 0 0 2px #7a8aa0;padding:12px 14px;color:#fff;font-size:13px;width:min(440px,94vw);max-height:86vh;overflow:auto';
+    function head(t) { var h = document.createElement('b'); h.textContent = t; h.style.cssText = 'display:block;font-size:15px;color:#ffe27a;margin:6px 0 4px'; box.appendChild(h); }
+    function line(t, dim) { var d = document.createElement('div'); d.textContent = t; d.style.cssText = 'padding:3px 0;border-bottom:1px solid rgba(255,255,255,.08);' + (dim ? 'opacity:.6' : ''); box.appendChild(d); return d; }
+    function when(at) { var d = new Date(at); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2); }
+    head('🛡 지켜보기 — 관리자만 보여요');
+    var chatH = line('🕊 막힌 채팅(최근 30일) — 불러오는 중…'), bagH;
+    var c = document.createElement('button'); c.className = 'mc'; c.textContent = '닫기'; c.style.cssText = 'display:block;width:100%;margin-top:8px';
+    c.addEventListener('click', function (e) { e.stopPropagation(); box.remove(); });
+    document.body.appendChild(box); sfx('pop');
+    client.rpc('get_ark_chat_blocked').then(function (r) {
+      var rows = (r && r.data) || [];
+      chatH.textContent = '🕊 막힌 채팅(최근 30일) ' + rows.length + '건' + (r.error ? ' — 불러오지 못했어요' : '');
+      rows.slice(0, 40).forEach(function (x) { line(when(x.at) + ' · ' + (x.nick || '?') + ': ' + x.body); });
+      bagH = line('🎒 가방 숫자 의심 기록 — 불러오는 중…');
+      return client.rpc('get_ark_bag_flags');
+    }).then(function (r) {
+      var rows = (r && r.data) || [];
+      bagH.textContent = '🎒 가방 숫자 의심 기록(최근 60일) ' + rows.length + '건' + (r.error ? ' — 불러오지 못했어요' : '');
+      rows.slice(0, 40).forEach(function (x) {
+        line(when(x.at) + ' · ' + (x.nick || '?') + ': 한 번에 ' + x.gain + '개 늘어남(가장 많이: ' + nameOf(x.top_item) + ' ' + x.top_gain + '개) — ' + (x.reverted ? '되돌림' : '기록만'), !x.reverted);
+      });
+      box.appendChild(c);
+    }, function () { box.appendChild(c); toast('불러오지 못했어요'); });
+  }
+  // 관리자: 함께 짓는 터를 최근 몇 분만큼 되돌리기(모두의 화면에서 처음 풀밭으로)
   function adminRevertCommons() {
     if (!NET.admin || !client) return;
     var v = window.prompt('함께 짓는 터에서 최근 몇 분 동안 바뀐 것을 되돌릴까요?\n(0 = 지금까지 전부)', '30'); if (v === null) return;
