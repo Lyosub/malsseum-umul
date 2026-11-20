@@ -970,15 +970,16 @@
   }
   // 지도에 그릴 레일: 불러온 땅 기둥을 하나씩 돌아가며 살펴봄(0.05초에 한 기둥)
   var RAIL_MAP = new Map(), railScanK = 0;
-  setInterval(function () {
-    if (!started) return;
+  setInterval(railScanStep, 200);
+  function railScanStep() {
+    if (!started || document.hidden) return;
     for (var tries = 0; tries < 4096; tries++) { railScanK = (railScanK + 1) % (NC * NC); if (COLS[railScanK]) break; }
     var col = COLS[railScanK]; if (!col) return;
     var cx = (railScanK % NC) * CS, cz = Math.floor(railScanK / NC) * CS, d = col.d;
     RAIL_MAP.forEach(function (v, key) { var kx = key >> 12, kz = key & 4095; if (kx >= cx && kx < cx + CS && kz >= cz && kz < cz + CS) RAIL_MAP.delete(key); });
     for (var i = 0; i < d.length; i++) { var v = d[i]; if ((v >= RAIL0 && v < RAIL0 + 10) || (v >= RAILF0 && v < RAILF0 + 10)) { var lx = i % CS, lz = Math.floor(i / CS) % CS; RAIL_MAP.set(((cx + lx) << 12) | (cz + lz), v >= RAILF0 ? 2 : 1); } }
     if (RAIL_MAP.size > 20000) RAIL_MAP.clear();
-  }, 50);
+  }
   function drawMapRails(x, ox, oz, sc, w, h) {
     var s = Math.max(1.5, sc);
     RAIL_MAP.forEach(function (v, key) {

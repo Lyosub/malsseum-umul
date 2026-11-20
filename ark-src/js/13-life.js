@@ -416,10 +416,10 @@
     }
   }
   // ── 땅 이름 팻말(11/20): 주인 있는 땅 앞(길 쪽)에 나무 기둥 + 「OO님의 땅」 — 56칸 안만 그림, 차단한 사람은 번호만 ──
-  var plotSignObjs = {}, plotPostMat = null, plotPostGeo = null, PLOT_NAMES = {}, plotNameT = 0;
+  var plotSignObjs = {}, plotPostMat = null, plotPostGeo = null, PLOT_NAMES = {}, PLOT_HIDDEN = {}, plotNameT = 0;
   function fetchPlotNames() {   // 주인이 쓴 팻말 글(서버, 금칙어 검사를 거친 것)
     if (!client || !me || me.id === 'test') return;
-    client.rpc('get_ark_plot_names', {}).then(function (r) { if (!r || r.error || !Array.isArray(r.data)) return; PLOT_NAMES = {}; r.data.forEach(function (row) { PLOT_NAMES[row.user_id] = row.body; }); }, function () {});
+    client.rpc('get_ark_plot_names', {}).then(function (r) { if (!r || r.error || !Array.isArray(r.data)) return; PLOT_NAMES = {}; PLOT_HIDDEN = {}; r.data.forEach(function (row) { if (row.hidden) PLOT_HIDDEN[row.user_id] = row.body; else PLOT_NAMES[row.user_id] = row.body; }); }, function () {});
   }
   function refreshPlotSigns() {
     if (!started) return;

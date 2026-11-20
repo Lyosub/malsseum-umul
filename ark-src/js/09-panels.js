@@ -525,6 +525,54 @@
     hb.style.maxWidth = Math.max(220, avail) / k + 'px'; if (vt) vt.style.maxWidth = Math.max(220, avail) + 'px';
   }
   window.addEventListener('resize', function () { setTimeout(function () { fitBottomBar(); }, 120); });
+  // ── 건의하기(11/20): 불편한 점·바라는 점을 관리자에게(300자, 1분에 한 번·하루 10번) ──
+  function fbBox(title) {
+    var old = $('fbBox'); if (old) old.remove();
+    if (lockOn) { try { document.exitPointerLock(); } catch (e) {} }
+    var box = document.createElement('div'); box.id = 'fbBox';
+    box.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:70;background:rgba(16,16,24,.96);border:2px solid #000;box-shadow:inset 0 0 0 2px #5a4a8a;padding:12px 14px;display:flex;flex-direction:column;gap:8px;width:min(520px,92vw);max-height:86vh;overflow:auto;color:#fff';
+    var h = document.createElement('b'); h.textContent = title; h.style.cssText = 'font-size:16px;color:#ffe27a'; box.appendChild(h);
+    document.body.appendChild(box); return box;
+  }
+  function fbBtn(parent, label, fn) { var b = document.createElement('button'); b.className = 'mc'; b.textContent = label; b.addEventListener('click', function (e) { e.stopPropagation(); fn(); }); parent.appendChild(b); return b; }
+  function openFeedback() {
+    var box = fbBox('📮 건의하기');
+    var p = document.createElement('div'); p.textContent = '불편한 점, 고장 난 곳, 있었으면 하는 것을 적어 주세요. 전도사님께 바로 전해져요.'; p.style.fontSize = '13px'; box.appendChild(p);
+    var ta = document.createElement('textarea'); ta.maxLength = 300; ta.rows = 4; ta.placeholder = '예: 수레가 비탈에서 멈춰요 / 낚시를 더 하고 싶어요'; ta.setAttribute('aria-label', '건의할 내용'); ta.style.cssText = 'font:inherit;font-size:14px;padding:6px;resize:vertical;width:100%;box-sizing:border-box'; box.appendChild(ta);
+    var cnt = document.createElement('small'); cnt.textContent = '0 / 300'; box.appendChild(cnt);
+    ta.addEventListener('input', function () { cnt.textContent = ta.value.length + ' / 300'; });
+    var row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;justify-content:flex-end'; box.appendChild(row);
+    fbBtn(row, '닫기', function () { box.remove(); });
+    fbBtn(row, '보내기', function () {
+      if (!client || !me || me.id === 'test') { toast('로그인하면 건의를 보낼 수 있어요'); return; }
+      client.rpc('send_ark_feedback', { p_body: ta.value, p_x: Math.floor(P.x), p_z: Math.floor(P.z), p_ua: navigator.userAgent }).then(function (r) {
+        var d = r && r.data || {}, why = { empty: '두 글자 이상 적어 주세요', long: '300자까지 쓸 수 있어요', slow: '1분 뒤에 다시 보내 주세요', many: '오늘은 10번까지 보낼 수 있어요', login: '로그인하면 보낼 수 있어요' }[d.error];
+        if (why) return toast('📮 ' + why);
+        box.remove(); toast('📮 고마워요! 건의를 보냈어요');
+      }, function () { toast('📮 보내지 못했어요. 조금 뒤에 다시 해 주세요'); });
+    });
+    setTimeout(function () { ta.focus(); }, 50);
+  }
+  function openFeedbackAdmin(all) {
+    if (!NET.admin || !client) return;
+    var box = fbBox('📮 건의함' + (all ? ' (모두)' : ' (아직 안 본 것)'));
+    var top = document.createElement('div'); top.style.cssText = 'display:flex;gap:8px'; box.appendChild(top);
+    fbBtn(top, all ? '안 본 것만' : '모두 보기', function () { openFeedbackAdmin(!all); });
+    fbBtn(top, '닫기', function () { box.remove(); });
+    var list = document.createElement('div'); list.textContent = '불러오는 중…'; box.appendChild(list);
+    client.rpc('list_ark_feedback', { p_all: !!all }).then(function (r) {
+      list.textContent = ''; var rows = r && r.data || [];
+      if (!rows.length) { list.textContent = '건의가 없어요'; return; }
+      rows.forEach(function (f) {
+        var it = document.createElement('div'); it.style.cssText = 'border-top:1px solid #444;padding:6px 0;font-size:13px' + (f.handled ? ';opacity:.5' : '');
+        var head = document.createElement('div'); head.style.color = '#9fd0ff'; head.textContent = (f.nick || '?') + ' · ' + new Date(f.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + (f.x !== null ? ' · 자리 ' + f.x + ',' + f.z : '');
+        var txt = document.createElement('div'); txt.textContent = f.body; txt.style.whiteSpace = 'pre-wrap';
+        it.append(head, txt);
+        if (!f.handled) fbBtn(it, '본 것으로', function () { client.rpc('mark_ark_feedback', { p_id: f.id, p_handled: true }).then(function () { it.style.opacity = '.5'; }); });
+        list.appendChild(it);
+      });
+    }, function () { list.textContent = '불러오지 못했어요'; });
+  }
   function updateMenuLabels() {
     if ($('mNews') && NEWS) { var nl = newsLeft(); $('mNews').textContent = '✨ 새 기능' + (S.newsSeen !== NEWS_VER ? ' (새로 ' + NEWS.length + ')' : (nl ? ' · ' + (NEWS.length - nl) + '/' + NEWS.length : ' ✅')); }
     if ($('mBtnSize')) $('mBtnSize').textContent = '버튼 크기: ' + (BTN_SIZES[S.btnSize === undefined ? 1 : S.btnSize] || BTN_SIZES[1])[0];
@@ -573,8 +621,8 @@
     // 게임 메뉴: 버튼을 묶음 탭(게임·이동·함께·설정)으로 — 돌아가기·나가기는 늘 보임
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
-      var G = { game: ['mNews', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
-        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
+      var G = { game: ['mNews', 'mFeedback', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
+        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch', 'mFeedbackAdmin'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
       var sl = grid.querySelector('.slider'); if (sl) sl.setAttribute('data-g', 'settings');
@@ -651,6 +699,8 @@
     on('mLight', function () { S.lightMode = !S.lightMode; if (!S.lightMode && S.autoLit) S.autoLight = false; S.autoLit = false; applyLightMode(); saveSettings(); updateMenuLabels(); });   // 자동으로 켠 것을 사람이 끄면 다시 자동으로 켜지 않음
     on('mBtnSize', function () { S.btnSize = ((S.btnSize === undefined ? 1 : S.btnSize) + 1) % 3; applyBtnSize(); saveSettings(); updateMenuLabels(); sfx('click'); newsMark('btn'); });
     on('mNews', function () { openVillageWork('news'); });
+    on('mFeedback', function () { openFeedback(); });
+    on('mFeedbackAdmin', function () { openFeedbackAdmin(); });
     applyBtnSize();
     on('touchAction', function () { if (isTouch && ui === 'play' && HOTBAR[sel] !== BOW) { tapAt(); mobileHudAt = 0; } });
     (function () { var ta = $('touchAction'); if (!ta) return;

@@ -4571,6 +4571,54 @@
     hb.style.maxWidth = Math.max(220, avail) / k + 'px'; if (vt) vt.style.maxWidth = Math.max(220, avail) + 'px';
   }
   window.addEventListener('resize', function () { setTimeout(function () { fitBottomBar(); }, 120); });
+  // ── 건의하기(11/20): 불편한 점·바라는 점을 관리자에게(300자, 1분에 한 번·하루 10번) ──
+  function fbBox(title) {
+    var old = $('fbBox'); if (old) old.remove();
+    if (lockOn) { try { document.exitPointerLock(); } catch (e) {} }
+    var box = document.createElement('div'); box.id = 'fbBox';
+    box.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:70;background:rgba(16,16,24,.96);border:2px solid #000;box-shadow:inset 0 0 0 2px #5a4a8a;padding:12px 14px;display:flex;flex-direction:column;gap:8px;width:min(520px,92vw);max-height:86vh;overflow:auto;color:#fff';
+    var h = document.createElement('b'); h.textContent = title; h.style.cssText = 'font-size:16px;color:#ffe27a'; box.appendChild(h);
+    document.body.appendChild(box); return box;
+  }
+  function fbBtn(parent, label, fn) { var b = document.createElement('button'); b.className = 'mc'; b.textContent = label; b.addEventListener('click', function (e) { e.stopPropagation(); fn(); }); parent.appendChild(b); return b; }
+  function openFeedback() {
+    var box = fbBox('📮 건의하기');
+    var p = document.createElement('div'); p.textContent = '불편한 점, 고장 난 곳, 있었으면 하는 것을 적어 주세요. 전도사님께 바로 전해져요.'; p.style.fontSize = '13px'; box.appendChild(p);
+    var ta = document.createElement('textarea'); ta.maxLength = 300; ta.rows = 4; ta.placeholder = '예: 수레가 비탈에서 멈춰요 / 낚시를 더 하고 싶어요'; ta.setAttribute('aria-label', '건의할 내용'); ta.style.cssText = 'font:inherit;font-size:14px;padding:6px;resize:vertical;width:100%;box-sizing:border-box'; box.appendChild(ta);
+    var cnt = document.createElement('small'); cnt.textContent = '0 / 300'; box.appendChild(cnt);
+    ta.addEventListener('input', function () { cnt.textContent = ta.value.length + ' / 300'; });
+    var row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;justify-content:flex-end'; box.appendChild(row);
+    fbBtn(row, '닫기', function () { box.remove(); });
+    fbBtn(row, '보내기', function () {
+      if (!client || !me || me.id === 'test') { toast('로그인하면 건의를 보낼 수 있어요'); return; }
+      client.rpc('send_ark_feedback', { p_body: ta.value, p_x: Math.floor(P.x), p_z: Math.floor(P.z), p_ua: navigator.userAgent }).then(function (r) {
+        var d = r && r.data || {}, why = { empty: '두 글자 이상 적어 주세요', long: '300자까지 쓸 수 있어요', slow: '1분 뒤에 다시 보내 주세요', many: '오늘은 10번까지 보낼 수 있어요', login: '로그인하면 보낼 수 있어요' }[d.error];
+        if (why) return toast('📮 ' + why);
+        box.remove(); toast('📮 고마워요! 건의를 보냈어요');
+      }, function () { toast('📮 보내지 못했어요. 조금 뒤에 다시 해 주세요'); });
+    });
+    setTimeout(function () { ta.focus(); }, 50);
+  }
+  function openFeedbackAdmin(all) {
+    if (!NET.admin || !client) return;
+    var box = fbBox('📮 건의함' + (all ? ' (모두)' : ' (아직 안 본 것)'));
+    var top = document.createElement('div'); top.style.cssText = 'display:flex;gap:8px'; box.appendChild(top);
+    fbBtn(top, all ? '안 본 것만' : '모두 보기', function () { openFeedbackAdmin(!all); });
+    fbBtn(top, '닫기', function () { box.remove(); });
+    var list = document.createElement('div'); list.textContent = '불러오는 중…'; box.appendChild(list);
+    client.rpc('list_ark_feedback', { p_all: !!all }).then(function (r) {
+      list.textContent = ''; var rows = r && r.data || [];
+      if (!rows.length) { list.textContent = '건의가 없어요'; return; }
+      rows.forEach(function (f) {
+        var it = document.createElement('div'); it.style.cssText = 'border-top:1px solid #444;padding:6px 0;font-size:13px' + (f.handled ? ';opacity:.5' : '');
+        var head = document.createElement('div'); head.style.color = '#9fd0ff'; head.textContent = (f.nick || '?') + ' · ' + new Date(f.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + (f.x !== null ? ' · 자리 ' + f.x + ',' + f.z : '');
+        var txt = document.createElement('div'); txt.textContent = f.body; txt.style.whiteSpace = 'pre-wrap';
+        it.append(head, txt);
+        if (!f.handled) fbBtn(it, '본 것으로', function () { client.rpc('mark_ark_feedback', { p_id: f.id, p_handled: true }).then(function () { it.style.opacity = '.5'; }); });
+        list.appendChild(it);
+      });
+    }, function () { list.textContent = '불러오지 못했어요'; });
+  }
   function updateMenuLabels() {
     if ($('mNews') && NEWS) { var nl = newsLeft(); $('mNews').textContent = '✨ 새 기능' + (S.newsSeen !== NEWS_VER ? ' (새로 ' + NEWS.length + ')' : (nl ? ' · ' + (NEWS.length - nl) + '/' + NEWS.length : ' ✅')); }
     if ($('mBtnSize')) $('mBtnSize').textContent = '버튼 크기: ' + (BTN_SIZES[S.btnSize === undefined ? 1 : S.btnSize] || BTN_SIZES[1])[0];
@@ -4619,8 +4667,8 @@
     // 게임 메뉴: 버튼을 묶음 탭(게임·이동·함께·설정)으로 — 돌아가기·나가기는 늘 보임
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
-      var G = { game: ['mNews', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
-        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
+      var G = { game: ['mNews', 'mFeedback', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
+        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch', 'mFeedbackAdmin'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
       var sl = grid.querySelector('.slider'); if (sl) sl.setAttribute('data-g', 'settings');
@@ -4697,6 +4745,8 @@
     on('mLight', function () { S.lightMode = !S.lightMode; if (!S.lightMode && S.autoLit) S.autoLight = false; S.autoLit = false; applyLightMode(); saveSettings(); updateMenuLabels(); });   // 자동으로 켠 것을 사람이 끄면 다시 자동으로 켜지 않음
     on('mBtnSize', function () { S.btnSize = ((S.btnSize === undefined ? 1 : S.btnSize) + 1) % 3; applyBtnSize(); saveSettings(); updateMenuLabels(); sfx('click'); newsMark('btn'); });
     on('mNews', function () { openVillageWork('news'); });
+    on('mFeedback', function () { openFeedback(); });
+    on('mFeedbackAdmin', function () { openFeedbackAdmin(); });
     applyBtnSize();
     on('touchAction', function () { if (isTouch && ui === 'play' && HOTBAR[sel] !== BOW) { tapAt(); mobileHudAt = 0; } });
     (function () { var ta = $('touchAction'); if (!ta) return;
@@ -6934,10 +6984,10 @@
     }
   }
   // ── 땅 이름 팻말(11/20): 주인 있는 땅 앞(길 쪽)에 나무 기둥 + 「OO님의 땅」 — 56칸 안만 그림, 차단한 사람은 번호만 ──
-  var plotSignObjs = {}, plotPostMat = null, plotPostGeo = null, PLOT_NAMES = {}, plotNameT = 0;
+  var plotSignObjs = {}, plotPostMat = null, plotPostGeo = null, PLOT_NAMES = {}, PLOT_HIDDEN = {}, plotNameT = 0;
   function fetchPlotNames() {   // 주인이 쓴 팻말 글(서버, 금칙어 검사를 거친 것)
     if (!client || !me || me.id === 'test') return;
-    client.rpc('get_ark_plot_names', {}).then(function (r) { if (!r || r.error || !Array.isArray(r.data)) return; PLOT_NAMES = {}; r.data.forEach(function (row) { PLOT_NAMES[row.user_id] = row.body; }); }, function () {});
+    client.rpc('get_ark_plot_names', {}).then(function (r) { if (!r || r.error || !Array.isArray(r.data)) return; PLOT_NAMES = {}; PLOT_HIDDEN = {}; r.data.forEach(function (row) { if (row.hidden) PLOT_HIDDEN[row.user_id] = row.body; else PLOT_NAMES[row.user_id] = row.body; }); }, function () {});
   }
   function refreshPlotSigns() {
     if (!started) return;
@@ -8718,15 +8768,16 @@
   }
   // 지도에 그릴 레일: 불러온 땅 기둥을 하나씩 돌아가며 살펴봄(0.05초에 한 기둥)
   var RAIL_MAP = new Map(), railScanK = 0;
-  setInterval(function () {
-    if (!started) return;
+  setInterval(railScanStep, 200);
+  function railScanStep() {
+    if (!started || document.hidden) return;
     for (var tries = 0; tries < 4096; tries++) { railScanK = (railScanK + 1) % (NC * NC); if (COLS[railScanK]) break; }
     var col = COLS[railScanK]; if (!col) return;
     var cx = (railScanK % NC) * CS, cz = Math.floor(railScanK / NC) * CS, d = col.d;
     RAIL_MAP.forEach(function (v, key) { var kx = key >> 12, kz = key & 4095; if (kx >= cx && kx < cx + CS && kz >= cz && kz < cz + CS) RAIL_MAP.delete(key); });
     for (var i = 0; i < d.length; i++) { var v = d[i]; if ((v >= RAIL0 && v < RAIL0 + 10) || (v >= RAILF0 && v < RAILF0 + 10)) { var lx = i % CS, lz = Math.floor(i / CS) % CS; RAIL_MAP.set(((cx + lx) << 12) | (cz + lz), v >= RAILF0 ? 2 : 1); } }
     if (RAIL_MAP.size > 20000) RAIL_MAP.clear();
-  }, 50);
+  }
   function drawMapRails(x, ox, oz, sc, w, h) {
     var s = Math.max(1.5, sc);
     RAIL_MAP.forEach(function (v, key) {
@@ -9197,7 +9248,21 @@
       },function(){toast('집 구경 정보를 저장하지 못했어요');});
     });
     villageButton(body,'공개 설정과 친구 집',openVisit);
+    // 근처 팻말 신고: 서로 다른 3명이 신고하면 가려져요(주인이 새로 쓰면 다시 셈)
+    var near=Object.keys(plotSignObjs).map(Number).filter(function(i){var u=plotUser[i];return u&&i!==myPlot&&PLOT_NAMES[u];});
+    if(near.length){
+      villageText(body,'🚩 근처 팻말 — 보기 싫은 말이 있으면 신고해요(3명이 신고하면 가려져요)','h3');
+      near.forEach(function(i){var u=plotUser[i],line=document.createElement('div');line.className='vrow';body.appendChild(line);
+        villageText(line,PLOT_NAMES[u]+' · '+(NET.names[u]||(i+1)+'번 땅'),'span');
+        villageButton(line,'신고',function(){
+          if(!window.confirm('「'+PLOT_NAMES[u]+'」 팻말을 신고할까요?'))return;
+          client.rpc('report_ark_plot_name',{p_target:u}).then(function(r){var d=r&&r.data||{};toast(d.ok?'🚩 신고했어요 — 3명이 신고하면 가려져요':(d.error==='login'?'로그인하면 신고할 수 있어요':'신고하지 못했어요'));},function(){toast('신고하지 못했어요');});
+        });});
+    }
     if(NET.admin){   // 관리자: 팻말 글 지우기
+      Object.keys(PLOT_HIDDEN).forEach(function(u){var line=document.createElement('div');line.className='vrow';body.appendChild(line);
+        villageText(line,'(신고로 가려짐) '+(NET.names[u]||'?')+' · '+PLOT_HIDDEN[u],'span');
+        villageButton(line,'지우기',function(){client.rpc('admin_clear_ark_plot_name',{p_user:u}).then(function(r){if(r&&r.data===true){delete PLOT_HIDDEN[u];renderVillageWork();toast('팻말 글을 지웠어요');}});});});
       var ids=Object.keys(PLOT_NAMES); if(ids.length)villageText(body,'관리자 · 학생 팻말 글','h3');
       ids.forEach(function(u){var line=document.createElement('div');line.className='vrow';body.appendChild(line);
         villageText(line,(NET.names[u]||'?')+' · '+PLOT_NAMES[u],'span');
@@ -9704,7 +9769,7 @@
     scene.add(goalDeco);
   }
   // 점검 함수: 내 컴퓨터(시험 서버)와 선생님 계정에서만 연다 — 학생이 개발자 창에서 물건을 만들어 내지 못하게
-  var ARK_DBG = { setPlotName: function (u, t) { if (t) PLOT_NAMES[u] = t; else delete PLOT_NAMES[u]; refreshPlotSigns(); }, plotSigns: function () { var o = {}; for (var k in plotSignObjs) o[k] = plotSignObjs[k].txt; return o; }, setPlotUser: function (p, u, nick) { plotUser[p] = u; plotOwners[p] = 1; if (nick) NET.names[u] = nick; }, fakeNet: function (c, id) { client = c; me = { id: id }; }, projectCells: function (k) { return projectCells(k).length; }, perf: function () { return perfAcc; }, home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+  var ARK_DBG = { openFeedback: function () { openFeedback(); }, openFeedbackAdmin: function () { openFeedbackAdmin(); }, railScanCost: function (n) { var t = performance.now(); for (var i = 0; i < (n || 20); i++) railScanStep(); return (performance.now() - t) / (n || 20); }, setPlotName: function (u, t) { if (t) PLOT_NAMES[u] = t; else delete PLOT_NAMES[u]; refreshPlotSigns(); }, plotSigns: function () { var o = {}; for (var k in plotSignObjs) o[k] = plotSignObjs[k].txt; return o; }, setPlotUser: function (p, u, nick) { plotUser[p] = u; plotOwners[p] = 1; if (nick) NET.names[u] = nick; }, fakeNet: function (c, id) { client = c; me = { id: id }; }, projectCells: function (k) { return projectCells(k).length; }, perf: function () { return perfAcc; }, home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };
