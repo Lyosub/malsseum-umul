@@ -1,6 +1,6 @@
   // ───────── 해·밤, 비 ─────────
   var FOG_FAR = (isTouch ? 5 : 7) * 32 - 12;
-  var DAY_LEN = 900, dayT = DAY_LEN * 0.06, rain = 0, rainOn = false, rainTimer = 100;
+  var DAY_LEN = 1200, dayT = DAY_LEN * 0.06, rain = 0, rainOn = false, rainTimer = 300;   // 11/20: 하루 15분 → 20분(낮 약 12분·밤 약 8분), 처음 5분은 맑게
   var storm = false, thunderT = 8, flashK = 0, stormTold = false;   // 뇌우: 비가 올 때 열에 넷쯤(노아 때 비는 늘 뇌우)
   var LU = { uDay: { value: 1 }, uTint: { value: new THREE.Color(1, 1, 1) }, uTime: { value: 0 }, uHand: { value: new THREE.Vector4(0, -999, 0, 0) } };   // uHand: 손에 든 횃불(위치, 세기)
   function lightPatch(mat) {
@@ -111,17 +111,17 @@
     var dusk = elev > -0.2 ? clamp01(1 - Math.abs(elev) / 0.28) : 0;
     // 거룩한 성 안: 다시 밤이 없음(계 22:5)
     if (started && STORY.done && cityInside(Math.floor(P.x), Math.floor(P.z))) { dayF = 1; dusk = 0; }
-    // 비: 가끔 1~2분
+    // 비: 11/20 「날씨가 너무 자주 바뀌어」 — 맑은 날 6~12분, 비 1.5~3분, 비가 올지는 2분마다 한 번 봄
     rainTimer -= dt;
     var season=seasonIndex();
     if(lastSeason!==season){
-      if(lastSeason!==-1){rainTimer=Math.min(rainTimer,18);if(started)toast(['🌧 이른 비 철이에요 — 밭 작물이 빨리 자라요','☀ 맑은 철이에요','🌧 늦은 비 철이에요 — 작물이 가장 빨리 여물어요','🏜 가뭄이에요 — 물가 밭이 아니면 작물이 더디 자라요'][season]);}
+      if(lastSeason!==-1){if(started)toast(['🌧 이른 비 철이에요 — 밭 작물이 빨리 자라요','☀ 맑은 철이에요','🌧 늦은 비 철이에요 — 작물이 가장 빨리 여물어요','🏜 가뭄이에요 — 물가 밭이 아니면 작물이 더디 자라요'][season]);}
       lastSeason=season;
     }
     if (rainTimer<=0) {
-      if (rainOn) { rainOn=false;rainTimer=150+Math.random()*150;if(dayF>.6)rainbowUntil=dayT+44; }
-      else if (noahWantsRain() || Math.random()<[.63,.20,.55,.06][season]) {rainOn=true;rainTimer=noahWantsRain()?30:55+Math.random()*65;storm=noahWantsRain()||Math.random()<.4;thunderT=6+Math.random()*8;}
-      else rainTimer=65;
+      if (rainOn) { rainOn=false;rainTimer=360+Math.random()*360;if(dayF>.6)rainbowUntil=dayT+44; }
+      else if (noahWantsRain() || Math.random()<[.45,.12,.4,.04][season]) {rainOn=true;rainTimer=noahWantsRain()?30:90+Math.random()*90;storm=noahWantsRain()||Math.random()<.4;thunderT=6+Math.random()*8;}
+      else rainTimer=120;
     }
     rain += ((rainOn ? 1 : 0) - rain) * Math.min(1, dt * 0.25);
     if (!rainOn) storm = false;
