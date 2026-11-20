@@ -28,7 +28,7 @@
     var ix = Math.floor(x), iz = Math.floor(z);
     if (ix < 1 || iz < 1 || ix >= SX - 1 || iz >= SZ - 1) return null;
     // 나뭇잎·통나무는 땅으로 치지 않는다(동물이 나무 꼭대기에 서는 문제) — 통나무 자리는 막힌 곳
-    for (var y = Math.floor(fromY) + 2; y >= 1; y--) {
+    for (var y = Math.floor(fromY) + 2; y >= YMIN + 1; y--) {
       var id = get(ix, y, iz); if (id === WATER) return null;
       if (id === LEAF || id === LOG) continue;
       if (isSolid(id)) { var up = get(ix, y + 1, iz); return up === LOG ? null : y + 1; }

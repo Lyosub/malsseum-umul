@@ -199,7 +199,7 @@
       for (var i = 0; i < list.length; i++) {
         var e = list[i]; if (!e || e.length !== 4) continue;
         var x = e[0] | 0, y = e[1] | 0, z = e[2] | 0, id = e[3] | 0;
-        if (y < 1 || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS || (id !== AIR && !B[id])) continue;
+        if (y < YMIN + 1 || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS || (id !== AIR && !B[id])) continue;
         var p = plotAt(x, z);
         if (p >= 0) {
           if (ARK_ADMINS[u]) { plotPut(p, x, y, z, id); if (p === myPlot) adminTouchedMine = true; }   // 관리자가 고친 것은 주인 기기에도 반영
@@ -242,7 +242,7 @@
       r.data.split(';').forEach(function (s) {
         var a = s.split(','); if (a.length !== 4) return;
         var x = +a[0], y = +a[1], z = +a[2], id = +a[3];
-        if (x < 0 || z < 0 || x >= WS || z >= WS || y < 1 || y >= SY || plotAt(x, z) >= 0) return;
+        if (x < 0 || z < 0 || x >= WS || z >= WS || y < YMIN + 1 || y >= SY || plotAt(x, z) >= 0) return;
         if (NET.pm[x + ',' + y + ',' + z] !== undefined) return;   // 내가 아직 보내는 중인 것은 그대로
         var k = (z >> 5) * NC + (x >> 5), li = (y * CS + (z & 31)) * CS + (x & 31);
         if (EDITS[k] && EDITS[k][li] === id && (!COLS[k] || readBlock(x, y, z) === id)) return;
@@ -284,8 +284,8 @@
       var cz = Math.floor(k / NC), cx = k % NC, ed = EDITS[k];
       for (var li in ed) {
         if (n >= 1400) return;
-        var l = +li, lx = l % CS, r0 = (l - lx) / CS, lz = r0 % CS, y = (r0 - lz) / CS, x = cx * CS + lx, z = cz * CS + lz;
-        if (y < 1 || plotAt(x, z) >= 0 || inArk(x, y, z)) continue;
+        var l = +li, lx = ((l % CS) + CS) % CS, r0 = (l - lx) / CS, lz = ((r0 % CS) + CS) % CS, y = (r0 - lz) / CS, x = cx * CS + lx, z = cz * CS + lz;
+        if (y < YMIN + 1 || plotAt(x, z) >= 0 || inArk(x, y, z)) continue;
         NET.pm[x + ',' + y + ',' + z] = ed[li]; n++;
       }
     }
@@ -662,7 +662,9 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 3, NEWS = [
+  var NEWS_VER = 4, NEWS = [
+    ['deep', '⛏', '더 깊은 땅속', '땅속이 32칸 더 깊어졌어요(바닥 y -32). 금은 y -8 아래, 청옥은 -16 아래, 금강석은 맨 아래 깊은 돌 층에서 나와요.', 0],
+    ['onyx', '🟣', '호마노 도구', '철과 금강석 사이에 호마노 곡괭이·도끼·삽·칼이 생겼어요. 호마노는 철 곡괭이로 캐고, 청옥·금강석은 호마노 곡괭이가 있어야 캐요.', TOOL_ONYX],
     ['quest', '📜', '퀘스트', '왼쪽 위 「📜 부탁」이나 메뉴의 「📜 퀘스트」에서 오늘의 부탁 셋·모험·땅 밟기를 봐요. 다 들어주면 보상을 받아요.', 0],
     ['south', '🌲', '남쪽 새 땅', '마을 남쪽 멀리 백향목 숲·광야·소금 바다가 생겼어요. 광야에는 성막, 숲에는 망대, 바닷가에는 나그네 장막촌이 있어요.', 0],
     ['vein', '💎', '광맥', '광석을 캐면 반짝이며, 이어진 광석이 있으면 잠깐 비춰 줘요.', 0],

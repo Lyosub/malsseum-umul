@@ -967,7 +967,7 @@
           var hy = a.y - s.y; if (Math.hypot(a.x - s.x, a.z - s.z) < 0.7 && hy > 0 && hy < 2.1 * s.sp.h) { hitShadow(s, a.dmg || 3); gone = true; break; }
         }
       }
-      if (gone || a.t > 4 || a.y < 0) { scene.remove(a.mesh); return; }
+      if (gone || a.t > 4 || a.y < YMIN) { scene.remove(a.mesh); return; }
       a.mesh.position.set(a.x, a.y, a.z); a.mesh.lookAt(a.x + a.vx, a.y + a.vy, a.z + a.vz); live.push(a);
     });
     ARROWS = live;

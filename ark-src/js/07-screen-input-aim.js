@@ -398,7 +398,7 @@
     var px = x, py = y, pz = z, t = 0;
     while (t <= maxD) {
       var id = get(x, y, z);
-      if (y >= 0 && id !== AIR && id !== WATER) return { x: x, y: y, z: z, px: px, py: py, pz: pz, atY: oy + dy * t, t: t };
+      if (y >= YMIN && id !== AIR && id !== WATER) return { x: x, y: y, z: z, px: px, py: py, pz: pz, atY: oy + dy * t, t: t };
       px = x; py = y; pz = z;
       if (tx < ty && tx < tz) { x += sx; t = tx; tx += tdx; }
       else if (ty < tz) { y += sy; t = ty; ty += tdy; }

@@ -542,12 +542,12 @@
     for (var dz = -1; dz <= 1; dz++) for (var dx = -1; dx <= 1; dx++) { var x = cx + dx, z = cz + dz; if (inWorldC(x, z) && !COLS[z * NC + x]) return false; }
     return true;
   }
-  function meshColumn(cx, cz) { for (var cy = 0; cy < CY; cy++) buildChunk(cx, cy, cz); meshedCols[cz * NC + cx] = 1; delete meshProg[cz * NC + cx]; }
+  function meshColumn(cx, cz) { for (var cy = CYMIN; cy < CY; cy++) buildChunk(cx, cy, cz); meshedCols[cz * NC + cx] = 1; delete meshProg[cz * NC + cx]; }
   // 걸어 다닐 때는 기둥 하나를 높이 조각(3개)으로 나눠 프레임마다 한 조각씩 그린다(느린 휴대폰에서 끊기지 않게)
   var meshProg = {};
-  function meshStep(cx, cz) { var k = cz * NC + cx, c = meshProg[k] || 0; buildChunk(cx, c, cz); if (++c >= CY) { meshedCols[k] = 1; delete meshProg[k]; } else meshProg[k] = c; }
+  function meshStep(cx, cz) { var k = cz * NC + cx, c = meshProg[k] !== undefined ? meshProg[k] : CYMIN; buildChunk(cx, c, cz); if (++c >= CY) { meshedCols[k] = 1; delete meshProg[k]; } else meshProg[k] = c; }
   function unmeshColumn(cx, cz) {
-    for (var cy = 0; cy < CY; cy++) { var key = cx + ',' + cy + ',' + cz, old = chunks[key]; if (old) { old.forEach(function (m) { scene.remove(m); m.geometry.dispose(); }); delete chunks[key]; } }
+    for (var cy = CYMIN; cy < CY; cy++) { var key = cx + ',' + cy + ',' + cz, old = chunks[key]; if (old) { old.forEach(function (m) { scene.remove(m); m.geometry.dispose(); }); delete chunks[key]; } }
     meshedCols[cz * NC + cx] = 0; delete meshProg[cz * NC + cx];
   }
   function newColumn(cx, cz) { genColumn(cx, cz); spawnColumn(cx, cz); }

@@ -27,7 +27,7 @@
     }
     // 입체로: 손잡이·가로대·칼날(어느 쪽에서 봐도 보이게). 칼날은 앞쪽으로 조금 들어 올림
     var u = HT / 32, g = new THREE.Group(), big = id === SWORD, type = big ? 'sword' : TOOL_TYPES[typeOf(id)];
-    var mat = big ? 0xe8eef5 : [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0x6ff0e6][tierOf(id)], wood = 0x7a5430;
+    var mat = big ? 0xe8eef5 : [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0xb57ad8, 0x6ff0e6][tierOf(id)], wood = 0x7a5430;
     function bx(w, h, d, hex, y, x) { var m = shadedBox(w * u, h * u, d * u, hex); m.position.set((x || 0) * u, y * u, 0); g.add(m); }
     if (type === 'sword' || type === 'knife') {
       var len = big ? 13 : 8;
@@ -278,7 +278,7 @@
     if (hitY) { if (P.vy < 0) P.ground = true; P.vy = 0; }
     else if (!P.fly && collides(P.x, P.y - 0.02, P.z)) P.ground = true;
     if (P.ground) P.groundAt = performance.now();
-    if (P.y < -10) teleport(P.x, surfaceY(P.x | 0, P.z | 0), P.z);
+    if (P.y < YMIN - 10) teleport(P.x, surfaceY(P.x | 0, P.z | 0), P.z);
     P.x = clamp(P.x, 40, WS - 40); P.z = clamp(P.z, 40, WS - 40);
     var moved = Math.hypot(P.x - lastX, P.z - lastZ);
     if (len > 0 && moved > 0.03 && moved < 2) tutorialEvent('walk');

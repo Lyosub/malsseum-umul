@@ -39,7 +39,7 @@
   var ING_CU = 70, ING_FE = 71, ING_AG = 72, ING_AU = 73, STICK = 74, TOOL0 = 80;
   // 마인크래프트처럼 더한 것: 석탄 광석(39), 호마노·청옥·금강석 광석, 보석 블록, 횃불, 깊은 돌(100~108), 석탄·숯·보석(75~79), 금강석 도구(120~123)
   var ORE_COAL = 39, ORE_ONYX = 100, ORE_SAPH = 101, ORE_DIA = 102, BLK_COAL = 103, BLK_ONYX = 104, BLK_SAPH = 105, BLK_DIA = 106, TORCH = 107, DEEP = 108;
-  var COAL = 75, CHAR = 76, GEM_ONYX = 77, GEM_SAPH = 78, GEM_DIA = 79, TOOL4 = 120;
+  var COAL = 75, CHAR = 76, GEM_ONYX = 77, GEM_SAPH = 78, GEM_DIA = 79, TOOL4 = 120, TOOL_ONYX = 380;   // 11/20 호마노 도구(철과 금강석 사이)
   var DEEPV = {};   // 보통 광석 → 깊은 돌 속 광석(같은 것이 나오지만 더 단단함)
   [ORE_COAL, ORE_CU, ORE_FE, ORE_AG, ORE_ONYX, ORE_AU, ORE_SAPH, ORE_DIA].forEach(function (o, i) { DEEPV[o] = 109 + i; });
   B[ORE_COAL] = ['석탄 광석', 'oreCoal', 'oreCoal', 'oreCoal']; B[ORE_ONYX] = ['호마노 광석', 'oreOnyx', 'oreOnyx', 'oreOnyx'];
@@ -96,9 +96,9 @@
   B[BLK_CU] = ['구리 블록', 'blkCopper', 'blkCopper', 'blkCopper']; B[BLK_FE] = ['철 블록', 'blkIron', 'blkIron', 'blkIron'];
   B[BLK_AG] = ['은 블록', 'blkSilver', 'blkSilver', 'blkSilver']; B[BLK_AU] = ['금 블록', 'blkGold', 'blkGold', 'blkGold'];
   [[ING_CU, '구리 덩이', 'ingotCopper'], [ING_FE, '철 덩이', 'ingotIron'], [ING_AG, '은 덩이', 'ingotSilver'], [ING_AU, '금 덩이', 'ingotGold'], [STICK, '막대기', 'stick']].forEach(function (it) { B[it[0]] = [it[1], it[2], it[2], it[2], 0, 0, 'item']; });
-  var TOOL_TYPES = ['pick', 'axe', 'shovel', 'knife'], TOOL_TNAME = ['곡괭이', '도끼', '삽', '칼'], TIER_NAME = ['나무', '돌', '구리', '철', '금강석'];
-  function toolId(type, tier) { var ti = TOOL_TYPES.indexOf(type); return tier < 4 ? TOOL0 + ti * 4 + tier : TOOL4 + ti; }   // tier 0~4(4=금강석)
-  TOOL_TYPES.forEach(function (type, ti) { for (var tier = 0; tier < 5; tier++) B[toolId(type, tier)] = [TIER_NAME[tier] + ' ' + TOOL_TNAME[ti], 'tool_' + type + tier, 'tool_' + type + tier, 'tool_' + type + tier, 0, 0, 'tool']; });
+  var TOOL_TYPES = ['pick', 'axe', 'shovel', 'knife'], TOOL_TNAME = ['곡괭이', '도끼', '삽', '칼'], TIER_NAME = ['나무', '돌', '구리', '철', '호마노', '금강석'];
+  function toolId(type, tier) { var ti = TOOL_TYPES.indexOf(type); return tier < 4 ? TOOL0 + ti * 4 + tier : (tier === 4 ? TOOL_ONYX + ti : TOOL4 + ti); }   // tier 0~5(4=호마노, 5=금강석)
+  TOOL_TYPES.forEach(function (type, ti) { for (var tier = 0; tier < 6; tier++) B[toolId(type, tier)] = [TIER_NAME[tier] + ' ' + TOOL_TNAME[ti], 'tool_' + type + tier, 'tool_' + type + tier, 'tool_' + type + tier, 0, 0, 'tool']; });
   function isItem(id) { var k = B[id] && B[id][6]; return k === 'item' || k === 'tool'; }
   // 모양 블록: 반 블록(40~42) · 계단(44~55, 방향 4) · 울타리(56) · 문(60~67, 방향 4 × 열림)
   // SHAPE[id] = { type, base(가방에 들어가는 번호), mat(무늬 블록), f(방향), open }
@@ -161,6 +161,8 @@
     ['담황옥', 0xe0a840, 0xffe0a0, 'ararat', 55, 79, 0.00012, 3], ['비취옥', 0x70b030, 0xb8e888, 'ararat', 1, 10, 0.0001, 4],
     null /* 열한째 청옥은 원래 있는 청옥 */, ['자수정', 0x7a38a8, 0xc898f0, 'south', 1, 20, 0.00015, 3]
   ];
+  // 11/20 땅속을 깊게(바닥 y -32): 원래 바닥 근처(y 1~)에서 나던 보석은 24칸 더 아래로
+  GEMS.forEach(function (g) { if (g && g[4] === 1) { g[4] = -31; g[5] -= 24; } });
   var GEM_ORE0 = 200, GEM_ITEM0 = 300, FSTONE0 = 230, LAMPSTAND = 211, PEARL = 213, SOCKET = 214, GOLDST = 215, CITYWALL = 216, LIFELEAF = 217;
   var FS_NAMES = ['벽옥', '남보석', '옥수', '녹보석', '홍마노', '홍보석', '황옥', '녹옥', '담황옥', '비취옥', '청옥', '자수정'];
   function gemOre(i) { return i < 10 ? GEM_ORE0 + i : (i === 11 ? GEM_ORE0 + 10 : ORE_SAPH); }      // 열두 번째 자수정은 210
@@ -560,7 +562,7 @@
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
   INV.push(ORE_COAL, COAL, CHAR, BLK_COAL, TORCH, DEEP, ORE_ONYX, GEM_ONYX, BLK_ONYX, ORE_SAPH, GEM_SAPH, BLK_SAPH, ORE_DIA, GEM_DIA, BLK_DIA);
   for (var tl = 0; tl < 16; tl++) INV.push(TOOL0 + tl);
-  for (tl = 0; tl < 4; tl++) INV.push(TOOL4 + tl);
+  for (tl = 0; tl < 4; tl++) INV.push(TOOL_ONYX + tl, TOOL4 + tl);
   var HOTBAR = [LOG, GOPHER, PITCH, STONE, LIME, 20, 12, 13, GLASS];
   // 캐는 데 걸리는 시간(초), 캤을 때 나오는 것
   var HARD = { 1: 0.35, 2: 0.35, 4: 0.3, 26: 0.35, 8: 0.15, 25: 0.05, 28: 0.05, 9: 0.25, 7: 0.6, 5: 0.5, 6: 0.5, 22: 0.4, 14: 0.3, 15: 0.3, 16: 0.3, 17: 0.3,
@@ -598,16 +600,16 @@
   setClass('knife', [LEAF, CEDAR_LEAF], 0.35); setClass('axe', [CEDAR_LOG], 1.6); setClass('shovel', [SALT_CRUST], 0.6); setClass('pick', [SALT_ROCK], 1.0); setClass('pick', [RED_ROCK, RED_ROCK2], 1.3);
   DROP[CEDAR_LOG] = LOG; DROP[SALT_CRUST] = SALT; DROP[SALT_ROCK] = SALT; DROP[RED_ROCK] = RED_EARTH; DROP[RED_ROCK2] = RED_EARTH; setClass('knife', [REED, FLOWER], 0.08); setClass('knife', [14, 15, 16, 17], 0.6);
   var NEED_TIER = {}; NEED_TIER[ORE_CU] = 0; NEED_TIER[ORE_FE] = 1; NEED_TIER[ORE_AG] = 2; NEED_TIER[ORE_AU] = 3;   // 0=나무 1=돌 2=구리 3=철 곡괭이
-  GEMS.forEach(function (g, i) { if (g) NEED_TIER[gemOre(i)] = g[7]; });   // 열두 보석: 귀한 것은 금강석 곡괭이(4)
-  NEED_TIER[ORE_COAL] = 0; NEED_TIER[ORE_ONYX] = 2; NEED_TIER[ORE_SAPH] = 3; NEED_TIER[ORE_DIA] = 3;
+  GEMS.forEach(function (g, i) { if (g) NEED_TIER[gemOre(i)] = g[7] >= 4 ? 5 : g[7]; });   // 열두 보석: 귀한 것은 금강석 곡괭이(5)
+  NEED_TIER[ORE_COAL] = 0; NEED_TIER[ORE_ONYX] = 3; NEED_TIER[ORE_SAPH] = 4; NEED_TIER[ORE_DIA] = 4;   // 11/20 호마노는 철부터, 청옥·금강석은 호마노 곡괭이부터
   for (var dk3 in DEEPV) NEED_TIER[DEEPV[dk3]] = NEED_TIER[dk3];
-  var HAND_SLOW = 2, MINE_SLOW = 1.8, TIER_SPEED = [2, 3, 4.5, 6, 8], TOOL_MAX = [60, 130, 200, 300, 1000];
-  function isTool(id) { return (id >= TOOL0 && id < TOOL0 + 16) || (id >= TOOL4 && id < TOOL4 + 4); }
-  function tierOf(id) { return id >= TOOL4 ? 4 : (id - TOOL0) % 4; }
-  function typeOf(id) { return id >= TOOL4 ? id - TOOL4 : Math.floor((id - TOOL0) / 4); }
+  var HAND_SLOW = 2, MINE_SLOW = 1.8, TIER_SPEED = [2, 3, 4.5, 6, 7, 8], TOOL_MAX = [60, 130, 200, 300, 500, 1000];
+  function isTool(id) { return (id >= TOOL0 && id < TOOL0 + 16) || (id >= TOOL4 && id < TOOL4 + 4) || (id >= TOOL_ONYX && id < TOOL_ONYX + 4); }
+  function tierOf(id) { return id >= TOOL_ONYX ? 4 : (id >= TOOL4 ? 5 : (id - TOOL0) % 4); }
+  function typeOf(id) { return id >= TOOL_ONYX ? id - TOOL_ONYX : (id >= TOOL4 ? id - TOOL4 : Math.floor((id - TOOL0) / 4)); }
   function toolMax(id) { return TOOL_MAX[tierOf(id)]; }
   function toolName(id) { return TIER_NAME[tierOf(id)] + ' ' + TOOL_TNAME[typeOf(id)]; }
-  function bestTier(cls) { var t = -1; for (var k = 4; k >= 0; k--) if (have(toolId(cls, k)) > 0) { t = k; break; } return t; }
+  function bestTier(cls) { var t = -1; for (var k = 5; k >= 0; k--) if (have(toolId(cls, k)) > 0) { t = k; break; } return t; }
   // 캐는 시간(초)과 못 캐는 이유
   // 손에 든 도구로 캔다: 맞는 도구면 빨리, 맞지 않는 도구면 맨손 속도(그래도 닳음)
   function mineInfo(id) {
@@ -663,9 +665,9 @@
     { out: [17, 2], need: [[REED, 2], [FLOWER, 1]] }
   ];
   TOOL_TYPES.forEach(function (type) {
-    [GOPHER, STONE, ING_CU, ING_FE, GEM_DIA].forEach(function (mat, tier) {
+    [GOPHER, STONE, ING_CU, ING_FE, GEM_ONYX, GEM_DIA].forEach(function (mat, tier) {
       var n = type === 'shovel' ? 1 : (type === 'knife' ? 2 : 3), st = type === 'knife' ? 1 : 2;
-      RECIPES.push({ out: [toolId(type, tier), 1], need: [[mat, n], [STICK, st]], cat: 'tool', ref: tier === 4 ? '렘 17:1' : (tier >= 2 ? '창 4:22' : '') });
+      RECIPES.push({ out: [toolId(type, tier), 1], need: [[mat, n], [STICK, st]], cat: 'tool', ref: tier === 5 ? '렘 17:1' : (tier === 4 ? '창 2:12' : (tier >= 2 ? '창 4:22' : '')) });
     });
   });
   // 녹이기(용광로 + 땔감): 광석 1 → 덩이 1 — 욥 28:1-2. 땔감은 석탄·숯 1개로 8번, 통나무 1개로 1.5번, 석탄 블록 1개로 72번

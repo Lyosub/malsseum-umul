@@ -324,6 +324,8 @@
   function regionTick() {
     if (!started || ui !== 'play') return;
     advDaily(); advChip();
+    if (P.y < 0) newsMark('deep');
+    if (have(TOOL_ONYX) > 0) newsMark('onyx');
     var k = regionKeyAt();
     if (k && k !== regKey) {
       if (k === regPend) regPendN++; else { regPend = k; regPendN = 1; }

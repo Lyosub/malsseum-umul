@@ -98,7 +98,7 @@
   // ── 가방·만들기 한 화면(11/20): 왼쪽 세로 그림 탭 · 가운데 칸 · 오른쪽 자세히 · 아래 단축 칸 ──
   var invSel = null, lastBC = 'bag', dropAmt = { id: 0, n: 1 };
   var CRAFT_TABS = [['all', '🔍', '모두'], ['recent', '🕘', '최근'], ['block', '🧱', '블록'], ['shape', '🚪', '모양'], ['tool', '⛏', '도구'], ['smelt', '🔥', '녹이기'], ['wear', '👕', '옷']];
-  var REP_MAT_T = function (tid) { return [GOPHER, STONE, ING_CU, ING_FE, GEM_DIA][tierOf(tid)]; };
+  var REP_MAT_T = function (tid) { return [GOPHER, STONE, ING_CU, ING_FE, GEM_ONYX, GEM_DIA][tierOf(tid)]; };
   // 최근 만든 것: [제작법 번호, 나오는 물건] 12개까지, 새로 만든 것이 앞
   function recentRank(rc) { var a = S.recentCraft || [], i = RECIPES.indexOf(rc); for (var k = 0; k < a.length; k++) if (a[k][0] === i && a[k][1] === rc.out[0]) return k; return -1; }
   function noteRecent(rc) { var i = RECIPES.indexOf(rc); if (i < 0) return; var a = (S.recentCraft || []).filter(function (p) { return p[0] !== i && RECIPES[p[0]] && RECIPES[p[0]].out[0] === p[1]; }); a.unshift([i, rc.out[0]]); S.recentCraft = a.slice(0, 12); saveSettings(); }

@@ -387,7 +387,7 @@
     tile('ingotCopper', ingot(0xc8743a)); tile('ingotIron', ingot(0xd2d6db)); tile('ingotSilver', ingot(0xe8eef5)); tile('ingotGold', ingot(0xf3c83c));
     tile('stick', function (px) { clear(px); for (var i = 0; i < 11; i++) { px(3 + i, 13 - i, 0x8a6236); px(4 + i, 13 - i, 0x6a4628); } });
     // 도구: 곡괭이·도끼·삽·칼 × 나무·돌·구리·철
-    var TCOL = [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0x6ff0e6];
+    var TCOL = [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0xb57ad8, 0x6ff0e6];   // 4=호마노(보랏빛)
     function handle(px, n) { for (var i = 0; i < n; i++) { px(2 + i, 14 - i, 0x7a5430); px(3 + i, 14 - i, 0x5c3e22); } }
     ['pick', 'axe', 'shovel', 'knife'].forEach(function (type) {
       TCOL.forEach(function (col, tier) {
@@ -787,7 +787,7 @@
   var ING_CU = 70, ING_FE = 71, ING_AG = 72, ING_AU = 73, STICK = 74, TOOL0 = 80;
   // 마인크래프트처럼 더한 것: 석탄 광석(39), 호마노·청옥·금강석 광석, 보석 블록, 횃불, 깊은 돌(100~108), 석탄·숯·보석(75~79), 금강석 도구(120~123)
   var ORE_COAL = 39, ORE_ONYX = 100, ORE_SAPH = 101, ORE_DIA = 102, BLK_COAL = 103, BLK_ONYX = 104, BLK_SAPH = 105, BLK_DIA = 106, TORCH = 107, DEEP = 108;
-  var COAL = 75, CHAR = 76, GEM_ONYX = 77, GEM_SAPH = 78, GEM_DIA = 79, TOOL4 = 120;
+  var COAL = 75, CHAR = 76, GEM_ONYX = 77, GEM_SAPH = 78, GEM_DIA = 79, TOOL4 = 120, TOOL_ONYX = 380;   // 11/20 호마노 도구(철과 금강석 사이)
   var DEEPV = {};   // 보통 광석 → 깊은 돌 속 광석(같은 것이 나오지만 더 단단함)
   [ORE_COAL, ORE_CU, ORE_FE, ORE_AG, ORE_ONYX, ORE_AU, ORE_SAPH, ORE_DIA].forEach(function (o, i) { DEEPV[o] = 109 + i; });
   B[ORE_COAL] = ['석탄 광석', 'oreCoal', 'oreCoal', 'oreCoal']; B[ORE_ONYX] = ['호마노 광석', 'oreOnyx', 'oreOnyx', 'oreOnyx'];
@@ -844,9 +844,9 @@
   B[BLK_CU] = ['구리 블록', 'blkCopper', 'blkCopper', 'blkCopper']; B[BLK_FE] = ['철 블록', 'blkIron', 'blkIron', 'blkIron'];
   B[BLK_AG] = ['은 블록', 'blkSilver', 'blkSilver', 'blkSilver']; B[BLK_AU] = ['금 블록', 'blkGold', 'blkGold', 'blkGold'];
   [[ING_CU, '구리 덩이', 'ingotCopper'], [ING_FE, '철 덩이', 'ingotIron'], [ING_AG, '은 덩이', 'ingotSilver'], [ING_AU, '금 덩이', 'ingotGold'], [STICK, '막대기', 'stick']].forEach(function (it) { B[it[0]] = [it[1], it[2], it[2], it[2], 0, 0, 'item']; });
-  var TOOL_TYPES = ['pick', 'axe', 'shovel', 'knife'], TOOL_TNAME = ['곡괭이', '도끼', '삽', '칼'], TIER_NAME = ['나무', '돌', '구리', '철', '금강석'];
-  function toolId(type, tier) { var ti = TOOL_TYPES.indexOf(type); return tier < 4 ? TOOL0 + ti * 4 + tier : TOOL4 + ti; }   // tier 0~4(4=금강석)
-  TOOL_TYPES.forEach(function (type, ti) { for (var tier = 0; tier < 5; tier++) B[toolId(type, tier)] = [TIER_NAME[tier] + ' ' + TOOL_TNAME[ti], 'tool_' + type + tier, 'tool_' + type + tier, 'tool_' + type + tier, 0, 0, 'tool']; });
+  var TOOL_TYPES = ['pick', 'axe', 'shovel', 'knife'], TOOL_TNAME = ['곡괭이', '도끼', '삽', '칼'], TIER_NAME = ['나무', '돌', '구리', '철', '호마노', '금강석'];
+  function toolId(type, tier) { var ti = TOOL_TYPES.indexOf(type); return tier < 4 ? TOOL0 + ti * 4 + tier : (tier === 4 ? TOOL_ONYX + ti : TOOL4 + ti); }   // tier 0~5(4=호마노, 5=금강석)
+  TOOL_TYPES.forEach(function (type, ti) { for (var tier = 0; tier < 6; tier++) B[toolId(type, tier)] = [TIER_NAME[tier] + ' ' + TOOL_TNAME[ti], 'tool_' + type + tier, 'tool_' + type + tier, 'tool_' + type + tier, 0, 0, 'tool']; });
   function isItem(id) { var k = B[id] && B[id][6]; return k === 'item' || k === 'tool'; }
   // 모양 블록: 반 블록(40~42) · 계단(44~55, 방향 4) · 울타리(56) · 문(60~67, 방향 4 × 열림)
   // SHAPE[id] = { type, base(가방에 들어가는 번호), mat(무늬 블록), f(방향), open }
@@ -909,6 +909,8 @@
     ['담황옥', 0xe0a840, 0xffe0a0, 'ararat', 55, 79, 0.00012, 3], ['비취옥', 0x70b030, 0xb8e888, 'ararat', 1, 10, 0.0001, 4],
     null /* 열한째 청옥은 원래 있는 청옥 */, ['자수정', 0x7a38a8, 0xc898f0, 'south', 1, 20, 0.00015, 3]
   ];
+  // 11/20 땅속을 깊게(바닥 y -32): 원래 바닥 근처(y 1~)에서 나던 보석은 24칸 더 아래로
+  GEMS.forEach(function (g) { if (g && g[4] === 1) { g[4] = -31; g[5] -= 24; } });
   var GEM_ORE0 = 200, GEM_ITEM0 = 300, FSTONE0 = 230, LAMPSTAND = 211, PEARL = 213, SOCKET = 214, GOLDST = 215, CITYWALL = 216, LIFELEAF = 217;
   var FS_NAMES = ['벽옥', '남보석', '옥수', '녹보석', '홍마노', '홍보석', '황옥', '녹옥', '담황옥', '비취옥', '청옥', '자수정'];
   function gemOre(i) { return i < 10 ? GEM_ORE0 + i : (i === 11 ? GEM_ORE0 + 10 : ORE_SAPH); }      // 열두 번째 자수정은 210
@@ -1308,7 +1310,7 @@
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
   INV.push(ORE_COAL, COAL, CHAR, BLK_COAL, TORCH, DEEP, ORE_ONYX, GEM_ONYX, BLK_ONYX, ORE_SAPH, GEM_SAPH, BLK_SAPH, ORE_DIA, GEM_DIA, BLK_DIA);
   for (var tl = 0; tl < 16; tl++) INV.push(TOOL0 + tl);
-  for (tl = 0; tl < 4; tl++) INV.push(TOOL4 + tl);
+  for (tl = 0; tl < 4; tl++) INV.push(TOOL_ONYX + tl, TOOL4 + tl);
   var HOTBAR = [LOG, GOPHER, PITCH, STONE, LIME, 20, 12, 13, GLASS];
   // 캐는 데 걸리는 시간(초), 캤을 때 나오는 것
   var HARD = { 1: 0.35, 2: 0.35, 4: 0.3, 26: 0.35, 8: 0.15, 25: 0.05, 28: 0.05, 9: 0.25, 7: 0.6, 5: 0.5, 6: 0.5, 22: 0.4, 14: 0.3, 15: 0.3, 16: 0.3, 17: 0.3,
@@ -1346,16 +1348,16 @@
   setClass('knife', [LEAF, CEDAR_LEAF], 0.35); setClass('axe', [CEDAR_LOG], 1.6); setClass('shovel', [SALT_CRUST], 0.6); setClass('pick', [SALT_ROCK], 1.0); setClass('pick', [RED_ROCK, RED_ROCK2], 1.3);
   DROP[CEDAR_LOG] = LOG; DROP[SALT_CRUST] = SALT; DROP[SALT_ROCK] = SALT; DROP[RED_ROCK] = RED_EARTH; DROP[RED_ROCK2] = RED_EARTH; setClass('knife', [REED, FLOWER], 0.08); setClass('knife', [14, 15, 16, 17], 0.6);
   var NEED_TIER = {}; NEED_TIER[ORE_CU] = 0; NEED_TIER[ORE_FE] = 1; NEED_TIER[ORE_AG] = 2; NEED_TIER[ORE_AU] = 3;   // 0=나무 1=돌 2=구리 3=철 곡괭이
-  GEMS.forEach(function (g, i) { if (g) NEED_TIER[gemOre(i)] = g[7]; });   // 열두 보석: 귀한 것은 금강석 곡괭이(4)
-  NEED_TIER[ORE_COAL] = 0; NEED_TIER[ORE_ONYX] = 2; NEED_TIER[ORE_SAPH] = 3; NEED_TIER[ORE_DIA] = 3;
+  GEMS.forEach(function (g, i) { if (g) NEED_TIER[gemOre(i)] = g[7] >= 4 ? 5 : g[7]; });   // 열두 보석: 귀한 것은 금강석 곡괭이(5)
+  NEED_TIER[ORE_COAL] = 0; NEED_TIER[ORE_ONYX] = 3; NEED_TIER[ORE_SAPH] = 4; NEED_TIER[ORE_DIA] = 4;   // 11/20 호마노는 철부터, 청옥·금강석은 호마노 곡괭이부터
   for (var dk3 in DEEPV) NEED_TIER[DEEPV[dk3]] = NEED_TIER[dk3];
-  var HAND_SLOW = 2, MINE_SLOW = 1.8, TIER_SPEED = [2, 3, 4.5, 6, 8], TOOL_MAX = [60, 130, 200, 300, 1000];
-  function isTool(id) { return (id >= TOOL0 && id < TOOL0 + 16) || (id >= TOOL4 && id < TOOL4 + 4); }
-  function tierOf(id) { return id >= TOOL4 ? 4 : (id - TOOL0) % 4; }
-  function typeOf(id) { return id >= TOOL4 ? id - TOOL4 : Math.floor((id - TOOL0) / 4); }
+  var HAND_SLOW = 2, MINE_SLOW = 1.8, TIER_SPEED = [2, 3, 4.5, 6, 7, 8], TOOL_MAX = [60, 130, 200, 300, 500, 1000];
+  function isTool(id) { return (id >= TOOL0 && id < TOOL0 + 16) || (id >= TOOL4 && id < TOOL4 + 4) || (id >= TOOL_ONYX && id < TOOL_ONYX + 4); }
+  function tierOf(id) { return id >= TOOL_ONYX ? 4 : (id >= TOOL4 ? 5 : (id - TOOL0) % 4); }
+  function typeOf(id) { return id >= TOOL_ONYX ? id - TOOL_ONYX : (id >= TOOL4 ? id - TOOL4 : Math.floor((id - TOOL0) / 4)); }
   function toolMax(id) { return TOOL_MAX[tierOf(id)]; }
   function toolName(id) { return TIER_NAME[tierOf(id)] + ' ' + TOOL_TNAME[typeOf(id)]; }
-  function bestTier(cls) { var t = -1; for (var k = 4; k >= 0; k--) if (have(toolId(cls, k)) > 0) { t = k; break; } return t; }
+  function bestTier(cls) { var t = -1; for (var k = 5; k >= 0; k--) if (have(toolId(cls, k)) > 0) { t = k; break; } return t; }
   // 캐는 시간(초)과 못 캐는 이유
   // 손에 든 도구로 캔다: 맞는 도구면 빨리, 맞지 않는 도구면 맨손 속도(그래도 닳음)
   function mineInfo(id) {
@@ -1411,9 +1413,9 @@
     { out: [17, 2], need: [[REED, 2], [FLOWER, 1]] }
   ];
   TOOL_TYPES.forEach(function (type) {
-    [GOPHER, STONE, ING_CU, ING_FE, GEM_DIA].forEach(function (mat, tier) {
+    [GOPHER, STONE, ING_CU, ING_FE, GEM_ONYX, GEM_DIA].forEach(function (mat, tier) {
       var n = type === 'shovel' ? 1 : (type === 'knife' ? 2 : 3), st = type === 'knife' ? 1 : 2;
-      RECIPES.push({ out: [toolId(type, tier), 1], need: [[mat, n], [STICK, st]], cat: 'tool', ref: tier === 4 ? '렘 17:1' : (tier >= 2 ? '창 4:22' : '') });
+      RECIPES.push({ out: [toolId(type, tier), 1], need: [[mat, n], [STICK, st]], cat: 'tool', ref: tier === 5 ? '렘 17:1' : (tier === 4 ? '창 2:12' : (tier >= 2 ? '창 4:22' : '')) });
     });
   });
   // 녹이기(용광로 + 땔감): 광석 1 → 덩이 1 — 욥 28:1-2. 땔감은 석탄·숯 1개로 8번, 통나무 1개로 1.5번, 석탄 블록 1개로 72번
@@ -1563,6 +1565,8 @@
   // 1블록 = 1규빗(약 45cm), 사람 키 약 3.4칸. 세계는 2048×2048칸, 높이 80칸.
   // 32×32칸 기둥을 내 둘레만 만들어 보여 주고, 멀어지면 지운다. 땅·산·강·숲은 공식으로 만들어서 같은 자리는 언제 가도 똑같다.
   var WS = 2048, SY = 80, G = 16, CS = 32, NC = WS / CS, CY = Math.ceil(SY / CS);
+  // 11/20 땅속을 깊게: 바닥이 y 0 → YMIN(-32). 지상 좌표·저장된 자리는 그대로, 기둥 배열만 아래로 늘림(배열 칸 = 좌표 칸 + YOFF)
+  var YMIN = -32, SYT = SY - YMIN, YOFF = -YMIN * CS * CS, CYMIN = Math.floor(YMIN / CS);
   var SX = WS, SZ = WS;
   var COLS = new Array(NC * NC);   // 기둥: { d: 블록, sky: 하늘 그늘, lamps: 등불, mod: 고친 적 있음 }
   function colAt(x, z) { if (x < 0 || z < 0 || x >= WS || z >= WS) return null; return COLS[(z >> 5) * NC + (x >> 5)]; }
@@ -1571,25 +1575,26 @@
     return id===AIR && frontierWater.size && frontierWater.has(frontierCell(x,y,z)) ? WATER : id;
   }
   function readBlock(x, y, z) {
-    if (y < 0) return BASALT;
+    if (y < YMIN) return BASALT;
     if (y >= SY) return AIR;
     var c = colAt(x, z); if (!c) return AIR;
-    return c.d[(y * CS + (z & 31)) * CS + (x & 31)];
+    return c.d[(y * CS + (z & 31)) * CS + (x & 31) + YOFF];
   }
   var genCol = null, genCX = 0, genCZ = 0;   // 지금 만드는 기둥(그 밖은 쓰지 않음)
   function setRaw(x, y, z, id) {
-    if (y < 0 || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS) return;
+    if (y < YMIN || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS) return;
     var c;
     if (genCol) { if ((x >> 5) !== genCX || (z >> 5) !== genCZ) return; c = genCol; }
     else { c = colAt(x, z); if (!c) return; }
-    c.d[(y * CS + (z & 31)) * CS + (x & 31)] = id;
+    c.d[(y * CS + (z & 31)) * CS + (x & 31) + YOFF] = id;
+    if (y < 0 && c.deepAir === false && (id === AIR || !isSolid(id) || isTrans(id))) c.deepAir = true;
   }
   function fill(x1, y1, z1, x2, y2, z2, id) {
     if (genCol) {   // 만드는 기둥 안쪽만
       x1 = Math.max(x1, genCX * CS); x2 = Math.min(x2, genCX * CS + CS - 1);
       z1 = Math.max(z1, genCZ * CS); z2 = Math.min(z2, genCZ * CS + CS - 1);
     }
-    y1 = Math.max(0, y1); y2 = Math.min(SY - 1, y2);
+    y1 = Math.max(YMIN, y1); y2 = Math.min(SY - 1, y2);
     for (var y = y1; y <= y2; y++) for (var z = z1; z <= z2; z++) for (var x = x1; x <= x2; x++) setRaw(x, y, z, id);
   }
 
@@ -1826,10 +1831,10 @@
     });
   }
   // 광석 난수는 2칸·3칸 덩이마다 같은 값이라 덩이마다 한 번만 계산해 둔다(값은 hash2 그대로 — 세상 모양은 한 칸도 안 바뀜)
-  var OC = new Float64Array(16 * 16 * SY), CLC = new Float64Array(16 * 16 * (SY >> 1) + 256), CCC = new Float64Array(12 * 12 * 28);
+  var OC = new Float64Array(16 * 16 * SYT), CLC = new Float64Array(16 * 16 * (SYT >> 1) + 256), CCC = new Float64Array(12 * 12 * 40), FY3MIN = Math.floor(YMIN / 3);
   function genColumn(cx, cz) {
     OC.fill(NaN); CLC.fill(NaN); CCC.fill(NaN);
-    var col = { d: new Uint16Array(CS * SY * CS), sky: new Int16Array(CS * CS), lamps: [], mod: false };
+    var col = { d: new Uint16Array(CS * SYT * CS), sky: new Int16Array(CS * CS), lamps: [], mod: false };
     genCol = col; genCX = cx; genCZ = cz;
     var x0 = cx * CS, z0 = cz * CS, lx, lz, x, z, y;
     var tops = new Int16Array(CS * CS), topIds = new Uint8Array(CS * CS), wtops = new Int16Array(CS * CS);
@@ -1837,51 +1842,52 @@
       x = x0 + lx; z = z0 + lz;
       terrain(x, z);
       var h = T.h, d = col.d;
-      d[(0 * CS + lz) * CS + lx] = BASALT;
+      d[(YMIN * CS + lz) * CS + lx + YOFF] = BASALT;
       // 칸마다 한 번만: 깊은 돌 높이, 이 지역 보석이 나올 수 있는 높이 범위(그 밖은 보석 계산을 건너뛴다 — 결과는 같음)
-      var deepY = 4 + Math.floor(hash2(x >> 2, z >> 2, 17) * 3), gemLo = 99, gemHi = -1;
+      var deepY = YMIN + 10 + Math.floor(hash2(x >> 2, z >> 2, 17) * 3), gemLo = 99, gemHi = -99;   // 깊은 돌: 바닥에서 10~12칸
       for (var gq = 0; gq < 12; gq++) { var gr = GEMS[gq]; if (gr && gr[3] === T.reg) { if (gr[4] < gemLo) gemLo = gr[4]; if (gr[5] > gemHi) gemHi = gr[5]; } }
-      for (y = 1; y <= h; y++) {
+      for (y = YMIN + 1; y <= h; y++) {
         var id = y === h ? T.top : (y > h - 4 ? T.sub : STONE);
         if (T.reg === 'wild' && id === STONE && y >= G - 3) id = y % 3 === 0 ? RED_ROCK2 : RED_ROCK;   // 광야: 붉은 바위 켜
         if (id === STONE && y < h - 2) {
           // 돌 속 석회암·검은 돌(2칸씩 뭉쳐서)
-          var pk = ((lz >> 1) * 16 + (lx >> 1)), oi = pk * SY + y, o = OC[oi];
+          var pk = ((lz >> 1) * 16 + (lx >> 1)), oi = pk * SYT + (y - YMIN), o = OC[oi];
           if (o !== o) o = OC[oi] = hash2((x >> 1) * 3 + y, (z >> 1) * 5 - (y >> 1), 7);
-          var ci = pk * (SY >> 1) + (y >> 1), cl = CLC[ci];
+          var ci = pk * (SYT >> 1) + ((y - YMIN) >> 1), cl = CLC[ci];
           if (cl !== cl) cl = CLC[ci] = hash2((x >> 1) * 7 + (y >> 1) * 131, (z >> 1) * 11 - (y >> 1) * 17, 13);
-          if (o < 0.035) id = y < 7 || o < 0.008 ? BASALT : LIME;
+          if (o < 0.035) id = y < YMIN + 10 || o < 0.008 ? BASALT : LIME;
           else if (cl < 0.0695 && hash2(x * 3 + y * 7, z * 5 - y, 14) < 0.35) {   // 11/19 광석 절반으로(전도사님 「광물이 너무 잘 나와」)   // cl이 크면 광석이 될 수 없으니 이 난수는 건너뜀
-            if (cl < 0.006 && y <= 12) id = ORE_AU;
-            else if (cl >= 0.006 && cl < 0.014 && y <= 18) id = ORE_AG;
-            else if (cl >= 0.014 && cl < 0.034 && y <= 48) id = ORE_FE;
+            // 11/20 더 깊게(땅 표면 y 15, 바닥 y -32): 구리 ≤64 · 철 ≤30 · 은 ≤2 · 호마노 ≤-4 · 금 ≤-8 · 청옥 ≤-16 · 금강석 ≤-22
+            if (cl < 0.006 && y <= -8) id = ORE_AU;
+            else if (cl >= 0.006 && cl < 0.014 && y <= 2) id = ORE_AG;
+            else if (cl >= 0.014 && cl < 0.034 && y <= 30) id = ORE_FE;
             else if (cl >= 0.034 && cl < 0.06 && y <= 64) id = ORE_CU;
-            else if (cl >= 0.06 && cl < 0.064 && y <= 22) id = ORE_ONYX;
-            else if (cl >= 0.064 && cl < 0.067 && y <= 10) id = ORE_SAPH;
-            else if (cl >= 0.067 && cl < 0.0695 && y <= 8) id = ORE_DIA;
+            else if (cl >= 0.06 && cl < 0.064 && y <= -4) id = ORE_ONYX;
+            else if (cl >= 0.064 && cl < 0.067 && y <= -16) id = ORE_SAPH;
+            else if (cl >= 0.067 && cl < 0.0695 && y <= -22) id = ORE_DIA;
           }
           // 석탄: 큰 덩이(3칸씩)로 흔하게, 산 속 높은 곳까지
-          if (id === STONE && y <= 72) { var fx3 = Math.floor(x / 3), fz3 = Math.floor(z / 3), fy3 = Math.floor(y / 3), cci = ((fz3 - Math.floor(z0 / 3)) * 12 + (fx3 - Math.floor(x0 / 3))) * 28 + fy3, cc = CCC[cci]; if (cc !== cc) cc = CCC[cci] = hash2(fx3 * 13 + fy3 * 71, fz3 * 17 - fy3 * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.375) id = ORE_COAL; }
+          if (id === STONE && y <= 72) { var fx3 = Math.floor(x / 3), fz3 = Math.floor(z / 3), fy3 = Math.floor(y / 3), cci = ((fz3 - Math.floor(z0 / 3)) * 12 + (fx3 - Math.floor(x0 / 3))) * 40 + (fy3 - FY3MIN), cc = CCC[cci]; if (cc !== cc) cc = CCC[cci] = hash2(fx3 * 13 + fy3 * 71, fz3 * 17 - fy3 * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.375) id = ORE_COAL; }
           // 열두 보석 광석: 곳마다·깊이마다 다르고 아주 드묾(계 21:19-20)
-          if (id === STONE && y >= gemLo && y <= gemHi) {
+          if (id === STONE && y >= gemLo && y <= gemHi && cl > 0.95) {   // 덩이 값으로 먼저 거르고(20분의 1) 확률은 20배 — 나오는 양은 같음
             var gv = hash2(x * 7 + y * 131, z * 11 - y * 17, 41), gb = 0.3;
-            for (var gi = 0; gi < 12; gi++) { var gg = GEMS[gi]; if (gg && gg[3] === T.reg && y >= gg[4] && y <= gg[5] && gv >= gb && gv < gb + gg[6]) { id = gemOre(gi); break; } gb += 0.002; }
+            if (gv < 0.78) for (var gi = 0; gi < 12; gi++) { var gg = GEMS[gi]; if (gg && gg[3] === T.reg && y >= gg[4] && y <= gg[5] && gv >= gb && gv < gb + gg[6] * 20) { id = gemOre(gi); break; } gb += 0.04; }
           }
           // 맨 아래 몇 칸은 깊은 돌(더 단단함)
           if (y <= deepY) { if (id === STONE) id = DEEP; else if (DEEPV[id]) id = DEEPV[id]; }
         }
-        d[(y * CS + lz) * CS + lx] = id;
+        d[(y * CS + lz) * CS + lx + YOFF] = id;
       }
-      for (y = h + 1; y <= T.wtop; y++) d[(y * CS + lz) * CS + lx] = WATER;
+      for (y = h + 1; y <= T.wtop; y++) d[(y * CS + lz) * CS + lx + YOFF] = WATER;
       tops[lz * CS + lx] = h; topIds[lz * CS + lx] = T.top; wtops[lz * CS + lx] = T.wtop;
       // 물가 갈대, 들꽃
       if (T.wtop < 0) {
         var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), hh = hash2(x, z, 11);
-        if (T.reg === 'salt' && T.top === SALT_CRUST && hh < 0.005 && h + 6 < SY && !landmarkAt(x, z, 4)) { var sk = 2 + Math.floor(hash2(x, z, 12) * 5); for (var sy = 1; sy <= sk; sy++) d[((h + sy) * CS + lz) * CS + lx] = SALT_ROCK; }
-        else if (((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 && h + 1 < SY) d[((h + 1) * CS + lz) * CS + lx] = REED;
+        if (T.reg === 'salt' && T.top === SALT_CRUST && hh < 0.005 && h + 6 < SY && !landmarkAt(x, z, 4)) { var sk = 2 + Math.floor(hash2(x, z, 12) * 5); for (var sy = 1; sy <= sk; sy++) d[((h + sy) * CS + lz) * CS + lx + YOFF] = SALT_ROCK; }
+        else if (((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 && h + 1 < SY) d[((h + 1) * CS + lz) * CS + lx + YOFF] = REED;
         else if (T.top===GRASS && hh>.92 && hh<=.955 && !inTown(x,z) && !inCommons(x,z) && h+1<SY)
-          d[((h+1)*CS+lz)*CS+lx]=le<2.1 || T.rd<12?LILY:(z>1210||x>VX1+70?THORN:THISTLE);
-        else if (T.top === GRASS && hh > 0.955 && plotAt(x, z) < 0 && !(z > AZ0 - 5 && z < AZ1 + 5 && x > AX0 - 5 && x < AX1 + 5)) d[((h + 1) * CS + lz) * CS + lx] = FLOWER;
+          d[((h+1)*CS+lz)*CS+lx+YOFF]=le<2.1 || T.rd<12?LILY:(z>1210||x>VX1+70?THORN:THISTLE);
+        else if (T.top === GRASS && hh > 0.955 && plotAt(x, z) < 0 && !(z > AZ0 - 5 && z < AZ1 + 5 && x > AX0 - 5 && x < AX1 + 5)) d[((h + 1) * CS + lz) * CS + lx + YOFF] = FLOWER;
       }
     }
     carveCaves(col, cx, cz, tops, wtops);
@@ -1932,7 +1938,7 @@
     buildLandmarks(x0, z0);
     if (HOREB_X >= x0 - 2 && HOREB_X < x0 + CS + 2 && HOREB_Z >= z0 - 2 && HOREB_Z < z0 + CS + 2) buildHoreb();
     markPlots();
-    var ed = EDITS[cz * NC + cx]; if (ed) for (var li in ed) col.d[li] = ed[li];
+    var ed = EDITS[cz * NC + cx]; if (ed) for (var li in ed) { var lj = +li + YOFF; if (lj >= 0 && lj < col.d.length) col.d[lj] = ed[li]; }
     col.machines=new Set();
     genCol = null;
     // 하늘 그늘, 등불
@@ -1957,7 +1963,8 @@
       if (sx < 12 || sz < 12 || sx > WS - 12 || sz > WS - 12) continue;
       terrain(sx | 0, sz | 0);
       var ent = hash2(ox, oz, 33) < 0.3 && T.wtop < 0 && T.h >= G && !inTown(sx | 0, sz | 0) && plotAt(sx | 0, sz | 0) < 0 && distOut(sx | 0, sz | 0) > 8;
-      var py = ent ? T.h + 1 : 3 + hash2(ox, oz, 36) * Math.max(3, T.h - 9);
+      var deepC = !ent && hash2(ox, oz, 44) < 0.05, pyMin = deepC ? YMIN + 4 : 3;   // 깊은 굴은 가끔만(땅속이 꽉 차 있으면 그리지 않아 가벼움)
+      var py = ent ? T.h + 1 : (deepC ? YMIN + 4 + hash2(ox, oz, 36) * 22 : 3 + hash2(ox, oz, 36) * Math.max(3, T.h - 9));
       var L = 50 + hash2(ox, oz, 37) * 70 | 0, yaw = hash2(ox, oz, 38) * Math.PI * 2, pitch = ent ? -0.6 : (hash2(ox, oz, 39) - 0.5) * 0.4;
       var px = sx, pz = sz, big = hash2(ox, oz, 40) < 0.2 ? (L * 0.6 | 0) : -99;   // 가끔 넓은 방
       for (var i = 0; i < L; i++) {
@@ -1965,19 +1972,19 @@
         pitch = ent && i < 14 ? -0.6 : pitch * 0.85 + (hash2(ox * 3 - i, oz * 5 + i, 42) - 0.5) * 0.18;
         var cpi = Math.cos(pitch);
         px += Math.cos(yaw) * cpi; pz += Math.sin(yaw) * cpi; py += Math.sin(pitch);
-        if (py < 3) { py = 3; pitch = Math.abs(pitch); }
+        if (py < pyMin) { py = pyMin; pitch = Math.abs(pitch); }
         var r = 1.4 + Math.sin(i / L * Math.PI) * 1.1 + (Math.abs(i - big) < 4 ? 2.4 : 0), ry = r * 0.75;
         if (px + r < x0 || px - r >= x0 + CS || pz + r < z0 || pz - r >= z0 + CS) continue;
         var xa = Math.max(x0, Math.floor(px - r)), xb = Math.min(x0 + CS - 1, Math.floor(px + r));
         var za = Math.max(z0, Math.floor(pz - r)), zb = Math.min(z0 + CS - 1, Math.floor(pz + r));
-        var ya = Math.max(1, Math.floor(py - ry)), yb = Math.min(SY - 2, Math.floor(py + ry));
+        var ya = Math.max(YMIN + 1, Math.floor(py - ry)), yb = Math.min(SY - 2, Math.floor(py + ry));
         for (var z = za; z <= zb; z++) for (var x = xa; x <= xb; x++) {
           var li = (z - z0) * CS + (x - x0), top = tops[li];
           var lim = ent && i < 16 && wtops[li] < 0 ? top : top - 3;   // 입구 굴의 처음 부분만 땅 위로 뚫린다
           for (var y = ya; y <= Math.min(yb, lim); y++) {
             var ddx = (x + 0.5 - px) / r, ddy = (y + 0.5 - py) / ry, ddz = (z + 0.5 - pz) / r;
             if (ddx * ddx + ddy * ddy + ddz * ddz > 1) continue;
-            var k = (y * CS + (z - z0)) * CS + (x - x0);
+            var k = (y * CS + (z - z0)) * CS + (x - x0) + YOFF;
             if (d[k] === WATER) continue;
             d[k] = AIR;
             if (y === top && y + 1 < SY && kind(d[k + CS * CS]) === 'plant') d[k + CS * CS] = AIR;
@@ -1987,12 +1994,12 @@
     }
   }
   function skyScan(col, lx, lz) {
-    var t = -1;
-    for (var y = SY - 1; y >= 0; y--) { var id = col.d[(y * CS + lz) * CS + lx]; if (isSolid(id) && id !== GLASS && id !== LEAF) { t = y; break; } }
+    var t = YMIN - 1;
+    for (var y = SY - 1; y >= YMIN; y--) { var id = col.d[(y * CS + lz) * CS + lx + YOFF]; if (isSolid(id) && id !== GLASS && id !== LEAF) { t = y; break; } }
     col.sky[lz * CS + lx] = t;
   }
   function updateSky(x, z) { var c = colAt(x, z); if (c) skyScan(c, x & 31, z & 31); }
-  function skyAt(x, z) { var c = colAt(x, z); return c ? c.sky[(z & 31) * CS + (x & 31)] : -1; }
+  function skyAt(x, z) { var c = colAt(x, z); return c ? c.sky[(z & 31) * CS + (x & 31)] : YMIN - 1; }
   function tree(x, y, z, h) {
     fill(x, y, z, x + 1, y + h - 1, z + 1, LOG);
     for (var ly = h - 3; ly <= h + 2; ly++) {
@@ -2013,7 +2020,7 @@
   }
   // 만드는 중에는 그 기둥 안을 읽는다
   function get2(x, y, z) {
-    if (genCol && (x >> 5) === genCX && (z >> 5) === genCZ) { if (y < 0 || y >= SY) return AIR; return genCol.d[(y * CS + (z & 31)) * CS + (x & 31)]; }
+    if (genCol && (x >> 5) === genCX && (z >> 5) === genCZ) { if (y < YMIN || y >= SY) return AIR; return genCol.d[(y * CS + (z & 31)) * CS + (x & 31) + YOFF]; }
     return get(x, y, z);
   }
   // ── 절기: 대림절 첫 주일 ~ 주현절(1/6)은 성탄 장식, 12~2월은 눈(사막 빼고). 주소에 ?season=christmas 를 붙이면 미리 보기 ──
@@ -2167,7 +2174,7 @@
   var EDITS = {}, editTimer = null;
   try { EDITS = JSON.parse(localStorage.getItem('arkVillage.edits') || '{}') || {}; } catch (e) { EDITS = {}; }
   function recordEdit(x, y, z, id) {
-    if (x < 0 || z < 0 || x >= WS || z >= WS || y < 0 || y >= SY) return;
+    if (x < 0 || z < 0 || x >= WS || z >= WS || y < YMIN || y >= SY) return;
     var k = (z >> 5) * NC + (x >> 5), li = (y * CS + (z & 31)) * CS + (x & 31);
     (EDITS[k] || (EDITS[k] = {}))[li] = id;
     clearTimeout(editTimer); editTimer = setTimeout(saveEdits, 1500);
@@ -2223,7 +2230,7 @@
   function lampChanged(x, y, z) {
     for (var cz = Math.floor((z - 8) / CS); cz <= Math.floor((z + 8) / CS); cz++) for (var cx = Math.floor((x - 8) / CS); cx <= Math.floor((x + 8) / CS); cx++) {
       if (!inWorldC(cx, cz) || !meshedCols[cz * NC + cx]) continue;
-      for (var cy = Math.max(0, Math.floor((y - 8) / CS)); cy <= Math.min(CY - 1, Math.floor((y + 8) / CS)); cy++) buildChunk(cx, cy, cz);
+      for (var cy = Math.max(CYMIN, Math.floor((y - 8) / CS)); cy <= Math.min(CY - 1, Math.floor((y + 8) / CS)); cy++) buildChunk(cx, cy, cz);
     }
   }
   // 등불마다 빈칸을 따라 퍼지며(벽은 못 지나감) 닿는 칸을 표시 — 칸마다 등불 32개까지 비트로
@@ -2242,7 +2249,7 @@
           var nx = x + (f === 0 ? 1 : f === 1 ? -1 : 0), ny = y + (f === 2 ? 1 : f === 3 ? -1 : 0), nz = z + (f === 4 ? 1 : f === 5 ? -1 : 0);
           var dx = nx - lx, dy = ny - ly, dz = nz - lz; if (dx * dx + dy * dy + dz * dz > 64) continue;
           var rx = nx - x0 + 8, ry = ny - y0 + 8, rz = nz - z0 + 8;
-          if (rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR || ny < 0 || ny >= SY) continue;
+          if (rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR || ny < YMIN || ny >= SY) continue;
           var ri = (ry * LR + rz) * LR + rx; if (LMASK[ri] & bit) continue;
           LMASK[ri] |= bit;   // 벽 칸도 빛은 받음(그 면은 빈칸 쪽에서 계산), 지나가지는 못함
           if (lightPass(get(nx, ny, nz))) { LQ[qt++] = nx; LQ[qt++] = ny; LQ[qt++] = nz; }
@@ -2250,12 +2257,18 @@
       }
     }
   }
+  // 땅속(y<0)에 빈칸이 하나라도 있는 기둥인가(한 번 세어 두고, 그 아래를 캐면 setRaw가 바꿈)
+  function deepOpen(c) {
+    if (c.deepAir === undefined) { var a = c.d, v = false; for (var i = CS * CS; i < YOFF; i++) { var id = a[i]; if (id === AIR || !isSolid(id) || isTrans(id)) { v = true; break; } } c.deepAir = v; }
+    return c.deepAir;
+  }
   function buildChunk(cx, cy, cz) {
     var key = cx + ',' + cy + ',' + cz, old = chunks[key];
     if (old) { old.forEach(function (m) { scene.remove(m); m.geometry.dispose(); }); }
     var P = [[], [], []], C = [[], [], []], U = [[], [], []], I = [[], [], []];
     var x0 = cx * CS, y0 = cy * CS, z0 = cz * CS;
     var colm = COLS[cz * NC + cx]; if (!colm) { delete chunks[key]; return; } var cd = colm.d;
+    if (cy < 0 && !deepOpen(colm) && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(function (q) { var nc = inWorldC(cx + q[0], cz + q[1]) && COLS[(cz + q[1]) * NC + cx + q[0]]; return !nc || !deepOpen(nc); })) { delete chunks[key]; return; }   // 꽉 막힌 땅속 조각은 그리지 않음(보일 곳이 없음)
     var lamps = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8);
     if (lamps.length > 32) { var mcx = x0 + 16, mcy = y0 + 16, mcz = z0 + 16; lamps.sort(function (a, b) { return (Math.abs(a[0] - mcx) + Math.abs(a[1] - mcy) + Math.abs(a[2] - mcz)) - (Math.abs(b[0] - mcx) + Math.abs(b[1] - mcy) + Math.abs(b[2] - mcz)); }); lamps.length = 32; }
     if (lamps.length) lampReach(lamps, x0, y0, z0);
@@ -2276,7 +2289,7 @@
     for (var y = y0; y < Math.min(y0 + CS, SY); y++)
       for (var z = z0; z < Math.min(z0 + CS, SZ); z++)
         for (var x = x0; x < Math.min(x0 + CS, SX); x++) {
-          var id = cd[(y * CS + (z & 31)) * CS + (x & 31)];
+          var id = cd[(y * CS + (z & 31)) * CS + (x & 31) + YOFF];
           if (id === AIR) continue;
           var def = B[id], k, v, uv, start;
           if (def[6] === 'plant') {
@@ -2323,7 +2336,7 @@
             var t = faceTile(id, f);
             if (jitter < 0) jitter = 0.97 + rnd(x * 7.1 + y * 13.3 + z * 3.7) * 0.06;
             var shade = lit ? 1 : F.s * jitter;
-            if (!lit && ny >= 0) shade *= skyLight(nx, ny, nz);
+            if (!lit && ny >= YMIN) shade *= skyLight(nx, ny, nz);
             var P2 = P[tr], C2 = C[tr], U2 = U[tr], I2 = I[tr];
             start = P2.length / 3;
             for (k = 0; k < 4; k++) {
@@ -2365,7 +2378,7 @@
     var done = {};
     [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].forEach(function (d) {
       var cx = Math.floor((x + d[0]) / CS), cy = Math.floor((y + d[1]) / CS), cz = Math.floor((z + d[2]) / CS);
-      if (cy < 0 || cy >= CY || !inWorldC(cx, cz) || !meshedCols[cz * NC + cx]) return;
+      if (cy < CYMIN || cy >= CY || !inWorldC(cx, cz) || !meshedCols[cz * NC + cx]) return;
       var k = cx + ',' + cy + ',' + cz; if (done[k]) return; done[k] = 1; buildChunk(cx, cy, cz);
     });
   }
@@ -2762,7 +2775,7 @@
     H[TAR] = '남쪽 호수 동쪽의 역청 구덩이에서 캐요(창 14:10)'; H[FLOWER] = '들판에 핀 들꽃을 캐요'; H[SNOW] = '아라랏 산 꼭대기의 눈을 캐요';
     H[COAL] = '석탄 광석을 곡괭이로 캐면 나와요 — 산 속과 땅속에 흔해요'; H[CHAR] = '용광로에서 통나무를 녹이면 숯이 돼요(요 21:9)';
     H[WOOL] = '칼을 들고 양을 누르면 양털을 깎아요'; H[LEATHER] = '칼을 들고 소·염소·낙타를 누르면 얻어요';
-    H[GEM_ONYX] = '깊은 땅속 호마노 광석을 구리 곡괭이 이상으로 캐요'; H[GEM_SAPH] = '아주 깊은 곳 청옥 광석을 철 곡괭이로 캐요'; H[GEM_DIA] = '맨 아래 가까이 금강석 광석을 철 곡괭이로 캐요';
+    H[GEM_ONYX] = '깊은 땅속 호마노 광석을 철 곡괭이 이상으로 캐요 — 호마노로 호마노 곡괭이를 만들어요'; H[GEM_SAPH] = '아주 깊은 곳 청옥 광석을 호마노 곡괭이로 캐요'; H[GEM_DIA] = '맨 아래 가까이 금강석 광석을 호마노 곡괭이로 캐요';
     [[ING_CU, ORE_CU], [ING_FE, ORE_FE], [ING_AG, ORE_AG], [ING_AU, ORE_AU]].forEach(function (q) { H[q[0]] = B[q[1]][0] + '을 캐서 용광로에서 녹여요(욥 28:2)'; });
     [[ORE_CU, '돌 아래 땅속'], [ORE_FE, '땅속 깊이(돌 곡괭이 이상)'], [ORE_AG, '더 깊은 땅속(구리 곡괭이 이상)'], [ORE_AU, '아주 깊은 땅속(철 곡괭이)']].forEach(function (q) { H[q[0]] = q[1] + '에서 캐요'; });
     H[HONEY] = '숲의 꽃을 살펴보세요. 꽃을 캐면 가끔 꿀이 나와요';
@@ -3368,7 +3381,7 @@
     var px = x, py = y, pz = z, t = 0;
     while (t <= maxD) {
       var id = get(x, y, z);
-      if (y >= 0 && id !== AIR && id !== WATER) return { x: x, y: y, z: z, px: px, py: py, pz: pz, atY: oy + dy * t, t: t };
+      if (y >= YMIN && id !== AIR && id !== WATER) return { x: x, y: y, z: z, px: px, py: py, pz: pz, atY: oy + dy * t, t: t };
       px = x; py = y; pz = z;
       if (tx < ty && tx < tz) { x += sx; t = tx; tx += tdx; }
       else if (ty < tz) { y += sy; t = ty; ty += tdy; }
@@ -3953,7 +3966,7 @@
     var flat = isFlat(d.item), geo = dropGeo[d.item] || (dropGeo[d.item] = flat ? itemGeometry(d.item) : blockGeometry(d.item));
     var m = new THREE.Mesh(geo, flat ? dropMatF : dropMatB); m.scale.setScalar(flat ? 0.5 : 0.3);
     var ix = Math.floor(d.x), iz = Math.floor(d.z), gy = d.y;
-    for (var yy = Math.min(SY - 1, Math.floor(d.y)); yy > 0; yy--) { if (isSolid(get(ix, yy - 1, iz))) { gy = yy + 0.18; break; } }
+    for (var yy = Math.min(SY - 1, Math.floor(d.y)); yy > YMIN; yy--) { if (isSolid(get(ix, yy - 1, iz))) { gy = yy + 0.18; break; } }
     m.position.set(d.x, gy, d.z); scene.add(m);
     SDROPS[d.id] = { id: d.id, item: d.item, n: d.amount, x: d.x, y: gy, z: d.z, m: m, hold: d.mine ? performance.now() + 3000 : 0, rot: Math.random() * 6, fullT: 0 };
   }
@@ -4069,7 +4082,7 @@
   function rebuildBox(x0, y0, z0, x1, y1, z1) {
     for (var cz = Math.floor(z0 / CS); cz <= Math.floor(z1 / CS); cz++) for (var cx = Math.floor(x0 / CS); cx <= Math.floor(x1 / CS); cx++) {
       if (!inWorldC(cx, cz) || !meshedCols[cz * NC + cx]) continue;
-      for (var cy = Math.max(0, Math.floor(y0 / CS)); cy <= Math.min(CY - 1, Math.floor(y1 / CS)); cy++) buildChunk(cx, cy, cz);
+      for (var cy = Math.max(CYMIN, Math.floor(y0 / CS)); cy <= Math.min(CY - 1, Math.floor(y1 / CS)); cy++) buildChunk(cx, cy, cz);
     }
   }
   function growTree(x, y, z) {
@@ -4212,7 +4225,7 @@
   // ── 가방·만들기 한 화면(11/20): 왼쪽 세로 그림 탭 · 가운데 칸 · 오른쪽 자세히 · 아래 단축 칸 ──
   var invSel = null, lastBC = 'bag', dropAmt = { id: 0, n: 1 };
   var CRAFT_TABS = [['all', '🔍', '모두'], ['recent', '🕘', '최근'], ['block', '🧱', '블록'], ['shape', '🚪', '모양'], ['tool', '⛏', '도구'], ['smelt', '🔥', '녹이기'], ['wear', '👕', '옷']];
-  var REP_MAT_T = function (tid) { return [GOPHER, STONE, ING_CU, ING_FE, GEM_DIA][tierOf(tid)]; };
+  var REP_MAT_T = function (tid) { return [GOPHER, STONE, ING_CU, ING_FE, GEM_ONYX, GEM_DIA][tierOf(tid)]; };
   // 최근 만든 것: [제작법 번호, 나오는 물건] 12개까지, 새로 만든 것이 앞
   function recentRank(rc) { var a = S.recentCraft || [], i = RECIPES.indexOf(rc); for (var k = 0; k < a.length; k++) if (a[k][0] === i && a[k][1] === rc.out[0]) return k; return -1; }
   function noteRecent(rc) { var i = RECIPES.indexOf(rc); if (i < 0) return; var a = (S.recentCraft || []).filter(function (p) { return p[0] !== i && RECIPES[p[0]] && RECIPES[p[0]].out[0] === p[1]; }); a.unshift([i, rc.out[0]]); S.recentCraft = a.slice(0, 12); saveSettings(); }
@@ -4930,7 +4943,7 @@
     var ix = Math.floor(x), iz = Math.floor(z);
     if (ix < 1 || iz < 1 || ix >= SX - 1 || iz >= SZ - 1) return null;
     // 나뭇잎·통나무는 땅으로 치지 않는다(동물이 나무 꼭대기에 서는 문제) — 통나무 자리는 막힌 곳
-    for (var y = Math.floor(fromY) + 2; y >= 1; y--) {
+    for (var y = Math.floor(fromY) + 2; y >= YMIN + 1; y--) {
       var id = get(ix, y, iz); if (id === WATER) return null;
       if (id === LEAF || id === LOG) continue;
       if (isSolid(id)) { var up = get(ix, y + 1, iz); return up === LOG ? null : y + 1; }
@@ -6198,12 +6211,12 @@
     for (var dz = -1; dz <= 1; dz++) for (var dx = -1; dx <= 1; dx++) { var x = cx + dx, z = cz + dz; if (inWorldC(x, z) && !COLS[z * NC + x]) return false; }
     return true;
   }
-  function meshColumn(cx, cz) { for (var cy = 0; cy < CY; cy++) buildChunk(cx, cy, cz); meshedCols[cz * NC + cx] = 1; delete meshProg[cz * NC + cx]; }
+  function meshColumn(cx, cz) { for (var cy = CYMIN; cy < CY; cy++) buildChunk(cx, cy, cz); meshedCols[cz * NC + cx] = 1; delete meshProg[cz * NC + cx]; }
   // 걸어 다닐 때는 기둥 하나를 높이 조각(3개)으로 나눠 프레임마다 한 조각씩 그린다(느린 휴대폰에서 끊기지 않게)
   var meshProg = {};
-  function meshStep(cx, cz) { var k = cz * NC + cx, c = meshProg[k] || 0; buildChunk(cx, c, cz); if (++c >= CY) { meshedCols[k] = 1; delete meshProg[k]; } else meshProg[k] = c; }
+  function meshStep(cx, cz) { var k = cz * NC + cx, c = meshProg[k] !== undefined ? meshProg[k] : CYMIN; buildChunk(cx, c, cz); if (++c >= CY) { meshedCols[k] = 1; delete meshProg[k]; } else meshProg[k] = c; }
   function unmeshColumn(cx, cz) {
-    for (var cy = 0; cy < CY; cy++) { var key = cx + ',' + cy + ',' + cz, old = chunks[key]; if (old) { old.forEach(function (m) { scene.remove(m); m.geometry.dispose(); }); delete chunks[key]; } }
+    for (var cy = CYMIN; cy < CY; cy++) { var key = cx + ',' + cy + ',' + cz, old = chunks[key]; if (old) { old.forEach(function (m) { scene.remove(m); m.geometry.dispose(); }); delete chunks[key]; } }
     meshedCols[cz * NC + cx] = 0; delete meshProg[cz * NC + cx];
   }
   function newColumn(cx, cz) { genColumn(cx, cz); spawnColumn(cx, cz); }
@@ -6316,7 +6329,7 @@
     }
     // 입체로: 손잡이·가로대·칼날(어느 쪽에서 봐도 보이게). 칼날은 앞쪽으로 조금 들어 올림
     var u = HT / 32, g = new THREE.Group(), big = id === SWORD, type = big ? 'sword' : TOOL_TYPES[typeOf(id)];
-    var mat = big ? 0xe8eef5 : [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0x6ff0e6][tierOf(id)], wood = 0x7a5430;
+    var mat = big ? 0xe8eef5 : [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0xb57ad8, 0x6ff0e6][tierOf(id)], wood = 0x7a5430;
     function bx(w, h, d, hex, y, x) { var m = shadedBox(w * u, h * u, d * u, hex); m.position.set((x || 0) * u, y * u, 0); g.add(m); }
     if (type === 'sword' || type === 'knife') {
       var len = big ? 13 : 8;
@@ -6567,7 +6580,7 @@
     if (hitY) { if (P.vy < 0) P.ground = true; P.vy = 0; }
     else if (!P.fly && collides(P.x, P.y - 0.02, P.z)) P.ground = true;
     if (P.ground) P.groundAt = performance.now();
-    if (P.y < -10) teleport(P.x, surfaceY(P.x | 0, P.z | 0), P.z);
+    if (P.y < YMIN - 10) teleport(P.x, surfaceY(P.x | 0, P.z | 0), P.z);
     P.x = clamp(P.x, 40, WS - 40); P.z = clamp(P.z, 40, WS - 40);
     var moved = Math.hypot(P.x - lastX, P.z - lastZ);
     if (len > 0 && moved > 0.03 && moved < 2) tutorialEvent('walk');
@@ -7609,7 +7622,7 @@
           var hy = a.y - s.y; if (Math.hypot(a.x - s.x, a.z - s.z) < 0.7 && hy > 0 && hy < 2.1 * s.sp.h) { hitShadow(s, a.dmg || 3); gone = true; break; }
         }
       }
-      if (gone || a.t > 4 || a.y < 0) { scene.remove(a.mesh); return; }
+      if (gone || a.t > 4 || a.y < YMIN) { scene.remove(a.mesh); return; }
       a.mesh.position.set(a.x, a.y, a.z); a.mesh.lookAt(a.x + a.vx, a.y + a.vy, a.z + a.vz); live.push(a);
     });
     ARROWS = live;
@@ -8081,7 +8094,7 @@
       for (var i = 0; i < list.length; i++) {
         var e = list[i]; if (!e || e.length !== 4) continue;
         var x = e[0] | 0, y = e[1] | 0, z = e[2] | 0, id = e[3] | 0;
-        if (y < 1 || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS || (id !== AIR && !B[id])) continue;
+        if (y < YMIN + 1 || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS || (id !== AIR && !B[id])) continue;
         var p = plotAt(x, z);
         if (p >= 0) {
           if (ARK_ADMINS[u]) { plotPut(p, x, y, z, id); if (p === myPlot) adminTouchedMine = true; }   // 관리자가 고친 것은 주인 기기에도 반영
@@ -8124,7 +8137,7 @@
       r.data.split(';').forEach(function (s) {
         var a = s.split(','); if (a.length !== 4) return;
         var x = +a[0], y = +a[1], z = +a[2], id = +a[3];
-        if (x < 0 || z < 0 || x >= WS || z >= WS || y < 1 || y >= SY || plotAt(x, z) >= 0) return;
+        if (x < 0 || z < 0 || x >= WS || z >= WS || y < YMIN + 1 || y >= SY || plotAt(x, z) >= 0) return;
         if (NET.pm[x + ',' + y + ',' + z] !== undefined) return;   // 내가 아직 보내는 중인 것은 그대로
         var k = (z >> 5) * NC + (x >> 5), li = (y * CS + (z & 31)) * CS + (x & 31);
         if (EDITS[k] && EDITS[k][li] === id && (!COLS[k] || readBlock(x, y, z) === id)) return;
@@ -8166,8 +8179,8 @@
       var cz = Math.floor(k / NC), cx = k % NC, ed = EDITS[k];
       for (var li in ed) {
         if (n >= 1400) return;
-        var l = +li, lx = l % CS, r0 = (l - lx) / CS, lz = r0 % CS, y = (r0 - lz) / CS, x = cx * CS + lx, z = cz * CS + lz;
-        if (y < 1 || plotAt(x, z) >= 0 || inArk(x, y, z)) continue;
+        var l = +li, lx = ((l % CS) + CS) % CS, r0 = (l - lx) / CS, lz = ((r0 % CS) + CS) % CS, y = (r0 - lz) / CS, x = cx * CS + lx, z = cz * CS + lz;
+        if (y < YMIN + 1 || plotAt(x, z) >= 0 || inArk(x, y, z)) continue;
         NET.pm[x + ',' + y + ',' + z] = ed[li]; n++;
       }
     }
@@ -8544,7 +8557,9 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 3, NEWS = [
+  var NEWS_VER = 4, NEWS = [
+    ['deep', '⛏', '더 깊은 땅속', '땅속이 32칸 더 깊어졌어요(바닥 y -32). 금은 y -8 아래, 청옥은 -16 아래, 금강석은 맨 아래 깊은 돌 층에서 나와요.', 0],
+    ['onyx', '🟣', '호마노 도구', '철과 금강석 사이에 호마노 곡괭이·도끼·삽·칼이 생겼어요. 호마노는 철 곡괭이로 캐고, 청옥·금강석은 호마노 곡괭이가 있어야 캐요.', TOOL_ONYX],
     ['quest', '📜', '퀘스트', '왼쪽 위 「📜 부탁」이나 메뉴의 「📜 퀘스트」에서 오늘의 부탁 셋·모험·땅 밟기를 봐요. 다 들어주면 보상을 받아요.', 0],
     ['south', '🌲', '남쪽 새 땅', '마을 남쪽 멀리 백향목 숲·광야·소금 바다가 생겼어요. 광야에는 성막, 숲에는 망대, 바닷가에는 나그네 장막촌이 있어요.', 0],
     ['vein', '💎', '광맥', '광석을 캐면 반짝이며, 이어진 광석이 있으면 잠깐 비춰 줘요.', 0],
@@ -9221,6 +9236,8 @@
   function regionTick() {
     if (!started || ui !== 'play') return;
     advDaily(); advChip();
+    if (P.y < 0) newsMark('deep');
+    if (have(TOOL_ONYX) > 0) newsMark('onyx');
     var k = regionKeyAt();
     if (k && k !== regKey) {
       if (k === regPend) regPendN++; else { regPend = k; regPendN = 1; }
@@ -10054,7 +10071,7 @@
       var a=queue[i];
       [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]].forEach(function(d){
         var bx=a[0]+d[0],by=a[1]+d[1],bz=a[2]+d[2],k=frontierCell(bx,by,bz);
-        if(visited.has(k)||by<1||by>=SY||!colAt(bx,bz)||queue.length>=100)return;
+        if(visited.has(k)||by<YMIN+1||by>=SY||!colAt(bx,bz)||queue.length>=100)return;
         visited.add(k);
         var id=get(bx,by,bz), s=SHAPE[id];
         if(id===ROPE||id===PULLEY||id===COUNTERWEIGHT){hasRope=hasRope||id===ROPE;hasPulley=hasPulley||id===PULLEY;queue.push([bx,by,bz]);}
@@ -10345,7 +10362,7 @@
     scene.add(goalDeco);
   }
   // 점검 함수: 내 컴퓨터(시험 서버)와 선생님 계정에서만 연다 — 학생이 개발자 창에서 물건을 만들어 내지 못하게
-  var ARK_DBG = { cine: { render: function () { renderer.render(scene, camera); }, kit: function () { return { THREE: THREE, scene: scene, B: B, makeAvatar: makeAvatar, dressAvatar: dressAvatar, peerLook: peerLook, handItem: handItem, makeCartMesh: makeCartMesh, textSprite: textSprite, sparkle: sparkle, floatText: floatText, combatFx: combatFx, shadowDeathFx: shadowDeathFx, hpBarDraw: hpBarDraw, LOOKS: LOOKS, HT: HT, G: G, get: readBlock, far: function (r) { R_MESH = r; R_GEN = r + 1; R_DROP = r + 4; FOG_FAR = r * CS - 12; camera.far = FOG_FAR + 60; camera.updateProjectionMatrix(); return FOG_FAR; }, isSolid: isSolid, kind: kind, SH_KINDS: SH_KINDS, makeShadow: makeShadow, SHADOWS: SHADOWS, disposeSprite: disposeSprite,
+  var ARK_DBG = { cine: { render: function () { renderer.render(scene, camera); }, kit: function () { return { THREE: THREE, scene: scene, B: B, makeAvatar: makeAvatar, dressAvatar: dressAvatar, peerLook: peerLook, handItem: handItem, makeCartMesh: makeCartMesh, textSprite: textSprite, sparkle: sparkle, floatText: floatText, combatFx: combatFx, shadowDeathFx: shadowDeathFx, hpBarDraw: hpBarDraw, LOOKS: LOOKS, HT: HT, G: G, get: readBlock, genTime: function (n) { var t0 = performance.now(), saved = []; for (var i = 0; i < n; i++) { var cx = 10 + i, cz = 10; saved.push(COLS[cz * NC + cx]); genColumn(cx, cz); } var t1 = performance.now(); for (i = 0; i < n; i++) { for (var cy = CYMIN; cy < CY; cy++) buildChunk(10 + i, cy, 10); } var t2 = performance.now(); for (i = 0; i < n; i++) { for (cy = CYMIN; cy < CY; cy++) { var kk = (10 + i) + ',' + cy + ',10'; (chunks[kk] || []).forEach(function (m) { scene.remove(m); m.geometry.dispose(); }); delete chunks[kk]; } COLS[10 * NC + 10 + i] = saved[i]; } return [(t1 - t0) / n, (t2 - t1) / n]; }, far: function (r) { R_MESH = r; R_GEN = r + 1; R_DROP = r + 4; FOG_FAR = r * CS - 12; camera.far = FOG_FAR + 60; camera.updateProjectionMatrix(); return FOG_FAR; }, isSolid: isSolid, kind: kind, SH_KINDS: SH_KINDS, makeShadow: makeShadow, SHADOWS: SHADOWS, disposeSprite: disposeSprite,
       bulk: function (L) {   // 예고편 촬영용: 블록을 한꺼번에 놓고 덩어리마다 한 번만 다시 그림
         var cols = {}, ch = {}, lamps = [];
         L.forEach(function (b) {
@@ -10358,7 +10375,7 @@
           if (LIGHTS[id] || LIGHTS[was]) for (var lz = (z - 8) >> 5; lz <= (z + 8) >> 5; lz++) for (var lx = (x - 8) >> 5; lx <= (x + 8) >> 5; lx++) for (var ly = (y - 8) >> 5; ly <= (y + 8) >> 5; ly++) ch[lx + ',' + ly + ',' + lz] = 1;
         });
         for (var k in cols) { var cc = cols[k], col = colAt(cc[0], cc[1]); for (var lz2 = 0; lz2 < CS; lz2++) for (var lx2 = 0; lx2 < CS; lx2++) skyScan(col, lx2, lz2); }
-        var n = 0; for (var k2 in ch) { var q = k2.split(',').map(Number); if (q[1] < 0 || q[1] >= CY || !inWorldC(q[0], q[2]) || !meshedCols[q[2] * NC + q[0]]) continue; buildChunk(q[0], q[1], q[2]); n++; }
+        var n = 0; for (var k2 in ch) { var q = k2.split(',').map(Number); if (q[1] < CYMIN || q[1] >= CY || !inWorldC(q[0], q[2]) || !meshedCols[q[2] * NC + q[0]]) continue; buildChunk(q[0], q[1], q[2]); n++; }
         return n;
       } }; }, frame: function (q) { return canvasEl.toDataURL('image/jpeg', q || 0.92); }, avatar: function (v) { if (avatar) avatar.visible = v; heldMesh.visible = false; }, key: function (c, v) { keys[c] = v; }, thunder: function () { thunderStrike(); }, rainbow: function (sec) { rainbowUntil = dayT + (sec || 40); }, rain: function (on, st) { rainOn = on; rain = on ? 1 : 0; storm = !!st; } }, openFeedback: function () { openFeedback(); }, openFeedbackAdmin: function () { openFeedbackAdmin(); }, railScanCost: function (n) { var t = performance.now(); for (var i = 0; i < (n || 20); i++) railScanStep(); return (performance.now() - t) / (n || 20); }, setPlotName: function (u, t) { if (t) PLOT_NAMES[u] = t; else delete PLOT_NAMES[u]; refreshPlotSigns(); }, plotSigns: function () { var o = {}; for (var k in plotSignObjs) o[k] = plotSignObjs[k].txt; return o; }, setPlotUser: function (p, u, nick) { plotUser[p] = u; plotOwners[p] = 1; if (nick) NET.names[u] = nick; }, fakeNet: function (c, id) { client = c; me = { id: id }; }, projectCells: function (k) { return projectCells(k).length; }, perf: function () { return perfAcc; }, home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },

@@ -2,6 +2,8 @@
   // 1블록 = 1규빗(약 45cm), 사람 키 약 3.4칸. 세계는 2048×2048칸, 높이 80칸.
   // 32×32칸 기둥을 내 둘레만 만들어 보여 주고, 멀어지면 지운다. 땅·산·강·숲은 공식으로 만들어서 같은 자리는 언제 가도 똑같다.
   var WS = 2048, SY = 80, G = 16, CS = 32, NC = WS / CS, CY = Math.ceil(SY / CS);
+  // 11/20 땅속을 깊게: 바닥이 y 0 → YMIN(-32). 지상 좌표·저장된 자리는 그대로, 기둥 배열만 아래로 늘림(배열 칸 = 좌표 칸 + YOFF)
+  var YMIN = -32, SYT = SY - YMIN, YOFF = -YMIN * CS * CS, CYMIN = Math.floor(YMIN / CS);
   var SX = WS, SZ = WS;
   var COLS = new Array(NC * NC);   // 기둥: { d: 블록, sky: 하늘 그늘, lamps: 등불, mod: 고친 적 있음 }
   function colAt(x, z) { if (x < 0 || z < 0 || x >= WS || z >= WS) return null; return COLS[(z >> 5) * NC + (x >> 5)]; }
@@ -10,25 +12,26 @@
     return id===AIR && frontierWater.size && frontierWater.has(frontierCell(x,y,z)) ? WATER : id;
   }
   function readBlock(x, y, z) {
-    if (y < 0) return BASALT;
+    if (y < YMIN) return BASALT;
     if (y >= SY) return AIR;
     var c = colAt(x, z); if (!c) return AIR;
-    return c.d[(y * CS + (z & 31)) * CS + (x & 31)];
+    return c.d[(y * CS + (z & 31)) * CS + (x & 31) + YOFF];
   }
   var genCol = null, genCX = 0, genCZ = 0;   // 지금 만드는 기둥(그 밖은 쓰지 않음)
   function setRaw(x, y, z, id) {
-    if (y < 0 || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS) return;
+    if (y < YMIN || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS) return;
     var c;
     if (genCol) { if ((x >> 5) !== genCX || (z >> 5) !== genCZ) return; c = genCol; }
     else { c = colAt(x, z); if (!c) return; }
-    c.d[(y * CS + (z & 31)) * CS + (x & 31)] = id;
+    c.d[(y * CS + (z & 31)) * CS + (x & 31) + YOFF] = id;
+    if (y < 0 && c.deepAir === false && (id === AIR || !isSolid(id) || isTrans(id))) c.deepAir = true;
   }
   function fill(x1, y1, z1, x2, y2, z2, id) {
     if (genCol) {   // 만드는 기둥 안쪽만
       x1 = Math.max(x1, genCX * CS); x2 = Math.min(x2, genCX * CS + CS - 1);
       z1 = Math.max(z1, genCZ * CS); z2 = Math.min(z2, genCZ * CS + CS - 1);
     }
-    y1 = Math.max(0, y1); y2 = Math.min(SY - 1, y2);
+    y1 = Math.max(YMIN, y1); y2 = Math.min(SY - 1, y2);
     for (var y = y1; y <= y2; y++) for (var z = z1; z <= z2; z++) for (var x = x1; x <= x2; x++) setRaw(x, y, z, id);
   }
 
@@ -265,10 +268,10 @@
     });
   }
   // 광석 난수는 2칸·3칸 덩이마다 같은 값이라 덩이마다 한 번만 계산해 둔다(값은 hash2 그대로 — 세상 모양은 한 칸도 안 바뀜)
-  var OC = new Float64Array(16 * 16 * SY), CLC = new Float64Array(16 * 16 * (SY >> 1) + 256), CCC = new Float64Array(12 * 12 * 28);
+  var OC = new Float64Array(16 * 16 * SYT), CLC = new Float64Array(16 * 16 * (SYT >> 1) + 256), CCC = new Float64Array(12 * 12 * 40), FY3MIN = Math.floor(YMIN / 3);
   function genColumn(cx, cz) {
     OC.fill(NaN); CLC.fill(NaN); CCC.fill(NaN);
-    var col = { d: new Uint16Array(CS * SY * CS), sky: new Int16Array(CS * CS), lamps: [], mod: false };
+    var col = { d: new Uint16Array(CS * SYT * CS), sky: new Int16Array(CS * CS), lamps: [], mod: false };
     genCol = col; genCX = cx; genCZ = cz;
     var x0 = cx * CS, z0 = cz * CS, lx, lz, x, z, y;
     var tops = new Int16Array(CS * CS), topIds = new Uint8Array(CS * CS), wtops = new Int16Array(CS * CS);
@@ -276,51 +279,52 @@
       x = x0 + lx; z = z0 + lz;
       terrain(x, z);
       var h = T.h, d = col.d;
-      d[(0 * CS + lz) * CS + lx] = BASALT;
+      d[(YMIN * CS + lz) * CS + lx + YOFF] = BASALT;
       // 칸마다 한 번만: 깊은 돌 높이, 이 지역 보석이 나올 수 있는 높이 범위(그 밖은 보석 계산을 건너뛴다 — 결과는 같음)
-      var deepY = 4 + Math.floor(hash2(x >> 2, z >> 2, 17) * 3), gemLo = 99, gemHi = -1;
+      var deepY = YMIN + 10 + Math.floor(hash2(x >> 2, z >> 2, 17) * 3), gemLo = 99, gemHi = -99;   // 깊은 돌: 바닥에서 10~12칸
       for (var gq = 0; gq < 12; gq++) { var gr = GEMS[gq]; if (gr && gr[3] === T.reg) { if (gr[4] < gemLo) gemLo = gr[4]; if (gr[5] > gemHi) gemHi = gr[5]; } }
-      for (y = 1; y <= h; y++) {
+      for (y = YMIN + 1; y <= h; y++) {
         var id = y === h ? T.top : (y > h - 4 ? T.sub : STONE);
         if (T.reg === 'wild' && id === STONE && y >= G - 3) id = y % 3 === 0 ? RED_ROCK2 : RED_ROCK;   // 광야: 붉은 바위 켜
         if (id === STONE && y < h - 2) {
           // 돌 속 석회암·검은 돌(2칸씩 뭉쳐서)
-          var pk = ((lz >> 1) * 16 + (lx >> 1)), oi = pk * SY + y, o = OC[oi];
+          var pk = ((lz >> 1) * 16 + (lx >> 1)), oi = pk * SYT + (y - YMIN), o = OC[oi];
           if (o !== o) o = OC[oi] = hash2((x >> 1) * 3 + y, (z >> 1) * 5 - (y >> 1), 7);
-          var ci = pk * (SY >> 1) + (y >> 1), cl = CLC[ci];
+          var ci = pk * (SYT >> 1) + ((y - YMIN) >> 1), cl = CLC[ci];
           if (cl !== cl) cl = CLC[ci] = hash2((x >> 1) * 7 + (y >> 1) * 131, (z >> 1) * 11 - (y >> 1) * 17, 13);
-          if (o < 0.035) id = y < 7 || o < 0.008 ? BASALT : LIME;
+          if (o < 0.035) id = y < YMIN + 10 || o < 0.008 ? BASALT : LIME;
           else if (cl < 0.0695 && hash2(x * 3 + y * 7, z * 5 - y, 14) < 0.35) {   // 11/19 광석 절반으로(전도사님 「광물이 너무 잘 나와」)   // cl이 크면 광석이 될 수 없으니 이 난수는 건너뜀
-            if (cl < 0.006 && y <= 12) id = ORE_AU;
-            else if (cl >= 0.006 && cl < 0.014 && y <= 18) id = ORE_AG;
-            else if (cl >= 0.014 && cl < 0.034 && y <= 48) id = ORE_FE;
+            // 11/20 더 깊게(땅 표면 y 15, 바닥 y -32): 구리 ≤64 · 철 ≤30 · 은 ≤2 · 호마노 ≤-4 · 금 ≤-8 · 청옥 ≤-16 · 금강석 ≤-22
+            if (cl < 0.006 && y <= -8) id = ORE_AU;
+            else if (cl >= 0.006 && cl < 0.014 && y <= 2) id = ORE_AG;
+            else if (cl >= 0.014 && cl < 0.034 && y <= 30) id = ORE_FE;
             else if (cl >= 0.034 && cl < 0.06 && y <= 64) id = ORE_CU;
-            else if (cl >= 0.06 && cl < 0.064 && y <= 22) id = ORE_ONYX;
-            else if (cl >= 0.064 && cl < 0.067 && y <= 10) id = ORE_SAPH;
-            else if (cl >= 0.067 && cl < 0.0695 && y <= 8) id = ORE_DIA;
+            else if (cl >= 0.06 && cl < 0.064 && y <= -4) id = ORE_ONYX;
+            else if (cl >= 0.064 && cl < 0.067 && y <= -16) id = ORE_SAPH;
+            else if (cl >= 0.067 && cl < 0.0695 && y <= -22) id = ORE_DIA;
           }
           // 석탄: 큰 덩이(3칸씩)로 흔하게, 산 속 높은 곳까지
-          if (id === STONE && y <= 72) { var fx3 = Math.floor(x / 3), fz3 = Math.floor(z / 3), fy3 = Math.floor(y / 3), cci = ((fz3 - Math.floor(z0 / 3)) * 12 + (fx3 - Math.floor(x0 / 3))) * 28 + fy3, cc = CCC[cci]; if (cc !== cc) cc = CCC[cci] = hash2(fx3 * 13 + fy3 * 71, fz3 * 17 - fy3 * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.375) id = ORE_COAL; }
+          if (id === STONE && y <= 72) { var fx3 = Math.floor(x / 3), fz3 = Math.floor(z / 3), fy3 = Math.floor(y / 3), cci = ((fz3 - Math.floor(z0 / 3)) * 12 + (fx3 - Math.floor(x0 / 3))) * 40 + (fy3 - FY3MIN), cc = CCC[cci]; if (cc !== cc) cc = CCC[cci] = hash2(fx3 * 13 + fy3 * 71, fz3 * 17 - fy3 * 5, 15); if (cc < 0.05 && hash2(x * 5 + y, z * 3 - y * 2, 16) < 0.375) id = ORE_COAL; }
           // 열두 보석 광석: 곳마다·깊이마다 다르고 아주 드묾(계 21:19-20)
-          if (id === STONE && y >= gemLo && y <= gemHi) {
+          if (id === STONE && y >= gemLo && y <= gemHi && cl > 0.95) {   // 덩이 값으로 먼저 거르고(20분의 1) 확률은 20배 — 나오는 양은 같음
             var gv = hash2(x * 7 + y * 131, z * 11 - y * 17, 41), gb = 0.3;
-            for (var gi = 0; gi < 12; gi++) { var gg = GEMS[gi]; if (gg && gg[3] === T.reg && y >= gg[4] && y <= gg[5] && gv >= gb && gv < gb + gg[6]) { id = gemOre(gi); break; } gb += 0.002; }
+            if (gv < 0.78) for (var gi = 0; gi < 12; gi++) { var gg = GEMS[gi]; if (gg && gg[3] === T.reg && y >= gg[4] && y <= gg[5] && gv >= gb && gv < gb + gg[6] * 20) { id = gemOre(gi); break; } gb += 0.04; }
           }
           // 맨 아래 몇 칸은 깊은 돌(더 단단함)
           if (y <= deepY) { if (id === STONE) id = DEEP; else if (DEEPV[id]) id = DEEPV[id]; }
         }
-        d[(y * CS + lz) * CS + lx] = id;
+        d[(y * CS + lz) * CS + lx + YOFF] = id;
       }
-      for (y = h + 1; y <= T.wtop; y++) d[(y * CS + lz) * CS + lx] = WATER;
+      for (y = h + 1; y <= T.wtop; y++) d[(y * CS + lz) * CS + lx + YOFF] = WATER;
       tops[lz * CS + lx] = h; topIds[lz * CS + lx] = T.top; wtops[lz * CS + lx] = T.wtop;
       // 물가 갈대, 들꽃
       if (T.wtop < 0) {
         var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), hh = hash2(x, z, 11);
-        if (T.reg === 'salt' && T.top === SALT_CRUST && hh < 0.005 && h + 6 < SY && !landmarkAt(x, z, 4)) { var sk = 2 + Math.floor(hash2(x, z, 12) * 5); for (var sy = 1; sy <= sk; sy++) d[((h + sy) * CS + lz) * CS + lx] = SALT_ROCK; }
-        else if (((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 && h + 1 < SY) d[((h + 1) * CS + lz) * CS + lx] = REED;
+        if (T.reg === 'salt' && T.top === SALT_CRUST && hh < 0.005 && h + 6 < SY && !landmarkAt(x, z, 4)) { var sk = 2 + Math.floor(hash2(x, z, 12) * 5); for (var sy = 1; sy <= sk; sy++) d[((h + sy) * CS + lz) * CS + lx + YOFF] = SALT_ROCK; }
+        else if (((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 && h + 1 < SY) d[((h + 1) * CS + lz) * CS + lx + YOFF] = REED;
         else if (T.top===GRASS && hh>.92 && hh<=.955 && !inTown(x,z) && !inCommons(x,z) && h+1<SY)
-          d[((h+1)*CS+lz)*CS+lx]=le<2.1 || T.rd<12?LILY:(z>1210||x>VX1+70?THORN:THISTLE);
-        else if (T.top === GRASS && hh > 0.955 && plotAt(x, z) < 0 && !(z > AZ0 - 5 && z < AZ1 + 5 && x > AX0 - 5 && x < AX1 + 5)) d[((h + 1) * CS + lz) * CS + lx] = FLOWER;
+          d[((h+1)*CS+lz)*CS+lx+YOFF]=le<2.1 || T.rd<12?LILY:(z>1210||x>VX1+70?THORN:THISTLE);
+        else if (T.top === GRASS && hh > 0.955 && plotAt(x, z) < 0 && !(z > AZ0 - 5 && z < AZ1 + 5 && x > AX0 - 5 && x < AX1 + 5)) d[((h + 1) * CS + lz) * CS + lx + YOFF] = FLOWER;
       }
     }
     carveCaves(col, cx, cz, tops, wtops);
@@ -371,7 +375,7 @@
     buildLandmarks(x0, z0);
     if (HOREB_X >= x0 - 2 && HOREB_X < x0 + CS + 2 && HOREB_Z >= z0 - 2 && HOREB_Z < z0 + CS + 2) buildHoreb();
     markPlots();
-    var ed = EDITS[cz * NC + cx]; if (ed) for (var li in ed) col.d[li] = ed[li];
+    var ed = EDITS[cz * NC + cx]; if (ed) for (var li in ed) { var lj = +li + YOFF; if (lj >= 0 && lj < col.d.length) col.d[lj] = ed[li]; }
     col.machines=new Set();
     genCol = null;
     // 하늘 그늘, 등불
@@ -396,7 +400,8 @@
       if (sx < 12 || sz < 12 || sx > WS - 12 || sz > WS - 12) continue;
       terrain(sx | 0, sz | 0);
       var ent = hash2(ox, oz, 33) < 0.3 && T.wtop < 0 && T.h >= G && !inTown(sx | 0, sz | 0) && plotAt(sx | 0, sz | 0) < 0 && distOut(sx | 0, sz | 0) > 8;
-      var py = ent ? T.h + 1 : 3 + hash2(ox, oz, 36) * Math.max(3, T.h - 9);
+      var deepC = !ent && hash2(ox, oz, 44) < 0.05, pyMin = deepC ? YMIN + 4 : 3;   // 깊은 굴은 가끔만(땅속이 꽉 차 있으면 그리지 않아 가벼움)
+      var py = ent ? T.h + 1 : (deepC ? YMIN + 4 + hash2(ox, oz, 36) * 22 : 3 + hash2(ox, oz, 36) * Math.max(3, T.h - 9));
       var L = 50 + hash2(ox, oz, 37) * 70 | 0, yaw = hash2(ox, oz, 38) * Math.PI * 2, pitch = ent ? -0.6 : (hash2(ox, oz, 39) - 0.5) * 0.4;
       var px = sx, pz = sz, big = hash2(ox, oz, 40) < 0.2 ? (L * 0.6 | 0) : -99;   // 가끔 넓은 방
       for (var i = 0; i < L; i++) {
@@ -404,19 +409,19 @@
         pitch = ent && i < 14 ? -0.6 : pitch * 0.85 + (hash2(ox * 3 - i, oz * 5 + i, 42) - 0.5) * 0.18;
         var cpi = Math.cos(pitch);
         px += Math.cos(yaw) * cpi; pz += Math.sin(yaw) * cpi; py += Math.sin(pitch);
-        if (py < 3) { py = 3; pitch = Math.abs(pitch); }
+        if (py < pyMin) { py = pyMin; pitch = Math.abs(pitch); }
         var r = 1.4 + Math.sin(i / L * Math.PI) * 1.1 + (Math.abs(i - big) < 4 ? 2.4 : 0), ry = r * 0.75;
         if (px + r < x0 || px - r >= x0 + CS || pz + r < z0 || pz - r >= z0 + CS) continue;
         var xa = Math.max(x0, Math.floor(px - r)), xb = Math.min(x0 + CS - 1, Math.floor(px + r));
         var za = Math.max(z0, Math.floor(pz - r)), zb = Math.min(z0 + CS - 1, Math.floor(pz + r));
-        var ya = Math.max(1, Math.floor(py - ry)), yb = Math.min(SY - 2, Math.floor(py + ry));
+        var ya = Math.max(YMIN + 1, Math.floor(py - ry)), yb = Math.min(SY - 2, Math.floor(py + ry));
         for (var z = za; z <= zb; z++) for (var x = xa; x <= xb; x++) {
           var li = (z - z0) * CS + (x - x0), top = tops[li];
           var lim = ent && i < 16 && wtops[li] < 0 ? top : top - 3;   // 입구 굴의 처음 부분만 땅 위로 뚫린다
           for (var y = ya; y <= Math.min(yb, lim); y++) {
             var ddx = (x + 0.5 - px) / r, ddy = (y + 0.5 - py) / ry, ddz = (z + 0.5 - pz) / r;
             if (ddx * ddx + ddy * ddy + ddz * ddz > 1) continue;
-            var k = (y * CS + (z - z0)) * CS + (x - x0);
+            var k = (y * CS + (z - z0)) * CS + (x - x0) + YOFF;
             if (d[k] === WATER) continue;
             d[k] = AIR;
             if (y === top && y + 1 < SY && kind(d[k + CS * CS]) === 'plant') d[k + CS * CS] = AIR;
@@ -426,12 +431,12 @@
     }
   }
   function skyScan(col, lx, lz) {
-    var t = -1;
-    for (var y = SY - 1; y >= 0; y--) { var id = col.d[(y * CS + lz) * CS + lx]; if (isSolid(id) && id !== GLASS && id !== LEAF) { t = y; break; } }
+    var t = YMIN - 1;
+    for (var y = SY - 1; y >= YMIN; y--) { var id = col.d[(y * CS + lz) * CS + lx + YOFF]; if (isSolid(id) && id !== GLASS && id !== LEAF) { t = y; break; } }
     col.sky[lz * CS + lx] = t;
   }
   function updateSky(x, z) { var c = colAt(x, z); if (c) skyScan(c, x & 31, z & 31); }
-  function skyAt(x, z) { var c = colAt(x, z); return c ? c.sky[(z & 31) * CS + (x & 31)] : -1; }
+  function skyAt(x, z) { var c = colAt(x, z); return c ? c.sky[(z & 31) * CS + (x & 31)] : YMIN - 1; }
   function tree(x, y, z, h) {
     fill(x, y, z, x + 1, y + h - 1, z + 1, LOG);
     for (var ly = h - 3; ly <= h + 2; ly++) {
@@ -452,7 +457,7 @@
   }
   // 만드는 중에는 그 기둥 안을 읽는다
   function get2(x, y, z) {
-    if (genCol && (x >> 5) === genCX && (z >> 5) === genCZ) { if (y < 0 || y >= SY) return AIR; return genCol.d[(y * CS + (z & 31)) * CS + (x & 31)]; }
+    if (genCol && (x >> 5) === genCX && (z >> 5) === genCZ) { if (y < YMIN || y >= SY) return AIR; return genCol.d[(y * CS + (z & 31)) * CS + (x & 31) + YOFF]; }
     return get(x, y, z);
   }
   // ── 절기: 대림절 첫 주일 ~ 주현절(1/6)은 성탄 장식, 12~2월은 눈(사막 빼고). 주소에 ?season=christmas 를 붙이면 미리 보기 ──
@@ -606,7 +611,7 @@
   var EDITS = {}, editTimer = null;
   try { EDITS = JSON.parse(localStorage.getItem('arkVillage.edits') || '{}') || {}; } catch (e) { EDITS = {}; }
   function recordEdit(x, y, z, id) {
-    if (x < 0 || z < 0 || x >= WS || z >= WS || y < 0 || y >= SY) return;
+    if (x < 0 || z < 0 || x >= WS || z >= WS || y < YMIN || y >= SY) return;
     var k = (z >> 5) * NC + (x >> 5), li = (y * CS + (z & 31)) * CS + (x & 31);
     (EDITS[k] || (EDITS[k] = {}))[li] = id;
     clearTimeout(editTimer); editTimer = setTimeout(saveEdits, 1500);

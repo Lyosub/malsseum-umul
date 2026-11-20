@@ -560,7 +560,7 @@
     var flat = isFlat(d.item), geo = dropGeo[d.item] || (dropGeo[d.item] = flat ? itemGeometry(d.item) : blockGeometry(d.item));
     var m = new THREE.Mesh(geo, flat ? dropMatF : dropMatB); m.scale.setScalar(flat ? 0.5 : 0.3);
     var ix = Math.floor(d.x), iz = Math.floor(d.z), gy = d.y;
-    for (var yy = Math.min(SY - 1, Math.floor(d.y)); yy > 0; yy--) { if (isSolid(get(ix, yy - 1, iz))) { gy = yy + 0.18; break; } }
+    for (var yy = Math.min(SY - 1, Math.floor(d.y)); yy > YMIN; yy--) { if (isSolid(get(ix, yy - 1, iz))) { gy = yy + 0.18; break; } }
     m.position.set(d.x, gy, d.z); scene.add(m);
     SDROPS[d.id] = { id: d.id, item: d.item, n: d.amount, x: d.x, y: gy, z: d.z, m: m, hold: d.mine ? performance.now() + 3000 : 0, rot: Math.random() * 6, fullT: 0 };
   }
@@ -676,7 +676,7 @@
   function rebuildBox(x0, y0, z0, x1, y1, z1) {
     for (var cz = Math.floor(z0 / CS); cz <= Math.floor(z1 / CS); cz++) for (var cx = Math.floor(x0 / CS); cx <= Math.floor(x1 / CS); cx++) {
       if (!inWorldC(cx, cz) || !meshedCols[cz * NC + cx]) continue;
-      for (var cy = Math.max(0, Math.floor(y0 / CS)); cy <= Math.min(CY - 1, Math.floor(y1 / CS)); cy++) buildChunk(cx, cy, cz);
+      for (var cy = Math.max(CYMIN, Math.floor(y0 / CS)); cy <= Math.min(CY - 1, Math.floor(y1 / CS)); cy++) buildChunk(cx, cy, cz);
     }
   }
   function growTree(x, y, z) {

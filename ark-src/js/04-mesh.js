@@ -46,7 +46,7 @@
   function lampChanged(x, y, z) {
     for (var cz = Math.floor((z - 8) / CS); cz <= Math.floor((z + 8) / CS); cz++) for (var cx = Math.floor((x - 8) / CS); cx <= Math.floor((x + 8) / CS); cx++) {
       if (!inWorldC(cx, cz) || !meshedCols[cz * NC + cx]) continue;
-      for (var cy = Math.max(0, Math.floor((y - 8) / CS)); cy <= Math.min(CY - 1, Math.floor((y + 8) / CS)); cy++) buildChunk(cx, cy, cz);
+      for (var cy = Math.max(CYMIN, Math.floor((y - 8) / CS)); cy <= Math.min(CY - 1, Math.floor((y + 8) / CS)); cy++) buildChunk(cx, cy, cz);
     }
   }
   // 등불마다 빈칸을 따라 퍼지며(벽은 못 지나감) 닿는 칸을 표시 — 칸마다 등불 32개까지 비트로
@@ -65,7 +65,7 @@
           var nx = x + (f === 0 ? 1 : f === 1 ? -1 : 0), ny = y + (f === 2 ? 1 : f === 3 ? -1 : 0), nz = z + (f === 4 ? 1 : f === 5 ? -1 : 0);
           var dx = nx - lx, dy = ny - ly, dz = nz - lz; if (dx * dx + dy * dy + dz * dz > 64) continue;
           var rx = nx - x0 + 8, ry = ny - y0 + 8, rz = nz - z0 + 8;
-          if (rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR || ny < 0 || ny >= SY) continue;
+          if (rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR || ny < YMIN || ny >= SY) continue;
           var ri = (ry * LR + rz) * LR + rx; if (LMASK[ri] & bit) continue;
           LMASK[ri] |= bit;   // 벽 칸도 빛은 받음(그 면은 빈칸 쪽에서 계산), 지나가지는 못함
           if (lightPass(get(nx, ny, nz))) { LQ[qt++] = nx; LQ[qt++] = ny; LQ[qt++] = nz; }
@@ -73,12 +73,18 @@
       }
     }
   }
+  // 땅속(y<0)에 빈칸이 하나라도 있는 기둥인가(한 번 세어 두고, 그 아래를 캐면 setRaw가 바꿈)
+  function deepOpen(c) {
+    if (c.deepAir === undefined) { var a = c.d, v = false; for (var i = CS * CS; i < YOFF; i++) { var id = a[i]; if (id === AIR || !isSolid(id) || isTrans(id)) { v = true; break; } } c.deepAir = v; }
+    return c.deepAir;
+  }
   function buildChunk(cx, cy, cz) {
     var key = cx + ',' + cy + ',' + cz, old = chunks[key];
     if (old) { old.forEach(function (m) { scene.remove(m); m.geometry.dispose(); }); }
     var P = [[], [], []], C = [[], [], []], U = [[], [], []], I = [[], [], []];
     var x0 = cx * CS, y0 = cy * CS, z0 = cz * CS;
     var colm = COLS[cz * NC + cx]; if (!colm) { delete chunks[key]; return; } var cd = colm.d;
+    if (cy < 0 && !deepOpen(colm) && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(function (q) { var nc = inWorldC(cx + q[0], cz + q[1]) && COLS[(cz + q[1]) * NC + cx + q[0]]; return !nc || !deepOpen(nc); })) { delete chunks[key]; return; }   // 꽉 막힌 땅속 조각은 그리지 않음(보일 곳이 없음)
     var lamps = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8);
     if (lamps.length > 32) { var mcx = x0 + 16, mcy = y0 + 16, mcz = z0 + 16; lamps.sort(function (a, b) { return (Math.abs(a[0] - mcx) + Math.abs(a[1] - mcy) + Math.abs(a[2] - mcz)) - (Math.abs(b[0] - mcx) + Math.abs(b[1] - mcy) + Math.abs(b[2] - mcz)); }); lamps.length = 32; }
     if (lamps.length) lampReach(lamps, x0, y0, z0);
@@ -99,7 +105,7 @@
     for (var y = y0; y < Math.min(y0 + CS, SY); y++)
       for (var z = z0; z < Math.min(z0 + CS, SZ); z++)
         for (var x = x0; x < Math.min(x0 + CS, SX); x++) {
-          var id = cd[(y * CS + (z & 31)) * CS + (x & 31)];
+          var id = cd[(y * CS + (z & 31)) * CS + (x & 31) + YOFF];
           if (id === AIR) continue;
           var def = B[id], k, v, uv, start;
           if (def[6] === 'plant') {
@@ -146,7 +152,7 @@
             var t = faceTile(id, f);
             if (jitter < 0) jitter = 0.97 + rnd(x * 7.1 + y * 13.3 + z * 3.7) * 0.06;
             var shade = lit ? 1 : F.s * jitter;
-            if (!lit && ny >= 0) shade *= skyLight(nx, ny, nz);
+            if (!lit && ny >= YMIN) shade *= skyLight(nx, ny, nz);
             var P2 = P[tr], C2 = C[tr], U2 = U[tr], I2 = I[tr];
             start = P2.length / 3;
             for (k = 0; k < 4; k++) {
@@ -188,7 +194,7 @@
     var done = {};
     [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].forEach(function (d) {
       var cx = Math.floor((x + d[0]) / CS), cy = Math.floor((y + d[1]) / CS), cz = Math.floor((z + d[2]) / CS);
-      if (cy < 0 || cy >= CY || !inWorldC(cx, cz) || !meshedCols[cz * NC + cx]) return;
+      if (cy < CYMIN || cy >= CY || !inWorldC(cx, cz) || !meshedCols[cz * NC + cx]) return;
       var k = cx + ',' + cy + ',' + cz; if (done[k]) return; done[k] = 1; buildChunk(cx, cy, cz);
     });
   }

@@ -387,7 +387,7 @@
     tile('ingotCopper', ingot(0xc8743a)); tile('ingotIron', ingot(0xd2d6db)); tile('ingotSilver', ingot(0xe8eef5)); tile('ingotGold', ingot(0xf3c83c));
     tile('stick', function (px) { clear(px); for (var i = 0; i < 11; i++) { px(3 + i, 13 - i, 0x8a6236); px(4 + i, 13 - i, 0x6a4628); } });
     // 도구: 곡괭이·도끼·삽·칼 × 나무·돌·구리·철
-    var TCOL = [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0x6ff0e6];
+    var TCOL = [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0xb57ad8, 0x6ff0e6];   // 4=호마노(보랏빛)
     function handle(px, n) { for (var i = 0; i < n; i++) { px(2 + i, 14 - i, 0x7a5430); px(3 + i, 14 - i, 0x5c3e22); } }
     ['pick', 'axe', 'shovel', 'knife'].forEach(function (type) {
       TCOL.forEach(function (col, tier) {
