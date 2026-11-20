@@ -636,6 +636,18 @@
       }
       px(11, 9, 0x3a2a18); px(11, 10, 0x3a2a18);
     });
+    tile('trapdoor', function (px, R) {   // 다락문: 판자 두 줄 + 가운데 창 두 개
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) {
+        var frame = x < 2 || x > 13 || y < 2 || y > 13, hole = !frame && (y > 3 && y < 7 || y > 8 && y < 12) && (x > 3 && x < 7 || x > 8 && x < 12);
+        px(x, y, hole ? 0x4a3420 : 0xa77a48, (frame ? 0.8 : 1) * (0.92 + R() * 0.14));
+      }
+    });
+    tile('frame', function (px, R) {   // 액자: 나무 테두리 + 가죽 바탕
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) {
+        var edge = x < 2 || x > 13 || y < 2 || y > 13;
+        px(x, y, edge ? 0x8a5a2b : 0x6b4a33, (edge ? (x + y) % 3 ? 1 : 0.85 : 0.9 + R() * 0.12));
+      }
+    });
     // 금 가는 모습 4단계(캐는 중)
     var lines = []; var CR = mkRand(4242);
     for (var l = 0; l < 8; l++) { var p = [], x = 8 + (CR() * 4 - 2 | 0), y = 8 + (CR() * 4 - 2 | 0), dx = CR() < 0.5 ? -1 : 1, dy = CR() < 0.5 ? -1 : 1; for (var s = 0; s < 9; s++) { p.push([x, y]); if (CR() < 0.6) x += dx; if (CR() < 0.6) y += dy; } lines.push(p); }
@@ -806,6 +818,13 @@
   regShape(FENCE, '울타리', 'fence', FENCE, GOPHER);
   for (var lf = 0; lf < 4; lf++) { regShape(LADDER + lf, '사닥다리', 'ladder', LADDER, GOPHER, lf); B[LADDER + lf][1] = B[LADDER + lf][2] = B[LADDER + lf][3] = 'ladder'; }
   for (var df = 0; df < 4; df++) for (var dop = 0; dop < 2; dop++) { regShape(DOOR + df * 2 + dop, '나무 문', 'door', DOOR, GOPHER, df, dop); B[DOOR + df * 2 + dop][1] = B[DOOR + df * 2 + dop][2] = B[DOOR + df * 2 + dop][3] = 'door'; }
+  // ── 2026-11-20 더한 것: 다락문(위로 여는 문)·액자 ──
+  var TRAP = 900, FRAME = 916;
+  for (var tf = 0; tf < 4; tf++) for (var th = 0; th < 2; th++) for (var to = 0; to < 2; to++) {
+    var tid = TRAP + tf * 4 + th * 2 + to; if (B[tid]) throw new Error('블록 번호가 겹쳐요: ' + tid);
+    regShape(tid, '다락문', 'trapdoor', TRAP, GOPHER, tf, to); SHAPE[tid].h = th; B[tid][1] = B[tid][2] = B[tid][3] = 'trapdoor';
+  }
+  for (var ff = 0; ff < 4; ff++) { if (B[FRAME + ff]) throw new Error('블록 번호가 겹쳐요: ' + (FRAME + ff)); regShape(FRAME + ff, '액자', 'frame', FRAME, GOPHER, ff); B[FRAME + ff][1] = B[FRAME + ff][2] = B[FRAME + ff][3] = 'frame'; }
   // ── 2026-11-18 더한 것: 농사(159~166), 침대·레버·벽 횃불·유리판·표지판(167~178), 양털 블록(179~182), 반 블록·계단(183~192), 눕힌 통나무(193~194)
   var SEED = 159, WHEAT = 160, BREAD = 161, FIG = 162, CROP0 = 163, BED = 167, LEVER = 168, WTORCH = 170, PANE = 174, SIGN = 175;
   var WOOL_W = 179, WOOL_B = 180, WOOL_V = 181, WOOL_R = 182, SLAB_L = 183, SLAB_P = 184, STAIR_L = 185, STAIR_P = 189, LOG_X = 193, LOG_Z = 194;
@@ -1150,6 +1169,8 @@
       return s.f ? gate.map(function(b) { return [b[2],b[1],b[0],b[5],b[4],b[3]]; }) : gate;
     }
     if (s.type === 'door') return [EDGE[s.open ? (s.f + 1) % 4 : s.f]];
+    if (s.type === 'trapdoor') return s.open ? [EDGE[s.f]] : [s.h ? [0, 0.81, 0, 1, 1, 1] : [0, 0, 0, 1, 0.19, 1]];   // 닫히면 바닥(아래·위 반쪽), 열리면 한쪽 벽에 세워짐
+    if (s.type === 'frame') return [[[0.12, 0.12, 0, 0.88, 0.88, 0.06], [0.94, 0.12, 0.12, 1, 0.88, 0.88], [0.12, 0.12, 0.94, 0.88, 0.88, 1], [0, 0.12, 0.12, 0.06, 0.88, 0.88]][s.f]];
     if (s.type === 'ladder') return [[[0, 0, 0, 1, 1, 0.1], [0.9, 0, 0, 1, 1, 1], [0, 0, 0.9, 1, 1, 1], [0, 0, 0, 0.1, 1, 1]][s.f]];
     if (s.type === 'chair') {
       var boxes = [[.1,.42,.1,.9,CHAIR_SEAT,.9],[.1,0,.1,.23,.42,.23],[.77,0,.1,.9,.42,.23],
@@ -1185,7 +1206,8 @@
     });
     return bx;
   }
-  function collBoxes(id, x, y, z) { var s = SHAPE[id]; if ((s.type === 'door' || s.type === 'gate') && s.open) return [];
+  function collBoxes(id, x, y, z) { var s = SHAPE[id]; if ((s.type === 'door' || s.type === 'gate' || s.type === 'trapdoor') && s.open) return [];
+    if (s.type === 'frame') return [];
     if (s.type === 'flag' || s.type === 'cloth' || s.type === 'rope' || s.type === 'plate') return [];
     if (s.type === 'gate') return [s.f ? [.43,0,0,.57,1,1] : [0,0,.43,1,1,.57]]; if (s.type === 'ladder' || s.type === 'wtorch' || s.type === 'lever' || s.type === 'sign' || s.type === 'lantern' || s.type === 'carpet' || s.type === 'lampstand') return []; if (s.type === 'fence') return [[0.3, 0, 0.3, 0.7, 1, 0.7]].concat(shapeBoxes(id, x, y, z).slice(1).map(function (b) { return [b[0], 0, b[2], b[3], 1, b[5]]; })); return shapeBoxes(id, x, y, z); }
   // 가방에 들어가는 것(캐거나 만들어서 모음)
@@ -1194,6 +1216,7 @@
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
   FRONTIER_RECIPES.forEach(function(r){INV.push(r[0]);});
+  INV.push(TRAP, FRAME);
   INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
@@ -1223,6 +1246,7 @@
   setClass('knife', [WOOL_W, WOOL_B, WOOL_V, WOOL_R], 0.5); setClass('axe', [LOG_X, LOG_Z], 1.4);
   GEMS.forEach(function (g, i) { if (!g) return; setClass('pick', [gemOre(i)], 5.2 + g[7] * 0.3); DROP[gemOre(i)] = gemItem(i); });
   for (var fsj = 0; fsj < 12; fsj++) setClass('pick', [FSTONE0 + fsj], 3.0);
+  (function () { var t = []; for (var i = 0; i < 16; i++) t.push(TRAP + i); setClass('axe', t, 0.9); setClass('axe', [FRAME, FRAME + 1, FRAME + 2, FRAME + 3], 0.3); })();
   setClass('axe', [SHELF], 1.0); setClass('pick', [SBRICK], 1.6); setClass('knife', [CARPET], 0.1); setClass('pick', [LANTERN], 0.4);
   setClass('pick', [SLAB_L, STAIR_L, STAIR_L + 1, STAIR_L + 2, STAIR_L + 3], 1.2); setClass('axe', [SLAB_P, STAIR_P, STAIR_P + 1, STAIR_P + 2, STAIR_P + 3], 1.0);
   for (var cb = 0; cb < 4; cb++) { BASE_T[CROP0 + cb] = 0.05; BASE_T[WTORCH + cb] = 0.05; }
@@ -1282,6 +1306,8 @@
     { out: [STAIR_G, 4], need: [[GOPHER, 6]] },
     { out: [FENCE, 3], need: [[GOPHER, 2], [LOG, 1]] },
     { out: [DOOR, 1], need: [[GOPHER, 6]] },
+    { out: [TRAP, 2], need: [[GOPHER, 6]], cat: 'shape' },
+    { out: [FRAME, 1], need: [[STICK, 8], [LEATHER, 1]], cat: 'shape' },
     { out: [SLAB_S, 6], need: [[STONE, 3]] },
     { out: [STAIR_S, 4], need: [[STONE, 6]] },
     { out: [SLAB_B, 6], need: [[BRICK, 3]] },
@@ -3288,6 +3314,10 @@
     for (yy = c[0]; yy <= c[1]; yy++) setBlock(x,yy,z,readBlock(x,yy,z)^1);
     sfx('door'); swingT = 0.25;
   }
+  function toggleTrap(x, y, z, id) {
+    var why = canPlace(x, y, z, id); if (why) return deny(why);
+    setBlock(x, y, z, id ^ 1); sfx('door', 700); swingT = 0.25;
+  }
   function toggleGate(x, y, z, id) {
     var why = canPlace(x, y, z, id);
     if (why) return deny(why);
@@ -3321,6 +3351,8 @@
       if (tryFrontierDevice(tgt,h)) return;
       if (SHAPE[tgt] && SHAPE[tgt].type === 'gate') return toggleGate(h.x, h.y, h.z, tgt);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'door') return toggleDoor(h.x, h.y, h.z);
+      if (SHAPE[tgt] && SHAPE[tgt].type === 'trapdoor') return toggleTrap(h.x, h.y, h.z, tgt);
+      if (SHAPE[tgt] && SHAPE[tgt].type === 'frame') return useFrame(h.x, h.y, h.z);
       if (tgt === FURNACE || tgt === FURNACE_ON) { if (plotAt(h.x, h.z) !== myPlot) return deny('다른 사람의 용광로예요'); craftCat = 'smelt'; invTab = 'craft'; openPanel('inv'); return; }
       if (tgt === CHEST) return openChest(h.x, h.y, h.z);
       if (tgt === CRAFT) { craftCat = 'wear'; invTab = 'craft'; openPanel('inv'); sfx('click'); return; }
@@ -3386,6 +3418,12 @@
         var ddx = h.x - h.px, ddz = h.z - h.pz;
         if (ddx || ddz) { if (!isSolid(get(h.x, h.y, h.z)) || SHAPE[get(h.x, h.y, h.z)]) return deny('사닥다리는 벽에 붙여요'); id = LADDER + (ddz < 0 ? 0 : (ddx > 0 ? 1 : (ddz > 0 ? 2 : 3))); }
         else id = LADDER + ld;
+      }
+      if (id === TRAP) { var ttop = h.py < h.y || (h.py === h.y && h.atY - h.py >= 0.5); id = TRAP + ((ld + 2) % 4) * 4 + (ttop ? 2 : 0); }   // 블록 윗반쪽·아랫면을 겨누면 위에 붙임
+      if (id === FRAME) {
+        var fdx = h.x - h.px, fdz = h.z - h.pz;
+        if (!(fdx || fdz) || !isSolid(get(h.x, h.y, h.z)) || SHAPE[get(h.x, h.y, h.z)]) return deny('액자는 벽 옆면에 걸어요');
+        id = FRAME + (fdz < 0 ? 0 : (fdx > 0 ? 1 : (fdz > 0 ? 2 : 3)));
       }
       if (id === SAPLING && [GRASS, DIRT].indexOf(get(bx, by - 1, bz)) < 0) return deny('묘목은 풀이나 흙 위에 심어요');
       // 벽 횃불: 옆면을 누르면 벽에 붙임
@@ -3476,6 +3514,7 @@
     if ((old === GRASS || old === FLOWER) && Math.random() < 0.12) dropItem(x + 0.5, y + 0.6, z + 0.5, SEED, 1);
     if (SHAPE[old] && SHAPE[old].type === 'sign' && myPlot >= 0 && plotAt(x, z) === myPlot) { var so = plotOrigin(myPlot); delete SIGNS[(x - so.x) + ',' + (y - PY0) + ',' + (z - so.z)]; markDirty(); refreshSigns(); }
     if (old === CHEST) spillChest(x, y, z);
+    if (SHAPE[old] && SHAPE[old].type === 'frame') frameBroken(x, y, z);
     if (old === LEAF && Math.random() < 0.04) dropItem(x + 0.5, y + 0.45, z + 0.5, FIG, 1);
     if (old === LEAF) {
       if (Math.random() < 0.08) dropItem(x + 0.5, y + 0.45, z + 0.5, SAPLING, 1);
@@ -3587,7 +3626,7 @@
       }
     }
     var cs = chestString();
-    return (a ? (expanded ? 'r3:' : (wide ? 'r2:' : 'r1:')) + btoa(out) : 'r0:') + '|i:' + bagString() + '|d:' + dexString() + (cs ? '|c:' + cs : '') + '|w:' + wornString() + '|s:' + seenString() + (signString() ? '|g:' + signString() : '');
+    return (a ? (expanded ? 'r3:' : (wide ? 'r2:' : 'r1:')) + btoa(out) : 'r0:') + '|i:' + bagString() + '|d:' + dexString() + (cs ? '|c:' + cs : '') + '|w:' + wornString() + '|s:' + seenString() + (signString() ? '|g:' + signString() : '') + (frameString() ? '|f:' + frameString() : '');
   }
   function decodePlot(i, data, mine) {
     try {
@@ -3602,6 +3641,11 @@
       parts.slice(1).forEach(function (seg) {   // 표지판 글: 내 땅이든 다른 사람 땅이든
         if (seg.slice(0, 2) !== 'g:') return;
         if (mine) { SIGNS = {}; signFromString(seg.slice(2), SIGNS); } else { OTHER_SIGNS[i] = {}; signFromString(seg.slice(2), OTHER_SIGNS[i]); }
+      });
+      if (mine) FRAMES = {}; else delete OTHER_FRAMES[i];
+      parts.slice(1).forEach(function (seg) {   // 액자에 건 것: 내 땅이든 다른 사람 땅이든
+        if (seg.slice(0, 2) !== 'f:') return;
+        if (mine) frameFromString(seg.slice(2), FRAMES); else { OTHER_FRAMES[i] = {}; frameFromString(seg.slice(2), OTHER_FRAMES[i]); }
       });
       var format = body.slice(0, 3);
       if (format !== 'r1:' && format !== 'r2:' && format !== 'r3:') return;
@@ -4878,7 +4922,8 @@
   function blockActionLabel(h, held) {
     var id = get(h.x, h.y, h.z), shape = SHAPE[id];
     var frontierAction=frontierActionLabel(id,h); if(frontierAction) return frontierAction;
-    if (shape && (shape.type === 'door' || shape.type === 'gate')) return shape.open ? '문 닫기' : '문 열기';
+    if (shape && (shape.type === 'door' || shape.type === 'gate' || shape.type === 'trapdoor')) return shape.open ? '문 닫기' : '문 열기';
+    if (shape && shape.type === 'frame') return myPlot >= 0 && plotAt(h.x, h.z) === myPlot ? '액자' : '';
     if (id>=FIND_MARK && id<=FIND_SEED) return id===FIND_MARK?'살펴보기':'전시 보기';
     if (id===FERRY_POST) return '나룻배 타기';
     if (id===FEAST_TABLE) return '음식 놓기';
@@ -6156,7 +6201,7 @@
         }
         if (started) { updateMobileBuild(now); updateFrontierTools(now); tickBlueprint(now); }
         if (started) stepFrontier(now,dt);
-        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); spawnZoneSigns(); } }
+        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); refreshFrames(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);
           if (ui === 'play' || ui === 'map') {
@@ -6673,7 +6718,9 @@
     if (linked) { toast(on?'연결한 장치를 열었어요':'연결한 장치를 닫았어요'); return; }
     var done = {}, n = 0;
     for (var dy = -2; dy <= 3; dy++) for (var dz = -4; dz <= 4; dz++) for (var dx = -4; dx <= 4; dx++) {
-      var d = get(x + dx, y + dy, z + dz); if (!(SHAPE[d] && SHAPE[d].type === 'door')) continue;
+      var d = get(x + dx, y + dy, z + dz);
+      if (SHAPE[d] && SHAPE[d].type === 'trapdoor') { if (!!SHAPE[d].open !== on && !canPlace(x + dx, y + dy, z + dz, d)) { setBlock(x + dx, y + dy, z + dz, d ^ 1); n++; } continue; }
+      if (!(SHAPE[d] && SHAPE[d].type === 'door')) continue;
       var col = doorColumn(x + dx, y + dy, z + dz), key = (x + dx) + ',' + col[0] + ',' + (z + dz); if (done[key]) continue; done[key] = 1;
       if (!!SHAPE[d].open !== on) { toggleDoor(x + dx, col[0], z + dz); n++; }
     }
@@ -6685,6 +6732,55 @@
   var SIGNS = {}, OTHER_SIGNS = {}, signSprites = {}, signAt = null;
   function signString() { var a = []; for (var k in SIGNS) a.push(k.replace(/,/g, '.') + '=' + SIGNS[k]); return a.join('/'); }
   function signFromString(str, into) { (str || '').split('/').forEach(function (e) { var q = e.split('='); if (q.length === 2 && SIGN_TEXTS[+q[1]] !== undefined) into[q[0].replace(/\./g, ',')] = +q[1]; }); }
+  // ── 액자(11/20): 손에 든 것 1개를 걸어 두고, 다시 누르면 꺼냄. 땅 저장에 함께 실려 다른 사람도 봄 ──
+  var FRAMES = {}, OTHER_FRAMES = {}, frameMeshes = {}, frameTex = {}, FRAME_GEO = null;
+  function frameString() { var a = []; for (var k in FRAMES) a.push(k.replace(/,/g, '.') + '=' + FRAMES[k]); return a.join('/'); }
+  function frameFromString(str, into) { (str || '').split('/').forEach(function (e) { var q = e.split('='); if (q.length === 2 && INV.indexOf(+q[1]) >= 0) into[q[0].replace(/\./g, ',')] = +q[1]; }); }
+  function frameKey(x, y, z) { var o = plotOrigin(myPlot); return (x - o.x) + ',' + (y - PY0) + ',' + (z - o.z); }
+  function useFrame(x, y, z) {
+    if (myPlot < 0 || plotAt(x, z) !== myPlot) { var ok = frameMeshes[x + ',' + y + ',' + z]; return toast(ok ? '🖼 액자: ' + nameOf(ok.userData.id) : '다른 사람의 액자예요'); }
+    var k = frameKey(x, y, z), cur = FRAMES[k];
+    if (cur) {
+      if (give(cur, 1) < 1) return deny('🎒 가방이 가득 찼어요');
+      delete FRAMES[k]; toast('🖼 ' + jo(nameOf(cur), '을', '를') + ' 액자에서 꺼냈어요');
+    } else {
+      var it = HOTBAR[sel];
+      if (!it || have(it) < 1 || it === FRAME) return deny('걸어 둘 것을 손에 들고 액자를 눌러요');
+      take(it, 1); FRAMES[k] = it; toast('🖼 ' + jo(nameOf(it), '을', '를') + ' 액자에 걸었어요 — 다시 누르면 꺼내요');
+    }
+    bagChanged(); markDirty(); refreshFrames(); sfx('click'); swingT = 0.25;
+  }
+  function frameBroken(x, y, z) {
+    if (myPlot < 0 || plotAt(x, z) !== myPlot) return;
+    var k = frameKey(x, y, z), cur = FRAMES[k];
+    if (cur) { dropItem(x + 0.5, y + 0.5, z + 0.5, cur, 1); delete FRAMES[k]; markDirty(); }
+    refreshFrames();
+  }
+  function frameTexture(id) {
+    if (frameTex[id]) return frameTex[id];
+    var img = new Image(), t = new THREE.Texture(img);
+    img.onload = function () { t.needsUpdate = true; }; img.src = ICON[id];
+    t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
+    return (frameTex[id] = t);
+  }
+  function refreshFrames() {
+    if (!FRAME_GEO) FRAME_GEO = new THREE.PlaneGeometry(0.62, 0.62);
+    var want = {};
+    function add(p, map) { var o = plotOrigin(p); for (var k in map) { var q = k.split(','), x = o.x + +q[0], y = PY0 + +q[1], z = o.z + +q[2], b = get(x, y, z); if (SHAPE[b] && SHAPE[b].type === 'frame' && ICON[map[k]]) want[x + ',' + y + ',' + z] = [map[k], SHAPE[b].f]; } }
+    if (myPlot >= 0) add(myPlot, FRAMES);
+    for (var p in OTHER_FRAMES) add(+p, OTHER_FRAMES[p]);
+    for (var k in frameMeshes) { var m = frameMeshes[k], w = want[k]; if (!w || m.userData.id !== w[0] || m.userData.f !== w[1]) { scene.remove(m); m.material.dispose(); delete frameMeshes[k]; } }
+    var lit = 0.35 + 0.65 * skyState.dayF;
+    for (var k2 in want) {
+      if (!frameMeshes[k2]) {
+        var q = k2.split(','), w2 = want[k2], d = [[0, 0, -0.42], [0.42, 0, 0], [0, 0, 0.42], [-0.42, 0, 0]][w2[1]];
+        var mesh = new THREE.Mesh(FRAME_GEO, new THREE.MeshBasicMaterial({ map: frameTexture(w2[0]), transparent: true, alphaTest: 0.1 }));
+        mesh.position.set(+q[0] + 0.5 + d[0], +q[1] + 0.5, +q[2] + 0.5 + d[2]); mesh.rotation.y = [0, -Math.PI / 2, Math.PI, Math.PI / 2][w2[1]];
+        mesh.userData = { id: w2[0], f: w2[1] }; scene.add(mesh); frameMeshes[k2] = mesh;
+      }
+      frameMeshes[k2].material.color.setScalar(lit);
+    }
+  }
   function openSignPick(x, y, z) {
     signAt = { x: x, y: y, z: z }; var L = $('signList'); L.innerHTML = '';
     SIGN_TEXTS.forEach(function (t, i) { var b = document.createElement('button'); b.className = 'mc'; b.textContent = t; b.addEventListener('click', function () { setSignText(i); }); L.appendChild(b); });
@@ -8763,9 +8859,9 @@
   }
   function setFrontierDevice(x,y,z,id,on) {
     var s=SHAPE[id];
-    if(!s||!['gate','door','sluice'].includes(s.type)||canPlace(x,y,z,id)||s.open===on)return false;
+    if(!s||!['gate','door','sluice','trapdoor'].includes(s.type)||canPlace(x,y,z,id)||s.open===on)return false;
     if(!on && P.x+HW>x&&P.x-HW<x+1&&P.z+HW>z&&P.z-HW<z+1&&P.y+HT>y&&P.y<y+1)return false;
-    if(s.type==='gate'||s.type==='sluice')setBlock(x,y,z,id^1);
+    if(s.type==='gate'||s.type==='sluice'||s.type==='trapdoor')setBlock(x,y,z,id^1);
     else {
       var c=doorColumn(x,y,z);
       for(var yy=c[0];yy<=c[1];yy++)if(canPlace(x,yy,z,id))return false;
@@ -8776,7 +8872,7 @@
   function mechanismNeighbor(id) {
     var s=SHAPE[id];
     return id===ROPE||id===PULLEY||id===COUNTERWEIGHT||id===PRESS_PLATE||
-      !!s&&['lever','sluice','gate','door'].includes(s.type);
+      !!s&&['lever','sluice','gate','door','trapdoor'].includes(s.type);
   }
   function pulseMechanical(x,y,z,on) {
     var queue=[[x,y,z]], visited=new Set(), connections=[], hasRope=false, hasPulley=false;
@@ -8788,7 +8884,7 @@
         visited.add(k);
         var id=get(bx,by,bz), s=SHAPE[id];
         if(id===ROPE||id===PULLEY||id===COUNTERWEIGHT){hasRope=hasRope||id===ROPE;hasPulley=hasPulley||id===PULLEY;queue.push([bx,by,bz]);}
-        else if(s&&['gate','door','sluice'].includes(s.type))connections.push([bx,by,bz,id]);
+        else if(s&&['gate','door','sluice','trapdoor'].includes(s.type))connections.push([bx,by,bz,id]);
       });
     }
     if(!hasRope||!hasPulley)return false;

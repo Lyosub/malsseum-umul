@@ -608,9 +608,9 @@
   }
   function setFrontierDevice(x,y,z,id,on) {
     var s=SHAPE[id];
-    if(!s||!['gate','door','sluice'].includes(s.type)||canPlace(x,y,z,id)||s.open===on)return false;
+    if(!s||!['gate','door','sluice','trapdoor'].includes(s.type)||canPlace(x,y,z,id)||s.open===on)return false;
     if(!on && P.x+HW>x&&P.x-HW<x+1&&P.z+HW>z&&P.z-HW<z+1&&P.y+HT>y&&P.y<y+1)return false;
-    if(s.type==='gate'||s.type==='sluice')setBlock(x,y,z,id^1);
+    if(s.type==='gate'||s.type==='sluice'||s.type==='trapdoor')setBlock(x,y,z,id^1);
     else {
       var c=doorColumn(x,y,z);
       for(var yy=c[0];yy<=c[1];yy++)if(canPlace(x,yy,z,id))return false;
@@ -621,7 +621,7 @@
   function mechanismNeighbor(id) {
     var s=SHAPE[id];
     return id===ROPE||id===PULLEY||id===COUNTERWEIGHT||id===PRESS_PLATE||
-      !!s&&['lever','sluice','gate','door'].includes(s.type);
+      !!s&&['lever','sluice','gate','door','trapdoor'].includes(s.type);
   }
   function pulseMechanical(x,y,z,on) {
     var queue=[[x,y,z]], visited=new Set(), connections=[], hasRope=false, hasPulley=false;
@@ -633,7 +633,7 @@
         visited.add(k);
         var id=get(bx,by,bz), s=SHAPE[id];
         if(id===ROPE||id===PULLEY||id===COUNTERWEIGHT){hasRope=hasRope||id===ROPE;hasPulley=hasPulley||id===PULLEY;queue.push([bx,by,bz]);}
-        else if(s&&['gate','door','sluice'].includes(s.type))connections.push([bx,by,bz,id]);
+        else if(s&&['gate','door','sluice','trapdoor'].includes(s.type))connections.push([bx,by,bz,id]);
       });
     }
     if(!hasRope||!hasPulley)return false;

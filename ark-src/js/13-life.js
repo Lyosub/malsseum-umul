@@ -325,7 +325,9 @@
     if (linked) { toast(on?'연결한 장치를 열었어요':'연결한 장치를 닫았어요'); return; }
     var done = {}, n = 0;
     for (var dy = -2; dy <= 3; dy++) for (var dz = -4; dz <= 4; dz++) for (var dx = -4; dx <= 4; dx++) {
-      var d = get(x + dx, y + dy, z + dz); if (!(SHAPE[d] && SHAPE[d].type === 'door')) continue;
+      var d = get(x + dx, y + dy, z + dz);
+      if (SHAPE[d] && SHAPE[d].type === 'trapdoor') { if (!!SHAPE[d].open !== on && !canPlace(x + dx, y + dy, z + dz, d)) { setBlock(x + dx, y + dy, z + dz, d ^ 1); n++; } continue; }
+      if (!(SHAPE[d] && SHAPE[d].type === 'door')) continue;
       var col = doorColumn(x + dx, y + dy, z + dz), key = (x + dx) + ',' + col[0] + ',' + (z + dz); if (done[key]) continue; done[key] = 1;
       if (!!SHAPE[d].open !== on) { toggleDoor(x + dx, col[0], z + dz); n++; }
     }
@@ -337,6 +339,55 @@
   var SIGNS = {}, OTHER_SIGNS = {}, signSprites = {}, signAt = null;
   function signString() { var a = []; for (var k in SIGNS) a.push(k.replace(/,/g, '.') + '=' + SIGNS[k]); return a.join('/'); }
   function signFromString(str, into) { (str || '').split('/').forEach(function (e) { var q = e.split('='); if (q.length === 2 && SIGN_TEXTS[+q[1]] !== undefined) into[q[0].replace(/\./g, ',')] = +q[1]; }); }
+  // ── 액자(11/20): 손에 든 것 1개를 걸어 두고, 다시 누르면 꺼냄. 땅 저장에 함께 실려 다른 사람도 봄 ──
+  var FRAMES = {}, OTHER_FRAMES = {}, frameMeshes = {}, frameTex = {}, FRAME_GEO = null;
+  function frameString() { var a = []; for (var k in FRAMES) a.push(k.replace(/,/g, '.') + '=' + FRAMES[k]); return a.join('/'); }
+  function frameFromString(str, into) { (str || '').split('/').forEach(function (e) { var q = e.split('='); if (q.length === 2 && INV.indexOf(+q[1]) >= 0) into[q[0].replace(/\./g, ',')] = +q[1]; }); }
+  function frameKey(x, y, z) { var o = plotOrigin(myPlot); return (x - o.x) + ',' + (y - PY0) + ',' + (z - o.z); }
+  function useFrame(x, y, z) {
+    if (myPlot < 0 || plotAt(x, z) !== myPlot) { var ok = frameMeshes[x + ',' + y + ',' + z]; return toast(ok ? '🖼 액자: ' + nameOf(ok.userData.id) : '다른 사람의 액자예요'); }
+    var k = frameKey(x, y, z), cur = FRAMES[k];
+    if (cur) {
+      if (give(cur, 1) < 1) return deny('🎒 가방이 가득 찼어요');
+      delete FRAMES[k]; toast('🖼 ' + jo(nameOf(cur), '을', '를') + ' 액자에서 꺼냈어요');
+    } else {
+      var it = HOTBAR[sel];
+      if (!it || have(it) < 1 || it === FRAME) return deny('걸어 둘 것을 손에 들고 액자를 눌러요');
+      take(it, 1); FRAMES[k] = it; toast('🖼 ' + jo(nameOf(it), '을', '를') + ' 액자에 걸었어요 — 다시 누르면 꺼내요');
+    }
+    bagChanged(); markDirty(); refreshFrames(); sfx('click'); swingT = 0.25;
+  }
+  function frameBroken(x, y, z) {
+    if (myPlot < 0 || plotAt(x, z) !== myPlot) return;
+    var k = frameKey(x, y, z), cur = FRAMES[k];
+    if (cur) { dropItem(x + 0.5, y + 0.5, z + 0.5, cur, 1); delete FRAMES[k]; markDirty(); }
+    refreshFrames();
+  }
+  function frameTexture(id) {
+    if (frameTex[id]) return frameTex[id];
+    var img = new Image(), t = new THREE.Texture(img);
+    img.onload = function () { t.needsUpdate = true; }; img.src = ICON[id];
+    t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
+    return (frameTex[id] = t);
+  }
+  function refreshFrames() {
+    if (!FRAME_GEO) FRAME_GEO = new THREE.PlaneGeometry(0.62, 0.62);
+    var want = {};
+    function add(p, map) { var o = plotOrigin(p); for (var k in map) { var q = k.split(','), x = o.x + +q[0], y = PY0 + +q[1], z = o.z + +q[2], b = get(x, y, z); if (SHAPE[b] && SHAPE[b].type === 'frame' && ICON[map[k]]) want[x + ',' + y + ',' + z] = [map[k], SHAPE[b].f]; } }
+    if (myPlot >= 0) add(myPlot, FRAMES);
+    for (var p in OTHER_FRAMES) add(+p, OTHER_FRAMES[p]);
+    for (var k in frameMeshes) { var m = frameMeshes[k], w = want[k]; if (!w || m.userData.id !== w[0] || m.userData.f !== w[1]) { scene.remove(m); m.material.dispose(); delete frameMeshes[k]; } }
+    var lit = 0.35 + 0.65 * skyState.dayF;
+    for (var k2 in want) {
+      if (!frameMeshes[k2]) {
+        var q = k2.split(','), w2 = want[k2], d = [[0, 0, -0.42], [0.42, 0, 0], [0, 0, 0.42], [-0.42, 0, 0]][w2[1]];
+        var mesh = new THREE.Mesh(FRAME_GEO, new THREE.MeshBasicMaterial({ map: frameTexture(w2[0]), transparent: true, alphaTest: 0.1 }));
+        mesh.position.set(+q[0] + 0.5 + d[0], +q[1] + 0.5, +q[2] + 0.5 + d[2]); mesh.rotation.y = [0, -Math.PI / 2, Math.PI, Math.PI / 2][w2[1]];
+        mesh.userData = { id: w2[0], f: w2[1] }; scene.add(mesh); frameMeshes[k2] = mesh;
+      }
+      frameMeshes[k2].material.color.setScalar(lit);
+    }
+  }
   function openSignPick(x, y, z) {
     signAt = { x: x, y: y, z: z }; var L = $('signList'); L.innerHTML = '';
     SIGN_TEXTS.forEach(function (t, i) { var b = document.createElement('button'); b.className = 'mc'; b.textContent = t; b.addEventListener('click', function () { setSignText(i); }); L.appendChild(b); });

@@ -54,6 +54,10 @@
     for (yy = c[0]; yy <= c[1]; yy++) setBlock(x,yy,z,readBlock(x,yy,z)^1);
     sfx('door'); swingT = 0.25;
   }
+  function toggleTrap(x, y, z, id) {
+    var why = canPlace(x, y, z, id); if (why) return deny(why);
+    setBlock(x, y, z, id ^ 1); sfx('door', 700); swingT = 0.25;
+  }
   function toggleGate(x, y, z, id) {
     var why = canPlace(x, y, z, id);
     if (why) return deny(why);
@@ -87,6 +91,8 @@
       if (tryFrontierDevice(tgt,h)) return;
       if (SHAPE[tgt] && SHAPE[tgt].type === 'gate') return toggleGate(h.x, h.y, h.z, tgt);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'door') return toggleDoor(h.x, h.y, h.z);
+      if (SHAPE[tgt] && SHAPE[tgt].type === 'trapdoor') return toggleTrap(h.x, h.y, h.z, tgt);
+      if (SHAPE[tgt] && SHAPE[tgt].type === 'frame') return useFrame(h.x, h.y, h.z);
       if (tgt === FURNACE || tgt === FURNACE_ON) { if (plotAt(h.x, h.z) !== myPlot) return deny('다른 사람의 용광로예요'); craftCat = 'smelt'; invTab = 'craft'; openPanel('inv'); return; }
       if (tgt === CHEST) return openChest(h.x, h.y, h.z);
       if (tgt === CRAFT) { craftCat = 'wear'; invTab = 'craft'; openPanel('inv'); sfx('click'); return; }
@@ -152,6 +158,12 @@
         var ddx = h.x - h.px, ddz = h.z - h.pz;
         if (ddx || ddz) { if (!isSolid(get(h.x, h.y, h.z)) || SHAPE[get(h.x, h.y, h.z)]) return deny('사닥다리는 벽에 붙여요'); id = LADDER + (ddz < 0 ? 0 : (ddx > 0 ? 1 : (ddz > 0 ? 2 : 3))); }
         else id = LADDER + ld;
+      }
+      if (id === TRAP) { var ttop = h.py < h.y || (h.py === h.y && h.atY - h.py >= 0.5); id = TRAP + ((ld + 2) % 4) * 4 + (ttop ? 2 : 0); }   // 블록 윗반쪽·아랫면을 겨누면 위에 붙임
+      if (id === FRAME) {
+        var fdx = h.x - h.px, fdz = h.z - h.pz;
+        if (!(fdx || fdz) || !isSolid(get(h.x, h.y, h.z)) || SHAPE[get(h.x, h.y, h.z)]) return deny('액자는 벽 옆면에 걸어요');
+        id = FRAME + (fdz < 0 ? 0 : (fdx > 0 ? 1 : (fdz > 0 ? 2 : 3)));
       }
       if (id === SAPLING && [GRASS, DIRT].indexOf(get(bx, by - 1, bz)) < 0) return deny('묘목은 풀이나 흙 위에 심어요');
       // 벽 횃불: 옆면을 누르면 벽에 붙임
@@ -242,6 +254,7 @@
     if ((old === GRASS || old === FLOWER) && Math.random() < 0.12) dropItem(x + 0.5, y + 0.6, z + 0.5, SEED, 1);
     if (SHAPE[old] && SHAPE[old].type === 'sign' && myPlot >= 0 && plotAt(x, z) === myPlot) { var so = plotOrigin(myPlot); delete SIGNS[(x - so.x) + ',' + (y - PY0) + ',' + (z - so.z)]; markDirty(); refreshSigns(); }
     if (old === CHEST) spillChest(x, y, z);
+    if (SHAPE[old] && SHAPE[old].type === 'frame') frameBroken(x, y, z);
     if (old === LEAF && Math.random() < 0.04) dropItem(x + 0.5, y + 0.45, z + 0.5, FIG, 1);
     if (old === LEAF) {
       if (Math.random() < 0.08) dropItem(x + 0.5, y + 0.45, z + 0.5, SAPLING, 1);
@@ -353,7 +366,7 @@
       }
     }
     var cs = chestString();
-    return (a ? (expanded ? 'r3:' : (wide ? 'r2:' : 'r1:')) + btoa(out) : 'r0:') + '|i:' + bagString() + '|d:' + dexString() + (cs ? '|c:' + cs : '') + '|w:' + wornString() + '|s:' + seenString() + (signString() ? '|g:' + signString() : '');
+    return (a ? (expanded ? 'r3:' : (wide ? 'r2:' : 'r1:')) + btoa(out) : 'r0:') + '|i:' + bagString() + '|d:' + dexString() + (cs ? '|c:' + cs : '') + '|w:' + wornString() + '|s:' + seenString() + (signString() ? '|g:' + signString() : '') + (frameString() ? '|f:' + frameString() : '');
   }
   function decodePlot(i, data, mine) {
     try {
@@ -368,6 +381,11 @@
       parts.slice(1).forEach(function (seg) {   // 표지판 글: 내 땅이든 다른 사람 땅이든
         if (seg.slice(0, 2) !== 'g:') return;
         if (mine) { SIGNS = {}; signFromString(seg.slice(2), SIGNS); } else { OTHER_SIGNS[i] = {}; signFromString(seg.slice(2), OTHER_SIGNS[i]); }
+      });
+      if (mine) FRAMES = {}; else delete OTHER_FRAMES[i];
+      parts.slice(1).forEach(function (seg) {   // 액자에 건 것: 내 땅이든 다른 사람 땅이든
+        if (seg.slice(0, 2) !== 'f:') return;
+        if (mine) frameFromString(seg.slice(2), FRAMES); else { OTHER_FRAMES[i] = {}; frameFromString(seg.slice(2), OTHER_FRAMES[i]); }
       });
       var format = body.slice(0, 3);
       if (format !== 'r1:' && format !== 'r2:' && format !== 'r3:') return;

@@ -636,6 +636,18 @@
       }
       px(11, 9, 0x3a2a18); px(11, 10, 0x3a2a18);
     });
+    tile('trapdoor', function (px, R) {   // 다락문: 판자 두 줄 + 가운데 창 두 개
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) {
+        var frame = x < 2 || x > 13 || y < 2 || y > 13, hole = !frame && (y > 3 && y < 7 || y > 8 && y < 12) && (x > 3 && x < 7 || x > 8 && x < 12);
+        px(x, y, hole ? 0x4a3420 : 0xa77a48, (frame ? 0.8 : 1) * (0.92 + R() * 0.14));
+      }
+    });
+    tile('frame', function (px, R) {   // 액자: 나무 테두리 + 가죽 바탕
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) {
+        var edge = x < 2 || x > 13 || y < 2 || y > 13;
+        px(x, y, edge ? 0x8a5a2b : 0x6b4a33, (edge ? (x + y) % 3 ? 1 : 0.85 : 0.9 + R() * 0.12));
+      }
+    });
     // 금 가는 모습 4단계(캐는 중)
     var lines = []; var CR = mkRand(4242);
     for (var l = 0; l < 8; l++) { var p = [], x = 8 + (CR() * 4 - 2 | 0), y = 8 + (CR() * 4 - 2 | 0), dx = CR() < 0.5 ? -1 : 1, dy = CR() < 0.5 ? -1 : 1; for (var s = 0; s < 9; s++) { p.push([x, y]); if (CR() < 0.6) x += dx; if (CR() < 0.6) y += dy; } lines.push(p); }
