@@ -148,7 +148,7 @@
             if (mapT <= 0) {
               mapT = 0.25;
               if (ui === 'play') { drawMap($('mapc'), false); renderMapCap(); }
-              else drawMap($('bigmapc'), true);
+              else { drawMap($('bigmapc'), true); renderMapPeople(); }
             }
           }
         }

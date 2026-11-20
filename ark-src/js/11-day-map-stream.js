@@ -470,6 +470,35 @@
   function canRequestMapFriend(id) {
     return FRIENDS.ready && !FRIENDS.hidden.has(id) && !FRIENDS.rows.some(function (row) { return row.id === id; });
   }
+  // 11/20 길 안내 창의 「지금 함께 있는 사람」: 큰 지도 대신 목록에서 친구 신청·파티 초대
+  var mapPeopleKey = '';
+  function renderMapPeople(force) {
+    var box = $('mapPeople'); if (!box) return;
+    var who = me ? Object.keys(NET.meta).filter(function (u) { return u !== me.id; }) : [];
+    var rows = who.map(function (u) {
+      var p = NET.peers[u], d = p && !p.mapHidden ? Math.round(Math.hypot(p.x - P.x, p.z - P.z) / 10) * 10 : -1;
+      var fr = FRIENDS.accepted.has(u) ? 'f' : (FRIENDS.hidden.has(u) ? 'h' : (FRIENDS.rows.some(function (r) { return r.id === u; }) ? 'p' : ''));
+      return { u: u, nm: NET.names[u] || '친구', d: d, fr: fr, pm: partyMate(u) };
+    }).sort(function (a, b) { return (a.d < 0 ? 1e9 : a.d) - (b.d < 0 ? 1e9 : b.d); });
+    var key = (me && NET.ok ? 'on' : 'off') + '|' + FRIENDS.ready + '|' + rows.map(function (r) { return [r.u, r.nm, r.d, r.fr, r.pm].join(','); }).join(';');
+    if (!force && key === mapPeopleKey) return; mapPeopleKey = key;
+    box.innerHTML = '';
+    var h = document.createElement('div'); h.className = 'sh'; h.style.fontSize = '13px'; h.textContent = '👥 지금 함께 있는 사람 ' + rows.length + '명 — 🤝 친구 신청 · 🧭 파티 초대'; box.appendChild(h);
+    if (!me || !NET.ok) { var e0 = document.createElement('div'); e0.className = 'empty'; e0.textContent = '로그인하면 친구 신청·파티 초대를 할 수 있어요'; box.appendChild(e0); return; }
+    if (!FRIENDS.ready) friendsFetch();
+    if (!rows.length) { var e1 = document.createElement('div'); e1.className = 'empty'; e1.textContent = '지금 접속한 다른 사람이 없어요'; box.appendChild(e1); return; }
+    rows.slice(0, 12).forEach(function (r) {
+      var row = document.createElement('div'); row.className = 'prow';
+      var t = document.createElement('span'); t.textContent = '🧑 ' + shortName(r.nm, 8) + (r.d >= 0 ? ' · ' + r.d + '칸' : ''); row.appendChild(t);
+      function b(label, fn, off) { var x = document.createElement('button'); x.className = 'mc'; x.textContent = label; x.disabled = !!off; if (fn) x.addEventListener('click', function (ev) { ev.stopPropagation(); sfx('click'); fn(); setTimeout(function () { renderMapPeople(true); }, 900); }); row.appendChild(x); }
+      if (r.fr === 'f') b('✓ 친구', null, true);
+      else if (r.fr === 'p') b('신청함', null, true);
+      else if (r.fr !== 'h') b('🤝 친구', function () { friendRequest(r.nm); });
+      if (r.pm) b('✓ 파티', null, true);
+      else b('🧭 파티', function () { partyCall('party_invite', { p_to: r.u }, '🤝 초대를 보냈어요 (10분 안에 받아야 해요)'); });
+      box.appendChild(row);
+    });
+  }
   function selectMapPerson(event) {
     var cv = $('bigmapc'), rect = cv.getBoundingClientRect(), hit = null, best = isTouch ? 23 : 16;
     mapPeople.forEach(function (dot) {
