@@ -348,7 +348,7 @@
         }
       });
     });
-    drawWordTiles();
+    drawWordTiles(); drawBowTiles();
   }
   // 4묶음. 말씀·양 돌보기·길 찾기.
   var FIND_MARK=500, FIND_POT=501, FIND_LAMP=502, FIND_SEED=503, DITCH=504, FEAST_TABLE=505,
@@ -395,6 +395,23 @@
     buildShape(d[0],d[1],'word'+d[0],'extension',STONE); SHAPE[d[0]].boxes=d[3];
   });
   WORD_ITEMS.forEach(function(d){expansionItem(d[0],d[1],'word'+d[0]);});
+  // ── 2026-11-20 활과 화살: 어둠의 그림자를 멀리서 물리침 ──
+  var BOW = 930, ARROW = 931;
+  [[BOW, '활'], [ARROW, '화살']].forEach(function (d) { if (B[d[0]]) throw new Error('번호가 겹쳐요: ' + d[0]); expansionItem(d[0], d[1], 'bow' + d[0]); });
+  function drawBowTiles() {
+    tile('bow930', function (px, R) {
+      clear(px);
+      for (var y = 1; y < 15; y++) { var cx = 3 + 7.5 * Math.sin(Math.PI * (y - 1) / 13); for (var x = 0; x < 16; x++) if (Math.abs(x - cx) < 1.1) px(x, y, 0x8a5a2b, 0.85 + R() * 0.25); }
+      for (var y2 = 1; y2 < 15; y2++) px(3, y2, 0xe8e2d0, 1);
+      px(10, 7, 0x4a2f18); px(10, 8, 0x4a2f18);
+    });
+    tile('bow931', function (px, R) {
+      clear(px);
+      for (var i = 3; i < 13; i++) px(i, 15 - i, 0x9a6a3a, 0.9 + R() * 0.2);
+      [[12, 2], [13, 2], [13, 3], [11, 2], [13, 4], [12, 3]].forEach(function (q) { px(q[0], q[1], 0xa8adb2, 1); });
+      [[2, 12], [3, 12], [2, 13], [3, 13], [1, 13], [2, 14], [4, 13], [3, 14]].forEach(function (q) { px(q[0], q[1], (q[0] + q[1]) % 2 ? 0xf0ece0 : 0xc0473a, 1); });
+    });
+  }
   function drawWordTiles() {
     WORD_BLOCKS.concat(WORD_ITEMS).forEach(function(d) {
       tile('word'+d[0],function(px,R){
@@ -510,7 +527,7 @@
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
   FRONTIER_RECIPES.forEach(function(r){INV.push(r[0]);});
-  INV.push(TRAP, FRAME);
+  INV.push(TRAP, FRAME, BOW, ARROW);
   INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
@@ -601,6 +618,8 @@
     { out: [FENCE, 3], need: [[GOPHER, 2], [LOG, 1]] },
     { out: [DOOR, 1], need: [[GOPHER, 6]] },
     { out: [TRAP, 2], need: [[GOPHER, 6]], cat: 'shape' },
+    { out: [BOW, 1], need: [[STICK, 3], [THREAD, 3]], cat: 'tool' },
+    { out: [ARROW, 4], need: [[STICK, 1], [FLINT, 1]], cat: 'tool' },
     { out: [FRAME, 1], need: [[STICK, 8], [LEATHER, 1]], cat: 'shape' },
     { out: [SLAB_S, 6], need: [[STONE, 3]] },
     { out: [STAIR_S, 4], need: [[STONE, 6]] },

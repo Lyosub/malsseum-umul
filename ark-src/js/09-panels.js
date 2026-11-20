@@ -85,7 +85,7 @@
   var BAG_CATS = [['all', '전체'], ['block', '🧱 블록'], ['tool', '⛏ 도구·옷'], ['food', '🍞 먹을 것'], ['item', '💎 재료'], ['deco', '🪑 꾸미기']];
   function bagCat(id) {
     var k = B[id] && B[id][6];
-    if (k === 'tool' || isWeapon(id) || WEARINFO[id] || id === SADDLE || id === FISH_ROD || id === FISH_NET || id === HOE || id === STAFF || id === SLING || id === COMPASS || id === HAND_MAP || id === SHOFAR) return 'tool';
+    if (k === 'tool' || isWeapon(id) || WEARINFO[id] || id === SADDLE || id === BOW || id === ARROW || id === FISH_ROD || id === FISH_NET || id === HOE || id === STAFF || id === SLING || id === COMPASS || id === HAND_MAP || id === SHOFAR) return 'tool';
     if (FOODS[id] !== undefined) return 'food';
     if (k === 'item') return 'item';
     if (SHAPE[id] || LIGHTS[id] || k === 'plant') return 'deco';

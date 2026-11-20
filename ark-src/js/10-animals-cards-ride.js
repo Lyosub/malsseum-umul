@@ -270,6 +270,7 @@
       if (held === COMPASS) return { label: '방향 보기' };
       if (held === SHOFAR) return { label: '나팔 불기' };
       if (held === SLING) return { label: '물매 연습' };
+      if (held === BOW) return { label: '활 쏘기' };
     }
     var c = pickCreature(screenDir(), blockCover(h));
     if (c && !(riding && c.a && c.a.sp.seat)) {
@@ -469,6 +470,7 @@
       if(held===COMPASS && have(held)) return toast('지금 보는 방향: '+headingName());
       if(held===SHOFAR && have(held)) return callShofar();
       if(held===SLING && have(held)) return slingPractice(pickDir(dir));
+      if(held===BOW && have(held)) return shootArrow(dir);
     }
     var h = pickDir(dir), c = pickCreature(dir, blockCover(h));
     if (c && riding && c.a && c.a.sp.seat) c = null;
