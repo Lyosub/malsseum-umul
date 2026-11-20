@@ -240,6 +240,7 @@
       if (!B[id]) continue;
       var c = document.createElement('canvas'); c.width = c.height = 64;
       var x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+      if (SPR_ICON[id] !== undefined) { var st = TILE[SPR_ICON[id]]; x.drawImage(atlas, (st % ACOLS) * TS, Math.floor(st / ACOLS) * TS, TS, TS, 4, 4, 56, 56); ICON[id] = c.toDataURL(); continue; }   // 11/21 GPT 아이콘
       var boxes = iconBoxes(id);
       if (kind(id) === 'plant' || !boxes) {
         var tp = BT[id][1];

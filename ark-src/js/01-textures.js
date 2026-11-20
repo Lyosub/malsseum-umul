@@ -23,7 +23,7 @@
     };
   }
   function tile(name, fn) {
-    var i = tileCount++, img = actx.createImageData(TS, TS), R = mkRand(i * 9973 + 17);
+    var i = TILE[name] !== undefined ? TILE[name] : tileCount++, img = actx.createImageData(TS, TS), R = mkRand(i * 9973 + 17);
     function px(x, y, hex, k, a) {
       if (x < 0 || y < 0 || x >= TS || y >= TS) return;
       var o = (y * TS + x) * 4; k = k === undefined ? 1 : k;

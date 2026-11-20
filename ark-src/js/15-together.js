@@ -869,10 +869,15 @@
   }
   function cartLen(c) { return c.s >= 6 ? 1.4 : ((c.from + 2) % 4 === c.to ? 1 : 0.8); }
   function makeCartMesh() {
-    var g = new THREE.Group(), iron = new THREE.MeshBasicMaterial({ color: 0x7f868c }), dark = new THREE.MeshBasicMaterial({ color: 0x3a3d40 });
-    function bx(w, h, d, x, y, z, m) { var o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); g.add(o); }
-    bx(0.9, 0.08, 1.2, 0, 0.2, 0, dark); bx(0.9, 0.42, 0.08, 0, 0.42, 0.56, iron); bx(0.9, 0.42, 0.08, 0, 0.42, -0.56, iron); bx(0.08, 0.42, 1.2, 0.41, 0.42, 0, iron); bx(0.08, 0.42, 1.2, -0.41, 0.42, 0, iron);
-    [[-0.45, -0.38], [0.45, -0.38], [-0.45, 0.38], [0.45, 0.38]].forEach(function (q) { bx(0.06, 0.2, 0.2, q[0], 0.12, q[1], dark); });
+    // 11/21 GPT 참고 그림대로 나무 수레: 널빤지 옆판 + 밝은 테두리 + 모서리 기둥, 쇠 바퀴
+    var g = new THREE.Group(), M = {}; function mat(c) { return M[c] || (M[c] = new THREE.MeshBasicMaterial({ color: c })); }
+    function bx(w, h, d, x, y, z, c) { var o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); o.position.set(x, y, z); g.add(o); }
+    bx(0.9, 0.08, 1.2, 0, 0.2, 0, 0x6a4226); bx(0.8, 0.02, 1.1, 0, 0.25, 0, 0xa8743f);
+    bx(0.9, 0.4, 0.08, 0, 0.42, 0.56, 0x9c6a3c); bx(0.9, 0.4, 0.08, 0, 0.42, -0.56, 0x9c6a3c); bx(0.08, 0.4, 1.2, 0.41, 0.42, 0, 0x9c6a3c); bx(0.08, 0.4, 1.2, -0.41, 0.42, 0, 0x9c6a3c);
+    bx(0.94, 0.06, 0.12, 0, 0.64, 0.56, 0xc08a54); bx(0.94, 0.06, 0.12, 0, 0.64, -0.56, 0xc08a54); bx(0.12, 0.06, 1.24, 0.41, 0.64, 0, 0xc08a54); bx(0.12, 0.06, 1.24, -0.41, 0.64, 0, 0xc08a54);
+    [[-0.42, -0.57], [0.42, -0.57], [-0.42, 0.57], [0.42, 0.57]].forEach(function (q) { bx(0.1, 0.46, 0.1, q[0], 0.42, q[1], 0x6e4426); });
+    bx(0.9, 0.05, 0.05, 0, 0.12, 0.38, 0x55595e); bx(0.9, 0.05, 0.05, 0, 0.12, -0.38, 0x55595e);
+    [[-0.47, -0.38], [0.47, -0.38], [-0.47, 0.38], [0.47, 0.38]].forEach(function (q) { bx(0.06, 0.22, 0.22, q[0], 0.12, q[1], 0x7f868c); bx(0.07, 0.08, 0.08, q[0], 0.12, q[1], 0x3a3d40); });
     scene.add(g); return g;
   }
   function cartNet() { return !!(client && me && me.id && me.id !== 'test'); }
@@ -1025,7 +1030,12 @@
     if (!spot) return deny('배는 물 위를 눌러서 띄워요');
     if (!isAdm()) { take(BOAT, 1); bagChanged(); }
     if (!boatMesh) {
-      boatMesh = new THREE.Mesh(mergedBoxes([[1.5, .22, 2.8, 0x7a4e2e, 0, 0, 0], [.14, .5, 2.7, 0x96603a, -.72, .25, 0], [.14, .5, 2.7, 0x96603a, .72, .25, 0], [1.4, .45, .16, 0x865630, 0, .22, 1.36], [1.1, .4, .16, 0x865630, 0, .22, -1.36], [1.3, .1, .45, 0x6a4428, 0, .3, .35]]), avatarMat);
+      boatMesh = new THREE.Mesh(mergedBoxes([   // 11/21 GPT 참고 그림대로: 높인 이물·고물, 밝은 뱃전, 가운데 앉을 자리, 이물 쪽 돛대와 작은 돛(눈높이 위)
+        [1.3, .18, 2.5, 0x6e4426, 0, 0, 0], [1.1, .04, 2.3, 0xb07a48, 0, .1, 0], [.14, .42, 2.6, 0x9a6438, -.68, .25, 0], [.14, .42, 2.6, 0x9a6438, .68, .25, 0],
+        [.2, .08, 2.6, 0xc08a54, -.68, .48, 0], [.2, .08, 2.6, 0xc08a54, .68, .48, 0], [1.5, .6, .32, 0x8a5630, 0, .3, 1.36], [1.3, .1, .36, 0xc08a54, 0, .64, 1.36],
+        [1.5, .5, .32, 0x8a5630, 0, .25, -1.36], [1.3, .1, .36, 0xc08a54, 0, .54, -1.36], [1.2, .1, .45, 0xa0703f, 0, .34, 0]]), avatarMat);
+      boatMesh.userData.mast = new THREE.Mesh(mergedBoxes([[.12, 2.6, .12, 0x5e3a20, 0, 1.45, 1.05], [1.1, .08, .08, 0x5e3a20, 0, 2.7, 1.05], [1.0, .72, .04, 0xe8e2d2, 0, 2.3, 1.1]]), avatarMat);
+      boatMesh.add(boatMesh.userData.mast);   // 돛대: 1인칭에서는 앞을 가려 숨김
       scene.add(boatMesh);
     }
     boatMesh.visible = true;
@@ -1053,7 +1063,7 @@
     } else { b.x = nx; b.z = nz; b.wy = wy; }
     var bob = Math.sin(b.t * 2.2) * 0.04;
     P.x = b.x; P.z = b.z; P.y = b.wy + 0.95 + bob; P.vx = P.vy = P.vz = 0; P.swim = false; P.ground = true;
-    boatMesh.position.set(b.x, b.wy + 0.82 + bob, b.z);
+    boatMesh.position.set(b.x, b.wy + 0.82 + bob, b.z); boatMesh.userData.mast.visible = S.view !== 0;
     if (v > 0.6) { var hd = Math.atan2(b.vx, b.vz), dh = hd - boatMesh.rotation.y; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); boatMesh.rotation.y += dh * Math.min(1, 4 * dt); }
     if (v > 3 && Math.random() < 0.3) sparkle(b.x - b.vx / v * 1.4, b.wy + 1.05, b.z - b.vz / v * 1.4, 0xe8f4ff, 1, { size: 0.25, life: 0.5, up: 0.4, v: 0.6 });
     placeCamera(dt);
