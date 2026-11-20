@@ -416,25 +416,31 @@
     }
   }
   // ── 땅 이름 팻말(11/20): 주인 있는 땅 앞(길 쪽)에 나무 기둥 + 「OO님의 땅」 — 56칸 안만 그림, 차단한 사람은 번호만 ──
-  var plotSignObjs = {}, plotPostMat = null, plotPostGeo = null;
+  var plotSignObjs = {}, plotPostMat = null, plotPostGeo = null, PLOT_NAMES = {}, plotNameT = 0;
+  function fetchPlotNames() {   // 주인이 쓴 팻말 글(서버, 금칙어 검사를 거친 것)
+    if (!client || !me || me.id === 'test') return;
+    client.rpc('get_ark_plot_names', {}).then(function (r) { if (!r || r.error || !Array.isArray(r.data)) return; PLOT_NAMES = {}; r.data.forEach(function (row) { PLOT_NAMES[row.user_id] = row.body; }); }, function () {});
+  }
   function refreshPlotSigns() {
     if (!started) return;
+    if (plotNameT-- <= 0) { plotNameT = 30; fetchPlotNames(); }
     var want = {}, ids = [];
     for (var pu in plotUser) if (plotUser[pu]) ids.push(plotUser[pu]);
     if (me && me.id) ids.push(me.id);
     if (ids.length && typeof fetchNames === 'function') fetchNames(ids);
     for (var i = 0; i < PCOLS * PROWS; i++) {
       var u = plotUser[i]; if (!u && i !== myPlot) continue;
-      var o = plotOrigin(i), cx = o.x + PLOT / 2, cz = o.z - 1.5;
+      var o = plotOrigin(i), cx = o.x + 0.5, cz = o.z - 1.5;   // 길 쪽 왼편 모서리
       if (Math.hypot(cx - P.x, cz - P.z) > 56) continue;
       var mine = i === myPlot, hidden = !mine && u && FRIENDS.hidden && FRIENDS.hidden.has(u);
       var nm = mine ? (me && NET.names[me.id]) : (hidden ? null : NET.names[u]);
-      want[i] = (mine ? '🏠 ' : '🏡 ') + (nm ? nm + '님의 땅' : (i + 1) + '번 땅') + (mine ? ' (내 땅)' : '');
+      var own = mine ? (me && PLOT_NAMES[me.id]) : (hidden ? null : PLOT_NAMES[u]);
+      want[i] = (mine ? '🏠 ' : '🏡 ') + (own ? own + (nm ? ' · ' + nm : '') : (nm ? nm + '님의 땅' : (i + 1) + '번 땅')) + (mine ? ' (내 땅)' : '');
     }
     for (var k in plotSignObjs) if (want[k] !== plotSignObjs[k].txt) { scene.remove(plotSignObjs[k].g); disposeSprite(plotSignObjs[k].s); delete plotSignObjs[k]; }
     for (var k2 in want) if (!plotSignObjs[k2]) {
       if (!plotPostMat) { plotPostMat = new THREE.MeshBasicMaterial({ color: 0x6b4a2b }); plotPostGeo = new THREE.BoxGeometry(0.16, 2.1, 0.16); }
-      var o2 = plotOrigin(+k2), x2 = o2.x + PLOT / 2, z2 = o2.z - 1.5, gy = groundAt(x2, z2, SY - 3); if (gy === null) continue;
+      var o2 = plotOrigin(+k2), x2 = o2.x + 0.5, z2 = o2.z - 1.5, gy = groundAt(x2, z2, SY - 3); if (gy === null) continue;
       var g = new THREE.Group(), post = new THREE.Mesh(plotPostGeo, plotPostMat); post.position.y = 1.05; g.add(post);
       var s = signSprite(want[k2]); s.position.y = 2.1 + s.scale.y / 2; g.add(s);
       g.position.set(x2, gy, z2); scene.add(g); plotSignObjs[k2] = { g: g, s: s, txt: want[k2] };
