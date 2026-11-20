@@ -199,6 +199,7 @@
     if (!g.hidden) { var gt = Math.round(y) + 'px'; if (g.style.top !== gt) g.style.top = gt; y = g.getBoundingClientRect().bottom + 6; }
     var ct = Math.round(y) + 'px'; if (c.style.top !== ct) c.style.top = ct;
   }
+  function guideHome() { if (myPlot < 0) { resume(); return goHome(); } var o = plotOrigin(myPlot); guideTo([o.x + OLD_PLOT / 2, o.z - 2], '내 땅(' + (myPlot + 1) + '번)'); }
   function goHome() {
     if (myPlot < 0) { toast(me ? '내 땅을 받는 중이에요' : '로그인하면 내 땅을 받을 수 있어요'); return; }
     var o = plotOrigin(myPlot); teleport(o.x + OLD_PLOT / 2, G, o.z - 2, Math.PI); tutorialEvent('home'); toast('내 땅(' + (myPlot + 1) + '번)이에요. 모은 블록으로 지어 보세요!');

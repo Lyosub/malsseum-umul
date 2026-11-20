@@ -268,7 +268,7 @@
       a.kept = inMyPlot(a.x, a.z);
       if ((lure || (staff && a.kind==='sheep' && (a!==lostSheep || a.found))) && a !== riding) {
         var dx = P.x - a.x, dz = P.z - a.z, d = Math.hypot(dx, dz);
-        if (d < 14 && d > 3) { a.h = Math.atan2(-dx, -dz); a.mode = 'walk'; a.t = 0.6; }
+        if (d < 14 && d > 3) { a.h = Math.atan2(-dx, -dz); a.mode = 'walk'; a.t = 0.6; a.luredUntil = now + 1500; }
         else if (d <= 3 && a.mode === 'walk') { a.mode = 'idle'; a.t = 1; }
       }
     });

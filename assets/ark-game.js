@@ -4854,7 +4854,7 @@
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', fitMobileKeyboard);
     }
-    on('mHome', function () { if (myPlot < 0) { resume(); return goHome(); } var o = plotOrigin(myPlot); guideTo([o.x + OLD_PLOT / 2, o.z - 2], '내 땅(' + (myPlot + 1) + '번)'); });
+    on('mHome', guideHome);
     on('mForest', function () { travel('forest'); });
     on('mHill', function () { travel('hill'); });
     on('mLake', function () { travel('lake'); });
@@ -4894,7 +4894,7 @@
     });
     on('mMap', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     ['ark', 'forest', 'hill', 'lake'].forEach(function (w) { on('go_' + w, function () { travel(w); }); });
-    on('go_home', function () { if (myPlot < 0) { resume(); return goHome(); } var o = plotOrigin(myPlot); guideTo([o.x + OLD_PLOT / 2, o.z - 2], '내 땅(' + (myPlot + 1) + '번)'); });
+    on('go_home', guideHome);
     ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);
@@ -4986,7 +4986,11 @@
     var moving = false;
     if (a.mode === 'walk') {
       var s = a.sp.speed * dt, nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
-      if (gy === null || Math.abs(gy - a.y) > 1.2 || plotAt(nx | 0, nz | 0) >= 0 || inArk(nx | 0, gy | 0, nz | 0) || Math.hypot(nx - P.x, nz - P.z) < 1.4) {
+      // 11/20 땅 칸: 남의 땅은 못 들어감. 내 땅은 밀·지팡이로 불러 데려올 때만 들어오고, 들어온 동물은 부르지 않으면 내 땅(우리) 밖으로 나가지 않음
+      var np = plotAt(nx | 0, nz | 0), cp = plotAt(a.x | 0, a.z | 0), lured = a.luredUntil > Date.now();
+      var plotBlock = np >= 0 && (np !== myPlot || myPlot < 0 || (cp !== np && !lured));
+      if (myPlot >= 0 && cp === myPlot && np !== myPlot && !lured) plotBlock = true;
+      if (gy === null || Math.abs(gy - a.y) > 1.2 || plotBlock || inArk(nx | 0, gy | 0, nz | 0) || Math.hypot(nx - P.x, nz - P.z) < 1.4) {
         a.h += Math.PI * (0.5 + Math.random()); a.mode = 'idle'; a.t = 0.4;
       } else { a.x = nx; a.z = nz; a.ty = gy; a.walk += s * 2.4; moving = true; }
     }
@@ -5625,15 +5629,15 @@
     { text: '🌲 동쪽 숲에서 통나무 5개 캐기', prog: function () { return Math.min(5, stats.log) + '/5'; }, done: function () { return stats.log >= 5; }, btn: ['숲으로', function () { travel('forest'); }] },
     { text: '🔨 가방 → 만들기에서 고페르 나무 만들기', done: function () { return stats.crafted > 0; }, btn: ['가방 열기', function () { invTab = 'craft'; openPanel('inv'); }] },
     { text: '🐑 동물을 눌러 말씀 카드 보기', done: function () { return stats.tapped > 0; } },
-    { text: '🏠 내 땅에 블록 놓기', done: function () { return stats.placed > 0; }, btn: ['내 땅으로', function () { goHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
+    { text: '🏠 내 땅에 블록 놓기', done: function () { return stats.placed > 0; }, btn: ['내 땅으로', function () { guideHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
     // 첫 집 짓기: 무엇을 지을지 한 단계씩
     { text: '🪵 집 지을 고페르 나무 20개 모으기(통나무 1 → 4)', prog: function () { return Math.min(20, have(GOPHER)) + '/20'; }, done: function () { return have(GOPHER) >= 20 || stats.placed >= 30; }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }] },
-    { text: '🧱 내 땅에 바닥과 벽 블록 30개 놓기', prog: function () { return Math.min(30, stats.placed) + '/30'; }, done: function () { return stats.placed >= 30; }, btn: ['내 땅으로', function () { goHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
+    { text: '🧱 내 땅에 바닥과 벽 블록 30개 놓기', prog: function () { return Math.min(30, stats.placed) + '/30'; }, done: function () { return stats.placed >= 30; }, btn: ['내 땅으로', function () { guideHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
     { text: '🚪 문을 만들어 집에 달기(고페르 나무 6)', done: function () { return [60, 61, 62, 63, 64, 65, 66, 67].some(plotHas); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'shape'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
     { text: '🔥 등불이나 횃불로 집 안 밝히기', done: function () { return plotHas(LAMP) || plotHas(TORCH) || [170, 171, 172, 173].some(plotHas); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
     { text: '🛏 침대를 놓아 쉴 곳 만들기(양털 3 + 고페르 나무 3)', done: function () { return plotHas(BED); }, btn: ['만들기', function () { invTab = 'craft'; craftCat = 'block'; openPanel('inv'); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' },
     { text: '🕊 방주 문 앞 노아의 부탁 다섯 가지 마치기 → 개척 땅', prog: function () { return (NOAH.done ? 5 : NOAH.step) + '/5'; }, done: function () { return !!NOAH.done; }, btn: ['노아에게', function () { travel('ark'); }], guest: '🏠 로그인하면 노아의 부탁을 받고 개척 땅을 맡을 수 있어요' },
-    { text: '🐑 울타리로 우리를 짓고 밀을 들고 양을 데려오기', done: function () { return HERD.length > 0; }, btn: ['내 땅으로', function () { goHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' }
+    { text: '🐑 울타리로 우리를 짓고 밀을 들고 양을 데려오기', done: function () { return HERD.length > 0; }, btn: ['내 땅으로', function () { guideHome(); }], guest: '🏠 로그인하면 내 땅에 집을 지을 수 있어요' }
   ];
   function questSave() { try { localStorage.setItem('arkVillage.quest', JSON.stringify({ stats: stats, step: qStep })); } catch (e) {} }
   function questCheck() {
@@ -5657,7 +5661,7 @@
       el.style.display = ''; var b2 = $('qBtn'); b2.style.display = '';
       if (!STORY.started) {
         $('qHead').textContent = '📜 ' + PART_NAMES[0]; $('qText').textContent = '🧭 마을 입구의 「안내하는 나그네」에게 말을 걸어요';
-        b2.textContent = '가기'; b2.onclick = function (e) { e.stopPropagation(); teleport(XM - 6.5, G, PZ0 - 3, 0); resume(); };
+        b2.textContent = '가기'; b2.onclick = function (e) { e.stopPropagation(); guideTo([XM - 6.5, PZ0 - 3], '안내하는 나그네'); };
         return;
       }
       var part = partOf(), txt = '';
@@ -6541,6 +6545,7 @@
     if (!g.hidden) { var gt = Math.round(y) + 'px'; if (g.style.top !== gt) g.style.top = gt; y = g.getBoundingClientRect().bottom + 6; }
     var ct = Math.round(y) + 'px'; if (c.style.top !== ct) c.style.top = ct;
   }
+  function guideHome() { if (myPlot < 0) { resume(); return goHome(); } var o = plotOrigin(myPlot); guideTo([o.x + OLD_PLOT / 2, o.z - 2], '내 땅(' + (myPlot + 1) + '번)'); }
   function goHome() {
     if (myPlot < 0) { toast(me ? '내 땅을 받는 중이에요' : '로그인하면 내 땅을 받을 수 있어요'); return; }
     var o = plotOrigin(myPlot); teleport(o.x + OLD_PLOT / 2, G, o.z - 2, Math.PI); tutorialEvent('home'); toast('내 땅(' + (myPlot + 1) + '번)이에요. 모은 블록으로 지어 보세요!');
@@ -6976,7 +6981,7 @@
       a.kept = inMyPlot(a.x, a.z);
       if ((lure || (staff && a.kind==='sheep' && (a!==lostSheep || a.found))) && a !== riding) {
         var dx = P.x - a.x, dz = P.z - a.z, d = Math.hypot(dx, dz);
-        if (d < 14 && d > 3) { a.h = Math.atan2(-dx, -dz); a.mode = 'walk'; a.t = 0.6; }
+        if (d < 14 && d > 3) { a.h = Math.atan2(-dx, -dz); a.mode = 'walk'; a.t = 0.6; a.luredUntil = now + 1500; }
         else if (d <= 3 && a.mode === 'walk') { a.mode = 'idle'; a.t = 1; }
       }
     });

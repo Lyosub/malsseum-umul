@@ -720,7 +720,7 @@
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', fitMobileKeyboard);
     }
-    on('mHome', function () { if (myPlot < 0) { resume(); return goHome(); } var o = plotOrigin(myPlot); guideTo([o.x + OLD_PLOT / 2, o.z - 2], '내 땅(' + (myPlot + 1) + '번)'); });
+    on('mHome', guideHome);
     on('mForest', function () { travel('forest'); });
     on('mHill', function () { travel('hill'); });
     on('mLake', function () { travel('lake'); });
@@ -760,7 +760,7 @@
     });
     on('mMap', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     ['ark', 'forest', 'hill', 'lake'].forEach(function (w) { on('go_' + w, function () { travel(w); }); });
-    on('go_home', function () { if (myPlot < 0) { resume(); return goHome(); } var o = plotOrigin(myPlot); guideTo([o.x + OLD_PLOT / 2, o.z - 2], '내 땅(' + (myPlot + 1) + '번)'); });
+    on('go_home', guideHome);
     ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);
