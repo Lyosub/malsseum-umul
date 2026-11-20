@@ -5,6 +5,7 @@
   function showUI(name) {
     ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party', 'friends', 'practice', 'villageWork', 'frontierChest'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
     document.body.classList.toggle('playing', name === 'play');
+    if (name === 'play') setTimeout(function () { fitBottomBar(); }, 60);   // 단축 칸 폭을 방향키에 맞춤
     document.body.classList.toggle('menu', name !== 'play');
     ui = name;
     if (name === 'map') { tutorialEvent('map'); renderPins(); if (!FRIENDS.ready) friendsFetch(); }

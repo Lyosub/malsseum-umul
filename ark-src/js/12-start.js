@@ -117,6 +117,7 @@
       var last = performance.now(), orbit = 0, mapT = 0, npcT = 0;
       (function loop(now) {
         var dt = Math.min(0.05, (now - last) / 1000); last = now;
+        fpsWatch(now);
         if (!started) {
           orbit += dt * 0.035;
           var cxr = XM, czr = AZ0 + AW / 2 + 40;
@@ -204,6 +205,20 @@
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
   }
 
+  // 화면 품질 자동 조절(11/20): 휴대폰이 버벅이면(4초씩 두 번 연속 초당 24장 아래) 「가벼운 화면」을 켬. 메뉴에서 끄면 다시는 자동으로 켜지 않음
+  var fpsW = { t0: 0, n: 0, low: 0 };
+  function fpsWatch(now) {
+    if (!started || ui !== 'play' || document.hidden) { fpsW.t0 = 0; return; }
+    if (!fpsW.t0) { fpsW.t0 = now; fpsW.n = 0; return; }
+    fpsW.n++;
+    if (now - fpsW.t0 < 4000) return;
+    var fps = fpsW.n * 1000 / (now - fpsW.t0); fpsW.t0 = now; fpsW.n = 0; fpsW.last = fps;
+    fpsW.low = fps < 24 ? fpsW.low + 1 : 0;
+    if (fpsW.low >= 2 && !S.lightMode && S.autoLight !== false) {
+      S.lightMode = true; S.autoLit = true; applyLightMode(); saveSettings(); updateMenuLabels(); fpsW.low = 0;
+      toast('📱 화면이 버벅여서 「가벼운 화면」으로 바꿨어요 — 메뉴에서 다시 끌 수 있어요');
+    }
+  }
   var fwd = new THREE.Vector3(), lastX = 0, lastZ = 0;
   function step(dt) {
     if(ferryRide){stepFerry(dt);return;}

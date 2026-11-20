@@ -508,7 +508,25 @@
     STAR_VERSES.forEach(function (v, i) { slot('s' + i, '<span class="em">' + v[0] + '</span><small>' + v[1] + '</small>', '별', '밤에 하늘을 한참 올려다보면 적혀요', function () { showVerseCard(v[0], v[1], v[3], v[2]); }); });
     $('dexCount').textContent += '  ·  넓힌 도감 ' + more + ' / ' + moreAll;
   }
+  // 버튼 크기(11/20): 작게·보통·크게 — 오른쪽 버튼·단축 칸은 zoom(화면 모서리에서 떨어진 거리도 같이 커져 겹치지 않음), 방향키는 왼쪽 아래 기준 확대
+  var BTN_SIZES = [['작게', 0.84], ['보통', 1], ['크게', 1.2]];
+  function applyBtnSize() {
+    var k = (BTN_SIZES[S.btnSize === undefined ? 1 : S.btnSize] || BTN_SIZES[1])[1];
+    ['btnJump', 'btnDown', 'btnRide', 'btnFly', 'btnRun', 'btnSneak', 'touchAction', 'slabMode', 'hotbar'].forEach(function (id) { var el = $(id); if (el) el.style.zoom = k === 1 ? '' : String(k); });
+    var dp = $('dpad'); if (dp) { dp.style.transformOrigin = 'left bottom'; dp.style.transform = k === 1 ? '' : 'scale(' + k + ')'; }
+    fitBottomBar(k);
+  }
+  // 단축 칸·체력 줄이 방향키와 오른쪽 버튼 사이에 들어가게(작은 휴대폰 가로)
+  function fitBottomBar(k) {
+    var hb = $('hotbar'), vt = $('vitals'), dp = $('dpad'); if (!hb || !dp) return;
+    k = k || +(hb.style.zoom || 1);
+    if (!isTouch || innerWidth < innerHeight) { hb.style.maxWidth = ''; if (vt) vt.style.maxWidth = ''; return; }
+    var r = dp.getBoundingClientRect(), avail = innerWidth - 2 * (r.right + 8);
+    hb.style.maxWidth = Math.max(220, avail) / k + 'px'; if (vt) vt.style.maxWidth = Math.max(220, avail) + 'px';
+  }
+  window.addEventListener('resize', function () { setTimeout(function () { fitBottomBar(); }, 120); });
   function updateMenuLabels() {
+    if ($('mBtnSize')) $('mBtnSize').textContent = '버튼 크기: ' + (BTN_SIZES[S.btnSize === undefined ? 1 : S.btnSize] || BTN_SIZES[1])[0];
     $('mLight').textContent = '가벼운 화면: ' + (S.lightMode ? '켬' : '끔');
     $('mLight').setAttribute('aria-pressed', String(!!S.lightMode));
     $('mMapVisible').textContent = '지도에 내 위치: ' + (S.mapVisible === false ? '숨김' : '표시');
@@ -629,7 +647,9 @@
     on('practiceMap', function () { practiceStep = 4; renderPractice(); });
     on('practiceSkip', finishPractice);
     on('practiceDone', finishPractice);
-    on('mLight', function () { S.lightMode = !S.lightMode; applyLightMode(); saveSettings(); updateMenuLabels(); });
+    on('mLight', function () { S.lightMode = !S.lightMode; if (!S.lightMode && S.autoLit) S.autoLight = false; S.autoLit = false; applyLightMode(); saveSettings(); updateMenuLabels(); });   // 자동으로 켠 것을 사람이 끄면 다시 자동으로 켜지 않음
+    on('mBtnSize', function () { S.btnSize = ((S.btnSize === undefined ? 1 : S.btnSize) + 1) % 3; applyBtnSize(); saveSettings(); updateMenuLabels(); sfx('click'); });
+    applyBtnSize();
     on('touchAction', function () { if (isTouch && ui === 'play' && HOTBAR[sel] !== BOW) { tapAt(); mobileHudAt = 0; } });
     (function () { var ta = $('touchAction'); if (!ta) return;
       ta.addEventListener('pointerdown', function () { if (ui === 'play' && HOTBAR[sel] === BOW) bowStart(); });
