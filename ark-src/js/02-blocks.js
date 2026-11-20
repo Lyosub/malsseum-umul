@@ -119,6 +119,11 @@
     regShape(tid, '다락문', 'trapdoor', TRAP, GOPHER, tf, to); SHAPE[tid].h = th; B[tid][1] = B[tid][2] = B[tid][3] = 'trapdoor';
   }
   for (var ff = 0; ff < 4; ff++) { if (B[FRAME + ff]) throw new Error('블록 번호가 겹쳐요: ' + (FRAME + ff)); regShape(FRAME + ff, '액자', 'frame', FRAME, GOPHER, ff); B[FRAME + ff][1] = B[FRAME + ff][2] = B[FRAME + ff][3] = 'frame'; }
+  // ── 2026-11-20 레일(수레 길): 0 남북 · 1 동서 · 2 북-동 · 3 동-남 · 4 남-서 · 5 서-북 · 6~9 북·동·남·서로 올라가는 비탈 ──
+  var RAIL0 = 940, CART = 950;
+  var RAIL_TILE = ['railNS', 'railEW', 'railC2', 'railC3', 'railC4', 'railC5', 'railNS', 'railEW', 'railNS', 'railEW'];
+  for (var rs = 0; rs < 10; rs++) { if (B[RAIL0 + rs]) throw new Error('블록 번호가 겹쳐요: ' + (RAIL0 + rs)); regShape(RAIL0 + rs, '레일', 'mrail', RAIL0, STONE, rs); B[RAIL0 + rs][1] = RAIL_TILE[rs]; B[RAIL0 + rs][2] = B[RAIL0 + rs][3] = 'railSide'; }
+  if (B[CART]) throw new Error('번호가 겹쳐요: ' + CART);
   // ── 2026-11-18 더한 것: 농사(159~166), 침대·레버·벽 횃불·유리판·표지판(167~178), 양털 블록(179~182), 반 블록·계단(183~192), 눕힌 통나무(193~194)
   var SEED = 159, WHEAT = 160, BREAD = 161, FIG = 162, CROP0 = 163, BED = 167, LEVER = 168, WTORCH = 170, PANE = 174, SIGN = 175;
   var WOOL_W = 179, WOOL_B = 180, WOOL_V = 181, WOOL_R = 182, SLAB_L = 183, SLAB_P = 184, STAIR_L = 185, STAIR_P = 189, LOG_X = 193, LOG_Z = 194;
@@ -397,13 +402,18 @@
   WORD_ITEMS.forEach(function(d){expansionItem(d[0],d[1],'word'+d[0]);});
   // ── 2026-11-20 활과 화살: 어둠의 그림자를 멀리서 물리침 ──
   var BOW = 930, ARROW = 931;
-  [[BOW, '활'], [ARROW, '화살']].forEach(function (d) { if (B[d[0]]) throw new Error('번호가 겹쳐요: ' + d[0]); expansionItem(d[0], d[1], 'bow' + d[0]); });
+  [[BOW, '활'], [ARROW, '화살'], [CART, '수레']].forEach(function (d) { if (B[d[0]]) throw new Error('번호가 겹쳐요: ' + d[0]); expansionItem(d[0], d[1], 'bow' + d[0]); });
   function drawBowTiles() {
     tile('bow930', function (px, R) {
       clear(px);
       for (var y = 1; y < 15; y++) { var cx = 3 + 7.5 * Math.sin(Math.PI * (y - 1) / 13); for (var x = 0; x < 16; x++) if (Math.abs(x - cx) < 1.1) px(x, y, 0x8a5a2b, 0.85 + R() * 0.25); }
       for (var y2 = 1; y2 < 15; y2++) px(3, y2, 0xe8e2d0, 1);
       px(10, 7, 0x4a2f18); px(10, 8, 0x4a2f18);
+    });
+    tile('bow950', function (px, R) {   // 수레: 쇠 통 + 바퀴
+      clear(px);
+      for (var y = 4; y < 12; y++) for (var x = 2; x < 14; x++) { var rim = y === 4 || x === 2 || x === 13; px(x, y, rim ? 0x6d7378 : 0x8d949a, 0.85 + R() * 0.2); }
+      [[4, 12], [5, 12], [4, 13], [5, 13], [10, 12], [11, 12], [10, 13], [11, 13]].forEach(function (q) { px(q[0], q[1], 0x2b2b2b, 1); });
     });
     tile('bow931', function (px, R) {
       clear(px);
@@ -480,6 +490,12 @@
       return s.f ? gate.map(function(b) { return [b[2],b[1],b[0],b[5],b[4],b[3]]; }) : gate;
     }
     if (s.type === 'door') return [EDGE[s.open ? (s.f + 1) % 4 : s.f]];
+    if (s.type === 'mrail') {
+      if (s.f < 6) return [[0, 0, 0, 1, 0.0625, 1]];
+      var rb = [];
+      for (var k = 0; k < 4; k++) { var lo = k * 0.25, hi = lo + 0.0625; rb.push([[0, lo, 0.75 - lo, 1, hi, 1 - lo], [lo, lo, 0, lo + 0.25, hi, 1], [0, lo, lo, 1, hi, lo + 0.25], [0.75 - lo, lo, 0, 1 - lo, hi, 1]][s.f - 6]); }
+      return rb;
+    }
     if (s.type === 'trapdoor') return s.open ? [EDGE[s.f]] : [s.h ? [0, 0.81, 0, 1, 1, 1] : [0, 0, 0, 1, 0.19, 1]];   // 닫히면 바닥(아래·위 반쪽), 열리면 한쪽 벽에 세워짐
     if (s.type === 'frame') return [[[0.12, 0.12, 0, 0.88, 0.88, 0.06], [0.94, 0.12, 0.12, 1, 0.88, 0.88], [0.12, 0.12, 0.94, 0.88, 0.88, 1], [0, 0.12, 0.12, 0.06, 0.88, 0.88]][s.f]];
     if (s.type === 'ladder') return [[[0, 0, 0, 1, 1, 0.1], [0.9, 0, 0, 1, 1, 1], [0, 0, 0.9, 1, 1, 1], [0, 0, 0, 0.1, 1, 1]][s.f]];
@@ -518,7 +534,7 @@
     return bx;
   }
   function collBoxes(id, x, y, z) { var s = SHAPE[id]; if ((s.type === 'door' || s.type === 'gate' || s.type === 'trapdoor') && s.open) return [];
-    if (s.type === 'frame') return [];
+    if (s.type === 'frame' || s.type === 'mrail') return [];
     if (s.type === 'flag' || s.type === 'cloth' || s.type === 'rope' || s.type === 'plate') return [];
     if (s.type === 'gate') return [s.f ? [.43,0,0,.57,1,1] : [0,0,.43,1,1,.57]]; if (s.type === 'ladder' || s.type === 'wtorch' || s.type === 'lever' || s.type === 'sign' || s.type === 'lantern' || s.type === 'carpet' || s.type === 'lampstand') return []; if (s.type === 'fence') return [[0.3, 0, 0.3, 0.7, 1, 0.7]].concat(shapeBoxes(id, x, y, z).slice(1).map(function (b) { return [b[0], 0, b[2], b[3], 1, b[5]]; })); return shapeBoxes(id, x, y, z); }
   // 가방에 들어가는 것(캐거나 만들어서 모음)
@@ -527,7 +543,7 @@
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
   FRONTIER_RECIPES.forEach(function(r){INV.push(r[0]);});
-  INV.push(TRAP, FRAME, BOW, ARROW);
+  INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART);
   INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
@@ -557,6 +573,7 @@
   setClass('knife', [WOOL_W, WOOL_B, WOOL_V, WOOL_R], 0.5); setClass('axe', [LOG_X, LOG_Z], 1.4);
   GEMS.forEach(function (g, i) { if (!g) return; setClass('pick', [gemOre(i)], 5.2 + g[7] * 0.3); DROP[gemOre(i)] = gemItem(i); });
   for (var fsj = 0; fsj < 12; fsj++) setClass('pick', [FSTONE0 + fsj], 3.0);
+  (function () { var r = []; for (var i = 0; i < 10; i++) r.push(RAIL0 + i); setClass('pick', r, 0.5); })();
   (function () { var t = []; for (var i = 0; i < 16; i++) t.push(TRAP + i); setClass('axe', t, 0.9); setClass('axe', [FRAME, FRAME + 1, FRAME + 2, FRAME + 3], 0.3); })();
   setClass('axe', [SHELF], 1.0); setClass('pick', [SBRICK], 1.6); setClass('knife', [CARPET], 0.1); setClass('pick', [LANTERN], 0.4);
   setClass('pick', [SLAB_L, STAIR_L, STAIR_L + 1, STAIR_L + 2, STAIR_L + 3], 1.2); setClass('axe', [SLAB_P, STAIR_P, STAIR_P + 1, STAIR_P + 2, STAIR_P + 3], 1.0);
@@ -619,6 +636,8 @@
     { out: [DOOR, 1], need: [[GOPHER, 6]] },
     { out: [TRAP, 2], need: [[GOPHER, 6]], cat: 'shape' },
     { out: [BOW, 1], need: [[STICK, 3], [THREAD, 3]], cat: 'tool' },
+    { out: [RAIL0, 16], need: [[ING_FE, 6], [STICK, 1]], cat: 'shape' },
+    { out: [CART, 1], need: [[ING_FE, 5]], cat: 'tool' },
     { out: [ARROW, 4], need: [[STICK, 1], [FLINT, 1]], cat: 'tool' },
     { out: [FRAME, 1], need: [[STICK, 8], [LEATHER, 1]], cat: 'shape' },
     { out: [SLAB_S, 6], need: [[STONE, 3]] },

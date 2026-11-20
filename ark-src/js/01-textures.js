@@ -636,6 +636,22 @@
       }
       px(11, 9, 0x3a2a18); px(11, 10, 0x3a2a18);
     });
+    // 레일: 자갈 바닥 + 나무 침목 + 쇠 레일 두 줄(위가 북쪽). 굽은 것은 두 변을 잇는 사분원
+    function railTile(name, kind) {
+      tile(name, function (px, R) {
+        for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) px(x, y, 0x7d7266, 0.8 + R() * 0.3);
+        var C = { 2: [16, -1], 3: [16, 16], 4: [-1, 16], 5: [-1, -1] }[kind];
+        for (var y2 = 0; y2 < TS; y2++) for (var x2 = 0; x2 < TS; x2++) {
+          var a, b;   // a: 레일을 따라가는 값, b: 가로지르는 값(0~15)
+          if (kind === 0) { a = y2; b = x2; } else if (kind === 1) { a = x2; b = y2; }
+          else { var r = Math.hypot(x2 + 0.5 - C[0], y2 + 0.5 - C[1]); b = r - 0.5; a = Math.atan2(y2 + 0.5 - C[1], x2 + 0.5 - C[0]) * 8; if (b < 0 || b > 15.5) continue; }
+          var tie = ((Math.floor(a) % 4) + 4) % 4 < 2 && b > 1 && b < 14.5, rail = Math.abs(b - 3.5) < 0.8 || Math.abs(b - 11.5) < 0.8;
+          if (rail) px(x2, y2, 0xb9bec2, 0.9 + R() * 0.15); else if (tie) px(x2, y2, 0x7a5232, 0.85 + R() * 0.2);
+        }
+      });
+    }
+    railTile('railNS', 0); railTile('railEW', 1); railTile('railC2', 2); railTile('railC3', 3); railTile('railC4', 4); railTile('railC5', 5);
+    tile('railSide', function (px, R) { for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) px(x, y, 0x5e5a55, 0.85 + R() * 0.2); });
     tile('trapdoor', function (px, R) {   // 다락문: 판자 두 줄 + 가운데 창 두 개
       for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) {
         var frame = x < 2 || x > 13 || y < 2 || y > 13, hole = !frame && (y > 3 && y < 7 || y > 8 && y < 12) && (x > 3 && x < 7 || x > 8 && x < 12);

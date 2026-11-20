@@ -178,6 +178,7 @@
     clearFrontierLift();
     if (!keepGuide) cancelForestRoute();
     if(ferryRide){ferryRide=null;ferryMesh.visible=false;}
+    if (cartRide) leaveCart(true);
     if (riding) dismount(true);
     ensureAround(x, z, 2);
     P.x = x; P.z = z; P.y = y; P.vy = 0; P.vx = P.vz = 0; fallTop = null;
@@ -206,6 +207,7 @@
   var fwd = new THREE.Vector3(), lastX = 0, lastZ = 0;
   function step(dt) {
     if(ferryRide){stepFerry(dt);return;}
+    if(cartRide){stepCart(dt);return;}
     if(frontierLift){moveFrontierLift(dt);placeCamera(dt,0);return;}
     if (furnitureRest) {
       var rest = furnitureRest;

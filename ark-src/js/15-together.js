@@ -775,6 +775,102 @@
     ferryMesh.visible=true; ferryRide={from:p,to:q,t:0};
     P.yaw=q.z>p.z?Math.PI:0; P.pitch=-.08; toast('나룻배로 호수를 건너요');
   }
+  // ── 수레(11/20, 마인크래프트 수레처럼): 레일을 따라 굴러감. 앞으로 = 바라보는 쪽으로 밀기, 비탈은 내려가며 빨라짐.
+  //    내리기 = Shift·「내리기」 버튼·방향키 가운데 톡톡 — 내리면 수레는 가방으로 ──
+  var RDX = [0, 1, 0, -1], RDZ = [-1, 0, 1, 0], RAIL_CONN = [[0, 2], [1, 3], [0, 1], [1, 2], [2, 3], [3, 0], [0, 2], [1, 3], [0, 2], [1, 3]];
+  var cartRide = null, cartMesh = null, cartClackT = 0;
+  function railAt(x, y, z) { var id = get(x, y, z); return id >= RAIL0 && id < RAIL0 + 10 ? id - RAIL0 : -1; }
+  function railHas(s, d) { return RAIL_CONN[s][0] === d || RAIL_CONN[s][1] === d; }
+  function railNeighbor(x, y, z, d) {   // d쪽 옆 레일: 같은 높이 → 한 칸 위 → 한 칸 아래
+    var nx = x + RDX[d], nz = z + RDZ[d];
+    for (var k = 0; k < 3; k++) { var dy = [0, 1, -1][k], s = railAt(nx, y + dy, nz); if (s >= 0) return { x: nx, y: y + dy, z: nz, s: s, up: dy }; }
+    return null;
+  }
+  function railLinks(x, y, z) { var s = railAt(x, y, z); if (s < 0) return 0; var n = 0; RAIL_CONN[s].forEach(function (d) { var nb = railNeighbor(x, y, z, d); if (nb && railHas(nb.s, (d + 2) % 4)) n++; }); return n; }
+  function railShapeFor(x, y, z, look) {
+    var cand = [];
+    for (var d = 0; d < 4; d++) { var nb = railNeighbor(x, y, z, d); if (nb && (railHas(nb.s, (d + 2) % 4) || railLinks(nb.x, nb.y, nb.z) < 2)) cand.push({ d: d, up: nb.up }); }
+    var a = cand[0], b = null;
+    for (var i = 0; i < cand.length && !b; i++) for (var j = i + 1; j < cand.length; j++) if ((cand[i].d + 2) % 4 === cand[j].d) { a = cand[i]; b = cand[j]; break; }
+    if (!b && cand.length > 1) b = cand[1];
+    if (!a) return (look % 2) ? 1 : 0;
+    var upD = a.up === 1 ? a.d : (b && b.up === 1 ? b.d : -1);
+    if (!b || (a.d + 2) % 4 === b.d) { if (upD >= 0) return 6 + upD; return a.d % 2 ? 1 : 0; }
+    var p = [a.d, b.d].sort(), key = p[0] + ',' + p[1];
+    return { '0,1': 2, '1,2': 3, '2,3': 4, '0,3': 5 }[key];
+  }
+  function railFixNeighbors(x, y, z) {   // 새 레일 쪽으로 옆 레일을 돌려 이음(이미 양쪽이 이어진 레일은 그대로)
+    for (var d = 0; d < 4; d++) {
+      var nb = railNeighbor(x, y, z, d); if (!nb) continue;
+      var lowFlat = nb.up === -1 && nb.s < 6;   // 한 칸 아래 평평한 레일은 이쪽으로 올라오는 비탈로
+      if (!lowFlat && (railHas(nb.s, (d + 2) % 4) || railLinks(nb.x, nb.y, nb.z) >= 2)) continue;
+      var ns = railShapeFor(nb.x, nb.y, nb.z, nb.s % 2); if (ns !== nb.s && !canPlace(nb.x, nb.y, nb.z, RAIL0)) setBlock(nb.x, nb.y, nb.z, RAIL0 + ns);
+    }
+    var me = railShapeFor(x, y, z, railAt(x, y, z) % 2); if (me !== railAt(x, y, z)) setBlock(x, y, z, RAIL0 + me);
+  }
+  function cartPos(c) {
+    var s = c.s, A = [c.x + 0.5 + RDX[c.from] * 0.5, c.z + 0.5 + RDZ[c.from] * 0.5], Bp = [c.x + 0.5 + RDX[c.to] * 0.5, c.z + 0.5 + RDZ[c.to] * 0.5], t = c.t, px, pz;
+    if ((c.from + 2) % 4 === c.to) { px = A[0] + (Bp[0] - A[0]) * t; pz = A[1] + (Bp[1] - A[1]) * t; }
+    else { var u = 1 - t, cx = c.x + 0.5, cz = c.z + 0.5; px = u * u * A[0] + 2 * u * t * cx + t * t * Bp[0]; pz = u * u * A[1] + 2 * u * t * cz + t * t * Bp[1]; }
+    var py = c.y + 0.07; if (s >= 6) py = c.y + 0.07 + (c.to === s - 6 ? t : 1 - t);
+    return [px, py, pz];
+  }
+  function cartLen(c) { return c.s >= 6 ? 1.4 : ((c.from + 2) % 4 === c.to ? 1 : 0.8); }
+  function makeCartMesh() {
+    var g = new THREE.Group(), iron = new THREE.MeshBasicMaterial({ color: 0x7f868c }), dark = new THREE.MeshBasicMaterial({ color: 0x3a3d40 });
+    function bx(w, h, d, x, y, z, m) { var o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); g.add(o); }
+    bx(0.9, 0.08, 1.2, 0, 0.2, 0, dark); bx(0.9, 0.42, 0.08, 0, 0.42, 0.56, iron); bx(0.9, 0.42, 0.08, 0, 0.42, -0.56, iron); bx(0.08, 0.42, 1.2, 0.41, 0.42, 0, iron); bx(0.08, 0.42, 1.2, -0.41, 0.42, 0, iron);
+    [[-0.45, -0.38], [0.45, -0.38], [-0.45, 0.38], [0.45, 0.38]].forEach(function (q) { bx(0.06, 0.2, 0.2, q[0], 0.12, q[1], dark); });
+    scene.add(g); return g;
+  }
+  function startCart(x, y, z) {
+    if (riding || ferryRide || furnitureRest) return deny('지금은 수레를 탈 수 없어요');
+    if (!isAdm() && have(CART) < 1) return deny('수레가 없어요 — 철 덩이 5개로 만들어요');
+    var s = railAt(x, y, z); if (s < 0) return;
+    var f = [-Math.sin(P.yaw), -Math.cos(P.yaw)], c0 = RAIL_CONN[s][0], c1 = RAIL_CONN[s][1];
+    var to = RDX[c0] * f[0] + RDZ[c0] * f[1] >= RDX[c1] * f[0] + RDZ[c1] * f[1] ? c0 : c1;
+    if (!isAdm()) { take(CART, 1); bagChanged(); }
+    cartRide = { x: x, y: y, z: z, s: s, to: to, from: to === c0 ? c1 : c0, t: 0.5, v: 0 };
+    if (!cartMesh) cartMesh = makeCartMesh(); cartMesh.visible = true;
+    $('restUp').textContent = '내리기'; $('restUp').hidden = false; resetInput(); sfx('door', 500);
+    toast('🛤 수레에 탔어요 — 앞으로 가면 바라보는 쪽으로 밀리고, Shift·「내리기」(휴대폰: 방향키 가운데 톡톡)로 내려요');
+  }
+  function leaveCart(quiet) {
+    var c = cartRide; if (!c) return;
+    cartRide = null; if (cartMesh) cartMesh.visible = false;
+    $('restUp').hidden = true; $('restUp').textContent = '일어나기';
+    if (!isAdm()) { if (give(CART, 1) < 1) dropItem(P.x, P.y + 0.5, P.z, CART, 1); bagChanged(); }
+    P.vx = P.vy = P.vz = 0; P.y += 0.3; while (collides(P.x, P.y, P.z) && P.y < SY) P.y += 1;
+    if (!quiet) { sfx('door', 500); toast('수레에서 내렸어요 — 수레는 가방에 넣었어요'); }
+  }
+  function stepCart(dt) {
+    var c = cartRide;
+    if (keys.ShiftLeft || keys.ShiftRight) { leaveCart(); placeCamera(dt, 0); return; }
+    if (railAt(c.x, c.y, c.z) !== c.s) { leaveCart(); placeCamera(dt, 0); return; }   // 레일이 사라짐
+    var fwdIn = ((keys.KeyW || keys.ArrowUp) ? 1 : 0) - ((keys.KeyS || keys.ArrowDown) ? 1 : 0) - joy.y;
+    var p0 = cartPos(c), save = c.t; c.t = Math.min(1, c.t + 0.01); var p1 = cartPos(c); c.t = save;
+    var tx = p1[0] - p0[0], tz = p1[2] - p0[2], tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
+    var look = tx * -Math.sin(P.yaw) + tz * -Math.cos(P.yaw);
+    c.v += fwdIn * look * 7 * dt;
+    if (c.s >= 6) c.v += (c.to === c.s - 6 ? -1 : 1) * 4.5 * dt;
+    var fr = (0.35 + 0.12 * Math.abs(c.v)) * dt; c.v = Math.abs(c.v) <= fr ? 0 : c.v - Math.sign(c.v) * fr;
+    if (c.v < 0) { var tmp = c.from; c.from = c.to; c.to = tmp; c.t = 1 - c.t; c.v = -c.v; }
+    c.v = Math.min(10, c.v);
+    c.t += c.v * dt / cartLen(c);
+    var guard = 0;
+    while (c.t >= 1 && guard++ < 4) {
+      var ny = c.y + (c.s >= 6 && c.to === c.s - 6 ? 1 : 0), nx = c.x + RDX[c.to], nz = c.z + RDZ[c.to], back = (c.to + 2) % 4, ns = railAt(nx, ny, nz);
+      if (ns < 0 || !railHas(ns, back)) { var ds = railAt(nx, ny - 1, nz); if (ds >= 6 && ds - 6 === back) { ny--; ns = ds; } else ns = -1; }
+      if (ns < 0) { c.t = 1; if (c.v > 2) { sfx('break', 'metal'); } c.v = 0; break; }
+      c.t -= 1; c.x = nx; c.y = ny; c.z = nz; c.s = ns; c.from = back; c.to = RAIL_CONN[ns][0] === back ? RAIL_CONN[ns][1] : RAIL_CONN[ns][0];
+      if (c.v > 0.5) tone('square', 130, 95, 0.04, Math.min(0.05, c.v * 0.006));
+    }
+    var p = cartPos(c);
+    P.x = p[0]; P.z = p[2]; P.y = p[1] + 0.25; P.vx = P.vy = P.vz = 0; P.swim = false; fallTop = null;
+    if (cartMesh) { cartMesh.position.set(p[0], p[1], p[2]); cartMesh.rotation.y = Math.atan2(tx, tz); }
+    ensureAround(P.x, P.z, 2);
+    placeCamera(dt, c.v);
+  }
   function stepFerry(dt) {
     var ride=ferryRide; ride.t+=dt;
     var progress=Math.min(1,ride.t/7),x=ride.from.x+.5,z=ride.from.z+.5+(ride.to.z-ride.from.z)*progress;
