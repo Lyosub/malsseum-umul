@@ -2833,9 +2833,12 @@
       } else if (slot === 'feet') {
         [pr.legL, pr.legR].forEach(function (L) { add(L, 4.6, 4.2, 4.9, col, 0, -9.9, -0.15); if (G) add(L, 4.8, 0.7, 5.1, GOLD, 0, -7.6, -0.15); });
       } else if (slot === 'shield') {
-        add(pr.armL, 0.9, 8, 7, col, -2.6, -5.5, 0);
-        add(pr.armL, 1, 8.4, 0.6, col === 0xa77a48 ? 0x6a4628 : 0x8a8e94, -2.6, -5.5, -3.5); add(pr.armL, 1, 8.4, 0.6, col === 0xa77a48 ? 0x6a4628 : 0x8a8e94, -2.6, -5.5, 3.5);
-        if (G) { add(pr.armL, 0.5, 6, 1.2, GOLD, -3.15, -5.5, 0); add(pr.armL, 0.5, 1.2, 4.6, GOLD, -3.15, -4, 0); }
+        // 11/21 방패를 크게(키의 절반쯤): 팔 바깥에 세운 판 + 둘레 테 + 가운데 징
+        var rimC = col === 0xa77a48 ? 0x6a4628 : 0x8a8e94;
+        add(pr.armL, 1, 13, 11, col, -2.7, -6, 0);
+        add(pr.armL, 1.2, 13.4, 0.8, rimC, -2.7, -6, -5.6); add(pr.armL, 1.2, 13.4, 0.8, rimC, -2.7, -6, 5.6); add(pr.armL, 1.2, 0.8, 11, rimC, -2.7, 0.6, 0); add(pr.armL, 1.2, 0.8, 11, rimC, -2.7, -12.6, 0);
+        add(pr.armL, 0.6, 2.4, 2.4, G ? GOLD : rimC, -3.4, -6, 0);
+        if (G) { add(pr.armL, 0.5, 9, 1.4, GOLD, -3.3, -6, 0); add(pr.armL, 0.5, 1.4, 7, GOLD, -3.3, -4, 0); }
       }
     });
   }
@@ -9179,6 +9182,7 @@
     [[-0.42, -0.57], [0.42, -0.57], [-0.42, 0.57], [0.42, 0.57]].forEach(function (q) { bx(0.1, 0.46, 0.1, q[0], 0.42, q[1], 0x6e4426); });
     bx(0.9, 0.05, 0.05, 0, 0.12, 0.38, 0x55595e); bx(0.9, 0.05, 0.05, 0, 0.12, -0.38, 0x55595e);
     [[-0.47, -0.38], [0.47, -0.38], [-0.47, 0.38], [0.47, 0.38]].forEach(function (q) { bx(0.06, 0.22, 0.22, q[0], 0.12, q[1], 0x7f868c); bx(0.07, 0.08, 0.08, q[0], 0.12, q[1], 0x3a3d40); });
+    g.scale.setScalar(1.5);   // 11/21 사람 키에 맞게 크게
     scene.add(g); return g;
   }
   function cartNet() { return !!(client && me && me.id && me.id !== 'test'); }
@@ -9249,7 +9253,7 @@
       if (c.v > 0.5) tone('square', 130, 95, 0.04, Math.min(0.05, c.v * 0.006));
     }
     var p = cartPos(c);
-    P.x = p[0]; P.z = p[2]; P.y = p[1] + 0.25; P.vx = P.vy = P.vz = 0; P.swim = false; fallTop = null;
+    P.x = p[0]; P.z = p[2]; P.y = p[1] + 0.38; P.vx = P.vy = P.vz = 0; P.swim = false; fallTop = null;
     if (cartMesh) { cartMesh.position.set(p[0], p[1], p[2]); cartMesh.rotation.y = Math.atan2(tx, tz); }
     ensureAround(P.x, P.z, 2);
     placeCamera(dt, c.v);
@@ -9334,14 +9338,14 @@
       boatMesh = new THREE.Mesh(mergedBoxes([   // 11/21 GPT 참고 그림대로: 높인 이물·고물, 밝은 뱃전, 가운데 앉을 자리, 이물 쪽 돛대와 작은 돛(눈높이 위)
         [1.3, .18, 2.5, 0x6e4426, 0, 0, 0], [1.1, .04, 2.3, 0xb07a48, 0, .1, 0], [.14, .42, 2.6, 0x9a6438, -.68, .25, 0], [.14, .42, 2.6, 0x9a6438, .68, .25, 0],
         [.2, .08, 2.6, 0xc08a54, -.68, .48, 0], [.2, .08, 2.6, 0xc08a54, .68, .48, 0], [1.5, .6, .32, 0x8a5630, 0, .3, 1.36], [1.3, .1, .36, 0xc08a54, 0, .64, 1.36],
-        [1.5, .5, .32, 0x8a5630, 0, .25, -1.36], [1.3, .1, .36, 0xc08a54, 0, .54, -1.36], [1.2, .1, .45, 0xa0703f, 0, .34, 0]]), avatarMat);
+        [1.5, .5, .32, 0x8a5630, 0, .25, -1.36], [1.3, .1, .36, 0xc08a54, 0, .54, -1.36], [1.2, .1, .4, 0xa0703f, 0, .34, -.75]]), avatarMat);
       boatMesh.userData.mast = new THREE.Mesh(mergedBoxes([[.12, 2.6, .12, 0x5e3a20, 0, 1.45, 1.05], [1.1, .08, .08, 0x5e3a20, 0, 2.7, 1.05], [1.0, .72, .04, 0xe8e2d2, 0, 2.3, 1.1]]), avatarMat);
-      boatMesh.add(boatMesh.userData.mast);   // 돛대: 1인칭에서는 앞을 가려 숨김
+      boatMesh.add(boatMesh.userData.mast); boatMesh.scale.setScalar(1.7);   // 11/21 사람 키에 맞게 크게(길이 약 4.3칸)   // 돛대: 1인칭에서는 앞을 가려 숨김
       scene.add(boatMesh);
     }
     boatMesh.visible = true;
     boatRide = { x: spot[0], z: spot[2], wy: spot[1], vx: 0, vz: 0, t: 0 };
-    P.x = spot[0]; P.z = spot[2]; P.y = spot[1] + 0.95; P.vx = P.vy = P.vz = 0;
+    P.x = spot[0]; P.z = spot[2]; P.y = spot[1] + 1.05; P.vx = P.vy = P.vz = 0;
     $('restUp').hidden = false; $('restUp').textContent = '배에서 내리기';
     toast('⛵ 배를 탔어요 — 방향키로 저어 가요. 내릴 때는 「배에서 내리기」'); newsMark('boat'); sfx('place', 'wood');
   }
@@ -9356,14 +9360,14 @@
     var wx = (mx * cos + mz * sin) * sp, wz = (-mx * sin + mz * cos) * sp;
     b.vx += (wx - b.vx) * Math.min(1, 2.5 * dt); b.vz += (wz - b.vz) * Math.min(1, 2.5 * dt);
     var nx = b.x + b.vx * dt, nz = b.z + b.vz * dt, v = Math.hypot(b.vx, b.vz) || 1;
-    var fx = nx + b.vx / v * 0.9, fz = nz + b.vz / v * 0.9;   // 뱃머리 쪽도 물이어야
+    var fx = nx + b.vx / v * 2, fz = nz + b.vz / v * 2;   // 뱃머리 쪽도 물이어야
     var wy = waterTopAt(Math.floor(nx), Math.floor(nz), b.wy), wf = waterTopAt(Math.floor(fx), Math.floor(fz), b.wy);
     if (wy === null || wf === null || Math.abs(wy - b.wy) > 1 || Math.abs(wf - b.wy) > 1) {
       b.vx *= -0.2; b.vz *= -0.2;
       var now = performance.now(); if (now > boatBumpT) { boatBumpT = now + 4000; toast('뭍에 닿았어요 — 「배에서 내리기」로 내려요'); }
     } else { b.x = nx; b.z = nz; b.wy = wy; }
     var bob = Math.sin(b.t * 2.2) * 0.04;
-    P.x = b.x; P.z = b.z; P.y = b.wy + 0.95 + bob; P.vx = P.vy = P.vz = 0; P.swim = false; P.ground = true;
+    P.x = b.x; P.z = b.z; P.y = b.wy + 1.05 + bob; P.vx = P.vy = P.vz = 0; P.swim = false; P.ground = true;
     boatMesh.position.set(b.x, b.wy + 0.82 + bob, b.z); boatMesh.userData.mast.visible = S.view !== 0;
     if (v > 0.6) { var hd = Math.atan2(b.vx, b.vz), dh = hd - boatMesh.rotation.y; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); boatMesh.rotation.y += dh * Math.min(1, 4 * dt); }
     if (v > 3 && Math.random() < 0.3) sparkle(b.x - b.vx / v * 1.4, b.wy + 1.05, b.z - b.vz / v * 1.4, 0xe8f4ff, 1, { size: 0.25, life: 0.5, up: 0.4, v: 0.6 });

@@ -138,9 +138,12 @@
       } else if (slot === 'feet') {
         [pr.legL, pr.legR].forEach(function (L) { add(L, 4.6, 4.2, 4.9, col, 0, -9.9, -0.15); if (G) add(L, 4.8, 0.7, 5.1, GOLD, 0, -7.6, -0.15); });
       } else if (slot === 'shield') {
-        add(pr.armL, 0.9, 8, 7, col, -2.6, -5.5, 0);
-        add(pr.armL, 1, 8.4, 0.6, col === 0xa77a48 ? 0x6a4628 : 0x8a8e94, -2.6, -5.5, -3.5); add(pr.armL, 1, 8.4, 0.6, col === 0xa77a48 ? 0x6a4628 : 0x8a8e94, -2.6, -5.5, 3.5);
-        if (G) { add(pr.armL, 0.5, 6, 1.2, GOLD, -3.15, -5.5, 0); add(pr.armL, 0.5, 1.2, 4.6, GOLD, -3.15, -4, 0); }
+        // 11/21 방패를 크게(키의 절반쯤): 팔 바깥에 세운 판 + 둘레 테 + 가운데 징
+        var rimC = col === 0xa77a48 ? 0x6a4628 : 0x8a8e94;
+        add(pr.armL, 1, 13, 11, col, -2.7, -6, 0);
+        add(pr.armL, 1.2, 13.4, 0.8, rimC, -2.7, -6, -5.6); add(pr.armL, 1.2, 13.4, 0.8, rimC, -2.7, -6, 5.6); add(pr.armL, 1.2, 0.8, 11, rimC, -2.7, 0.6, 0); add(pr.armL, 1.2, 0.8, 11, rimC, -2.7, -12.6, 0);
+        add(pr.armL, 0.6, 2.4, 2.4, G ? GOLD : rimC, -3.4, -6, 0);
+        if (G) { add(pr.armL, 0.5, 9, 1.4, GOLD, -3.3, -6, 0); add(pr.armL, 0.5, 1.4, 7, GOLD, -3.3, -4, 0); }
       }
     });
   }
