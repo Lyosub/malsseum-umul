@@ -749,6 +749,7 @@
     on('cardClose', function () { $('card').classList.remove('show'); });
     on('mapc', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     on('mapDone', function () { closePanel(); });
+    on('mapX', function () { closePanel(); });
     on('mMapVisible', function () { S.mapVisible = S.mapVisible === false; NET.sentKey = ''; saveSettings(); updateMenuLabels(); });
     $('bigmapc').addEventListener('click', selectMapPerson);
     on('mapFriend', function () {

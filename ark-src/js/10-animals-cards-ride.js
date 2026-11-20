@@ -309,7 +309,7 @@
     if (merge) slabGhost.position.set(h.x + .5, h.y + (get(h.x, h.y, h.z) === held ? .75 : .25), h.z + .5);
     else slabGhost.position.set(h.px + .5, h.py + (id === held ? .25 : .75), h.pz + .5);
     slabGhost.material.color.setHex(valid ? 0x91edb3 : 0xff806d);
-    slabGhost.visible = true;
+    slabGhost.visible = false;   // 11/20 놓일 자리 미리보기 블록은 보이지 않게(전도사님 「없어도 되지 않을까」)
   }
   // 톡/오른쪽 클릭: 동물이 먼저, 아니면 블록 놓기(문이면 열고 닫기)
   // 다른 사람 캐릭터: 한 번 누르면 이름, 두 번 누르면 친구·파티 메뉴

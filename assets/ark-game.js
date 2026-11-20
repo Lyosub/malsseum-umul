@@ -3136,6 +3136,7 @@
     resume(); renderForestRoute();
     toast('🧭 ' + label + ' — X ' + Math.round(pos[0]) + ', Z ' + Math.round(pos[1]) + ' · 화살표를 따라 걸어가요');
   }
+  var guideTopAt = 0;
   function cancelForestRoute() {
     forestRoute = null;
     $('forestGuide').hidden = true;
@@ -3157,6 +3158,7 @@
     }
     var angle = Math.atan2(next[0] - P.x, P.z - next[1]) + P.yaw, placeLabel = forestName + ' (X ' + Math.round(forestDestination[0]) + ', Z ' + Math.round(forestDestination[1]) + ')';
     if ($('forestPlace').textContent !== placeLabel) $('forestPlace').textContent = placeLabel;
+    var gnow = performance.now(); if (!(gnow < guideTopAt)) { guideTopAt = gnow + 500; var ib = $('info').getBoundingClientRect(), gt = Math.round(ib.bottom + 6) + 'px'; if ($('forestGuide').style.top !== gt) $('forestGuide').style.top = gt; }   // 왼쪽 위 정보 바로 아래
     $('forestArrow').style.transform = 'rotate(' + angle + 'rad)';
     var distanceLabel = Math.round(remaining) + '칸';
     if ($('forestDistance').textContent !== distanceLabel) $('forestDistance').textContent = distanceLabel;
@@ -4882,6 +4884,7 @@
     on('cardClose', function () { $('card').classList.remove('show'); });
     on('mapc', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     on('mapDone', function () { closePanel(); });
+    on('mapX', function () { closePanel(); });
     on('mMapVisible', function () { S.mapVisible = S.mapVisible === false; NET.sentKey = ''; saveSettings(); updateMenuLabels(); });
     $('bigmapc').addEventListener('click', selectMapPerson);
     on('mapFriend', function () {
@@ -5230,7 +5233,7 @@
     if (merge) slabGhost.position.set(h.x + .5, h.y + (get(h.x, h.y, h.z) === held ? .75 : .25), h.z + .5);
     else slabGhost.position.set(h.px + .5, h.py + (id === held ? .25 : .75), h.pz + .5);
     slabGhost.material.color.setHex(valid ? 0x91edb3 : 0xff806d);
-    slabGhost.visible = true;
+    slabGhost.visible = false;   // 11/20 놓일 자리 미리보기 블록은 보이지 않게(전도사님 「없어도 되지 않을까」)
   }
   // 톡/오른쪽 클릭: 동물이 먼저, 아니면 블록 놓기(문이면 열고 닫기)
   // 다른 사람 캐릭터: 한 번 누르면 이름, 두 번 누르면 친구·파티 메뉴
