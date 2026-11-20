@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-11-19 12:40",
+  "generated_kst": "2026-11-20 12:31",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 142,
     "follows_count": 110,
-    "media_count": 174
+    "media_count": 176
   },
   "posts": [
+    {
+      "id": "18128480356927641",
+      "type": "FEED",
+      "media_type": "IMAGE",
+      "timestamp_utc": "2026-11-19T10:32:30+0000",
+      "permalink": "https://www.instagram.com/p/Df635x8m4vx/",
+      "caption_first_line": "\"나도 받은 거야.\" 내 손에 있는 것, 누가 주셨을까요?",
+      "likes": 3,
+      "comments": 1
+    },
     {
       "id": "18096922754689774",
       "type": "FEED",
@@ -246,16 +256,6 @@
       "permalink": "https://www.instagram.com/p/DegwFDgoHfE/",
       "caption_first_line": "먼저 자리를 내어 주는 것, 시작은 작습니다.",
       "likes": 7,
-      "comments": 1
-    },
-    {
-      "id": "18117784391077050",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-10-13T10:33:05+0000",
-      "permalink": "https://www.instagram.com/p/DebmjxZFT_0/",
-      "caption_first_line": "자리를 내어 주는 것, 그것이 긍휼입니다.",
-      "likes": 8,
       "comments": 1
     }
   ]
