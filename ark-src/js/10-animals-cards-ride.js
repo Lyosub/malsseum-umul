@@ -271,7 +271,7 @@
       if (held === COMPASS) return { label: '방향 보기' };
       if (held === SHOFAR) return { label: '나팔 불기' };
       if (held === SLING) return { label: '물매 연습' };
-      if (held === BOW) return { label: '활 쏘기' };
+      if (held === BOW) return { label: '꾹 눌러 활 당기기' };
     }
     var c = pickCreature(screenDir(), blockCover(h));
     if (c && !(riding && c.a && c.a.sp.seat)) {

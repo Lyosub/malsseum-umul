@@ -6,14 +6,21 @@
    [HONEY,3],[POMEGRANATE,4],[STEW,7],[COOKED_FISH,6],[COOKED_LAMB,8],[FLATBREAD,4]]
     .forEach(function(d){FOODS[d[0]]=d[1];});
   function vitalsOn() { return started && !isAdm(); }
-  // ── 믿음의 방패(엡 6:16, 11/20): 어둠의 그림자에게 맞으면 깎이고, 다 깨지면 「유혹에 넘어졌어요」 → 집에서 다시 일어남(눅 15:20).
+  // ── 믿음(✦, 11/20): 어둠의 그림자에게 맞으면 깎이고(입은 방패가 불화살을 막음, 파티원이 곁에 있으면 덜 깎임 — 전 4:12), 다 깨지면 「유혹에 넘어졌어요」 → 집에서 다시 일어남(눅 15:20).
   //    잠시 맞지 않으면 조금씩, 말씀 두루마리를 읽거나 제단에서 기도하면 다 채워짐 ──
-  var FAITH = 20, faithHitT = 0, faithRegT = 0, faithTold = false;
+  var FAITH = 20, faithHitT = 0, faithRegT = 0, faithTold = false, cordTold = false;
+  function matesNear() {   // 12칸 안에 있는 파티원 수
+    if (!inParty() || !NET.on) return 0; var n = 0, now = performance.now();
+    for (var u in NET.peers) { var p = NET.peers[u]; if (partyMate(u) && now - p.t < 6000 && Math.hypot(p.tx - P.x, p.tz - P.z) < 12) n++; }
+    return n;
+  }
   function hurtFaith(n, who) {
     if (!vitalsOn() || n <= 0) return;
+    var mates = matesNear();
+    if (mates) { n = Math.max(1, Math.round(n * (mates >= 2 ? 0.6 : 0.75))); if (!cordTold) { cordTold = true; setTimeout(function () { showVerseCard('🤝', '세 겹 줄', '한 사람이면 패하겠거니와 두 사람이면 맞설 수 있나니 세 겹 줄은 쉽게 끊어지지 아니하느니라', '전도서 4:12', '파티원이 곁에 있으면 그림자에게 덜 흔들리고 믿음이 더 빨리 차요'); }, 300); } }
     FAITH = Math.max(0, FAITH - n); faithHitT = performance.now(); renderVitals(); stateDirty();
     document.body.classList.add('hurt'); setTimeout(function () { document.body.classList.remove('hurt'); }, 260); sfx('break', 200); vibrate();
-    if (!faithTold && FAITH > 0) { faithTold = true; toast('🛡 믿음의 방패로 막았어요 — 다 깨지기 전에 물리치거나 마을·불빛 곁으로 피해요 (엡 6:16)'); }
+    if (!faithTold && FAITH > 0) { faithTold = true; toast('✦ 믿음이 흔들렸어요 — 다 사라지기 전에 물리치거나 마을·불빛 곁으로 피해요. 방패를 차면 불화살을 막아요 (엡 6:16)'); }
     if (FAITH <= 0) fallTemptation(who);
   }
   function fallTemptation(who) {
@@ -21,9 +28,9 @@
     SHADOWS.forEach(function (s) { s.dead = true; }); clearFireArrows();
     document.body.classList.add('faint'); setTimeout(function () { document.body.classList.remove('faint'); }, 1400);
     respawn(); renderVitals(); stateDirty();
-    showVerseCard('🏠', '집으로 돌아왔어요', '이에 일어나서 아버지께로 돌아가니라 아직도 거리가 먼데 아버지가 그를 보고 측은히 여겨 달려가 목을 안고 입을 맞추니', '누가복음 15:20', (who || '어둠의 그림자') + '의 유혹에 넘어졌어요. ' + (SPAWN ? '침대' : '내 자리') + '에서 다시 일어났고 믿음의 방패도 다시 채워졌어요 (가진 것은 그대로예요)');
+    showVerseCard('🏠', '집으로 돌아왔어요', '이에 일어나서 아버지께로 돌아가니라 아직도 거리가 먼데 아버지가 그를 보고 측은히 여겨 달려가 목을 안고 입을 맞추니', '누가복음 15:20', (who || '어둠의 그림자') + '의 유혹에 넘어졌어요. ' + (SPAWN ? '침대' : '내 자리') + '에서 다시 일어났고 믿음도 다시 채워졌어요 (가진 것은 그대로예요)');
   }
-  function refillFaith() { if (vitalsOn() && FAITH < 20) { FAITH = 20; renderVitals(); stateDirty(); setTimeout(function () { toast('🛡 믿음의 방패가 다시 채워졌어요 (엡 6:16)'); }, 400); } }
+  function refillFaith() { if (vitalsOn() && FAITH < 20) { FAITH = 20; renderVitals(); stateDirty(); setTimeout(function () { toast('✦ 믿음이 다시 채워졌어요'); }, 400); } }
   function exhaust(v) { if (!vitalsOn()) return; EXH += v * (has('abraham') ? 0.7 : 1); while (EXH >= 4) { EXH -= 4; if (FOOD > 0) { FOOD--; renderVitals(); stateDirty(); } } }
   function hurt(n, why) {
     if (!vitalsOn() || n <= 0) return;
@@ -52,7 +59,7 @@
     regenT += dt;
     if (FOOD >= 16 && HP < 20 && regenT > (has('abel') ? 2 : 4)) { regenT = 0; HP++; exhaust(1.2); renderVitals(); }
     if (FOOD === 0) { starveT += dt; if (starveT > 8) { starveT = 0; if (HP > 2) hurt(1, '배가 고파요'); } } else starveT = 0;
-    if (FAITH < 20 && performance.now() - faithHitT > 6000 && !SHADOWS.some(function (s) { return !s.dead && Math.hypot(s.x - P.x, s.z - P.z) < 12; })) { faithRegT += dt; if (faithRegT > 3) { faithRegT = 0; FAITH++; renderVitals(); } } else faithRegT = 0;
+    if (FAITH < 20 && performance.now() - faithHitT > 6000 && !SHADOWS.some(function (s) { return !s.dead && Math.hypot(s.x - P.x, s.z - P.z) < 12; })) { faithRegT += dt; if (faithRegT > (matesNear() ? 2 : 3)) { faithRegT = 0; FAITH++; renderVitals(); } } else faithRegT = 0;
     vitT -= dt; if (vitT <= 0) { vitT = 0.25; renderVitals(headWater || AIRV < 10); }
   }
   var vitKey = '';
@@ -61,7 +68,7 @@
     var air = showAir === undefined ? AIRV < 10 : showAir, shield = FAITH < 20 || SHADOWS.some(function (s) { return !s.dead; }), key = HP + ',' + FOOD + ',' + (air ? Math.ceil(AIRV) : -1) + ',' + (shield ? FAITH : -1);
     if (key === vitKey) return; vitKey = key;
     function row(n, full, half, empty, cls) { var h = ''; for (var i = 0; i < 10; i++) { var v = n - i * 2; h += '<b class="' + cls + (v >= 2 ? '' : (v === 1 ? ' half' : ' off')) + '">' + (v >= 2 ? full : (v === 1 ? half : empty)) + '</b>'; } return h; }
-    el.innerHTML = (shield ? '<span class="sh" title="믿음의 방패 (엡 6:16)">' + row(FAITH, '🛡', '🛡', '🛡', 's') + '</span>' : '') + '<span class="hp" title="체력">' + row(HP, '♥', '♥', '♥', 'h') + '</span>' + (air ? '<span class="air" title="숨">' + row(Math.ceil(AIRV) * 2, '●', '●', '○', 'a') + '</span>' : '') + '<span class="fd" title="기운(배고픔)">' + row(FOOD, '◆', '◆', '◇', 'f') + '</span>';
+    el.innerHTML = (shield ? '<span class="sh" title="믿음">' + row(FAITH, '✦', '✦', '✧', 's') + '</span>' : '') + '<span class="hp" title="체력">' + row(HP, '♥', '♥', '♥', 'h') + '</span>' + (air ? '<span class="air" title="숨">' + row(Math.ceil(AIRV) * 2, '●', '●', '○', 'a') + '</span>' : '') + '<span class="fd" title="기운(배고픔)">' + row(FOOD, '◆', '◆', '◇', 'f') + '</span>';
   }
   function eatItem(id) {
     if (!vitalsOn()) return deny('관리자는 배고프지 않아요');
@@ -843,18 +850,36 @@
     bagChanged();
   }
   // ── 화살(내가 쏨)·불화살(의심이 쏨) ──
+  var shieldToldT = 0;
   var ARROWS = [], FIRES = [], bowAt = 0, arrowGeo = null, arrowMat = null, fireMat = null;
   function arrowMesh(fire) {
     if (!arrowGeo) { arrowGeo = new THREE.BoxGeometry(0.06, 0.06, 0.7); arrowMat = new THREE.MeshBasicMaterial({ color: 0x8a5a2b }); fireMat = new THREE.MeshBasicMaterial({ color: 0xff7a1e, fog: false }); }
     var m = new THREE.Mesh(arrowGeo, fire ? fireMat : arrowMat); if (fire) m.scale.set(2.2, 2.2, 1); scene.add(m); return m;
   }
-  function shootArrow(dir) {
+  var bowDraw = null, bowUiT = 0;
+  function bowStart() {
+    if (HOTBAR[sel] !== BOW || have(BOW) < 1) return false;
+    if (!isAdm() && have(ARROW) < 1) { deny('화살이 없어요 — 막대기 1 + 부싯돌 1로 화살 4개를 만들어요'); return true; }
+    bowDraw = { t0: performance.now() }; $('bowBar').classList.add('show'); tone('triangle', 140, 220, 0.5, 0.03);
+    clearInterval(bowUiT); bowUiT = setInterval(function () { if (!bowDraw) return; var p = Math.min(1, (performance.now() - bowDraw.t0) / 1000); $('bowFill').style.width = Math.round(p * 100) + '%'; $('bowBar').classList.toggle('full', p >= 1); }, 40);
+    return true;
+  }
+  function bowRelease(dir) {
+    if (!bowDraw) return false;
+    var p = Math.max(0.15, Math.min(1, (performance.now() - bowDraw.t0) / 1000));
+    bowDraw = null; clearInterval(bowUiT); $('bowBar').classList.remove('show', 'full'); $('bowFill').style.width = '0%';
+    if (HOTBAR[sel] === BOW) { bowAt = 0; shootArrow(dir || screenDir(), p); }
+    return true;
+  }
+  function bowCancel() { if (bowDraw) { bowDraw = null; clearInterval(bowUiT); $('bowBar').classList.remove('show', 'full'); } }
+  function shootArrow(dir, pow) {
+    pow = pow || 0.35;
     var now = performance.now(); if (now < bowAt) return;
     if (!isAdm() && have(ARROW) < 1) return deny('화살이 없어요 — 막대기 1 + 부싯돌 1로 화살 4개를 만들어요');
-    bowAt = now + 650; if (!isAdm()) { take(ARROW, 1); bagChanged(); }
-    var p = camera.position, v = 30;
-    ARROWS.push({ x: p.x + dir.x * 0.6, y: p.y + dir.y * 0.6 - 0.1, z: p.z + dir.z * 0.6, vx: dir.x * v, vy: dir.y * v + 1.5, vz: dir.z * v, t: 0, mesh: arrowMesh(false) });
-    tone('triangle', 320, 170, 0.12, 0.09); swingT = 0.25;
+    bowAt = now + 250; if (!isAdm()) { take(ARROW, 1); bagChanged(); }
+    var p = camera.position, v = 12 + 24 * pow;
+    ARROWS.push({ x: p.x + dir.x * 0.6, y: p.y + dir.y * 0.6 - 0.1, z: p.z + dir.z * 0.6, vx: dir.x * v, vy: dir.y * v + 1.5, vz: dir.z * v, t: 0, dmg: 1 + Math.round(2.5 * pow), mesh: arrowMesh(false) });
+    tone('triangle', 260 + 160 * pow, 150, 0.12, 0.06 + 0.06 * pow); swingT = 0.25;
   }
   function shootFireArrow(s) {
     var tx = P.x - s.x, ty = P.y + 1.1 - (s.y + 1.5 * s.sp.h), tz = P.z - s.z, d = Math.hypot(tx, ty, tz) || 1, v = 13;
@@ -872,7 +897,7 @@
         if (isSolid(bid) && !(SHAPE[bid] && collBoxes(bid, 0, 0, 0).length === 0)) { gone = true; if (Math.random() < 0.6 && !isAdm()) dropItem(a.x - a.vx * st, a.y - a.vy * st + 0.2, a.z - a.vz * st, ARROW, 1); sfx('dig', 900); break; }
         for (var i = 0; i < SHADOWS.length; i++) {
           var s = SHADOWS[i]; if (s.dead) continue;
-          var hy = a.y - s.y; if (Math.hypot(a.x - s.x, a.z - s.z) < 0.7 && hy > 0 && hy < 2.1 * s.sp.h) { hitShadow(s, 3); gone = true; break; }
+          var hy = a.y - s.y; if (Math.hypot(a.x - s.x, a.z - s.z) < 0.7 && hy > 0 && hy < 2.1 * s.sp.h) { hitShadow(s, a.dmg || 3); gone = true; break; }
         }
       }
       if (gone || a.t > 4 || a.y < 0) { scene.remove(a.mesh); return; }
@@ -886,7 +911,9 @@
         var st = dt / 3; f.x += f.vx * st; f.y += f.vy * st; f.z += f.vz * st; f.t += st;
         if (isSolid(get(Math.floor(f.x), Math.floor(f.y), Math.floor(f.z)))) { gone = true; break; }
         if (Math.hypot(f.x - P.x, f.z - P.z) < 0.55 && f.y > P.y && f.y < P.y + HT + 0.1) {
-          gone = true; var g = armorGuard(), dmg = Math.round(f.dmg * (1 - g));
+          gone = true; var g = armorGuard(), dmg = Math.round(f.dmg * (1 - g)), sh = WORN.shield, fl = Math.hypot(f.vx, f.vz) || 1;
+          var front = (-Math.sin(P.yaw)) * (-f.vx / fl) + (-Math.cos(P.yaw)) * (-f.vz / fl) > 0.3;
+          if (sh && front && Math.random() < ({ 156: 0.5, 157: 0.75, 158: 1 }[sh] || 0)) { sfx('place', 'metal'); burst(Math.floor(f.x), Math.floor(f.y), Math.floor(f.z), LAMP); var nowB = performance.now(); if (nowB - shieldToldT > 5000) { shieldToldT = nowB; toast(sh === 158 ? '🛡 믿음의 방패로 불화살을 막았어요 (엡 6:16)' : '🛡 ' + nameOf(sh) + '로 불화살을 막았어요'); } break; }
           if (dmg > 0) hurtFaith(dmg, '「' + f.who + '」'); else if (vitalsOn()) toast('🛡 하나님의 전신 갑주가 불화살을 막아 주었어요 (엡 6:16)');
         }
       }

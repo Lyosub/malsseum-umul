@@ -630,7 +630,10 @@
     on('practiceSkip', finishPractice);
     on('practiceDone', finishPractice);
     on('mLight', function () { S.lightMode = !S.lightMode; applyLightMode(); saveSettings(); updateMenuLabels(); });
-    on('touchAction', function () { if (isTouch && ui === 'play') { tapAt(); mobileHudAt = 0; } });
+    on('touchAction', function () { if (isTouch && ui === 'play' && HOTBAR[sel] !== BOW) { tapAt(); mobileHudAt = 0; } });
+    (function () { var ta = $('touchAction'); if (!ta) return;
+      ta.addEventListener('pointerdown', function () { if (ui === 'play' && HOTBAR[sel] === BOW) bowStart(); });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { ta.addEventListener(ev, function (e) { if (bowDraw) { if (e.type === 'pointerup') bowRelease(screenDir()); else bowCancel(); } }); }); })();
     on('slabMode', function () {
       slabMode = (slabMode + 1) % SLAB_NAMES.length;
       $('slabMode').textContent = '반 블록: ' + SLAB_NAMES[slabMode];
