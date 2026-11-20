@@ -2995,6 +2995,7 @@
       if ((e.code === 'KeyT' || e.code === 'Enter') && ui === 'play' && !e.repeat) { openChat(); e.preventDefault(); return; }
       if (e.code === 'KeyE' && (ui === 'play' || ui === 'inv' || ui === 'chest')) { if (ui !== 'play') closePanel(); else openPanel('inv'); e.preventDefault(); return; }
       if ((e.code === 'F5' || e.code === 'KeyV') && ui === 'play') { cycleView(); e.preventDefault(); return; }
+      if (e.code === 'F2' && (ui === 'play' || ui === 'pause') && !e.repeat) { savePhoto(); e.preventDefault(); return; }   // 마인크래프트처럼 F2 = 사진
       if (e.code === 'KeyC' && (ui === 'play' || ui === 'looks') && !e.repeat) { if (ui === 'looks') closePanel(); else openLooks(); e.preventDefault(); return; }
       if (e.code === 'KeyM' && (ui === 'play' || ui === 'map') && !e.repeat) { if (ui === 'map') closePanel(); else { openPanel('map'); drawMap($('bigmapc'), true); } e.preventDefault(); return; }
       if (e.code === 'KeyH' && ui === 'play' && !e.repeat) { S.keysOff = !S.keysOff; saveSettings(); document.body.classList.toggle('keysoff', !!S.keysOff); return; }
@@ -3946,11 +3947,25 @@
     }
     return '<img alt="" src="' + ICON[id] + '"' + (count === 0 ? ' class="none"' : '') + '>' + bar + (isAdm() ? '<i class="inf">∞</i>' : (count > 1 || (count === 1 && stackOf(id) > 1) ? '<i>' + count + '</i>' : ''));
   }
+  // 마인크래프트 휴대폰판처럼 단축 칸을 길게 누르면 버리기 — 0.5초에 1개, 그대로 1.5초까지 누르면 한 묶음
+  var hotHold = { t1: 0, t2: 0, quiet: 0 };
+  function hotHoldStop() { clearTimeout(hotHold.t1); clearTimeout(hotHold.t2); hotHold.t1 = hotHold.t2 = 0; }
+  window.addEventListener('pointerup', hotHoldStop); window.addEventListener('pointercancel', hotHoldStop);
   function renderHotbar() {
     var bar = $('hotbar'); bar.innerHTML = '';
     HOTBAR.forEach(function (id, i) {
       var d = document.createElement('button'); d.className = 'slot' + (i === sel ? ' on' : ''); d.title = nameOf(id) + ' (' + (i + 1) + ')'; d.innerHTML = (id ? slotHTML(id, hotCount(id)) : '') + '<u class="num">' + (i + 1) + '</u>';
-      d.addEventListener('click', function () { setSel(i); sfx('click'); });
+      d.addEventListener('click', function () { if (performance.now() < hotHold.quiet) return; setSel(i); sfx('click'); });
+      d.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      d.addEventListener('pointerdown', function (e) {
+        if (e.pointerType !== 'touch' || !id || ui !== 'play' || have(id) < 1) return;
+        hotHoldStop();
+        hotHold.t1 = setTimeout(function () {
+          hotHold.quiet = performance.now() + 2500; setSel(i, true); throwItem(id, 1); vibrate();
+          hotHold.t2 = setTimeout(function () { hotHold.t2 = 0; var n = Math.min(hotCount(id), 64); if (n > 0) { throwItem(id, n); vibrate(); } }, 1000);
+        }, 500);
+      });
+      d.addEventListener('pointerleave', function () { if (hotHold.t1 && !hotHold.quiet) hotHoldStop(); });
       bar.appendChild(d);
     });
     var more = document.createElement('button'); more.className = 'slot more'; more.innerHTML = '🎒<small>가방</small>'; more.title = '가방·만들기 (E)';
@@ -4520,6 +4535,7 @@
     on('mHill', function () { travel('hill'); });
     on('mLake', function () { travel('lake'); });
     on('mView', function () { S.view = (S.view + 1) % 3; saveSettings(); updateMenuLabels(); sfx('click'); });
+    on('mPhoto', function () { savePhoto(); });
     on('mSound', function () { S.sound = !S.sound; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mAim', function () { S.aim = S.aim === 'cross' ? 'finger' : 'cross'; saveSettings(); updateMenuLabels(); sfx('click'); });
     $('mSens').addEventListener('input', function () { S.sens = +this.value / 100; saveSettings(); updateMenuLabels(); });
@@ -5333,6 +5349,7 @@
   // ───────── 해·밤, 비 ─────────
   var FOG_FAR = (isTouch ? 5 : 7) * 32 - 12;
   var DAY_LEN = 900, dayT = DAY_LEN * 0.06, rain = 0, rainOn = false, rainTimer = 100;
+  var storm = false, thunderT = 8, flashK = 0, stormTold = false;   // 뇌우: 비가 올 때 열에 넷쯤(노아 때 비는 늘 뇌우)
   var LU = { uDay: { value: 1 }, uTint: { value: new THREE.Color(1, 1, 1) }, uTime: { value: 0 }, uHand: { value: new THREE.Vector4(0, -999, 0, 0) } };   // uHand: 손에 든 횃불(위치, 세기)
   function lightPatch(mat) {
     mat.onBeforeCompile = function (sh) {
@@ -5451,15 +5468,19 @@
     }
     if (rainTimer<=0) {
       if (rainOn) { rainOn=false;rainTimer=150+Math.random()*150;if(dayF>.6)rainbowUntil=dayT+44; }
-      else if (noahWantsRain() || Math.random()<[.63,.20,.55,.06][season]) {rainOn=true;rainTimer=noahWantsRain()?30:55+Math.random()*65;}
+      else if (noahWantsRain() || Math.random()<[.63,.20,.55,.06][season]) {rainOn=true;rainTimer=noahWantsRain()?30:55+Math.random()*65;storm=noahWantsRain()||Math.random()<.4;thunderT=6+Math.random()*8;}
       else rainTimer=65;
     }
     rain += ((rainOn ? 1 : 0) - rain) * Math.min(1, dt * 0.25);
+    if (!rainOn) storm = false;
+    if (started && storm && rain > 0.7 && !snowNow) { thunderT -= dt; if (thunderT <= 0) { thunderT = 9 + Math.random() * 22; thunderStrike(); } }
+    flashK = Math.max(0, flashK - dt * 3.2);
     skyC.copy(C_NIGHT).lerp(C_DAY, dayF).lerp(C_DUSK, dusk * 0.5).lerp(C_RAIN, rain * 0.6 * dayF);
     scene.background.copy(skyC);
     fogC.copy(skyC).lerp(C_WHITE, 0.18 * dayF);
     scene.fog.color.copy(fogC); scene.fog.near = FOG_FAR * 0.4 * (1 - 0.45 * rain); scene.fog.far = FOG_FAR * (1 - 0.3 * rain);
     LU.uDay.value = (0.24 + 0.76 * dayF) * (1 - 0.22 * rain);
+    if (flashK > 0) { var fk = flashK * (1 - caveK) * (flashK > 0.55 && flashK < 0.75 ? 0.35 : 1); LU.uDay.value = Math.min(1.25, LU.uDay.value + fk * 0.9); skyC.lerp(C_WHITE, fk * 0.75); scene.background.copy(skyC); }
     // 횃불·등을 손에 들면 내 둘레 7칸이 밝아짐(밤·굴에서)
     var hId = started ? HOTBAR[sel] : 0, hOn = hId && have(hId) > 0 && (hId === TORCH || (hId >= WTORCH && hId < WTORCH + 4) || hId === LANTERN || hId === LAMPSTAND + 1) ? 1 : 0;
     var hu = LU.uHand.value; hu.w += (hOn - hu.w) * Math.min(1, dt * 6); hu.x = P.x; hu.y = P.y + 2.4; hu.z = P.z;
@@ -5521,6 +5542,25 @@
     var g = AC.createGain(); g.gain.value = 0;
     src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
     return g;
+  }
+  // 번개: 하늘이 두 번 번쩍, 0.3~2.5초 뒤 우르릉(가까울수록 빨리·크게). 굴 속에선 빛은 안 보이고 소리만 작게
+  function thunderStrike() {
+    var near = Math.random(); flashK = 1; vibrate();
+    setTimeout(function () { rumble(near); }, 300 + (1 - near) * 2200);
+    if (!stormTold && ui === 'play') { stormTold = true; toast('⛈ 천둥 번개가 쳐요 — 지붕 밑이나 방주 안으로 피해요'); }
+  }
+  function rumble(near) {
+    if (!AC || !S.sound) return;
+    try {
+      var vol = (0.25 + 0.45 * near) * (1 - caveK * 0.6), dur = 2.2 + (1 - near) * 1.6;
+      var len = Math.floor(AC.sampleRate * dur), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0), last = 0;
+      for (var i = 0; i < len; i++) { var tt = i / len, env = (tt < 0.04 ? tt / 0.04 : Math.pow(1 - tt, 1.7)) * (0.7 + 0.3 * Math.sin(tt * 37) * Math.sin(tt * 11)); last = last * 0.96 + (Math.random() * 2 - 1) * 0.2; d[i] = last * env * 3; }
+      var src = AC.createBufferSource(); src.buffer = buf;
+      var f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 160 + near * 260;
+      var g = AC.createGain(); g.gain.value = vol;
+      src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+      if (near > 0.7) { var b2 = AC.createBufferSource(), l2 = Math.floor(AC.sampleRate * 0.25), bb = AC.createBuffer(1, l2, AC.sampleRate), d2 = bb.getChannelData(0); for (var k = 0; k < l2; k++) d2[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / l2, 3); b2.buffer = bb; var f2 = AC.createBiquadFilter(); f2.type = 'highpass'; f2.frequency.value = 900; var g2 = AC.createGain(); g2.gain.value = 0.35 * (1 - caveK * 0.7); b2.connect(f2); f2.connect(g2); g2.connect(AC.destination); b2.start(); }   // 가까우면 「쾅」
+    } catch (e) {}
   }
   function tone(type, f0, f1, dur, vol, trem) {
     if (!AC || !S.sound) return;
@@ -8142,6 +8182,35 @@
       fetchGifts(true);
     }, function () { toast('선물을 받지 못했어요. 조금 뒤에 다시 해 주세요'); });
   }
+  // 사진 저장(11/20): 지금 화면을 내 폰·컴퓨터에 저장 — 휴대폰은 공유 창(사진에 저장), 컴퓨터는 내려받기
+  function savePhoto() {
+    try {
+      renderer.render(scene, camera);
+      var src = canvasEl, W = Math.min(1920, src.width), H = Math.round(W * src.height / src.width), c = document.createElement('canvas');
+      c.width = W; c.height = H; var g = c.getContext('2d'); g.drawImage(src, 0, 0, W, H);
+      var fs = Math.max(12, Math.round(H / 40)); g.font = 'bold ' + fs + 'px sans-serif'; g.textAlign = 'right'; g.textBaseline = 'bottom';
+      var mark = '나그네 마을 · logoswell.kr'; g.lineWidth = Math.max(2, fs / 6); g.strokeStyle = 'rgba(0,0,0,.6)'; g.strokeText(mark, W - fs * 0.6, H - fs * 0.5); g.fillStyle = 'rgba(255,255,255,.92)'; g.fillText(mark, W - fs * 0.6, H - fs * 0.5);
+      var url = c.toDataURL('image/jpeg', 0.9), bin = atob(url.split(',')[1]), arr = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      var d = new Date(), pad = function (n) { return (n < 10 ? '0' : '') + n; };
+      var name = '나그네마을_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds()) + '.jpg';
+      var blob = new Blob([arr], { type: 'image/jpeg' }), file = null;
+      try { file = new File([blob], name, { type: 'image/jpeg' }); } catch (e) {}
+      document.body.classList.add('snapflash'); setTimeout(function () { document.body.classList.remove('snapflash'); }, 260);
+      sfx('click'); tone('square', 1800, 1200, 0.05, 0.05);
+      function dl() {
+        var a = document.createElement('a'), ou = URL.createObjectURL(blob); a.href = ou; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(ou); }, 4000);
+        toast('📷 찰칵! 사진을 저장했어요 (' + name + ')');
+      }
+      var canS = false; try { canS = isTouch && file && navigator.canShare && navigator.canShare({ files: [file] }); } catch (e) {}
+      if (canS) {   // 휴대폰: 공유 창에서 「이미지 저장」 — 사람이 닫은 것(AbortError)이 아니면 내려받기로
+        navigator.share({ files: [file], title: '나그네 마을' }).then(function () { toast('📷 사진을 보냈어요'); }, function (er) { if (!er || er.name !== 'AbortError') dl(); });
+        return;
+      }
+      dl();
+    } catch (e) { toast('사진을 찍지 못했어요'); }
+  }
   // 건축 사진: 게임 화면만 작게 찍는다(한 사람 3장, 제목은 고르기)
   var photoCap = 0;
   function takePhoto() {
@@ -8969,7 +9038,7 @@
     scene.add(goalDeco);
   }
   // 점검 함수: 내 컴퓨터(시험 서버)와 선생님 계정에서만 연다 — 학생이 개발자 창에서 물건을 만들어 내지 못하게
-  var ARK_DBG = { chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+  var ARK_DBG = { thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };

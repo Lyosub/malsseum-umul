@@ -1,6 +1,7 @@
   // ───────── 해·밤, 비 ─────────
   var FOG_FAR = (isTouch ? 5 : 7) * 32 - 12;
   var DAY_LEN = 900, dayT = DAY_LEN * 0.06, rain = 0, rainOn = false, rainTimer = 100;
+  var storm = false, thunderT = 8, flashK = 0, stormTold = false;   // 뇌우: 비가 올 때 열에 넷쯤(노아 때 비는 늘 뇌우)
   var LU = { uDay: { value: 1 }, uTint: { value: new THREE.Color(1, 1, 1) }, uTime: { value: 0 }, uHand: { value: new THREE.Vector4(0, -999, 0, 0) } };   // uHand: 손에 든 횃불(위치, 세기)
   function lightPatch(mat) {
     mat.onBeforeCompile = function (sh) {
@@ -119,15 +120,19 @@
     }
     if (rainTimer<=0) {
       if (rainOn) { rainOn=false;rainTimer=150+Math.random()*150;if(dayF>.6)rainbowUntil=dayT+44; }
-      else if (noahWantsRain() || Math.random()<[.63,.20,.55,.06][season]) {rainOn=true;rainTimer=noahWantsRain()?30:55+Math.random()*65;}
+      else if (noahWantsRain() || Math.random()<[.63,.20,.55,.06][season]) {rainOn=true;rainTimer=noahWantsRain()?30:55+Math.random()*65;storm=noahWantsRain()||Math.random()<.4;thunderT=6+Math.random()*8;}
       else rainTimer=65;
     }
     rain += ((rainOn ? 1 : 0) - rain) * Math.min(1, dt * 0.25);
+    if (!rainOn) storm = false;
+    if (started && storm && rain > 0.7 && !snowNow) { thunderT -= dt; if (thunderT <= 0) { thunderT = 9 + Math.random() * 22; thunderStrike(); } }
+    flashK = Math.max(0, flashK - dt * 3.2);
     skyC.copy(C_NIGHT).lerp(C_DAY, dayF).lerp(C_DUSK, dusk * 0.5).lerp(C_RAIN, rain * 0.6 * dayF);
     scene.background.copy(skyC);
     fogC.copy(skyC).lerp(C_WHITE, 0.18 * dayF);
     scene.fog.color.copy(fogC); scene.fog.near = FOG_FAR * 0.4 * (1 - 0.45 * rain); scene.fog.far = FOG_FAR * (1 - 0.3 * rain);
     LU.uDay.value = (0.24 + 0.76 * dayF) * (1 - 0.22 * rain);
+    if (flashK > 0) { var fk = flashK * (1 - caveK) * (flashK > 0.55 && flashK < 0.75 ? 0.35 : 1); LU.uDay.value = Math.min(1.25, LU.uDay.value + fk * 0.9); skyC.lerp(C_WHITE, fk * 0.75); scene.background.copy(skyC); }
     // 횃불·등을 손에 들면 내 둘레 7칸이 밝아짐(밤·굴에서)
     var hId = started ? HOTBAR[sel] : 0, hOn = hId && have(hId) > 0 && (hId === TORCH || (hId >= WTORCH && hId < WTORCH + 4) || hId === LANTERN || hId === LAMPSTAND + 1) ? 1 : 0;
     var hu = LU.uHand.value; hu.w += (hOn - hu.w) * Math.min(1, dt * 6); hu.x = P.x; hu.y = P.y + 2.4; hu.z = P.z;
@@ -189,6 +194,25 @@
     var g = AC.createGain(); g.gain.value = 0;
     src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
     return g;
+  }
+  // 번개: 하늘이 두 번 번쩍, 0.3~2.5초 뒤 우르릉(가까울수록 빨리·크게). 굴 속에선 빛은 안 보이고 소리만 작게
+  function thunderStrike() {
+    var near = Math.random(); flashK = 1; vibrate();
+    setTimeout(function () { rumble(near); }, 300 + (1 - near) * 2200);
+    if (!stormTold && ui === 'play') { stormTold = true; toast('⛈ 천둥 번개가 쳐요 — 지붕 밑이나 방주 안으로 피해요'); }
+  }
+  function rumble(near) {
+    if (!AC || !S.sound) return;
+    try {
+      var vol = (0.25 + 0.45 * near) * (1 - caveK * 0.6), dur = 2.2 + (1 - near) * 1.6;
+      var len = Math.floor(AC.sampleRate * dur), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0), last = 0;
+      for (var i = 0; i < len; i++) { var tt = i / len, env = (tt < 0.04 ? tt / 0.04 : Math.pow(1 - tt, 1.7)) * (0.7 + 0.3 * Math.sin(tt * 37) * Math.sin(tt * 11)); last = last * 0.96 + (Math.random() * 2 - 1) * 0.2; d[i] = last * env * 3; }
+      var src = AC.createBufferSource(); src.buffer = buf;
+      var f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 160 + near * 260;
+      var g = AC.createGain(); g.gain.value = vol;
+      src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+      if (near > 0.7) { var b2 = AC.createBufferSource(), l2 = Math.floor(AC.sampleRate * 0.25), bb = AC.createBuffer(1, l2, AC.sampleRate), d2 = bb.getChannelData(0); for (var k = 0; k < l2; k++) d2[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / l2, 3); b2.buffer = bb; var f2 = AC.createBiquadFilter(); f2.type = 'highpass'; f2.frequency.value = 900; var g2 = AC.createGain(); g2.gain.value = 0.35 * (1 - caveK * 0.7); b2.connect(f2); f2.connect(g2); g2.connect(AC.destination); b2.start(); }   // 가까우면 「쾅」
+    } catch (e) {}
   }
   function tone(type, f0, f1, dur, vol, trem) {
     if (!AC || !S.sound) return;

@@ -217,6 +217,7 @@
       if ((e.code === 'KeyT' || e.code === 'Enter') && ui === 'play' && !e.repeat) { openChat(); e.preventDefault(); return; }
       if (e.code === 'KeyE' && (ui === 'play' || ui === 'inv' || ui === 'chest')) { if (ui !== 'play') closePanel(); else openPanel('inv'); e.preventDefault(); return; }
       if ((e.code === 'F5' || e.code === 'KeyV') && ui === 'play') { cycleView(); e.preventDefault(); return; }
+      if (e.code === 'F2' && (ui === 'play' || ui === 'pause') && !e.repeat) { savePhoto(); e.preventDefault(); return; }   // 마인크래프트처럼 F2 = 사진
       if (e.code === 'KeyC' && (ui === 'play' || ui === 'looks') && !e.repeat) { if (ui === 'looks') closePanel(); else openLooks(); e.preventDefault(); return; }
       if (e.code === 'KeyM' && (ui === 'play' || ui === 'map') && !e.repeat) { if (ui === 'map') closePanel(); else { openPanel('map'); drawMap($('bigmapc'), true); } e.preventDefault(); return; }
       if (e.code === 'KeyH' && ui === 'play' && !e.repeat) { S.keysOff = !S.keysOff; saveSettings(); document.body.classList.toggle('keysoff', !!S.keysOff); return; }

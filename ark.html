@@ -180,6 +180,8 @@
   #vitals b.off { color:#3a3a3a; } #vitals b.half { opacity:.6; }
   body.hurt:before { content:''; position:fixed; inset:0; background:rgba(200,0,0,.28); pointer-events:none; z-index:6; }
   body.faint:before, body.sleep:before { content:''; position:fixed; inset:0; background:#000; opacity:.85; pointer-events:none; z-index:7; transition:opacity .4s; }
+  #snapFlash { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:200; transition:opacity .25s; }
+  body.snapflash #snapFlash { opacity:.7; transition:none; }
   body.sneaking #btnSneak { background:rgba(120,180,255,.55); }
   #btnSneak { right:calc(166px + var(--sar)); bottom:calc(112px + var(--sab)); width:62px; height:34px; font-size:12px; }
   @media (max-height:430px) { #btnSneak { bottom:calc(100px + var(--sab)); } }
@@ -544,6 +546,7 @@
     body.touch #inv .panel, body.touch #chest .panel { width:100%; }
     body.touch #hotbar { width:min(calc(100vw - var(--sal) - var(--sar) - 12px), 348px); }
     body.touch #hotbar .slot { flex:1; min-width:0; width:auto; }
+    body.touch #hotbar .slot { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
     body.touch #topRight { max-width:calc(100vw - var(--sal) - var(--sar) - 100px); }
     body.touch #topRight .ibtn { min-width:0; }
     body.touch #map .wrap { width:min(100%, 360px); }
@@ -646,6 +649,7 @@
 </style>
 </head>
 <body class="menu">
+<div id="snapFlash"></div>
 <canvas id="game"></canvas>
 <div id="cross"></div>
 
@@ -673,7 +677,7 @@
   <div><b>W A S D</b> 걷기 · <b>W 두 번</b>/<b>Ctrl</b> 달리기</div>
   <div><b>스페이스</b> 점프<span id="fly-hint"> · F = 날기</span></div>
   <div><b>왼쪽 클릭 꾹</b> 캐기 · <b>오른쪽 클릭</b> 놓기·누르기</div>
-  <div><b>1~9</b>·휠 단축 칸 고르기 · <b>E</b> 가방·만들기</div>
+  <div><b>1~9</b>·휠 단축 칸 고르기 · <b>E</b> 가방·만들기 · <b>Q</b> 버리기 · <b>F2</b> 사진 저장</div>
   <div><b>C</b> 옷 · <b>T</b> 채팅 · <b>M</b> 지도 · <b>V</b> 시점 · <b>Esc</b> 메뉴</div>
 </div>
 <div id="keysMini" class="hud sh">⌨ <b>H</b> 조작 키 보기</div>
@@ -755,6 +759,7 @@
     <button id="mView" class="mc">시점: 1인칭</button>
     <button id="mArk" class="mc">⛵ 방주 앞</button>
     <button id="mHome" class="mc">🏠 내 땅</button>
+    <button id="mPhoto" class="mc">📷 사진 저장 <small class="k">F2</small></button>
     <button id="mSound" class="mc">소리: 켬</button>
     <button id="mMusic" class="mc">음악: 켬</button>
     <button id="mShadow" class="mc">어둠의 그림자: 나옴</button>
@@ -969,7 +974,7 @@
       동물을 누르면 그 동물이 나오는 말씀 카드가 떠요. 📖 도감에 만난 동물과 캔 재료가 모여요.<br>
       🎒 → 🔨 만들기에서 통나무로 고페르 나무를, 고페르 나무와 역청으로 역청 칠한 나무를 만들어요(창 6:14).<br>
       모은 블록으로 내 땅에 집을 지어요. 블록을 놓으면 가방에서 하나씩 줄어요.<br>
-      🎒 가방에는 가진 것만 담겨요. 눌러서 집고 다른 칸을 누르면 자리를 바꾸고, 아래 단축 칸 1~9를 누르면 손에 들 수 있게 넣어요. 새로 얻은 것은 빈 단축 칸에 저절로 들어가고, 다 쓰면 그 칸이 비어요.<br>
+      🎒 가방에는 가진 것만 담겨요. 눌러서 집고 다른 칸을 누르면 자리를 바꾸고, 아래 단축 칸 1~9를 누르면 손에 들 수 있게 넣어요. 새로 얻은 것은 빈 단축 칸에 저절로 들어가고, 다 쓰면 그 칸이 비어요. 휴대폰에서는 단축 칸을 길게 누르면 1개, 더 오래(1.5초) 누르면 한 묶음을 앞에 버려요. 📷 사진 저장(메뉴, 컴퓨터는 F2)은 지금 화면을 내 폰·컴퓨터에 저장해요. 큰비가 올 때 가끔 천둥 번개가 쳐요.<br>
       ⛏ 땅을 깊이 파면 광석이 나와요. 석탄은 산 속 높은 곳까지 흔하고, 구리·철·은·호마노·금·청옥·금강석은 깊을수록 귀해요(창 2:12, 욥 28:6). 맨 아래는 단단한 깊은 돌이에요.<br>
       🕳 땅속에는 구불구불한 굴이 있고, 산비탈에는 굴 입구가 있어요. 굴 속은 어두우니 횃불을 가져가요. 깊은 굴은 사닥다리(막대기 7 → 3개, 창 28:12)를 벽에 붙여 오르내려요 — 앞으로 밀거나 점프하면 올라가요.<br>
       🌳 캔 것은 땅에 떨어졌다가 가까이 가면 가방에 들어와요. 모래·자갈은 받침이 없으면 떨어져요. 나뭇잎에서 가끔 묘목이 나오는데, 풀·흙 위에 심으면 2~3분 뒤 나무로 자라요(시 1:3). 아주 드물게 감람나무 새 잎사귀도 나와요(창 8:11).<br>
@@ -997,6 +1002,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=352ea5bdc7"></script>
+<script src="assets/ark-game.js?v=890bcc3f1d"></script>
 </body>
 </html>

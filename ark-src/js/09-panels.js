@@ -56,11 +56,25 @@
     }
     return '<img alt="" src="' + ICON[id] + '"' + (count === 0 ? ' class="none"' : '') + '>' + bar + (isAdm() ? '<i class="inf">∞</i>' : (count > 1 || (count === 1 && stackOf(id) > 1) ? '<i>' + count + '</i>' : ''));
   }
+  // 마인크래프트 휴대폰판처럼 단축 칸을 길게 누르면 버리기 — 0.5초에 1개, 그대로 1.5초까지 누르면 한 묶음
+  var hotHold = { t1: 0, t2: 0, quiet: 0 };
+  function hotHoldStop() { clearTimeout(hotHold.t1); clearTimeout(hotHold.t2); hotHold.t1 = hotHold.t2 = 0; }
+  window.addEventListener('pointerup', hotHoldStop); window.addEventListener('pointercancel', hotHoldStop);
   function renderHotbar() {
     var bar = $('hotbar'); bar.innerHTML = '';
     HOTBAR.forEach(function (id, i) {
       var d = document.createElement('button'); d.className = 'slot' + (i === sel ? ' on' : ''); d.title = nameOf(id) + ' (' + (i + 1) + ')'; d.innerHTML = (id ? slotHTML(id, hotCount(id)) : '') + '<u class="num">' + (i + 1) + '</u>';
-      d.addEventListener('click', function () { setSel(i); sfx('click'); });
+      d.addEventListener('click', function () { if (performance.now() < hotHold.quiet) return; setSel(i); sfx('click'); });
+      d.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      d.addEventListener('pointerdown', function (e) {
+        if (e.pointerType !== 'touch' || !id || ui !== 'play' || have(id) < 1) return;
+        hotHoldStop();
+        hotHold.t1 = setTimeout(function () {
+          hotHold.quiet = performance.now() + 2500; setSel(i, true); throwItem(id, 1); vibrate();
+          hotHold.t2 = setTimeout(function () { hotHold.t2 = 0; var n = Math.min(hotCount(id), 64); if (n > 0) { throwItem(id, n); vibrate(); } }, 1000);
+        }, 500);
+      });
+      d.addEventListener('pointerleave', function () { if (hotHold.t1 && !hotHold.quiet) hotHoldStop(); });
       bar.appendChild(d);
     });
     var more = document.createElement('button'); more.className = 'slot more'; more.innerHTML = '🎒<small>가방</small>'; more.title = '가방·만들기 (E)';
@@ -630,6 +644,7 @@
     on('mHill', function () { travel('hill'); });
     on('mLake', function () { travel('lake'); });
     on('mView', function () { S.view = (S.view + 1) % 3; saveSettings(); updateMenuLabels(); sfx('click'); });
+    on('mPhoto', function () { savePhoto(); });
     on('mSound', function () { S.sound = !S.sound; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mAim', function () { S.aim = S.aim === 'cross' ? 'finger' : 'cross'; saveSettings(); updateMenuLabels(); sfx('click'); });
     $('mSens').addEventListener('input', function () { S.sens = +this.value / 100; saveSettings(); updateMenuLabels(); });
