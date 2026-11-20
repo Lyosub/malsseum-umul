@@ -10069,7 +10069,7 @@
     var ok=!canPlace(hit.px,hit.py,hit.pz,item)&&!isSolid(readBlock(hit.px,hit.py,hit.pz));
     if(item===DOOR) for(var i=1;i<4;i++) if(isSolid(readBlock(hit.px,hit.py+i,hit.pz))||canPlace(hit.px,hit.py+i,hit.pz,item))ok=false;
     blockGhost.material.color.setHex(ok?0x9be2b3:0xff806d);
-    blockGhost.position.set(hit.px+.5,hit.py+.5,hit.pz+.5); blockGhost.visible=true;
+    blockGhost.position.set(hit.px+.5,hit.py+.5,hit.pz+.5); blockGhost.visible=false;   // 11/20 놓일 자리 미리보기 블록은 보이지 않게(전도사님 「없어도 되지 않을까」)
   }
 
   var frontierLift=null, frontierWater=new Set(), frontierWheels=new Map(), frontierRotors=new Map(), frontierStepAt=0, lastPlate='';
