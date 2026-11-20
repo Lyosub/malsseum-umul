@@ -43,7 +43,7 @@
     pr.armR.add(g); pr.hand = g; pr.handId = id;
   }
   function setHeld(id) {
-    var wpn = isWeapon(id);
+    var wpn = isWeapon(id) || isTool(id);   // 11/20 곡괭이·도끼·삽도 칼처럼 오른쪽 아래에 크게 비스듬히 들고 휘두름
     heldMesh.userData.weapon = wpn; heldMesh.scale.set(wpn ? -(id === SWORD ? 0.72 : 0.62) : (isItem(id) ? 0.5 : 0.34), wpn ? (id === SWORD ? 0.72 : 0.62) : (isItem(id) ? 0.5 : 0.34), isItem(id) ? 0.5 : 0.34);
     heldMesh.material.side = wpn ? THREE.DoubleSide : THREE.FrontSide;
     if (avatar) handItem(avatar, heldShown() === id ? id : 0);

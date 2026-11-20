@@ -664,6 +664,25 @@
   @media (orientation:landscape) and (max-height:390px) { body.touch #touchAction { right:calc(162px + var(--sar)); bottom:calc(100px + var(--sab)); } body.touch #slabMode { right:calc(162px + var(--sar)); bottom:calc(150px + var(--sab)); } }
   /* ⑮ 세로 화면: 장소 글자가 위쪽 버튼 줄에 깔리지 않게 안내·지도 아래로 */
   @media (orientation:portrait) { body.touch #info { left:calc(8px + var(--sal)); max-width:60vw; } }   /* 높이는 게임이 안내 상자 바로 아래로 맞춤 */
+  /* 11/20 휴대폰 화면 정리(전도사님 「마인크래프트 모바일처럼」 — 그림은 베끼지 않고 배치 원칙만): 넓게 비우고 꼭 필요한 것만 가장자리에 */
+  body.touch #qMini, body.touch #btnFold, body.touch #btnLook, body.touch #btnView, body.touch #btnRotate { display:none !important; }
+  body.touch #topRight { left:50% !important; right:auto !important; transform:translateX(-50%); top:calc(4px + var(--sat)) !important; gap:6px !important; max-width:none !important; }
+  body.touch #topRight .ibtn.lbl { width:36px !important; height:32px !important; background:rgba(40,40,40,.55); }
+  body.touch #topRight .ibtn.lbl small { display:none !important; }
+  body.touch #topRight .ibtn.lbl span { font-size:15px !important; }
+  body.touch #mapc { top:calc(6px + var(--sat)) !important; }
+  body.touch #mapCap { top:calc(102px + var(--sat)) !important; }
+  @media (orientation:landscape) {
+    body.touch #mapCap { top:calc(122px + var(--sat)) !important; }
+    body.touch #quest:not(.fold) { top:calc(42px + var(--sat)) !important; left:50% !important; right:auto !important; transform:translateX(-50%) !important; width:min(320px, 40vw) !important; font-size:11px !important; padding:3px 7px !important; opacity:.92; }
+    body.touch #quest.fold { top:calc(42px + var(--sat)) !important; left:50% !important; right:auto !important; transform:translateX(-50%) !important; }
+  }
+  body.touch #toast { font-size:12px !important; max-width:48vw !important; padding:3px 9px !important; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  body.touch #dpad .dhint { display:none !important; }
+  body.touch #dpad .dk { background:rgba(255,255,255,.14) !important; border-color:rgba(255,255,255,.35) !important; }
+  body.touch #dpad .dk.on { background:rgba(255,255,255,.38) !important; }
+  body.touch .tbtn, body.touch #touchAction, body.touch #slabMode { opacity:.72; }
+  body.touch #vitals b { font-size:12px !important; }
 </style>
 </head>
 <body class="menu">
@@ -780,6 +799,9 @@
     <button id="mLight" class="mc" aria-pressed="false">가벼운 화면: 끔</button>
     <button id="mBtnSize" class="mc touchonly">버튼 크기: 보통</button>
     <button id="mView" class="mc">시점: 1인칭</button>
+    <button id="mLook" class="mc">👤 내 모습·옷</button>
+    <button id="mRotate" class="mc touchonly">🔄 가로·세로 바꾸기</button>
+    <button id="mQBox" class="mc">📜 안내 상자 접기·펴기</button>
     <button id="mArk" class="mc">⛵ 방주 앞</button>
     <button id="mHome" class="mc">🏠 내 땅</button>
     <button id="mPhoto" class="mc">📷 사진 저장 <small class="k">F2</small></button>
@@ -1028,6 +1050,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=f015a38096"></script>
+<script src="assets/ark-game.js?v=8f5c98353d"></script>
 </body>
 </html>

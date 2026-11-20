@@ -4854,7 +4854,7 @@
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', fitMobileKeyboard);
     }
-    on('mHome', function () { resume(); goHome(); });
+    on('mHome', function () { if (myPlot < 0) { resume(); return goHome(); } var o = plotOrigin(myPlot); guideTo([o.x + OLD_PLOT / 2, o.z - 2], '내 땅(' + (myPlot + 1) + '번)'); });
     on('mForest', function () { travel('forest'); });
     on('mHill', function () { travel('hill'); });
     on('mLake', function () { travel('lake'); });
@@ -4874,6 +4874,9 @@
     $('craftStage').addEventListener('click', function () { $('invName').textContent = this.title + ' · 재료를 처음 얻으면 그 재료로 만드는 법이 열려요'; sfx('click'); });
     on('tLook', function () { openLooks(); });
     on('btnLook', function () { openLooks(); });
+    on('mLook', function () { openLooks(); });
+    on('mRotate', function () { rotateScreen(); });
+    on('mQBox', function () { closePanel(); toggleFold('q'); });
     on('tipsDone', function () { try { localStorage.setItem('arkVillage.tips', '1'); } catch (e) {} resume(); });
     var br = $('btnRun');
     br.addEventListener('touchstart', function (e) { setRun(!runLock, 'btn'); e.preventDefault(); }, { passive: false });
@@ -6382,7 +6385,7 @@
     pr.armR.add(g); pr.hand = g; pr.handId = id;
   }
   function setHeld(id) {
-    var wpn = isWeapon(id);
+    var wpn = isWeapon(id) || isTool(id);   // 11/20 곡괭이·도끼·삽도 칼처럼 오른쪽 아래에 크게 비스듬히 들고 휘두름
     heldMesh.userData.weapon = wpn; heldMesh.scale.set(wpn ? -(id === SWORD ? 0.72 : 0.62) : (isItem(id) ? 0.5 : 0.34), wpn ? (id === SWORD ? 0.72 : 0.62) : (isItem(id) ? 0.5 : 0.34), isItem(id) ? 0.5 : 0.34);
     heldMesh.material.side = wpn ? THREE.DoubleSide : THREE.FrontSide;
     if (avatar) handItem(avatar, heldShown() === id ? id : 0);
@@ -8648,7 +8651,7 @@
   function newsTick() {   // 1초마다: 들어온 지 6초 뒤 한 번 알림
     if (newsTold || !started || ui !== 'play' || S.newsSeen === NEWS_VER) return;
     if (++newsT < 6) return;
-    newsTold = true; toast('✨ 새 기능 ' + NEWS.length + '가지가 생겼어요 — 메뉴의 「✨ 새 기능」에서 봐요 (퀘스트·남쪽 새 땅·성막·광맥·강한 일격…)');
+    newsTold = true; toast('✨ 새 기능 ' + NEWS.length + '가지 — 메뉴 → ✨ 새 기능');
   }
   var VILLAGE_SITES = [
     { name:'사막의 옛 우물',x:1510,z:811,r:7,style:'well',item:FIND_POT,clue:'동쪽 사막의 북쪽에서 돌 테두리를 찾아요.' },

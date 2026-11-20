@@ -704,7 +704,7 @@
   function newsTick() {   // 1초마다: 들어온 지 6초 뒤 한 번 알림
     if (newsTold || !started || ui !== 'play' || S.newsSeen === NEWS_VER) return;
     if (++newsT < 6) return;
-    newsTold = true; toast('✨ 새 기능 ' + NEWS.length + '가지가 생겼어요 — 메뉴의 「✨ 새 기능」에서 봐요 (퀘스트·남쪽 새 땅·성막·광맥·강한 일격…)');
+    newsTold = true; toast('✨ 새 기능 ' + NEWS.length + '가지 — 메뉴 → ✨ 새 기능');
   }
   var VILLAGE_SITES = [
     { name:'사막의 옛 우물',x:1510,z:811,r:7,style:'well',item:FIND_POT,clue:'동쪽 사막의 북쪽에서 돌 테두리를 찾아요.' },

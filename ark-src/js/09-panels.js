@@ -720,7 +720,7 @@
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', fitMobileKeyboard);
     }
-    on('mHome', function () { resume(); goHome(); });
+    on('mHome', function () { if (myPlot < 0) { resume(); return goHome(); } var o = plotOrigin(myPlot); guideTo([o.x + OLD_PLOT / 2, o.z - 2], '내 땅(' + (myPlot + 1) + '번)'); });
     on('mForest', function () { travel('forest'); });
     on('mHill', function () { travel('hill'); });
     on('mLake', function () { travel('lake'); });
@@ -740,6 +740,9 @@
     $('craftStage').addEventListener('click', function () { $('invName').textContent = this.title + ' · 재료를 처음 얻으면 그 재료로 만드는 법이 열려요'; sfx('click'); });
     on('tLook', function () { openLooks(); });
     on('btnLook', function () { openLooks(); });
+    on('mLook', function () { openLooks(); });
+    on('mRotate', function () { rotateScreen(); });
+    on('mQBox', function () { closePanel(); toggleFold('q'); });
     on('tipsDone', function () { try { localStorage.setItem('arkVillage.tips', '1'); } catch (e) {} resume(); });
     var br = $('btnRun');
     br.addEventListener('touchstart', function (e) { setRun(!runLock, 'btn'); e.preventDefault(); }, { passive: false });
