@@ -3158,7 +3158,6 @@
     }
     var angle = Math.atan2(next[0] - P.x, P.z - next[1]) + P.yaw, placeLabel = forestName + ' (X ' + Math.round(forestDestination[0]) + ', Z ' + Math.round(forestDestination[1]) + ')';
     if ($('forestPlace').textContent !== placeLabel) $('forestPlace').textContent = placeLabel;
-    var gnow = performance.now(); if (!(gnow < guideTopAt)) { guideTopAt = gnow + 500; var ib = $('info').getBoundingClientRect(), gt = Math.round(ib.bottom + 6) + 'px'; if ($('forestGuide').style.top !== gt) $('forestGuide').style.top = gt; }   // 왼쪽 위 정보 바로 아래
     $('forestArrow').style.transform = 'rotate(' + angle + 'rad)';
     var distanceLabel = Math.round(remaining) + '칸';
     if ($('forestDistance').textContent !== distanceLabel) $('forestDistance').textContent = distanceLabel;
@@ -6487,7 +6486,7 @@
             mapT -= dt;
             if (mapT <= 0) {
               mapT = 0.25;
-              if (ui === 'play') { drawMap($('mapc'), false); renderMapCap(); }
+              if (ui === 'play') { drawMap($('mapc'), false); renderMapCap(); layoutLeftStack(); }
               else { drawMap($('bigmapc'), true); renderMapPeople(); }
             }
           }
@@ -6532,6 +6531,12 @@
     var x = Math.floor(P.x), y = Math.floor(P.y), z = Math.floor(P.z), k = x + ',' + y + ',' + z;
     if (!force && k === mapCapKey) return; mapCapKey = k;
     $('mapCap').innerHTML = mapCapLabel + '<span class="coords">X ' + x + ' · Z ' + z + '<br>Y ' + y + ' (높이)</span>';
+  }
+  // 11/20 왼쪽 위에 쌓이는 것(장소·날씨 정보 → 길 안내 → 채팅·알림 줄)이 겹치지 않게 차례로 아래에 붙임
+  function layoutLeftStack() {
+    var y = $('info').getBoundingClientRect().bottom + 6, g = $('forestGuide'), c = $('chatLog');
+    if (!g.hidden) { var gt = Math.round(y) + 'px'; if (g.style.top !== gt) g.style.top = gt; y = g.getBoundingClientRect().bottom + 6; }
+    var ct = Math.round(y) + 'px'; if (c.style.top !== ct) c.style.top = ct;
   }
   function goHome() {
     if (myPlot < 0) { toast(me ? '내 땅을 받는 중이에요' : '로그인하면 내 땅을 받을 수 있어요'); return; }

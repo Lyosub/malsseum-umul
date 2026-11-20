@@ -175,7 +175,6 @@
     }
     var angle = Math.atan2(next[0] - P.x, P.z - next[1]) + P.yaw, placeLabel = forestName + ' (X ' + Math.round(forestDestination[0]) + ', Z ' + Math.round(forestDestination[1]) + ')';
     if ($('forestPlace').textContent !== placeLabel) $('forestPlace').textContent = placeLabel;
-    var gnow = performance.now(); if (!(gnow < guideTopAt)) { guideTopAt = gnow + 500; var ib = $('info').getBoundingClientRect(), gt = Math.round(ib.bottom + 6) + 'px'; if ($('forestGuide').style.top !== gt) $('forestGuide').style.top = gt; }   // 왼쪽 위 정보 바로 아래
     $('forestArrow').style.transform = 'rotate(' + angle + 'rad)';
     var distanceLabel = Math.round(remaining) + '칸';
     if ($('forestDistance').textContent !== distanceLabel) $('forestDistance').textContent = distanceLabel;
