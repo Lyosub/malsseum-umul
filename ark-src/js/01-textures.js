@@ -718,5 +718,31 @@
       });
     });
     drawExpansionTiles();
+    // 남쪽 새 지역(11/20): 백향목·소금·붉은 바위
+    tile('cedarBark', function (px, R) {
+      var col = []; for (var x = 0; x < TS; x++) col.push(0.8 + R() * 0.32);
+      for (var y = 0; y < TS; y++) for (var x2 = 0; x2 < TS; x2++) { var k = col[x2] + (R() - 0.5) * 0.08; if ((x2 * 7 + y * 3) % 11 === 0) k *= 0.78; px(x2, y, 0x8a4f32, k); }
+    });
+    tile('cedarTop', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var d = Math.hypot(x - 7.5, y - 7.5); if (d > 6.6) px(x, y, 0x7a4430, 0.9 + R() * 0.15); else px(x, y, 0xc98a5e, (Math.floor(d * 1.1) % 2 ? 0.86 : 1.0) + (R() - 0.5) * 0.06); }
+    });
+    tile('cedarLeaf', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var v = R(), k = 0.82 + v * 0.3; if (v < 0.16) k = 0.55; if ((x + y * 2) % 5 === 0 && v > 0.5) k = 1.18; px(x, y, 0x2f6b4a, k); }
+    });
+    tile('saltTop', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var crack = (x * 5 + y * 3) % 13 === 0 || (x * 2 - y * 7 + 64) % 17 === 0; px(x, y, crack ? 0xc9c4b4 : 0xf2efe6, crack ? 0.95 : 0.96 + R() * 0.06); }
+    });
+    tile('saltSide', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) px(x, y, y < 4 ? 0xf2efe6 : 0xd9c896, y < 4 ? 0.95 + R() * 0.07 : 0.93 + R() * 0.1);
+    });
+    tile('saltRock', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var f = (x * 3 + y * 5) % 9 === 0; px(x, y, f ? 0xbfc6c6 : 0xe9e7df, 0.92 + R() * 0.1); }
+    });
+    tile('redRock', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var band = (y + Math.floor(Math.sin(x * 0.7) * 1.3) + 16) % 8 < 2; px(x, y, band ? 0xb2603c : 0xc97a4c, 0.92 + R() * 0.1); }
+    });
+    tile('redRock2', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var band = (y + 16) % 5 < 2; px(x, y, band ? 0xe0a774 : 0xa94f33, 0.92 + R() * 0.1); }
+    });
   }
 

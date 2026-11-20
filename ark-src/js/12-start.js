@@ -153,14 +153,14 @@
           }
         }
         streamTick(camera.position.x, camera.position.z, dt); mapTick();
-        stepBits(dt); stepDrops(dt); stepSDrops(dt); stepFalls(dt); stepCreatures(dt, now / 1000); netTick(dt, now);
+        stepBits(dt); stepFx(dt); stepDrops(dt); stepSDrops(dt); stepFalls(dt); stepCreatures(dt, now / 1000); netTick(dt, now);
         if (forestRoute && ui === 'play') renderForestRoute();
         renderer.render(scene, camera);
         requestAnimationFrame(loop);
       })(last);
       setInterval(function () {
         if (!started) return;
-        $('place').textContent=placeName();
+        $('place').textContent=placeName(); regionTick();
         renderMaterialGuide();
         if(((ui==='villageWork'&&(villageTab==='projects'||villageTab==='neighbors'))||(villageProjectsEnabled&&inCommons(P.x,P.z)))&&Date.now()>villageProjectAt){villageProjectAt=Date.now()+6000;fetchVillageProjects();}
         $('seasonInfo').textContent=(FESTIVE?'🌟 성탄 절기 · ':'')+WEATHER[seasonIndex()]+(rainOn?(snowNow?' · 눈':' · 비'):'')+

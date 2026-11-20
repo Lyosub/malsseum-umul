@@ -34,7 +34,11 @@
     }
     var p = plotAt(x, z);
     if (p >= 0) return p === myPlot ? '내 땅 (' + (p + 1) + '번)' + (homeSafe ? ' · 🏠 안전한 집' : '') : (p + 1) + '번 땅' + (plotOwners[p] ? '' : ' · 빈 땅');
-    var reg = region(x, z);
+    var reg = region(x, z), lmk = inLandmark(x, z);
+    if (lmk) return REGION_INFO[lmk][0];
+    if (reg === 'cedar') return '백향목 숲';
+    if (reg === 'wild') return '광야';
+    if (reg === 'salt') return P.swim ? '소금 바다 (헤엄치는 중)' : '소금 바닷가';
     if (reg === 'tar') return '역청 구덩이 (창 14:10)';
     if (reg === 'lake') return P.swim ? '호수 (헤엄치는 중)' : '남쪽 호숫가';
     if (inCommons(x, z)) return '🏗 함께 짓는 터';
@@ -621,7 +625,7 @@
     // 게임 메뉴: 버튼을 묶음 탭(게임·이동·함께·설정)으로 — 돌아가기·나가기는 늘 보임
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
-      var G = { game: ['mNews', 'mFeedback', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
+      var G = { game: ['mNews', 'mQuest', 'mFeedback', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
         together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch', 'mFeedbackAdmin'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
@@ -700,6 +704,8 @@
     on('mBtnSize', function () { S.btnSize = ((S.btnSize === undefined ? 1 : S.btnSize) + 1) % 3; applyBtnSize(); saveSettings(); updateMenuLabels(); sfx('click'); newsMark('btn'); });
     on('mNews', function () { openVillageWork('news'); });
     on('mFeedback', function () { openFeedback(); });
+    on('mQuest', function () { openQuests(); });
+    on('advChip', function () { openQuests('today'); });
     on('mFeedbackAdmin', function () { openFeedbackAdmin(); });
     applyBtnSize();
     on('touchAction', function () { if (isTouch && ui === 'play' && HOTBAR[sel] !== BOW) { tapAt(); mobileHudAt = 0; } });

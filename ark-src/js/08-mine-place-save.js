@@ -7,6 +7,7 @@
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
     if (inArk(x, y, z)) return '노아의 방주는 다 지어져 있어요. 안으로 들어가 둘러보세요! (창 6:22)';
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
+    if (inLandmark(x, z)) return '「' + REGION_INFO[inLandmark(x, z)][0] + '」은(는) 함께 구경하는 곳이라 지켜져 있어요';
     if (inDungeon(x, y, z) && get(x, y, z) !== TORCH && !(get(x, y, z) >= 170 && get(x, y, z) < 174) && get(x, y, z) !== LADDER + 3) return '골짜기의 벽은 깨지지 않아요 — 길을 찾아 지나가요(시 23:4)';
     if (y <= 0) return '맨 아래 바닥은 캘 수 없어요';
     var p = plotAt(x, z);
@@ -27,6 +28,7 @@
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
     if (inArk(x, y, z)) return '노아의 방주는 다 지어져 있어요. 안으로 들어가 둘러보세요! (창 6:22)';
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
+    if (inLandmark(x, z)) return '「' + REGION_INFO[inLandmark(x, z)][0] + '」은(는) 함께 구경하는 곳이라 지켜져 있어요';
     if (inDungeon(x, y, z) && id !== TORCH) return '골짜기에는 횃불만 놓을 수 있어요';
     var p = plotAt(x, z);
     // 땅 밖(숲·산·호수 같은 자연)에서도 블록을 놓을 수 있다 — 마을 마당·다른 사람 땅·방주만 빼고
@@ -80,12 +82,12 @@
         for (var dy = dc[0]; dy <= dc[1]; dy++) setBlock(h.x, dy, h.z, AIR);
         burst(h.x, h.y, h.z, old); dropItem(h.x + 0.5, h.y + 0.45, h.z + 0.5, DOOR, 1);
       } else {
-        breakAt(h.x, h.y, h.z, old);
+        breakAt(h.x, h.y, h.z, old); if (oreBase(old)) oreBroken(h.x, h.y, h.z, old);
         var up = get(h.x, h.y + 1, h.z);
         if (kind(up) === 'plant') breakAt(h.x, h.y + 1, h.z, up);
       }
       if (isGrav(get(h.x, h.y + 1, h.z))) startFall(h.x, h.y + 1, h.z);
-      sfx('break', matSound(old)); vibrate('break'); wearTool(usedTool); bagChanged();
+      sfx('break', matSound(old)); vibrate('break'); wearTool(usedTool); bagChanged(); questEvent('break', old, 1);
     } else {
       var tgt = get(h.x, h.y, h.z);
       if (tryFrontierDevice(tgt,h)) return;
@@ -312,7 +314,7 @@
     }
     if (mine.denied) return;
     mine.t += dt; mine.snd -= dt;
-    if (mine.snd <= 0) { sfx('dig', mine.f); mine.snd = 0.2; swingT = 0.25; burst(mine.x, mine.y, mine.z, get(mine.x, mine.y, mine.z), true); }
+    if (mine.snd <= 0) { sfx('dig', mine.f); mine.snd = 0.2; swingT = 0.25; burst(mine.x, mine.y, mine.z, get(mine.x, mine.y, mine.z), true); oreTap(mine.x, mine.y, mine.z, get(mine.x, mine.y, mine.z)); }
     if (mine.t >= mine.need) { act('break', h); mine = null; if (hold) hold.dug = true; }
   }
   function updateCrack() {

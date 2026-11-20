@@ -31,6 +31,8 @@
   body.menu .hud { display:none !important; }
   #info { top:calc(8px + var(--sat)); left:calc(10px + var(--sal)); font-size:12px; line-height:1.5; pointer-events:none; }
   #place { font-size:16px; }
+  #advChip { pointer-events:auto; font-size:12px; padding:3px 8px; margin:3px 0; min-height:0; }
+  #advChip.ready { box-shadow: inset 0 0 0 2px #ffe27a; color:#ffe27a; }
   #saveState, #who { color:#e8e8e8; }
   #netState { color:#b8f0ff; }
   body:not(.adm) .admonly { display:none !important; }
@@ -662,7 +664,7 @@
 <div id="cross"></div>
 
 <!-- 놀이 화면 -->
-<div id="info" class="hud sh"><div id="place">나그네 마을</div><div id="seasonInfo"></div><div id="trailGuide"></div><div id="saveState"></div><div id="who"></div><div id="netState"></div></div>
+<div id="info" class="hud sh"><div id="place">나그네 마을</div><button id="advChip" class="mc" type="button" hidden>📜 부탁</button><div id="seasonInfo"></div><div id="trailGuide"></div><div id="saveState"></div><div id="who"></div><div id="netState"></div></div>
 <div id="chatLog" class="hud"></div>
 <div id="forestGuide" class="hud sh" hidden>
   <span id="forestArrow" aria-hidden="true">⬆</span><span><span id="forestPlace">동쪽 숲</span> <span id="forestDistance"></span></span>
@@ -764,6 +766,7 @@
     <button id="mTutorial" class="mc">튜토리얼 다시 보기</button>
     <button id="mPractice" class="mc">첫 집 연습터</button>
     <button id="mNews" class="mc">✨ 새 기능</button>
+    <button id="mQuest" class="mc">📜 퀘스트</button>
     <button id="mFeedback" class="mc">📮 건의하기</button>
     <button id="mVillageWork" class="mc">마을 수첩</button>
     <button id="mLight" class="mc" aria-pressed="false">가벼운 화면: 끔</button>
@@ -1015,6 +1018,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=04c262322d"></script>
+<script src="assets/ark-game.js?v=3d9db000e4"></script>
 </body>
 </html>

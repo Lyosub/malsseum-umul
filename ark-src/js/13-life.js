@@ -818,7 +818,7 @@
     wasNight = night;
   }
   function nearSafeHome(x, z) { if (!homeSafe || myPlot < 0) return false; var o = plotOrigin(myPlot); return x >= o.x - 10 && x < o.x + PLOT + 10 && z >= o.z - 10 && z < o.z + PLOT + 10; }
-  function safeZone(x, z) { return nearSafeHome(x, z) || inTown(x, z) || inCommons(x, z) || plotAt(x, z) >= 0 || inArk(x, G + 2, z) || inCity(x, z); }
+  function safeZone(x, z) { return nearSafeHome(x, z) || inTown(x, z) || inCommons(x, z) || plotAt(x, z) >= 0 || inArk(x, G + 2, z) || inCity(x, z) || !!inLandmark(x, z); }
   function removeShadow(s) {
     var materials = new Set();
     s.mesh.traverse(function (o) {
@@ -867,16 +867,20 @@
         if (dist > want + 0.3) mv = s.sp.speed * dt; else if ((torch || s.sp.ranged) && dist < want - 0.5) mv = -s.sp.speed * 0.6 * dt;
         if (s.sp.ranged) { s.fireT = (s.fireT === undefined ? 1.5 + Math.random() : s.fireT) - dt; if (s.fireT <= 0 && dist < 20 && Math.abs(P.y - s.y) < 6) { s.fireT = 2.8 + Math.random() * 1.2; shootFireArrow(s); } }
         if (s.sp.blink && dist > 6 && Math.random() < dt * 0.25) mv = Math.min(dist - 3, 4);   // 거짓: 갑자기 가까이
-        if (mv) {
+        if (mv && !(s.wind > 0)) {
           var nx = s.x + dx / dist * mv, nz = s.z + dz / dist * mv, ny = groundAt(nx, nz, s.y + 2);
           if (ny !== null && Math.abs(ny - s.y) <= 1.6 && !litNear(Math.floor(nx), ny, Math.floor(nz), 4)) { s.x = nx; s.z = nz; s.y = ny; }
         }
-        if (!s.sp.ranged && dist < 1.6 && Math.abs(P.y - s.y) < 2.5 && now - s.hitT > 1200) {
-          s.hitT = now; var g = armorGuard(), dmg = Math.round(s.sp.dmg * (1 - g));
+        if (!s.sp.ranged && !(s.wind > 0) && dist < 1.9 && Math.abs(P.y - s.y) < 2.5 && now - s.hitT > 1200) { s.wind = 0.45; s.hitT = now; }
+        if (s.wind > 0 && (s.wind -= dt) <= 0) {   // 공격 신호(몸을 젖힘) 0.45초 뒤에 덮침 — 그 사이 물러서면 피함
+          s.wind = 0; s.hitT = now; s.lunge = 1;
+          if (dist < 2.3 && Math.abs(P.y - s.y) < 2.5) { var g = armorGuard(), dmg = Math.round(s.sp.dmg * (1 - g));
           if (dmg > 0) hurtFaith(dmg, '「' + s.sp.name + '」'); else if (vitalsOn()) toast('🛡 하나님의 전신 갑주가 막아 주었어요 (엡 6:11)');
-          P.vx += dx / dist * 6; P.vz += dz / dist * 6;
+          P.vx += dx / dist * 6; P.vz += dz / dist * 6; }
+          else floatText(P.x, P.y + HT + 0.3, P.z, '피했어요!', '#bfe8ff', 0.5, 0.8);
         }
       }
+      shadowFxStep(s, dt);
       s.mesh.position.set(s.x, s.y + Math.sin(s.t * 2) * 0.12, s.z);
       s.mesh.rotation.y = Math.atan2(-dx, -dz);
       var op = Math.max(0, 0.78 * (1 - s.fade)) * (0.85 + Math.sin(s.t * 5) * 0.15);
@@ -886,18 +890,23 @@
     if (SHADOWS.length) shadowMat.opacity = Math.max(0.15, Math.min.apply(null, SHADOWS.map(function (s) { return s.op; })));
     SHADOWS = SHADOWS.filter(function (s) { if (s.fade >= 1) { removeShadow(s); return false; } return true; });
   }
-  function hitShadow(s, arrowDmg) {
+  function hitShadow(s, arrowDmg, sweep) {
     if (s.dead) return;
     var held = arrowDmg ? 0 : HOTBAR[sel], dmg = 1;
     if (arrowDmg) dmg = arrowDmg;
     else if (held === SWORD && have(SWORD) > 0) dmg = 4;
     else if (isTool(held) && have(held) > 0 && TOOL_TYPES[typeOf(held)] === 'knife') dmg = 1.5 + tierOf(held) * 0.5;
     if (has('jericho')) dmg += 1;
-    s.hp -= dmg; swingT = 0.25; sfx('dig', 300);
-    var dx = s.x - P.x, dz = s.z - P.z, d = Math.hypot(dx, dz) || 1; s.x += dx / d * 1.5; s.z += dz / d * 1.5;   // 밀려남
+    var crit = !arrowDmg && !P.ground && P.vy < -1 && !P.swim && !P.fly;   // 떨어지면서 치면 강한 일격
+    if (crit) dmg *= 1.5;
+    if (s.wind > 0 && !arrowDmg) { s.wind = 0; s.hitT = performance.now(); }   // 덮치려던 순간에 맞으면 멈칫
+    s.hp -= dmg; if (!sweep) { swingT = 0.25; sfx('dig', 300); }
+    combatFx(s, dmg, crit);
+    var dx = s.x - P.x, dz = s.z - P.z, d = Math.hypot(dx, dz) || 1, kb = crit ? 11 : (arrowDmg ? 4 : 8); s.kx = dx / d * kb; s.kz = dz / d * kb;   // 밀려남
+    if (held === SWORD && !arrowDmg && have(SWORD) > 0) sweepHit(s);
     if (isTool(held)) wearTool(held);
     if (s.hp <= 0) {
-      s.dead = true; burst(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z), LAMP); sfx('craft', 1800);
+      s.dead = true; burst(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z), LAMP); sfx('craft', 1800); shadowDeathFx(s); questEvent('shadow', s.kind, 1);
       dropItem(s.x, s.y + 1, s.z, SHARD, s.kind === 'great' ? 3 : 1);   // 빛 조각 — 횃불·등롱 재료
       if (!S.shardTold) { S.shardTold = 1; saveSettings(); setTimeout(function () { showVerseCard('✨', '빛 조각', '빛이 어둠에 비치되 어둠이 깨닫지 못하더라', '요한복음 1:5', '그림자를 물리친 자리에 빛 조각이 남았어요 — 주워서 횃불·등롱을 만들어요'); }, ACH.shadow ? 300 : 9500); }
       if (!ACH.shadow) { $('cardEmoji').textContent = '⚔'; $('cardName').textContent = '성령의 검'; $('cardText').textContent = '구원의 투구와 성령의 검 곧 하나님의 말씀을 가지라'; $('cardRef').textContent = '에베소서 6:17'; $('cardNew').textContent = '어둠의 그림자 「' + s.sp.name + '」을(를) 물리쳤어요'; $('card').classList.add('show'); clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, 9000); }
@@ -1003,7 +1012,7 @@
   function stateDirty() { stateDirtyF = true; }
   function stateGather() {
     var horses = []; try { horses = JSON.parse(localStorage.getItem('arkVillage.horses') || '[]'); } catch (e) {}
-    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, faith: FAITH, spawn: SPAWN, ach: ACH, noah: NOAH, quest: { stats: stats, step: qStep }, story: STORY, tutorial: tutorialStep, titles: { t: MYTITLE, got: GOTTITLES } };
+    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, faith: FAITH, spawn: SPAWN, ach: ACH, noah: NOAH, quest: { stats: stats, step: qStep }, story: STORY, tutorial: tutorialStep, titles: { t: MYTITLE, got: GOTTITLES }, adv: ADV };
   }
   function stateApply(d) {
     if (!d || d.v !== 1) return;
@@ -1018,6 +1027,7 @@
     SPAWN = d.spawn || null; if (d.ach) ACH = d.ach;
     if (d.noah && typeof d.noah.step === 'number' && ((d.noah.done || 0) > (NOAH.done || 0) || d.noah.step > NOAH.step)) { NOAH = d.noah; try { localStorage.setItem('arkVillage.noah', JSON.stringify(NOAH)); } catch (e) {} }
     if (d.titles) { for (var tk in (d.titles.got || {})) if (TITLES[+tk]) GOTTITLES[tk] = d.titles.got[tk]; if (typeof d.titles.t === 'number' && (d.titles.t < 0 || GOTTITLES[d.titles.t])) MYTITLE = d.titles.t; try { localStorage.setItem('arkVillage.title', String(MYTITLE)); localStorage.setItem('arkVillage.titles', JSON.stringify(GOTTITLES)); } catch (e) {} }
+    if (d.adv) advMerge(d.adv);
     if (d.story) { mergeStory(d.story); try { localStorage.setItem('arkVillage.story', JSON.stringify(STORY)); } catch (e) {} }
     if (Number.isInteger(d.tutorial) && d.tutorial >= 0 && d.tutorial <= 9) {
       tutorialStep = d.tutorial; tutorialWalk = tutorialLook = false; tutorialDoor = null;

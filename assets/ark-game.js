@@ -718,6 +718,32 @@
       });
     });
     drawExpansionTiles();
+    // 남쪽 새 지역(11/20): 백향목·소금·붉은 바위
+    tile('cedarBark', function (px, R) {
+      var col = []; for (var x = 0; x < TS; x++) col.push(0.8 + R() * 0.32);
+      for (var y = 0; y < TS; y++) for (var x2 = 0; x2 < TS; x2++) { var k = col[x2] + (R() - 0.5) * 0.08; if ((x2 * 7 + y * 3) % 11 === 0) k *= 0.78; px(x2, y, 0x8a4f32, k); }
+    });
+    tile('cedarTop', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var d = Math.hypot(x - 7.5, y - 7.5); if (d > 6.6) px(x, y, 0x7a4430, 0.9 + R() * 0.15); else px(x, y, 0xc98a5e, (Math.floor(d * 1.1) % 2 ? 0.86 : 1.0) + (R() - 0.5) * 0.06); }
+    });
+    tile('cedarLeaf', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var v = R(), k = 0.82 + v * 0.3; if (v < 0.16) k = 0.55; if ((x + y * 2) % 5 === 0 && v > 0.5) k = 1.18; px(x, y, 0x2f6b4a, k); }
+    });
+    tile('saltTop', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var crack = (x * 5 + y * 3) % 13 === 0 || (x * 2 - y * 7 + 64) % 17 === 0; px(x, y, crack ? 0xc9c4b4 : 0xf2efe6, crack ? 0.95 : 0.96 + R() * 0.06); }
+    });
+    tile('saltSide', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) px(x, y, y < 4 ? 0xf2efe6 : 0xd9c896, y < 4 ? 0.95 + R() * 0.07 : 0.93 + R() * 0.1);
+    });
+    tile('saltRock', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var f = (x * 3 + y * 5) % 9 === 0; px(x, y, f ? 0xbfc6c6 : 0xe9e7df, 0.92 + R() * 0.1); }
+    });
+    tile('redRock', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var band = (y + Math.floor(Math.sin(x * 0.7) * 1.3) + 16) % 8 < 2; px(x, y, band ? 0xb2603c : 0xc97a4c, 0.92 + R() * 0.1); }
+    });
+    tile('redRock2', function (px, R) {
+      for (var y = 0; y < TS; y++) for (var x = 0; x < TS; x++) { var band = (y + 16) % 5 < 2; px(x, y, band ? 0xe0a774 : 0xa94f33, 0.92 + R() * 0.1); }
+    });
   }
 
   // ───────── 블록 ─────────
@@ -894,6 +920,11 @@
   B[PEARL] = ['진주 문', 'pearl', 'pearl', 'pearl', 0, 1]; B[SOCKET] = ['기초석 자리', 'socket', 'sbrick', 'sbrick'];
   B[GOLDST] = ['정금 길', 'goldst', 'goldst', 'goldst', 0, 1]; B[CITYWALL] = ['벽옥 성곽', 'citywall', 'citywall', 'citywall'];
   B[LIFELEAF] = ['생명나무 잎', 'lifeleaf', 'lifeleaf', 'lifeleaf'];
+  // ── 남쪽 새 지역(11/20): 백향목 숲·광야·소금 바다의 자연 블록 — 캐면 원래 재료(통나무·소금·붉은 흙)로 가방에 들어간다(서버 허용 목록은 그대로) ──
+  var CEDAR_LOG = 860, CEDAR_LEAF = 861, SALT_CRUST = 862, SALT_ROCK = 863, RED_ROCK = 864, RED_ROCK2 = 865;
+  B[CEDAR_LOG] = ['백향목', 'cedarTop', 'cedarBark', 'cedarTop']; B[CEDAR_LEAF] = ['백향목 잎', 'cedarLeaf', 'cedarLeaf', 'cedarLeaf'];
+  B[SALT_CRUST] = ['소금 땅', 'saltTop', 'saltSide', 'sand']; B[SALT_ROCK] = ['소금 바위', 'saltRock', 'saltRock', 'saltRock'];
+  B[RED_ROCK] = ['붉은 바위', 'redRock', 'redRock', 'redRock']; B[RED_ROCK2] = ['붉은 바위 줄무늬', 'redRock2', 'redRock2', 'redRock2'];
   // 반 블록은 가방에는 아래쪽 번호 하나로, 세계에는 위아래 번호를 따로 저장한다.
   var SLABS = [[SLAB_G,GOPHER,242],[SLAB_S,STONE,243],[SLAB_B,BRICK,244],
     [SLAB_L,LIME,245],[SLAB_P,PITCH,246],[218,DIRT,247],[219,20,248],
@@ -1312,7 +1343,8 @@
   setClass('axe', [LOG], 1.4); setClass('axe', [GOPHER, PITCH], 1.1); setClass('axe', [22], 0.8);
   setClass('axe', [SLAB_G, STAIR_G, STAIR_G + 1, STAIR_G + 2, STAIR_G + 3, FENCE, 60, 61, 62, 63, 64, 65, 66, 67], 1.0);
   setClass('shovel', [GRASS, DIRT, 19], 0.7); setClass('shovel', [SAND], 0.6); setClass('shovel', [CLAY, TAR], 0.9); setClass('shovel', [18], 0.9); setClass('shovel', [SNOW], 0.4);
-  setClass('knife', [LEAF], 0.35); setClass('knife', [REED, FLOWER], 0.08); setClass('knife', [14, 15, 16, 17], 0.6);
+  setClass('knife', [LEAF, CEDAR_LEAF], 0.35); setClass('axe', [CEDAR_LOG], 1.6); setClass('shovel', [SALT_CRUST], 0.6); setClass('pick', [SALT_ROCK], 1.0); setClass('pick', [RED_ROCK, RED_ROCK2], 1.3);
+  DROP[CEDAR_LOG] = LOG; DROP[SALT_CRUST] = SALT; DROP[SALT_ROCK] = SALT; DROP[RED_ROCK] = RED_EARTH; DROP[RED_ROCK2] = RED_EARTH; setClass('knife', [REED, FLOWER], 0.08); setClass('knife', [14, 15, 16, 17], 0.6);
   var NEED_TIER = {}; NEED_TIER[ORE_CU] = 0; NEED_TIER[ORE_FE] = 1; NEED_TIER[ORE_AG] = 2; NEED_TIER[ORE_AU] = 3;   // 0=나무 1=돌 2=구리 3=철 곡괭이
   GEMS.forEach(function (g, i) { if (g) NEED_TIER[gemOre(i)] = g[7]; });   // 열두 보석: 귀한 것은 금강석 곡괭이(4)
   NEED_TIER[ORE_COAL] = 0; NEED_TIER[ORE_ONYX] = 2; NEED_TIER[ORE_SAPH] = 3; NEED_TIER[ORE_DIA] = 3;
@@ -1573,6 +1605,18 @@
   var TARR = [LX + LRX + 8, LZ - 18, LX + LRX + 46, LZ + 22];
   // 먼 곳: 북쪽 바다, 동쪽 사막(오아시스), 서쪽 끝 아라랏 산(창 8:4)
   var SEA_Z = AZ0 - 150, DES_X = VX1 + 170, ARX = XM - 600, ARZ = AZ0 + 60, OASX = VX1 + 430, OASZ = PZ0 + 70;
+  // 남쪽 새 지역(11/20): 서남쪽 백향목 숲(시 92:12), 가운데 광야와 성막(출 25:8, 27:18), 동남쪽 소금 바다(마 5:13)와 나그네 장막촌(히 11:9)
+  var CEX = 640, CEZ = 1640, CER = 210, WIX = 1030, WIZ = 1700, WIR = 190, SAX = 1440, SAZ = 1690, SARX = 140, SARZ = 85, SAR = 205;
+  var TBX = 1030, TBZ = 1700, CTX = 640, CTZ = 1640, TCX = 1262, TCZ = 1690, LOTX = 1440, LOTZ = 1784;
+  function southReg(x, z) {
+    if (z < 1380) return '';
+    var n = (vnoise(x, z, 50, 71) - 0.5) * 60;
+    if (Math.hypot(x - SAX, (z - SAZ) * 1.3) + n < SAR) return 'salt';
+    if (Math.hypot(x - WIX, z - WIZ) + n < WIR) return 'wild';
+    if (Math.hypot(x - CEX, z - CEZ) + n < CER) return 'cedar';
+    return '';
+  }
+  function saltE(x, z) { var dx = (x - SAX) / SARX, dz = (z - SAZ) / SARZ; return dx * dx + dz * dz; }
   function plotOrigin(i) { return { x: PX0 + (i % PCOLS) * PSTEP, z: PZ0 + Math.floor(i / PCOLS) * PSTEP }; }
   function plotAt(x, z) {
     var cx = x - PX0, cz = z - PZ0;
@@ -1642,6 +1686,7 @@
     if (Math.hypot(x - OASX, z - OASZ) < 34) return 'oasis';
     if (z < SEA_Z + 10 + (vnoise(x, z, 60, 9) - 0.5) * 40) return 'sea';
     if (Math.hypot(x - ARX, z - ARZ) < 230) return 'ararat';
+    var sr = southReg(x, z); if (sr) return sr;
     var southF = z + (vnoise(x, z, 70, 12) - 0.5) * 60;
     if (x < PX0 - 8 && southF < LZ + 120) return 'west';
     if (x > DES_X + (vnoise(x, z, 80, 8) - 0.5) * 60 && southF < LZ + 120) return 'desert';
@@ -1669,6 +1714,18 @@
     var desW = sstep(DES_X - 40, DES_X + 30, x + (vnoise(x, z, 80, 8) - 0.5) * 60) * southK;
     var dune = 2 + 5 * Math.abs(Math.sin(x * 0.045 + vnoise(x, z, 40, 5) * 4)) * vnoise(x, z, 30, 6);
     hf = hf * (1 - desW) + bl * dune * desW;
+    var wildW = 0, mesaTop = false;
+    if (z > 1340) {   // 남쪽 새 지역 땅 모양
+      var snz = (vnoise(x, z, 50, 71) - 0.5) * 60;
+      var cw = sstep(0, 50, CER - (Math.hypot(x - CEX, z - CEZ) + snz));
+      wildW = sstep(0, 50, WIR - (Math.hypot(x - WIX, z - WIZ) + snz));
+      var sw = sstep(0, 40, SAR - (Math.hypot(x - SAX, (z - SAZ) * 1.3) + snz));
+      if (cw > 0) hf = hf * (1 - cw) + cw * bl * (4 + 12 * n1 + 10 * ridge * n1);
+      if (wildW > 0) { var mesa = vnoise(x, z, 38, 72), mh = mesa > 0.64 ? Math.min(14, 5 + Math.round((mesa - 0.64) * 70)) : 0; mesaTop = mh > 0 && wildW > 0.6; hf = hf * (1 - wildW) + wildW * bl * (1.2 + 2 * n2 + mh); }
+      if (sw > 0) hf = hf * (1 - sw) + sw * bl * (0.8 + n2);
+      // 건축물 자리는 평평하게
+      var fk = landmarkFlat(x, z); if (fk) { hf = hf * (1 - fk[1]) + fk[0] * fk[1]; if (fk[1] > 0.5) mesaTop = false; }
+    }
     var h = G - 1 + Math.round(hf);
     // 북쪽 바다: 바닷가에서 점점 깊게
     var seaD = (SEA_Z + (vnoise(x, z, 60, 9) - 0.5) * 40) - z;
@@ -1678,13 +1735,16 @@
     if (rd < 15) { var vf = clamp01((rd - 4) / 11); vf = vf * vf; h = Math.round(G - 1 + (h - (G - 1)) * vf); }
     if (h > SY - 4) h = SY - 4;
     var top = GRASS, sub = DIRT, wtop = -1;
-    var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ);
+    var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), se = z > 1500 ? saltE(x, z) : 9;
     if (le < 1) { h = G - 2 - Math.floor(5 * (1 - le)); wtop = G - 1; top = hash2(x, z, 1) < 0.5 ? CLAY : SAND; sub = CLAY; }
     else if (od < 11) { h = G - 2 - Math.floor(4 * (1 - od / 11)); wtop = G - 1; top = SAND; sub = CLAY; }
+    else if (se < 1) { h = G - 2 - Math.floor(6 * (1 - se)); wtop = G - 1; top = hash2(x, z, 4) < 0.3 ? SALT_CRUST : SAND; sub = SAND; }
     else if (rd <= 2.2) { wtop = h; h = h - 2; top = hash2(x, z, 2) < 0.5 ? CLAY : SAND; sub = SAND; }
     else if (h < G - 1) { wtop = G - 1; top = n2 < 0.3 ? 18 : SAND; sub = SAND; }
     else if (le < 1.3 || od < 16 || rd <= 3.2) { top = le < 1.3 && hash2(x, z, 3) < 0.3 ? CLAY : SAND; sub = SAND; }
     else if (desW > 0.5) { top = SAND; sub = SAND; }
+    else if (se < 1.5) { top = SALT_CRUST; sub = SAND; }
+    else if (wildW > 0.5) { top = mesaTop ? RED_ROCK : (n2 > 0.62 ? 18 : (n1 > 0.6 ? RED_ROCK : SAND)); sub = RED_ROCK; }
     else if (seaD > -16) { top = SAND; sub = SAND; }
     else if (h > G + 46 + n2 * 4) { top = SNOW; sub = STONE; }
     else if ((westW > 0 || ar > 0.25) && h > G + 15 + vnoise(x, z, 9, 3) * 9) { top = STONE; sub = STONE; }
@@ -1783,6 +1843,7 @@
       for (var gq = 0; gq < 12; gq++) { var gr = GEMS[gq]; if (gr && gr[3] === T.reg) { if (gr[4] < gemLo) gemLo = gr[4]; if (gr[5] > gemHi) gemHi = gr[5]; } }
       for (y = 1; y <= h; y++) {
         var id = y === h ? T.top : (y > h - 4 ? T.sub : STONE);
+        if (T.reg === 'wild' && id === STONE && y >= G - 3) id = y % 3 === 0 ? RED_ROCK2 : RED_ROCK;   // 광야: 붉은 바위 켜
         if (id === STONE && y < h - 2) {
           // 돌 속 석회암·검은 돌(2칸씩 뭉쳐서)
           var pk = ((lz >> 1) * 16 + (lx >> 1)), oi = pk * SY + y, o = OC[oi];
@@ -1816,7 +1877,8 @@
       // 물가 갈대, 들꽃
       if (T.wtop < 0) {
         var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), hh = hash2(x, z, 11);
-        if (((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 && h + 1 < SY) d[((h + 1) * CS + lz) * CS + lx] = REED;
+        if (T.reg === 'salt' && T.top === SALT_CRUST && hh < 0.005 && h + 6 < SY && !landmarkAt(x, z, 4)) { var sk = 2 + Math.floor(hash2(x, z, 12) * 5); for (var sy = 1; sy <= sk; sy++) d[((h + sy) * CS + lz) * CS + lx] = SALT_ROCK; }
+        else if (((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 && h + 1 < SY) d[((h + 1) * CS + lz) * CS + lx] = REED;
         else if (T.top===GRASS && hh>.92 && hh<=.955 && !inTown(x,z) && !inCommons(x,z) && h+1<SY)
           d[((h+1)*CS+lz)*CS+lx]=le<2.1 || T.rd<12?LILY:(z>1210||x>VX1+70?THORN:THISTLE);
         else if (T.top === GRASS && hh > 0.955 && plotAt(x, z) < 0 && !(z > AZ0 - 5 && z < AZ1 + 5 && x > AX0 - 5 && x < AX1 + 5)) d[((h + 1) * CS + lz) * CS + lx] = FLOWER;
@@ -1827,17 +1889,20 @@
     // 나무: 7칸 격자마다 한 그루 후보(옆 기둥 나무도 걸치게)
     for (var gz = Math.floor((z0 - 6) / 7); gz <= Math.floor((z0 + CS + 6) / 7); gz++) for (var gx = Math.floor((x0 - 6) / 7); gx <= Math.floor((x0 + CS + 6) / 7); gx++) {
       var tx = gx * 7 + Math.floor(hash2(gx, gz, 21) * 6), tz = gz * 7 + Math.floor(hash2(gx, gz, 22) * 6);
+      if (landmarkAt(tx, tz, 13)) continue;
       if (inTown(tx, tz) || distOut(tx, tz) < 6 || plotAt(tx, tz) >= 0 || (tx >= COMMONS[0] - 4 && tx <= COMMONS[2] + 4 && tz >= COMMONS[1] - 4 && tz <= COMMONS[3] + 4)) continue;
       terrain(tx, tz);
       if (T.wtop >= 0) continue;
-      var reg = T.reg, p = reg === 'east' ? 0.6 : (reg === 'south' ? 0.16 : (reg === 'west' || reg === 'ararat' ? 0.14 : (reg === 'other' ? 0.1 : 0)));
+      var reg = T.reg, p = reg === 'cedar' ? 0.62 : reg === 'wild' ? 0.035 : reg === 'salt' ? 0 : reg === 'east' ? 0.6 : (reg === 'south' ? 0.16 : (reg === 'west' || reg === 'ararat' ? 0.14 : (reg === 'other' ? 0.1 : 0)));
       var palm = reg === 'oasis' || (reg === 'desert' && hash2(gx, gz, 24) < 0.015);
       if (palm) p = reg === 'oasis' ? 0.7 : 1;
       if (hash2(gx, gz, 23) > p) continue;
       if (palm) { if (T.top === SAND) palmTree(tx, T.h + 1, tz, 8 + Math.floor(hash2(gx, gz, 25) * 4)); continue; }
-      if (T.top !== GRASS) continue;
+      if (T.top !== GRASS && !(reg === 'wild' && T.top === SAND)) continue;
       var t2 = T.h; terrain(tx + 1, tz + 1); if (T.h !== t2) continue;
-      tree(tx, t2 + 1, tz, 7 + Math.floor(hash2(gx, gz, 26) * 5));
+      if (reg === 'cedar') cedarTree(tx, t2 + 1, tz, 14 + Math.floor(hash2(gx, gz, 26) * 8));
+      else if (reg === 'wild') acaciaTree(tx, t2 + 1, tz, 5 + Math.floor(hash2(gx, gz, 26) * 3));
+      else tree(tx, t2 + 1, tz, 7 + Math.floor(hash2(gx, gz, 26) * 5));
     }
     // 함께 짓는 터: 평평한 풀밭 + 자갈 테두리 + 네 귀퉁이 등불
     if (x0 + CS > COMMONS[0] - 1 && x0 < COMMONS[2] + 2 && z0 + CS > COMMONS[1] - 1 && z0 < COMMONS[3] + 2) {
@@ -1864,6 +1929,7 @@
       if (po.x + PLOT <= x0 || po.x >= x0 + CS || po.z + PLOT <= z0 || po.z >= z0 + CS) continue;
       if (plotData[i]) { var a = plotData[i], k = 0; for (y = PY0; y < G + PH; y++) for (z = 0; z < PLOT; z++) for (x = 0; x < PLOT; x++) setRaw(po.x + x, y, po.z + z, a[k++]); }
     }
+    buildLandmarks(x0, z0);
     if (HOREB_X >= x0 - 2 && HOREB_X < x0 + CS + 2 && HOREB_Z >= z0 - 2 && HOREB_Z < z0 + CS + 2) buildHoreb();
     markPlots();
     var ed = EDITS[cz * NC + cx]; if (ed) for (var li in ed) col.d[li] = ed[li];
@@ -3334,6 +3400,7 @@
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
     if (inArk(x, y, z)) return '노아의 방주는 다 지어져 있어요. 안으로 들어가 둘러보세요! (창 6:22)';
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
+    if (inLandmark(x, z)) return '「' + REGION_INFO[inLandmark(x, z)][0] + '」은(는) 함께 구경하는 곳이라 지켜져 있어요';
     if (inDungeon(x, y, z) && get(x, y, z) !== TORCH && !(get(x, y, z) >= 170 && get(x, y, z) < 174) && get(x, y, z) !== LADDER + 3) return '골짜기의 벽은 깨지지 않아요 — 길을 찾아 지나가요(시 23:4)';
     if (y <= 0) return '맨 아래 바닥은 캘 수 없어요';
     var p = plotAt(x, z);
@@ -3354,6 +3421,7 @@
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
     if (inArk(x, y, z)) return '노아의 방주는 다 지어져 있어요. 안으로 들어가 둘러보세요! (창 6:22)';
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
+    if (inLandmark(x, z)) return '「' + REGION_INFO[inLandmark(x, z)][0] + '」은(는) 함께 구경하는 곳이라 지켜져 있어요';
     if (inDungeon(x, y, z) && id !== TORCH) return '골짜기에는 횃불만 놓을 수 있어요';
     var p = plotAt(x, z);
     // 땅 밖(숲·산·호수 같은 자연)에서도 블록을 놓을 수 있다 — 마을 마당·다른 사람 땅·방주만 빼고
@@ -3407,12 +3475,12 @@
         for (var dy = dc[0]; dy <= dc[1]; dy++) setBlock(h.x, dy, h.z, AIR);
         burst(h.x, h.y, h.z, old); dropItem(h.x + 0.5, h.y + 0.45, h.z + 0.5, DOOR, 1);
       } else {
-        breakAt(h.x, h.y, h.z, old);
+        breakAt(h.x, h.y, h.z, old); if (oreBase(old)) oreBroken(h.x, h.y, h.z, old);
         var up = get(h.x, h.y + 1, h.z);
         if (kind(up) === 'plant') breakAt(h.x, h.y + 1, h.z, up);
       }
       if (isGrav(get(h.x, h.y + 1, h.z))) startFall(h.x, h.y + 1, h.z);
-      sfx('break', matSound(old)); vibrate('break'); wearTool(usedTool); bagChanged();
+      sfx('break', matSound(old)); vibrate('break'); wearTool(usedTool); bagChanged(); questEvent('break', old, 1);
     } else {
       var tgt = get(h.x, h.y, h.z);
       if (tryFrontierDevice(tgt,h)) return;
@@ -3639,7 +3707,7 @@
     }
     if (mine.denied) return;
     mine.t += dt; mine.snd -= dt;
-    if (mine.snd <= 0) { sfx('dig', mine.f); mine.snd = 0.2; swingT = 0.25; burst(mine.x, mine.y, mine.z, get(mine.x, mine.y, mine.z), true); }
+    if (mine.snd <= 0) { sfx('dig', mine.f); mine.snd = 0.2; swingT = 0.25; burst(mine.x, mine.y, mine.z, get(mine.x, mine.y, mine.z), true); oreTap(mine.x, mine.y, mine.z, get(mine.x, mine.y, mine.z)); }
     if (mine.t >= mine.need) { act('break', h); mine = null; if (hold) hold.dug = true; }
   }
   function updateCrack() {
@@ -4080,7 +4148,11 @@
     }
     var p = plotAt(x, z);
     if (p >= 0) return p === myPlot ? '내 땅 (' + (p + 1) + '번)' + (homeSafe ? ' · 🏠 안전한 집' : '') : (p + 1) + '번 땅' + (plotOwners[p] ? '' : ' · 빈 땅');
-    var reg = region(x, z);
+    var reg = region(x, z), lmk = inLandmark(x, z);
+    if (lmk) return REGION_INFO[lmk][0];
+    if (reg === 'cedar') return '백향목 숲';
+    if (reg === 'wild') return '광야';
+    if (reg === 'salt') return P.swim ? '소금 바다 (헤엄치는 중)' : '소금 바닷가';
     if (reg === 'tar') return '역청 구덩이 (창 14:10)';
     if (reg === 'lake') return P.swim ? '호수 (헤엄치는 중)' : '남쪽 호숫가';
     if (inCommons(x, z)) return '🏗 함께 짓는 터';
@@ -4667,7 +4739,7 @@
     // 게임 메뉴: 버튼을 묶음 탭(게임·이동·함께·설정)으로 — 돌아가기·나가기는 늘 보임
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
-      var G = { game: ['mNews', 'mFeedback', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
+      var G = { game: ['mNews', 'mQuest', 'mFeedback', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
         together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch', 'mFeedbackAdmin'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
@@ -4746,6 +4818,8 @@
     on('mBtnSize', function () { S.btnSize = ((S.btnSize === undefined ? 1 : S.btnSize) + 1) % 3; applyBtnSize(); saveSettings(); updateMenuLabels(); sfx('click'); newsMark('btn'); });
     on('mNews', function () { openVillageWork('news'); });
     on('mFeedback', function () { openFeedback(); });
+    on('mQuest', function () { openQuests(); });
+    on('advChip', function () { openQuests('today'); });
     on('mFeedbackAdmin', function () { openFeedbackAdmin(); });
     applyBtnSize();
     on('touchAction', function () { if (isTouch && ui === 'play' && HOTBAR[sel] !== BOW) { tapAt(); mobileHudAt = 0; } });
@@ -6368,14 +6442,14 @@
           }
         }
         streamTick(camera.position.x, camera.position.z, dt); mapTick();
-        stepBits(dt); stepDrops(dt); stepSDrops(dt); stepFalls(dt); stepCreatures(dt, now / 1000); netTick(dt, now);
+        stepBits(dt); stepFx(dt); stepDrops(dt); stepSDrops(dt); stepFalls(dt); stepCreatures(dt, now / 1000); netTick(dt, now);
         if (forestRoute && ui === 'play') renderForestRoute();
         renderer.render(scene, camera);
         requestAnimationFrame(loop);
       })(last);
       setInterval(function () {
         if (!started) return;
-        $('place').textContent=placeName();
+        $('place').textContent=placeName(); regionTick();
         renderMaterialGuide();
         if(((ui==='villageWork'&&(villageTab==='projects'||villageTab==='neighbors'))||(villageProjectsEnabled&&inCommons(P.x,P.z)))&&Date.now()>villageProjectAt){villageProjectAt=Date.now()+6000;fetchVillageProjects();}
         $('seasonInfo').textContent=(FESTIVE?'🌟 성탄 절기 · ':'')+WEATHER[seasonIndex()]+(rainOn?(snowNow?' · 눈':' · 비'):'')+
@@ -7386,7 +7460,7 @@
     wasNight = night;
   }
   function nearSafeHome(x, z) { if (!homeSafe || myPlot < 0) return false; var o = plotOrigin(myPlot); return x >= o.x - 10 && x < o.x + PLOT + 10 && z >= o.z - 10 && z < o.z + PLOT + 10; }
-  function safeZone(x, z) { return nearSafeHome(x, z) || inTown(x, z) || inCommons(x, z) || plotAt(x, z) >= 0 || inArk(x, G + 2, z) || inCity(x, z); }
+  function safeZone(x, z) { return nearSafeHome(x, z) || inTown(x, z) || inCommons(x, z) || plotAt(x, z) >= 0 || inArk(x, G + 2, z) || inCity(x, z) || !!inLandmark(x, z); }
   function removeShadow(s) {
     var materials = new Set();
     s.mesh.traverse(function (o) {
@@ -7435,16 +7509,20 @@
         if (dist > want + 0.3) mv = s.sp.speed * dt; else if ((torch || s.sp.ranged) && dist < want - 0.5) mv = -s.sp.speed * 0.6 * dt;
         if (s.sp.ranged) { s.fireT = (s.fireT === undefined ? 1.5 + Math.random() : s.fireT) - dt; if (s.fireT <= 0 && dist < 20 && Math.abs(P.y - s.y) < 6) { s.fireT = 2.8 + Math.random() * 1.2; shootFireArrow(s); } }
         if (s.sp.blink && dist > 6 && Math.random() < dt * 0.25) mv = Math.min(dist - 3, 4);   // 거짓: 갑자기 가까이
-        if (mv) {
+        if (mv && !(s.wind > 0)) {
           var nx = s.x + dx / dist * mv, nz = s.z + dz / dist * mv, ny = groundAt(nx, nz, s.y + 2);
           if (ny !== null && Math.abs(ny - s.y) <= 1.6 && !litNear(Math.floor(nx), ny, Math.floor(nz), 4)) { s.x = nx; s.z = nz; s.y = ny; }
         }
-        if (!s.sp.ranged && dist < 1.6 && Math.abs(P.y - s.y) < 2.5 && now - s.hitT > 1200) {
-          s.hitT = now; var g = armorGuard(), dmg = Math.round(s.sp.dmg * (1 - g));
+        if (!s.sp.ranged && !(s.wind > 0) && dist < 1.9 && Math.abs(P.y - s.y) < 2.5 && now - s.hitT > 1200) { s.wind = 0.45; s.hitT = now; }
+        if (s.wind > 0 && (s.wind -= dt) <= 0) {   // 공격 신호(몸을 젖힘) 0.45초 뒤에 덮침 — 그 사이 물러서면 피함
+          s.wind = 0; s.hitT = now; s.lunge = 1;
+          if (dist < 2.3 && Math.abs(P.y - s.y) < 2.5) { var g = armorGuard(), dmg = Math.round(s.sp.dmg * (1 - g));
           if (dmg > 0) hurtFaith(dmg, '「' + s.sp.name + '」'); else if (vitalsOn()) toast('🛡 하나님의 전신 갑주가 막아 주었어요 (엡 6:11)');
-          P.vx += dx / dist * 6; P.vz += dz / dist * 6;
+          P.vx += dx / dist * 6; P.vz += dz / dist * 6; }
+          else floatText(P.x, P.y + HT + 0.3, P.z, '피했어요!', '#bfe8ff', 0.5, 0.8);
         }
       }
+      shadowFxStep(s, dt);
       s.mesh.position.set(s.x, s.y + Math.sin(s.t * 2) * 0.12, s.z);
       s.mesh.rotation.y = Math.atan2(-dx, -dz);
       var op = Math.max(0, 0.78 * (1 - s.fade)) * (0.85 + Math.sin(s.t * 5) * 0.15);
@@ -7454,18 +7532,23 @@
     if (SHADOWS.length) shadowMat.opacity = Math.max(0.15, Math.min.apply(null, SHADOWS.map(function (s) { return s.op; })));
     SHADOWS = SHADOWS.filter(function (s) { if (s.fade >= 1) { removeShadow(s); return false; } return true; });
   }
-  function hitShadow(s, arrowDmg) {
+  function hitShadow(s, arrowDmg, sweep) {
     if (s.dead) return;
     var held = arrowDmg ? 0 : HOTBAR[sel], dmg = 1;
     if (arrowDmg) dmg = arrowDmg;
     else if (held === SWORD && have(SWORD) > 0) dmg = 4;
     else if (isTool(held) && have(held) > 0 && TOOL_TYPES[typeOf(held)] === 'knife') dmg = 1.5 + tierOf(held) * 0.5;
     if (has('jericho')) dmg += 1;
-    s.hp -= dmg; swingT = 0.25; sfx('dig', 300);
-    var dx = s.x - P.x, dz = s.z - P.z, d = Math.hypot(dx, dz) || 1; s.x += dx / d * 1.5; s.z += dz / d * 1.5;   // 밀려남
+    var crit = !arrowDmg && !P.ground && P.vy < -1 && !P.swim && !P.fly;   // 떨어지면서 치면 강한 일격
+    if (crit) dmg *= 1.5;
+    if (s.wind > 0 && !arrowDmg) { s.wind = 0; s.hitT = performance.now(); }   // 덮치려던 순간에 맞으면 멈칫
+    s.hp -= dmg; if (!sweep) { swingT = 0.25; sfx('dig', 300); }
+    combatFx(s, dmg, crit);
+    var dx = s.x - P.x, dz = s.z - P.z, d = Math.hypot(dx, dz) || 1, kb = crit ? 11 : (arrowDmg ? 4 : 8); s.kx = dx / d * kb; s.kz = dz / d * kb;   // 밀려남
+    if (held === SWORD && !arrowDmg && have(SWORD) > 0) sweepHit(s);
     if (isTool(held)) wearTool(held);
     if (s.hp <= 0) {
-      s.dead = true; burst(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z), LAMP); sfx('craft', 1800);
+      s.dead = true; burst(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z), LAMP); sfx('craft', 1800); shadowDeathFx(s); questEvent('shadow', s.kind, 1);
       dropItem(s.x, s.y + 1, s.z, SHARD, s.kind === 'great' ? 3 : 1);   // 빛 조각 — 횃불·등롱 재료
       if (!S.shardTold) { S.shardTold = 1; saveSettings(); setTimeout(function () { showVerseCard('✨', '빛 조각', '빛이 어둠에 비치되 어둠이 깨닫지 못하더라', '요한복음 1:5', '그림자를 물리친 자리에 빛 조각이 남았어요 — 주워서 횃불·등롱을 만들어요'); }, ACH.shadow ? 300 : 9500); }
       if (!ACH.shadow) { $('cardEmoji').textContent = '⚔'; $('cardName').textContent = '성령의 검'; $('cardText').textContent = '구원의 투구와 성령의 검 곧 하나님의 말씀을 가지라'; $('cardRef').textContent = '에베소서 6:17'; $('cardNew').textContent = '어둠의 그림자 「' + s.sp.name + '」을(를) 물리쳤어요'; $('card').classList.add('show'); clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, 9000); }
@@ -7571,7 +7654,7 @@
   function stateDirty() { stateDirtyF = true; }
   function stateGather() {
     var horses = []; try { horses = JSON.parse(localStorage.getItem('arkVillage.horses') || '[]'); } catch (e) {}
-    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, faith: FAITH, spawn: SPAWN, ach: ACH, noah: NOAH, quest: { stats: stats, step: qStep }, story: STORY, tutorial: tutorialStep, titles: { t: MYTITLE, got: GOTTITLES } };
+    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, faith: FAITH, spawn: SPAWN, ach: ACH, noah: NOAH, quest: { stats: stats, step: qStep }, story: STORY, tutorial: tutorialStep, titles: { t: MYTITLE, got: GOTTITLES }, adv: ADV };
   }
   function stateApply(d) {
     if (!d || d.v !== 1) return;
@@ -7586,6 +7669,7 @@
     SPAWN = d.spawn || null; if (d.ach) ACH = d.ach;
     if (d.noah && typeof d.noah.step === 'number' && ((d.noah.done || 0) > (NOAH.done || 0) || d.noah.step > NOAH.step)) { NOAH = d.noah; try { localStorage.setItem('arkVillage.noah', JSON.stringify(NOAH)); } catch (e) {} }
     if (d.titles) { for (var tk in (d.titles.got || {})) if (TITLES[+tk]) GOTTITLES[tk] = d.titles.got[tk]; if (typeof d.titles.t === 'number' && (d.titles.t < 0 || GOTTITLES[d.titles.t])) MYTITLE = d.titles.t; try { localStorage.setItem('arkVillage.title', String(MYTITLE)); localStorage.setItem('arkVillage.titles', JSON.stringify(GOTTITLES)); } catch (e) {} }
+    if (d.adv) advMerge(d.adv);
     if (d.story) { mergeStory(d.story); try { localStorage.setItem('arkVillage.story', JSON.stringify(STORY)); } catch (e) {} }
     if (Number.isInteger(d.tutorial) && d.tutorial >= 0 && d.tutorial <= 9) {
       tutorialStep = d.tutorial; tutorialWalk = tutorialLook = false; tutorialDoor = null;
@@ -8460,7 +8544,11 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 2, NEWS = [
+  var NEWS_VER = 3, NEWS = [
+    ['quest', '📜', '퀘스트', '왼쪽 위 「📜 부탁」이나 메뉴의 「📜 퀘스트」에서 오늘의 부탁 셋·모험·땅 밟기를 봐요. 다 들어주면 보상을 받아요.', 0],
+    ['south', '🌲', '남쪽 새 땅', '마을 남쪽 멀리 백향목 숲·광야·소금 바다가 생겼어요. 광야에는 성막, 숲에는 망대, 바닷가에는 나그네 장막촌이 있어요.', 0],
+    ['vein', '💎', '광맥', '광석을 캐면 반짝이며, 이어진 광석이 있으면 잠깐 비춰 줘요.', 0],
+    ['crit', '✦', '강한 일격', '뛰어올라 떨어지면서 그림자를 치면 더 세게 쳐요. 성령의 검은 앞쪽 그림자를 함께 쳐요. 그림자가 몸을 젖히면 곧 덮치니 물러서요.', 0],
     ['bow', '🏹', '활과 화살', '활을 들고 화면을 꾹 눌러 당기고, 떼면 쏴요. 오래 당길수록 멀리·세게 날아가요.', BOW],
     ['shield', '🛡', '방패로 불화살 막기', '방패를 차면 「의심」이 쏘는 불화살을 앞에서 막아요. 믿음의 방패는 모두 막아요(엡 6:16).', 0],
     ['faith', '✦', '믿음', '그림자에게 맞으면 믿음이 깎여요. 말씀 두루마리를 읽거나 제단에서 기도하면 다시 차고, 파티원과 함께면 덜 깎여요.', 0],
@@ -8495,7 +8583,7 @@
   function newsTick() {   // 1초마다: 들어온 지 6초 뒤 한 번 알림
     if (newsTold || !started || ui !== 'play' || S.newsSeen === NEWS_VER) return;
     if (++newsT < 6) return;
-    newsTold = true; toast('✨ 새 기능 ' + NEWS.length + '가지가 생겼어요 — 메뉴의 「✨ 새 기능」에서 봐요 (활·수레·다락문·액자…)');
+    newsTold = true; toast('✨ 새 기능 ' + NEWS.length + '가지가 생겼어요 — 메뉴의 「✨ 새 기능」에서 봐요 (퀘스트·남쪽 새 땅·성막·광맥·강한 일격…)');
   }
   var VILLAGE_SITES = [
     { name:'사막의 옛 우물',x:1510,z:811,r:7,style:'well',item:FIND_POT,clue:'동쪽 사막의 북쪽에서 돌 테두리를 찾아요.' },
@@ -8806,6 +8894,494 @@
       teleport(ride.to.x+.5,surfaceY(ride.to.x,shore),shore,P.yaw);
       toast('호수 건너편에 도착했어요');
     }
+  }
+  // ───────── 모험 손맛(2026-11-20): 광석 캐기 반짝임·광맥 알림, 그림자와 싸울 때 체력 막대·피해 숫자·번쩍임·강한 일격·검 휘두르기·공격 신호 ─────────
+  var ORE_SET = {}, ORE_COLOR = {};
+  [[ORE_COAL, 0x5a5a66], [ORE_CU, 0xff9a52], [ORE_FE, 0xf0c49a], [ORE_AG, 0xeef6ff], [ORE_ONYX, 0xc88cff], [ORE_AU, 0xffd84a], [ORE_SAPH, 0x5a8cff], [ORE_DIA, 0x8ff8ff]].forEach(function (o) {
+    ORE_SET[o[0]] = o[0]; ORE_COLOR[o[0]] = o[1]; if (DEEPV[o[0]]) ORE_SET[DEEPV[o[0]]] = o[0];
+  });
+  for (var gq0 = 0; gq0 < 12; gq0++) if (GEMS[gq0]) { var go0 = gemOre(gq0); if (!ORE_COLOR[go0]) { ORE_SET[go0] = go0; ORE_COLOR[go0] = TILE_AVG[TILE['gem' + gq0]] || 0xffffff; } }
+  function oreBase(id) { return ORE_SET[id] || 0; }
+  // 반짝이·숫자 같은 잠깐 보이는 것(FX)
+  var FX = [], glowTex = null;
+  function glowMat(color, through) {
+    if (!glowTex) {
+      var c = document.createElement('canvas'); c.width = c.height = 32; var g = c.getContext('2d'), gr = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+      gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.75)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 32, 32); glowTex = new THREE.CanvasTexture(c);
+    }
+    return new THREE.SpriteMaterial({ map: glowTex, color: color, transparent: true, depthWrite: false, depthTest: !through, blending: THREE.AdditiveBlending, fog: false });
+  }
+  function sparkle(x, y, z, color, n, o) {
+    if (S.lightMode) n = Math.ceil(n / 2);
+    if (!scene) return;
+    o = o || {};
+    for (var i = 0; i < n; i++) {
+      var s = new THREE.Sprite(glowMat(color, o.through)), sz = (o.size || 0.32) * (0.6 + Math.random() * 0.8);
+      s.scale.set(sz, sz, 1); s.position.set(x + (Math.random() - 0.5) * (o.spread || 0.8), y + (Math.random() - 0.5) * (o.spread || 0.8), z + (Math.random() - 0.5) * (o.spread || 0.8));
+      s.renderOrder = o.through ? 19 : 4; scene.add(s);
+      FX.push({ m: s, vx: (Math.random() - 0.5) * (o.v || 1.6), vy: (o.up === undefined ? 1.2 : o.up) + Math.random() * (o.v || 1.6), vz: (Math.random() - 0.5) * (o.v || 1.6), g: o.g || 0, life: (o.life || 0.9) * (0.7 + Math.random() * 0.6), t: 0, sz: sz });
+    }
+  }
+  function floatText(x, y, z, t, color, hgt, life) {
+    if (!scene) return;
+    var s = textSprite(t, 'rgba(0,0,0,0)', color, hgt || 0.6); s.position.set(x, y, z); scene.add(s);
+    FX.push({ m: s, vx: (Math.random() - 0.5) * 0.6, vy: 1.6, vz: (Math.random() - 0.5) * 0.6, g: 1.2, life: life || 0.9, t: 0, text: true });
+  }
+  function stepFx(dt) {
+    if (!FX.length) return;
+    FX = FX.filter(function (f) {
+      f.t += dt; f.vy -= f.g * dt;
+      f.m.position.x += f.vx * dt; f.m.position.y += f.vy * dt; f.m.position.z += f.vz * dt;
+      var k = f.t / f.life;
+      if (k >= 1) { if (f.text) disposeSprite(f.m); else { scene.remove(f.m); f.m.material.dispose(); } return false; }
+      f.m.material.opacity = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
+      if (!f.text) { var sc = f.sz * (1 - k * 0.5); f.m.scale.set(sc, sc, 1); }
+      return true;
+    });
+  }
+  // 광석을 캘 때: 두드릴 때마다 광석 빛 부스러기, 캐면 반짝 + 맑은 소리, 이어진 광석(광맥)이 있으면 잠깐 비춰 주고 알림
+  var veinToldAt = 0;
+  function oreTap(x, y, z, id) { var b = oreBase(id); if (b) sparkle(x + 0.5, y + 0.5, z + 0.5, ORE_COLOR[b], 2, { size: 0.22, life: 0.45, up: 0.6 }); }
+  function oreBroken(x, y, z, id) {
+    var b = oreBase(id); if (!b) return;
+    sparkle(x + 0.5, y + 0.5, z + 0.5, ORE_COLOR[b], 12, { size: 0.4, life: 1.0, up: 1.4, v: 2.2 });
+    var rare = b === ORE_AU || b === ORE_DIA || b === ORE_SAPH || b === ORE_ONYX || b >= GEM_ORE0 && b <= GEM_ORE0 + 10;
+    tone('sine', rare ? 1568 : 1175, rare ? 2093 : 1568, 0.22, 0.045);
+    if (rare) setTimeout(function () { tone('sine', 2093, 2637, 0.25, 0.035); }, 110);
+    // 광맥: 닿아 있는(대각선 포함) 같은 광석을 32개까지 찾는다
+    var seen = {}, q = [[x, y, z]], found = [];
+    seen[x + ',' + y + ',' + z] = 1;
+    while (q.length && found.length < 32) {
+      var c = q.shift();
+      for (var dy = -1; dy <= 1; dy++) for (var dz = -1; dz <= 1; dz++) for (var dx = -1; dx <= 1; dx++) {
+        var nx = c[0] + dx, ny = c[1] + dy, nz = c[2] + dz, k = nx + ',' + ny + ',' + nz;
+        if (seen[k]) continue; seen[k] = 1;
+        if (oreBase(get(nx, ny, nz)) === b) { found.push([nx, ny, nz]); q.push([nx, ny, nz]); }
+      }
+    }
+    if (found.length) {
+      found.forEach(function (p, i) { setTimeout(function () { sparkle(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5, ORE_COLOR[b], 3, { size: 0.5, life: 1.4, up: 0.3, v: 0.4, spread: 0.6, through: true }); }, 120 + i * 60); });
+      var now = performance.now();
+      questEvent('vein', found.length + 1, 1);
+      if (now - veinToldAt > 9000) { veinToldAt = now; toast('⛏ ' + B[b][0] + ' 줄기 — 이어진 광석 ' + found.length + '개가 더 있어요'); }
+    }
+    questEvent('ore', b, 1);
+  }
+  // ── 그림자와 싸우기 ──
+  var flashMat = null;
+  function shadowEyes(s) {
+    if (!s.eyes) { s.eyes = []; s.mesh.children.forEach(function (m) { if (!m.isSprite && m.material && m.material !== shadowMat && m.material !== flashMat) s.eyes.push(m); }); }
+    return s.eyes;
+  }
+  function hpBarDraw(s) {
+    if (!s.bar) {
+      var c = document.createElement('canvas'); c.width = 64; c.height = 10;
+      var tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.NearestFilter; tex.magFilter = THREE.NearestFilter;
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, fog: false }));
+      sp.scale.set(1.3, 0.2, 1); sp.position.y = HT * s.sp.h + 0.2; sp.renderOrder = 21; s.mesh.add(sp);
+      s.bar = sp; s.barC = c;
+    }
+    var g = s.barC.getContext('2d'), f = Math.max(0, s.hp) / s.sp.hp;
+    g.clearRect(0, 0, 64, 10); g.fillStyle = 'rgba(0,0,0,0.7)'; g.fillRect(0, 0, 64, 10);
+    g.fillStyle = f > 0.5 ? '#ffe27a' : (f > 0.25 ? '#ffae4a' : '#ff6a4a'); g.fillRect(2, 2, Math.round(60 * f), 6);
+    s.bar.material.map.needsUpdate = true; s.bar.visible = true; s.barT = 4;
+  }
+  function combatFx(s, dmg, crit) {
+    if (!flashMat) flashMat = new THREE.MeshBasicMaterial({ color: 0xfff6d8, transparent: true, opacity: 0.95 });
+    s.mesh.children.forEach(function (m) { if (m.material === shadowMat) m.material = flashMat; });
+    s.flashT = 0.12;
+    hpBarDraw(s);
+    var top = s.y + HT * s.sp.h + 0.5, n = Math.round(dmg * 10) / 10;
+    floatText(s.x, top, s.z, (crit ? '✦ ' : '') + n, crit ? '#ffd23a' : '#ffffff', crit ? 0.8 : 0.6);
+    sparkle(s.x, s.y + 1.6 * s.sp.h, s.z, crit ? 0xffd23a : 0xfff0c0, crit ? 8 : 4, { size: 0.35, life: 0.5, v: 2.4, up: 0.8 });
+    if (crit) { newsMark('crit'); tone('square', 520, 1040, 0.12, 0.04); vibrate('break'); if (s.hp <= 0) questEvent('crit'); }
+  }
+  function shadowFxStep(s, dt) {
+    if (s.flashT > 0) { s.flashT -= dt; if (s.flashT <= 0) s.mesh.children.forEach(function (m) { if (m.material === flashMat) m.material = shadowMat; }); }
+    if (s.bar && s.barT > 0) { s.barT -= dt; if (s.barT <= 0 || s.dead) s.bar.visible = false; }
+    if (s.kx || s.kz) {   // 밀려나기(땅을 따라 미끄러지듯)
+      var nx = s.x + s.kx * dt, nz = s.z + s.kz * dt, ny = groundAt(nx, nz, s.y + 2);
+      if (ny !== null && Math.abs(ny - s.y) <= 1.6) { s.x = nx; s.z = nz; s.y = ny; }
+      s.kx *= Math.pow(0.02, dt); s.kz *= Math.pow(0.02, dt); if (Math.abs(s.kx) + Math.abs(s.kz) < 0.2) s.kx = s.kz = 0;
+    }
+    // 공격 신호: 몸을 뒤로 젖히고 눈이 커지며 밝아짐
+    var w = s.wind > 0 ? 1 - s.wind / 0.45 : 0;
+    s.mesh.rotation.x = s.wind > 0 ? -0.35 * w : (s.lunge > 0 ? 0.3 * s.lunge : 0);
+    if (s.lunge > 0) s.lunge = Math.max(0, s.lunge - dt * 4);
+    shadowEyes(s).forEach(function (m) { var k = s.wind > 0 ? 1 + w * 0.9 : 1; m.scale.set(k, k, 1); });
+  }
+  function sweepHit(s0) {   // 성령의 검: 앞쪽 가까이 있는 다른 그림자도 함께(조금 약하게)
+    var dir = new THREE.Vector3(); camera.getWorldDirection(dir); dir.y = 0; dir.normalize();
+    SHADOWS.forEach(function (o) {
+      if (o === s0 || o.dead) return;
+      var dx = o.x - P.x, dz = o.z - P.z, d = Math.hypot(dx, dz);
+      if (d < 3.4 && Math.abs(o.y - P.y) < 2.5 && (dx * dir.x + dz * dir.z) / (d || 1) > 0.2) hitShadow(o, 2, true);
+    });
+    sparkleArc();
+  }
+  function sparkleArc() {   // 휘두른 자리에 빛 줄기
+    var dir = new THREE.Vector3(); camera.getWorldDirection(dir); dir.y = 0; dir.normalize();
+    for (var i = -3; i <= 3; i++) {
+      var a = i * 0.22, cx = dir.x * Math.cos(a) - dir.z * Math.sin(a), cz = dir.x * Math.sin(a) + dir.z * Math.cos(a);
+      (function (cx, cz, i) { setTimeout(function () { sparkle(P.x + cx * 2.2, P.y + 1.9 - i * 0.08, P.z + cz * 2.2, 0xfff3c4, 1, { size: 0.45, life: 0.3, up: 0, v: 0.2, spread: 0.1 }); }, (i + 3) * 14); })(cx, cz, i);
+    }
+  }
+  function shadowDeathFx(s) {
+    sparkle(s.x, s.y + 1.2 * s.sp.h, s.z, 0xfff3c4, s.kind === 'great' ? 26 : 16, { size: 0.42, life: 1.4, up: 2.2, v: 1.2, spread: 1.2 });
+    tone('sine', 880, 1760, 0.35, 0.04); setTimeout(function () { tone('sine', 1320, 2640, 0.4, 0.03); }, 140);
+  }
+  // ───────── 남쪽 새 지역의 건축물(11/20): 성막(출 25–27장 치수 그대로) · 백향목 망대 · 나그네 장막촌 · 소금 기둥 ─────────
+  // 성막 뜰: 길이 100 · 너비 50 · 세마포 휘장 높이 5(출 27:18), 동쪽 문, 번제단 5×5×3(출 27:1), 물두멍, 성막 30×10×10, 지성소 10×10×10
+  var TB_TENT = { x0: TBX - 42, x1: TBX - 13, z0: TBZ - 5, z1: TBZ + 4 }, TWY = G + 4, TCY = G + 1;
+  var TENTS = [[-10, -9, 0], [7, -10, 1], [-9, 8, 1], [8, 7, 0]];
+  var LANDMARKS = [
+    { k: 'tabernacle', x0: TBX - 50, z0: TBZ - 25, x1: TBX + 49, z1: TBZ + 24, flat: 0 },
+    { k: 'tower', x0: CTX - 6, z0: CTZ - 6, x1: CTX + 6, z1: CTZ + 6, flat: 4 },
+    { k: 'tents', x0: TCX - 16, z0: TCZ - 16, x1: TCX + 16, z1: TCZ + 16, flat: 1 },
+    { k: 'lot', x0: LOTX - 2, z0: LOTZ - 2, x1: LOTX + 2, z1: LOTZ + 2, flat: 1 }
+  ];
+  function landmarkAt(x, z, m) {
+    if (!LANDMARKS) return '';
+    m = m || 0;
+    for (var i = 0; i < LANDMARKS.length; i++) { var L = LANDMARKS[i]; if (x >= L.x0 - m && x <= L.x1 + m && z >= L.z0 - m && z <= L.z1 + m) return L.k; }
+    return '';
+  }
+  function landmarkFlat(x, z) {   // [평평하게 할 높이, 섞는 정도] — 둘레 10칸에 걸쳐 원래 땅과 이어지게
+    if (!LANDMARKS) return null;
+    for (var i = 0; i < LANDMARKS.length; i++) {
+      var L = LANDMARKS[i], dx = Math.max(L.x0 - 3 - x, 0, x - L.x1 - 3), dz = Math.max(L.z0 - 3 - z, 0, z - L.z1 - 3), d = Math.hypot(dx, dz);
+      if (d < 12) return [L.flat, 1 - sstep(0, 12, d)];
+    }
+    return null;
+  }
+  function inLandmark(x, z) { return landmarkAt(x, z, 1); }
+  function cedarTree(x, y, z, h) {   // 레바논 백향목: 곧은 줄기, 넓고 납작한 가지 켜(시 92:12)
+    for (var i = 0; i < h; i++) { setRaw(x, y + i, z, CEDAR_LOG); setRaw(x + 1, y + i, z, CEDAR_LOG); setRaw(x, y + i, z + 1, CEDAR_LOG); setRaw(x + 1, y + i, z + 1, CEDAR_LOG); }
+    var tiers = 0;
+    for (var ly = Math.floor(h * 0.4); ly <= h; ly += 3) {
+      var r = Math.max(1.5, (h - ly) / h * 8 + 1.2);
+      for (var dz = -Math.ceil(r); dz <= Math.ceil(r) + 1; dz++) for (var dx = -Math.ceil(r); dx <= Math.ceil(r) + 1; dx++) {
+        var ddx = dx - 0.5, ddz = dz - 0.5, dd = ddx * ddx + ddz * ddz, rr = r + (hash2(x + dx, z + dz, ly) - 0.5) * 1.2;
+        if (dd <= rr * rr && get2(x + dx, y + ly, z + dz) === AIR) setRaw(x + dx, y + ly, z + dz, CEDAR_LEAF);
+        if (dd <= (rr - 1.5) * (rr - 1.5) && get2(x + dx, y + ly + 1, z + dz) === AIR) setRaw(x + dx, y + ly + 1, z + dz, CEDAR_LEAF);
+      }
+      tiers++;
+    }
+    for (var t = 0; t < 2; t++) for (var dz2 = 0; dz2 <= 1; dz2++) for (var dx2 = 0; dx2 <= 1; dx2++) if (get2(x + dx2, y + h + 1 + t, z + dz2) === AIR) setRaw(x + dx2, y + h + 1 + t, z + dz2, CEDAR_LEAF);
+  }
+  function acaciaTree(x, y, z, h) {   // 광야의 조각목(출 27:1): 굽은 줄기, 납작한 잎 지붕
+    var cx = x, cz = z, dir = hash2(x, z, 27) < 0.5 ? 1 : -1;
+    for (var i = 0; i < h; i++) { if (i === Math.floor(h / 2)) cx += dir; setRaw(cx, y + i, cz, LOG); }
+    for (var dz = -3; dz <= 3; dz++) for (var dx = -3; dx <= 3; dx++) {
+      if (Math.abs(dx) + Math.abs(dz) > 4) continue;
+      if (get2(cx + dx, y + h, cz + dz) === AIR) setRaw(cx + dx, y + h, cz + dz, LEAF);
+      if (Math.abs(dx) + Math.abs(dz) <= 2 && get2(cx + dx, y + h + 1, cz + dz) === AIR) setRaw(cx + dx, y + h + 1, cz + dz, LEAF);
+    }
+  }
+  function buildLandmarks(x0, z0) {
+    LANDMARKS.forEach(function (L) {
+      if (x0 + CS <= L.x0 - 4 || x0 > L.x1 + 4 || z0 + CS <= L.z0 - 4 || z0 > L.z1 + 4) return;
+      if (L.k === 'tabernacle') buildTabernacle(); else if (L.k === 'tower') buildCedarTower(); else if (L.k === 'tents') buildTentCamp(); else buildLotPillar();
+    });
+  }
+  function buildTabernacle() {
+    var x0 = TBX - 50, x1 = TBX + 49, z0 = TBZ - 25, z1 = TBZ + 24, y = G, x, z;
+    fill(x0 - 2, G, z0 - 2, x1 + 2, SY - 1, z1 + 2, AIR);
+    fill(x0 - 2, G - 4, z0 - 2, x1 + 2, G - 2, z1 + 2, SAND);
+    fill(x0 - 2, G - 1, z0 - 2, x1 + 2, G - 1, z1 + 2, SAND);
+    fill(x0 + 1, G - 1, z0 + 1, x1 - 1, G - 1, z1 - 1, 18);
+    // 세마포 휘장(높이 5)과 5규빗마다 기둥(놋 받침·은 머리)
+    [[x0, z0, x1, z0], [x0, z1, x1, z1], [x0, z0, x0, z1], [x1, z0, x1, z1]].forEach(function (s) { fill(s[0], y, s[1], s[2], y + 4, s[3], WOOL_W); });
+    function post(px, pz) { setRaw(px, y, pz, BLK_CU); fill(px, y + 1, pz, px, y + 4, pz, PILLAR); setRaw(px, y + 5, pz, BLK_AG); }
+    for (x = x0; x <= x1; x += 5) { post(x, z0); post(x, z1); }
+    post(x1, z1);
+    for (z = z0; z <= z1; z += 5) { post(x0, z); post(x1, z); }
+    // 동쪽 뜰 문 너비 20(출 27:16): 위쪽에 청색·자색·홍색 실로 수놓은 휘장, 아래는 드나드는 곳
+    var gz0 = TBZ - 10, gz1 = TBZ + 9, cols = [WOOL_B, WOOL_V, WOOL_R, WOOL_W];
+    fill(x1, y, gz0, x1, y + 3, gz1, AIR);
+    for (z = gz0; z <= gz1; z++) setRaw(x1, y + 4, z, cols[(z - gz0) % 4]);
+    [gz0, gz0 + 6, gz1 - 6, gz1].forEach(function (pz) { post(x1, pz); });
+    fill(x1 + 1, G - 1, gz0, x1 + 2, G - 1, gz1, 18);
+    // 번제단: 길이·너비 5, 높이 3, 네 모퉁이 뿔(출 27:1-2), 위에 불
+    var ax = TBX + 22;
+    fill(ax - 2, y, TBZ - 2, ax + 2, y + 2, TBZ + 2, BLK_CU);
+    [[-2, -2], [2, -2], [-2, 2], [2, 2]].forEach(function (c) { setRaw(ax + c[0], y + 3, TBZ + c[1], BLK_CU); });
+    setRaw(ax, y + 3, TBZ, LAMP);
+    // 물두멍(출 30:18): 놋 받침 위 물
+    var lx = TBX + 6;
+    fill(lx - 1, y, TBZ - 1, lx + 1, y, TBZ + 1, BLK_CU); setRaw(lx, y, TBZ, WATER);
+    // 성막: 금으로 싼 널판(출 26:29) 벽, 붉은 물 들인 숫양의 가죽 덮개(출 26:14), 동쪽 입구 기둥 다섯(출 26:37)
+    var T2 = TB_TENT;
+    fill(T2.x0, y, T2.z0, T2.x1, y + 9, T2.z1, BLK_AU);
+    fill(T2.x0 + 1, y, T2.z0 + 1, T2.x1 - 1, y + 9, T2.z1 - 1, AIR);
+    fill(T2.x0 + 1, G - 1, T2.z0 + 1, T2.x1 - 1, G - 1, T2.z1 - 1, SAND);
+    fill(T2.x0 - 1, y + 10, T2.z0 - 1, T2.x1 + 1, y + 10, T2.z1 + 1, WOOL_R);
+    fill(T2.x0 - 1, y + 6, T2.z0 - 1, T2.x1 + 1, y + 9, T2.z0 - 1, WOOL_R); fill(T2.x0 - 1, y + 6, T2.z1 + 1, T2.x1 + 1, y + 9, T2.z1 + 1, WOOL_R);
+    fill(T2.x0 - 1, y + 6, T2.z0 - 1, T2.x0 - 1, y + 9, T2.z1 + 1, WOOL_R);
+    fill(T2.x1, y, T2.z0 + 1, T2.x1, y + 8, T2.z1 - 1, AIR);
+    for (z = T2.z0 + 1; z <= T2.z1 - 1; z++) setRaw(T2.x1, y + 9, z, cols[(z - T2.z0) % 3]);
+    [T2.z0 + 1, T2.z0 + 3, TBZ, T2.z1 - 3, T2.z1 - 1].forEach(function (pz) { fill(T2.x1, y, pz, T2.x1, y + 8, pz, BLK_AU); });
+    // 휘장(출 26:31-33): 지성소와 성소 사이 — 위로부터 아래까지 찢어져 열린 길(마 27:51, 히 10:20)
+    var vx = T2.x0 + 10;
+    for (z = T2.z0 + 1; z <= T2.z1 - 1; z++) fill(vx, y, z, vx, y + 9, z, cols[(z - T2.z0) % 3]);
+    fill(vx, y, TBZ - 1, vx, y + 9, TBZ, AIR);
+    // 지성소: 언약궤 / 성소: 남쪽 등잔대, 북쪽 떡상, 휘장 앞 분향단
+    fill(T2.x0 + 4, y, TBZ - 1, T2.x0 + 5, y, TBZ, BLK_AU); setRaw(T2.x0 + 4, y + 1, TBZ - 1, LANTERN); setRaw(T2.x0 + 5, y + 1, TBZ, LANTERN);
+    fill(TBX - 26, y, T2.z1 - 2, TBX - 26, y + 1, T2.z1 - 2, BLK_AU); setRaw(TBX - 26, y + 2, T2.z1 - 2, LANTERN);
+    fill(TBX - 27, y, T2.z0 + 2, TBX - 25, y, T2.z0 + 2, BLK_AU);
+    fill(vx + 2, y, TBZ - 1, vx + 2, y + 1, TBZ - 1, BLK_AU); setRaw(vx + 2, y + 2, TBZ - 1, LANTERN);
+    for (x = T2.x0 + 14; x < T2.x1; x += 6) setRaw(x, y + 9, TBZ, LAMP);
+  }
+  function buildCedarTower() {   // 견고한 망대(잠 18:10): 돌 탑 18칸 + 백향목 기둥 + 넓은 전망대 + 기와 지붕
+    var x0 = CTX - 4, x1 = CTX + 4, z0 = CTZ - 4, z1 = CTZ + 4, y = TWY, k;
+    fill(x0 - 5, y, z0 - 5, x1 + 5, SY - 1, z1 + 5, AIR);
+    fill(x0 - 2, y - 1, z0 - 2, x1 + 2, y - 1, z1 + 2, 18);
+    fill(x0, y, z0, x1, y + 17, z1, SBRICK); fill(x0 + 1, y, z0 + 1, x1 - 1, y + 17, z1 - 1, AIR);
+    [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].forEach(function (c) { fill(c[0], y, c[1], c[0], y + 17, c[1], CEDAR_LOG); });
+    fill(CTX - 1, y, z1, CTX + 1, y + 3, z1, AIR);                       // 남쪽 문
+    for (k = 5; k <= 15; k += 5) { fill(CTX, y + k, z0, CTX, y + k + 1, z0, AIR); fill(x0, y + k, CTZ + 1, x0, y + k + 1, CTZ + 1, AIR); fill(x1, y + k, CTZ, x1, y + k + 1, CTZ, AIR); }
+    fill(x0 + 1, y + 9, z0 + 1, x1 - 1, y + 9, z1 - 1, GOPHER);          // 가운데 층
+    for (k = 0; k <= 18; k++) setRaw(x0 + 1, y + k, CTZ - 1, LADDER + 3);   // 서쪽 벽 사닥다리
+    setRaw(x1 - 1, y + 10, z1 - 1, LANTERN); setRaw(x1 - 1, y, z0 + 1, LANTERN);
+    // 전망대(13×13): 바닥, 돌 난간, 백향목 기둥, 등불, 기와 지붕, 깃발
+    fill(x0 - 2, y + 18, z0 - 2, x1 + 2, y + 18, z1 + 2, GOPHER); setRaw(x0 + 1, y + 18, CTZ - 1, LADDER + 3);
+    for (k = x0 - 2; k <= x1 + 2; k++) { setRaw(k, y + 19, z0 - 2, RAIL); setRaw(k, y + 19, z1 + 2, RAIL); }
+    for (k = z0 - 2; k <= z1 + 2; k++) { setRaw(x0 - 2, y + 19, k, RAIL); setRaw(x1 + 2, y + 19, k, RAIL); }
+    [[x0 - 2, z0 - 2], [x1 + 2, z0 - 2], [x0 - 2, z1 + 2], [x1 + 2, z1 + 2]].forEach(function (c) { fill(c[0], y + 19, c[1], c[0], y + 23, c[1], CEDAR_LOG); });
+    [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].forEach(function (c) { setRaw(c[0], y + 19, c[1], LANTERN); });
+    for (k = 0; k < 4; k++) fill(x0 - 3 + k, y + 24 + k, z0 - 3 + k, x1 + 3 - k, y + 24 + k, z1 + 3 - k, 13);
+    fill(CTX, y + 28, CTZ, CTX, y + 29, CTZ, CEDAR_LOG); setRaw(CTX, y + 30, CTZ, FLAG);
+  }
+  function buildTentCamp() {   // 나그네 장막촌(히 11:9): 줄무늬 양털 장막 넷, 가운데 모닥불
+    var y = TCY;
+    fill(TCX - 16, y, TCZ - 16, TCX + 16, SY - 1, TCZ + 16, AIR);
+    fill(TCX - 2, y - 1, TCZ - 2, TCX + 2, y - 1, TCZ + 2, 18);
+    [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function (c) { setRaw(TCX + c[0], y, TCZ + c[1], STONE); }); setRaw(TCX, y, TCZ, LAMP);
+    TENTS.forEach(function (t, n) {
+      var tx = TCX + t[0], tz = TCZ + t[1], a = t[2] ? WOOL_B : WOOL_R;
+      for (var k = 0; k <= 4; k++) for (var dz = -4; dz <= 4; dz++) {
+        var c = (dz + 4) % 2 ? WOOL_W : a;
+        setRaw(tx - 4 + k, y + k, tz + dz, c); setRaw(tx + 4 - k, y + k, tz + dz, c);
+      }
+      for (var k2 = 0; k2 <= 3; k2++) fill(tx - 3 + k2, y + k2, tz + 4, tx + 3 - k2, y + k2, tz + 4, a);   // 뒤쪽 막음
+      fill(tx - 2, y - 1, tz - 3, tx + 2, y - 1, tz + 3, 18);
+      fill(tx - 1, y, tz - 3, tx + 1, y, tz + 3, CARPET);
+      setRaw(tx - 3, y, tz + 3, JAR); setRaw(tx + 3, y, tz + 3, OIL_JAR); setRaw(tx, y, tz + 3, OIL_LAMP);
+    });
+  }
+  function buildLotPillar() {   // 소금 기둥(창 19:26)
+    var y = G + 1;
+    fill(LOTX - 1, y, LOTZ - 1, LOTX + 1, y, LOTZ + 1, SALT_ROCK);
+    fill(LOTX, y + 1, LOTZ, LOTX, y + 4, LOTZ, SALT_ROCK);
+  }
+  // ───────── 지역 이름 카드 · 퀘스트(오늘의 부탁 · 모험 · 땅 밟기) (11/20) ─────────
+  // 구절은 개역개정 원문 대조(2026-11-20, bskorea)
+  var REGION_INFO = {
+    town: ['나그네 마을'], west: ['서쪽 산'], east: ['동쪽 숲'], sea: ['북쪽 바다'], desert: ['동쪽 사막'], oasis: ['오아시스'],
+    ararat: ['아라랏 산'], lake: ['남쪽 호수'], tar: ['역청 구덩이'], south: ['남쪽 들판'],
+    cedar: ['백향목 숲', '의인은 종려나무 같이 번성하며 레바논의 백향목 같이 성장하리로다', '시편 92:12'],
+    wild: ['광야', '네 하나님 여호와께서 이 사십 년 동안에 네게 광야 길을 걷게 하신 것을 기억하라 이는 너를 낮추시며 너를 시험하사 네 마음이 어떠한지 그 명령을 지키는지 지키지 않는지 알려 하심이라', '신명기 8:2'],
+    salt: ['소금 바다', '너희는 세상의 소금이니 소금이 만일 그 맛을 잃으면 무엇으로 짜게 하리요 후에는 아무 쓸 데 없어 다만 밖에 버려져 사람에게 밟힐 뿐이니라', '마태복음 5:13'],
+    tabernacle: ['성막', '내가 그들 중에 거할 성소를 그들이 나를 위하여 짓되', '출애굽기 25:8'],
+    tower: ['백향목 망대', '여호와의 이름은 견고한 망대라 의인은 그리로 달려가서 안전함을 얻느니라', '잠언 18:10'],
+    tents: ['나그네 장막촌', '믿음으로 그가 이방의 땅에 있는 것 같이 약속의 땅에 거류하여 동일한 약속을 유업으로 함께 받은 이삭 및 야곱과 더불어 장막에 거하였으니', '히브리서 11:9'],
+    lot: ['소금 기둥', '롯의 아내는 뒤를 돌아보았으므로 소금 기둥이 되었더라', '창세기 19:26']
+  };
+  var WALK_KEYS = ['town', 'east', 'west', 'sea', 'desert', 'oasis', 'ararat', 'lake', 'tar', 'south', 'cedar', 'wild', 'salt'];
+  var ADV = { day: '', list: [], done: {}, regions: {}, tour: 0, total: 0, bonus: '' };
+  try { var advS = JSON.parse(localStorage.getItem('arkVillage.adv') || 'null'); if (advS && typeof advS === 'object') { for (var ak in advS) ADV[ak] = advS[ak]; } } catch (e) {}
+  function advSave() { try { localStorage.setItem('arkVillage.adv', JSON.stringify(ADV)); } catch (e) {} if (typeof stateDirty === 'function') stateDirty(); advChip(); }
+  function advMerge(d) {   // 다른 기기 기록과 합치기(이룬 것은 잃지 않게)
+    if (!d || typeof d !== 'object') return;
+    ['done', 'regions'].forEach(function (k) { for (var q in (d[k] || {})) ADV[k][q] = 1; });
+    ADV.tour = Math.max(ADV.tour || 0, d.tour || 0); ADV.total = Math.max(ADV.total || 0, d.total || 0);
+    if (d.day && d.day >= ADV.day && Array.isArray(d.list)) { if (d.day > ADV.day) { ADV.day = d.day; ADV.list = d.list; } else d.list.forEach(function (e, i) { var m = ADV.list[i]; if (m && e && e.i === m.i) { m.n = Math.max(m.n || 0, e.n || 0); m.claimed = m.claimed || e.claimed; } }); }
+    if (d.bonus && d.bonus > (ADV.bonus || '')) ADV.bonus = d.bonus;
+    try { localStorage.setItem('arkVillage.adv', JSON.stringify(ADV)); } catch (e) {}
+  }
+  // 지역 카드: 새 지역에 들어서면 가운데에 이름(과 말씀)
+  var regKey = '', regPend = '', regPendN = 0, regCardT = null;
+  function regionKeyAt() {
+    var x = Math.floor(P.x), z = Math.floor(P.z), lm = inLandmark(x, z);
+    if (lm) return lm;
+    if (inTown(x, z) || plotAt(x, z) >= 0 || inCommons(x, z) || inArk(x, G + 2, z)) return 'town';
+    var r = region(x, z); return REGION_INFO[r] ? r : (z > LZ + 50 ? 'south' : '');
+  }
+  function showRegionCard(k, first) {
+    var info = REGION_INFO[k]; if (!info || $('card').classList.contains('show')) return;
+    var el = $('regionCard');
+    if (!el) { el = document.createElement('div'); el.id = 'regionCard'; el.style.cssText = 'position:fixed;left:50%;top:21%;transform:translateX(-50%);z-index:30;pointer-events:none;text-align:center;width:min(560px,84vw);transition:opacity .8s;opacity:0;text-shadow:0 2px 0 #000,0 0 12px rgba(0,0,0,.7)'; document.body.appendChild(el); }
+    el.innerHTML = '';
+    var n = document.createElement('div'); n.textContent = info[0]; n.style.cssText = 'font-size:' + (isTouch ? 26 : 34) + 'px;color:#ffe27a;letter-spacing:3px;font-weight:bold'; el.appendChild(n);
+    if (first) { var f = document.createElement('div'); f.textContent = '— 처음 밟은 땅 —'; f.style.cssText = 'font-size:12px;color:#fff;opacity:.85;margin-top:2px'; el.appendChild(f); }
+    if (info[1]) { var v = document.createElement('div'); v.textContent = '「' + info[1] + '」 ' + info[2]; v.style.cssText = 'font-size:' + (isTouch ? 12 : 14) + 'px;color:#fff;margin-top:6px;line-height:1.45'; el.appendChild(v); }
+    el.style.opacity = '1'; clearTimeout(regCardT); regCardT = setTimeout(function () { el.style.opacity = '0'; }, info[1] ? 6500 : 3200);
+  }
+  function regionTick() {
+    if (!started || ui !== 'play') return;
+    advDaily(); advChip();
+    var k = regionKeyAt();
+    if (k && k !== regKey) {
+      if (k === regPend) regPendN++; else { regPend = k; regPendN = 1; }
+      if (regPendN >= 2) {
+        var first = !ADV.regions[k] && WALK_KEYS.indexOf(k) >= 0;
+        regKey = k; showRegionCard(k, first && k !== 'town');
+        if (first) { ADV.regions[k] = 1; advSave(); }
+        questEvent('visit', k, 1);
+        if (k === 'lot') advDone('lot');
+        if (k === 'cedar' || k === 'wild' || k === 'salt' || k === 'tabernacle' || k === 'tower' || k === 'tents') newsMark('south');
+      }
+    }
+    // 모험: 성막 순례 · 망대 꼭대기 · 장막촌의 밤 · 소금 10개
+    var x = P.x, z = P.z;
+    if (!ADV.done.tabernacle && inLandmark(Math.floor(x), Math.floor(z)) === 'tabernacle') {
+      var T2 = TB_TENT, vx = T2.x0 + 10, step = ADV.tour || 0, inTent = x > T2.x0 && x < T2.x1 + 0.5 && z > T2.z0 && z < T2.z1 + 1;
+      var ok = [Math.abs(x - (TBX + 49)) < 6 && Math.abs(z - TBZ) < 11, Math.hypot(x - (TBX + 22), z - TBZ) < 5.5, Math.hypot(x - (TBX + 6), z - TBZ) < 3.5, inTent && x > vx + 1, inTent && x < vx][step];
+      var names = ['🚪 뜰 문으로 들어왔어요 — 번제단으로 가요', '🔥 번제단(출 27:1) — 이제 물두멍으로', '💧 물두멍(출 30:18) — 이제 성막 안 성소로', '🕯 성소 — 등잔대·떡상·분향단 너머 휘장이 열려 있어요', ''];
+      if (ok) { ADV.tour = step + 1; advSave(); if (step < 4) toast(names[step]); else advDone('tabernacle'); }
+    }
+    if (!ADV.done.tower && Math.abs(x - CTX) < 8 && Math.abs(z - CTZ) < 8 && P.y >= TWY + 18) advDone('tower');
+    if (!ADV.done.tents && inLandmark(Math.floor(x), Math.floor(z)) === 'tents' && isNight()) advDone('tents');
+    if (!ADV.done.salt10 && have(SALT) >= 10) advDone('salt10');
+    if (!ADV.done.walk && WALK_KEYS.every(function (k2) { return ADV.regions[k2]; })) advDone('walk');
+  }
+  // 모험(한 번만): [키, 이름, 할 일, 보상, 카드(그림·이름·말씀·장절) 또는 null]
+  var ADVS = [
+    ['tabernacle', '⛺ 성막 순례', '광야 한가운데 성막: 뜰 문 → 번제단 → 물두멍 → 성소 → 지성소 순서로 걸어 봐요', [[GEM_SAPH, 1], [LANTERN, 2]], ['⛺', '열린 휘장', '그 길은 우리를 위하여 휘장 가운데로 열어 놓으신 새로운 살 길이요 휘장은 곧 그의 육체니라', '히브리서 10:20']],
+    ['tower', '🗼 백향목 망대 꼭대기', '백향목 숲 가운데 돌 망대의 사닥다리를 타고 꼭대기 전망대까지 올라가요', [[ARROW, 12]], ['🗼', '견고한 망대', REGION_INFO.tower[1], REGION_INFO.tower[2]]],
+    ['tents', '⛺ 장막촌의 밤', '소금 바다 서쪽 나그네 장막촌에서 밤을 맞아요', [[BREAD, 4], [WOOL_W, 6]], ['⛺', '장막에 거한 나그네', REGION_INFO.tents[1], REGION_INFO.tents[2]]],
+    ['salt10', '🧂 세상의 소금', '소금 바다의 소금 땅·소금 바위를 캐서 소금 10개를 모아요', [[COOKED_FISH, 3]], ['🧂', '세상의 소금', REGION_INFO.salt[1], REGION_INFO.salt[2]]],
+    ['lot', '🧂 뒤돌아보지 않기', '소금 바다 남쪽 바닷가의 소금 기둥을 찾아가요', [[SHARD, 2]], null],
+    ['vein', '💎 광맥 찾기', '광석을 캐다가 이어진 광석이 5개 넘는 줄기를 찾아요', [[ING_FE, 3]], null],
+    ['crit', '✦ 강한 일격', '뛰어올라 떨어지면서 칼로 쳐서 그림자를 물리쳐요', [[SHARD, 3]], null],
+    ['walk', '🗺 땅을 두루 밟기', '나그네 땅 13곳을 모두 밟아요(땅 밟기 탭)', [[GEM_DIA, 1], [ING_AU, 2]], ['🗺', '두루 다녀 보라', '너는 일어나 그 땅을 종과 횡으로 두루 다녀 보라 내가 그것을 네게 주리라', '창세기 13:17']]
+  ];
+  function advDone(k) {
+    if (ADV.done[k]) return;
+    var a = ADVS.filter(function (q) { return q[0] === k; })[0]; if (!a) return;
+    ADV.done[k] = 1; advSave();
+    a[3].forEach(function (r) { give(r[0], r[1]); }); bagChanged();
+    var gift = a[3].map(function (r) { return B[r[0]][0] + ' ' + r[1]; }).join(', ');
+    if ($('regionCard')) $('regionCard').style.opacity = '0';
+    if (a[4]) showVerseCard(a[4][0], a[4][1], a[4][2], a[4][3], '모험 「' + a[1].replace(/^\S+ /, '') + '」을(를) 마쳤어요 — ' + gift);
+    else toast('🎉 모험 「' + a[1] + '」 완료! ' + gift + ' 받았어요');
+    sfx('craft'); vibrate('break');
+  }
+  // 오늘의 부탁(매일 한국 시간 0시에 셋이 바뀜): [종류, 대상, 목표, 글, 보상]
+  var ERRANDS = [
+    ['ore', ORE_COAL, 8, '⛏ 석탄 광석 8개 캐기', [[TORCH, 6]]],
+    ['ore', ORE_CU, 6, '⛏ 구리 광석 6개 캐기', [[ING_CU, 3]]],
+    ['ore', ORE_FE, 5, '⛏ 철 광석 5개 캐기', [[ING_FE, 3]]],
+    ['ore', ORE_AG, 3, '⛏ 은 광석 3개 캐기', [[ING_AU, 1]]],
+    ['shadow', '', 3, '⚔ 어둠의 그림자 3번 물리치기', [[SHARD, 2], [ARROW, 6]]],
+    ['shadow', 'doubt', 2, '🛡 「의심」 그림자 2번 물리치기', [[SHARD, 3]]],
+    ['log', '', 12, '🪓 통나무 12개 캐기(백향목도 돼요)', [[BREAD, 3]]],
+    ['salt', '', 8, '🧂 소금 바다에서 소금 8개 캐기', [[COOKED_FISH, 2]]],
+    ['red', '', 8, '🪨 광야의 붉은 바위 8개 캐기', [[RED_EARTH, 4], [LANTERN, 1]]],
+    ['place', '', 40, '🧱 블록 40개 놓아 짓기', [[LANTERN, 2]]],
+    ['craft', '', 5, '🔨 무엇이든 5번 만들기', [[ING_CU, 2]]],
+    ['visit', 'cedar', 1, '🌲 백향목 숲 다녀오기', [[BREAD, 2]]],
+    ['visit', 'wild', 1, '🏜 광야 다녀오기', [[BREAD, 2]]],
+    ['visit', 'salt', 1, '🌊 소금 바다 다녀오기', [[BREAD, 2]]],
+    ['visit', 'ararat', 1, '⛰ 아라랏 산 다녀오기', [[BREAD, 2]]]
+  ];
+  function kstDay() { return new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); }
+  function advDaily() {
+    var d = kstDay(); if (ADV.day === d && ADV.list.length) return;
+    var seed = 0; for (var i = 0; i < d.length; i++) seed = (seed * 31 + d.charCodeAt(i)) | 0;
+    var R = mkRand(seed), pick = [], kinds = {};
+    while (pick.length < 3) { var j = Math.floor(R() * ERRANDS.length), e = ERRANDS[j], kk = e[0] === 'visit' || e[0] === 'ore' ? e[0] : e[0] + e[1]; if (kinds[kk]) continue; kinds[kk] = 1; pick.push(j); }
+    ADV.day = d; ADV.list = pick.map(function (j) { return { i: j, n: 0, base: ERRANDS[j][0] === 'place' ? stats.placed : (ERRANDS[j][0] === 'craft' ? stats.crafted : 0), claimed: false }; });
+    advSave();
+  }
+  function errandProg(e) {
+    var E = ERRANDS[e.i]; if (!E) return 0;
+    if (E[0] === 'place') return Math.max(0, stats.placed - e.base);
+    if (E[0] === 'craft') return Math.max(0, stats.crafted - e.base);
+    return e.n || 0;
+  }
+  var errToldDay = {};
+  function questEvent(kind, key, n) {
+    if (!started) return;
+    if (kind === 'vein') { newsMark('vein'); if (key >= 5) advDone('vein'); return; }
+    if (kind === 'crit') { newsMark('crit'); advDone('crit'); return; }
+    advDaily();
+    var ch = false;
+    ADV.list.forEach(function (e) {
+      var E = ERRANDS[e.i]; if (!E || e.claimed) return;
+      var hit = (E[0] === kind && (E[1] === '' || E[1] === key)) ||
+        (E[0] === 'log' && kind === 'break' && (key === LOG || key === CEDAR_LOG || key === LOG_X || key === LOG_Z)) ||
+        (E[0] === 'salt' && kind === 'break' && (key === SALT_CRUST || key === SALT_ROCK)) ||
+        (E[0] === 'red' && kind === 'break' && (key === RED_ROCK || key === RED_ROCK2));
+      if (!hit) return;
+      var before = errandProg(e); e.n = (e.n || 0) + n; ch = true;
+      if (before < E[2] && errandProg(e) >= E[2]) { toast('📜 부탁 완료: ' + E[3].replace(/^\S+ /, '') + ' — 📜 퀘스트에서 보상을 받아요'); sfx('craft'); }
+    });
+    if (ch) advSave();
+  }
+  function claimErrand(idx) {
+    var e = ADV.list[idx], E = e && ERRANDS[e.i]; if (!E || e.claimed || errandProg(e) < E[2]) return;
+    e.claimed = true; ADV.total = (ADV.total || 0) + 1;
+    E[4].forEach(function (r) { give(r[0], r[1]); }); bagChanged(); sfx('craft');
+    toast('🎁 ' + E[4].map(function (r) { return B[r[0]][0] + ' ' + r[1]; }).join(', ') + ' 받았어요');
+    if (ADV.list.every(function (q) { return q.claimed; }) && ADV.bonus !== ADV.day) {
+      ADV.bonus = ADV.day; give(GEM_SAPH, 1); bagChanged();
+      setTimeout(function () { showVerseCard('🤝', '오늘의 부탁을 다 들어줬어요', '너희가 짐을 서로 지라 그리하여 그리스도의 법을 성취하라', '갈라디아서 6:2', '덤으로 청옥 1개를 받았어요 — 내일 새 부탁이 와요'); }, 400);
+    }
+    advSave();
+  }
+  function advChip() {
+    var c = $('advChip'); if (!c) return;
+    if (!started) { c.hidden = true; return; }
+    var ready = ADV.list.filter(function (e) { var E = ERRANDS[e.i]; return E && !e.claimed && errandProg(e) >= E[2]; }).length;
+    var left = ADV.list.filter(function (e) { return !e.claimed; }).length;
+    c.hidden = false; c.textContent = ready ? '📜 보상 ' + ready : '📜 부탁 ' + left;
+    c.classList.toggle('ready', ready > 0);
+  }
+  var questTab = 'today';
+  function openQuests(tab) {
+    if (tab) questTab = tab;
+    newsMark('quest');
+    advDaily();
+    var box = fbBox('📜 퀘스트');
+    var tabs = document.createElement('div'); tabs.style.cssText = 'display:flex;gap:6px'; box.appendChild(tabs);
+    [['today', '오늘의 부탁'], ['adv', '모험 ' + ADVS.filter(function (a) { return ADV.done[a[0]]; }).length + '/' + ADVS.length], ['walk', '땅 밟기 ' + WALK_KEYS.filter(function (k) { return ADV.regions[k]; }).length + '/' + WALK_KEYS.length]].forEach(function (t) {
+      var b = fbBtn(tabs, t[1], function () { openQuests(t[0]); }); b.style.flex = '1'; b.style.fontSize = '13px'; if (questTab === t[0]) b.style.boxShadow = 'inset 0 0 0 2px #ffe27a';
+    });
+    var body = document.createElement('div'); body.style.cssText = 'display:flex;flex-direction:column;gap:6px;font-size:13px'; box.appendChild(body);
+    function row(title, sub, right) {
+      var r = document.createElement('div'); r.style.cssText = 'display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);padding:6px 8px';
+      var l = document.createElement('div'); l.style.flex = '1';
+      var t = document.createElement('div'); t.textContent = title; l.appendChild(t);
+      if (sub) { var s = document.createElement('small'); s.textContent = sub; s.style.cssText = 'opacity:.75;display:block;margin-top:2px'; l.appendChild(s); }
+      r.appendChild(l); if (right) r.appendChild(right); body.appendChild(r); return r;
+    }
+    function gifts(list) { return '보상: ' + list.map(function (r) { return B[r[0]][0] + ' ' + r[1]; }).join(', '); }
+    if (questTab === 'today') {
+      ADV.list.forEach(function (e, i) {
+        var E = ERRANDS[e.i]; if (!E) return;
+        var p = Math.min(errandProg(e), E[2]), right;
+        if (e.claimed) { right = document.createElement('b'); right.textContent = '✔ 받음'; right.style.color = '#8be08b'; }
+        else if (p >= E[2]) right = fbBtn(document.createElement('span'), '보상 받기', function () { claimErrand(i); openQuests(); });
+        else { right = document.createElement('b'); right.textContent = p + '/' + E[2]; }
+        row(E[3], gifts(E[4]), right);
+      });
+      var note = document.createElement('small'); note.style.opacity = '.75';
+      note.textContent = '매일 0시에 새 부탁 셋이 와요. 셋을 다 들어주면 덤으로 청옥을 받아요. 지금까지 들어준 부탁 ' + (ADV.total || 0) + '번'; body.appendChild(note);
+    } else if (questTab === 'adv') {
+      ADVS.forEach(function (a) {
+        var right = document.createElement('b'); right.textContent = ADV.done[a[0]] ? '✔' : (a[0] === 'tabernacle' && ADV.tour ? ADV.tour + '/5' : '');
+        right.style.color = '#8be08b'; row(a[1], a[2] + ' · ' + gifts(a[3]), right);
+      });
+      var go = document.createElement('div'); go.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap'; body.appendChild(go);
+      [['🌲 백향목 숲', CTX + 0.5, CTZ + 9.5], ['🏜 광야 성막', TBX + 56.5, TBZ + 0.5], ['🌊 소금 바다', TCX + 0.5, TCZ + 18.5]].forEach(function (g) {
+        fbBtn(go, g[0] + ' 길 안내', function () { $('fbBox').remove(); startFrontierGuide([Math.floor(g[1]), Math.floor(g[2])], g[0].replace(/^\S+ /, '')); resume(); }).style.fontSize = '12px';
+      });
+    } else {
+      WALK_KEYS.forEach(function (k) { var right = document.createElement('b'); right.textContent = ADV.regions[k] ? '✔' : '?'; right.style.color = ADV.regions[k] ? '#8be08b' : '#999'; row(ADV.regions[k] ? REGION_INFO[k][0] : '아직 밟지 않은 땅', null, right); });
+    }
+    fbBtn(box, '닫기', function () { box.remove(); });
   }
   // ── 마을 소식 · 선물 · 건축 사진 · 설계도 나누기(서버: sql-migrations/2026-11-19-ark-village-social.sql) ──
   // 자유 글은 쓰지 않는다: 소식은 종류+숫자, 사진 제목과 설계도 이름은 고르기
@@ -9771,7 +10347,7 @@
   // 점검 함수: 내 컴퓨터(시험 서버)와 선생님 계정에서만 연다 — 학생이 개발자 창에서 물건을 만들어 내지 못하게
   var ARK_DBG = { cine: { render: function () { renderer.render(scene, camera); }, frame: function (q) { return canvasEl.toDataURL('image/jpeg', q || 0.92); }, avatar: function (v) { if (avatar) avatar.visible = v; heldMesh.visible = false; }, key: function (c, v) { keys[c] = v; }, thunder: function () { thunderStrike(); }, rainbow: function (sec) { rainbowUntil = dayT + (sec || 40); }, rain: function (on, st) { rainOn = on; rain = on ? 1 : 0; storm = !!st; } }, openFeedback: function () { openFeedback(); }, openFeedbackAdmin: function () { openFeedbackAdmin(); }, railScanCost: function (n) { var t = performance.now(); for (var i = 0; i < (n || 20); i++) railScanStep(); return (performance.now() - t) / (n || 20); }, setPlotName: function (u, t) { if (t) PLOT_NAMES[u] = t; else delete PLOT_NAMES[u]; refreshPlotSigns(); }, plotSigns: function () { var o = {}; for (var k in plotSignObjs) o[k] = plotSignObjs[k].txt; return o; }, setPlotUser: function (p, u, nick) { plotUser[p] = u; plotOwners[p] = 1; if (nick) NET.names[u] = nick; }, fakeNet: function (c, id) { client = c; me = { id: id }; }, projectCells: function (k) { return projectCells(k).length; }, perf: function () { return perfAcc; }, home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
-    gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
+    gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, FX: function () { return FX; }, ADV: function () { return ADV; }, openQuests: openQuests, questEvent: questEvent, regionTick: regionTick, inLandmark: inLandmark, LMK: { TBX: TBX, TBZ: TBZ, CTX: CTX, CTZ: CTZ, TCX: TCX, TCZ: TCZ, LOTX: LOTX, LOTZ: LOTZ, TWY: TWY, SAX: SAX, SAZ: SAZ, CEX: CEX, CEZ: CEZ }, region: region, getB: function (x, y, z) { return get(x, y, z); }, oreBase: oreBase, P2: function () { return P; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };
   if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__arkDebug = ARK_DBG;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();

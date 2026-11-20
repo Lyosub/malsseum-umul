@@ -172,6 +172,11 @@
   B[PEARL] = ['진주 문', 'pearl', 'pearl', 'pearl', 0, 1]; B[SOCKET] = ['기초석 자리', 'socket', 'sbrick', 'sbrick'];
   B[GOLDST] = ['정금 길', 'goldst', 'goldst', 'goldst', 0, 1]; B[CITYWALL] = ['벽옥 성곽', 'citywall', 'citywall', 'citywall'];
   B[LIFELEAF] = ['생명나무 잎', 'lifeleaf', 'lifeleaf', 'lifeleaf'];
+  // ── 남쪽 새 지역(11/20): 백향목 숲·광야·소금 바다의 자연 블록 — 캐면 원래 재료(통나무·소금·붉은 흙)로 가방에 들어간다(서버 허용 목록은 그대로) ──
+  var CEDAR_LOG = 860, CEDAR_LEAF = 861, SALT_CRUST = 862, SALT_ROCK = 863, RED_ROCK = 864, RED_ROCK2 = 865;
+  B[CEDAR_LOG] = ['백향목', 'cedarTop', 'cedarBark', 'cedarTop']; B[CEDAR_LEAF] = ['백향목 잎', 'cedarLeaf', 'cedarLeaf', 'cedarLeaf'];
+  B[SALT_CRUST] = ['소금 땅', 'saltTop', 'saltSide', 'sand']; B[SALT_ROCK] = ['소금 바위', 'saltRock', 'saltRock', 'saltRock'];
+  B[RED_ROCK] = ['붉은 바위', 'redRock', 'redRock', 'redRock']; B[RED_ROCK2] = ['붉은 바위 줄무늬', 'redRock2', 'redRock2', 'redRock2'];
   // 반 블록은 가방에는 아래쪽 번호 하나로, 세계에는 위아래 번호를 따로 저장한다.
   var SLABS = [[SLAB_G,GOPHER,242],[SLAB_S,STONE,243],[SLAB_B,BRICK,244],
     [SLAB_L,LIME,245],[SLAB_P,PITCH,246],[218,DIRT,247],[219,20,248],
@@ -590,7 +595,8 @@
   setClass('axe', [LOG], 1.4); setClass('axe', [GOPHER, PITCH], 1.1); setClass('axe', [22], 0.8);
   setClass('axe', [SLAB_G, STAIR_G, STAIR_G + 1, STAIR_G + 2, STAIR_G + 3, FENCE, 60, 61, 62, 63, 64, 65, 66, 67], 1.0);
   setClass('shovel', [GRASS, DIRT, 19], 0.7); setClass('shovel', [SAND], 0.6); setClass('shovel', [CLAY, TAR], 0.9); setClass('shovel', [18], 0.9); setClass('shovel', [SNOW], 0.4);
-  setClass('knife', [LEAF], 0.35); setClass('knife', [REED, FLOWER], 0.08); setClass('knife', [14, 15, 16, 17], 0.6);
+  setClass('knife', [LEAF, CEDAR_LEAF], 0.35); setClass('axe', [CEDAR_LOG], 1.6); setClass('shovel', [SALT_CRUST], 0.6); setClass('pick', [SALT_ROCK], 1.0); setClass('pick', [RED_ROCK, RED_ROCK2], 1.3);
+  DROP[CEDAR_LOG] = LOG; DROP[SALT_CRUST] = SALT; DROP[SALT_ROCK] = SALT; DROP[RED_ROCK] = RED_EARTH; DROP[RED_ROCK2] = RED_EARTH; setClass('knife', [REED, FLOWER], 0.08); setClass('knife', [14, 15, 16, 17], 0.6);
   var NEED_TIER = {}; NEED_TIER[ORE_CU] = 0; NEED_TIER[ORE_FE] = 1; NEED_TIER[ORE_AG] = 2; NEED_TIER[ORE_AU] = 3;   // 0=나무 1=돌 2=구리 3=철 곡괭이
   GEMS.forEach(function (g, i) { if (g) NEED_TIER[gemOre(i)] = g[7]; });   // 열두 보석: 귀한 것은 금강석 곡괭이(4)
   NEED_TIER[ORE_COAL] = 0; NEED_TIER[ORE_ONYX] = 2; NEED_TIER[ORE_SAPH] = 3; NEED_TIER[ORE_DIA] = 3;

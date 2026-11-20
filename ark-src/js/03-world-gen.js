@@ -44,6 +44,18 @@
   var TARR = [LX + LRX + 8, LZ - 18, LX + LRX + 46, LZ + 22];
   // 먼 곳: 북쪽 바다, 동쪽 사막(오아시스), 서쪽 끝 아라랏 산(창 8:4)
   var SEA_Z = AZ0 - 150, DES_X = VX1 + 170, ARX = XM - 600, ARZ = AZ0 + 60, OASX = VX1 + 430, OASZ = PZ0 + 70;
+  // 남쪽 새 지역(11/20): 서남쪽 백향목 숲(시 92:12), 가운데 광야와 성막(출 25:8, 27:18), 동남쪽 소금 바다(마 5:13)와 나그네 장막촌(히 11:9)
+  var CEX = 640, CEZ = 1640, CER = 210, WIX = 1030, WIZ = 1700, WIR = 190, SAX = 1440, SAZ = 1690, SARX = 140, SARZ = 85, SAR = 205;
+  var TBX = 1030, TBZ = 1700, CTX = 640, CTZ = 1640, TCX = 1262, TCZ = 1690, LOTX = 1440, LOTZ = 1784;
+  function southReg(x, z) {
+    if (z < 1380) return '';
+    var n = (vnoise(x, z, 50, 71) - 0.5) * 60;
+    if (Math.hypot(x - SAX, (z - SAZ) * 1.3) + n < SAR) return 'salt';
+    if (Math.hypot(x - WIX, z - WIZ) + n < WIR) return 'wild';
+    if (Math.hypot(x - CEX, z - CEZ) + n < CER) return 'cedar';
+    return '';
+  }
+  function saltE(x, z) { var dx = (x - SAX) / SARX, dz = (z - SAZ) / SARZ; return dx * dx + dz * dz; }
   function plotOrigin(i) { return { x: PX0 + (i % PCOLS) * PSTEP, z: PZ0 + Math.floor(i / PCOLS) * PSTEP }; }
   function plotAt(x, z) {
     var cx = x - PX0, cz = z - PZ0;
@@ -113,6 +125,7 @@
     if (Math.hypot(x - OASX, z - OASZ) < 34) return 'oasis';
     if (z < SEA_Z + 10 + (vnoise(x, z, 60, 9) - 0.5) * 40) return 'sea';
     if (Math.hypot(x - ARX, z - ARZ) < 230) return 'ararat';
+    var sr = southReg(x, z); if (sr) return sr;
     var southF = z + (vnoise(x, z, 70, 12) - 0.5) * 60;
     if (x < PX0 - 8 && southF < LZ + 120) return 'west';
     if (x > DES_X + (vnoise(x, z, 80, 8) - 0.5) * 60 && southF < LZ + 120) return 'desert';
@@ -140,6 +153,18 @@
     var desW = sstep(DES_X - 40, DES_X + 30, x + (vnoise(x, z, 80, 8) - 0.5) * 60) * southK;
     var dune = 2 + 5 * Math.abs(Math.sin(x * 0.045 + vnoise(x, z, 40, 5) * 4)) * vnoise(x, z, 30, 6);
     hf = hf * (1 - desW) + bl * dune * desW;
+    var wildW = 0, mesaTop = false;
+    if (z > 1340) {   // 남쪽 새 지역 땅 모양
+      var snz = (vnoise(x, z, 50, 71) - 0.5) * 60;
+      var cw = sstep(0, 50, CER - (Math.hypot(x - CEX, z - CEZ) + snz));
+      wildW = sstep(0, 50, WIR - (Math.hypot(x - WIX, z - WIZ) + snz));
+      var sw = sstep(0, 40, SAR - (Math.hypot(x - SAX, (z - SAZ) * 1.3) + snz));
+      if (cw > 0) hf = hf * (1 - cw) + cw * bl * (4 + 12 * n1 + 10 * ridge * n1);
+      if (wildW > 0) { var mesa = vnoise(x, z, 38, 72), mh = mesa > 0.64 ? Math.min(14, 5 + Math.round((mesa - 0.64) * 70)) : 0; mesaTop = mh > 0 && wildW > 0.6; hf = hf * (1 - wildW) + wildW * bl * (1.2 + 2 * n2 + mh); }
+      if (sw > 0) hf = hf * (1 - sw) + sw * bl * (0.8 + n2);
+      // 건축물 자리는 평평하게
+      var fk = landmarkFlat(x, z); if (fk) { hf = hf * (1 - fk[1]) + fk[0] * fk[1]; if (fk[1] > 0.5) mesaTop = false; }
+    }
     var h = G - 1 + Math.round(hf);
     // 북쪽 바다: 바닷가에서 점점 깊게
     var seaD = (SEA_Z + (vnoise(x, z, 60, 9) - 0.5) * 40) - z;
@@ -149,13 +174,16 @@
     if (rd < 15) { var vf = clamp01((rd - 4) / 11); vf = vf * vf; h = Math.round(G - 1 + (h - (G - 1)) * vf); }
     if (h > SY - 4) h = SY - 4;
     var top = GRASS, sub = DIRT, wtop = -1;
-    var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ);
+    var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), se = z > 1500 ? saltE(x, z) : 9;
     if (le < 1) { h = G - 2 - Math.floor(5 * (1 - le)); wtop = G - 1; top = hash2(x, z, 1) < 0.5 ? CLAY : SAND; sub = CLAY; }
     else if (od < 11) { h = G - 2 - Math.floor(4 * (1 - od / 11)); wtop = G - 1; top = SAND; sub = CLAY; }
+    else if (se < 1) { h = G - 2 - Math.floor(6 * (1 - se)); wtop = G - 1; top = hash2(x, z, 4) < 0.3 ? SALT_CRUST : SAND; sub = SAND; }
     else if (rd <= 2.2) { wtop = h; h = h - 2; top = hash2(x, z, 2) < 0.5 ? CLAY : SAND; sub = SAND; }
     else if (h < G - 1) { wtop = G - 1; top = n2 < 0.3 ? 18 : SAND; sub = SAND; }
     else if (le < 1.3 || od < 16 || rd <= 3.2) { top = le < 1.3 && hash2(x, z, 3) < 0.3 ? CLAY : SAND; sub = SAND; }
     else if (desW > 0.5) { top = SAND; sub = SAND; }
+    else if (se < 1.5) { top = SALT_CRUST; sub = SAND; }
+    else if (wildW > 0.5) { top = mesaTop ? RED_ROCK : (n2 > 0.62 ? 18 : (n1 > 0.6 ? RED_ROCK : SAND)); sub = RED_ROCK; }
     else if (seaD > -16) { top = SAND; sub = SAND; }
     else if (h > G + 46 + n2 * 4) { top = SNOW; sub = STONE; }
     else if ((westW > 0 || ar > 0.25) && h > G + 15 + vnoise(x, z, 9, 3) * 9) { top = STONE; sub = STONE; }
@@ -254,6 +282,7 @@
       for (var gq = 0; gq < 12; gq++) { var gr = GEMS[gq]; if (gr && gr[3] === T.reg) { if (gr[4] < gemLo) gemLo = gr[4]; if (gr[5] > gemHi) gemHi = gr[5]; } }
       for (y = 1; y <= h; y++) {
         var id = y === h ? T.top : (y > h - 4 ? T.sub : STONE);
+        if (T.reg === 'wild' && id === STONE && y >= G - 3) id = y % 3 === 0 ? RED_ROCK2 : RED_ROCK;   // 광야: 붉은 바위 켜
         if (id === STONE && y < h - 2) {
           // 돌 속 석회암·검은 돌(2칸씩 뭉쳐서)
           var pk = ((lz >> 1) * 16 + (lx >> 1)), oi = pk * SY + y, o = OC[oi];
@@ -287,7 +316,8 @@
       // 물가 갈대, 들꽃
       if (T.wtop < 0) {
         var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), hh = hash2(x, z, 11);
-        if (((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 && h + 1 < SY) d[((h + 1) * CS + lz) * CS + lx] = REED;
+        if (T.reg === 'salt' && T.top === SALT_CRUST && hh < 0.005 && h + 6 < SY && !landmarkAt(x, z, 4)) { var sk = 2 + Math.floor(hash2(x, z, 12) * 5); for (var sy = 1; sy <= sk; sy++) d[((h + sy) * CS + lz) * CS + lx] = SALT_ROCK; }
+        else if (((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 && h + 1 < SY) d[((h + 1) * CS + lz) * CS + lx] = REED;
         else if (T.top===GRASS && hh>.92 && hh<=.955 && !inTown(x,z) && !inCommons(x,z) && h+1<SY)
           d[((h+1)*CS+lz)*CS+lx]=le<2.1 || T.rd<12?LILY:(z>1210||x>VX1+70?THORN:THISTLE);
         else if (T.top === GRASS && hh > 0.955 && plotAt(x, z) < 0 && !(z > AZ0 - 5 && z < AZ1 + 5 && x > AX0 - 5 && x < AX1 + 5)) d[((h + 1) * CS + lz) * CS + lx] = FLOWER;
@@ -298,17 +328,20 @@
     // 나무: 7칸 격자마다 한 그루 후보(옆 기둥 나무도 걸치게)
     for (var gz = Math.floor((z0 - 6) / 7); gz <= Math.floor((z0 + CS + 6) / 7); gz++) for (var gx = Math.floor((x0 - 6) / 7); gx <= Math.floor((x0 + CS + 6) / 7); gx++) {
       var tx = gx * 7 + Math.floor(hash2(gx, gz, 21) * 6), tz = gz * 7 + Math.floor(hash2(gx, gz, 22) * 6);
+      if (landmarkAt(tx, tz, 13)) continue;
       if (inTown(tx, tz) || distOut(tx, tz) < 6 || plotAt(tx, tz) >= 0 || (tx >= COMMONS[0] - 4 && tx <= COMMONS[2] + 4 && tz >= COMMONS[1] - 4 && tz <= COMMONS[3] + 4)) continue;
       terrain(tx, tz);
       if (T.wtop >= 0) continue;
-      var reg = T.reg, p = reg === 'east' ? 0.6 : (reg === 'south' ? 0.16 : (reg === 'west' || reg === 'ararat' ? 0.14 : (reg === 'other' ? 0.1 : 0)));
+      var reg = T.reg, p = reg === 'cedar' ? 0.62 : reg === 'wild' ? 0.035 : reg === 'salt' ? 0 : reg === 'east' ? 0.6 : (reg === 'south' ? 0.16 : (reg === 'west' || reg === 'ararat' ? 0.14 : (reg === 'other' ? 0.1 : 0)));
       var palm = reg === 'oasis' || (reg === 'desert' && hash2(gx, gz, 24) < 0.015);
       if (palm) p = reg === 'oasis' ? 0.7 : 1;
       if (hash2(gx, gz, 23) > p) continue;
       if (palm) { if (T.top === SAND) palmTree(tx, T.h + 1, tz, 8 + Math.floor(hash2(gx, gz, 25) * 4)); continue; }
-      if (T.top !== GRASS) continue;
+      if (T.top !== GRASS && !(reg === 'wild' && T.top === SAND)) continue;
       var t2 = T.h; terrain(tx + 1, tz + 1); if (T.h !== t2) continue;
-      tree(tx, t2 + 1, tz, 7 + Math.floor(hash2(gx, gz, 26) * 5));
+      if (reg === 'cedar') cedarTree(tx, t2 + 1, tz, 14 + Math.floor(hash2(gx, gz, 26) * 8));
+      else if (reg === 'wild') acaciaTree(tx, t2 + 1, tz, 5 + Math.floor(hash2(gx, gz, 26) * 3));
+      else tree(tx, t2 + 1, tz, 7 + Math.floor(hash2(gx, gz, 26) * 5));
     }
     // 함께 짓는 터: 평평한 풀밭 + 자갈 테두리 + 네 귀퉁이 등불
     if (x0 + CS > COMMONS[0] - 1 && x0 < COMMONS[2] + 2 && z0 + CS > COMMONS[1] - 1 && z0 < COMMONS[3] + 2) {
@@ -335,6 +368,7 @@
       if (po.x + PLOT <= x0 || po.x >= x0 + CS || po.z + PLOT <= z0 || po.z >= z0 + CS) continue;
       if (plotData[i]) { var a = plotData[i], k = 0; for (y = PY0; y < G + PH; y++) for (z = 0; z < PLOT; z++) for (x = 0; x < PLOT; x++) setRaw(po.x + x, y, po.z + z, a[k++]); }
     }
+    buildLandmarks(x0, z0);
     if (HOREB_X >= x0 - 2 && HOREB_X < x0 + CS + 2 && HOREB_Z >= z0 - 2 && HOREB_Z < z0 + CS + 2) buildHoreb();
     markPlots();
     var ed = EDITS[cz * NC + cx]; if (ed) for (var li in ed) col.d[li] = ed[li];
