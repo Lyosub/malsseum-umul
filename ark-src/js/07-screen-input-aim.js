@@ -339,7 +339,7 @@
       if (typeof furnitureRest !== 'undefined' && furnitureRest) { standFromFurniture(); return; }
       if (cartRide) { leaveCart(); return; }
       if (riding) { dismount(); return; }
-      sneakLock = !sneakLock;
+      sneakLock = !sneakLock; newsMark('sneak');
       toast(sneakLock ? '🧎 웅크렸어요 — 천천히 걷고 가장자리에서 떨어지지 않아요' : '🧍 일어났어요');
     }
     function padUp(e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) { var tap = padMid && e.type === 'touchend' && performance.now() - padMid < 600; padEnd(); if (tap) { var nw = performance.now(); if (nw - lastMidTap < 400) { lastMidTap = 0; padMidTap(); } else lastMidTap = nw; } } e.preventDefault(); }

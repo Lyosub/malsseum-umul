@@ -70,7 +70,7 @@
         if (e.pointerType !== 'touch' || !id || ui !== 'play' || have(id) < 1) return;
         hotHoldStop();
         hotHold.t1 = setTimeout(function () {
-          hotHold.quiet = performance.now() + 2500; setSel(i, true); throwItem(id, 1); vibrate();
+          hotHold.quiet = performance.now() + 2500; setSel(i, true); throwItem(id, 1); vibrate(); newsMark('drop');
           hotHold.t2 = setTimeout(function () { hotHold.t2 = 0; var n = Math.min(hotCount(id), 64); if (n > 0) { throwItem(id, n); vibrate(); } }, 1000);
         }, 500);
       });
@@ -526,6 +526,7 @@
   }
   window.addEventListener('resize', function () { setTimeout(function () { fitBottomBar(); }, 120); });
   function updateMenuLabels() {
+    if ($('mNews') && NEWS) { var nl = newsLeft(); $('mNews').textContent = '✨ 새 기능' + (S.newsSeen !== NEWS_VER ? ' (새로 ' + NEWS.length + ')' : (nl ? ' · ' + (NEWS.length - nl) + '/' + NEWS.length : ' ✅')); }
     if ($('mBtnSize')) $('mBtnSize').textContent = '버튼 크기: ' + (BTN_SIZES[S.btnSize === undefined ? 1 : S.btnSize] || BTN_SIZES[1])[0];
     $('mLight').textContent = '가벼운 화면: ' + (S.lightMode ? '켬' : '끔');
     $('mLight').setAttribute('aria-pressed', String(!!S.lightMode));
@@ -572,8 +573,8 @@
     // 게임 메뉴: 버튼을 묶음 탭(게임·이동·함께·설정)으로 — 돌아가기·나가기는 늘 보임
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
-      var G = { game: ['mBook', 'mStory', 'mVillageWork', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
-        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch'], settings: ['mLight', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
+      var G = { game: ['mNews', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
+        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
       var sl = grid.querySelector('.slider'); if (sl) sl.setAttribute('data-g', 'settings');
@@ -648,7 +649,8 @@
     on('practiceSkip', finishPractice);
     on('practiceDone', finishPractice);
     on('mLight', function () { S.lightMode = !S.lightMode; if (!S.lightMode && S.autoLit) S.autoLight = false; S.autoLit = false; applyLightMode(); saveSettings(); updateMenuLabels(); });   // 자동으로 켠 것을 사람이 끄면 다시 자동으로 켜지 않음
-    on('mBtnSize', function () { S.btnSize = ((S.btnSize === undefined ? 1 : S.btnSize) + 1) % 3; applyBtnSize(); saveSettings(); updateMenuLabels(); sfx('click'); });
+    on('mBtnSize', function () { S.btnSize = ((S.btnSize === undefined ? 1 : S.btnSize) + 1) % 3; applyBtnSize(); saveSettings(); updateMenuLabels(); sfx('click'); newsMark('btn'); });
+    on('mNews', function () { openVillageWork('news'); });
     applyBtnSize();
     on('touchAction', function () { if (isTouch && ui === 'play' && HOTBAR[sel] !== BOW) { tapAt(); mobileHudAt = 0; } });
     (function () { var ta = $('touchAction'); if (!ta) return;

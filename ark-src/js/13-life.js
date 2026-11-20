@@ -18,7 +18,7 @@
     if (!vitalsOn() || n <= 0) return;
     var mates = matesNear();
     if (mates) { n = Math.max(1, Math.round(n * (mates >= 2 ? 0.6 : 0.75))); if (!cordTold) { cordTold = true; setTimeout(function () { showVerseCard('🤝', '세 겹 줄', '한 사람이면 패하겠거니와 두 사람이면 맞설 수 있나니 세 겹 줄은 쉽게 끊어지지 아니하느니라', '전도서 4:12', '파티원이 곁에 있으면 그림자에게 덜 흔들리고 믿음이 더 빨리 차요'); }, 300); } }
-    FAITH = Math.max(0, FAITH - n); faithHitT = performance.now(); renderVitals(); stateDirty();
+    FAITH = Math.max(0, FAITH - n); faithHitT = performance.now(); renderVitals(); stateDirty(); newsMark('faith');
     document.body.classList.add('hurt'); setTimeout(function () { document.body.classList.remove('hurt'); }, 260); sfx('break', 200); vibrate();
     if (!faithTold && FAITH > 0) { faithTold = true; toast('✦ 믿음이 흔들렸어요 — 다 사라지기 전에 물리치거나 마을·불빛 곁으로 피해요. 방패를 차면 불화살을 막아요 (엡 6:16)'); }
     if (FAITH <= 0) fallTemptation(who);
@@ -380,7 +380,7 @@
     } else {
       var it = HOTBAR[sel];
       if (!it || have(it) < 1 || it === FRAME) return deny('걸어 둘 것을 손에 들고 액자를 눌러요');
-      take(it, 1); FRAMES[k] = it; toast('🖼 ' + jo(nameOf(it), '을', '를') + ' 액자에 걸었어요 — 다시 누르면 꺼내요');
+      take(it, 1); FRAMES[k] = it; newsMark('frame'); toast('🖼 ' + jo(nameOf(it), '을', '를') + ' 액자에 걸었어요 — 다시 누르면 꺼내요');
     }
     bagChanged(); markDirty(); refreshFrames(); sfx('click'); swingT = 0.25;
   }
@@ -876,7 +876,7 @@
     pow = pow || 0.35;
     var now = performance.now(); if (now < bowAt) return;
     if (!isAdm() && have(ARROW) < 1) return deny('화살이 없어요 — 막대기 1 + 부싯돌 1로 화살 4개를 만들어요');
-    bowAt = now + 250; if (!isAdm()) { take(ARROW, 1); bagChanged(); }
+    bowAt = now + 250; if (!isAdm()) { take(ARROW, 1); bagChanged(); } newsMark('bow');
     var p = camera.position, v = 12 + 24 * pow;
     ARROWS.push({ x: p.x + dir.x * 0.6, y: p.y + dir.y * 0.6 - 0.1, z: p.z + dir.z * 0.6, vx: dir.x * v, vy: dir.y * v + 1.5, vz: dir.z * v, t: 0, dmg: 1 + Math.round(2.5 * pow), mesh: arrowMesh(false) });
     tone('triangle', 260 + 160 * pow, 150, 0.12, 0.06 + 0.06 * pow); swingT = 0.25;
@@ -913,7 +913,7 @@
         if (Math.hypot(f.x - P.x, f.z - P.z) < 0.55 && f.y > P.y && f.y < P.y + HT + 0.1) {
           gone = true; var g = armorGuard(), dmg = Math.round(f.dmg * (1 - g)), sh = WORN.shield, fl = Math.hypot(f.vx, f.vz) || 1;
           var front = (-Math.sin(P.yaw)) * (-f.vx / fl) + (-Math.cos(P.yaw)) * (-f.vz / fl) > 0.3;
-          if (sh && front && Math.random() < ({ 156: 0.5, 157: 0.75, 158: 1 }[sh] || 0)) { sfx('place', 'metal'); burst(Math.floor(f.x), Math.floor(f.y), Math.floor(f.z), LAMP); var nowB = performance.now(); if (nowB - shieldToldT > 5000) { shieldToldT = nowB; toast(sh === 158 ? '🛡 믿음의 방패로 불화살을 막았어요 (엡 6:16)' : '🛡 ' + nameOf(sh) + '로 불화살을 막았어요'); } break; }
+          if (sh && front && Math.random() < ({ 156: 0.5, 157: 0.75, 158: 1 }[sh] || 0)) { newsMark('shield'); sfx('place', 'metal'); burst(Math.floor(f.x), Math.floor(f.y), Math.floor(f.z), LAMP); var nowB = performance.now(); if (nowB - shieldToldT > 5000) { shieldToldT = nowB; toast(sh === 158 ? '🛡 믿음의 방패로 불화살을 막았어요 (엡 6:16)' : '🛡 ' + nameOf(sh) + '로 불화살을 막았어요'); } break; }
           if (dmg > 0) hurtFaith(dmg, '「' + f.who + '」'); else if (vitalsOn()) toast('🛡 하나님의 전신 갑주가 불화살을 막아 주었어요 (엡 6:16)');
         }
       }

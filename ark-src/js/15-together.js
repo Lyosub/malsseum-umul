@@ -611,9 +611,9 @@
     saveVillageBook(); renderVillageWork();
     if (kind===3) showVerseCard('⛺', '성막 모형', '내가 그들 중에 거할 성소를 그들이 나를 위하여 짓되', '출애굽기 25:8', '무릇 내가 네게 보이는 모양대로 장막을 짓고 기구들도 그 모양을 따라 지을지니라 (출 25:9) — 반투명 윤곽을 따라 지어요');
   }
-  var villageTabs = [['build','설계도'],['materials','재료'],['discover','탐험'],['projects','공동 작업'],['neighbors','마을 사람'],['cargo','나귀 짐'],['showcase','집 구경'],['frontier','개척 땅'],['feed','마을 소식'],['gifts','선물'],['photos','사진']];
+  var villageTabs = [['news','✨ 새 기능'],['build','설계도'],['materials','재료'],['discover','탐험'],['projects','공동 작업'],['neighbors','마을 사람'],['cargo','나귀 짐'],['showcase','집 구경'],['frontier','개척 땅'],['feed','마을 소식'],['gifts','선물'],['photos','사진']];
   function openVillageWork(tab) { villageTab=tab; openPanel('villageWork'); renderVillageWork(); if(tab==='projects'||tab==='neighbors')fetchVillageProjects(); }
-  var VILLAGE_GROUPS=[['🔨 짓기',['build','materials','projects','frontier']],['🏘 마을',['neighbors','cargo','discover']],['🤝 함께',['showcase','feed','gifts','photos']]];
+  var VILLAGE_GROUPS=[['🔨 짓기',['build','materials','projects','frontier']],['🏘 마을',['news','neighbors','cargo','discover']],['🤝 함께',['showcase','feed','gifts','photos']]];
   function renderVillageWork() {
     var tabs=$('villageTabs'), body=$('villageBody'); tabs.replaceChildren(); body.replaceChildren();
     // 탭은 두 줄: 위는 묶음(짓기·마을·함께), 아래는 고른 묶음의 탭만
@@ -649,6 +649,8 @@
         villageButton(body,'설계도 지우기',function () {delete villageBook.plan; saveVillageBook(); renderVillageWork();});
       }
       renderPlanShare(body);
+    } else if(villageTab==='news') {
+      renderNews(body);
     } else if(villageTab==='materials') {
       var r=pinnedRecipe();
       if(!r) return villageText(body,'가방의 만들기 목록에서 「재료 표시」를 눌러요.');
@@ -658,6 +660,43 @@
     } else {
       renderVillageExtras(villageTab,body);
     }
+  }
+  // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
+  var NEWS_VER = 1, NEWS = [
+    ['bow', '🏹', '활과 화살', '활을 들고 화면을 꾹 눌러 당기고, 떼면 쏴요. 오래 당길수록 멀리·세게 날아가요.', BOW],
+    ['shield', '🛡', '방패로 불화살 막기', '방패를 차면 「의심」이 쏘는 불화살을 앞에서 막아요. 믿음의 방패는 모두 막아요(엡 6:16).', 0],
+    ['faith', '✦', '믿음', '그림자에게 맞으면 믿음이 깎여요. 말씀 두루마리를 읽거나 제단에서 기도하면 다시 차고, 파티원과 함께면 덜 깎여요.', 0],
+    ['cart', '🛒', '레일과 수레', '레일을 이어 깔고, 수레를 들고 레일을 누르면 타요. 금빛 빠른 레일은 더 빨라요.', RAIL0],
+    ['trap', '🚪', '다락문', '바닥이나 천장 쪽에 놓고 누르면 위로 열려요.', TRAP],
+    ['frame', '🖼', '액자', '벽 옆면에 걸고, 손에 든 것을 들고 누르면 걸어 둬요. 다른 사람도 봐요.', FRAME],
+    ['photo', '📷', '사진 저장', '메뉴의 「📷 사진 저장」을 누르면 지금 화면을 내 폰에 저장해요.', 0],
+    ['drop', '🫳', '길게 눌러 버리기', '아래 단축 칸을 길게 누르면 1개, 더 오래 누르면 한 묶음을 버려요.', 0],
+    ['sneak', '🧎', '웅크리기', '방향키 가운데를 톡톡 두 번 누르면 웅크려서 가장자리에서 떨어지지 않아요.', 0],
+    ['btn', '📱', '버튼 크기', '메뉴 → 설정에서 버튼 크기를 작게·보통·크게로 바꿔요.', 0]
+  ];
+  var NEWS_DONE = {}; try { NEWS_DONE = JSON.parse(localStorage.getItem('arkVillage.newsDone') || '{}') || {}; } catch (e) { NEWS_DONE = {}; }
+  function newsMark(k) {
+    if (NEWS_DONE[k]) return; NEWS_DONE[k] = 1; try { localStorage.setItem('arkVillage.newsDone', JSON.stringify(NEWS_DONE)); } catch (e) {}
+    if (NEWS.every(function (n) { return NEWS_DONE[n[0]]; })) setTimeout(function () { toast('✨ 새 기능을 다 해 봤어요!'); }, 1200);
+    if (ui === 'villageWork' && villageTab === 'news') renderVillageWork();
+    updateMenuLabels();
+  }
+  function newsLeft() { return NEWS.filter(function (n) { return !NEWS_DONE[n[0]]; }).length; }
+  function renderNews(body) {
+    if (S.newsSeen !== NEWS_VER) { S.newsSeen = NEWS_VER; saveSettings(); updateMenuLabels(); }
+    villageText(body, '✨ 새로 생긴 것 ' + NEWS.length + '가지 — 해 보면 ✅ 표시가 돼요 (' + (NEWS.length - newsLeft()) + '/' + NEWS.length + ')');
+    NEWS.forEach(function (n) {
+      villageText(body, (NEWS_DONE[n[0]] ? '✅ ' : '⬜ ') + n[1] + ' ' + n[2], 'h3');
+      villageText(body, n[3]);
+      var rc = n[4] ? RECIPES.filter(function (r) { return r.out[0] === n[4]; })[0] : null;
+      if (rc) villageButton(body, nameOf(n[4]) + ' 재료 표시', function () { villageBook.recipe = { id: rc.out[0], index: RECIPES.indexOf(rc) }; saveVillageBook(); renderMaterialGuide(); toast('마을 수첩에 ' + nameOf(rc.out[0]) + ' 재료를 표시했어요'); });
+    });
+  }
+  var newsTold = false, newsT = 0;
+  function newsTick() {   // 1초마다: 들어온 지 6초 뒤 한 번 알림
+    if (newsTold || !started || ui !== 'play' || S.newsSeen === NEWS_VER) return;
+    if (++newsT < 6) return;
+    newsTold = true; toast('✨ 새 기능 ' + NEWS.length + '가지가 생겼어요 — 메뉴의 「✨ 새 기능」에서 봐요 (활·수레·다락문·액자…)');
   }
   var VILLAGE_SITES = [
     { name:'사막의 옛 우물',x:1510,z:811,r:7,style:'well',item:FIND_POT,clue:'동쪽 사막의 북쪽에서 돌 테두리를 찾아요.' },
@@ -833,7 +872,7 @@
     if (park) { removeParked(park); cartRide = { x: park.x, y: park.y, z: park.z, s: s, to: park.to, from: park.from, t: park.t, v: 0 }; if (!railHas(s, cartRide.to) || !railHas(s, cartRide.from)) { cartRide.to = to; cartRide.from = to === c0 ? c1 : c0; cartRide.t = 0.5; } }
     else { if (!isAdm()) { take(CART, 1); bagChanged(); } cartRide = { x: x, y: y, z: z, s: s, to: to, from: to === c0 ? c1 : c0, t: 0.5, v: 0 }; }
     if (!cartMesh) cartMesh = makeCartMesh(); cartMesh.visible = true;
-    $('restUp').textContent = '내리기'; $('restUp').hidden = false; resetInput(); sfx('door', 500);
+    $('restUp').textContent = '내리기'; $('restUp').hidden = false; resetInput(); sfx('door', 500); newsMark('cart');
     toast('🛤 수레에 탔어요 — 앞으로 가면 바라보는 쪽으로 밀리고, 금빛 빠른 레일을 지나면 빨라져요. 내리면 수레는 레일 위에 서 있어요');
   }
   function leaveCart(quiet) {
