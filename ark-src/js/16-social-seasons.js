@@ -960,7 +960,7 @@
     scene.add(goalDeco);
   }
   // 점검 함수: 내 컴퓨터(시험 서버)와 선생님 계정에서만 연다 — 학생이 개발자 창에서 물건을 만들어 내지 못하게
-  var ARK_DBG = { cine: { render: function () { renderer.render(scene, camera); }, kit: function () { return { THREE: THREE, scene: scene, B: B, makeAvatar: makeAvatar, dressAvatar: dressAvatar, peerLook: peerLook, handItem: handItem, makeCartMesh: makeCartMesh, textSprite: textSprite, sparkle: sparkle, floatText: floatText, combatFx: combatFx, shadowDeathFx: shadowDeathFx, hpBarDraw: hpBarDraw, LOOKS: LOOKS, HT: HT, G: G, get: readBlock, isSolid: isSolid, kind: kind, SH_KINDS: SH_KINDS, makeShadow: makeShadow, SHADOWS: SHADOWS, disposeSprite: disposeSprite,
+  var ARK_DBG = { cine: { render: function () { renderer.render(scene, camera); }, kit: function () { return { THREE: THREE, scene: scene, B: B, makeAvatar: makeAvatar, dressAvatar: dressAvatar, peerLook: peerLook, handItem: handItem, makeCartMesh: makeCartMesh, textSprite: textSprite, sparkle: sparkle, floatText: floatText, combatFx: combatFx, shadowDeathFx: shadowDeathFx, hpBarDraw: hpBarDraw, LOOKS: LOOKS, HT: HT, G: G, get: readBlock, far: function (r) { R_MESH = r; R_GEN = r + 1; R_DROP = r + 4; FOG_FAR = r * CS - 12; camera.far = FOG_FAR + 60; camera.updateProjectionMatrix(); return FOG_FAR; }, isSolid: isSolid, kind: kind, SH_KINDS: SH_KINDS, makeShadow: makeShadow, SHADOWS: SHADOWS, disposeSprite: disposeSprite,
       bulk: function (L) {   // 예고편 촬영용: 블록을 한꺼번에 놓고 덩어리마다 한 번만 다시 그림
         var cols = {}, ch = {}, lamps = [];
         L.forEach(function (b) {
