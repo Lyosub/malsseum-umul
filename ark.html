@@ -256,11 +256,12 @@
     background:rgba(40,40,40,.45); border:2px solid rgba(255,255,255,.55); text-shadow:1px 1px 0 #222; pointer-events:none; }
   #dpad .dk.on { background:rgba(255,255,255,.4); }
   #dUp { left:52px; top:0; } #dDown { left:52px; bottom:0; } #dLeft { left:0; top:52px; } #dRight { right:0; top:52px; }
-  #dpad .dmid { left:52px; top:52px; font-size:16px; background:rgba(40,40,40,.25); border-style:dashed; }
-  #dpad .dmid.hold { animation:sneakfill 2s linear forwards; }
+  #dpad .dmid { left:52px; top:52px; font-size:11px; line-height:1.05; text-align:center; font-weight:bold; background:rgba(40,40,40,.25); border-style:dashed; }
+  body.touch #dpad .dmid, #dpad .dk.dmid { font-size:11px; }
+  #dpad .dmid.hold { background:rgba(120,180,255,.45); }
   @keyframes sneakfill { from { background:rgba(40,40,40,.25); } to { background:rgba(120,180,255,.75); } }
   body.sneaking #dpad .dmid { background:rgba(120,180,255,.6); border-style:solid; }
-  #dpad .dhint { position:absolute; left:0; right:0; top:-18px; text-align:center; font-size:10px; color:#fff; text-shadow:1px 1px 0 #000; pointer-events:none; }
+  #dpad .dhint { position:absolute; left:0; top:-18px; white-space:nowrap; text-align:left; font-size:10px; color:#fff; text-shadow:1px 1px 0 #000; pointer-events:none; }
   body.running #dUp { background:rgba(120,220,120,.55); }
   body.touch #cross { width:26px; height:26px; margin:-13px 0 0 -13px; }
   body.touch #cross:before { left:12px; height:26px; } body.touch #cross:after { top:12px; width:26px; }
@@ -581,7 +582,8 @@
   .vtab span { font-size:18px; line-height:1; } .vtab small { font-size:10px; line-height:1.1; margin-top:2px; text-shadow:1px 1px 0 #333; white-space:nowrap; }
   .vtab.on { background:#4f8a34; box-shadow:inset 2px 2px 0 #8fd06a, inset -2px -2px 0 #2f5a1e; }
   .vsep { flex:none; height:4px; display:block; }
-  @media (max-height:430px) { .vtab span { font-size:14px; } .vtab small { font-size:9px; margin-top:1px; } }
+  @media (max-height:500px) { .vtab span { display:none; } .vtab small { font-size:12px; margin-top:0; font-weight:bold; } }
+  body.touch .vtab span { display:none; } body.touch .vtab small { font-size:12px; margin-top:0; font-weight:bold; }
   .invMain { flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; }
   .invBody.solo .invMain { display:block; }
   #bagView, #craftView { display:flex; flex-direction:column; flex:1; min-height:0; }
@@ -679,7 +681,7 @@
   <div class="panel tpanel">
     <h2>처음이면 이렇게 해요</h2>
     <div class="tgrid">
-      <div><b>◀ ▲ ▶ ▼ 왼쪽 아래 방향키</b><br>걷기 · ▲ 두 번 누르고 있기(또는 🏃) = 달리기 · 가운데 🧎 2초 = 웅크리기</div>
+      <div><b>◀ ▲ ▶ ▼ 왼쪽 아래 방향키</b><br>걷기 · ▲ 두 번 누르고 있기(또는 🏃) = 달리기 · 가운데 한 번 = 웅크리기(의자·침대에선 일어나기, 동물에선 내리기)</div>
       <div><b>👉 화면 끌기</b><br>둘러보기 — 가운데 <b>＋</b> 표시가 겨누는 곳이에요</div>
       <div><b>☝ 화면을 꾹</b><br>＋ 자리 블록 캐기 — 캔 것은 🎒 가방에 들어가요</div>
       <div><b>👆 톡</b><br>＋ 자리에 블록 놓기 · 동물·문·궤 누르기</div>
@@ -706,8 +708,8 @@
   <div id="stickBase" style="display:none"><div id="knob"></div></div>
   <div id="dpad" aria-label="방향키 — 위를 두 번 누르면 달리기">
     <span id="dUp" class="dk">▲</span><span id="dLeft" class="dk">◀</span><span id="dRight" class="dk">▶</span><span id="dDown" class="dk">▼</span>
-    <span id="dMid" class="dk dmid">🧎</span>
-    <small class="dhint">▲ 두 번 = 달리기 · 가운데 2초 = 웅크리기</small>
+    <span id="dMid" class="dk dmid" title="웅크리기">웅크<br>리기</span>
+    <small class="dhint">▲▲ 달리기 · 가운데 웅크리기</small>
   </div>
   <button id="touchAction" class="mc" hidden></button>
   <button id="slabMode" class="mc" hidden>반 블록: 자동</button>
@@ -942,7 +944,7 @@
 <div id="help" class="screen dim">
   <div class="page">
     <div><h3>휴대폰</h3>
-      왼쪽 아래 방향키 = 걷기 · ▲ 두 번 누르고 있기(또는 🏃) = 달리기 · 가운데 🧎 2초 = 웅크리기 · 1칸 높이는 그냥 걸어 올라가요<br>
+      왼쪽 아래 방향키 = 걷기 · ▲ 두 번 누르고 있기(또는 🏃) = 달리기 · 가운데 한 번 = 웅크리기 · 1칸 높이는 그냥 걸어 올라가요<br>
       화면을 끌면 둘러보기 · 가운데 ＋가 겨누는 곳<br>
       꾹 = ＋ 자리 캐기 · 톡 = ＋ 자리에 놓기 (메뉴에서 「겨누기: 손가락 자리」로 바꿀 수 있어요)<br>
       ▲ 점프 · 두 번 톡 = 날기 · 물에선 ▲ 헤엄<br>
@@ -975,7 +977,7 @@
       👕 첫 화면이나 메뉴의 「👤 내 모습」에서 나그네 6명 중 하나를 골라요(히 11:13). 칼을 들고 양을 누르면 양털, 소·염소·낙타를 누르면 가죽을 얻어요. 제작대(고페르 나무 4)를 가방에 넣거나 내 땅에 놓고 🔨 만들기 → 👕 옷에서 가죽옷(창 3:21)·채색옷(창 37:3)·놋 투구(삼상 17:38)·순금 관(시 21:3)·방패·신을 만들어요. 손에 들고 누르거나 「내 모습」에서 입어요. 하나님의 전신 갑주 다섯 가지를 다 입으면 말씀 카드가 나와요(엡 6:11-17).<br>
       ♥ 체력과 ◆ 기운: 걷고 달리고 캐면 기운이 줄어요. 떡(밀 3, 마 4:4)이나 무화과(나뭇잎에서 가끔)를 들고 누르면 먹어요. 기운이 넉넉하면 체력이 차오르고, 기운이 없으면 달릴 수 없어요. 높은 곳에서 떨어지거나 물속에 오래 있으면 다쳐요. 쓰러져도 가진 것은 그대로예요.<br>
       🌾 풀이나 꽃을 캐면 가끔 밀 씨가 나와요. 흙·풀 위에 심으면 자라요(물이 가까우면 빨리, 막 4:3). 익은 밀을 거둬요. 밀을 들고 있으면 양·소·염소가 따라오고, 둘에게 먹이면 새끼가 태어나요 — 내 땅 안의 동물은 저장돼요.<br>
-      🪑 나무 의자를 누르면 앉고, 🛏 침대를 누르면 누워요. 「일어나기」를 누르거나 움직이면 일어나요. 침대는 다시 일어날 자리로 저장되고, 밤이면 자고 아침이 돼요(시 4:8). 🔘 레버(막대기 + 돌)를 누르면 둘레 문이 함께 열리고 닫혀요. 🪧 표지판은 내 땅에 세우고 글을 골라요. 횃불은 벽에도 붙고, 통나무는 옆면에 놓으면 눕혀져요. 웅크리기(PC: Shift, 휴대폰: 방향키 가운데 2초)로 가장자리에서 떨어지지 않아요.<br>
+      🪑 나무 의자를 누르면 앉고, 🛏 침대를 누르면 누워요. 「일어나기」를 누르거나 움직이면 일어나요. 침대는 다시 일어날 자리로 저장되고, 밤이면 자고 아침이 돼요(시 4:8). 🔘 레버(막대기 + 돌)를 누르면 둘레 문이 함께 열리고 닫혀요. 🪧 표지판은 내 땅에 세우고 글을 골라요. 횃불은 벽에도 붙고, 통나무는 옆면에 놓으면 눕혀져요. 웅크리기(PC: Shift, 휴대폰: 방향키 가운데 한 번)로 가장자리에서 떨어지지 않아요.<br>
       🌑 밤 들판과 굴 속에는 「어둠의 그림자」(미움·거짓·교만)가 나와요. 마을·내 땅·함께 짓는 터와 불빛 곁은 안전하고, 횃불을 들면 가까이 못 오고, 햇빛에는 사라져요. 갑옷을 입으면 덜 다치고, 하나님의 전신 갑주 다섯 가지를 다 입으면 다치지 않아요(엡 6:11). 칼이나 성령의 검(철 2 + 금 1 + 막대기, 제작대, 엡 6:17)으로 물리쳐요 — 톡(PC: 클릭). 메뉴에서 안 나오게 할 수 있어요.<br>
       📜 첫 집을 다 지으면 마을 입구의 「안내하는 나그네」에게 말을 걸어 긴 이야기 「본향을 향하여」(히 11:16)를 시작해요 — 1부 믿음의 증표 일곱(히 11장), 2부 땅속 깊이 숨은 열두 보석으로 기초석 만들기(계 21:19-20), 3부 동쪽 사막 땅속 「사망의 음침한 골짜기」 미로에서 일곱 등잔대 밝히기(시 23:4), 4부 동쪽 끝 거룩한 성의 열두 진주 문(계 21:21). 메뉴 → 📜 나그네의 길에서 할 일을 봐요. 아주 어려워요 — 친구들과 함께 가요.<br>
       🤝 메뉴 → 🤝 파티에서 지금 함께 있는 친구를 초대해 4명까지 파티를 맺어요. 파티원은 이름표가 초록색이고, 함께 나무 캐기·블록 놓기·밀 거두기·철 녹이기·그림자 물리치기·아라랏 산 오르기 파티 퀘스트를 채워 칭호를 받아요(전 4:9). 칭호는 이름표 위에 달 수 있어요.<br>
@@ -995,6 +997,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=3096abf1e7"></script>
+<script src="assets/ark-game.js?v=1aa36388fe"></script>
 </body>
 </html>

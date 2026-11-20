@@ -2812,7 +2812,7 @@
   // ── 화면 안내(처음 한 번): 버튼이 어디 있고 무엇을 하는지 노란 테두리로 차례로 짚어 준다 ──
   var TOUR_STEPS = [
     [null, '👋 나그네 마을에 온 것을 환영해요!', '화면에 있는 것들을 하나씩 짚어 줄게요. 언제든 「건너뛰기」를 누를 수 있어요.'],
-    ['#dpad', '🕹 방향키', '눌러서 걸어요. ▲를 두 번 누르면 달리고, 가운데를 2초 누르면 웅크려요.', 'touch'],
+    ['#dpad', '🕹 방향키', '눌러서 걸어요. ▲를 두 번 누르면 달리고, 가운데를 한 번 누르면 웅크려요(다시 누르면 일어나요).', 'touch'],
     ['#keys', '⌨ 걷기', 'W A S D로 걷고 마우스로 둘러봐요. 스페이스는 점프, W를 두 번 누르면 달리기예요.', 'pc'],
     [null, '👀 둘러보기', '화면의 빈 곳을 손가락으로 끌면 둘러봐요. 가운데 + 표시가 겨누는 곳이에요.', 'touch'],
     ['#btnJump', '⬆ 점프', '한 칸 높이는 저절로 올라가고, 더 높으면 점프를 눌러요.', 'touch'],
@@ -3083,18 +3083,14 @@
     canvas.addEventListener('touchend', end); canvas.addEventListener('touchcancel', end);
 
     // 방향키(↑ ← → ↓): 누른 채 손가락을 옆으로 밀어도 따라가고, 모서리는 대각선. ↑ 두 번 = 달리기
-    var pad = $('dpad'), padT = null, lastUp = 0, upWas = false, padHoldT = 0;
+    var pad = $('dpad'), padT = null, lastUp = 0, upWas = false, padMid = null;   // padMid: 가운데에서 누르기 시작한 때(밖으로 밀면 취소)
     function padAt(t) {
       var r = pad.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, R = r.width / 2;
       var dx = (t.clientX - cx) / R, dy = (t.clientY - cy) / R;
       var x = Math.abs(dx) > 0.33 ? (dx > 0 ? 1 : -1) : 0, y = Math.abs(dy) > 0.33 ? (dy > 0 ? 1 : -1) : 0;
       var center = Math.abs(dx) < 0.33 && Math.abs(dy) < 0.33;
       if (center) { x = 0; y = 0; }
-      // 가운데를 2초 누르고 있으면 웅크리기 켜고 끄기
-      if (center && !padHoldT) {
-        $('dMid').classList.add('hold');
-        padHoldT = setTimeout(function () { padHoldT = 0; $('dMid').classList.remove('hold'); sneakLock = !sneakLock; vibrate(); toast(sneakLock ? '🧎 웅크렸어요 — 가장자리에서 떨어지지 않아요. 가운데를 다시 2초 누르면 일어나요' : '🧍 일어났어요'); }, 2000);
-      } else if (!center && padHoldT) { clearTimeout(padHoldT); padHoldT = 0; $('dMid').classList.remove('hold'); }
+      if (!center && padMid) { padMid = null; $('dMid').classList.remove('hold'); }   // 가운데에서 밀어 걸으면 웅크리기 아님
       joy.x = x; joy.y = y;
       if (x && y) { joy.x = x * 0.7071; joy.y = y * 0.7071; }
       var up = y < 0;
@@ -3103,10 +3099,22 @@
       upWas = up;
       ['dUp', 'dLeft', 'dRight', 'dDown'].forEach(function (k, i) { $(k).classList.toggle('on', [y < 0, x < 0, x > 0, y > 0][i]); });
     }
-    function padEnd() { if (padHoldT) { clearTimeout(padHoldT); padHoldT = 0; $('dMid').classList.remove('hold'); } padT = null; joy.x = joy.y = 0; upWas = false; if (runSrc === 'pad') setRun(false); ['dUp', 'dLeft', 'dRight', 'dDown'].forEach(function (k) { $(k).classList.remove('on'); }); }
-    pad.addEventListener('touchstart', function (e) { if (ui !== 'play') return; var t = e.changedTouches[0]; if (padT === null) { padT = t.identifier; padAt(t); } e.preventDefault(); e.stopPropagation(); }, { passive: false });
+    function padEnd() { padMid = null; $('dMid').classList.remove('hold'); padT = null; joy.x = joy.y = 0; upWas = false; if (runSrc === 'pad') setRun(false); ['dUp', 'dLeft', 'dRight', 'dDown'].forEach(function (k) { $(k).classList.remove('on'); }); }
+    pad.addEventListener('touchstart', function (e) {
+      if (ui !== 'play') return; var t = e.changedTouches[0];
+      if (padT === null) { padT = t.identifier; var r = pad.getBoundingClientRect(), R = r.width / 2; if (Math.abs(t.clientX - r.left - R) < R * 0.33 && Math.abs(t.clientY - r.top - R) < R * 0.33) { padMid = performance.now(); $('dMid').classList.add('hold'); } padAt(t); }
+      e.preventDefault(); e.stopPropagation();
+    }, { passive: false });
     pad.addEventListener('touchmove', function (e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) padAt(e.changedTouches[i]); e.preventDefault(); e.stopPropagation(); }, { passive: false });
-    function padUp(e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) padEnd(); e.preventDefault(); }
+    // 마인크래프트 휴대폰 조작처럼: 가운데를 한 번 톡 = 웅크리기 켜고 끄기 · 의자/침대에선 일어나기 · 탄 동물에선 내리기
+    function padMidTap() {
+      vibrate();
+      if (typeof furnitureRest !== 'undefined' && furnitureRest) { standFromFurniture(); return; }
+      if (riding) { dismount(); return; }
+      sneakLock = !sneakLock;
+      toast(sneakLock ? '🧎 웅크렸어요 — 천천히 걷고 가장자리에서 떨어지지 않아요' : '🧍 일어났어요');
+    }
+    function padUp(e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) { var tap = padMid && e.type === 'touchend' && performance.now() - padMid < 600; padEnd(); if (tap) padMidTap(); } e.preventDefault(); }
     pad.addEventListener('touchend', padUp); pad.addEventListener('touchcancel', padUp);
     resetTouchInput = function () { tMove = tLook = null; stickHome(); padEnd(); lastUp = 0; };
   }
