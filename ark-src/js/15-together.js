@@ -556,7 +556,7 @@
     return a;
   }
   function matchesPlan(expected,id) {
-    var s=SHAPE[id]; return id===expected || (s && s.base===expected) ||
+    var s=SHAPE[id]; return id===expected || (s && s.base===expected) || (expected===RAIL0 && s && s.type==='mrail') ||
       (expected===GATE && s && s.type==='gate');
   }
   function createBlueprintMesh() {
@@ -863,7 +863,18 @@
     [[-0.45, -0.38], [0.45, -0.38], [-0.45, 0.38], [0.45, 0.38]].forEach(function (q) { bx(0.06, 0.2, 0.2, q[0], 0.12, q[1], dark); });
     scene.add(g); return g;
   }
+  function cartNet() { return !!(client && me && me.id && me.id !== 'test'); }
+  function cartToBag() { if (!isAdm()) { if (give(CART, 1) < 1) dropItem(P.x, P.y + 0.5, P.z, CART, 1); bagChanged(); } }
   function startCart(x, y, z, park) {
+    if (park && park.id) {   // 서버에 세워 둔 수레: 먼저 누른 한 사람만
+      if (park.taking) return; park.taking = true;
+      client.rpc('take_ark_cart', { p_id: park.id }).then(function (r) {
+        var d = r && r.data; removeParked(park);
+        if (!d) return toast('다른 사람이 먼저 탔어요');
+        startCart(d.x, d.y, d.z, { x: d.x, y: d.y, z: d.z, s: d.s, from: d.from, to: d.to, t: d.t });
+      }, function () { park.taking = false; toast('수레를 타지 못했어요. 다시 눌러 주세요'); });
+      return;
+    }
     if (riding || ferryRide || furnitureRest) return deny('지금은 수레를 탈 수 없어요');
     if (!park && !isAdm() && have(CART) < 1) return deny('수레가 없어요 — 철 덩이 5개로 만들어요');
     var s = railAt(x, y, z); if (s < 0) return;
@@ -879,11 +890,20 @@
     var c = cartRide; if (!c) return;
     cartRide = null; if (cartMesh) cartMesh.visible = false;
     $('restUp').hidden = true; $('restUp').textContent = '일어나기';
-    var parked = railAt(c.x, c.y, c.z) >= 0 && PARKED.length < 12;
-    if (parked) addParked({ x: c.x, y: c.y, z: c.z, s: c.s, from: c.from, to: c.to, t: c.t });
-    else if (!isAdm()) { if (give(CART, 1) < 1) dropItem(P.x, P.y + 0.5, P.z, CART, 1); bagChanged(); }
+    var onRail = railAt(c.x, c.y, c.z) >= 0, parked = onRail && (cartNet() || PARKED.filter(function (q) { return !q.id; }).length < 12);
+    if (parked) {
+      var lp = { x: c.x, y: c.y, z: c.z, s: c.s, from: c.from, to: c.to, t: Math.max(0, Math.min(1, c.t)) };
+      if (cartNet()) {
+        lp.pending = true; addParked(lp);
+        client.rpc('park_ark_cart', { p_x: lp.x, p_y: lp.y, p_z: lp.z, p_s: lp.s, p_from: lp.from, p_to: lp.to, p_t: lp.t }).then(function (r) {
+          var id = r && r.data;
+          if (id > 0) { lp.id = id; lp.pending = false; return; }
+          removeParked(lp); cartToBag(); toast(id === -4 ? '세워 둘 수 있는 수레는 한 사람 6대까지예요 — 수레를 가방에 넣었어요' : '여기에는 수레를 세울 수 없어요 — 가방에 넣었어요');
+        }, function () { removeParked(lp); cartToBag(); toast('수레를 세우지 못해 가방에 넣었어요'); });
+      } else addParked(lp);
+    } else cartToBag();
     P.vx = P.vy = P.vz = 0; P.y += 0.3; P.x += -Math.cos(P.yaw) * 0.9; P.z += Math.sin(P.yaw) * 0.9; if (collides(P.x, P.y, P.z)) { P.x = cartPos(c)[0]; P.z = cartPos(c)[2]; } while (collides(P.x, P.y, P.z) && P.y < SY) P.y += 1;
-    if (!quiet) { sfx('door', 500); toast(parked ? '수레에서 내렸어요 — 수레는 레일 위에 세워 뒀어요. 다시 누르면 타고, 레일을 캐면 가방으로 돌아와요' : '수레에서 내렸어요 — 수레는 가방에 넣었어요'); }
+    if (!quiet) { sfx('door', 500); toast(parked ? '수레에서 내렸어요 — 수레는 레일 위에 세워 뒀어요. ' + (cartNet() ? '누구나 눌러 탈 수 있고, ' : '다시 누르면 타고, ') + '레일을 캐면 가방으로 돌아와요' : '수레에서 내렸어요 — 수레는 가방에 넣었어요'); }
   }
   function stepCart(dt) {
     var c = cartRide;
@@ -919,16 +939,30 @@
   // 세워 둔 수레(이 기기에 기억): 레일이 사라지면 가방으로
   var PARKED = [];
   try { PARKED = (JSON.parse(localStorage.getItem('arkVillage.carts') || '[]') || []).filter(function (p) { return p && typeof p.x === 'number'; }).slice(0, 12); } catch (e) { PARKED = []; }
-  function saveParked() { try { localStorage.setItem('arkVillage.carts', JSON.stringify(PARKED.map(function (p) { return { x: p.x, y: p.y, z: p.z, s: p.s, from: p.from, to: p.to, t: p.t }; }))); } catch (e) {} }
+  function saveParked() { try { localStorage.setItem('arkVillage.carts', JSON.stringify(PARKED.filter(function (p) { return !p.id && !p.pending; }).map(function (p) { return { x: p.x, y: p.y, z: p.z, s: p.s, from: p.from, to: p.to, t: p.t }; }))); } catch (e) {} }
   function parkedAt(x, y, z) { for (var i = 0; i < PARKED.length; i++) { var p = PARKED[i]; if (p.x === x && p.y === y && p.z === z) return p; } return null; }
   function placeParkedMesh(p) { if (!p.mesh) p.mesh = makeCartMesh(); var q = cartPos(p), save = p.t; p.t = Math.min(1, p.t + 0.01); var q2 = cartPos(p); p.t = save; p.mesh.position.set(q[0], q[1], q[2]); p.mesh.rotation.y = Math.atan2(q2[0] - q[0], q2[2] - q[2]); p.mesh.visible = true; }
   function addParked(p) { PARKED.push(p); placeParkedMesh(p); saveParked(); }
   function removeParked(p) { var i = PARKED.indexOf(p); if (i >= 0) PARKED.splice(i, 1); if (p.mesh) { scene.remove(p.mesh); p.mesh = null; } saveParked(); }
-  function parkedBroken(x, y, z) { var p = parkedAt(x, y, z); if (!p) return; removeParked(p); if (!isAdm()) { if (give(CART, 1) < 1) dropItem(x + 0.5, y + 0.5, z + 0.5, CART, 1); bagChanged(); } toast('🛒 세워 둔 수레를 가방에 넣었어요'); }
-  function tickParked() {   // 1초마다: 가까이 있으면 보이게, 땅이 불러와졌는데 레일이 없으면 가방으로
+  function parkedBroken(x, y, z) {
+    var p = parkedAt(x, y, z); if (!p) return; removeParked(p);
+    if (p.id) { client.rpc('take_ark_cart', { p_id: p.id }).then(function (r) { if (r && r.data) { cartToBag(); toast('🛒 세워 둔 수레를 가방에 넣었어요'); } }, function () {}); return; }
+    cartToBag(); toast('🛒 세워 둔 수레를 가방에 넣었어요');
+  }
+  var cartPollT = 0;
+  function pollCarts() {
+    client.rpc('list_ark_carts', { p_x: Math.floor(P.x), p_z: Math.floor(P.z) }).then(function (r) {
+      if (!r || r.error || !Array.isArray(r.data)) return;
+      var ids = new Set(r.data.map(function (d) { return d.id; }));
+      PARKED.slice().forEach(function (p) { if (p.id && !ids.has(p.id) && !p.taking) removeParked(p); });
+      r.data.forEach(function (d) { if (!PARKED.some(function (p) { return p.id === d.id; })) PARKED.push({ id: d.id, x: d.x, y: d.y, z: d.z, s: d.s, from: d.frm, to: d.too, t: d.t }); });
+    }, function () {});
+  }
+  function tickParked() {   // 1초마다: 가까이 있으면 보이게. 이 기기 수레는 땅이 불러와졌는데 레일이 없으면 가방으로
+    if (cartNet() && started && ++cartPollT >= 5) { cartPollT = 0; pollCarts(); }
     PARKED.slice().forEach(function (p) {
       if (!colAt(p.x, p.z)) { if (p.mesh) p.mesh.visible = false; return; }
-      if (railAt(p.x, p.y, p.z) < 0) { parkedBroken(p.x, p.y, p.z); return; }
+      if (railAt(p.x, p.y, p.z) < 0) { if (p.id || p.pending) { if (p.mesh) p.mesh.visible = false; } else parkedBroken(p.x, p.y, p.z); return; }
       p.s = railAt(p.x, p.y, p.z); if (!railHas(p.s, p.to) || !railHas(p.s, p.from)) { p.from = RAIL_CONN[p.s][0]; p.to = RAIL_CONN[p.s][1]; }
       placeParkedMesh(p);
     });

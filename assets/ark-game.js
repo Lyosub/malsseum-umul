@@ -6371,13 +6371,18 @@
   }
 
   // 화면 품질 자동 조절(11/20): 휴대폰이 버벅이면(4초씩 두 번 연속 초당 24장 아래) 「가벼운 화면」을 켬. 메뉴에서 끄면 다시는 자동으로 켜지 않음
-  var fpsW = { t0: 0, n: 0, low: 0 };
+  var fpsW = { t0: 0, n: 0, low: 0 }, perfAcc = { sum: 0, n: 0, low: 999, next: 0 };   // perfAcc: 실제 폰 버벅임 기록(1분 평균, 10분에 한 번 서버로)
   function fpsWatch(now) {
     if (!started || ui !== 'play' || document.hidden) { fpsW.t0 = 0; return; }
     if (!fpsW.t0) { fpsW.t0 = now; fpsW.n = 0; return; }
     fpsW.n++;
     if (now - fpsW.t0 < 4000) return;
     var fps = fpsW.n * 1000 / (now - fpsW.t0); fpsW.t0 = now; fpsW.n = 0; fpsW.last = fps;
+    perfAcc.sum += fps; perfAcc.n++; perfAcc.low = Math.min(perfAcc.low, fps);
+    if (perfAcc.n >= 15) {
+      if (client && me && me.id !== 'test' && now > perfAcc.next) { perfAcc.next = now + 600000; client.rpc('log_ark_perf', { p_avg: Math.round(perfAcc.sum / perfAcc.n * 10) / 10, p_low: Math.round(perfAcc.low * 10) / 10, p_light: !!S.lightMode, p_w: innerWidth, p_h: innerHeight, p_dpr: window.devicePixelRatio || 1, p_ua: navigator.userAgent }).then(function () {}, function () {}); }
+      perfAcc.sum = 0; perfAcc.n = 0; perfAcc.low = 999;
+    }
     fpsW.low = fps < 24 ? fpsW.low + 1 : 0;
     if (fpsW.low >= 2 && !S.lightMode && S.autoLight !== false) {
       S.lightMode = true; S.autoLit = true; applyLightMode(); saveSettings(); updateMenuLabels(); fpsW.low = 0;
@@ -8268,7 +8273,7 @@
     return a;
   }
   function matchesPlan(expected,id) {
-    var s=SHAPE[id]; return id===expected || (s && s.base===expected) ||
+    var s=SHAPE[id]; return id===expected || (s && s.base===expected) || (expected===RAIL0 && s && s.type==='mrail') ||
       (expected===GATE && s && s.type==='gate');
   }
   function createBlueprintMesh() {
@@ -8575,7 +8580,18 @@
     [[-0.45, -0.38], [0.45, -0.38], [-0.45, 0.38], [0.45, 0.38]].forEach(function (q) { bx(0.06, 0.2, 0.2, q[0], 0.12, q[1], dark); });
     scene.add(g); return g;
   }
+  function cartNet() { return !!(client && me && me.id && me.id !== 'test'); }
+  function cartToBag() { if (!isAdm()) { if (give(CART, 1) < 1) dropItem(P.x, P.y + 0.5, P.z, CART, 1); bagChanged(); } }
   function startCart(x, y, z, park) {
+    if (park && park.id) {   // 서버에 세워 둔 수레: 먼저 누른 한 사람만
+      if (park.taking) return; park.taking = true;
+      client.rpc('take_ark_cart', { p_id: park.id }).then(function (r) {
+        var d = r && r.data; removeParked(park);
+        if (!d) return toast('다른 사람이 먼저 탔어요');
+        startCart(d.x, d.y, d.z, { x: d.x, y: d.y, z: d.z, s: d.s, from: d.from, to: d.to, t: d.t });
+      }, function () { park.taking = false; toast('수레를 타지 못했어요. 다시 눌러 주세요'); });
+      return;
+    }
     if (riding || ferryRide || furnitureRest) return deny('지금은 수레를 탈 수 없어요');
     if (!park && !isAdm() && have(CART) < 1) return deny('수레가 없어요 — 철 덩이 5개로 만들어요');
     var s = railAt(x, y, z); if (s < 0) return;
@@ -8591,11 +8607,20 @@
     var c = cartRide; if (!c) return;
     cartRide = null; if (cartMesh) cartMesh.visible = false;
     $('restUp').hidden = true; $('restUp').textContent = '일어나기';
-    var parked = railAt(c.x, c.y, c.z) >= 0 && PARKED.length < 12;
-    if (parked) addParked({ x: c.x, y: c.y, z: c.z, s: c.s, from: c.from, to: c.to, t: c.t });
-    else if (!isAdm()) { if (give(CART, 1) < 1) dropItem(P.x, P.y + 0.5, P.z, CART, 1); bagChanged(); }
+    var onRail = railAt(c.x, c.y, c.z) >= 0, parked = onRail && (cartNet() || PARKED.filter(function (q) { return !q.id; }).length < 12);
+    if (parked) {
+      var lp = { x: c.x, y: c.y, z: c.z, s: c.s, from: c.from, to: c.to, t: Math.max(0, Math.min(1, c.t)) };
+      if (cartNet()) {
+        lp.pending = true; addParked(lp);
+        client.rpc('park_ark_cart', { p_x: lp.x, p_y: lp.y, p_z: lp.z, p_s: lp.s, p_from: lp.from, p_to: lp.to, p_t: lp.t }).then(function (r) {
+          var id = r && r.data;
+          if (id > 0) { lp.id = id; lp.pending = false; return; }
+          removeParked(lp); cartToBag(); toast(id === -4 ? '세워 둘 수 있는 수레는 한 사람 6대까지예요 — 수레를 가방에 넣었어요' : '여기에는 수레를 세울 수 없어요 — 가방에 넣었어요');
+        }, function () { removeParked(lp); cartToBag(); toast('수레를 세우지 못해 가방에 넣었어요'); });
+      } else addParked(lp);
+    } else cartToBag();
     P.vx = P.vy = P.vz = 0; P.y += 0.3; P.x += -Math.cos(P.yaw) * 0.9; P.z += Math.sin(P.yaw) * 0.9; if (collides(P.x, P.y, P.z)) { P.x = cartPos(c)[0]; P.z = cartPos(c)[2]; } while (collides(P.x, P.y, P.z) && P.y < SY) P.y += 1;
-    if (!quiet) { sfx('door', 500); toast(parked ? '수레에서 내렸어요 — 수레는 레일 위에 세워 뒀어요. 다시 누르면 타고, 레일을 캐면 가방으로 돌아와요' : '수레에서 내렸어요 — 수레는 가방에 넣었어요'); }
+    if (!quiet) { sfx('door', 500); toast(parked ? '수레에서 내렸어요 — 수레는 레일 위에 세워 뒀어요. ' + (cartNet() ? '누구나 눌러 탈 수 있고, ' : '다시 누르면 타고, ') + '레일을 캐면 가방으로 돌아와요' : '수레에서 내렸어요 — 수레는 가방에 넣었어요'); }
   }
   function stepCart(dt) {
     var c = cartRide;
@@ -8631,16 +8656,30 @@
   // 세워 둔 수레(이 기기에 기억): 레일이 사라지면 가방으로
   var PARKED = [];
   try { PARKED = (JSON.parse(localStorage.getItem('arkVillage.carts') || '[]') || []).filter(function (p) { return p && typeof p.x === 'number'; }).slice(0, 12); } catch (e) { PARKED = []; }
-  function saveParked() { try { localStorage.setItem('arkVillage.carts', JSON.stringify(PARKED.map(function (p) { return { x: p.x, y: p.y, z: p.z, s: p.s, from: p.from, to: p.to, t: p.t }; }))); } catch (e) {} }
+  function saveParked() { try { localStorage.setItem('arkVillage.carts', JSON.stringify(PARKED.filter(function (p) { return !p.id && !p.pending; }).map(function (p) { return { x: p.x, y: p.y, z: p.z, s: p.s, from: p.from, to: p.to, t: p.t }; }))); } catch (e) {} }
   function parkedAt(x, y, z) { for (var i = 0; i < PARKED.length; i++) { var p = PARKED[i]; if (p.x === x && p.y === y && p.z === z) return p; } return null; }
   function placeParkedMesh(p) { if (!p.mesh) p.mesh = makeCartMesh(); var q = cartPos(p), save = p.t; p.t = Math.min(1, p.t + 0.01); var q2 = cartPos(p); p.t = save; p.mesh.position.set(q[0], q[1], q[2]); p.mesh.rotation.y = Math.atan2(q2[0] - q[0], q2[2] - q[2]); p.mesh.visible = true; }
   function addParked(p) { PARKED.push(p); placeParkedMesh(p); saveParked(); }
   function removeParked(p) { var i = PARKED.indexOf(p); if (i >= 0) PARKED.splice(i, 1); if (p.mesh) { scene.remove(p.mesh); p.mesh = null; } saveParked(); }
-  function parkedBroken(x, y, z) { var p = parkedAt(x, y, z); if (!p) return; removeParked(p); if (!isAdm()) { if (give(CART, 1) < 1) dropItem(x + 0.5, y + 0.5, z + 0.5, CART, 1); bagChanged(); } toast('🛒 세워 둔 수레를 가방에 넣었어요'); }
-  function tickParked() {   // 1초마다: 가까이 있으면 보이게, 땅이 불러와졌는데 레일이 없으면 가방으로
+  function parkedBroken(x, y, z) {
+    var p = parkedAt(x, y, z); if (!p) return; removeParked(p);
+    if (p.id) { client.rpc('take_ark_cart', { p_id: p.id }).then(function (r) { if (r && r.data) { cartToBag(); toast('🛒 세워 둔 수레를 가방에 넣었어요'); } }, function () {}); return; }
+    cartToBag(); toast('🛒 세워 둔 수레를 가방에 넣었어요');
+  }
+  var cartPollT = 0;
+  function pollCarts() {
+    client.rpc('list_ark_carts', { p_x: Math.floor(P.x), p_z: Math.floor(P.z) }).then(function (r) {
+      if (!r || r.error || !Array.isArray(r.data)) return;
+      var ids = new Set(r.data.map(function (d) { return d.id; }));
+      PARKED.slice().forEach(function (p) { if (p.id && !ids.has(p.id) && !p.taking) removeParked(p); });
+      r.data.forEach(function (d) { if (!PARKED.some(function (p) { return p.id === d.id; })) PARKED.push({ id: d.id, x: d.x, y: d.y, z: d.z, s: d.s, from: d.frm, to: d.too, t: d.t }); });
+    }, function () {});
+  }
+  function tickParked() {   // 1초마다: 가까이 있으면 보이게. 이 기기 수레는 땅이 불러와졌는데 레일이 없으면 가방으로
+    if (cartNet() && started && ++cartPollT >= 5) { cartPollT = 0; pollCarts(); }
     PARKED.slice().forEach(function (p) {
       if (!colAt(p.x, p.z)) { if (p.mesh) p.mesh.visible = false; return; }
-      if (railAt(p.x, p.y, p.z) < 0) { parkedBroken(p.x, p.y, p.z); return; }
+      if (railAt(p.x, p.y, p.z) < 0) { if (p.id || p.pending) { if (p.mesh) p.mesh.visible = false; } else parkedBroken(p.x, p.y, p.z); return; }
       p.s = railAt(p.x, p.y, p.z); if (!railHas(p.s, p.to) || !railHas(p.s, p.from)) { p.from = RAIL_CONN[p.s][0]; p.to = RAIL_CONN[p.s][1]; }
       placeParkedMesh(p);
     });
@@ -8945,7 +8984,8 @@
     well:['공동 우물',1030,765,1036,772],
     shelter:['여행자 쉼터',1031,790,1041,800],
     pen:['목자의 양 우리',1030,775,1039,785],
-    meal:['함께 차리는 식탁',1042,790,1053,800]
+    meal:['함께 차리는 식탁',1042,790,1053,800],
+    railway:['함께 놓는 철길',993,756,1054,815]
   };
   var VILLAGE_ROLES=['재료 모으기','재료 다듬기','블록 놓기'];
   var villageProjectsEnabled=false, villageProjectState={}, villageProjectFetch=false, villageProjectAt=0;
@@ -8964,6 +9004,9 @@
     }else if(key==='pen'){
       for(x=1032;x<=1037;x++)for(z=777;z<=782;z++)if(x===1032||x===1037||z===777||z===782)
         put(x,G,z,x===1034&&z===782?GATE:FENCE);
+    }else if(key==='railway'){   // 함께 짓는 터 둘레 한 바퀴(240칸) — 보통·빠른 레일 어떤 모양이든
+      for(x=993;x<=1054;x++){put(x,G,756,RAIL0);put(x,G,815,RAIL0);}
+      for(z=757;z<=814;z++){put(993,G,z,RAIL0);put(1054,G,z,RAIL0);}
     }else if(key==='meal'){
       [FEAST_BREAD,FEAST_OLIVE,FEAST_FISH].forEach(function(id,i){put(1045+i*2,G,795,FEAST_TABLE);put(1045+i*2,G+1,795,id);});
     }
@@ -9040,7 +9083,7 @@
     if(Array.isArray(state.roles))villageText(line,VILLAGE_ROLES.map(function(role,i){return role+' '+state.roles[i]+'명';}).join(' · '),'small');
     villageButton(line,'공사장으로',function(){focusProject(key);});
     if(NET.admin){
-      if(done||state.locked)villageButton(line,state.locked?'잠금 풀기':'완성한 곳 보호',function(){projectAdmin(key,state.locked?'unlock':'lock');});
+      if((done||state.locked)&&key!=='railway')villageButton(line,state.locked?'잠금 풀기':'완성한 곳 보호',function(){projectAdmin(key,state.locked?'unlock':'lock');});
       if(state.snapshot)villageButton(line,'이곳만 되돌리기',function(){projectAdmin(key,'restore');});
     }
   }
@@ -9122,6 +9165,9 @@
       });
       if(villageBook.role)villageText(body,'내가 맡은 일 · '+villageBook.role);
       ['bridge','well','shelter'].forEach(function(key){renderOneProject(body,key);});
+      villageText(body,'🛤 함께 짓는 터 둘레에 레일을 이어 깔아 한 바퀴 도는 철길을 만들어요. 다 이으면 수레를 타고 함께 돌아요(금빛 빠른 레일도 돼요).');
+      renderOneProject(body,'railway');
+      if(villageProjectState.railway&&villageProjectState.railway.done>=240)villageText(body,'철길이 한 바퀴 다 이어졌어요! 수레를 타고 돌아 보세요.');
     }else{
       villageText(body,'목자가 부탁했어요. 양들이 안전하게 쉴 수 있도록 울타리와 문을 고쳐 주세요.');
       renderOneProject(body,'pen');
@@ -9607,7 +9653,7 @@
     scene.add(goalDeco);
   }
   // 점검 함수: 내 컴퓨터(시험 서버)와 선생님 계정에서만 연다 — 학생이 개발자 창에서 물건을 만들어 내지 못하게
-  var ARK_DBG = { home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+  var ARK_DBG = { fakeNet: function (c, id) { client = c; me = { id: id }; }, projectCells: function (k) { return projectCells(k).length; }, perf: function () { return perfAcc; }, home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); } };

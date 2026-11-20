@@ -206,13 +206,18 @@
   }
 
   // 화면 품질 자동 조절(11/20): 휴대폰이 버벅이면(4초씩 두 번 연속 초당 24장 아래) 「가벼운 화면」을 켬. 메뉴에서 끄면 다시는 자동으로 켜지 않음
-  var fpsW = { t0: 0, n: 0, low: 0 };
+  var fpsW = { t0: 0, n: 0, low: 0 }, perfAcc = { sum: 0, n: 0, low: 999, next: 0 };   // perfAcc: 실제 폰 버벅임 기록(1분 평균, 10분에 한 번 서버로)
   function fpsWatch(now) {
     if (!started || ui !== 'play' || document.hidden) { fpsW.t0 = 0; return; }
     if (!fpsW.t0) { fpsW.t0 = now; fpsW.n = 0; return; }
     fpsW.n++;
     if (now - fpsW.t0 < 4000) return;
     var fps = fpsW.n * 1000 / (now - fpsW.t0); fpsW.t0 = now; fpsW.n = 0; fpsW.last = fps;
+    perfAcc.sum += fps; perfAcc.n++; perfAcc.low = Math.min(perfAcc.low, fps);
+    if (perfAcc.n >= 15) {
+      if (client && me && me.id !== 'test' && now > perfAcc.next) { perfAcc.next = now + 600000; client.rpc('log_ark_perf', { p_avg: Math.round(perfAcc.sum / perfAcc.n * 10) / 10, p_low: Math.round(perfAcc.low * 10) / 10, p_light: !!S.lightMode, p_w: innerWidth, p_h: innerHeight, p_dpr: window.devicePixelRatio || 1, p_ua: navigator.userAgent }).then(function () {}, function () {}); }
+      perfAcc.sum = 0; perfAcc.n = 0; perfAcc.low = 999;
+    }
     fpsW.low = fps < 24 ? fpsW.low + 1 : 0;
     if (fpsW.low >= 2 && !S.lightMode && S.autoLight !== false) {
       S.lightMode = true; S.autoLit = true; applyLightMode(); saveSettings(); updateMenuLabels(); fpsW.low = 0;
