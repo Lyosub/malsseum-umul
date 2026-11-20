@@ -50,6 +50,15 @@
   // 남쪽 새 지역(11/20): 서남쪽 백향목 숲(시 92:12), 가운데 광야와 성막(출 25:8, 27:18), 동남쪽 소금 바다(마 5:13)와 나그네 장막촌(히 11:9)
   var CEX = 640, CEZ = 1640, CER = 210, WIX = 1030, WIZ = 1700, WIR = 190, SAX = 1440, SAZ = 1690, SARX = 140, SARZ = 85, SAR = 205;
   var TBX = 1030, TBZ = 1700, CTX = 640, CTZ = 1640, TCX = 1262, TCZ = 1690, LOTX = 1440, LOTZ = 1784;
+  // 11/20 북쪽 바다의 섬: [이름, x, z, 반지름, 언덕 높이] — 밧모(계 1:9) · 멜리데(행 28:1) · 구브로(행 13:4) + 작은 섬
+  var ISLES = [['patmos', 560, 330, 58, 16], ['malta', 1500, 380, 78, 9], ['cyprus', 1040, 200, 135, 26], ['islet', 250, 540, 24, 5], ['islet', 820, 530, 18, 4],
+    ['islet', 1250, 560, 22, 6], ['islet', 1830, 520, 28, 7], ['islet', 1780, 180, 34, 9], ['islet', 330, 140, 30, 8], ['islet', 1960, 330, 20, 5]];
+  function isleAt(x, z) {   // [섬 번호, 가운데로 갈수록 1]
+    if (z > SEA_Z - 40) return null;
+    for (var i = 0; i < ISLES.length; i++) { var I = ISLES[i], dx = x - I[1], dz = z - I[2]; if (Math.abs(dx) > I[3] * 1.4 || Math.abs(dz) > I[3] * 1.4) continue;
+      var d = Math.hypot(dx, dz) + (vnoise(x, z, 22, 80 + (i % 9)) - 0.5) * I[3] * 0.55; if (d < I[3]) return [i, 1 - d / I[3]]; }
+    return null;
+  }
   function southReg(x, z) {
     if (z < 1380) return '';
     var n = (vnoise(x, z, 50, 71) - 0.5) * 60;
@@ -126,6 +135,7 @@
     if (x >= TARR[0] - 4 && x <= TARR[2] + 4 && z >= TARR[1] - 4 && z <= TARR[3] + 4) return 'tar';
     if (lakeE(x, z) < 1.7) return 'lake';
     if (Math.hypot(x - OASX, z - OASZ) < 34) return 'oasis';
+    if (z < SEA_Z - 40) { var il0 = isleAt(x, z); if (il0 && il0[1] > 0.06) return ISLES[il0[0]][0]; }
     if (z < SEA_Z + 10 + (vnoise(x, z, 60, 9) - 0.5) * 40) return 'sea';
     if (Math.hypot(x - ARX, z - ARZ) < 230) return 'ararat';
     var sr = southReg(x, z); if (sr) return sr;
@@ -175,6 +185,9 @@
     // 강 골짜기
     var rd = riverDist(x, z);
     if (rd < 15) { var vf = clamp01((rd - 4) / 11); vf = vf * vf; h = Math.round(G - 1 + (h - (G - 1)) * vf); }
+    var isleK = 0, isleI = -1;
+    if (z < SEA_Z - 40) { var il = isleAt(x, z); if (il) { isleK = il[1]; isleI = il[0]; var IH = ISLES[isleI][4];
+      var ih = G - 4 + Math.round(sstep(0, 0.28, isleK) * 4.5 + Math.pow(Math.max(0, isleK - 0.2) / 0.8, 1.4) * IH * (0.55 + 0.7 * n1)); if (ih > h) h = ih; } }
     if (h > SY - 4) h = SY - 4;
     var top = GRASS, sub = DIRT, wtop = -1;
     var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), se = z > 1500 ? saltE(x, z) : 9;
@@ -190,7 +203,8 @@
     else if (seaD > -16) { top = SAND; sub = SAND; }
     else if (h > G + 46 + n2 * 4) { top = SNOW; sub = STONE; }
     else if ((westW > 0 || ar > 0.25) && h > G + 15 + vnoise(x, z, 9, 3) * 9) { top = STONE; sub = STONE; }
-    T.h = h; T.top = top; T.sub = sub; T.wtop = wtop; T.reg = reg; T.rd = rd;
+    if (isleK > 0 && h >= G - 1) { var IHt = ISLES[isleI][4]; wtop = -1; if (h <= G || isleK < 0.22) { top = SAND; sub = SAND; } else if (h > G + IHt * 0.75 + n2 * 3 && IHt > 12) { top = STONE; sub = STONE; } else { top = GRASS; sub = DIRT; } }
+    T.h = h; T.top = top; T.sub = sub; T.wtop = wtop; T.reg = reg; T.rd = rd; T.isle = isleK;
     return T;
   }
   function surfaceY(x, z) { terrain(x, z); return Math.max(T.h, T.wtop) + 1; }
@@ -329,6 +343,7 @@
     }
     carveCaves(col, cx, cz, tops, wtops);
     buildFrontierCave(x0,z0,tops);
+    if (z0 < SEA_Z) buildIsleMarks(x0, z0);
     // 나무: 7칸 격자마다 한 그루 후보(옆 기둥 나무도 걸치게)
     for (var gz = Math.floor((z0 - 6) / 7); gz <= Math.floor((z0 + CS + 6) / 7); gz++) for (var gx = Math.floor((x0 - 6) / 7); gx <= Math.floor((x0 + CS + 6) / 7); gx++) {
       var tx = gx * 7 + Math.floor(hash2(gx, gz, 21) * 6), tz = gz * 7 + Math.floor(hash2(gx, gz, 22) * 6);
@@ -336,14 +351,14 @@
       if (inTown(tx, tz) || distOut(tx, tz) < 6 || plotAt(tx, tz) >= 0 || (tx >= COMMONS[0] - 4 && tx <= COMMONS[2] + 4 && tz >= COMMONS[1] - 4 && tz <= COMMONS[3] + 4)) continue;
       terrain(tx, tz);
       if (T.wtop >= 0) continue;
-      var reg = T.reg, p = reg === 'cedar' ? 0.62 : reg === 'wild' ? 0.035 : reg === 'salt' ? 0 : reg === 'east' ? 0.6 : (reg === 'south' ? 0.16 : (reg === 'west' || reg === 'ararat' ? 0.14 : (reg === 'other' ? 0.1 : 0)));
-      var palm = reg === 'oasis' || (reg === 'desert' && hash2(gx, gz, 24) < 0.015);
-      if (palm) p = reg === 'oasis' ? 0.7 : 1;
+      var reg = T.reg, p = reg === 'cyprus' ? 0.4 : reg === 'malta' ? 0.16 : reg === 'patmos' ? 0.06 : reg === 'islet' ? 0.22 : reg === 'cedar' ? 0.62 : reg === 'wild' ? 0.035 : reg === 'salt' ? 0 : reg === 'east' ? 0.6 : (reg === 'south' ? 0.16 : (reg === 'west' || reg === 'ararat' ? 0.14 : (reg === 'other' ? 0.1 : 0)));
+      var palm = reg === 'oasis' || (reg === 'desert' && hash2(gx, gz, 24) < 0.015) || ((reg === 'malta' || reg === 'islet' || reg === 'cyprus') && T.top === SAND);
+      if (palm) p = reg === 'oasis' ? 0.7 : (reg === 'desert' ? 1 : (reg === 'cyprus' ? 0.25 : 0.4));
       if (hash2(gx, gz, 23) > p) continue;
       if (palm) { if (T.top === SAND) palmTree(tx, T.h + 1, tz, 8 + Math.floor(hash2(gx, gz, 25) * 4)); continue; }
       if (T.top !== GRASS && !(reg === 'wild' && T.top === SAND)) continue;
       var t2 = T.h; terrain(tx + 1, tz + 1); if (T.h !== t2) continue;
-      if (reg === 'cedar') cedarTree(tx, t2 + 1, tz, 14 + Math.floor(hash2(gx, gz, 26) * 8));
+      if (reg === 'cedar' || (reg === 'cyprus' && hash2(gx, gz, 27) < 0.35)) cedarTree(tx, t2 + 1, tz, (reg === 'cyprus' ? 9 : 14) + Math.floor(hash2(gx, gz, 26) * 8));
       else if (reg === 'wild') acaciaTree(tx, t2 + 1, tz, 5 + Math.floor(hash2(gx, gz, 26) * 3));
       else tree(tx, t2 + 1, tz, 7 + Math.floor(hash2(gx, gz, 26) * 5));
     }
@@ -428,6 +443,36 @@
           }
         }
       }
+    }
+  }
+  // 섬의 볼거리: 밧모섬 바위굴(계 1:9) · 멜리데 바닷가 모닥불과 부서진 배(행 27:41, 28:2) · 구브로 나무 부두(행 13:4)
+  function isleTop(x, z) { terrain(x, z); return T.h; }
+  function buildIsleMarks(x0, z0) {
+    var P0 = ISLES[0], M0 = ISLES[1], C0 = ISLES[2];
+    function near(cx, cz, r) { return cx + r >= x0 && cx - r < x0 + CS && cz + r >= z0 && cz - r < z0 + CS; }
+    // 밧모: 섬 가운데 언덕에 동쪽으로 열린 바위굴, 안에 등잔과 두루마리 서가
+    if (near(P0[1], P0[2], 12)) {
+      var px = P0[1], pz = P0[2], ph = isleTop(px, pz);
+      fill(px - 6, ph - 5, pz - 5, px + 6, ph + 4, pz + 5, STONE);
+      fill(px - 4, ph - 3, pz - 3, px + 4, ph + 1, pz + 3, AIR);
+      fill(px + 5, ph - 3, pz - 1, px + 7, ph, pz + 1, AIR);
+      fill(px - 4, ph - 4, pz - 3, px + 4, ph - 4, pz + 3, STONE);
+      setRaw(px - 3, ph - 3, pz, LAMP); setRaw(px - 4, ph - 3, pz + 2, WORD_SHELF); setRaw(px, ph - 3, pz - 2, LAMP);
+    }
+    // 멜리데: 남쪽 바닷가 모닥불(행 28:2)과 물가에 걸린 부서진 배(행 27:41)
+    if (near(M0[1], M0[2] + 70, 16)) {
+      var mx = M0[1] - 10, mz = M0[2] + 62, mh = isleTop(mx, mz);
+      setRaw(mx, mh + 1, mz, CAMPFIRE);
+      [[-2, 0], [2, 0], [0, -2], [0, 2]].forEach(function (q) { setRaw(mx + q[0], mh + 1, mz + q[1], LOG); });
+      var sx = M0[1] + 14, sz = M0[2] + 80, sh = G - 2;
+      for (var i = 0; i < 16; i++) { var w = i < 3 ? 1 : (i > 12 ? 1 : 2); for (var dz = -w; dz <= w; dz++) { setRaw(sx + i, sh, sz + dz, PITCH); if (Math.abs(dz) === w && (i % 4) !== 1) setRaw(sx + i, sh + 1, sz + dz, PITCH); } }
+      for (var j = 0; j < 4; j++) setRaw(sx + 7, sh + 1 + j, sz, LOG);
+      setRaw(sx + 7, sh + 5, sz + 1, WOOL_W); setRaw(sx + 7, sh + 4, sz + 1, WOOL_W);
+    }
+    // 구브로: 남쪽 물가로 나온 나무 부두와 등불
+    if (near(C0[1], C0[2] + 150, 24)) {
+      var cx2 = C0[1], cz2 = C0[2] + 128;
+      for (var k = 0; k < 26; k++) { var zz = cz2 + k; terrain(cx2, zz); if (T.h >= G) continue; for (var dx = -1; dx <= 1; dx++) setRaw(cx2 + dx, G, zz, GOPHER); if (k % 6 === 0) { setRaw(cx2 - 2, G, zz, LOG); setRaw(cx2 - 2, G + 1, zz, FENCE); setRaw(cx2 - 2, G + 2, zz, LAMP); for (var yy = G - 4; yy < G; yy++) { setRaw(cx2 - 1, yy, zz, LOG); setRaw(cx2 + 1, yy, zz, LOG); } } }
     }
   }
   function skyScan(col, lx, lz) {

@@ -36,6 +36,7 @@
     if (p >= 0) return p === myPlot ? '내 땅 (' + (p + 1) + '번)' + (homeSafe ? ' · 🏠 안전한 집' : '') : (p + 1) + '번 땅' + (plotOwners[p] ? '' : ' · 빈 땅');
     var reg = region(x, z), lmk = inLandmark(x, z);
     if (lmk) return REGION_INFO[lmk][0];
+    if (REGION_INFO[reg] && /patmos|malta|cyprus|islet/.test(reg)) return REGION_INFO[reg][0];
     if (reg === 'cedar') return '백향목 숲';
     if (reg === 'wild') return '광야';
     if (reg === 'salt') return P.swim ? '소금 바다 (헤엄치는 중)' : '소금 바닷가';
@@ -761,7 +762,7 @@
     on('mMap', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     ['ark', 'forest', 'hill', 'lake'].forEach(function (w) { on('go_' + w, function () { travel(w); }); });
     on('go_home', guideHome);
-    ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
+    ['sea', 'desert', 'ararat', 'commons', 'patmos', 'malta', 'cyprus'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);
     on('mWatch', openAdminWatch);

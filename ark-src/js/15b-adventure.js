@@ -289,9 +289,13 @@
     tabernacle: ['성막', '내가 그들 중에 거할 성소를 그들이 나를 위하여 짓되', '출애굽기 25:8'],
     tower: ['백향목 망대', '여호와의 이름은 견고한 망대라 의인은 그리로 달려가서 안전함을 얻느니라', '잠언 18:10'],
     tents: ['나그네 장막촌', '믿음으로 그가 이방의 땅에 있는 것 같이 약속의 땅에 거류하여 동일한 약속을 유업으로 함께 받은 이삭 및 야곱과 더불어 장막에 거하였으니', '히브리서 11:9'],
-    lot: ['소금 기둥', '롯의 아내는 뒤를 돌아보았으므로 소금 기둥이 되었더라', '창세기 19:26']
+    lot: ['소금 기둥', '롯의 아내는 뒤를 돌아보았으므로 소금 기둥이 되었더라', '창세기 19:26'],
+    patmos: ['밧모섬', '나 요한은 너희 형제요 예수의 환난과 나라와 참음에 동참하는 자라 하나님의 말씀과 예수를 증언하였음으로 말미암아 밧모라 하는 섬에 있었더니', '요한계시록 1:9'],
+    malta: ['멜리데섬', '비가 오고 날이 차매 원주민들이 우리에게 특별한 동정을 하여 불을 피워 우리를 다 영접하더라', '사도행전 28:2'],
+    cyprus: ['구브로섬', '두 사람이 성령의 보내심을 받아 실루기아에 내려가 거기서 배 타고 구브로에 가서', '사도행전 13:4'],
+    islet: ['작은 섬']
   };
-  var WALK_KEYS = ['town', 'east', 'west', 'sea', 'desert', 'oasis', 'ararat', 'lake', 'tar', 'south', 'cedar', 'wild', 'salt'];
+  var WALK_KEYS = ['town', 'east', 'west', 'sea', 'desert', 'oasis', 'ararat', 'lake', 'tar', 'south', 'cedar', 'wild', 'salt', 'patmos', 'malta', 'cyprus'];
   var ADV = { day: '', list: [], done: {}, regions: {}, tour: 0, total: 0, bonus: '' };
   try { var advS = JSON.parse(localStorage.getItem('arkVillage.adv') || 'null'); if (advS && typeof advS === 'object') { for (var ak in advS) ADV[ak] = advS[ak]; } } catch (e) {}
   function advSave() { try { localStorage.setItem('arkVillage.adv', JSON.stringify(ADV)); } catch (e) {} if (typeof stateDirty === 'function') stateDirty(); advChip(); }
@@ -325,6 +329,7 @@
     if (!started || ui !== 'play') return;
     advDaily(); advChip();
     if (P.y < 0) newsMark('deep');
+    if (/patmos|malta|cyprus|islet/.test(region(Math.floor(P.x), Math.floor(P.z)))) newsMark('isles');
     if (have(TOOL_ONYX) > 0) newsMark('onyx');
     var k = regionKeyAt();
     if (k && k !== regKey) {

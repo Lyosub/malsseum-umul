@@ -189,8 +189,9 @@
       sea: [XM + 0.5, SEA_Z + 24, 0, '북쪽 바다예요. 모래사장과 바닷속 물고기를 만나 보세요'],
       desert: [DES_X + 40, PZ0 + 70, -Math.PI / 2, '동쪽 사막이에요. 낙타를 만나고, 더 가면 오아시스가 있어요'],
       ararat: [ARX + 150, ARZ, Math.PI / 2, '아라랏 산이에요. 방주가 아라랏 산에 머물렀어요(창 8:4)'],
-      commons: [XM + 0.5, COMMONS[3] + 4, 0, '함께 짓는 터예요. 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요']
-    }, names = { ark: '방주', hill: '서쪽 산', lake: '남쪽 호수', sea: '북쪽 바다', desert: '동쪽 사막', ararat: '아라랏 산', commons: '함께 짓는 터' }, s = spots[where];
+      commons: [XM + 0.5, COMMONS[3] + 4, 0, '함께 짓는 터예요. 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요'],
+      patmos: [ISLES[0][1] + 8, ISLES[0][2], 0, ''], malta: [ISLES[1][1] - 10, ISLES[1][2] + 60, 0, ''], cyprus: [ISLES[2][1], ISLES[2][2] + 120, 0, '']
+    }, names = { ark: '방주', hill: '서쪽 산', lake: '남쪽 호수', sea: '북쪽 바다', desert: '동쪽 사막', ararat: '아라랏 산', commons: '함께 짓는 터', patmos: '밧모섬', malta: '멜리데섬', cyprus: '구브로섬' }, s = spots[where];
     guideTo([s[0], s[1]], names[where]);
   }
 

@@ -1663,6 +1663,15 @@
   // 남쪽 새 지역(11/20): 서남쪽 백향목 숲(시 92:12), 가운데 광야와 성막(출 25:8, 27:18), 동남쪽 소금 바다(마 5:13)와 나그네 장막촌(히 11:9)
   var CEX = 640, CEZ = 1640, CER = 210, WIX = 1030, WIZ = 1700, WIR = 190, SAX = 1440, SAZ = 1690, SARX = 140, SARZ = 85, SAR = 205;
   var TBX = 1030, TBZ = 1700, CTX = 640, CTZ = 1640, TCX = 1262, TCZ = 1690, LOTX = 1440, LOTZ = 1784;
+  // 11/20 북쪽 바다의 섬: [이름, x, z, 반지름, 언덕 높이] — 밧모(계 1:9) · 멜리데(행 28:1) · 구브로(행 13:4) + 작은 섬
+  var ISLES = [['patmos', 560, 330, 58, 16], ['malta', 1500, 380, 78, 9], ['cyprus', 1040, 200, 135, 26], ['islet', 250, 540, 24, 5], ['islet', 820, 530, 18, 4],
+    ['islet', 1250, 560, 22, 6], ['islet', 1830, 520, 28, 7], ['islet', 1780, 180, 34, 9], ['islet', 330, 140, 30, 8], ['islet', 1960, 330, 20, 5]];
+  function isleAt(x, z) {   // [섬 번호, 가운데로 갈수록 1]
+    if (z > SEA_Z - 40) return null;
+    for (var i = 0; i < ISLES.length; i++) { var I = ISLES[i], dx = x - I[1], dz = z - I[2]; if (Math.abs(dx) > I[3] * 1.4 || Math.abs(dz) > I[3] * 1.4) continue;
+      var d = Math.hypot(dx, dz) + (vnoise(x, z, 22, 80 + (i % 9)) - 0.5) * I[3] * 0.55; if (d < I[3]) return [i, 1 - d / I[3]]; }
+    return null;
+  }
   function southReg(x, z) {
     if (z < 1380) return '';
     var n = (vnoise(x, z, 50, 71) - 0.5) * 60;
@@ -1739,6 +1748,7 @@
     if (x >= TARR[0] - 4 && x <= TARR[2] + 4 && z >= TARR[1] - 4 && z <= TARR[3] + 4) return 'tar';
     if (lakeE(x, z) < 1.7) return 'lake';
     if (Math.hypot(x - OASX, z - OASZ) < 34) return 'oasis';
+    if (z < SEA_Z - 40) { var il0 = isleAt(x, z); if (il0 && il0[1] > 0.06) return ISLES[il0[0]][0]; }
     if (z < SEA_Z + 10 + (vnoise(x, z, 60, 9) - 0.5) * 40) return 'sea';
     if (Math.hypot(x - ARX, z - ARZ) < 230) return 'ararat';
     var sr = southReg(x, z); if (sr) return sr;
@@ -1788,6 +1798,9 @@
     // 강 골짜기
     var rd = riverDist(x, z);
     if (rd < 15) { var vf = clamp01((rd - 4) / 11); vf = vf * vf; h = Math.round(G - 1 + (h - (G - 1)) * vf); }
+    var isleK = 0, isleI = -1;
+    if (z < SEA_Z - 40) { var il = isleAt(x, z); if (il) { isleK = il[1]; isleI = il[0]; var IH = ISLES[isleI][4];
+      var ih = G - 4 + Math.round(sstep(0, 0.28, isleK) * 4.5 + Math.pow(Math.max(0, isleK - 0.2) / 0.8, 1.4) * IH * (0.55 + 0.7 * n1)); if (ih > h) h = ih; } }
     if (h > SY - 4) h = SY - 4;
     var top = GRASS, sub = DIRT, wtop = -1;
     var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), se = z > 1500 ? saltE(x, z) : 9;
@@ -1803,7 +1816,8 @@
     else if (seaD > -16) { top = SAND; sub = SAND; }
     else if (h > G + 46 + n2 * 4) { top = SNOW; sub = STONE; }
     else if ((westW > 0 || ar > 0.25) && h > G + 15 + vnoise(x, z, 9, 3) * 9) { top = STONE; sub = STONE; }
-    T.h = h; T.top = top; T.sub = sub; T.wtop = wtop; T.reg = reg; T.rd = rd;
+    if (isleK > 0 && h >= G - 1) { var IHt = ISLES[isleI][4]; wtop = -1; if (h <= G || isleK < 0.22) { top = SAND; sub = SAND; } else if (h > G + IHt * 0.75 + n2 * 3 && IHt > 12) { top = STONE; sub = STONE; } else { top = GRASS; sub = DIRT; } }
+    T.h = h; T.top = top; T.sub = sub; T.wtop = wtop; T.reg = reg; T.rd = rd; T.isle = isleK;
     return T;
   }
   function surfaceY(x, z) { terrain(x, z); return Math.max(T.h, T.wtop) + 1; }
@@ -1942,6 +1956,7 @@
     }
     carveCaves(col, cx, cz, tops, wtops);
     buildFrontierCave(x0,z0,tops);
+    if (z0 < SEA_Z) buildIsleMarks(x0, z0);
     // 나무: 7칸 격자마다 한 그루 후보(옆 기둥 나무도 걸치게)
     for (var gz = Math.floor((z0 - 6) / 7); gz <= Math.floor((z0 + CS + 6) / 7); gz++) for (var gx = Math.floor((x0 - 6) / 7); gx <= Math.floor((x0 + CS + 6) / 7); gx++) {
       var tx = gx * 7 + Math.floor(hash2(gx, gz, 21) * 6), tz = gz * 7 + Math.floor(hash2(gx, gz, 22) * 6);
@@ -1949,14 +1964,14 @@
       if (inTown(tx, tz) || distOut(tx, tz) < 6 || plotAt(tx, tz) >= 0 || (tx >= COMMONS[0] - 4 && tx <= COMMONS[2] + 4 && tz >= COMMONS[1] - 4 && tz <= COMMONS[3] + 4)) continue;
       terrain(tx, tz);
       if (T.wtop >= 0) continue;
-      var reg = T.reg, p = reg === 'cedar' ? 0.62 : reg === 'wild' ? 0.035 : reg === 'salt' ? 0 : reg === 'east' ? 0.6 : (reg === 'south' ? 0.16 : (reg === 'west' || reg === 'ararat' ? 0.14 : (reg === 'other' ? 0.1 : 0)));
-      var palm = reg === 'oasis' || (reg === 'desert' && hash2(gx, gz, 24) < 0.015);
-      if (palm) p = reg === 'oasis' ? 0.7 : 1;
+      var reg = T.reg, p = reg === 'cyprus' ? 0.4 : reg === 'malta' ? 0.16 : reg === 'patmos' ? 0.06 : reg === 'islet' ? 0.22 : reg === 'cedar' ? 0.62 : reg === 'wild' ? 0.035 : reg === 'salt' ? 0 : reg === 'east' ? 0.6 : (reg === 'south' ? 0.16 : (reg === 'west' || reg === 'ararat' ? 0.14 : (reg === 'other' ? 0.1 : 0)));
+      var palm = reg === 'oasis' || (reg === 'desert' && hash2(gx, gz, 24) < 0.015) || ((reg === 'malta' || reg === 'islet' || reg === 'cyprus') && T.top === SAND);
+      if (palm) p = reg === 'oasis' ? 0.7 : (reg === 'desert' ? 1 : (reg === 'cyprus' ? 0.25 : 0.4));
       if (hash2(gx, gz, 23) > p) continue;
       if (palm) { if (T.top === SAND) palmTree(tx, T.h + 1, tz, 8 + Math.floor(hash2(gx, gz, 25) * 4)); continue; }
       if (T.top !== GRASS && !(reg === 'wild' && T.top === SAND)) continue;
       var t2 = T.h; terrain(tx + 1, tz + 1); if (T.h !== t2) continue;
-      if (reg === 'cedar') cedarTree(tx, t2 + 1, tz, 14 + Math.floor(hash2(gx, gz, 26) * 8));
+      if (reg === 'cedar' || (reg === 'cyprus' && hash2(gx, gz, 27) < 0.35)) cedarTree(tx, t2 + 1, tz, (reg === 'cyprus' ? 9 : 14) + Math.floor(hash2(gx, gz, 26) * 8));
       else if (reg === 'wild') acaciaTree(tx, t2 + 1, tz, 5 + Math.floor(hash2(gx, gz, 26) * 3));
       else tree(tx, t2 + 1, tz, 7 + Math.floor(hash2(gx, gz, 26) * 5));
     }
@@ -2041,6 +2056,36 @@
           }
         }
       }
+    }
+  }
+  // 섬의 볼거리: 밧모섬 바위굴(계 1:9) · 멜리데 바닷가 모닥불과 부서진 배(행 27:41, 28:2) · 구브로 나무 부두(행 13:4)
+  function isleTop(x, z) { terrain(x, z); return T.h; }
+  function buildIsleMarks(x0, z0) {
+    var P0 = ISLES[0], M0 = ISLES[1], C0 = ISLES[2];
+    function near(cx, cz, r) { return cx + r >= x0 && cx - r < x0 + CS && cz + r >= z0 && cz - r < z0 + CS; }
+    // 밧모: 섬 가운데 언덕에 동쪽으로 열린 바위굴, 안에 등잔과 두루마리 서가
+    if (near(P0[1], P0[2], 12)) {
+      var px = P0[1], pz = P0[2], ph = isleTop(px, pz);
+      fill(px - 6, ph - 5, pz - 5, px + 6, ph + 4, pz + 5, STONE);
+      fill(px - 4, ph - 3, pz - 3, px + 4, ph + 1, pz + 3, AIR);
+      fill(px + 5, ph - 3, pz - 1, px + 7, ph, pz + 1, AIR);
+      fill(px - 4, ph - 4, pz - 3, px + 4, ph - 4, pz + 3, STONE);
+      setRaw(px - 3, ph - 3, pz, LAMP); setRaw(px - 4, ph - 3, pz + 2, WORD_SHELF); setRaw(px, ph - 3, pz - 2, LAMP);
+    }
+    // 멜리데: 남쪽 바닷가 모닥불(행 28:2)과 물가에 걸린 부서진 배(행 27:41)
+    if (near(M0[1], M0[2] + 70, 16)) {
+      var mx = M0[1] - 10, mz = M0[2] + 62, mh = isleTop(mx, mz);
+      setRaw(mx, mh + 1, mz, CAMPFIRE);
+      [[-2, 0], [2, 0], [0, -2], [0, 2]].forEach(function (q) { setRaw(mx + q[0], mh + 1, mz + q[1], LOG); });
+      var sx = M0[1] + 14, sz = M0[2] + 80, sh = G - 2;
+      for (var i = 0; i < 16; i++) { var w = i < 3 ? 1 : (i > 12 ? 1 : 2); for (var dz = -w; dz <= w; dz++) { setRaw(sx + i, sh, sz + dz, PITCH); if (Math.abs(dz) === w && (i % 4) !== 1) setRaw(sx + i, sh + 1, sz + dz, PITCH); } }
+      for (var j = 0; j < 4; j++) setRaw(sx + 7, sh + 1 + j, sz, LOG);
+      setRaw(sx + 7, sh + 5, sz + 1, WOOL_W); setRaw(sx + 7, sh + 4, sz + 1, WOOL_W);
+    }
+    // 구브로: 남쪽 물가로 나온 나무 부두와 등불
+    if (near(C0[1], C0[2] + 150, 24)) {
+      var cx2 = C0[1], cz2 = C0[2] + 128;
+      for (var k = 0; k < 26; k++) { var zz = cz2 + k; terrain(cx2, zz); if (T.h >= G) continue; for (var dx = -1; dx <= 1; dx++) setRaw(cx2 + dx, G, zz, GOPHER); if (k % 6 === 0) { setRaw(cx2 - 2, G, zz, LOG); setRaw(cx2 - 2, G + 1, zz, FENCE); setRaw(cx2 - 2, G + 2, zz, LAMP); for (var yy = G - 4; yy < G; yy++) { setRaw(cx2 - 1, yy, zz, LOG); setRaw(cx2 + 1, yy, zz, LOG); } } }
     }
   }
   function skyScan(col, lx, lz) {
@@ -3222,8 +3267,9 @@
       sea: [XM + 0.5, SEA_Z + 24, 0, '북쪽 바다예요. 모래사장과 바닷속 물고기를 만나 보세요'],
       desert: [DES_X + 40, PZ0 + 70, -Math.PI / 2, '동쪽 사막이에요. 낙타를 만나고, 더 가면 오아시스가 있어요'],
       ararat: [ARX + 150, ARZ, Math.PI / 2, '아라랏 산이에요. 방주가 아라랏 산에 머물렀어요(창 8:4)'],
-      commons: [XM + 0.5, COMMONS[3] + 4, 0, '함께 짓는 터예요. 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요']
-    }, names = { ark: '방주', hill: '서쪽 산', lake: '남쪽 호수', sea: '북쪽 바다', desert: '동쪽 사막', ararat: '아라랏 산', commons: '함께 짓는 터' }, s = spots[where];
+      commons: [XM + 0.5, COMMONS[3] + 4, 0, '함께 짓는 터예요. 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요'],
+      patmos: [ISLES[0][1] + 8, ISLES[0][2], 0, ''], malta: [ISLES[1][1] - 10, ISLES[1][2] + 60, 0, ''], cyprus: [ISLES[2][1], ISLES[2][2] + 120, 0, '']
+    }, names = { ark: '방주', hill: '서쪽 산', lake: '남쪽 호수', sea: '북쪽 바다', desert: '동쪽 사막', ararat: '아라랏 산', commons: '함께 짓는 터', patmos: '밧모섬', malta: '멜리데섬', cyprus: '구브로섬' }, s = spots[where];
     guideTo([s[0], s[1]], names[where]);
   }
 
@@ -4273,6 +4319,7 @@
     if (p >= 0) return p === myPlot ? '내 땅 (' + (p + 1) + '번)' + (homeSafe ? ' · 🏠 안전한 집' : '') : (p + 1) + '번 땅' + (plotOwners[p] ? '' : ' · 빈 땅');
     var reg = region(x, z), lmk = inLandmark(x, z);
     if (lmk) return REGION_INFO[lmk][0];
+    if (REGION_INFO[reg] && /patmos|malta|cyprus|islet/.test(reg)) return REGION_INFO[reg][0];
     if (reg === 'cedar') return '백향목 숲';
     if (reg === 'wild') return '광야';
     if (reg === 'salt') return P.swim ? '소금 바다 (헤엄치는 중)' : '소금 바닷가';
@@ -4998,7 +5045,7 @@
     on('mMap', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     ['ark', 'forest', 'hill', 'lake'].forEach(function (w) { on('go_' + w, function () { travel(w); }); });
     on('go_home', guideHome);
-    ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
+    ['sea', 'desert', 'ararat', 'commons', 'patmos', 'malta', 'cyprus'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);
     on('mWatch', openAdminWatch);
@@ -8739,7 +8786,8 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 6, NEWS = [
+  var NEWS_VER = 7, NEWS = [
+    ['isles', '🏝', '북쪽 바다의 섬', '북쪽 바다에 밧모섬(계 1:9)·멜리데섬(행 28:1)·구브로섬(행 13:4)과 작은 섬들이 생겼어요. 작은 지도를 누르고 섬을 고르면 길을 알려 줘요.', 0],
     ['arms', '⚔', '광물 무기와 방패', '돌·구리·은·금·호마노·청옥·금강석으로 검·방패·물매·활·화살을 만들어요(제작대). 좋은 재료일수록 더 세게 치고 더 잘 막아요. 물매는 매끄러운 돌을 던져요.', 262],
     ['guide', '🧭', '길 안내와 좌표', '작은 지도를 누르고 갈 곳을 고르면 순간이동 대신 화살표가 길을 알려 줘요. 작은 지도 아래에 지금 좌표(X·Z, 높이 Y)가 보여요.', 0],
     ['deep', '⛏', '더 깊은 땅속', '땅속이 32칸 더 깊어졌어요(바닥 y -32). 금은 y -8 아래, 청옥은 -16 아래, 금강석은 맨 아래 깊은 돌 층에서 나와요.', 0],
@@ -9385,9 +9433,13 @@
     tabernacle: ['성막', '내가 그들 중에 거할 성소를 그들이 나를 위하여 짓되', '출애굽기 25:8'],
     tower: ['백향목 망대', '여호와의 이름은 견고한 망대라 의인은 그리로 달려가서 안전함을 얻느니라', '잠언 18:10'],
     tents: ['나그네 장막촌', '믿음으로 그가 이방의 땅에 있는 것 같이 약속의 땅에 거류하여 동일한 약속을 유업으로 함께 받은 이삭 및 야곱과 더불어 장막에 거하였으니', '히브리서 11:9'],
-    lot: ['소금 기둥', '롯의 아내는 뒤를 돌아보았으므로 소금 기둥이 되었더라', '창세기 19:26']
+    lot: ['소금 기둥', '롯의 아내는 뒤를 돌아보았으므로 소금 기둥이 되었더라', '창세기 19:26'],
+    patmos: ['밧모섬', '나 요한은 너희 형제요 예수의 환난과 나라와 참음에 동참하는 자라 하나님의 말씀과 예수를 증언하였음으로 말미암아 밧모라 하는 섬에 있었더니', '요한계시록 1:9'],
+    malta: ['멜리데섬', '비가 오고 날이 차매 원주민들이 우리에게 특별한 동정을 하여 불을 피워 우리를 다 영접하더라', '사도행전 28:2'],
+    cyprus: ['구브로섬', '두 사람이 성령의 보내심을 받아 실루기아에 내려가 거기서 배 타고 구브로에 가서', '사도행전 13:4'],
+    islet: ['작은 섬']
   };
-  var WALK_KEYS = ['town', 'east', 'west', 'sea', 'desert', 'oasis', 'ararat', 'lake', 'tar', 'south', 'cedar', 'wild', 'salt'];
+  var WALK_KEYS = ['town', 'east', 'west', 'sea', 'desert', 'oasis', 'ararat', 'lake', 'tar', 'south', 'cedar', 'wild', 'salt', 'patmos', 'malta', 'cyprus'];
   var ADV = { day: '', list: [], done: {}, regions: {}, tour: 0, total: 0, bonus: '' };
   try { var advS = JSON.parse(localStorage.getItem('arkVillage.adv') || 'null'); if (advS && typeof advS === 'object') { for (var ak in advS) ADV[ak] = advS[ak]; } } catch (e) {}
   function advSave() { try { localStorage.setItem('arkVillage.adv', JSON.stringify(ADV)); } catch (e) {} if (typeof stateDirty === 'function') stateDirty(); advChip(); }
@@ -9421,6 +9473,7 @@
     if (!started || ui !== 'play') return;
     advDaily(); advChip();
     if (P.y < 0) newsMark('deep');
+    if (/patmos|malta|cyprus|islet/.test(region(Math.floor(P.x), Math.floor(P.z)))) newsMark('isles');
     if (have(TOOL_ONYX) > 0) newsMark('onyx');
     var k = regionKeyAt();
     if (k && k !== regKey) {
