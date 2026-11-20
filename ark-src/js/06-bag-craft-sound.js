@@ -268,7 +268,42 @@
     try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { AC = null; }
   }
   var DIG_F = { pick: 2200, axe: 700, shovel: 420, knife: 1600 };
-  function matSound(id) { if (id === SAND || id === SNOW || id === 18) return 1300; if (id === GRASS || id === LEAF || kind(id) === 'plant') return 1700; return DIG_F[TCLASS[id]] || 900; }   // 돌은 딱딱, 나무는 둔탁, 흙은 사각
+  // 캐고·부수고·놓는 소리를 재료마다 다르게(11/20, 마인크래프트처럼): 돌 딱 · 나무 통 · 흙 사각 · 모래·눈 스슥 · 풀잎 바스락 · 유리 쨍 · 쇠 깡 · 양털 폭
+  function matSound(id) {
+    if (!id || !B[id]) return 'stone';
+    var m = SHAPE[id] && SHAPE[id].mat ? SHAPE[id].mat : id;
+    if (SLAB_MATERIAL[m]) m = SLAB_MATERIAL[m];
+    if (m === GLASS || id === PANE) return 'glass';
+    if ((m >= BLK_CU && m <= BLK_AU) || m === LANTERN) return 'metal';
+    if ((m >= WOOL_W && m <= WOOL_R) || m === WOOL || (SHAPE[id] && SHAPE[id].type === 'carpet') || B[m][1] === 'wool') return 'wool';
+    if (m === LEAF || kind(m) === 'plant' || m === REED) return 'plant';
+    var k = stepKind(m);
+    return k === 'soft' ? 'sand' : k === 'grass' ? 'dirt' : k === 'water' ? 'dirt' : k;   // wood · stone
+  }
+  function nz(dur, type, freq, gain, pw, grain, q, at) {   // 잡음 한 토막: grain>0이면 사각사각 끊김
+    var len = Math.max(1, Math.floor(AC.sampleRate * dur)), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0), gate = 1;
+    for (var i = 0; i < len; i++) { if (grain && i % Math.floor(AC.sampleRate * grain) === 0) gate = Math.random() < 0.55 ? 1 : 0.25; d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, pw) * gate; }
+    var src = AC.createBufferSource(); src.buffer = buf; src.playbackRate.value = 0.9 + Math.random() * 0.2;
+    var f = AC.createBiquadFilter(); f.type = type; f.frequency.value = freq; if (q) f.Q.value = q;
+    var g = AC.createGain(); g.gain.value = gain;
+    src.connect(f); f.connect(g); g.connect(AC.destination); src.start(AC.currentTime + (at || 0));
+  }
+  function matSfx(act, m) {
+    var big = act === 'break', dig = act === 'dig', v = 0.9 + Math.random() * 0.2;
+    if (m === 'stone') { nz(dig ? 0.045 : big ? 0.16 : 0.07, 'highpass', 1700, dig ? 0.22 : 0.4, 4.5); nz(big ? 0.12 : 0.05, 'bandpass', 700 * v, dig ? 0.12 : 0.25, 3, 0, 1.5); }
+    else if (m === 'wood') { nz(dig ? 0.05 : big ? 0.14 : 0.07, 'bandpass', 520 * v, dig ? 0.3 : 0.45, 3, 0, 2); tone('sine', 230 * v, 150 * v, dig ? 0.06 : 0.1, dig ? 0.07 : 0.12); if (big) tone('sine', 160 * v, 95 * v, 0.14, 0.1); }
+    else if (m === 'dirt') { nz(dig ? 0.08 : big ? 0.2 : 0.1, 'lowpass', 900 * v, dig ? 0.3 : 0.45, 1.6, 0.006); }
+    else if (m === 'sand') { nz(dig ? 0.1 : big ? 0.24 : 0.12, 'highpass', 2300 * v, dig ? 0.12 : 0.2, 1.3, 0.004); }
+    else if (m === 'plant') { nz(dig ? 0.07 : big ? 0.16 : 0.08, 'bandpass', 2600 * v, dig ? 0.18 : 0.3, 1.8, 0.005, 0.8); }
+    else if (m === 'wool') { nz(dig ? 0.06 : 0.11, 'lowpass', 420 * v, dig ? 0.25 : 0.4, 2); }
+    else if (m === 'glass') {
+      if (big) { nz(0.25, 'highpass', 3000, 0.35, 2.2, 0.003); for (var i = 0; i < 6; i++) (function (k) { setTimeout(function () { tone('sine', 2400 + Math.random() * 3200, 2200 + Math.random() * 2600, 0.08 + Math.random() * 0.1, 0.05); }, k * 28 + Math.random() * 20); })(i); }
+      else { nz(0.04, 'highpass', 2600, dig ? 0.15 : 0.25, 4); tone('sine', 2900 * v, 2900 * v, dig ? 0.06 : 0.14, dig ? 0.03 : 0.06); }
+    }
+    else if (m === 'metal') { nz(0.04, 'highpass', 2200, dig ? 0.18 : 0.3, 4); tone('triangle', 880 * v, 860 * v, dig ? 0.12 : big ? 0.45 : 0.3, dig ? 0.05 : 0.09); tone('sine', 1330 * v, 1300 * v, dig ? 0.1 : 0.35, dig ? 0.03 : 0.05); }
+    else return false;
+    return true;
+  }
   // 발소리: 밟은 것마다 다르게(모래·눈은 사각, 풀·흙은 부드럽게, 나무는 통통, 돌은 딱딱, 물은 첨벙) + 걸음마다 조금씩 다른 높이
   var STEP_CFG = { soft: [0.11, 'bandpass', 1100, 0.085, 1.2], grass: [0.07, 'lowpass', 650, 0.09, 2.2], wood: [0.05, 'bandpass', 420, 0.15, 4], stone: [0.045, 'highpass', 1300, 0.06, 4.5], water: [0.16, 'bandpass', 620, 0.1, 1] };
   function stepKind(id) {
@@ -294,6 +329,8 @@
   function sfx(kindS, freq) {
     if (!AC || !S.sound) return;
     try {
+      if (typeof freq === 'string' && (kindS === 'break' || kindS === 'dig' || kindS === 'place') && matSfx(kindS, freq)) return;   // 재료 소리
+      if (typeof freq === 'string') freq = 0;
       var dur = { 'break': 0.18, step: 0.06, click: 0.03, dig: 0.05, pop: 0.05, craft: 0.12, door: 0.14, place: 0.07 }[kindS] || 0.09;
       var len = Math.floor(AC.sampleRate * dur), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
       for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, kindS === 'break' ? 1.6 : 3);

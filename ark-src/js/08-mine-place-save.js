@@ -288,7 +288,7 @@
       if (why) { deny(why); mine = { x: h.x, y: h.y, z: h.z, t: 0, need: 1, denied: true }; return; }
       var id = get(h.x, h.y, h.z), mi = mineInfo(id);
       if (mi.deny) { deny(mi.deny); mine = { x: h.x, y: h.y, z: h.z, t: 0, need: 1, denied: true }; return; }
-      mine = { x: h.x, y: h.y, z: h.z, t: 0, need: mi.t * (P.swim ? 3 : 1), snd: 0, f: DIG_F[TCLASS[id]] || 900 };
+      mine = { x: h.x, y: h.y, z: h.z, t: 0, need: mi.t * (P.swim ? 3 : 1), snd: 0, f: matSound(id) };
     }
     if (mine.denied) return;
     mine.t += dt; mine.snd -= dt;
