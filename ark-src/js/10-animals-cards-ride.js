@@ -244,7 +244,7 @@
     var id = get(h.x, h.y, h.z), shape = SHAPE[id];
     var frontierAction=frontierActionLabel(id,h); if(frontierAction) return frontierAction;
     if (shape && (shape.type === 'door' || shape.type === 'gate' || shape.type === 'trapdoor')) return shape.open ? '문 닫기' : '문 열기';
-    if (shape && shape.type === 'mrail' && held === CART) return '수레 타기';
+    if (shape && shape.type === 'mrail' && (held === CART || parkedAt(h.x, h.y, h.z))) return '수레 타기';
     if (shape && shape.type === 'frame') return myPlot >= 0 && plotAt(h.x, h.z) === myPlot ? '액자' : '';
     if (id>=FIND_MARK && id<=FIND_SEED) return id===FIND_MARK?'살펴보기':'전시 보기';
     if (id===FERRY_POST) return '나룻배 타기';

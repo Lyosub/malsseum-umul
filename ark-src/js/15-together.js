@@ -779,7 +779,8 @@
   //    내리기 = Shift·「내리기」 버튼·방향키 가운데 톡톡 — 내리면 수레는 가방으로 ──
   var RDX = [0, 1, 0, -1], RDZ = [-1, 0, 1, 0], RAIL_CONN = [[0, 2], [1, 3], [0, 1], [1, 2], [2, 3], [3, 0], [0, 2], [1, 3], [0, 2], [1, 3]];
   var cartRide = null, cartMesh = null, cartClackT = 0;
-  function railAt(x, y, z) { var id = get(x, y, z); return id >= RAIL0 && id < RAIL0 + 10 ? id - RAIL0 : -1; }
+  function railAt(x, y, z) { var id = get(x, y, z); return id >= RAIL0 && id < RAIL0 + 10 ? id - RAIL0 : (id >= RAILF0 && id < RAILF0 + 10 ? id - RAILF0 : -1); }
+  function railBaseAt(x, y, z) { var id = get(x, y, z); return id >= RAILF0 && id < RAILF0 + 10 ? RAILF0 : RAIL0; }
   function railHas(s, d) { return RAIL_CONN[s][0] === d || RAIL_CONN[s][1] === d; }
   function railNeighbor(x, y, z, d) {   // d쪽 옆 레일: 같은 높이 → 한 칸 위 → 한 칸 아래
     var nx = x + RDX[d], nz = z + RDZ[d];
@@ -804,9 +805,9 @@
       var nb = railNeighbor(x, y, z, d); if (!nb) continue;
       var lowFlat = nb.up === -1 && nb.s < 6;   // 한 칸 아래 평평한 레일은 이쪽으로 올라오는 비탈로
       if (!lowFlat && (railHas(nb.s, (d + 2) % 4) || railLinks(nb.x, nb.y, nb.z) >= 2)) continue;
-      var ns = railShapeFor(nb.x, nb.y, nb.z, nb.s % 2); if (ns !== nb.s && !canPlace(nb.x, nb.y, nb.z, RAIL0)) setBlock(nb.x, nb.y, nb.z, RAIL0 + ns);
+      var ns = railShapeFor(nb.x, nb.y, nb.z, nb.s % 2); if (ns !== nb.s && !canPlace(nb.x, nb.y, nb.z, RAIL0)) setBlock(nb.x, nb.y, nb.z, railBaseAt(nb.x, nb.y, nb.z) + ns);
     }
-    var me = railShapeFor(x, y, z, railAt(x, y, z) % 2); if (me !== railAt(x, y, z)) setBlock(x, y, z, RAIL0 + me);
+    var me = railShapeFor(x, y, z, railAt(x, y, z) % 2); if (me !== railAt(x, y, z)) setBlock(x, y, z, railBaseAt(x, y, z) + me);
   }
   function cartPos(c) {
     var s = c.s, A = [c.x + 0.5 + RDX[c.from] * 0.5, c.z + 0.5 + RDZ[c.from] * 0.5], Bp = [c.x + 0.5 + RDX[c.to] * 0.5, c.z + 0.5 + RDZ[c.to] * 0.5], t = c.t, px, pz;
@@ -823,25 +824,27 @@
     [[-0.45, -0.38], [0.45, -0.38], [-0.45, 0.38], [0.45, 0.38]].forEach(function (q) { bx(0.06, 0.2, 0.2, q[0], 0.12, q[1], dark); });
     scene.add(g); return g;
   }
-  function startCart(x, y, z) {
+  function startCart(x, y, z, park) {
     if (riding || ferryRide || furnitureRest) return deny('지금은 수레를 탈 수 없어요');
-    if (!isAdm() && have(CART) < 1) return deny('수레가 없어요 — 철 덩이 5개로 만들어요');
+    if (!park && !isAdm() && have(CART) < 1) return deny('수레가 없어요 — 철 덩이 5개로 만들어요');
     var s = railAt(x, y, z); if (s < 0) return;
     var f = [-Math.sin(P.yaw), -Math.cos(P.yaw)], c0 = RAIL_CONN[s][0], c1 = RAIL_CONN[s][1];
     var to = RDX[c0] * f[0] + RDZ[c0] * f[1] >= RDX[c1] * f[0] + RDZ[c1] * f[1] ? c0 : c1;
-    if (!isAdm()) { take(CART, 1); bagChanged(); }
-    cartRide = { x: x, y: y, z: z, s: s, to: to, from: to === c0 ? c1 : c0, t: 0.5, v: 0 };
+    if (park) { removeParked(park); cartRide = { x: park.x, y: park.y, z: park.z, s: s, to: park.to, from: park.from, t: park.t, v: 0 }; if (!railHas(s, cartRide.to) || !railHas(s, cartRide.from)) { cartRide.to = to; cartRide.from = to === c0 ? c1 : c0; cartRide.t = 0.5; } }
+    else { if (!isAdm()) { take(CART, 1); bagChanged(); } cartRide = { x: x, y: y, z: z, s: s, to: to, from: to === c0 ? c1 : c0, t: 0.5, v: 0 }; }
     if (!cartMesh) cartMesh = makeCartMesh(); cartMesh.visible = true;
     $('restUp').textContent = '내리기'; $('restUp').hidden = false; resetInput(); sfx('door', 500);
-    toast('🛤 수레에 탔어요 — 앞으로 가면 바라보는 쪽으로 밀리고, Shift·「내리기」(휴대폰: 방향키 가운데 톡톡)로 내려요');
+    toast('🛤 수레에 탔어요 — 앞으로 가면 바라보는 쪽으로 밀리고, 금빛 빠른 레일을 지나면 빨라져요. 내리면 수레는 레일 위에 서 있어요');
   }
   function leaveCart(quiet) {
     var c = cartRide; if (!c) return;
     cartRide = null; if (cartMesh) cartMesh.visible = false;
     $('restUp').hidden = true; $('restUp').textContent = '일어나기';
-    if (!isAdm()) { if (give(CART, 1) < 1) dropItem(P.x, P.y + 0.5, P.z, CART, 1); bagChanged(); }
-    P.vx = P.vy = P.vz = 0; P.y += 0.3; while (collides(P.x, P.y, P.z) && P.y < SY) P.y += 1;
-    if (!quiet) { sfx('door', 500); toast('수레에서 내렸어요 — 수레는 가방에 넣었어요'); }
+    var parked = railAt(c.x, c.y, c.z) >= 0 && PARKED.length < 12;
+    if (parked) addParked({ x: c.x, y: c.y, z: c.z, s: c.s, from: c.from, to: c.to, t: c.t });
+    else if (!isAdm()) { if (give(CART, 1) < 1) dropItem(P.x, P.y + 0.5, P.z, CART, 1); bagChanged(); }
+    P.vx = P.vy = P.vz = 0; P.y += 0.3; P.x += -Math.cos(P.yaw) * 0.9; P.z += Math.sin(P.yaw) * 0.9; if (collides(P.x, P.y, P.z)) { P.x = cartPos(c)[0]; P.z = cartPos(c)[2]; } while (collides(P.x, P.y, P.z) && P.y < SY) P.y += 1;
+    if (!quiet) { sfx('door', 500); toast(parked ? '수레에서 내렸어요 — 수레는 레일 위에 세워 뒀어요. 다시 누르면 타고, 레일을 캐면 가방으로 돌아와요' : '수레에서 내렸어요 — 수레는 가방에 넣었어요'); }
   }
   function stepCart(dt) {
     var c = cartRide;
@@ -855,7 +858,10 @@
     if (c.s >= 6) c.v += (c.to === c.s - 6 ? -1 : 1) * 4.5 * dt;
     var fr = (0.35 + 0.12 * Math.abs(c.v)) * dt; c.v = Math.abs(c.v) <= fr ? 0 : c.v - Math.sign(c.v) * fr;
     if (c.v < 0) { var tmp = c.from; c.from = c.to; c.to = tmp; c.t = 1 - c.t; c.v = -c.v; }
-    c.v = Math.min(10, c.v);
+    var fast = railBaseAt(c.x, c.y, c.z) === RAILF0;
+    if (fast && c.v > 0.2) c.v += 9 * dt;   // 빠른 레일: 굴러가는 수레를 더 밀어 줌
+    if (!fast && c.v > 10) c.v -= 3 * dt;
+    c.v = Math.min(14, c.v);
     c.t += c.v * dt / cartLen(c);
     var guard = 0;
     while (c.t >= 1 && guard++ < 4) {
@@ -870,6 +876,49 @@
     if (cartMesh) { cartMesh.position.set(p[0], p[1], p[2]); cartMesh.rotation.y = Math.atan2(tx, tz); }
     ensureAround(P.x, P.z, 2);
     placeCamera(dt, c.v);
+  }
+  // 세워 둔 수레(이 기기에 기억): 레일이 사라지면 가방으로
+  var PARKED = [];
+  try { PARKED = (JSON.parse(localStorage.getItem('arkVillage.carts') || '[]') || []).filter(function (p) { return p && typeof p.x === 'number'; }).slice(0, 12); } catch (e) { PARKED = []; }
+  function saveParked() { try { localStorage.setItem('arkVillage.carts', JSON.stringify(PARKED.map(function (p) { return { x: p.x, y: p.y, z: p.z, s: p.s, from: p.from, to: p.to, t: p.t }; }))); } catch (e) {} }
+  function parkedAt(x, y, z) { for (var i = 0; i < PARKED.length; i++) { var p = PARKED[i]; if (p.x === x && p.y === y && p.z === z) return p; } return null; }
+  function placeParkedMesh(p) { if (!p.mesh) p.mesh = makeCartMesh(); var q = cartPos(p), save = p.t; p.t = Math.min(1, p.t + 0.01); var q2 = cartPos(p); p.t = save; p.mesh.position.set(q[0], q[1], q[2]); p.mesh.rotation.y = Math.atan2(q2[0] - q[0], q2[2] - q[2]); p.mesh.visible = true; }
+  function addParked(p) { PARKED.push(p); placeParkedMesh(p); saveParked(); }
+  function removeParked(p) { var i = PARKED.indexOf(p); if (i >= 0) PARKED.splice(i, 1); if (p.mesh) { scene.remove(p.mesh); p.mesh = null; } saveParked(); }
+  function parkedBroken(x, y, z) { var p = parkedAt(x, y, z); if (!p) return; removeParked(p); if (!isAdm()) { if (give(CART, 1) < 1) dropItem(x + 0.5, y + 0.5, z + 0.5, CART, 1); bagChanged(); } toast('🛒 세워 둔 수레를 가방에 넣었어요'); }
+  function tickParked() {   // 1초마다: 가까이 있으면 보이게, 땅이 불러와졌는데 레일이 없으면 가방으로
+    PARKED.slice().forEach(function (p) {
+      if (!colAt(p.x, p.z)) { if (p.mesh) p.mesh.visible = false; return; }
+      if (railAt(p.x, p.y, p.z) < 0) { parkedBroken(p.x, p.y, p.z); return; }
+      p.s = railAt(p.x, p.y, p.z); if (!railHas(p.s, p.to) || !railHas(p.s, p.from)) { p.from = RAIL_CONN[p.s][0]; p.to = RAIL_CONN[p.s][1]; }
+      placeParkedMesh(p);
+    });
+  }
+  // 지도에 그릴 레일: 불러온 땅 기둥을 하나씩 돌아가며 살펴봄(0.05초에 한 기둥)
+  var RAIL_MAP = new Map(), railScanK = 0;
+  setInterval(function () {
+    if (!started) return;
+    for (var tries = 0; tries < 4096; tries++) { railScanK = (railScanK + 1) % (NC * NC); if (COLS[railScanK]) break; }
+    var col = COLS[railScanK]; if (!col) return;
+    var cx = (railScanK % NC) * CS, cz = Math.floor(railScanK / NC) * CS, d = col.d;
+    RAIL_MAP.forEach(function (v, key) { var kx = key >> 12, kz = key & 4095; if (kx >= cx && kx < cx + CS && kz >= cz && kz < cz + CS) RAIL_MAP.delete(key); });
+    for (var i = 0; i < d.length; i++) { var v = d[i]; if ((v >= RAIL0 && v < RAIL0 + 10) || (v >= RAILF0 && v < RAILF0 + 10)) { var lx = i % CS, lz = Math.floor(i / CS) % CS; RAIL_MAP.set(((cx + lx) << 12) | (cz + lz), v >= RAILF0 ? 2 : 1); } }
+    if (RAIL_MAP.size > 20000) RAIL_MAP.clear();
+  }, 50);
+  function drawMapRails(x, ox, oz, sc, w, h) {
+    var s = Math.max(1.5, sc);
+    RAIL_MAP.forEach(function (v, key) {
+      var mx = ((key >> 12) - ox) * sc, mz = ((key & 4095) - oz) * sc; if (mx < -2 || mz < -2 || mx > w + 2 || mz > h + 2) return;
+      x.fillStyle = v === 2 ? '#e8c53a' : '#2f2f33'; x.fillRect(mx - s / 2, mz - s / 2, s, s);
+    });
+    PARKED.forEach(function (p) { var mx = (p.x + 0.5 - ox) * sc, mz = (p.z + 0.5 - oz) * sc; x.fillStyle = '#9aa3aa'; x.fillRect(mx - 3, mz - 2, 6, 4); x.strokeStyle = '#222'; x.lineWidth = 1; x.strokeRect(mx - 3, mz - 2, 6, 4); });
+  }
+  function drawMapBed(x, big, ox, oz, sc) {
+    if (!SPAWN) return;
+    var mx = (SPAWN.x + 0.5 - ox) * sc, mz = (SPAWN.z + 0.5 - oz) * sc, r = big ? 6 : 4;
+    x.fillStyle = '#c0473a'; x.fillRect(mx - r, mz - r * 0.6, r * 2, r * 1.2); x.fillStyle = '#f2efe6'; x.fillRect(mx - r, mz - r * 0.6, r * 0.7, r * 1.2);
+    x.strokeStyle = '#fff'; x.lineWidth = 1; x.strokeRect(mx - r, mz - r * 0.6, r * 2, r * 1.2);
+    if (big) { x.font = '11px Galmuri11, sans-serif'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.fillText('내 침대', mx, mz - r - 6); }
   }
   function stepFerry(dt) {
     var ride=ferryRide; ride.t+=dt;

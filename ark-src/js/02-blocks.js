@@ -120,9 +120,11 @@
   }
   for (var ff = 0; ff < 4; ff++) { if (B[FRAME + ff]) throw new Error('블록 번호가 겹쳐요: ' + (FRAME + ff)); regShape(FRAME + ff, '액자', 'frame', FRAME, GOPHER, ff); B[FRAME + ff][1] = B[FRAME + ff][2] = B[FRAME + ff][3] = 'frame'; }
   // ── 2026-11-20 레일(수레 길): 0 남북 · 1 동서 · 2 북-동 · 3 동-남 · 4 남-서 · 5 서-북 · 6~9 북·동·남·서로 올라가는 비탈 ──
-  var RAIL0 = 940, CART = 950;
+  var RAIL0 = 940, CART = 950, RAILF0 = 960;   // RAILF0: 빠른 레일(금) — 지나가면 수레가 빨라짐
   var RAIL_TILE = ['railNS', 'railEW', 'railC2', 'railC3', 'railC4', 'railC5', 'railNS', 'railEW', 'railNS', 'railEW'];
-  for (var rs = 0; rs < 10; rs++) { if (B[RAIL0 + rs]) throw new Error('블록 번호가 겹쳐요: ' + (RAIL0 + rs)); regShape(RAIL0 + rs, '레일', 'mrail', RAIL0, STONE, rs); B[RAIL0 + rs][1] = RAIL_TILE[rs]; B[RAIL0 + rs][2] = B[RAIL0 + rs][3] = 'railSide'; }
+  [[RAIL0, '레일', ''], [RAILF0, '빠른 레일', 'F']].forEach(function (rr) {
+    for (var rs = 0; rs < 10; rs++) { var rid = rr[0] + rs; if (B[rid]) throw new Error('블록 번호가 겹쳐요: ' + rid); regShape(rid, rr[1], 'mrail', rr[0], STONE, rs); B[rid][1] = RAIL_TILE[rs] + rr[2]; B[rid][2] = B[rid][3] = 'railSide'; }
+  });
   if (B[CART]) throw new Error('번호가 겹쳐요: ' + CART);
   // ── 2026-11-18 더한 것: 농사(159~166), 침대·레버·벽 횃불·유리판·표지판(167~178), 양털 블록(179~182), 반 블록·계단(183~192), 눕힌 통나무(193~194)
   var SEED = 159, WHEAT = 160, BREAD = 161, FIG = 162, CROP0 = 163, BED = 167, LEVER = 168, WTORCH = 170, PANE = 174, SIGN = 175;
@@ -543,7 +545,7 @@
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
   FRONTIER_RECIPES.forEach(function(r){INV.push(r[0]);});
-  INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART);
+  INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART, RAILF0);
   INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
@@ -573,7 +575,7 @@
   setClass('knife', [WOOL_W, WOOL_B, WOOL_V, WOOL_R], 0.5); setClass('axe', [LOG_X, LOG_Z], 1.4);
   GEMS.forEach(function (g, i) { if (!g) return; setClass('pick', [gemOre(i)], 5.2 + g[7] * 0.3); DROP[gemOre(i)] = gemItem(i); });
   for (var fsj = 0; fsj < 12; fsj++) setClass('pick', [FSTONE0 + fsj], 3.0);
-  (function () { var r = []; for (var i = 0; i < 10; i++) r.push(RAIL0 + i); setClass('pick', r, 0.5); })();
+  (function () { var r = []; for (var i = 0; i < 10; i++) r.push(RAIL0 + i, RAILF0 + i); setClass('pick', r, 0.5); })();
   (function () { var t = []; for (var i = 0; i < 16; i++) t.push(TRAP + i); setClass('axe', t, 0.9); setClass('axe', [FRAME, FRAME + 1, FRAME + 2, FRAME + 3], 0.3); })();
   setClass('axe', [SHELF], 1.0); setClass('pick', [SBRICK], 1.6); setClass('knife', [CARPET], 0.1); setClass('pick', [LANTERN], 0.4);
   setClass('pick', [SLAB_L, STAIR_L, STAIR_L + 1, STAIR_L + 2, STAIR_L + 3], 1.2); setClass('axe', [SLAB_P, STAIR_P, STAIR_P + 1, STAIR_P + 2, STAIR_P + 3], 1.0);
@@ -637,6 +639,7 @@
     { out: [TRAP, 2], need: [[GOPHER, 6]], cat: 'shape' },
     { out: [BOW, 1], need: [[STICK, 3], [THREAD, 3]], cat: 'tool' },
     { out: [RAIL0, 16], need: [[ING_FE, 6], [STICK, 1]], cat: 'shape' },
+    { out: [RAILF0, 6], need: [[ING_AU, 6], [STICK, 1]], cat: 'shape' },
     { out: [CART, 1], need: [[ING_FE, 5]], cat: 'tool' },
     { out: [ARROW, 4], need: [[STICK, 1], [FLINT, 1]], cat: 'tool' },
     { out: [FRAME, 1], need: [[STICK, 8], [LEATHER, 1]], cat: 'shape' },

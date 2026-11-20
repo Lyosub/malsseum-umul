@@ -503,6 +503,7 @@
       MAP_LABELS.forEach(function (l) { var lx = (l[1] - ox) * sc, ly = (l[2] - oz) * sc; x.fillStyle = 'rgba(0,0,0,.55)'; var tw = x.measureText(l[0]).width + 10; x.fillRect(lx - tw / 2, ly - 10, tw, 20); x.fillStyle = '#fff'; x.fillText(l[0], lx, ly); });
       if (mapRow < MAPN) { x.fillStyle = 'rgba(0,0,0,.5)'; x.fillRect(0, h - 22, w, 22); x.fillStyle = '#fff'; x.fillText('지도를 그리는 중… ' + Math.round(mapRow / MAPN * 100) + '%', w / 2, h - 11); }
     }
+    drawMapRails(x, ox, oz, sc, w, h); drawMapBed(x, big, ox, oz, sc);
     drawMapPeople(x, big, ox, oz, sc, w, h);
     drawVillagePins(x, ox, oz, sc, w, h);
     drawFrontierMap(x,big,ox,oz,sc);

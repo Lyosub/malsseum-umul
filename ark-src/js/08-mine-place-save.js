@@ -93,6 +93,7 @@
       if (SHAPE[tgt] && SHAPE[tgt].type === 'door') return toggleDoor(h.x, h.y, h.z);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'trapdoor') return toggleTrap(h.x, h.y, h.z, tgt);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'frame') return useFrame(h.x, h.y, h.z);
+      if (railAt(h.x, h.y, h.z) >= 0 && parkedAt(h.x, h.y, h.z)) return startCart(h.x, h.y, h.z, parkedAt(h.x, h.y, h.z));   // 세워 둔 수레
       if (HOTBAR[sel] === CART) { if (railAt(h.x, h.y, h.z) >= 0) return startCart(h.x, h.y, h.z); return deny('수레는 손에 들고 레일을 눌러 타요'); }
       if (tgt === FURNACE || tgt === FURNACE_ON) { if (plotAt(h.x, h.z) !== myPlot) return deny('다른 사람의 용광로예요'); craftCat = 'smelt'; invTab = 'craft'; openPanel('inv'); return; }
       if (tgt === CHEST) return openChest(h.x, h.y, h.z);
@@ -173,7 +174,7 @@
       else if (kind(id) === 'plant' && (!isSolid(get(bx, by - 1, bz)) || isShape(get(bx, by - 1, bz)))) return deny(id === TORCH ? '횃불은 단단한 블록 위나 벽에 붙여요' : '풀과 꽃은 땅 위에만 심을 수 있어요');
       // 통나무: 옆면에 놓으면 눕혀서
       if (id === LOG && h.py === h.y) id = sdx ? LOG_X : LOG_Z;
-      if (id === RAIL0) { var rg = get(bx, by - 1, bz); if (!isSolid(rg) || isShape(rg)) return deny('레일은 단단한 블록 위에 깔아요'); id = RAIL0 + railShapeFor(bx, by, bz, ld); }
+      if (id === RAIL0 || id === RAILF0) { var rg = get(bx, by - 1, bz); if (!isSolid(rg) || isShape(rg)) return deny('레일은 단단한 블록 위에 깔아요'); id = id + railShapeFor(bx, by, bz, ld); }
       if (id === LEVER && (!isSolid(get(bx, by - 1, bz)) || isShape(get(bx, by - 1, bz)))) return deny('레버는 단단한 블록 위에 놓아요');
       if (id === SIGN) { if (plotAt(bx, bz) !== myPlot || myPlot < 0) return deny('표지판은 내 땅에 세워요'); id = SIGN + ld; }
       function hitsMe(yy) { return bx + 1 > P.x - HW && bx < P.x + HW && yy + 1 > P.y && yy < P.y + HT && bz + 1 > P.z - HW && bz < P.z + HW; }
@@ -198,7 +199,7 @@
       var beforeId=readBlock(bx,by,bz);
       take(item, 1); setBlock(bx, by, bz, id); sfx('place', matSound(item)); bagChanged();
       rememberBuild(item,[[bx,by,bz,beforeId,id]]);
-      if (item === RAIL0) railFixNeighbors(bx, by, bz);
+      if (item === RAIL0 || item === RAILF0) railFixNeighbors(bx, by, bz);
       if (isGrav(id)) startFall(bx, by, bz);
       if (id === SAPLING) { SAPS.push({ x: bx, y: by, z: bz, t: Date.now() + (90 + Math.random() * 90) * 1000 }); saveSaps(); toast('묘목을 심었어요. 조금 지나면 나무로 자라요 (시 1:3)'); }
       partyAdd('build', 1);
@@ -258,6 +259,7 @@
     if (SHAPE[old] && SHAPE[old].type === 'sign' && myPlot >= 0 && plotAt(x, z) === myPlot) { var so = plotOrigin(myPlot); delete SIGNS[(x - so.x) + ',' + (y - PY0) + ',' + (z - so.z)]; markDirty(); refreshSigns(); }
     if (old === CHEST) spillChest(x, y, z);
     if (SHAPE[old] && SHAPE[old].type === 'frame') frameBroken(x, y, z);
+    if (SHAPE[old] && SHAPE[old].type === 'mrail') parkedBroken(x, y, z);
     if (old === LEAF && Math.random() < 0.04) dropItem(x + 0.5, y + 0.45, z + 0.5, FIG, 1);
     if (old === LEAF) {
       if (Math.random() < 0.08) dropItem(x + 0.5, y + 0.45, z + 0.5, SAPLING, 1);
