@@ -708,9 +708,9 @@
     on('advChip', function () { openQuests('today'); });
     on('mFeedbackAdmin', function () { openFeedbackAdmin(); });
     applyBtnSize();
-    on('touchAction', function () { if (isTouch && ui === 'play' && HOTBAR[sel] !== BOW) { tapAt(); mobileHudAt = 0; } });
+    on('touchAction', function () { if (isTouch && ui === 'play' && !isBowId(HOTBAR[sel])) { tapAt(); mobileHudAt = 0; } });
     (function () { var ta = $('touchAction'); if (!ta) return;
-      ta.addEventListener('pointerdown', function () { if (ui === 'play' && HOTBAR[sel] === BOW) bowStart(); });
+      ta.addEventListener('pointerdown', function () { if (ui === 'play' && isBowId(HOTBAR[sel])) bowStart(); });
       ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { ta.addEventListener(ev, function (e) { if (bowDraw) { if (e.type === 'pointerup') bowRelease(screenDir()); else bowCancel(); } }); }); })();
     on('slabMode', function () {
       slabMode = (slabMode + 1) % SLAB_NAMES.length;

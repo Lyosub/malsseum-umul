@@ -77,6 +77,17 @@
     [157, '철 방패', 'shield', 0xc8ccd2, 'shield', ''],
     [158, '믿음의 방패', 'shield', 0xe8eef5, 'shieldG', '엡 6:16']
   ];
+  // 11/20 광물로 만드는 무기·방패 일곱 단계: 돌 < 구리 < 은 < 금 < 호마노 < 청옥 < 금강석
+  var ARM_MATS = ['돌', '구리', '은', '금', '호마노', '청옥', '금강석'], ARM_COL = [0x8f8f8b, 0xc8743a, 0xe8eef5, 0xf3c83c, 0xb57ad8, 0x4a78e0, 0x6ff0e6];
+  var ARM_SWORD0 = 256, ARM_SLING0 = 263, ARM_SHIELD0 = 270, ARM_BOW0 = 277, ARM_ARROW0 = 284;
+  var ARM_SWORD_DMG = [2.5, 3, 3.5, 4, 4.5, 5, 6], ARM_SLING_DMG = [2, 2.5, 3, 3.5, 4, 4.5, 5.5], ARM_BOW_BONUS = [0, 0.3, 0.6, 0.9, 1.2, 1.5, 2], ARM_ARROW_DMG = [1.5, 1.8, 2.1, 2.4, 2.8, 3.2, 3.8];
+  var ARM_SHIELD_BLOCK = [0.45, 0.55, 0.62, 0.7, 0.8, 0.88, 0.95], ARM_SHIELD_GUARD = [0.08, 0.1, 0.11, 0.12, 0.14, 0.16, 0.18];   // 불화살을 앞에서 막는 확률 · 맞을 때 줄여 주는 몫
+  ARM_MATS.forEach(function (n, m) { WEARS.push([ARM_SHIELD0 + m, n + ' 방패', 'shield', ARM_COL[m], 'shield', '']); });
+  function armOf(id, base) { var m = id - base; return m >= 0 && m < 7 ? m : -1; }
+  function isArmSword(id) { return armOf(id, ARM_SWORD0) >= 0; }
+  function isSlingId(id) { return id === SLING || armOf(id, ARM_SLING0) >= 0; }
+  function isBowId(id) { return id === BOW || armOf(id, ARM_BOW0) >= 0; }
+  function isArrowId(id) { return id === ARROW || armOf(id, ARM_ARROW0) >= 0; }
   var WEARINFO = {}, SLOTS = ['head', 'body', 'belt', 'feet', 'shield'], SLOT_NAME = { head: '머리', body: '몸', belt: '허리', feet: '발', shield: '방패' };
   WEARS.forEach(function (w) { WEARINFO[w[0]] = { slot: w[1 + 1], col: w[3], shape: w[4], ref: w[5] }; B[w[0]] = [w[1], 'wear' + w[0], 'wear' + w[0], 'wear' + w[0], 0, 0, 'item']; });
   B[SAPLING] = ['묘목', 'sapling', 'sapling', 'sapling', 1, 0, 'plant'];
@@ -362,7 +373,7 @@
         }
       });
     });
-    drawWordTiles(); drawBowTiles();
+    drawWordTiles(); drawBowTiles(); drawArmTiles();
   }
   // 4묶음. 말씀·양 돌보기·길 찾기.
   var FIND_MARK=500, FIND_POT=501, FIND_LAMP=502, FIND_SEED=503, DITCH=504, FEAST_TABLE=505,
@@ -412,6 +423,36 @@
   // ── 2026-11-20 활과 화살: 어둠의 그림자를 멀리서 물리침 ──
   var BOW = 930, ARROW = 931, SHARD = 933;
   [[BOW, '활'], [ARROW, '화살'], [CART, '수레'], [SHARD, '빛 조각']].forEach(function (d) { if (B[d[0]]) throw new Error('번호가 겹쳐요: ' + d[0]); expansionItem(d[0], d[1], 'bow' + d[0]); });
+  ARM_MATS.forEach(function (n, m) {
+    [[ARM_SWORD0, ' 검'], [ARM_SLING0, ' 물매'], [ARM_BOW0, ' 활'], [ARM_ARROW0, ' 화살']].forEach(function (d) { var id = d[0] + m; if (B[id]) throw new Error('번호가 겹쳐요: ' + id); expansionItem(id, n + d[1], 'arm' + id); });
+  });
+  function drawArmTiles() {   // 재료 빛깔로: 검 날·물매 돌주머니·활 끝·화살촉
+    ARM_COL.forEach(function (col, m) {
+      tile('arm' + (ARM_SWORD0 + m), function (px) {
+        clear(px);
+        for (var i = 0; i < 9; i++) { px(5 + i, 10 - i, col, 1.15); px(6 + i, 10 - i, col, 0.92); px(5 + i, 11 - i, col, 0.72); }
+        for (var g = 0; g < 6; g++) px(2 + g, 8 + g, 0x6a4628);
+        px(3, 12, 0x8a6236); px(2, 13, 0x8a6236); px(1, 14, col); px(14, 1, 0xffffff);
+      });
+      tile('arm' + (ARM_SLING0 + m), function (px, R) {
+        clear(px);
+        for (var y = 2; y < 11; y++) { px(4 + (y >> 2), y, 0x9a7052, 0.9 + R() * 0.2); px(11 - (y >> 2), y, 0x9a7052, 0.9 + R() * 0.2); }
+        for (var y2 = 10; y2 < 14; y2++) for (var x = 5; x < 11; x++) if (Math.hypot(x - 7.5, y2 - 11.8) < 2.7) px(x, y2, col, 0.85 + R() * 0.25);
+      });
+      tile('arm' + (ARM_BOW0 + m), function (px, R) {
+        clear(px);
+        for (var y = 1; y < 15; y++) { var cx = 3 + 7.5 * Math.sin(Math.PI * (y - 1) / 13); for (var x = 0; x < 16; x++) if (Math.abs(x - cx) < 1.1) px(x, y, y < 4 || y > 11 ? col : 0x8a5a2b, 0.85 + R() * 0.25); }
+        for (var y2 = 1; y2 < 15; y2++) px(3, y2, 0xe8e2d0, 1);
+        px(10, 7, col); px(10, 8, col);
+      });
+      tile('arm' + (ARM_ARROW0 + m), function (px, R) {
+        clear(px);
+        for (var i = 3; i < 13; i++) px(i, 15 - i, 0x9a6a3a, 0.9 + R() * 0.2);
+        [[12, 2], [13, 2], [13, 3], [11, 2], [13, 4], [12, 3], [11, 3], [12, 4]].forEach(function (q) { px(q[0], q[1], col, 1.05); });
+        [[2, 12], [3, 12], [2, 13], [3, 13], [1, 13], [2, 14], [4, 13], [3, 14]].forEach(function (q) { px(q[0], q[1], (q[0] + q[1]) % 2 ? 0xf0ece0 : 0xc0473a, 1); });
+      });
+    });
+  }
   function drawBowTiles() {
     tile('bow930', function (px, R) {
       clear(px);
@@ -557,6 +598,7 @@
   WEARS.forEach(function (w) { INV.push(w[0]); });
   FRONTIER_RECIPES.forEach(function(r){INV.push(r[0]);});
   INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART, RAILF0, SHARD);
+  for (var am = 0; am < 7; am++) INV.push(ARM_SWORD0 + am, ARM_SHIELD0 + am, ARM_SLING0 + am, ARM_BOW0 + am, ARM_ARROW0 + am);
   INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
@@ -692,6 +734,14 @@
   RECIPES.push({ out: [CARPET, 3], need: [[WOOL_R, 2]], cat: 'shape' });
   RECIPES.push({ out: [LANTERN, 1], need: [[ING_FE, 1], [TORCH, 1]], cat: 'shape' });
   RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 2], [ING_AU, 1], [STICK, 1]], cat: 'wear', table: true, ref: '엡 6:17' });
+  // 광물 무기·방패 만들기: 검(재료 2 + 막대기) · 방패(재료 4 + 고페르 나무 2) · 물매(가죽 + 실 2 + 재료) · 활(막대기 3 + 실 3 + 재료) · 화살 4개(막대기 + 재료)
+  [STONE, ING_CU, ING_AG, ING_AU, GEM_ONYX, GEM_SAPH, GEM_DIA].forEach(function (mt, m) {
+    RECIPES.push({ out: [ARM_SWORD0 + m, 1], need: [[mt, 2], [STICK, 1]], cat: 'wear', table: true });
+    RECIPES.push({ out: [ARM_SHIELD0 + m, 1], need: [[mt, 4], [GOPHER, 2]], cat: 'wear', table: true });
+    RECIPES.push({ out: [ARM_SLING0 + m, 1], need: [[LEATHER, 1], [THREAD, 2], [mt, 1]], cat: 'tool' });
+    RECIPES.push({ out: [ARM_BOW0 + m, 1], need: [[STICK, 3], [THREAD, 3], [mt, 1]], cat: 'tool' });
+    RECIPES.push({ out: [ARM_ARROW0 + m, 4], need: [[STICK, 1], [mt, 1]], cat: 'tool' });
+  });
   FRONTIER_RECIPES.forEach(function(r){RECIPES.push({out:[r[0],1],need:r[3],cat:'shape'});});
   RECIPES.push({ out: [CHAIR, 1], need: [[GOPHER, 3], [STICK, 2]], cat: 'shape' });
   RECIPES.push({ out: [BED, 1], need: [[WOOL, 3], [GOPHER, 3]], cat: 'block', ref: '시 4:8' });

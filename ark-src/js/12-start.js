@@ -10,7 +10,7 @@
     return g;
   }
   // 무기(칼·성령의 검): 손에 들면 크게, 3인칭·친구 화면에서도 손에 쥔 모습
-  function isWeapon(id) { return id === SWORD || isTool(id); }   // 칼·검과 곡괭이·도끼·삽: 손에 든 모습을 크게
+  function isWeapon(id) { return id === SWORD || isArmSword(id) || isTool(id); }   // 칼·검과 곡괭이·도끼·삽: 손에 든 모습을 크게
   function heldWeapon() { var id = HOTBAR[sel]; return id && have(id) > 0 && isWeapon(id) ? id : 0; }
   function heldShown() { var id = HOTBAR[sel]; return id && B[id] && have(id) > 0 ? id : 0; }   // 다른 사람에게 보이는 손에 든 것(블록·물건 포함)
   function handItem(av, id) {
@@ -26,7 +26,7 @@
       return;
     }
     // 입체로: 손잡이·가로대·칼날(어느 쪽에서 봐도 보이게). 칼날은 앞쪽으로 조금 들어 올림
-    var u = HT / 32, g = new THREE.Group(), big = id === SWORD, type = big ? 'sword' : TOOL_TYPES[typeOf(id)];
+    var u = HT / 32, g = new THREE.Group(), big = id === SWORD || isArmSword(id), type = big ? 'sword' : TOOL_TYPES[typeOf(id)];
     var mat = big ? 0xe8eef5 : [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0xb57ad8, 0x6ff0e6][tierOf(id)], wood = 0x7a5430;
     function bx(w, h, d, hex, y, x) { var m = shadedBox(w * u, h * u, d * u, hex); m.position.set((x || 0) * u, y * u, 0); g.add(m); }
     if (type === 'sword' || type === 'knife') {

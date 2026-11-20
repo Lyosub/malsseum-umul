@@ -252,7 +252,7 @@
         if (cs2 && cs2.shadow) { hitShadow(cs2.shadow); return; }
         mouseMining = true; return;
       }
-      if (e.button === 2) { if (HOTBAR[sel] === BOW && have(BOW) > 0 && bowStart()) return; tapAt(); return; }
+      if (e.button === 2) { if (isBowId(HOTBAR[sel]) && have(HOTBAR[sel]) > 0 && bowStart()) return; tapAt(); return; }
       var h = pickCenter(); if (!h) return;
       else if (e.button === 1) { var id = get(h.x, h.y, h.z); id = dropOf(id); if (INV.indexOf(id) >= 0 && have(id) > 0) { var hj = HOTBAR.indexOf(id); if (hj >= 0) { setSel(hj); return; } HOTBAR[sel] = id; renderHotbar(); setSel(sel); saveSettings(); } }
     });
@@ -276,7 +276,7 @@
         // 걷기는 왼쪽 아래 방향키로 하고, 화면은 어디를 끌어도 둘러보기
         if (!tLook) {
           tLook = { id: t.identifier, lx: t.clientX, ly: t.clientY, t0: performance.now(), moved: 0 };
-          if (HOTBAR[sel] === BOW && have(BOW) > 0 && bowStart()) tLook.bow = true;   // 활: 누르고 있는 동안 당김(끌어서 겨눔), 떼면 쏨
+          if (isBowId(HOTBAR[sel]) && have(HOTBAR[sel]) > 0 && bowStart()) tLook.bow = true;   // 활: 누르고 있는 동안 당김(끌어서 겨눔), 떼면 쏨
           else hold = { x: t.clientX, y: t.clientY, t0: performance.now(), dug: false };
         }
       }

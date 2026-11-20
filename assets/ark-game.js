@@ -825,6 +825,17 @@
     [157, '철 방패', 'shield', 0xc8ccd2, 'shield', ''],
     [158, '믿음의 방패', 'shield', 0xe8eef5, 'shieldG', '엡 6:16']
   ];
+  // 11/20 광물로 만드는 무기·방패 일곱 단계: 돌 < 구리 < 은 < 금 < 호마노 < 청옥 < 금강석
+  var ARM_MATS = ['돌', '구리', '은', '금', '호마노', '청옥', '금강석'], ARM_COL = [0x8f8f8b, 0xc8743a, 0xe8eef5, 0xf3c83c, 0xb57ad8, 0x4a78e0, 0x6ff0e6];
+  var ARM_SWORD0 = 256, ARM_SLING0 = 263, ARM_SHIELD0 = 270, ARM_BOW0 = 277, ARM_ARROW0 = 284;
+  var ARM_SWORD_DMG = [2.5, 3, 3.5, 4, 4.5, 5, 6], ARM_SLING_DMG = [2, 2.5, 3, 3.5, 4, 4.5, 5.5], ARM_BOW_BONUS = [0, 0.3, 0.6, 0.9, 1.2, 1.5, 2], ARM_ARROW_DMG = [1.5, 1.8, 2.1, 2.4, 2.8, 3.2, 3.8];
+  var ARM_SHIELD_BLOCK = [0.45, 0.55, 0.62, 0.7, 0.8, 0.88, 0.95], ARM_SHIELD_GUARD = [0.08, 0.1, 0.11, 0.12, 0.14, 0.16, 0.18];   // 불화살을 앞에서 막는 확률 · 맞을 때 줄여 주는 몫
+  ARM_MATS.forEach(function (n, m) { WEARS.push([ARM_SHIELD0 + m, n + ' 방패', 'shield', ARM_COL[m], 'shield', '']); });
+  function armOf(id, base) { var m = id - base; return m >= 0 && m < 7 ? m : -1; }
+  function isArmSword(id) { return armOf(id, ARM_SWORD0) >= 0; }
+  function isSlingId(id) { return id === SLING || armOf(id, ARM_SLING0) >= 0; }
+  function isBowId(id) { return id === BOW || armOf(id, ARM_BOW0) >= 0; }
+  function isArrowId(id) { return id === ARROW || armOf(id, ARM_ARROW0) >= 0; }
   var WEARINFO = {}, SLOTS = ['head', 'body', 'belt', 'feet', 'shield'], SLOT_NAME = { head: '머리', body: '몸', belt: '허리', feet: '발', shield: '방패' };
   WEARS.forEach(function (w) { WEARINFO[w[0]] = { slot: w[1 + 1], col: w[3], shape: w[4], ref: w[5] }; B[w[0]] = [w[1], 'wear' + w[0], 'wear' + w[0], 'wear' + w[0], 0, 0, 'item']; });
   B[SAPLING] = ['묘목', 'sapling', 'sapling', 'sapling', 1, 0, 'plant'];
@@ -1110,7 +1121,7 @@
         }
       });
     });
-    drawWordTiles(); drawBowTiles();
+    drawWordTiles(); drawBowTiles(); drawArmTiles();
   }
   // 4묶음. 말씀·양 돌보기·길 찾기.
   var FIND_MARK=500, FIND_POT=501, FIND_LAMP=502, FIND_SEED=503, DITCH=504, FEAST_TABLE=505,
@@ -1160,6 +1171,36 @@
   // ── 2026-11-20 활과 화살: 어둠의 그림자를 멀리서 물리침 ──
   var BOW = 930, ARROW = 931, SHARD = 933;
   [[BOW, '활'], [ARROW, '화살'], [CART, '수레'], [SHARD, '빛 조각']].forEach(function (d) { if (B[d[0]]) throw new Error('번호가 겹쳐요: ' + d[0]); expansionItem(d[0], d[1], 'bow' + d[0]); });
+  ARM_MATS.forEach(function (n, m) {
+    [[ARM_SWORD0, ' 검'], [ARM_SLING0, ' 물매'], [ARM_BOW0, ' 활'], [ARM_ARROW0, ' 화살']].forEach(function (d) { var id = d[0] + m; if (B[id]) throw new Error('번호가 겹쳐요: ' + id); expansionItem(id, n + d[1], 'arm' + id); });
+  });
+  function drawArmTiles() {   // 재료 빛깔로: 검 날·물매 돌주머니·활 끝·화살촉
+    ARM_COL.forEach(function (col, m) {
+      tile('arm' + (ARM_SWORD0 + m), function (px) {
+        clear(px);
+        for (var i = 0; i < 9; i++) { px(5 + i, 10 - i, col, 1.15); px(6 + i, 10 - i, col, 0.92); px(5 + i, 11 - i, col, 0.72); }
+        for (var g = 0; g < 6; g++) px(2 + g, 8 + g, 0x6a4628);
+        px(3, 12, 0x8a6236); px(2, 13, 0x8a6236); px(1, 14, col); px(14, 1, 0xffffff);
+      });
+      tile('arm' + (ARM_SLING0 + m), function (px, R) {
+        clear(px);
+        for (var y = 2; y < 11; y++) { px(4 + (y >> 2), y, 0x9a7052, 0.9 + R() * 0.2); px(11 - (y >> 2), y, 0x9a7052, 0.9 + R() * 0.2); }
+        for (var y2 = 10; y2 < 14; y2++) for (var x = 5; x < 11; x++) if (Math.hypot(x - 7.5, y2 - 11.8) < 2.7) px(x, y2, col, 0.85 + R() * 0.25);
+      });
+      tile('arm' + (ARM_BOW0 + m), function (px, R) {
+        clear(px);
+        for (var y = 1; y < 15; y++) { var cx = 3 + 7.5 * Math.sin(Math.PI * (y - 1) / 13); for (var x = 0; x < 16; x++) if (Math.abs(x - cx) < 1.1) px(x, y, y < 4 || y > 11 ? col : 0x8a5a2b, 0.85 + R() * 0.25); }
+        for (var y2 = 1; y2 < 15; y2++) px(3, y2, 0xe8e2d0, 1);
+        px(10, 7, col); px(10, 8, col);
+      });
+      tile('arm' + (ARM_ARROW0 + m), function (px, R) {
+        clear(px);
+        for (var i = 3; i < 13; i++) px(i, 15 - i, 0x9a6a3a, 0.9 + R() * 0.2);
+        [[12, 2], [13, 2], [13, 3], [11, 2], [13, 4], [12, 3], [11, 3], [12, 4]].forEach(function (q) { px(q[0], q[1], col, 1.05); });
+        [[2, 12], [3, 12], [2, 13], [3, 13], [1, 13], [2, 14], [4, 13], [3, 14]].forEach(function (q) { px(q[0], q[1], (q[0] + q[1]) % 2 ? 0xf0ece0 : 0xc0473a, 1); });
+      });
+    });
+  }
   function drawBowTiles() {
     tile('bow930', function (px, R) {
       clear(px);
@@ -1305,6 +1346,7 @@
   WEARS.forEach(function (w) { INV.push(w[0]); });
   FRONTIER_RECIPES.forEach(function(r){INV.push(r[0]);});
   INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART, RAILF0, SHARD);
+  for (var am = 0; am < 7; am++) INV.push(ARM_SWORD0 + am, ARM_SHIELD0 + am, ARM_SLING0 + am, ARM_BOW0 + am, ARM_ARROW0 + am);
   INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
@@ -1440,6 +1482,14 @@
   RECIPES.push({ out: [CARPET, 3], need: [[WOOL_R, 2]], cat: 'shape' });
   RECIPES.push({ out: [LANTERN, 1], need: [[ING_FE, 1], [TORCH, 1]], cat: 'shape' });
   RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 2], [ING_AU, 1], [STICK, 1]], cat: 'wear', table: true, ref: '엡 6:17' });
+  // 광물 무기·방패 만들기: 검(재료 2 + 막대기) · 방패(재료 4 + 고페르 나무 2) · 물매(가죽 + 실 2 + 재료) · 활(막대기 3 + 실 3 + 재료) · 화살 4개(막대기 + 재료)
+  [STONE, ING_CU, ING_AG, ING_AU, GEM_ONYX, GEM_SAPH, GEM_DIA].forEach(function (mt, m) {
+    RECIPES.push({ out: [ARM_SWORD0 + m, 1], need: [[mt, 2], [STICK, 1]], cat: 'wear', table: true });
+    RECIPES.push({ out: [ARM_SHIELD0 + m, 1], need: [[mt, 4], [GOPHER, 2]], cat: 'wear', table: true });
+    RECIPES.push({ out: [ARM_SLING0 + m, 1], need: [[LEATHER, 1], [THREAD, 2], [mt, 1]], cat: 'tool' });
+    RECIPES.push({ out: [ARM_BOW0 + m, 1], need: [[STICK, 3], [THREAD, 3], [mt, 1]], cat: 'tool' });
+    RECIPES.push({ out: [ARM_ARROW0 + m, 4], need: [[STICK, 1], [mt, 1]], cat: 'tool' });
+  });
   FRONTIER_RECIPES.forEach(function(r){RECIPES.push({out:[r[0],1],need:r[3],cat:'shape'});});
   RECIPES.push({ out: [CHAIR, 1], need: [[GOPHER, 3], [STICK, 2]], cat: 'shape' });
   RECIPES.push({ out: [BED, 1], need: [[WOOL, 3], [GOPHER, 3]], cat: 'block', ref: '시 4:8' });
@@ -2654,7 +2704,7 @@
   function saveSettings() { try { localStorage.setItem('arkVillage.settings', JSON.stringify(S)); localStorage.setItem('arkVillage.hotbar4', JSON.stringify(HOTBAR)); localStorage.setItem('arkVillage.bagslots', JSON.stringify(BAGSLOT)); } catch (e) {} }
   // 가방: 36칸, 한 칸에 한 묶음(77개, 도구·옷·안장은 1개). 관리자는 끝없음(∞)
   var STACK = 77, BAG_SLOTS = 36;
-  function stackOf(id) { return isTool(id) || WEARINFO[id] || id === SADDLE || id === SWORD || id === BOW || id === CART ? 1 : STACK; }
+  function stackOf(id) { return isTool(id) || WEARINFO[id] || id === SADDLE || id === SWORD || isArmSword(id) || isBowId(id) || isSlingId(id) || id === CART ? 1 : STACK; }
   function slotsFor(id, n) { return n > 0 ? Math.ceil(n / stackOf(id)) : 0; }
   function usedSlots() { var s = 0; for (var k in BAG) if (BAG[k] > 0) s += slotsFor(+k, BAG[k]); return s; }
   // 이 물건을 몇 개 더 담을 수 있나(채우다 만 묶음 + 빈 칸)
@@ -3235,7 +3285,7 @@
         if (cs2 && cs2.shadow) { hitShadow(cs2.shadow); return; }
         mouseMining = true; return;
       }
-      if (e.button === 2) { if (HOTBAR[sel] === BOW && have(BOW) > 0 && bowStart()) return; tapAt(); return; }
+      if (e.button === 2) { if (isBowId(HOTBAR[sel]) && have(HOTBAR[sel]) > 0 && bowStart()) return; tapAt(); return; }
       var h = pickCenter(); if (!h) return;
       else if (e.button === 1) { var id = get(h.x, h.y, h.z); id = dropOf(id); if (INV.indexOf(id) >= 0 && have(id) > 0) { var hj = HOTBAR.indexOf(id); if (hj >= 0) { setSel(hj); return; } HOTBAR[sel] = id; renderHotbar(); setSel(sel); saveSettings(); } }
     });
@@ -3259,7 +3309,7 @@
         // 걷기는 왼쪽 아래 방향키로 하고, 화면은 어디를 끌어도 둘러보기
         if (!tLook) {
           tLook = { id: t.identifier, lx: t.clientX, ly: t.clientY, t0: performance.now(), moved: 0 };
-          if (HOTBAR[sel] === BOW && have(BOW) > 0 && bowStart()) tLook.bow = true;   // 활: 누르고 있는 동안 당김(끌어서 겨눔), 떼면 쏨
+          if (isBowId(HOTBAR[sel]) && have(HOTBAR[sel]) > 0 && bowStart()) tLook.bow = true;   // 활: 누르고 있는 동안 당김(끌어서 겨눔), 떼면 쏨
           else hold = { x: t.clientX, y: t.clientY, t0: performance.now(), dug: false };
         }
       }
@@ -4842,9 +4892,9 @@
     on('advChip', function () { openQuests('today'); });
     on('mFeedbackAdmin', function () { openFeedbackAdmin(); });
     applyBtnSize();
-    on('touchAction', function () { if (isTouch && ui === 'play' && HOTBAR[sel] !== BOW) { tapAt(); mobileHudAt = 0; } });
+    on('touchAction', function () { if (isTouch && ui === 'play' && !isBowId(HOTBAR[sel])) { tapAt(); mobileHudAt = 0; } });
     (function () { var ta = $('touchAction'); if (!ta) return;
-      ta.addEventListener('pointerdown', function () { if (ui === 'play' && HOTBAR[sel] === BOW) bowStart(); });
+      ta.addEventListener('pointerdown', function () { if (ui === 'play' && isBowId(HOTBAR[sel])) bowStart(); });
       ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { ta.addEventListener(ev, function (e) { if (bowDraw) { if (e.type === 'pointerup') bowRelease(screenDir()); else bowCancel(); } }); }); })();
     on('slabMode', function () {
       slabMode = (slabMode + 1) % SLAB_NAMES.length;
@@ -5201,7 +5251,8 @@
       if (held === COMPASS) return { label: '방향 보기' };
       if (held === SHOFAR) return { label: '나팔 불기' };
       if (held === SLING) return { label: '물매 연습' };
-      if (held === BOW) return { label: '꾹 눌러 활 당기기' };
+      if (isBowId(held)) return { label: '꾹 눌러 활 당기기' };
+      if (isSlingId(held)) return { label: '물매 던지기' };
     }
     var c = pickCreature(screenDir(), blockCover(h));
     if (c && !(riding && c.a && c.a.sp.seat)) {
@@ -5400,8 +5451,8 @@
       if(held===HAND_MAP && have(held)) {openPanel('map');drawMap($('bigmapc'),true);return;}
       if(held===COMPASS && have(held)) return toast('지금 보는 방향: '+headingName());
       if(held===SHOFAR && have(held)) return callShofar();
-      if(held===SLING && have(held)) return slingPractice(pickDir(dir));
-      if(held===BOW && have(held)) return shootArrow(dir);
+      if(isSlingId(held) && have(held)) { var sh0=pickDir(dir); if(sh0 && get(sh0.x,sh0.y,sh0.z)===SLING_TARGET) return slingPractice(sh0); return slingThrow(dir); }
+      if(isBowId(held) && have(held)) return shootArrow(dir);
     }
     var h = pickDir(dir), c = pickCreature(dir, blockCover(h));
     if (c && riding && c.a && c.a.sp.seat) c = null;
@@ -6356,7 +6407,7 @@
     return g;
   }
   // 무기(칼·성령의 검): 손에 들면 크게, 3인칭·친구 화면에서도 손에 쥔 모습
-  function isWeapon(id) { return id === SWORD || isTool(id); }   // 칼·검과 곡괭이·도끼·삽: 손에 든 모습을 크게
+  function isWeapon(id) { return id === SWORD || isArmSword(id) || isTool(id); }   // 칼·검과 곡괭이·도끼·삽: 손에 든 모습을 크게
   function heldWeapon() { var id = HOTBAR[sel]; return id && have(id) > 0 && isWeapon(id) ? id : 0; }
   function heldShown() { var id = HOTBAR[sel]; return id && B[id] && have(id) > 0 ? id : 0; }   // 다른 사람에게 보이는 손에 든 것(블록·물건 포함)
   function handItem(av, id) {
@@ -6372,7 +6423,7 @@
       return;
     }
     // 입체로: 손잡이·가로대·칼날(어느 쪽에서 봐도 보이게). 칼날은 앞쪽으로 조금 들어 올림
-    var u = HT / 32, g = new THREE.Group(), big = id === SWORD, type = big ? 'sword' : TOOL_TYPES[typeOf(id)];
+    var u = HT / 32, g = new THREE.Group(), big = id === SWORD || isArmSword(id), type = big ? 'sword' : TOOL_TYPES[typeOf(id)];
     var mat = big ? 0xe8eef5 : [0xa77a48, 0x8f8f8b, 0xc8743a, 0xd2d6db, 0xb57ad8, 0x6ff0e6][tierOf(id)], wood = 0x7a5430;
     function bx(w, h, d, hex, y, x) { var m = shadedBox(w * u, h * u, d * u, hex); m.position.set((x || 0) * u, y * u, 0); g.add(m); }
     if (type === 'sword' || type === 'knife') {
@@ -7483,7 +7534,7 @@
   function shadowsOn() { return S.shadows !== false; }
   function armorGuard() {   // 0~1: 줄여 주는 몫
     var g = 0, god = 0;
-    SLOTS.forEach(function (s) { var id = WORN[s]; if (!id) return; var sh = WEARINFO[id].shape; if (sh.slice(-1) === 'G') { god++; g += 0.2; } else if (/helm|mail|shield|crown/.test(sh)) g += 0.12; else g += 0.06; });
+    SLOTS.forEach(function (s) { var id = WORN[s]; if (!id) return; var sh = WEARINFO[id].shape, am = armOf(id, ARM_SHIELD0); if (sh.slice(-1) === 'G') { god++; g += 0.2; } else if (am >= 0) g += ARM_SHIELD_GUARD[am]; else if (/helm|mail|shield|crown/.test(sh)) g += 0.12; else g += 0.06; });
     return god === 5 ? 1 : Math.min(0.85, g);
   }
   function makeShadow(kind, x, z) {
@@ -7607,6 +7658,8 @@
     var held = arrowDmg ? 0 : HOTBAR[sel], dmg = 1;
     if (arrowDmg) dmg = arrowDmg;
     else if (held === SWORD && have(SWORD) > 0) dmg = 4;
+    else if (isArmSword(held) && have(held) > 0) dmg = ARM_SWORD_DMG[armOf(held, ARM_SWORD0)];
+    if (isArmSword(held)) newsMark('arms');
     else if (isTool(held) && have(held) > 0 && TOOL_TYPES[typeOf(held)] === 'knife') dmg = 1.5 + tierOf(held) * 0.5;
     if (has('jericho')) dmg += 1;
     var crit = !arrowDmg && !P.ground && P.vy < -1 && !P.swim && !P.fly;   // 떨어지면서 치면 강한 일격
@@ -7615,7 +7668,7 @@
     s.hp -= dmg; if (!sweep) { swingT = 0.25; sfx('dig', 300); }
     combatFx(s, dmg, crit);
     var dx = s.x - P.x, dz = s.z - P.z, d = Math.hypot(dx, dz) || 1, kb = crit ? 11 : (arrowDmg ? 4 : 8); s.kx = dx / d * kb; s.kz = dz / d * kb;   // 밀려남
-    if (held === SWORD && !arrowDmg && have(SWORD) > 0) sweepHit(s);
+    if ((held === SWORD || isArmSword(held)) && !arrowDmg && have(held) > 0) sweepHit(s);
     if (isTool(held)) wearTool(held);
     if (s.hp <= 0) {
       s.dead = true; burst(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z), LAMP); sfx('craft', 1800); shadowDeathFx(s); questEvent('shadow', s.kind, 1);
@@ -7637,8 +7690,8 @@
   }
   var bowDraw = null, bowUiT = 0;
   function bowStart() {
-    if (HOTBAR[sel] !== BOW || have(BOW) < 1) return false;
-    if (!isAdm() && have(ARROW) < 1) { deny('화살이 없어요 — 막대기 1 + 부싯돌 1로 화살 4개를 만들어요'); return true; }
+    if (!isBowId(HOTBAR[sel]) || have(HOTBAR[sel]) < 1) return false;
+    if (!isAdm() && !bestArrow()) { deny('화살이 없어요 — 막대기 1 + 부싯돌이나 돌·광물 1로 화살 4개를 만들어요'); return true; }
     bowDraw = { t0: performance.now() }; $('bowBar').classList.add('show'); tone('triangle', 140, 220, 0.5, 0.03);
     clearInterval(bowUiT); bowUiT = setInterval(function () { if (!bowDraw) return; var p = Math.min(1, (performance.now() - bowDraw.t0) / 1000); $('bowFill').style.width = Math.round(p * 100) + '%'; $('bowBar').classList.toggle('full', p >= 1); }, 40);
     return true;
@@ -7647,18 +7700,33 @@
     if (!bowDraw) return false;
     var p = Math.max(0.15, Math.min(1, (performance.now() - bowDraw.t0) / 1000));
     bowDraw = null; clearInterval(bowUiT); $('bowBar').classList.remove('show', 'full'); $('bowFill').style.width = '0%';
-    if (HOTBAR[sel] === BOW) { bowAt = 0; shootArrow(dir || screenDir(), p); }
+    if (isBowId(HOTBAR[sel])) { bowAt = 0; shootArrow(dir || screenDir(), p); }
     return true;
   }
   function bowCancel() { if (bowDraw) { bowDraw = null; clearInterval(bowUiT); $('bowBar').classList.remove('show', 'full'); } }
   function shootArrow(dir, pow) {
     pow = pow || 0.35;
     var now = performance.now(); if (now < bowAt) return;
-    if (!isAdm() && have(ARROW) < 1) return deny('화살이 없어요 — 막대기 1 + 부싯돌 1로 화살 4개를 만들어요');
-    bowAt = now + 250; if (!isAdm()) { take(ARROW, 1); bagChanged(); } newsMark('bow');
-    var p = camera.position, v = 12 + 24 * pow;
-    ARROWS.push({ x: p.x + dir.x * 0.6, y: p.y + dir.y * 0.6 - 0.1, z: p.z + dir.z * 0.6, vx: dir.x * v, vy: dir.y * v + 1.5, vz: dir.z * v, t: 0, dmg: 1 + Math.round(2.5 * pow), mesh: arrowMesh(false) });
+    var aid = bestArrow() || (isAdm() ? ARROW : 0);
+    if (!aid) return deny('화살이 없어요 — 막대기 1 + 부싯돌이나 돌·광물 1로 화살 4개를 만들어요');
+    bowAt = now + 250; if (!isAdm()) { take(aid, 1); bagChanged(); } newsMark('bow');
+    var bm = armOf(HOTBAR[sel], ARM_BOW0), am = armOf(aid, ARM_ARROW0), base = am >= 0 ? ARM_ARROW_DMG[am] : 1, bonus = bm >= 0 ? ARM_BOW_BONUS[bm] : 0;   // 화살촉 재료 + 활 재료 + 당긴 힘
+    var p = camera.position, v = 12 + 24 * pow * (1 + (bm >= 0 ? bm : 0) * 0.05);
+    ARROWS.push({ x: p.x + dir.x * 0.6, y: p.y + dir.y * 0.6 - 0.1, z: p.z + dir.z * 0.6, vx: dir.x * v, vy: dir.y * v + 1.5, vz: dir.z * v, t: 0, dmg: Math.round((base + bonus + 2.5 * pow) * 10) / 10, item: aid, mesh: arrowMesh(false) });
     tone('triangle', 260 + 160 * pow, 150, 0.12, 0.06 + 0.06 * pow); swingT = 0.25; vibrate('bow');
+  }
+  function bestArrow() { for (var m = 6; m >= 0; m--) if (have(ARM_ARROW0 + m) > 0) return ARM_ARROW0 + m; return have(ARROW) > 0 ? ARROW : 0; }   // 가장 좋은 화살부터
+  // 물매: 매끄러운 돌을 던져 멀리 있는 그림자를 맞힘(삼상 17:49) — 물매 재료에 따라 세기가 다름
+  var slingStoneGeo = null, slingStoneMat = null;
+  function slingThrow(dir) {
+    var now = performance.now(); if (now < slingAt) return;
+    if (!isAdm() && have(ROUND_STONE) < 1) return deny('매끄러운 돌이 없어요 — 돌 1개로 매끄러운 돌 4개를 만들어요');
+    slingAt = now + 650; if (!isAdm()) { take(ROUND_STONE, 1); bagChanged(); }
+    var m = armOf(HOTBAR[sel], ARM_SLING0), dmg = m >= 0 ? ARM_SLING_DMG[m] : 1.5, p = camera.position, v = 24;
+    if (!slingStoneGeo) { slingStoneGeo = new THREE.BoxGeometry(0.18, 0.18, 0.18); slingStoneMat = new THREE.MeshBasicMaterial({ color: 0xa4adad }); }
+    var mesh = new THREE.Mesh(slingStoneGeo, slingStoneMat); scene.add(mesh);
+    ARROWS.push({ x: p.x + dir.x * 0.6, y: p.y + dir.y * 0.6, z: p.z + dir.z * 0.6, vx: dir.x * v, vy: dir.y * v + 1, vz: dir.z * v, t: 0, dmg: dmg, item: ROUND_STONE, mesh: mesh });
+    tone('triangle', 520, 200, 0.12, 0.05); swingT = 0.25;
   }
   function shootFireArrow(s) {
     var tx = P.x - s.x, ty = P.y + 1.1 - (s.y + 1.5 * s.sp.h), tz = P.z - s.z, d = Math.hypot(tx, ty, tz) || 1, v = 13;
@@ -7673,10 +7741,10 @@
       for (var k = 0; k < 3 && !gone; k++) {
         var st = dt / 3; a.vy -= 12 * st; a.x += a.vx * st; a.y += a.vy * st; a.z += a.vz * st; a.t += st;
         var bid = get(Math.floor(a.x), Math.floor(a.y), Math.floor(a.z));
-        if (isSolid(bid) && !(SHAPE[bid] && collBoxes(bid, 0, 0, 0).length === 0)) { gone = true; if (Math.random() < 0.6 && !isAdm()) dropItem(a.x - a.vx * st, a.y - a.vy * st + 0.2, a.z - a.vz * st, ARROW, 1); sfx('dig', 900); break; }
+        if (isSolid(bid) && !(SHAPE[bid] && collBoxes(bid, 0, 0, 0).length === 0)) { gone = true; if (Math.random() < 0.6 && !isAdm()) dropItem(a.x - a.vx * st, a.y - a.vy * st + 0.2, a.z - a.vz * st, a.item || ARROW, 1); sfx('dig', 900); break; }
         for (var i = 0; i < SHADOWS.length; i++) {
           var s = SHADOWS[i]; if (s.dead) continue;
-          var hy = a.y - s.y; if (Math.hypot(a.x - s.x, a.z - s.z) < 0.7 && hy > 0 && hy < 2.1 * s.sp.h) { hitShadow(s, a.dmg || 3); gone = true; break; }
+          var hy = a.y - s.y; if (Math.hypot(a.x - s.x, a.z - s.z) < 0.8 && hy > 0 && hy < HT * s.sp.h + 0.2) { hitShadow(s, a.dmg || 3); gone = true; break; }
         }
       }
       if (gone || a.t > 4 || a.y < YMIN) { scene.remove(a.mesh); return; }
@@ -7692,7 +7760,8 @@
         if (Math.hypot(f.x - P.x, f.z - P.z) < 0.55 && f.y > P.y && f.y < P.y + HT + 0.1) {
           gone = true; var g = armorGuard(), dmg = Math.round(f.dmg * (1 - g)), sh = WORN.shield, fl = Math.hypot(f.vx, f.vz) || 1;
           var front = (-Math.sin(P.yaw)) * (-f.vx / fl) + (-Math.cos(P.yaw)) * (-f.vz / fl) > 0.3;
-          if (sh && front && Math.random() < ({ 156: 0.5, 157: 0.75, 158: 1 }[sh] || 0)) { newsMark('shield'); vibrate('block'); sfx('place', 'metal'); burst(Math.floor(f.x), Math.floor(f.y), Math.floor(f.z), LAMP); var nowB = performance.now(); if (nowB - shieldToldT > 5000) { shieldToldT = nowB; toast(sh === 158 ? '🛡 믿음의 방패로 불화살을 막았어요 (엡 6:16)' : '🛡 ' + nameOf(sh) + '로 불화살을 막았어요'); } break; }
+          var shBlock = armOf(sh, ARM_SHIELD0) >= 0 ? ARM_SHIELD_BLOCK[armOf(sh, ARM_SHIELD0)] : ({ 156: 0.5, 157: 0.75, 158: 1 }[sh] || 0);
+          if (sh && front && Math.random() < shBlock) { newsMark('shield'); vibrate('block'); sfx('place', 'metal'); burst(Math.floor(f.x), Math.floor(f.y), Math.floor(f.z), LAMP); var nowB = performance.now(); if (nowB - shieldToldT > 5000) { shieldToldT = nowB; toast(sh === 158 ? '🛡 믿음의 방패로 불화살을 막았어요 (엡 6:16)' : '🛡 ' + nameOf(sh) + '로 불화살을 막았어요'); } break; }
           if (dmg > 0) hurtFaith(dmg, '「' + f.who + '」'); else if (vitalsOn()) toast('🛡 하나님의 전신 갑주가 불화살을 막아 주었어요 (엡 6:16)');
         }
       }
@@ -8614,7 +8683,8 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 5, NEWS = [
+  var NEWS_VER = 6, NEWS = [
+    ['arms', '⚔', '광물 무기와 방패', '돌·구리·은·금·호마노·청옥·금강석으로 검·방패·물매·활·화살을 만들어요(제작대). 좋은 재료일수록 더 세게 치고 더 잘 막아요. 물매는 매끄러운 돌을 던져요.', 262],
     ['guide', '🧭', '길 안내와 좌표', '작은 지도를 누르고 갈 곳을 고르면 순간이동 대신 화살표가 길을 알려 줘요. 작은 지도 아래에 지금 좌표(X·Z, 높이 Y)가 보여요.', 0],
     ['deep', '⛏', '더 깊은 땅속', '땅속이 32칸 더 깊어졌어요(바닥 y -32). 금은 y -8 아래, 청옥은 -16 아래, 금강석은 맨 아래 깊은 돌 층에서 나와요.', 0],
     ['onyx', '🟣', '호마노 도구', '철과 금강석 사이에 호마노 곡괭이·도끼·삽·칼이 생겼어요. 호마노는 철 곡괭이로 캐고, 청옥·금강석은 호마노 곡괭이가 있어야 캐요.', TOOL_ONYX],
