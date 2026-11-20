@@ -3959,9 +3959,12 @@
     return 'block';
   }
   // ── 가방·만들기 한 화면(11/20): 왼쪽 세로 그림 탭 · 가운데 칸 · 오른쪽 자세히 · 아래 단축 칸 ──
-  var invSel = null, lastBC = 'bag';
-  var CRAFT_TABS = [['all', '🔍', '모두'], ['block', '🧱', '블록'], ['shape', '🚪', '모양'], ['tool', '⛏', '도구'], ['smelt', '🔥', '녹이기'], ['wear', '👕', '옷']];
+  var invSel = null, lastBC = 'bag', dropAmt = { id: 0, n: 1 };
+  var CRAFT_TABS = [['all', '🔍', '모두'], ['recent', '🕘', '최근'], ['block', '🧱', '블록'], ['shape', '🚪', '모양'], ['tool', '⛏', '도구'], ['smelt', '🔥', '녹이기'], ['wear', '👕', '옷']];
   var REP_MAT_T = function (tid) { return [GOPHER, STONE, ING_CU, ING_FE, GEM_DIA][tierOf(tid)]; };
+  // 최근 만든 것: [제작법 번호, 나오는 물건] 12개까지, 새로 만든 것이 앞
+  function recentRank(rc) { var a = S.recentCraft || [], i = RECIPES.indexOf(rc); for (var k = 0; k < a.length; k++) if (a[k][0] === i && a[k][1] === rc.out[0]) return k; return -1; }
+  function noteRecent(rc) { var i = RECIPES.indexOf(rc); if (i < 0) return; var a = (S.recentCraft || []).filter(function (p) { return p[0] !== i && RECIPES[p[0]] && RECIPES[p[0]].out[0] === p[1]; }); a.unshift([i, rc.out[0]]); S.recentCraft = a.slice(0, 12); saveSettings(); }
   function craftTimes(rc) { if (isAdm()) return 99; var t = 999; rc.need.forEach(function (n) { t = Math.min(t, Math.floor(have(n[0]) / n[1])); }); return t; }
   function invInfo(id) { return B[id][0] + ' ' + fmtN(have(id)) + '개' + (isTool(id) && !isAdm() ? ' · 남은 힘 ' + wearLeft(id) + '/' + toolMax(id) : ''); }
   function renderInv() {
@@ -4060,9 +4063,10 @@
     var items = [];
     RECIPES.forEach(function (rc) {
       if (craftQuery) { if (!recOpen(rc) || B[rc.out[0]][0].indexOf(craftQuery) < 0) return; }   // 찾는 중엔 잠긴 제작법 이름을 드러내지 않음
+      else if (craftCat === 'recent') { if (recentRank(rc) < 0 || !recOpen(rc)) return; }
       else if (craftCat !== 'all' && rc.cat !== craftCat) return;
       if (!recOpen(rc)) { if (craftCat !== 'all') items.push({ k: 'lock', rc: rc, o: 3 + recStage(rc) / 100 }); return; }   // 「모두」에는 아는 제작법만
-      var ok = canCraft(rc); items.push({ k: 'rec', rc: rc, ok: ok, o: ok ? 0 : 2 });
+      var ok = canCraft(rc); items.push({ k: 'rec', rc: rc, ok: ok, o: craftCat === 'recent' && !craftQuery ? recentRank(rc) : (ok ? 0 : 2) });
     });
     if (craftCat === 'tool' && !craftQuery) Object.keys(WEAR).forEach(function (k) {
       var tid = +k; if (have(tid) < 1) return;
@@ -4082,7 +4086,7 @@
       d.addEventListener('click', function (e) { e.stopPropagation(); sfx('click'); invSel = it; renderInv(); });
       list.appendChild(d);
     });
-    if (!items.length) { var e = document.createElement('div'); e.className = 'bagEmpty'; e.textContent = craftQuery ? '찾는 제작법이 없어요' : '아직 이 분류의 제작법이 없어요'; list.appendChild(e); }
+    if (!items.length) { var e = document.createElement('div'); e.className = 'bagEmpty'; e.textContent = craftQuery ? '찾는 제작법이 없어요' : (craftCat === 'recent' ? '아직 만든 것이 없어요 — 만들면 여기에 모여요' : '아직 이 분류의 제작법이 없어요'); list.appendChild(e); }
   }
   // 오른쪽 자세히: 가방에서 고른 것 / 고른 제작법
   function renderInvDetail() {
@@ -4105,9 +4109,18 @@
       if (p.from === 'bag') {
         add('div', 'dhint', '⬇ 아래 단축 칸을 누르면 손에 들어요');
         if (!isAdm()) {
-          var r = add('div', 'drow');
-          btn('1개 버리기', function () { bagPick = null; throwItem(id, 1); $('invName').textContent = B[id][0] + ' 1개를 앞에 버렸어요 — 다시 가까이 가면 주워요'; renderInv(); }, r);
-          btn('묶음 버리기', function () { var n = Math.min(p.n || 1, have(id), 64); bagPick = null; throwItem(id, n); $('invName').textContent = B[id][0] + ' ' + n + '개를 앞에 버렸어요 — 다시 가까이 가면 주워요'; renderInv(); }, r);
+          var maxN = Math.max(1, Math.min(have(id), 64));
+          if (dropAmt.id !== id) dropAmt = { id: id, n: 1 };
+          dropAmt.n = Math.max(1, Math.min(maxN, dropAmt.n));
+          if (maxN > 1) {   // 몇 개 버릴지: − 숫자 + · 반 · 최대
+            var r = add('div', 'drow damt');
+            btn('−', function () { dropAmt.n = Math.max(1, dropAmt.n - 1); renderInvDetail(); }, r);
+            var lab = document.createElement('b'); lab.textContent = dropAmt.n + '개'; r.appendChild(lab);
+            btn('+', function () { dropAmt.n = Math.min(maxN, dropAmt.n + 1); renderInvDetail(); }, r);
+            btn('반', function () { dropAmt.n = Math.max(1, Math.floor(maxN / 2)); renderInvDetail(); }, r);
+            btn('최대', function () { dropAmt.n = maxN; renderInvDetail(); }, r);
+          }
+          btn('🫳 ' + dropAmt.n + '개 버리기', function () { var n = dropAmt.n; bagPick = null; dropAmt = { id: 0, n: 1 }; throwItem(id, n); $('invName').textContent = B[id][0] + ' ' + n + '개를 앞에 버렸어요 — 다시 가까이 가면 주워요'; renderInv(); }).classList.add('ddrop');
         }
       } else {
         add('div', 'dhint', '다른 단축 칸을 누르면 자리를 바꿔요');
@@ -4170,6 +4183,7 @@
         if (rc.out[0] === GOPHER) { stats.crafted++; questCheck(); }
         if (rc.out[0] === PITCH && STORY.started) { STORY.s.pitch += rc.out[1]; saveStory(); }
       }
+      if (made) noteRecent(rc);
       sfx('craft'); $('invName').textContent = rc.fuel ? '용광로에 넣었어요 — ' + B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개가 하나에 ' + SMELT_SEC + '초씩 녹아요' : B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개를 만들었어요';
       bagChanged();
     }
@@ -4205,7 +4219,19 @@
     }
   }
   // 궤: 내 땅 안 자리마다 안에 든 것 { "x,y,z(땅 안 좌표)": {번호: 개수} }
-  var CHESTS = {}, curChest = null, chestOne = false;
+  var CHESTS = {}, curChest = null, chestAmt = 0;   // 옮기는 양: 0 모두 · 1 반 · 2 한 개
+  var AMT_NAME = ['모두', '반', '1개'];
+  function amtOf(total, half) { var m = half ? 1 : chestAmt; return m === 0 ? total : m === 1 ? Math.max(1, Math.ceil(total / 2)) : 1; }
+  // 칸을 길게 누르거나(휴대폰) 오른쪽 클릭하면(컴퓨터) 반만
+  var holdQuiet = 0;   // 길게 누른 뒤 칸이 다시 그려지면 손을 뗄 때 새 칸이 눌린 것으로 잡히므로 잠깐 무시
+  function holdable(d, tap, hold) {
+    var t = null, fired = false;
+    function H() { fired = true; holdQuiet = performance.now() + 600; hold(); }
+    d.addEventListener('pointerdown', function () { fired = false; clearTimeout(t); t = setTimeout(H, 450); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { d.addEventListener(ev, function () { clearTimeout(t); }); });
+    d.addEventListener('contextmenu', function (e) { e.preventDefault(); clearTimeout(t); if (!fired && performance.now() > holdQuiet) H(); });
+    d.addEventListener('click', function () { if (fired || performance.now() < holdQuiet) { fired = false; return; } tap(); });
+  }
   function chestKey(x, y, z) { var o = plotOrigin(myPlot); return (x - o.x) + ',' + (y - PY0) + ',' + (z - o.z); }
   function chestString() {
     var a = []; for (var k in CHESTS) { var c = CHESTS[k], it = []; for (var id in c) if (c[id] > 0) it.push(id + ':' + c[id]); if (it.length) a.push(k.replace(/,/g, '.') + '=' + it.join(';')); }
@@ -4248,32 +4274,34 @@
   }
   function renderChest() {
     var c = CHESTS[curChest] || {}, g1 = $('chestGrid'), g2 = $('chestBag'); g1.innerHTML = ''; g2.innerHTML = '';
-    $('chestOne').textContent = '한 개씩: ' + (chestOne ? '켬' : '끔');
+    $('chestOne').textContent = '옮기는 양: ' + AMT_NAME[chestAmt];
+    if (!$('chestName').textContent) $('chestName').textContent = '칸을 길게 누르면 반만 옮겨요';
     chestItemKeys(c).forEach(function (k) {
       var id = +k; if (!(c[id] > 0)) return;
       var d = document.createElement('button'); d.className = 'islot'; d.innerHTML = slotHTML(id, c[id]); d.title = B[id][0];
-      d.addEventListener('click', function () { var n = give(id, chestOne ? 1 : c[id]); if (!n) { $('chestName').textContent = '🎒 가방이 가득 찼어요'; sfx('click'); return; } c[id] -= n; if (c[id] <= 0) delete c[id]; $('chestName').textContent = B[id][0] + ' ' + n + '개를 가방으로'; sfx('click'); markDirty(); bagChanged(); renderChest(); });
+      function out(half) { var n = give(id, amtOf(c[id], half)); if (!n) { $('chestName').textContent = '🎒 가방이 가득 찼어요'; sfx('click'); return; } c[id] -= n; if (c[id] <= 0) delete c[id]; $('chestName').textContent = B[id][0] + ' ' + n + '개를 가방으로'; sfx('click'); markDirty(); bagChanged(); renderChest(); }
+      holdable(d, function () { out(false); }, function () { out(true); });
       g1.appendChild(d);
     });
     if (!g1.children.length) g1.innerHTML = '<span class="empty">비어 있어요 — 아래 가방에서 눌러 넣어요</span>';
-    function put(id) {
+    function put(id, half) {
       if (have(id) < 1) return;
       if (isTool(id)) { $('chestName').textContent = '도구는 가방에 넣고 다녀요'; sfx('click'); return; }
       if (!c[id] && Object.keys(c).length >= 27) { $('chestName').textContent = '궤가 가득 찼어요(27가지)'; return; }
-      var n = chestOne ? 1 : have(id); take(id, n); c[id] = (c[id] || 0) + n; CHESTS[curChest] = c;
+      var n = amtOf(have(id), half); take(id, n); c[id] = (c[id] || 0) + n; CHESTS[curChest] = c;
       $('chestName').textContent = B[id][0] + ' ' + n + '개를 궤에'; sfx('click'); markDirty(); bagChanged(); renderChest();
     }
     INV.forEach(function (id) {
       if (have(id) < 1) return;
       var d = document.createElement('button'); d.className = 'islot'; d.innerHTML = slotHTML(id, have(id)); d.title = B[id][0];
-      d.addEventListener('click', function () { put(id); });
+      holdable(d, function () { put(id); }, function () { put(id, true); });
       g2.appendChild(d);
     });
     if (!g2.children.length) g2.innerHTML = '<span class="empty">가방이 비어 있어요</span>';
     var g3 = $('chestHot'); if (g3) { g3.innerHTML = '';
       HOTBAR.forEach(function (id, i) {
         var d = document.createElement('button'); d.className = 'islot' + (i === sel ? ' on' : '') + (id ? '' : ' empty'); d.innerHTML = (id ? slotHTML(id, hotCount(id)) : '') + '<u class="num">' + (i + 1) + '</u>'; d.title = (i + 1) + '번 칸: ' + nameOf(id);
-        d.addEventListener('click', function () { if (id) put(id); else sfx('click'); });
+        holdable(d, function () { if (id) put(id); else sfx('click'); }, function () { if (id) put(id, true); });
         g3.appendChild(d);
       });
     }
@@ -4490,7 +4518,7 @@
     on('helpDone', function () { closePanel(); });
     on('invDone', function () { closePanel(); });
     on('chestDone', function () { closePanel(); });
-    on('chestOne', function () { chestOne = !chestOne; renderChest(); sfx('click'); });
+    on('chestOne', function () { chestAmt = (chestAmt + 1) % 3; renderChest(); sfx('click'); });
     on('tabBag', function () { invTab = lastBC; renderInv(); sfx('click'); });
     on('tabDex', function () { invTab = 'dex'; renderInv(); sfx('click'); });
     $('craftQ').addEventListener('input', function () { craftQuery = this.value.trim(); invSel = null; renderInv(); });
