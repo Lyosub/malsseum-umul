@@ -644,13 +644,16 @@
       fishes.push({ kind: 'fish', mesh: m, x: fx + 0.5, y: T.h + 1 + Math.min(T.wtop - T.h - 1, 1) + 0.5, z: fz + 0.5, h: hash2(fx, fz, 44) * 6.28, spd: 1.2 + hash2(fx, fz, 45) * 1.2, t: 0 });
     }
     terrain(x0 + 16, z0 + 16);
-    var kinds = reg === 'desert' ? ['camel', 'camel', 'donkey'] : (reg === 'west' || reg === 'ararat' ? ['goat', 'goat', 'sheep', 'donkey'] : (reg === 'sea' || reg === 'lake' || reg === 'oasis' ? (reg === 'oasis' ? ['camel', 'donkey'] : []) : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey']));
-    if (!kinds.length || hash2(cx, cz, 31) > (reg === 'desert' ? 0.16 : 0.3)) return;
-    var kn = kinds[Math.floor(hash2(cx, cz, 32) * kinds.length)], n = 2 + Math.floor(hash2(cx, cz, 33) * 3);
+    var kinds = reg === 'desert' ? ['camel', 'camel', 'donkey'] : (reg === 'west' || reg === 'ararat' ? ['goat', 'goat', 'sheep', 'donkey'] : (reg === 'sea' || reg === 'lake' || reg === 'oasis' ? (reg === 'oasis' ? ['camel', 'donkey'] : []) :
+      (reg === 'cedar' ? ['sheep', 'goat', 'rabbit'] : (reg === 'wild' ? ['goat', 'donkey', 'camel'] : (reg === 'salt' ? ['goat'] : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey'])))));
+    // 11/20 동물이 너무 많아 반쯤으로(한 무리 1~2마리, 기둥 열에 하나꼴), 가까이 40마리가 넘으면 더 만들지 않음
+    if (!kinds.length || animals.length > 40 || hash2(cx, cz, 31) > (reg === 'desert' ? 0.07 : 0.14)) return;
+    var kn = kinds[Math.floor(hash2(cx, cz, 32) * kinds.length)], n = 1 + Math.floor(hash2(cx, cz, 33) * 2);
     for (i = 0; i < n; i++) {
       var hx = x0 + 4 + hash2(cx + i, cz, 34) * 24, hz = z0 + 4 + hash2(cx, cz + i, 35) * 24;
       if (inTown(hx | 0, hz | 0) || plotAt(hx | 0, hz | 0) >= 0) continue;
       var gy = groundAt(hx, hz, SY - 3); if (gy === null) continue;
+      terrain(hx | 0, hz | 0); if (gy !== T.h + 1 || T.wtop >= 0 || inCity(hx | 0, hz | 0)) continue;   // 자연 땅 위에만(성벽·지붕·나무 위 금지)
       animals.push(makeBeast(kn, hx, hz));
     }
   }

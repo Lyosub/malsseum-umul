@@ -30,8 +30,8 @@
     // 나뭇잎·통나무는 땅으로 치지 않는다(동물이 나무 꼭대기에 서는 문제) — 통나무 자리는 막힌 곳
     for (var y = Math.floor(fromY) + 2; y >= YMIN + 1; y--) {
       var id = get(ix, y, iz); if (id === WATER) return null;
-      if (id === LEAF || id === LOG) continue;
-      if (isSolid(id)) { var up = get(ix, y + 1, iz); return up === LOG ? null : y + 1; }
+      if (id === LEAF || id === LOG || id === CEDAR_LEAF || id === CEDAR_LOG || id === LIFELEAF) continue;   // 백향목 잎·줄기도 땅이 아님(11/20 말이 숲 꼭대기에 섬)
+      if (isSolid(id)) { var up = get(ix, y + 1, iz); return up === LOG || up === CEDAR_LOG ? null : y + 1; }
     }
     return null;
   }

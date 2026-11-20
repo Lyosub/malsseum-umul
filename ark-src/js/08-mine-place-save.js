@@ -234,6 +234,7 @@
   function breakAt(x, y, z, old) {
     var resource = naturalBuildResource(x, y, z, old);
     setBlock(x, y, z, AIR); burst(x, y, z, old);
+    if (old === LOG || old === CEDAR_LOG) treeFell(x, y, z, old);
     var dropId = dropOf(old);
     exhaust(0.03);
     if (FARM_PLANTS[old]) {
@@ -708,6 +709,58 @@
     });
     if (ch) saveSaps();
   }, 2000);
+  // ── 11/20 나무 다시 자라기: 줄기를 다 베면 남은 잎이 차례로 시들고, 밑동 자리에 묘목이 나서 몇 분 뒤 다시 나무가 됨 ──
+  var DECAY = [], REPLANT = [];
+  function wildSpot(x, z) { return plotAt(x, z) < 0 && !inTown(x, z) && !inCommons(x, z) && !inCity(x, z) && !(typeof inLandmark === 'function' && inLandmark(x, z)) && !(x >= FRONTIER_BOUNDS[0] && x <= FRONTIER_BOUNDS[2] && z >= FRONTIER_BOUNDS[1] && z <= FRONTIER_BOUNDS[3]); }
+  function leafCleanup(x, y, z, quick) {   // 둘레 줄기에서 멀리 떨어진(이어진 나무가 없는) 잎을 시들게
+    var R = 10, logs = [], now = Date.now(), n = 0;
+    for (var yy = y - 6; yy <= y + 26; yy++) for (var zz = z - R - 2; zz <= z + R + 2; zz++) for (var xx = x - R - 2; xx <= x + R + 2; xx++) { var id = get(xx, yy, zz); if (id === LOG || id === CEDAR_LOG) logs.push([xx, yy, zz, id === CEDAR_LOG ? 10 : 6]); }
+    for (yy = y - 4; yy <= y + 24; yy++) for (zz = z - R; zz <= z + R; zz++) for (xx = x - R; xx <= x + R; xx++) {
+      var lf = get(xx, yy, zz); if (lf !== LEAF && lf !== CEDAR_LEAF) continue;
+      if (!wildSpot(xx, zz)) continue;
+      var near = logs.some(function (l) { return Math.abs(l[1] - yy) <= 12 && Math.hypot(l[0] - xx, l[2] - zz) <= l[3]; });
+      if (near) continue;
+      DECAY.push({ x: xx, y: yy, z: zz, id: lf, t: now + (quick ? 300 : 1500) + Math.random() * (quick ? 3000 : 9000) }); if (++n > 1500) return n;
+    }
+    return n;
+  }
+  function treeFell(x, y, z, lg) {
+    if (!wildSpot(x, z)) return;
+    for (var dy = -2; dy <= 24; dy++) for (var dz = -1; dz <= 1; dz++) for (var dx = -1; dx <= 1; dx++) if (get(x + dx, y + dy, z + dz) === lg) return;   // 아직 줄기가 남음
+    leafCleanup(x, y, z, false);
+    var g = get(x, y - 1, z);
+    if ((g === GRASS || g === DIRT) && !REPLANT.some(function (r) { return Math.abs(r.x - x) < 3 && Math.abs(r.z - z) < 3; })) REPLANT.push({ x: x, y: y, z: z, t: Date.now() + 15000 });
+  }
+  var floatScanAt = 0;
+  setInterval(function () {
+    if (!started) return;
+    var now = Date.now(), done = [], touched = {};
+    if (DECAY.length) {
+      DECAY = DECAY.filter(function (d) {
+        if (d.t > now) return true;
+        if (get(d.x, d.y, d.z) === d.id) { setQuiet(d.x, d.y, d.z, AIR); done.push(d); if (Math.random() < 0.02) dropItem(d.x + .5, d.y + .3, d.z + .5, SAPLING, 1); }
+        return false;
+      });
+      done.forEach(function (d) { touched[(d.x >> 3) + ',' + (d.z >> 3)] = d; });
+      for (var k in touched) { var d = touched[k], bx = d.x & ~7, bz = d.z & ~7; for (var sz = bz; sz < bz + 8; sz++) for (var sx = bx; sx < bx + 8; sx++) updateSky(sx, sz); }
+      if (done.length) { var x0 = 1e9, z0 = 1e9, y0 = 1e9, x1 = -1e9, z1 = -1e9, y1 = -1e9; done.forEach(function (d) { x0 = Math.min(x0, d.x); x1 = Math.max(x1, d.x); y0 = Math.min(y0, d.y); y1 = Math.max(y1, d.y); z0 = Math.min(z0, d.z); z1 = Math.max(z1, d.z); }); rebuildBox(x0 - 1, y0 - 1, z0 - 1, x1 + 1, y1 + 1, z1 + 1); }
+    }
+    REPLANT = REPLANT.filter(function (r) {
+      if (r.t > now) return true;
+      if (!colAt(r.x, r.z)) return true;
+      var g = get(r.x, r.y - 1, r.z);
+      if (get(r.x, r.y, r.z) === AIR && (g === GRASS || g === DIRT)) { setBlock(r.x, r.y, r.z, SAPLING); SAPS.push({ x: r.x, y: r.y, z: r.z, t: now + (150 + Math.random() * 150) * 1000 }); saveSaps(); }
+      return false;
+    });
+    // 예전에 베어서 공중에 남은 잎: 둘레를 조금씩 살펴 시들게
+    if (ui === 'play' && now > floatScanAt) {
+      floatScanAt = now + 4000;
+      for (var i = 0; i < 24; i++) {
+        var ax = Math.floor(P.x + (Math.random() - 0.5) * 48), az = Math.floor(P.z + (Math.random() - 0.5) * 48), ay = Math.floor(P.y + Math.random() * 18);
+        var id = get(ax, ay, az); if ((id === LEAF || id === CEDAR_LEAF) && wildSpot(ax, az)) { leafCleanup(ax, ay, az, true); break; }
+      }
+    }
+  }, 250);
   function stepBits(dt) {
     for (var i = bits.length - 1; i >= 0; i--) {
       var m = bits[i], d = m.userData;
