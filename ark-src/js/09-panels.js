@@ -33,7 +33,7 @@
       return y >= AY0 + 21 ? '방주 상층' : (y >= AY0 + 11 ? '방주 중층' : '방주 하층');
     }
     var p = plotAt(x, z);
-    if (p >= 0) return p === myPlot ? '내 땅 (' + (p + 1) + '번)' : (p + 1) + '번 땅' + (plotOwners[p] ? '' : ' · 빈 땅');
+    if (p >= 0) return p === myPlot ? '내 땅 (' + (p + 1) + '번)' + (homeSafe ? ' · 🏠 안전한 집' : '') : (p + 1) + '번 땅' + (plotOwners[p] ? '' : ' · 빈 땅');
     var reg = region(x, z);
     if (reg === 'tar') return '역청 구덩이 (창 14:10)';
     if (reg === 'lake') return P.swim ? '호수 (헤엄치는 중)' : '남쪽 호숫가';
@@ -70,8 +70,8 @@
         if (e.pointerType !== 'touch' || !id || ui !== 'play' || have(id) < 1) return;
         hotHoldStop();
         hotHold.t1 = setTimeout(function () {
-          hotHold.quiet = performance.now() + 2500; setSel(i, true); throwItem(id, 1); vibrate(); newsMark('drop');
-          hotHold.t2 = setTimeout(function () { hotHold.t2 = 0; var n = Math.min(hotCount(id), 64); if (n > 0) { throwItem(id, n); vibrate(); } }, 1000);
+          hotHold.quiet = performance.now() + 2500; setSel(i, true); throwItem(id, 1); vibrate('drop'); newsMark('drop');
+          hotHold.t2 = setTimeout(function () { hotHold.t2 = 0; var n = Math.min(hotCount(id), 64); if (n > 0) { throwItem(id, n); vibrate('break'); } }, 1000);
         }, 500);
       });
       d.addEventListener('pointerleave', function () { if (hotHold.t1 && !hotHold.quiet) hotHoldStop(); });

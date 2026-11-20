@@ -335,7 +335,7 @@
     // 마인크래프트 휴대폰 조작처럼: 가운데를 톡톡 두 번 = 웅크리기 켜고 끄기 · 의자/침대에선 일어나기 · 탄 동물에선 내리기
     var lastMidTap = 0;   // 두 번째 톡이 0.4초 안에 와야 함
     function padMidTap() {
-      vibrate();
+      vibrate('tap');
       if (typeof furnitureRest !== 'undefined' && furnitureRest) { standFromFurniture(); return; }
       if (cartRide) { leaveCart(); return; }
       if (riding) { dismount(); return; }

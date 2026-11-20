@@ -197,7 +197,7 @@
   }
   // 번개: 하늘이 두 번 번쩍, 0.3~2.5초 뒤 우르릉(가까울수록 빨리·크게). 굴 속에선 빛은 안 보이고 소리만 작게
   function thunderStrike() {
-    var near = Math.random(); flashK = 1; vibrate();
+    var near = Math.random(); flashK = 1; vibrate('thunder');
     setTimeout(function () { rumble(near); }, 300 + (1 - near) * 2200);
     if (!stormTold && ui === 'play') { stormTold = true; toast('⛈ 천둥 번개가 쳐요 — 지붕 밑이나 방주 안으로 피해요'); }
   }

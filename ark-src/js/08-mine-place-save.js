@@ -85,7 +85,7 @@
         if (kind(up) === 'plant') breakAt(h.x, h.y + 1, h.z, up);
       }
       if (isGrav(get(h.x, h.y + 1, h.z))) startFall(h.x, h.y + 1, h.z);
-      sfx('break', matSound(old)); wearTool(usedTool); bagChanged();
+      sfx('break', matSound(old)); vibrate('break'); wearTool(usedTool); bagChanged();
     } else {
       var tgt = get(h.x, h.y, h.z);
       if (tryFrontierDevice(tgt,h)) return;
@@ -151,7 +151,7 @@
           tutorialEvent('place');
           if (plotAt(h.x, h.z) === myPlot) { stats.placed++; questCheck(); if (stats.placed >= 30) unlock('house'); buildMilestone(); }
           if (inCommons(h.x, h.z)) unlock('commons');
-          swingT = 0.25; vibrate(); exhaust(0.02);
+          swingT = 0.25; vibrate('place'); exhaust(0.02);
           return;
         }
         id = slabPlacement(id, h);
@@ -193,7 +193,7 @@
         }
         rememberBuild(item,doorUndo);
         sfx('place', matSound(item)); bagChanged(); stats.placed++; questCheck();
-        swingT = 0.25; vibrate(); return;
+        swingT = 0.25; vibrate('place'); return;
       }
       if ((isSolid(id) && !SHAPE[id] || id === RAIL || item === GATE) && hitsMe(by)) return;
       var beforeId=readBlock(bx,by,bz);
@@ -209,7 +209,7 @@
       if (inCommons(bx, bz)) unlock('commons');
       if (SHAPE[id] && SHAPE[id].type === 'sign') openSignPick(bx, by, bz);
     }
-    swingT = 0.25; vibrate(); exhaust(0.02);
+    swingT = 0.25; vibrate('place'); exhaust(0.02);
   }
   function naturalBuildResource(x, y, z, old) {
     if (old !== STONE && old !== LIME && old !== SAND && old !== CLAY) return 0;
@@ -283,7 +283,8 @@
     el.textContent = parts.join('  '); el.classList.add('show'); sfx('pop');
     clearTimeout(pickT); pickT = setTimeout(function () { el.classList.remove('show'); pickAgg = {}; }, 1400);
   }
-  function vibrate() { try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} }
+  var VIB = { tap: 10, place: 12, drop: 18, break: 22, bow: [8, 30, 26], block: 40, hurt: [50, 40, 50], faith: [25, 30, 25, 30, 25], thunder: [20, 80, 70] };
+  function vibrate(k) { try { navigator.vibrate && navigator.vibrate(VIB[k] || 12); } catch (e) {} }
   function setBlock(x, y, z, id) {
     var was = readBlock(x, y, z), c0 = colAt(x, z);
     setRaw(x, y, z, id); updateFrontierMachine(c0,x,y,z,id); updateSky(x, z); plotWrite(x, y, z, id);

@@ -620,7 +620,7 @@
     tutorialStep = 9;
     // 새 안내가 이전의 처음 네 가지 할 일을 대신한다.
     if (qStep < 4) { qStep = 4; questSave(); }
-    if (showMessage) toast('첫 안내를 끝냈어요. 위에 나오는 할 일을 따라 첫 집을 지어 보세요!');
+    if (showMessage) toast('첫 안내를 끝냈어요. 위에 나오는 할 일을 따라 첫 집을 지어 보세요! 활·수레 같은 것은 메뉴 「✨ 새 기능」에서 봐요');
     tutorialSave(); renderQuest();
   }
   function tutorialAdvance() {
@@ -674,7 +674,7 @@
   }
   function renderTutorial() {
     var text = [
-      isTouch ? '방향키로 걷고 화면을 밀어 둘러봐요' : 'WASD로 걷고 마우스로 둘러봐요',
+      isTouch ? '방향키로 걷고 화면을 밀어 둘러봐요 (방향키 가운데 톡톡 = 웅크리기)' : 'WASD로 걷고 마우스로 둘러봐요 (Shift = 웅크리기)',
       isTouch ? '통나무 2개를 캐요 — ＋에 맞추고 화면을 꾹 눌러요' : '통나무 2개를 캐요 — ＋를 맞추고 왼쪽 버튼을 꾹 눌러요',
       '가방 → 만들기 → 블록에서 고페르 나무를 두 번 만들어요',
       isTouch ? '단축 칸에서 블록을 고르고 화면을 톡 눌러 놓아요' : '단축 칸에서 블록을 고르고 오른쪽 클릭해 놓아요',

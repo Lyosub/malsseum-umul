@@ -403,8 +403,8 @@
   });
   WORD_ITEMS.forEach(function(d){expansionItem(d[0],d[1],'word'+d[0]);});
   // ── 2026-11-20 활과 화살: 어둠의 그림자를 멀리서 물리침 ──
-  var BOW = 930, ARROW = 931;
-  [[BOW, '활'], [ARROW, '화살'], [CART, '수레']].forEach(function (d) { if (B[d[0]]) throw new Error('번호가 겹쳐요: ' + d[0]); expansionItem(d[0], d[1], 'bow' + d[0]); });
+  var BOW = 930, ARROW = 931, SHARD = 933;
+  [[BOW, '활'], [ARROW, '화살'], [CART, '수레'], [SHARD, '빛 조각']].forEach(function (d) { if (B[d[0]]) throw new Error('번호가 겹쳐요: ' + d[0]); expansionItem(d[0], d[1], 'bow' + d[0]); });
   function drawBowTiles() {
     tile('bow930', function (px, R) {
       clear(px);
@@ -416,6 +416,10 @@
       clear(px);
       for (var y = 4; y < 12; y++) for (var x = 2; x < 14; x++) { var rim = y === 4 || x === 2 || x === 13; px(x, y, rim ? 0x6d7378 : 0x8d949a, 0.85 + R() * 0.2); }
       [[4, 12], [5, 12], [4, 13], [5, 13], [10, 12], [11, 12], [10, 13], [11, 13]].forEach(function (q) { px(q[0], q[1], 0x2b2b2b, 1); });
+    });
+    tile('bow933', function (px, R) {   // 빛 조각: 빛나는 노란 마름모
+      clear(px);
+      for (var y = 2; y < 14; y++) for (var x = 2; x < 14; x++) { var d = Math.abs(x - 7.5) + Math.abs(y - 7.5); if (d < 5.6) px(x, y, d < 2.2 ? 0xfffbe0 : (d < 4 ? 0xffe27a : 0xe8b030), 1); }
     });
     tile('bow931', function (px, R) {
       clear(px);
@@ -545,7 +549,7 @@
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
   FRONTIER_RECIPES.forEach(function(r){INV.push(r[0]);});
-  INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART, RAILF0);
+  INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART, RAILF0, SHARD);
   INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
   for (var fsi = 0; fsi < 12; fsi++) INV.push(FSTONE0 + fsi);
@@ -702,6 +706,8 @@
   ].forEach(function (o) { RECIPES.push({ out: [o[0], 1], need: o[1], cat: 'wear', table: true, ref: WEARINFO[o[0]].ref }); });
   RECIPES.push({ out: [TORCH, 4], need: [[STICK, 1], [COAL, 1]], cat: 'block', ref: '창 15:17' });
   RECIPES.push({ out: [TORCH, 4], need: [[STICK, 1], [CHAR, 1]], cat: 'block', ref: '창 15:17' });
+  RECIPES.push({ out: [TORCH, 6], need: [[SHARD, 1], [STICK, 1]], cat: 'block', ref: '요 1:5' });   // 빛 조각으로 더 많이
+  RECIPES.push({ out: [LANTERN, 2], need: [[SHARD, 2], [ING_FE, 1]], cat: 'shape' });
   // 땔감
   var FUEL = {}; FUEL[COAL] = 8; FUEL[CHAR] = 8; FUEL[LOG] = 1.5; FUEL[BLK_COAL] = 72;
   var FUEL_ORDER = [COAL, CHAR, LOG, BLK_COAL];
