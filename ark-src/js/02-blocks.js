@@ -426,7 +426,13 @@
   ARM_MATS.forEach(function (n, m) {
     [[ARM_SWORD0, ' 검'], [ARM_SLING0, ' 물매'], [ARM_BOW0, ' 활'], [ARM_ARROW0, ' 화살']].forEach(function (d) { var id = d[0] + m; if (B[id]) throw new Error('번호가 겹쳐요: ' + id); expansionItem(id, n + d[1], 'arm' + id); });
   });
-  function drawArmTiles() {   // 재료 빛깔로: 검 날·물매 돌주머니·활 끝·화살촉
+  var BOAT = 291; if (B[BOAT]) throw new Error('번호가 겹쳐요: ' + BOAT); expansionItem(BOAT, '배', 'boat291');
+  function drawArmTiles() {
+    tile('boat291', function (px, R) {   // 배: 나무 배 옆모습
+      clear(px);
+      for (var y = 8; y < 13; y++) for (var x = 1; x < 15; x++) { var inset = (12 - y) * 0.0 + (y - 8) * 0.9; if (x < 1 + inset || x > 14 - inset) continue; px(x, y, y === 8 ? 0x96603a : 0x7a4e2e, 0.85 + R() * 0.25); }
+      for (var y2 = 2; y2 < 8; y2++) px(8, y2, 0x6a4428, 1); for (var y3 = 3; y3 < 7; y3++) for (var x3 = 9; x3 < 9 + (7 - y3); x3++) px(x3, y3, 0xeeeae0, 0.95);
+    });   // 재료 빛깔로: 검 날·물매 돌주머니·활 끝·화살촉
     ARM_COL.forEach(function (col, m) {
       tile('arm' + (ARM_SWORD0 + m), function (px) {
         clear(px);
@@ -597,7 +603,7 @@
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
   FRONTIER_RECIPES.forEach(function(r){INV.push(r[0]);});
-  INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART, RAILF0, SHARD);
+  INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART, RAILF0, SHARD, BOAT);
   for (var am = 0; am < 7; am++) INV.push(ARM_SWORD0 + am, ARM_SHIELD0 + am, ARM_SLING0 + am, ARM_BOW0 + am, ARM_ARROW0 + am);
   INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
@@ -734,6 +740,7 @@
   RECIPES.push({ out: [CARPET, 3], need: [[WOOL_R, 2]], cat: 'shape' });
   RECIPES.push({ out: [LANTERN, 1], need: [[ING_FE, 1], [TORCH, 1]], cat: 'shape' });
   RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 2], [ING_AU, 1], [STICK, 1]], cat: 'wear', table: true, ref: '엡 6:17' });
+  RECIPES.push({ out: [BOAT, 1], need: [[GOPHER, 5], [PITCH, 1]], cat: 'tool', ref: '창 6:14' });   // 11/20 배: 역청을 칠해 물이 새지 않게
   // 광물 무기·방패 만들기: 검(재료 2 + 막대기) · 방패(재료 4 + 고페르 나무 2) · 물매(가죽 + 실 2 + 재료) · 활(막대기 3 + 실 3 + 재료) · 화살 4개(막대기 + 재료)
   [STONE, ING_CU, ING_AG, ING_AU, GEM_ONYX, GEM_SAPH, GEM_DIA].forEach(function (mt, m) {
     RECIPES.push({ out: [ARM_SWORD0 + m, 1], need: [[mt, 2], [STICK, 1]], cat: 'wear', table: true });

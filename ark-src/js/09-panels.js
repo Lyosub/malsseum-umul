@@ -646,7 +646,7 @@
     on('mapCap', function () { toggleFold('map'); });
     on('btnRotate', rotateScreen);
     applyFold();
-    on('restUp', function () { if (cartRide) leaveCart(); else standFromFurniture(); });
+    on('restUp', function () { if (cartRide) leaveCart(); else if (boatRide) leaveBoat(); else standFromFurniture(); });
     on('forestCancel', cancelForestRoute);
     on('go_frontier', function(){ startFrontierGuide(FRONTIER_ENTRY,'자유 개척지'); });
     on('go_cave', function(){ startFrontierGuide(FRONTIER_CAVE[0],'바위굴 입구'); });

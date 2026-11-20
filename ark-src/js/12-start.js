@@ -180,6 +180,7 @@
     if (!keepGuide) cancelForestRoute();
     if(ferryRide){ferryRide=null;ferryMesh.visible=false;}
     if (cartRide) leaveCart(true);
+    if (boatRide) leaveBoat(true);
     if (riding) dismount(true);
     ensureAround(x, z, 2);
     P.x = x; P.z = z; P.y = y; P.vy = 0; P.vx = P.vz = 0; fallTop = null;
@@ -242,6 +243,7 @@
   function step(dt) {
     if(ferryRide){stepFerry(dt);return;}
     if(cartRide){stepCart(dt);return;}
+    if(boatRide){stepBoat(dt);return;}
     if(frontierLift){moveFrontierLift(dt);placeCamera(dt,0);return;}
     if (furnitureRest) {
       var rest = furnitureRest;

@@ -15,7 +15,7 @@
   function saveSettings() { try { localStorage.setItem('arkVillage.settings', JSON.stringify(S)); localStorage.setItem('arkVillage.hotbar4', JSON.stringify(HOTBAR)); localStorage.setItem('arkVillage.bagslots', JSON.stringify(BAGSLOT)); } catch (e) {} }
   // 가방: 36칸, 한 칸에 한 묶음(77개, 도구·옷·안장은 1개). 관리자는 끝없음(∞)
   var STACK = 77, BAG_SLOTS = 36;
-  function stackOf(id) { return isTool(id) || WEARINFO[id] || id === SADDLE || id === SWORD || isArmSword(id) || isBowId(id) || isSlingId(id) || id === CART ? 1 : STACK; }
+  function stackOf(id) { return isTool(id) || WEARINFO[id] || id === SADDLE || id === SWORD || isArmSword(id) || isBowId(id) || isSlingId(id) || id === CART || id === BOAT ? 1 : STACK; }
   function slotsFor(id, n) { return n > 0 ? Math.ceil(n / stackOf(id)) : 0; }
   function usedSlots() { var s = 0; for (var k in BAG) if (BAG[k] > 0) s += slotsFor(+k, BAG[k]); return s; }
   // 이 물건을 몇 개 더 담을 수 있나(채우다 만 묶음 + 빈 칸)

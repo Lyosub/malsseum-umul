@@ -277,6 +277,7 @@
       if (held === SLING) return { label: '물매 연습' };
       if (isBowId(held)) return { label: '꾹 눌러 활 당기기' };
       if (isSlingId(held)) return { label: '물매 던지기' };
+      if (held === BOAT) return { label: '배 띄우기' };
     }
     var c = pickCreature(screenDir(), blockCover(h));
     if (c && !(riding && c.a && c.a.sp.seat)) {
@@ -477,6 +478,7 @@
       if(held===SHOFAR && have(held)) return callShofar();
       if(isSlingId(held) && have(held)) { var sh0=pickDir(dir); if(sh0 && get(sh0.x,sh0.y,sh0.z)===SLING_TARGET) return slingPractice(sh0); return slingThrow(dir); }
       if(isBowId(held) && have(held)) return shootArrow(dir);
+      if(held===BOAT && (have(held) || isAdm())) return useBoat(dir);
     }
     var h = pickDir(dir), c = pickCreature(dir, blockCover(h));
     if (c && riding && c.a && c.a.sp.seat) c = null;

@@ -662,7 +662,8 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 8, NEWS = [
+  var NEWS_VER = 9, NEWS = [
+    ['boat', '⛵', '배', '고페르 나무 5 + 역청 칠한 나무 1로 배를 만들어요(창 6:14). 배를 들고 물 위를 누르면 띄워서 타요 — 헤엄보다 세 배 빨라 섬에 가기 좋아요. 물에서는 가만히 있으면 가라앉고, 점프를 누르면 떠올라요. 오래 잠기면 숨이 막혀요.', 291],
     ['bigworld', '🗺', '두 배로 넓어진 세상', '세상이 동쪽·남쪽으로 두 배 넓어졌어요. 눈 덮인 헐몬 산, 동쪽 큰 숲, 갈릴리 호수와 요단 강, 시내 산, 푸른 들판, 남쪽 큰 바다와 섬을 찾아가 보세요.', 0],
     ['isles', '🏝', '북쪽 바다의 섬', '북쪽 바다에 밧모섬(계 1:9)·멜리데섬(행 28:1)·구브로섬(행 13:4)과 작은 섬들이 생겼어요. 작은 지도를 누르고 섬을 고르면 길을 알려 줘요.', 0],
     ['arms', '⚔', '광물 무기와 방패', '돌·구리·은·금·호마노·청옥·금강석으로 검·방패·물매·활·화살을 만들어요(제작대). 좋은 재료일수록 더 세게 치고 더 잘 막아요. 물매는 매끄러운 돌을 던져요.', 262],
@@ -1004,6 +1005,69 @@
     x.fillStyle = '#c0473a'; x.fillRect(mx - r, mz - r * 0.6, r * 2, r * 1.2); x.fillStyle = '#f2efe6'; x.fillRect(mx - r, mz - r * 0.6, r * 0.7, r * 1.2);
     x.strokeStyle = '#fff'; x.lineWidth = 1; x.strokeRect(mx - r, mz - r * 0.6, r * 2, r * 1.2);
     if (big) { x.font = '11px Galmuri11, sans-serif'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.fillText('내 침대', mx, mz - r - 6); }
+  }
+  // ── 11/20 배: 물 위를 눌러 띄우고 타요. 방향키로 저어 가고(초당 15칸), 「배에서 내리기」를 누르면 가까운 뭍으로 내려 배는 가방으로 ──
+  var boatRide = null, boatMesh = null, boatBumpT = 0;
+  function waterTopAt(x, z, yh) { for (var y = yh + 3; y >= yh - 8; y--) if (get(x, y, z) === WATER && get(x, y + 1, z) !== WATER && !isSolid(get(x, y + 1, z))) return y; return null; }
+  function useBoat(dir) {
+    if (boatRide || riding || cartRide || ferryRide) return;
+    if (!isAdm() && have(BOAT) < 1) return;
+    var spot = null;
+    if (P.swim) { var wy0 = waterTopAt(Math.floor(P.x), Math.floor(P.z), Math.floor(P.y)); if (wy0 !== null) spot = [P.x, wy0, P.z]; }
+    if (!spot) {
+      var ex = P.x, ey = P.y + EYE, ez = P.z;   // 내 눈에서(3인칭이어도) 앞쪽으로
+      for (var t = 0.5; t < 10 && !spot; t += 0.4) {
+        var bx = Math.floor(ex + dir.x * t), by = Math.floor(ey + dir.y * t), bz = Math.floor(ez + dir.z * t), id = get(bx, by, bz);
+        if (id === WATER) { var wy = waterTopAt(bx, bz, by); if (wy !== null) spot = [bx + 0.5, wy, bz + 0.5]; }
+        else if (isSolid(id)) break;
+      }
+    }
+    if (!spot) return deny('배는 물 위를 눌러서 띄워요');
+    if (!isAdm()) { take(BOAT, 1); bagChanged(); }
+    if (!boatMesh) {
+      boatMesh = new THREE.Mesh(mergedBoxes([[1.5, .22, 2.8, 0x7a4e2e, 0, 0, 0], [.14, .5, 2.7, 0x96603a, -.72, .25, 0], [.14, .5, 2.7, 0x96603a, .72, .25, 0], [1.4, .45, .16, 0x865630, 0, .22, 1.36], [1.1, .4, .16, 0x865630, 0, .22, -1.36], [1.3, .1, .45, 0x6a4428, 0, .3, .35]]), avatarMat);
+      scene.add(boatMesh);
+    }
+    boatMesh.visible = true;
+    boatRide = { x: spot[0], z: spot[2], wy: spot[1], vx: 0, vz: 0, t: 0 };
+    P.x = spot[0]; P.z = spot[2]; P.y = spot[1] + 0.95; P.vx = P.vy = P.vz = 0;
+    $('restUp').hidden = false; $('restUp').textContent = '배에서 내리기';
+    toast('⛵ 배를 탔어요 — 방향키로 저어 가요. 내릴 때는 「배에서 내리기」'); newsMark('boat'); sfx('place', 'wood');
+  }
+  function stepBoat(dt) {
+    var b = boatRide; b.t += dt;
+    if (keys.ShiftLeft || keys.ShiftRight) { leaveBoat(); placeCamera(dt, 0); return; }
+    var mx = 0, mz = 0;
+    if (keys.KeyW || keys.ArrowUp) mz -= 1; if (keys.KeyS || keys.ArrowDown) mz += 1;
+    if (keys.KeyA || keys.ArrowLeft) mx -= 1; if (keys.KeyD || keys.ArrowRight) mx += 1;
+    mx += joy.x; mz += joy.y; var len = Math.hypot(mx, mz); if (len > 1) { mx /= len; mz /= len; }
+    var sin = Math.sin(P.yaw), cos = Math.cos(P.yaw), sp = 15;
+    var wx = (mx * cos + mz * sin) * sp, wz = (-mx * sin + mz * cos) * sp;
+    b.vx += (wx - b.vx) * Math.min(1, 2.5 * dt); b.vz += (wz - b.vz) * Math.min(1, 2.5 * dt);
+    var nx = b.x + b.vx * dt, nz = b.z + b.vz * dt, v = Math.hypot(b.vx, b.vz) || 1;
+    var fx = nx + b.vx / v * 0.9, fz = nz + b.vz / v * 0.9;   // 뱃머리 쪽도 물이어야
+    var wy = waterTopAt(Math.floor(nx), Math.floor(nz), b.wy), wf = waterTopAt(Math.floor(fx), Math.floor(fz), b.wy);
+    if (wy === null || wf === null || Math.abs(wy - b.wy) > 1 || Math.abs(wf - b.wy) > 1) {
+      b.vx *= -0.2; b.vz *= -0.2;
+      var now = performance.now(); if (now > boatBumpT) { boatBumpT = now + 4000; toast('뭍에 닿았어요 — 「배에서 내리기」로 내려요'); }
+    } else { b.x = nx; b.z = nz; b.wy = wy; }
+    var bob = Math.sin(b.t * 2.2) * 0.04;
+    P.x = b.x; P.z = b.z; P.y = b.wy + 0.95 + bob; P.vx = P.vy = P.vz = 0; P.swim = false; P.ground = true;
+    boatMesh.position.set(b.x, b.wy + 0.82 + bob, b.z);
+    if (v > 0.6) { var hd = Math.atan2(b.vx, b.vz), dh = hd - boatMesh.rotation.y; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); boatMesh.rotation.y += dh * Math.min(1, 4 * dt); }
+    if (v > 3 && Math.random() < 0.3) sparkle(b.x - b.vx / v * 1.4, b.wy + 1.05, b.z - b.vz / v * 1.4, 0xe8f4ff, 1, { size: 0.25, life: 0.5, up: 0.4, v: 0.6 });
+    placeCamera(dt);
+  }
+  function leaveBoat(quiet) {
+    var b = boatRide; if (!b) return;
+    boatRide = null; if (boatMesh) boatMesh.visible = false;
+    $('restUp').hidden = true; $('restUp').textContent = '일어나기';
+    if (!isAdm()) { give(BOAT, 1); bagChanged(); }
+    for (var r = 1.5; r <= 3.5; r += 1) for (var a = 0; a < 8; a++) {   // 가까운 뭍(물이 아닌 땅) 위로
+      var x = b.x + Math.cos(a * Math.PI / 4) * r, z = b.z + Math.sin(a * Math.PI / 4) * r, gy = groundAt(x, z, b.wy + 3);
+      if (gy !== null && gy >= b.wy + 1 && gy <= b.wy + 2 && !collides(x, gy, z)) { P.x = x; P.y = gy; P.z = z; P.vx = P.vy = P.vz = 0; if (!quiet) toast('배를 가방에 넣고 뭍에 내렸어요'); return; }
+    }
+    P.y = b.wy + 0.3; P.vx = P.vy = P.vz = 0; if (!quiet) toast('배를 가방에 넣었어요 — 헤엄쳐요(점프를 누르면 떠올라요)');
   }
   function stepFerry(dt) {
     var ride=ferryRide; ride.t+=dt;

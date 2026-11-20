@@ -347,6 +347,7 @@
       vibrate('tap');
       if (typeof furnitureRest !== 'undefined' && furnitureRest) { standFromFurniture(); return; }
       if (cartRide) { leaveCart(); return; }
+      if (boatRide) { leaveBoat(); return; }
       if (riding) { dismount(); return; }
       sneakLock = !sneakLock; newsMark('sneak');
       toast(sneakLock ? '🧎 웅크렸어요 — 천천히 걷고 가장자리에서 떨어지지 않아요' : '🧍 일어났어요');

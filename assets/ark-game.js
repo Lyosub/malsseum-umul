@@ -1174,7 +1174,13 @@
   ARM_MATS.forEach(function (n, m) {
     [[ARM_SWORD0, ' 검'], [ARM_SLING0, ' 물매'], [ARM_BOW0, ' 활'], [ARM_ARROW0, ' 화살']].forEach(function (d) { var id = d[0] + m; if (B[id]) throw new Error('번호가 겹쳐요: ' + id); expansionItem(id, n + d[1], 'arm' + id); });
   });
-  function drawArmTiles() {   // 재료 빛깔로: 검 날·물매 돌주머니·활 끝·화살촉
+  var BOAT = 291; if (B[BOAT]) throw new Error('번호가 겹쳐요: ' + BOAT); expansionItem(BOAT, '배', 'boat291');
+  function drawArmTiles() {
+    tile('boat291', function (px, R) {   // 배: 나무 배 옆모습
+      clear(px);
+      for (var y = 8; y < 13; y++) for (var x = 1; x < 15; x++) { var inset = (12 - y) * 0.0 + (y - 8) * 0.9; if (x < 1 + inset || x > 14 - inset) continue; px(x, y, y === 8 ? 0x96603a : 0x7a4e2e, 0.85 + R() * 0.25); }
+      for (var y2 = 2; y2 < 8; y2++) px(8, y2, 0x6a4428, 1); for (var y3 = 3; y3 < 7; y3++) for (var x3 = 9; x3 < 9 + (7 - y3); x3++) px(x3, y3, 0xeeeae0, 0.95);
+    });   // 재료 빛깔로: 검 날·물매 돌주머니·활 끝·화살촉
     ARM_COL.forEach(function (col, m) {
       tile('arm' + (ARM_SWORD0 + m), function (px) {
         clear(px);
@@ -1345,7 +1351,7 @@
   INV.push(SAPLING, OLIVE, LADDER, CHEST, SADDLE, CRAFT, LEATHER, WOOL);
   WEARS.forEach(function (w) { INV.push(w[0]); });
   FRONTIER_RECIPES.forEach(function(r){INV.push(r[0]);});
-  INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART, RAILF0, SHARD);
+  INV.push(TRAP, FRAME, BOW, ARROW, RAIL0, CART, RAILF0, SHARD, BOAT);
   for (var am = 0; am < 7; am++) INV.push(ARM_SWORD0 + am, ARM_SHIELD0 + am, ARM_SLING0 + am, ARM_BOW0 + am, ARM_ARROW0 + am);
   INV.push(SEED, WHEAT, BREAD, FIG, BED, CHAIR, LEVER, PANE, SIGN, WOOL_W, WOOL_B, WOOL_V, WOOL_R, SLAB_L, SLAB_P, STAIR_L, STAIR_P, SWORD, SHELF, SBRICK, CARPET, LANTERN);
   GEMS.forEach(function (g, i) { if (g) INV.push(gemOre(i), gemItem(i)); });
@@ -1482,6 +1488,7 @@
   RECIPES.push({ out: [CARPET, 3], need: [[WOOL_R, 2]], cat: 'shape' });
   RECIPES.push({ out: [LANTERN, 1], need: [[ING_FE, 1], [TORCH, 1]], cat: 'shape' });
   RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 2], [ING_AU, 1], [STICK, 1]], cat: 'wear', table: true, ref: '엡 6:17' });
+  RECIPES.push({ out: [BOAT, 1], need: [[GOPHER, 5], [PITCH, 1]], cat: 'tool', ref: '창 6:14' });   // 11/20 배: 역청을 칠해 물이 새지 않게
   // 광물 무기·방패 만들기: 검(재료 2 + 막대기) · 방패(재료 4 + 고페르 나무 2) · 물매(가죽 + 실 2 + 재료) · 활(막대기 3 + 실 3 + 재료) · 화살 4개(막대기 + 재료)
   [STONE, ING_CU, ING_AG, ING_AU, GEM_ONYX, GEM_SAPH, GEM_DIA].forEach(function (mt, m) {
     RECIPES.push({ out: [ARM_SWORD0 + m, 1], need: [[mt, 2], [STICK, 1]], cat: 'wear', table: true });
@@ -2830,7 +2837,7 @@
   function saveSettings() { try { localStorage.setItem('arkVillage.settings', JSON.stringify(S)); localStorage.setItem('arkVillage.hotbar4', JSON.stringify(HOTBAR)); localStorage.setItem('arkVillage.bagslots', JSON.stringify(BAGSLOT)); } catch (e) {} }
   // 가방: 36칸, 한 칸에 한 묶음(77개, 도구·옷·안장은 1개). 관리자는 끝없음(∞)
   var STACK = 77, BAG_SLOTS = 36;
-  function stackOf(id) { return isTool(id) || WEARINFO[id] || id === SADDLE || id === SWORD || isArmSword(id) || isBowId(id) || isSlingId(id) || id === CART ? 1 : STACK; }
+  function stackOf(id) { return isTool(id) || WEARINFO[id] || id === SADDLE || id === SWORD || isArmSword(id) || isBowId(id) || isSlingId(id) || id === CART || id === BOAT ? 1 : STACK; }
   function slotsFor(id, n) { return n > 0 ? Math.ceil(n / stackOf(id)) : 0; }
   function usedSlots() { var s = 0; for (var k in BAG) if (BAG[k] > 0) s += slotsFor(+k, BAG[k]); return s; }
   // 이 물건을 몇 개 더 담을 수 있나(채우다 만 묶음 + 빈 칸)
@@ -3506,6 +3513,7 @@
       vibrate('tap');
       if (typeof furnitureRest !== 'undefined' && furnitureRest) { standFromFurniture(); return; }
       if (cartRide) { leaveCart(); return; }
+      if (boatRide) { leaveBoat(); return; }
       if (riding) { dismount(); return; }
       sneakLock = !sneakLock; newsMark('sneak');
       toast(sneakLock ? '🧎 웅크렸어요 — 천천히 걷고 가장자리에서 떨어지지 않아요' : '🧍 일어났어요');
@@ -5011,7 +5019,7 @@
     on('mapCap', function () { toggleFold('map'); });
     on('btnRotate', rotateScreen);
     applyFold();
-    on('restUp', function () { if (cartRide) leaveCart(); else standFromFurniture(); });
+    on('restUp', function () { if (cartRide) leaveCart(); else if (boatRide) leaveBoat(); else standFromFurniture(); });
     on('forestCancel', cancelForestRoute);
     on('go_frontier', function(){ startFrontierGuide(FRONTIER_ENTRY,'자유 개척지'); });
     on('go_cave', function(){ startFrontierGuide(FRONTIER_CAVE[0],'바위굴 입구'); });
@@ -5435,6 +5443,7 @@
       if (held === SLING) return { label: '물매 연습' };
       if (isBowId(held)) return { label: '꾹 눌러 활 당기기' };
       if (isSlingId(held)) return { label: '물매 던지기' };
+      if (held === BOAT) return { label: '배 띄우기' };
     }
     var c = pickCreature(screenDir(), blockCover(h));
     if (c && !(riding && c.a && c.a.sp.seat)) {
@@ -5635,6 +5644,7 @@
       if(held===SHOFAR && have(held)) return callShofar();
       if(isSlingId(held) && have(held)) { var sh0=pickDir(dir); if(sh0 && get(sh0.x,sh0.y,sh0.z)===SLING_TARGET) return slingPractice(sh0); return slingThrow(dir); }
       if(isBowId(held) && have(held)) return shootArrow(dir);
+      if(held===BOAT && (have(held) || isAdm())) return useBoat(dir);
     }
     var h = pickDir(dir), c = pickCreature(dir, blockCover(h));
     if (c && riding && c.a && c.a.sp.seat) c = null;
@@ -6775,6 +6785,7 @@
     if (!keepGuide) cancelForestRoute();
     if(ferryRide){ferryRide=null;ferryMesh.visible=false;}
     if (cartRide) leaveCart(true);
+    if (boatRide) leaveBoat(true);
     if (riding) dismount(true);
     ensureAround(x, z, 2);
     P.x = x; P.z = z; P.y = y; P.vy = 0; P.vx = P.vz = 0; fallTop = null;
@@ -6837,6 +6848,7 @@
   function step(dt) {
     if(ferryRide){stepFerry(dt);return;}
     if(cartRide){stepCart(dt);return;}
+    if(boatRide){stepBoat(dt);return;}
     if(frontierLift){moveFrontierLift(dt);placeCamera(dt,0);return;}
     if (furnitureRest) {
       var rest = furnitureRest;
@@ -8881,7 +8893,8 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 8, NEWS = [
+  var NEWS_VER = 9, NEWS = [
+    ['boat', '⛵', '배', '고페르 나무 5 + 역청 칠한 나무 1로 배를 만들어요(창 6:14). 배를 들고 물 위를 누르면 띄워서 타요 — 헤엄보다 세 배 빨라 섬에 가기 좋아요. 물에서는 가만히 있으면 가라앉고, 점프를 누르면 떠올라요. 오래 잠기면 숨이 막혀요.', 291],
     ['bigworld', '🗺', '두 배로 넓어진 세상', '세상이 동쪽·남쪽으로 두 배 넓어졌어요. 눈 덮인 헐몬 산, 동쪽 큰 숲, 갈릴리 호수와 요단 강, 시내 산, 푸른 들판, 남쪽 큰 바다와 섬을 찾아가 보세요.', 0],
     ['isles', '🏝', '북쪽 바다의 섬', '북쪽 바다에 밧모섬(계 1:9)·멜리데섬(행 28:1)·구브로섬(행 13:4)과 작은 섬들이 생겼어요. 작은 지도를 누르고 섬을 고르면 길을 알려 줘요.', 0],
     ['arms', '⚔', '광물 무기와 방패', '돌·구리·은·금·호마노·청옥·금강석으로 검·방패·물매·활·화살을 만들어요(제작대). 좋은 재료일수록 더 세게 치고 더 잘 막아요. 물매는 매끄러운 돌을 던져요.', 262],
@@ -9223,6 +9236,69 @@
     x.fillStyle = '#c0473a'; x.fillRect(mx - r, mz - r * 0.6, r * 2, r * 1.2); x.fillStyle = '#f2efe6'; x.fillRect(mx - r, mz - r * 0.6, r * 0.7, r * 1.2);
     x.strokeStyle = '#fff'; x.lineWidth = 1; x.strokeRect(mx - r, mz - r * 0.6, r * 2, r * 1.2);
     if (big) { x.font = '11px Galmuri11, sans-serif'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.fillText('내 침대', mx, mz - r - 6); }
+  }
+  // ── 11/20 배: 물 위를 눌러 띄우고 타요. 방향키로 저어 가고(초당 15칸), 「배에서 내리기」를 누르면 가까운 뭍으로 내려 배는 가방으로 ──
+  var boatRide = null, boatMesh = null, boatBumpT = 0;
+  function waterTopAt(x, z, yh) { for (var y = yh + 3; y >= yh - 8; y--) if (get(x, y, z) === WATER && get(x, y + 1, z) !== WATER && !isSolid(get(x, y + 1, z))) return y; return null; }
+  function useBoat(dir) {
+    if (boatRide || riding || cartRide || ferryRide) return;
+    if (!isAdm() && have(BOAT) < 1) return;
+    var spot = null;
+    if (P.swim) { var wy0 = waterTopAt(Math.floor(P.x), Math.floor(P.z), Math.floor(P.y)); if (wy0 !== null) spot = [P.x, wy0, P.z]; }
+    if (!spot) {
+      var ex = P.x, ey = P.y + EYE, ez = P.z;   // 내 눈에서(3인칭이어도) 앞쪽으로
+      for (var t = 0.5; t < 10 && !spot; t += 0.4) {
+        var bx = Math.floor(ex + dir.x * t), by = Math.floor(ey + dir.y * t), bz = Math.floor(ez + dir.z * t), id = get(bx, by, bz);
+        if (id === WATER) { var wy = waterTopAt(bx, bz, by); if (wy !== null) spot = [bx + 0.5, wy, bz + 0.5]; }
+        else if (isSolid(id)) break;
+      }
+    }
+    if (!spot) return deny('배는 물 위를 눌러서 띄워요');
+    if (!isAdm()) { take(BOAT, 1); bagChanged(); }
+    if (!boatMesh) {
+      boatMesh = new THREE.Mesh(mergedBoxes([[1.5, .22, 2.8, 0x7a4e2e, 0, 0, 0], [.14, .5, 2.7, 0x96603a, -.72, .25, 0], [.14, .5, 2.7, 0x96603a, .72, .25, 0], [1.4, .45, .16, 0x865630, 0, .22, 1.36], [1.1, .4, .16, 0x865630, 0, .22, -1.36], [1.3, .1, .45, 0x6a4428, 0, .3, .35]]), avatarMat);
+      scene.add(boatMesh);
+    }
+    boatMesh.visible = true;
+    boatRide = { x: spot[0], z: spot[2], wy: spot[1], vx: 0, vz: 0, t: 0 };
+    P.x = spot[0]; P.z = spot[2]; P.y = spot[1] + 0.95; P.vx = P.vy = P.vz = 0;
+    $('restUp').hidden = false; $('restUp').textContent = '배에서 내리기';
+    toast('⛵ 배를 탔어요 — 방향키로 저어 가요. 내릴 때는 「배에서 내리기」'); newsMark('boat'); sfx('place', 'wood');
+  }
+  function stepBoat(dt) {
+    var b = boatRide; b.t += dt;
+    if (keys.ShiftLeft || keys.ShiftRight) { leaveBoat(); placeCamera(dt, 0); return; }
+    var mx = 0, mz = 0;
+    if (keys.KeyW || keys.ArrowUp) mz -= 1; if (keys.KeyS || keys.ArrowDown) mz += 1;
+    if (keys.KeyA || keys.ArrowLeft) mx -= 1; if (keys.KeyD || keys.ArrowRight) mx += 1;
+    mx += joy.x; mz += joy.y; var len = Math.hypot(mx, mz); if (len > 1) { mx /= len; mz /= len; }
+    var sin = Math.sin(P.yaw), cos = Math.cos(P.yaw), sp = 15;
+    var wx = (mx * cos + mz * sin) * sp, wz = (-mx * sin + mz * cos) * sp;
+    b.vx += (wx - b.vx) * Math.min(1, 2.5 * dt); b.vz += (wz - b.vz) * Math.min(1, 2.5 * dt);
+    var nx = b.x + b.vx * dt, nz = b.z + b.vz * dt, v = Math.hypot(b.vx, b.vz) || 1;
+    var fx = nx + b.vx / v * 0.9, fz = nz + b.vz / v * 0.9;   // 뱃머리 쪽도 물이어야
+    var wy = waterTopAt(Math.floor(nx), Math.floor(nz), b.wy), wf = waterTopAt(Math.floor(fx), Math.floor(fz), b.wy);
+    if (wy === null || wf === null || Math.abs(wy - b.wy) > 1 || Math.abs(wf - b.wy) > 1) {
+      b.vx *= -0.2; b.vz *= -0.2;
+      var now = performance.now(); if (now > boatBumpT) { boatBumpT = now + 4000; toast('뭍에 닿았어요 — 「배에서 내리기」로 내려요'); }
+    } else { b.x = nx; b.z = nz; b.wy = wy; }
+    var bob = Math.sin(b.t * 2.2) * 0.04;
+    P.x = b.x; P.z = b.z; P.y = b.wy + 0.95 + bob; P.vx = P.vy = P.vz = 0; P.swim = false; P.ground = true;
+    boatMesh.position.set(b.x, b.wy + 0.82 + bob, b.z);
+    if (v > 0.6) { var hd = Math.atan2(b.vx, b.vz), dh = hd - boatMesh.rotation.y; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); boatMesh.rotation.y += dh * Math.min(1, 4 * dt); }
+    if (v > 3 && Math.random() < 0.3) sparkle(b.x - b.vx / v * 1.4, b.wy + 1.05, b.z - b.vz / v * 1.4, 0xe8f4ff, 1, { size: 0.25, life: 0.5, up: 0.4, v: 0.6 });
+    placeCamera(dt);
+  }
+  function leaveBoat(quiet) {
+    var b = boatRide; if (!b) return;
+    boatRide = null; if (boatMesh) boatMesh.visible = false;
+    $('restUp').hidden = true; $('restUp').textContent = '일어나기';
+    if (!isAdm()) { give(BOAT, 1); bagChanged(); }
+    for (var r = 1.5; r <= 3.5; r += 1) for (var a = 0; a < 8; a++) {   // 가까운 뭍(물이 아닌 땅) 위로
+      var x = b.x + Math.cos(a * Math.PI / 4) * r, z = b.z + Math.sin(a * Math.PI / 4) * r, gy = groundAt(x, z, b.wy + 3);
+      if (gy !== null && gy >= b.wy + 1 && gy <= b.wy + 2 && !collides(x, gy, z)) { P.x = x; P.y = gy; P.z = z; P.vx = P.vy = P.vz = 0; if (!quiet) toast('배를 가방에 넣고 뭍에 내렸어요'); return; }
+    }
+    P.y = b.wy + 0.3; P.vx = P.vy = P.vz = 0; if (!quiet) toast('배를 가방에 넣었어요 — 헤엄쳐요(점프를 누르면 떠올라요)');
   }
   function stepFerry(dt) {
     var ride=ferryRide; ride.t+=dt;
