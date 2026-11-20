@@ -547,8 +547,7 @@
             return {id:'tour-'+i,label:'집 볼거리 '+(i+1),x:o.x+mark[0],z:o.z+mark[1]};
           });
           if(visitMarks.length)villageBook.target=visitMarks[0].id;
-          teleport(o.x + OLD_PLOT / 2, G, o.z - 3, Math.PI); resume();
-          toast('🏡 ' + x.nick + '의 집이에요 — '+(visitMarks.length?'지도에 볼거리가 있어요':'구경만 할 수 있어요'));
+          guideTo([o.x + OLD_PLOT / 2, o.z - 3], shortName(x.nick, 8) + '의 집');
         });
         d.appendChild(t); d.appendChild(b); L.appendChild(d);
       });

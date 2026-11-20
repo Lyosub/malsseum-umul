@@ -147,7 +147,7 @@
             mapT -= dt;
             if (mapT <= 0) {
               mapT = 0.25;
-              if (ui === 'play') drawMap($('mapc'), false);
+              if (ui === 'play') { drawMap($('mapc'), false); renderMapCap(); }
               else drawMap($('bigmapc'), true);
             }
           }
@@ -185,6 +185,13 @@
     P.x = x; P.z = z; P.y = y; P.vy = 0; P.vx = P.vz = 0; fallTop = null;
     while (collides(P.x, P.y, P.z) && P.y < SY) P.y += 1;
     if (yaw !== undefined) P.yaw = yaw; P.pitch = -0.12; P.camY = 0;
+  }
+  // 작은 지도 아래 지금 좌표(X 동서 · Z 남북 · Y 높이) — 아이들이 좌표로 자리를 말할 수 있게
+  var mapCapLabel = '지도<b class="k">M</b>', mapCapKey = '';
+  function renderMapCap(force) {
+    var x = Math.floor(P.x), y = Math.floor(P.y), z = Math.floor(P.z), k = x + ',' + y + ',' + z;
+    if (!force && k === mapCapKey) return; mapCapKey = k;
+    $('mapCap').innerHTML = mapCapLabel + '<span class="coords">X ' + x + ' · Z ' + z + '<br>Y ' + y + ' (높이)</span>';
   }
   function goHome() {
     if (myPlot < 0) { toast(me ? '내 땅을 받는 중이에요' : '로그인하면 내 땅을 받을 수 있어요'); return; }

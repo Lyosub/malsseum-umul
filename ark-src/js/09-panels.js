@@ -607,7 +607,7 @@
       $('btnFold').querySelector('span').textContent = f.top ? '◀' : '▶'; $('btnFold').querySelector('small').textContent = f.top ? '펴기' : '접기';
       document.body.classList.toggle('qfold', !!f.q);   // 안내를 접으면 상자는 숨기고 위쪽 줄의 📜 버튼만
       document.body.classList.toggle('mapfold', !!f.map);
-      $('mapCap').innerHTML = f.map ? '🗺 지도 펴기' : '지도<b class="k">M</b>';
+      mapCapLabel = f.map ? '🗺 지도 펴기' : '지도<b class="k">M</b>'; renderMapCap(true);
     }
     function toggleFold(k) { S.fold = S.fold || {}; S.fold[k] = !S.fold[k]; saveSettings(); applyFold(); sfx('click'); }
     on('btnFold', function () { toggleFold('top'); });
@@ -756,7 +756,7 @@
     });
     on('mMap', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     ['ark', 'forest', 'hill', 'lake'].forEach(function (w) { on('go_' + w, function () { travel(w); }); });
-    on('go_home', function () { resume(); goHome(); });
+    on('go_home', function () { if (myPlot < 0) { resume(); return goHome(); } var o = plotOrigin(myPlot); guideTo([o.x + OLD_PLOT / 2, o.z - 2], '내 땅(' + (myPlot + 1) + '번)'); });
     ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);

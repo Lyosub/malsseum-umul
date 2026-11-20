@@ -3033,7 +3033,7 @@
     ['#btnRotate', '🔄 화면', '가로 · 세로를 바꿔요.', 'touch'],
     ['#btnFold', '▶ 접기', '위쪽 버튼들을 접어 화면을 넓게 써요. 다시 누르면 펴져요.'],
     ['#btnPause', '❚❚ 메뉴', '게임 · 이동 · 함께 · 설정 탭이 있어요. 마을 수첩 · 지도 · 친구 · 파티도 여기서 열어요.'],
-    ['#mapc', '🗺 작은 지도', '누르면 큰 지도가 열려요. 아래 「지도」 글자를 누르면 접혀요.'],
+    ['#mapc', '🗺 작은 지도', '누르면 길 안내가 열려요. 아래에 지금 좌표(X·Y·Z)가 보여요. 「지도」 글자를 누르면 접혀요.'],
     ['#quest', '📜 할 일 안내', '지금 해 볼 일을 알려 줘요. ▴를 누르면 접혀요.'],
     ['#info', '📍 지금 있는 곳', '장소 · 계절 · 함께 있는 사람 수가 나와요.'],
     [null, '🤝 다른 나그네', '다른 사람을 두 번 누르면 친구 신청 · 파티 초대를 할 수 있어요.'],
@@ -3130,6 +3130,12 @@
     resume();
     renderForestRoute();
   }
+  // 11/20 순간이동 대신 길 안내(전도사님 「순간이동하면 탐험하는 의미가 없어」): 화살표·남은 칸·목적지 좌표
+  function guideTo(pos, label) {
+    forestRoute = [pos]; forestDestination = pos; forestName = label; newsMark('guide');
+    resume(); renderForestRoute();
+    toast('🧭 ' + label + ' — X ' + Math.round(pos[0]) + ', Z ' + Math.round(pos[1]) + ' · 화살표를 따라 걸어가요');
+  }
   function cancelForestRoute() {
     forestRoute = null;
     $('forestGuide').hidden = true;
@@ -3149,8 +3155,8 @@
       toast(forestName+'에 도착했어요!');
       return;
     }
-    var angle = Math.atan2(next[0] - P.x, P.z - next[1]) + P.yaw;
-    if ($('forestPlace').textContent !== forestName) $('forestPlace').textContent=forestName;
+    var angle = Math.atan2(next[0] - P.x, P.z - next[1]) + P.yaw, placeLabel = forestName + ' (X ' + Math.round(forestDestination[0]) + ', Z ' + Math.round(forestDestination[1]) + ')';
+    if ($('forestPlace').textContent !== placeLabel) $('forestPlace').textContent = placeLabel;
     $('forestArrow').style.transform = 'rotate(' + angle + 'rad)';
     var distanceLabel = Math.round(remaining) + '칸';
     if ($('forestDistance').textContent !== distanceLabel) $('forestDistance').textContent = distanceLabel;
@@ -3166,8 +3172,8 @@
       desert: [DES_X + 40, PZ0 + 70, -Math.PI / 2, '동쪽 사막이에요. 낙타를 만나고, 더 가면 오아시스가 있어요'],
       ararat: [ARX + 150, ARZ, Math.PI / 2, '아라랏 산이에요. 방주가 아라랏 산에 머물렀어요(창 8:4)'],
       commons: [XM + 0.5, COMMONS[3] + 4, 0, '함께 짓는 터예요. 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요']
-    }, s = spots[where];
-    teleport(s[0], surfaceY(Math.floor(s[0]), Math.floor(s[1])), s[1], s[2]); resume(); toast(s[3]);
+    }, names = { ark: '방주', hill: '서쪽 산', lake: '남쪽 호수', sea: '북쪽 바다', desert: '동쪽 사막', ararat: '아라랏 산', commons: '함께 짓는 터' }, s = spots[where];
+    guideTo([s[0], s[1]], names[where]);
   }
 
   // ───────── 입력 ─────────
@@ -4734,7 +4740,7 @@
       $('btnFold').querySelector('span').textContent = f.top ? '◀' : '▶'; $('btnFold').querySelector('small').textContent = f.top ? '펴기' : '접기';
       document.body.classList.toggle('qfold', !!f.q);   // 안내를 접으면 상자는 숨기고 위쪽 줄의 📜 버튼만
       document.body.classList.toggle('mapfold', !!f.map);
-      $('mapCap').innerHTML = f.map ? '🗺 지도 펴기' : '지도<b class="k">M</b>';
+      mapCapLabel = f.map ? '🗺 지도 펴기' : '지도<b class="k">M</b>'; renderMapCap(true);
     }
     function toggleFold(k) { S.fold = S.fold || {}; S.fold[k] = !S.fold[k]; saveSettings(); applyFold(); sfx('click'); }
     on('btnFold', function () { toggleFold('top'); });
@@ -4883,7 +4889,7 @@
     });
     on('mMap', function () { openPanel('map'); drawMap($('bigmapc'), true); sfx('click'); });
     ['ark', 'forest', 'hill', 'lake'].forEach(function (w) { on('go_' + w, function () { travel(w); }); });
-    on('go_home', function () { resume(); goHome(); });
+    on('go_home', function () { if (myPlot < 0) { resume(); return goHome(); } var o = plotOrigin(myPlot); guideTo([o.x + OLD_PLOT / 2, o.z - 2], '내 땅(' + (myPlot + 1) + '번)'); });
     ['sea', 'desert', 'ararat', 'commons'].forEach(function (w) { var b = $('go_' + w); if (b) on('go_' + w, function () { travel(w); }); });
     on('mMusic', function () { S.music = S.music === false; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mRevert', adminRevertCommons);
@@ -6449,7 +6455,7 @@
             mapT -= dt;
             if (mapT <= 0) {
               mapT = 0.25;
-              if (ui === 'play') drawMap($('mapc'), false);
+              if (ui === 'play') { drawMap($('mapc'), false); renderMapCap(); }
               else drawMap($('bigmapc'), true);
             }
           }
@@ -6487,6 +6493,13 @@
     P.x = x; P.z = z; P.y = y; P.vy = 0; P.vx = P.vz = 0; fallTop = null;
     while (collides(P.x, P.y, P.z) && P.y < SY) P.y += 1;
     if (yaw !== undefined) P.yaw = yaw; P.pitch = -0.12; P.camY = 0;
+  }
+  // 작은 지도 아래 지금 좌표(X 동서 · Z 남북 · Y 높이) — 아이들이 좌표로 자리를 말할 수 있게
+  var mapCapLabel = '지도<b class="k">M</b>', mapCapKey = '';
+  function renderMapCap(force) {
+    var x = Math.floor(P.x), y = Math.floor(P.y), z = Math.floor(P.z), k = x + ',' + y + ',' + z;
+    if (!force && k === mapCapKey) return; mapCapKey = k;
+    $('mapCap').innerHTML = mapCapLabel + '<span class="coords">X ' + x + ' · Z ' + z + '<br>Y ' + y + ' (높이)</span>';
   }
   function goHome() {
     if (myPlot < 0) { toast(me ? '내 땅을 받는 중이에요' : '로그인하면 내 땅을 받을 수 있어요'); return; }
@@ -7202,8 +7215,7 @@
             return {id:'tour-'+i,label:'집 볼거리 '+(i+1),x:o.x+mark[0],z:o.z+mark[1]};
           });
           if(visitMarks.length)villageBook.target=visitMarks[0].id;
-          teleport(o.x + OLD_PLOT / 2, G, o.z - 3, Math.PI); resume();
-          toast('🏡 ' + x.nick + '의 집이에요 — '+(visitMarks.length?'지도에 볼거리가 있어요':'구경만 할 수 있어요'));
+          guideTo([o.x + OLD_PLOT / 2, o.z - 3], shortName(x.nick, 8) + '의 집');
         });
         d.appendChild(t); d.appendChild(b); L.appendChild(d);
       });
@@ -8557,7 +8569,8 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 4, NEWS = [
+  var NEWS_VER = 5, NEWS = [
+    ['guide', '🧭', '길 안내와 좌표', '작은 지도를 누르고 갈 곳을 고르면 순간이동 대신 화살표가 길을 알려 줘요. 작은 지도 아래에 지금 좌표(X·Z, 높이 Y)가 보여요.', 0],
     ['deep', '⛏', '더 깊은 땅속', '땅속이 32칸 더 깊어졌어요(바닥 y -32). 금은 y -8 아래, 청옥은 -16 아래, 금강석은 맨 아래 깊은 돌 층에서 나와요.', 0],
     ['onyx', '🟣', '호마노 도구', '철과 금강석 사이에 호마노 곡괭이·도끼·삽·칼이 생겼어요. 호마노는 철 곡괭이로 캐고, 청옥·금강석은 호마노 곡괭이가 있어야 캐요.', TOOL_ONYX],
     ['quest', '📜', '퀘스트', '왼쪽 위 「📜 부탁」이나 메뉴의 「📜 퀘스트」에서 오늘의 부탁 셋·모험·땅 밟기를 봐요. 다 들어주면 보상을 받아요.', 0],

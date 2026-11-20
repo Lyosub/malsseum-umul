@@ -50,7 +50,7 @@
     ['#btnRotate', '🔄 화면', '가로 · 세로를 바꿔요.', 'touch'],
     ['#btnFold', '▶ 접기', '위쪽 버튼들을 접어 화면을 넓게 써요. 다시 누르면 펴져요.'],
     ['#btnPause', '❚❚ 메뉴', '게임 · 이동 · 함께 · 설정 탭이 있어요. 마을 수첩 · 지도 · 친구 · 파티도 여기서 열어요.'],
-    ['#mapc', '🗺 작은 지도', '누르면 큰 지도가 열려요. 아래 「지도」 글자를 누르면 접혀요.'],
+    ['#mapc', '🗺 작은 지도', '누르면 길 안내가 열려요. 아래에 지금 좌표(X·Y·Z)가 보여요. 「지도」 글자를 누르면 접혀요.'],
     ['#quest', '📜 할 일 안내', '지금 해 볼 일을 알려 줘요. ▴를 누르면 접혀요.'],
     ['#info', '📍 지금 있는 곳', '장소 · 계절 · 함께 있는 사람 수가 나와요.'],
     [null, '🤝 다른 나그네', '다른 사람을 두 번 누르면 친구 신청 · 파티 초대를 할 수 있어요.'],
@@ -147,6 +147,12 @@
     resume();
     renderForestRoute();
   }
+  // 11/20 순간이동 대신 길 안내(전도사님 「순간이동하면 탐험하는 의미가 없어」): 화살표·남은 칸·목적지 좌표
+  function guideTo(pos, label) {
+    forestRoute = [pos]; forestDestination = pos; forestName = label; newsMark('guide');
+    resume(); renderForestRoute();
+    toast('🧭 ' + label + ' — X ' + Math.round(pos[0]) + ', Z ' + Math.round(pos[1]) + ' · 화살표를 따라 걸어가요');
+  }
   function cancelForestRoute() {
     forestRoute = null;
     $('forestGuide').hidden = true;
@@ -166,8 +172,8 @@
       toast(forestName+'에 도착했어요!');
       return;
     }
-    var angle = Math.atan2(next[0] - P.x, P.z - next[1]) + P.yaw;
-    if ($('forestPlace').textContent !== forestName) $('forestPlace').textContent=forestName;
+    var angle = Math.atan2(next[0] - P.x, P.z - next[1]) + P.yaw, placeLabel = forestName + ' (X ' + Math.round(forestDestination[0]) + ', Z ' + Math.round(forestDestination[1]) + ')';
+    if ($('forestPlace').textContent !== placeLabel) $('forestPlace').textContent = placeLabel;
     $('forestArrow').style.transform = 'rotate(' + angle + 'rad)';
     var distanceLabel = Math.round(remaining) + '칸';
     if ($('forestDistance').textContent !== distanceLabel) $('forestDistance').textContent = distanceLabel;
@@ -183,8 +189,8 @@
       desert: [DES_X + 40, PZ0 + 70, -Math.PI / 2, '동쪽 사막이에요. 낙타를 만나고, 더 가면 오아시스가 있어요'],
       ararat: [ARX + 150, ARZ, Math.PI / 2, '아라랏 산이에요. 방주가 아라랏 산에 머물렀어요(창 8:4)'],
       commons: [XM + 0.5, COMMONS[3] + 4, 0, '함께 짓는 터예요. 누구나 함께 지을 수 있고, 지은 것은 모두에게 남아요']
-    }, s = spots[where];
-    teleport(s[0], surfaceY(Math.floor(s[0]), Math.floor(s[1])), s[1], s[2]); resume(); toast(s[3]);
+    }, names = { ark: '방주', hill: '서쪽 산', lake: '남쪽 호수', sea: '북쪽 바다', desert: '동쪽 사막', ararat: '아라랏 산', commons: '함께 짓는 터' }, s = spots[where];
+    guideTo([s[0], s[1]], names[where]);
   }
 
   // ───────── 입력 ─────────
