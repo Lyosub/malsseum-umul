@@ -34,7 +34,7 @@
   // ── 화면 안내(처음 한 번): 버튼이 어디 있고 무엇을 하는지 노란 테두리로 차례로 짚어 준다 ──
   var TOUR_STEPS = [
     [null, '👋 나그네 마을에 온 것을 환영해요!', '화면에 있는 것들을 하나씩 짚어 줄게요. 언제든 「건너뛰기」를 누를 수 있어요.'],
-    ['#dpad', '🕹 방향키', '눌러서 걸어요. ▲를 두 번 누르면 달리고, 가운데를 한 번 누르면 웅크려요(다시 누르면 일어나요).', 'touch'],
+    ['#dpad', '🕹 방향키', '눌러서 걸어요. ▲를 두 번 누르면 달리고, 가운데를 톡톡 두 번 누르면 웅크려요(다시 톡톡 누르면 일어나요).', 'touch'],
     ['#keys', '⌨ 걷기', 'W A S D로 걷고 마우스로 둘러봐요. 스페이스는 점프, W를 두 번 누르면 달리기예요.', 'pc'],
     [null, '👀 둘러보기', '화면의 빈 곳을 손가락으로 끌면 둘러봐요. 가운데 + 표시가 겨누는 곳이에요.', 'touch'],
     ['#btnJump', '⬆ 점프', '한 칸 높이는 저절로 올라가고, 더 높으면 점프를 눌러요.', 'touch'],
@@ -328,7 +328,8 @@
       e.preventDefault(); e.stopPropagation();
     }, { passive: false });
     pad.addEventListener('touchmove', function (e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) padAt(e.changedTouches[i]); e.preventDefault(); e.stopPropagation(); }, { passive: false });
-    // 마인크래프트 휴대폰 조작처럼: 가운데를 한 번 톡 = 웅크리기 켜고 끄기 · 의자/침대에선 일어나기 · 탄 동물에선 내리기
+    // 마인크래프트 휴대폰 조작처럼: 가운데를 톡톡 두 번 = 웅크리기 켜고 끄기 · 의자/침대에선 일어나기 · 탄 동물에선 내리기
+    var lastMidTap = 0;   // 두 번째 톡이 0.4초 안에 와야 함
     function padMidTap() {
       vibrate();
       if (typeof furnitureRest !== 'undefined' && furnitureRest) { standFromFurniture(); return; }
@@ -336,7 +337,7 @@
       sneakLock = !sneakLock;
       toast(sneakLock ? '🧎 웅크렸어요 — 천천히 걷고 가장자리에서 떨어지지 않아요' : '🧍 일어났어요');
     }
-    function padUp(e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) { var tap = padMid && e.type === 'touchend' && performance.now() - padMid < 600; padEnd(); if (tap) padMidTap(); } e.preventDefault(); }
+    function padUp(e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === padT) { var tap = padMid && e.type === 'touchend' && performance.now() - padMid < 600; padEnd(); if (tap) { var nw = performance.now(); if (nw - lastMidTap < 400) { lastMidTap = 0; padMidTap(); } else lastMidTap = nw; } } e.preventDefault(); }
     pad.addEventListener('touchend', padUp); pad.addEventListener('touchcancel', padUp);
     resetTouchInput = function () { tMove = tLook = null; stickHome(); padEnd(); lastUp = 0; };
   }
