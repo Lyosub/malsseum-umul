@@ -298,22 +298,34 @@
   }
 
   // ───────── 지도(공식으로 그려 두고, 조금씩 채운다) ─────────
-  var MAPN = 512, MSC = WS / MAPN, mapBase = document.createElement('canvas'), mapRow = 0, mapImg = null;
+  var MAPN = 1024, MSC = WS / MAPN, mapBase = document.createElement('canvas'), mapRow = 0, mapImg = null;
   mapBase.width = mapBase.height = MAPN;
+  // 11/20 세계가 넓어져(4096) 지도를 32×32 조각으로 나눠 내 둘레 조각부터 조금씩(프레임마다 512점) 그림
+  var MT = 32, MTN = MAPN / MT, mapDone = new Uint8Array(MTN * MTN), mapCur = -1, mapCurRow = 0, mapDoneN = 0;
   function mapTick() {
-    if (mapRow >= MAPN) return;
+    if (mapDoneN >= MTN * MTN) { mapRow = MAPN; return; }
     var x = mapBase.getContext('2d');
-    if (!mapImg) { mapImg = x.createImageData(MAPN, 1); x.fillStyle = '#3a4a3a'; x.fillRect(0, 0, MAPN, MAPN); }
-    for (var r = 0; r < 4 && mapRow < MAPN; r++, mapRow++) {
-      for (var px = 0; px < MAPN; px++) {
-        var wx = Math.floor((px + 0.5) * MSC), wz = Math.floor((mapRow + 0.5) * MSC);
+    if (!mapImg) { mapImg = x.createImageData(MT, 1); x.fillStyle = '#3a4a3a'; x.fillRect(0, 0, MAPN, MAPN); }
+    var budget = 512;
+    while (budget > 0) {
+      if (mapCur < 0) {
+        var ptx = Math.max(0, Math.min(MTN - 1, Math.floor(P.x / MSC / MT))), ptz = Math.max(0, Math.min(MTN - 1, Math.floor(P.z / MSC / MT))), best = -1, bd = 1e9;
+        for (var t = 0; t < MTN * MTN; t++) { if (mapDone[t]) continue; var dx = t % MTN - ptx, dz = ((t / MTN) | 0) - ptz, d = dx * dx + dz * dz; if (d < bd) { bd = d; best = t; } }
+        if (best < 0 || bd > 9) return; mapCur = best; mapCurRow = 0;   // 작은 지도에 필요한 내 둘레(조각 3칸 ≈ 384칸)만
+      }
+      var tx = mapCur % MTN, tz = (mapCur / MTN) | 0, row = tz * MT + mapCurRow;
+      for (var px = 0; px < MT; px++) {
+        var wx = Math.floor((tx * MT + px + 0.5) * MSC), wz = Math.floor((row + 0.5) * MSC);
         terrain(wx, wz);
         var col = T.wtop >= 0 ? (T.wtop - T.h > 5 ? 0x2c62a8 : 0x3d7fc6) : TILE_AVG[BT[T.top][0]];
         var k = T.wtop >= 0 ? 1 : 0.82 + clamp01((T.h - G + 4) / 50) * 0.5, o = px * 4;
         mapImg.data[o] = clamp255(((col >> 16) & 255) * k); mapImg.data[o + 1] = clamp255(((col >> 8) & 255) * k); mapImg.data[o + 2] = clamp255((col & 255) * k); mapImg.data[o + 3] = 255;
       }
-      x.putImageData(mapImg, 0, mapRow);
+      x.putImageData(mapImg, tx * MT, row);
+      budget -= MT;
+      if (++mapCurRow >= MT) { mapDone[mapCur] = 1; mapDoneN++; mapCur = -1; }
     }
+    mapRow = Math.floor(mapDoneN / (MTN * MTN) * MAPN);
   }
   var MAP_LABELS = [['⛵ 방주', XM, AZ0 + AW / 2], ['마을', XM, PZ0 + 112], ['🌲 동쪽 숲', VX1 + 80, PZ0 + 60], ['⛰ 서쪽 산', PX0 - 110, PZ0 + 60], ['🌊 호수', LX, LZ],
     ['역청 구덩이', TARR[0] + 18, TARR[1] - 12], ['🌊 북쪽 바다', XM, SEA_Z - 180], ['🐪 동쪽 사막', DES_X + 260, PZ0 - 80], ['🌴 오아시스', OASX, OASZ + 30], ['🏔 아라랏 산', ARX, ARZ - 30], ['🌾 남쪽 들판', XM, LZ + 260]];
@@ -645,7 +657,8 @@
     }
     terrain(x0 + 16, z0 + 16);
     var kinds = reg === 'desert' ? ['camel', 'camel', 'donkey'] : (reg === 'west' || reg === 'ararat' ? ['goat', 'goat', 'sheep', 'donkey'] : (reg === 'sea' || reg === 'lake' || reg === 'oasis' ? (reg === 'oasis' ? ['camel', 'donkey'] : []) :
-      (reg === 'cedar' ? ['sheep', 'goat', 'rabbit'] : (reg === 'wild' ? ['goat', 'donkey', 'camel'] : (reg === 'salt' ? ['goat'] : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey'])))));
+      (reg === 'taiga' ? ['goat', 'rabbit', 'sheep'] : reg === 'hermon' ? ['goat'] : reg === 'galilee' ? ['sheep', 'cow'] : reg === 'jordan' ? ['sheep', 'donkey'] : reg === 'sinai' ? ['camel', 'goat'] : (reg === 'southsea' || reg === 'sisle') ? [] : reg === 'meadow' ? ['sheep', 'cow', 'horse', 'rabbit', 'donkey', 'sheep'] :
+      (reg === 'cedar' ? ['sheep', 'goat', 'rabbit'] : (reg === 'wild' ? ['goat', 'donkey', 'camel'] : (reg === 'salt' ? ['goat'] : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey']))))));
     // 11/20 동물이 너무 많아 반쯤으로(한 무리 1~2마리, 기둥 열에 하나꼴), 가까이 40마리가 넘으면 더 만들지 않음
     if (!kinds.length || animals.length > 40 || hash2(cx, cz, 31) > (reg === 'desert' ? 0.07 : 0.14)) return;
     var kn = kinds[Math.floor(hash2(cx, cz, 32) * kinds.length)], n = 1 + Math.floor(hash2(cx, cz, 33) * 2);

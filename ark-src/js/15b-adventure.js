@@ -293,9 +293,17 @@
     patmos: ['밧모섬', '나 요한은 너희 형제요 예수의 환난과 나라와 참음에 동참하는 자라 하나님의 말씀과 예수를 증언하였음으로 말미암아 밧모라 하는 섬에 있었더니', '요한계시록 1:9'],
     malta: ['멜리데섬', '비가 오고 날이 차매 원주민들이 우리에게 특별한 동정을 하여 불을 피워 우리를 다 영접하더라', '사도행전 28:2'],
     cyprus: ['구브로섬', '두 사람이 성령의 보내심을 받아 실루기아에 내려가 거기서 배 타고 구브로에 가서', '사도행전 13:4'],
-    islet: ['작은 섬']
+    islet: ['작은 섬'],
+    hermon: ['헐몬 산', '헐몬의 이슬이 시온의 산들에 내림 같도다 거기서 여호와께서 복을 명령하셨나니 곧 영생이로다', '시편 133:3'],
+    taiga: ['동쪽 큰 숲', '밭과 그 가운데에 있는 모든 것은 즐거워할지로다 그 때 숲의 모든 나무들이 여호와 앞에서 즐거이 노래하리니', '시편 96:12'],
+    galilee: ['갈릴리 호수', '갈릴리 해변에 다니시다가 두 형제 곧 베드로라 하는 시몬과 그의 형제 안드레가 바다에 그물 던지는 것을 보시니 그들은 어부라', '마태복음 4:18'],
+    jordan: ['요단 강', '이 때에 예수께서 갈릴리로부터 요단 강에 이르러 요한에게 세례를 받으려 하시니', '마태복음 3:13'],
+    sinai: ['시내 산', '여호와께서 시내 산 곧 그 산 꼭대기에 강림하시고 모세를 그리로 부르시니 모세가 올라가매', '출애굽기 19:20'],
+    meadow: ['푸른 들판', '그가 나를 푸른 풀밭에 누이시며 쉴 만한 물 가로 인도하시는도다', '시편 23:2'],
+    southsea: ['남쪽 큰 바다', '배들을 바다에 띄우며 큰 물에서 일을 하는 자는', '시편 107:23'],
+    sisle: ['남쪽 바다의 섬']
   };
-  var WALK_KEYS = ['town', 'east', 'west', 'sea', 'desert', 'oasis', 'ararat', 'lake', 'tar', 'south', 'cedar', 'wild', 'salt', 'patmos', 'malta', 'cyprus'];
+  var WALK_KEYS = ['town', 'east', 'west', 'sea', 'desert', 'oasis', 'ararat', 'lake', 'tar', 'south', 'cedar', 'wild', 'salt', 'patmos', 'malta', 'cyprus', 'hermon', 'taiga', 'galilee', 'jordan', 'sinai', 'meadow', 'southsea'];
   var ADV = { day: '', list: [], done: {}, regions: {}, tour: 0, total: 0, bonus: '' };
   try { var advS = JSON.parse(localStorage.getItem('arkVillage.adv') || 'null'); if (advS && typeof advS === 'object') { for (var ak in advS) ADV[ak] = advS[ak]; } } catch (e) {}
   function advSave() { try { localStorage.setItem('arkVillage.adv', JSON.stringify(ADV)); } catch (e) {} if (typeof stateDirty === 'function') stateDirty(); advChip(); }
@@ -330,6 +338,7 @@
     advDaily(); advChip();
     if (P.y < 0) newsMark('deep');
     if (/patmos|malta|cyprus|islet/.test(region(Math.floor(P.x), Math.floor(P.z)))) newsMark('isles');
+    if (P.x >= 2048 || P.z >= 2048) newsMark('bigworld');
     if (have(TOOL_ONYX) > 0) newsMark('onyx');
     var k = regionKeyAt();
     if (k && k !== regKey) {
