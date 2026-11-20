@@ -16,11 +16,11 @@
     },
     "devotion": {
       "users": 8,
-      "count": 13
+      "count": 14
     },
     "memorize": {
       "users": 4,
-      "count": 8
+      "count": 9
     },
     "note_gratitude": {
       "users": 4,
@@ -129,6 +129,6 @@
       "attendance_count": 16
     }
   ],
-  "generated_kst": "2026-11-20 21:40",
+  "generated_kst": "2026-11-20 23:19",
   "ok": true
 }
