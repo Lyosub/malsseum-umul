@@ -427,7 +427,7 @@
     var want = {}, ids = [];
     for (var pu in plotUser) if (plotUser[pu]) ids.push(plotUser[pu]);
     if (me && me.id) ids.push(me.id);
-    if (ids.length && typeof fetchNames === 'function') fetchNames(ids);
+    if (ids.length && me && me.id !== 'test' && typeof fetchNames === 'function') fetchNames(ids);   // 이름은 로그인했을 때만(구경 중엔 서버가 막음)
     for (var i = 0; i < PCOLS * PROWS; i++) {
       var u = plotUser[i]; if (!u && i !== myPlot) continue;
       var o = plotOrigin(i), cx = o.x + 0.5, cz = o.z - 1.5;   // 길 쪽 왼편 모서리
