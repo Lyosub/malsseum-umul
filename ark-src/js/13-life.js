@@ -858,6 +858,9 @@
   function nearSafeHome(x, z) { if (!homeSafe || myPlot < 0) return false; var o = plotOrigin(myPlot); return x >= o.x - 10 && x < o.x + PLOT + 10 && z >= o.z - 10 && z < o.z + PLOT + 10; }
   // 11/21: 밤에는 마을 마당·방주 둘레·명소 둘레에도 그림자가 나와요 — 방주 안·명소 안·성읍 성벽 안·땅(내 땅·공동 터)은 그대로 안전
   function safeZone(x, z) { return nearSafeHome(x, z) || inCommons(x, z) || plotAt(x, z) >= 0 || inArk(x, G + 2, z) || cityInside(x, z) || !!landmarkAt(x, z, 0); }
+  // 11/21: 그림자가 걸어 들어가면 사라지는 곳 — 안전한 집 둘레·방주 안·성읍 성벽 안·명소 안(땅과 공동 터는 나오지는 않아도 걸어 들어올 수 있어요)
+  function shadowBarred(x, z) { return nearSafeHome(x, z) || inArk(x, G + 2, z) || cityInside(x, z) || !!landmarkAt(x, z, 0); }
+  function roofOver(x, y, z) { for (var yy = y + 2; yy <= y + 9; yy++) { var b = get(x, yy, z); if (b !== AIR && b !== LEAF && isSolid(b)) return true; } return false; }   // 지붕·천장 밑(나뭇잎은 빼고)
   function removeShadow(s) {
     var materials = new Set();
     s.mesh.traverse(function (o) {
@@ -901,7 +904,7 @@
       s.t += dt;
       var dx = P.x - s.x, dz = P.z - s.z, dist = Math.hypot(dx, dz) || 0.01;
       var sun = !cave && !inDungeon(Math.floor(s.x), Math.floor(s.y), Math.floor(s.z)) && !isNight() && skyLight(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z)) > 0.6;
-      if (s.dead || sun || dist > 44 || safeZone(Math.floor(s.x), Math.floor(s.z))) { s.fade += dt * 1.5; }
+      if (s.dead || sun || dist > 44 || shadowBarred(Math.floor(s.x), Math.floor(s.z))) { s.fade += dt * 1.5; }
       else if (!s.dead && s.sp.fuse && get(Math.floor(s.x), Math.floor(s.y), Math.floor(s.z)) === WATER) {   // 분노가 물에 닿으면 꺼짐
         s.dead = true; s.fade = 0.5; sparkle(s.x, s.y + 1, s.z, 0xe8eef2, 18, { size: 0.45, life: 1.2, up: 2, v: 1.2 }); tone('sine', 900, 300, 0.4, 0.04);
         if (!S.angerWaterTold) { S.angerWaterTold = 1; saveSettings(); showVerseCard('💧', '분노가 꺼졌어요', '유순한 대답은 분노를 쉬게 하여도 과격한 말은 노를 격동하느니라', '잠언 15:1', '「분노」 그림자는 물에 닿으면 터지지 않고 꺼져요'); }
@@ -913,7 +916,8 @@
         if (s.sp.blink && dist > 6 && Math.random() < dt * 0.25) mv = Math.min(dist - 3, 4);   // 거짓: 갑자기 가까이
         if (mv && !(s.wind > 0) && !(s.sp.fuse && Math.abs(s.kx || 0) + Math.abs(s.kz || 0) > 1)) {   // 분노는 밀려나는 동안 다가오지 않음
           var nx = s.x + dx / dist * mv, nz = s.z + dz / dist * mv, ny = groundAt(nx, nz, s.y + 2);
-          if (ny !== null && Math.abs(ny - s.y) <= 1.6 && !litNear(Math.floor(nx), ny, Math.floor(nz), 4)) { s.x = nx; s.z = nz; s.y = ny; }
+          var intoHouse = ny !== null && (plotAt(Math.floor(nx), Math.floor(nz)) >= 0 || inTown(nx, nz) || inCommons(nx, nz)) && roofOver(Math.floor(nx), ny, Math.floor(nz)) && !roofOver(Math.floor(s.x), Math.floor(s.y), Math.floor(s.z));   // 땅·마을에서 바깥 → 지붕 밑(집 안)으로는 안 들어감(동굴 입구는 그대로 따라감)
+          if (ny !== null && !intoHouse && Math.abs(ny - s.y) <= 1.6 && !litNear(Math.floor(nx), ny, Math.floor(nz), 4)) { s.x = nx; s.z = nz; s.y = ny; }
         }
         if (s.sp.fuse) {   // 분노: 2.4칸 안이면 1.5초 동안 부풀다 터짐, 멀어지면 다시 식음
           if (dist < 2.4 && Math.abs(P.y - s.y) < 2.5) { if (!s.fuse) tone('sawtooth', 70, 150, 1.4, 0.05); s.fuse += dt; }
