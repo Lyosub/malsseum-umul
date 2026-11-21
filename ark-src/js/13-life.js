@@ -759,13 +759,13 @@
   }
   // ── 어둠의 그림자(미움·거짓·교만): 밤 들판과 굴 속에 나옴. 마을·내 땅·함께 짓는 터·불빛 가까이엔 안 나옴.
   //    횃불을 들면 가까이 못 오고, 햇빛에 사라짐. 갑옷은 덜 다치게, 전신 갑주를 다 입으면 다치지 않음. 칼·성령의 검(엡 6:17)으로 물리침 ──
-  var SHADOWS = [], shadowT = 3, shadowMat = null, shadowTold = false;
+  var SHADOWS = [], shadowT = 3, shadowMat = null, shadowOutM = null, shadowTold = false;
   var SH_KINDS = {
     hate: { name: '미움', eye: 0xff3a3a, hp: 3, dmg: 2, speed: 4.2, h: 1 },
     lie: { name: '거짓', eye: 0xc060ff, hp: 2, dmg: 2, speed: 5.0, h: 0.95, blink: true },
     pride: { name: '교만', eye: 0xffc840, hp: 5, dmg: 3, speed: 3.0, h: 1.25 },
     doubt: { name: '의심', eye: 0x6ad0ff, hp: 3, dmg: 2, speed: 3.4, h: 1.05, ranged: true },   // 멀찍이 서서 불화살(엡 6:16)
-    anger: { name: '분노', eye: 0xff5a1a, hp: 7, dmg: 5, speed: 3.8, h: 0.95, fuse: true },   // 11/21 가까이 오면 부풀다 터짐(엡 4:26) — 칼로 치면 밀려나며 식고, 물에 닿으면 꺼짐(잠 15:1)
+    anger: { name: '분노', eye: 0xff5a1a, hp: 7, dmg: 5, speed: 3.8, h: 1.2, fuse: true },   // 11/21 가까이 오면 부풀다 터짐(엡 4:26) — 칼로 치면 밀려나며 식고, 물에 닿으면 꺼짐(잠 15:1)
     great: { name: '큰 그림자', eye: 0xff8a2a, hp: 10, dmg: 4, speed: 4.6, h: 1.45 }   // 골짜기에만
   };
   function shadowsOn() { return S.shadows !== false; }
@@ -777,16 +777,49 @@
   function makeShadow(kind, x, z) {
     var sp = SH_KINDS[kind], u = HT / 32 * sp.h, root = new THREE.Group();
     if (!shadowMat) shadowMat = new THREE.MeshBasicMaterial({ color: 0x08060c, transparent: true, opacity: 0.78 });
-    function box(w, h, d, x0, y0, z0, mat) { var m = new THREE.Mesh(new THREE.BoxGeometry(w * u, h * u, d * u), mat || shadowMat); m.position.set(x0 * u, y0 * u, z0 * u); root.add(m); return m; }
-    box(8.4, 13, 4.4, 0, 18, 0); box(7, 8, 3.6, 0, 7, 0); box(3, 9, 3, -6, 19, 0); box(3, 9, 3, 6, 19, 0);
-    var head = box(8, 8, 8, 0, 28.5, 0), eyeM = new THREE.MeshBasicMaterial({ color: sp.eye, fog: false });
-    box(1.6, 1.2, 0.4, -1.8, 29, -4.1, eyeM); box(1.6, 1.2, 0.4, 1.8, 29, -4.1, eyeM);
-    var crackM = null;
-    if (sp.fuse) {   // 분노: 몸에 빨간 금(숯덩이처럼) — 부풀수록 밝아짐
-      crackM = new THREE.MeshBasicMaterial({ color: 0x5a1a0a, fog: false });
-      [[0.5, 9, 4.6, -2, 18, 0], [0.5, 6, 4.6, 2.4, 20, 0], [5, 0.5, 4.6, 0.3, 14.5, 0], [3, 0.5, 4.6, 1.2, 22.5, 0], [0.5, 4, 8.2, 1.4, 29, 0], [3.4, 0.5, 8.2, -1.4, 26.5, 0]].forEach(function (q) { box(q[0], q[1], q[2], q[3], q[4], q[5], crackM); });
+    var outM = kind === 'great' ? (shadowOutM || (shadowOutM = new THREE.MeshBasicMaterial({ color: 0x353b56, side: THREE.BackSide, transparent: true, opacity: 0.9 }))) : null;
+    function box(w, h, d, x0, y0, z0, mat, par) {
+      var m = new THREE.Mesh(new THREE.BoxGeometry(w * u, h * u, d * u), mat || shadowMat); m.position.set(x0 * u, y0 * u, z0 * u); (par || root).add(m);
+      if (outM && !mat) { var o = new THREE.Mesh(m.geometry, outM); o.scale.setScalar(1.08); m.add(o); }   // 큰 그림자: 둘레 윤곽(밤 모래 위에서도 몸이 보이게)
+      return m;
     }
-    var tag = textSprite(sp.name, 'rgba(0,0,0,0.55)', '#' + sp.eye.toString(16).padStart(6, '0'), 0.55); tag.position.y = HT * sp.h + 0.6; root.add(tag);
+    var eyeM = new THREE.MeshBasicMaterial({ color: sp.eye, fog: false }), crackM = null, top = 32.5;
+    function headAt(x0, y0, z0, rx, rz) {   // 머리(눈 포함)를 한 덩이로 — 기울일 수 있게
+      var hg = new THREE.Group(); hg.position.set(x0 * u, y0 * u, z0 * u); hg.rotation.set(rx || 0, 0, rz || 0); root.add(hg);
+      box(8, 8, 8, 0, 0, 0, null, hg); box(1.6, 1.2, 0.4, -1.8, 0.5, -4.1, eyeM, hg); box(1.6, 1.2, 0.4, 1.8, 0.5, -4.1, eyeM, hg);
+    }
+    if (kind === 'pride') {   // 교만: 넓은 어깨, 가슴을 내밀고 뒤로 젖힘
+      box(11, 13, 5, 0, 18, 0.4); box(9, 5, 1.6, 0, 21, -2.6); box(7.4, 8, 3.8, 0, 7, 0);
+      box(3.2, 9.5, 3.2, -7.4, 18.5, 0.6).rotation.z = -0.18; box(3.2, 9.5, 3.2, 7.4, 18.5, 0.6).rotation.z = 0.18;
+      headAt(0, 29, 1.2, -0.22, 0);
+    } else if (kind === 'doubt') {   // 의심: 좁은 어깨, 머리를 한쪽으로 기울여 두리번
+      box(6.2, 13, 4, 0, 18, 0); box(5.6, 8, 3.4, 0, 7, 0); box(2.4, 9, 2.4, -4.4, 19, 0); box(2.4, 9, 2.4, 4.4, 19, 0);
+      headAt(1.4, 28.2, -0.4, 0.08, -0.38);
+    } else if (kind === 'lie') {   // 거짓: 비대칭 — 한쪽 팔은 길고 다른 쪽은 짧고, 어깨 높이가 다름
+      box(8.4, 13, 4.4, 0, 18, 0); box(7, 8, 3.6, 0, 7, 0); box(3, 13, 3, -6, 17, 0); box(2.4, 6.5, 2.4, 5.8, 21.2, 0);
+      box(3.4, 2.4, 4.6, 4.6, 25.4, 0); box(2.2, 3, 2.2, -4.8, 26.2, 0.6);
+      headAt(-0.8, 28.8, 0, 0, 0.12);
+    } else if (kind === 'hate') {   // 미움: 짧은 팔에 주먹을 쥐고 웅크림
+      box(7.4, 6, 3.6, 0, 5.2, 0.6); var tb = box(8.4, 11, 4.4, 0, 14.2, -0.4); tb.rotation.x = 0.22;
+      box(3, 5, 3, -6, 15.4, -1.2); box(3, 5, 3, 6, 15.4, -1.2); box(3.8, 3.2, 3.8, -6, 11.6, -1.6); box(3.8, 3.2, 3.8, 6, 11.6, -1.6);
+      headAt(0, 23.6, -1.6, 0.18, 0); top = 27.6;
+    } else if (kind === 'anger') {   // 분노: 둥글고 다부진 숯덩이 몸, 짧은 다리·팔 토막, 지그재그 금
+      box(11, 11, 8, 0, 12.5, 0); box(8.6, 5, 7, 0, 20.5, 0); box(5.6, 1.6, 5, 0, 23.8, 0);
+      box(3.6, 5, 4, -2.7, 3.2, 0); box(3.6, 5, 4, 2.7, 3.2, 0); box(2, 5, 3.2, -6.4, 12.5, 0); box(2, 5, 3.2, 6.4, 12.5, 0);
+      box(1.6, 1.2, 0.4, -1.8, 21, -3.7, eyeM); box(1.6, 1.2, 0.4, 1.8, 21, -3.7, eyeM);
+      crackM = new THREE.MeshBasicMaterial({ color: 0x5a1a0a, fog: false });
+      [[-2.8, 17, -4.15, 7, 1], [2.6, 17.5, -4.15, 7, -1], [-0.6, 9, -4.15, 3, 1], [3.2, 16, 4.15, 6, 1], [-5.65, 15, 0, 5, 1]].forEach(function (z) {   // [x, 위 y, 면 z, 마디 수, 방향]
+        for (var i = 0; i < z[3]; i++) {
+          var side = z[2] === 0, xo = z[0] + (side ? 0 : (i % 2 ? 0.7 : -0.7) * z[4]), zo = side ? (i % 2 ? 0.7 : -0.7) : z[2];
+          box(side ? 0.4 : 0.6, 1.5, side ? 0.6 : 0.4, xo, z[1] - i * 1.25, zo, crackM);
+        }
+      });
+      top = 25;
+    } else {   // 큰 그림자: 넷의 기본 몸을 크게(윤곽선)
+      box(8.4, 13, 4.4, 0, 18, 0); box(7, 8, 3.6, 0, 7, 0); box(3, 9, 3, -6, 19, 0); box(3, 9, 3, 6, 19, 0);
+      headAt(0, 28.5, 0, 0, 0);
+    }
+    var tag = textSprite(sp.name, 'rgba(0,0,0,0.55)', '#' + sp.eye.toString(16).padStart(6, '0'), 0.55); tag.position.y = top * u + 0.6; root.add(tag);
     var y = groundAt(x, z, SY - 3); if (y === null) y = P.y;
     root.position.set(x, y, z); scene.add(root);
     return { kind: kind, sp: sp, mesh: root, tag: tag, crack: crackM, fuse: 0, x: x, y: y, z: z, hp: sp.hp, hitT: 0, t: Math.random() * 6, fade: 0, dead: false };

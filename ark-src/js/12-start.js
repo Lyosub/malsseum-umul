@@ -52,7 +52,7 @@
     canvasEl = $('game');
     if (isTouch) document.body.classList.add('touch');
     document.body.classList.toggle('keysoff', !!S.keysOff);
-    buildTiles(); applySprites();
+    buildTiles(); applySprites(); applyGptTex();
     for (var id = 1; id < B.length; id++) if (B[id]) BT[id] = [TILE[B[id][1]], TILE[B[id][2]], TILE[B[id][3]]];
     makeIcons();
 

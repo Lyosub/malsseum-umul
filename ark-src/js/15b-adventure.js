@@ -455,7 +455,7 @@
     if (!started) { c.hidden = true; return; }
     var ready = ADV.list.filter(function (e) { var E = ERRANDS[e.i]; return E && !e.claimed && errandProg(e) >= E[2]; }).length;
     var left = ADV.list.filter(function (e) { return !e.claimed; }).length;
-    c.hidden = false; c.textContent = ready ? '📜 보상 ' + ready : '📜 부탁 ' + left;
+    c.hidden = false; c.innerHTML = '<img class="uic" src="assets/ark-ui/quest.png" alt="">' + (ready ? '보상 ' + ready : '부탁 ' + left);
     c.classList.toggle('ready', ready > 0);
   }
   var questTab = 'today';

@@ -108,16 +108,17 @@
     // 만든 옷을 입은 자리는 기본 옷차림 장식을 가린다
     (pr.deco || []).forEach(function (d) { d.m.visible = !((d.tag === 'torso' && worn && worn.body) || (d.tag === 'belt' && worn && worn.belt) || (d.tag === 'head' && worn && worn.head) || (d.tag === 'legs' && worn && worn.feet && false)); });
     function add(parent, w, h, d, hex, x, y, z) { var m = shadedBox(w * u, h * u, d * u, hex); m.position.set(x * u, y * u, z * u); parent.add(m); pr.dress.push(m); }
-    var GOLD = 0xf0c840;
+    var GOLD = 0xd8aa48;
     SLOTS.forEach(function (slot) {
       var id = worn && worn[slot], wi = id && WEARINFO[id]; if (!wi) return;
       var col = wi.col, sh = wi.shape, G = sh.slice(-1) === 'G'; if (G) sh = sh.slice(0, -1);
+      if (G) { col = slot === 'belt' ? 0x6b4425 : slot === 'feet' ? 0x80592f : 0xf5d983; }   // 11/21 전신갑주 색을 가방 아이콘에 맞춤
       if (slot === 'head') {
         if (sh === 'cap') { add(pr.head, 8.9, 2.8, 8.9, col, 0, 7.6, 0); add(pr.head, 10, 0.7, 10, col, 0, 6.2, -0.3); }
         else if (sh === 'helm') {
           add(pr.head, 9.1, 4.6, 9.1, col, 0, 6.6, 0); add(pr.head, 9.1, 4, 1.2, col, 0, 3.6, 3.9);
           add(pr.head, 1, 3, 0.6, col, 0, 4.2, -4.7);
-          if (G) { add(pr.head, 1.2, 2.6, 7, GOLD, 0, 9.9, 0.4); add(pr.head, 9.3, 0.7, 9.3, GOLD, 0, 4.5, 0); }
+          if (G) { add(pr.head, 9.3, 0.7, 9.3, GOLD, 0, 4.5, 0); add(pr.head, 7, 1, 7, 0xfbe6a6, 0, 9.3, 0); add(pr.head, 1.4, 2.2, 1.4, GOLD, 0, 10.6, 0); add(pr.head, 0.9, 1, 0.9, 0xfff3c4, 0, 12.1, 0); add(pr.head, 1.2, 3.4, 4.6, GOLD, -4.6, 4.6, -1.6); add(pr.head, 1.2, 3.4, 4.6, GOLD, 4.6, 4.6, -1.6); }
         } else if (sh === 'crown') {
           add(pr.head, 9, 1.6, 9, col, 0, 8.6, 0);
           [[-3.8, -3.8], [3.8, -3.8], [-3.8, 3.8], [3.8, 3.8], [0, -3.8]].forEach(function (q) { add(pr.head, 1.4, 1.8, 1.4, col, q[0], 10.2, q[1]); });
@@ -132,18 +133,25 @@
           [pr.armL, pr.armR].forEach(function (A) { add(A, 5, 1.6, 5, col, 0, 2.3, 0); });
           if (sh === 'mail') for (var r = 0; r < 5; r++) add(av, 8.9, 0.4, 4.9, 0x6a6e74, 0, 13.6 + r * 2.4, 0);
         }
+        if (sh === 'plate' && G) [pr.armL, pr.armR].forEach(function (A) { add(A, 5.4, 2.4, 5.4, col, 0, 1.6, 0); add(A, 5.6, 0.6, 5.6, GOLD, 0, 0.4, 0); });   // 어깨 덮개
         if (sh === 'plate') { add(av, 7, 7, 0.7, col, 0, 19.5, -2.7); add(av, 7.4, 0.6, 0.8, GOLD, 0, 23, -2.7); add(av, 7.4, 0.6, 0.8, GOLD, 0, 16, -2.7); add(av, 0.6, 7, 0.8, GOLD, -3.5, 19.5, -2.7); add(av, 0.6, 7, 0.8, GOLD, 3.5, 19.5, -2.7); }
       } else if (slot === 'belt') {
-        add(av, 9, 1.8, 5, col, 0, 14.5, 0); add(av, 2, 2.2, 0.6, G ? 0xffffff : 0xd8c070, 0, 14.5, -2.6);
+        add(av, 9, 1.8, 5, col, 0, 14.5, 0); add(av, 2, 2.2, 0.6, G ? GOLD : 0xd8c070, 0, 14.5, -2.6);
+        if (G) { add(av, 0.8, 1.2, 0.5, GOLD, -3.2, 14.5, -2.6); add(av, 0.8, 1.2, 0.5, GOLD, 3.2, 14.5, -2.6); add(av, 0.9, 0.9, 0.4, 0xfff3c4, 0, 14.5, -2.95); }
       } else if (slot === 'feet') {
-        [pr.legL, pr.legR].forEach(function (L) { add(L, 4.6, 4.2, 4.9, col, 0, -9.9, -0.15); if (G) add(L, 4.8, 0.7, 5.1, GOLD, 0, -7.6, -0.15); });
+        [pr.legL, pr.legR].forEach(function (L) { add(L, 4.6, 4.2, 4.9, col, 0, -9.9, -0.15); if (G) { add(L, 4.8, 0.7, 5.1, GOLD, 0, -7.6, -0.15); add(L, 1.4, 0.8, 0.4, 0xfff3c4, 0, -9, -2.7); } });
       } else if (slot === 'shield') {
         // 11/21 방패를 크게(키의 절반쯤): 팔 바깥에 세운 판 + 둘레 테 + 가운데 징
         var rimC = col === 0xa77a48 ? 0x6a4628 : 0x8a8e94;
+        if (G) {   // 믿음의 방패(11/21 GPT 참고): 아래로 좁아지는 밝은 금 방패 + 짙은 금 테, 안쪽은 나무
+          add(pr.armL, 1, 11, 10, col, -2.7, -4.5, 0); add(pr.armL, 1, 2.4, 7, col, -2.7, -11.2, 0); add(pr.armL, 1, 1.8, 3.6, col, -2.7, -13.3, 0);
+          add(pr.armL, 1.2, 11.4, 0.8, GOLD, -2.7, -4.5, -5.2); add(pr.armL, 1.2, 11.4, 0.8, GOLD, -2.7, -4.5, 5.2); add(pr.armL, 1.2, 0.8, 10.6, GOLD, -2.7, 1.1, 0); add(pr.armL, 1.2, 0.8, 4.4, GOLD, -2.7, -14.3, 0);
+          add(pr.armL, 0.5, 1.2, 1.2, 0xfff3c4, -3.3, -1, 3); add(pr.armL, 0.4, 13, 9, 0x80592f, -2.05, -6, 0);
+        } else {
         add(pr.armL, 1, 13, 11, col, -2.7, -6, 0);
         add(pr.armL, 1.2, 13.4, 0.8, rimC, -2.7, -6, -5.6); add(pr.armL, 1.2, 13.4, 0.8, rimC, -2.7, -6, 5.6); add(pr.armL, 1.2, 0.8, 11, rimC, -2.7, 0.6, 0); add(pr.armL, 1.2, 0.8, 11, rimC, -2.7, -12.6, 0);
-        add(pr.armL, 0.6, 2.4, 2.4, G ? GOLD : rimC, -3.4, -6, 0);
-        if (G) { add(pr.armL, 0.5, 9, 1.4, GOLD, -3.3, -6, 0); add(pr.armL, 0.5, 1.4, 7, GOLD, -3.3, -4, 0); }
+        add(pr.armL, 0.6, 2.4, 2.4, rimC, -3.4, -6, 0);
+        }
       }
     });
   }
@@ -153,7 +161,7 @@
   function buildFpShield(id) {
     while (fpShield.children.length) { var c = fpShield.children.pop(); c.geometry.dispose(); }
     fpShieldId = id; if (!id || !WEARINFO[id]) return;
-    var wi = WEARINFO[id], col = wi.col, G = wi.shape.slice(-1) === 'G', rim = G ? 0xf0c840 : (col === 0xa77a48 ? 0x6a4628 : col);
+    var wi = WEARINFO[id], col = wi.col, G = wi.shape.slice(-1) === 'G', rim = G ? 0xd8aa48 : (col === 0xa77a48 ? 0x6a4628 : col);
     function bx(w, h, d, hex, x, y, z) { var m = new THREE.Mesh(boxGeo(w, h, d, hex), fpShieldMat); m.position.set(x, y, z); m.renderOrder = 10; fpShield.add(m); }
     for (var k = 0; k < 4; k++) bx(0.12, 0.66, 0.03, k % 2 ? 0x8a5a32 : 0x9c6a3c, -0.18 + k * 0.12, 0, 0);
     bx(0.56, 0.05, 0.05, rim, 0, 0.35, 0.005); bx(0.56, 0.05, 0.05, rim, 0, -0.35, 0.005); bx(0.05, 0.75, 0.05, rim, -0.265, 0, 0.005); bx(0.05, 0.75, 0.05, rim, 0.265, 0, 0.005);

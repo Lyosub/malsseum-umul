@@ -645,6 +645,7 @@
   .eqe { display:block; height:26px; line-height:26px; font-size:16px; opacity:.35; text-align:center; }
   .eqme { flex:1; min-width:0; width:100%; height:212px; object-fit:contain; background:#000; }
   .dhint { opacity:.8; font-size:11px; margin-top:6px; }
+  img.uic { width:22px; height:22px; image-rendering:pixelated; vertical-align:middle; pointer-events:none; } .ibtn.lbl span img.uic { width:24px; height:24px; display:block; } #advChip img.uic { width:18px; height:18px; margin-right:3px; } .xbtn img.uic { width:20px; height:20px; }
   #pingMenu { position:fixed; top:64px; right:8px; z-index:30; display:flex; flex-direction:column; gap:5px; width:190px; padding:8px; background:rgba(20,18,30,.88); border:2px solid #8b8b8b; color:#fff; font-size:13px; }
   #pingMenu[hidden] { display:none; } #pingMenu .mc { height:40px; font-size:14px; text-align:left; padding:0 10px; } #pingMenu small { font-size:10px; opacity:.75; }
   #bossBar { position:fixed; top:60px; left:50%; transform:translateX(-50%); z-index:25; width:min(320px, 60vw); text-align:center; color:#ffb070; font-size:13px; text-shadow:1px 1px 0 #000; pointer-events:none; }
@@ -702,7 +703,7 @@
 <div id="cross"></div>
 
 <!-- 놀이 화면 -->
-<div id="info" class="hud sh"><div id="place">나그네 마을</div><button id="advChip" class="mc" type="button" hidden>📜 부탁</button><div id="seasonInfo"></div><div id="trailGuide"></div><div id="saveState"></div><div id="who"></div><div id="netState"></div></div>
+<div id="info" class="hud sh"><div id="place">나그네 마을</div><button id="advChip" class="mc" type="button" hidden><img class="uic" src="assets/ark-ui/quest.png" alt="">부탁</button><div id="seasonInfo"></div><div id="trailGuide"></div><div id="saveState"></div><div id="who"></div><div id="netState"></div></div>
 <div id="chatLog" class="hud"></div>
 <div id="forestGuide" class="hud sh" hidden>
   <span id="forestArrow" aria-hidden="true">⬆</span><span><span id="forestPlace">동쪽 숲</span> <span id="forestDistance"></span></span>
@@ -713,12 +714,12 @@
   <button id="qMini" class="mc ibtn lbl" aria-label="안내 펴기"><span>📜</span><small>안내</small></button>
   <button id="btnFold" class="mc ibtn lbl" aria-label="버튼 접기"><span>▶</span><small>접기</small></button>
   <button id="btnPing" class="mc ibtn lbl" aria-label="모이기 표식 (P)"><span>📍</span><small>표식<b class="k">P</b></small></button>
-  <button id="btnChat" class="mc ibtn lbl" aria-label="채팅 (T)"><span>💬</span><small>채팅<b class="k">T</b></small></button>
-  <button id="btnBag" class="mc ibtn lbl" aria-label="가방·만들기 (E)"><span>🎒</span><small>가방<b class="k">E</b></small></button>
+  <button id="btnChat" class="mc ibtn lbl" aria-label="채팅 (T)"><span><img class="uic" src="assets/ark-ui/chat.png" alt=""></span><small>채팅<b class="k">T</b></small></button>
+  <button id="btnBag" class="mc ibtn lbl" aria-label="가방·만들기 (E)"><span><img class="uic" src="assets/ark-ui/bag.png" alt=""></span><small>가방<b class="k">E</b></small></button>
   <button id="btnLook" class="mc ibtn lbl" aria-label="내 모습·옷 (C)"><span>👤</span><small>옷<b class="k">C</b></small></button>
   <button id="btnView" class="mc ibtn lbl" aria-label="시점 바꾸기 (V)"><span>👁</span><small>시점<b class="k">V</b></small></button>
   <button id="btnRotate" class="mc ibtn lbl" aria-label="가로·세로 바꾸기"><span>🔄</span><small>화면</small></button>
-  <button id="btnPause" class="mc ibtn lbl" aria-label="게임 메뉴 (Esc)"><span>❚❚</span><small>메뉴<b class="k">Esc</b></small></button>
+  <button id="btnPause" class="mc ibtn lbl" aria-label="게임 메뉴 (Esc)"><span><img class="uic" src="assets/ark-ui/pause.png" alt=""></span><small>메뉴<b class="k">Esc</b></small></button>
 </div>
 <div id="pingMenu" class="hud" hidden><b>📯 모이기 표식 <small>(느 4:20)</small></b><button class="mc" data-k="come">📍 여기로 와요</button><button class="mc" data-k="help">🙋 여기 도와줘요</button><button class="mc" data-k="warn">⚠️ 여기 조심</button><small>보는 곳에 찍혀요 · 일행(없으면 친구)에게 45초</small></div>
 <div id="bossBar" class="hud" hidden><span>큰 그림자</span><i><s id="bossFill"></s></i></div>
@@ -845,12 +846,12 @@
 <!-- 가방·만들기 -->
 <div id="inv" class="screen dim">
   <div class="panel invPanel">
-    <div class="invTop"><div class="tabs"><button id="tabBag" class="tab on">🎒 가방·만들기</button><button id="tabDex" class="tab">📖 도감</button><button id="tabAch" class="tab">🏅 업적</button></div><button id="invDone" class="mc xbtn" title="닫기 (E)" aria-label="닫기">✕</button></div>
+    <div class="invTop"><div class="tabs"><button id="tabBag" class="tab on"><img class="uic" src="assets/ark-ui/bag.png" alt=""> 가방·만들기</button><button id="tabDex" class="tab"><img class="uic" src="assets/ark-ui/dex.png" alt=""> 도감</button><button id="tabAch" class="tab"><img class="uic" src="assets/ark-ui/ach.png" alt=""> 업적</button></div><button id="invDone" class="mc xbtn" title="닫기 (E)" aria-label="닫기"><img class="uic" src="assets/ark-ui/close.png" alt=""></button></div>
     <div id="invBody" class="invBody">
       <div id="invSide"></div>
       <div class="invMain">
         <div id="bagView">
-          <div class="invHead"><b>🎒 가방</b> <small id="bagUse"></small> <button id="bagSort" class="mc">↕ 정리</button></div>
+          <div class="invHead"><b><img class="uic" src="assets/ark-ui/bag.png" alt=""> 가방</b> <small id="bagUse"></small> <button id="bagSort" class="mc"><img class="uic" src="assets/ark-ui/sort.png" alt=""> 정리</button></div>
           <div id="bagCats" class="bagCats"></div>
           <div id="invGrid"></div>
         </div>
@@ -1070,6 +1071,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=237139eaae"></script>
+<script src="assets/ark-game.js?v=e3656f3a59"></script>
 </body>
 </html>
