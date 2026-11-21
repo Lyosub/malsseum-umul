@@ -995,9 +995,12 @@
   }
   // ── 11/21 짐승 잡기: 치면 밀려나 달아나고, 다 잡으면 고기·털·가죽이 무작위로(창 9:3). 말·나귀·낙타는 고기 대신 가죽(레 11:4) ──
   var BEAST_HP = { sheep: 4, goat: 4, rabbit: 2, cow: 7, horse: 7, donkey: 6, camel: 8, pig: 5, chicken: 2 };
-  var BEAST_DROP = { sheep: [[RAW_LAMB, 1, 2], [WOOL, 0, 2]], goat: [[RAW_GOAT, 1, 2], [LEATHER, 0, 1]], cow: [[RAW_BEEF, 1, 3], [LEATHER, 0, 2]],
-    pig: [[LEATHER, 1, 2]], chicken: [[RAW_CHICKEN, 1, 2], [FEATHER, 0, 2]],
-    rabbit: [[LEATHER, 0, 1]], horse: [[LEATHER, 1, 2]], donkey: [[LEATHER, 1, 2]], camel: [[LEATHER, 1, 2], [WOOL, 0, 1]] };
+  // 11/21 나오는 것은 하나하나 확률로: [물건, 나올 확률, 최소, 최대] — 아무것도 안 나올 수도 있음(새끼는 확률 0.6배·개수 절반)
+  var BEAST_DROP = {
+    sheep: [[RAW_LAMB, 0.8, 1, 2], [WOOL, 0.6, 1, 2], [BONE, 0.3, 1, 1]], goat: [[RAW_GOAT, 0.8, 1, 2], [LEATHER, 0.5, 1, 1], [BONE, 0.3, 1, 1]],
+    cow: [[RAW_BEEF, 0.85, 1, 3], [LEATHER, 0.6, 1, 2], [BONE, 0.35, 1, 2]], pig: [[LEATHER, 0.7, 1, 2], [BONE, 0.35, 1, 1]],
+    chicken: [[RAW_CHICKEN, 0.75, 1, 1], [FEATHER, 0.6, 1, 2], [BONE, 0.2, 1, 1]], rabbit: [[LEATHER, 0.5, 1, 1], [BONE, 0.2, 1, 1]],
+    horse: [[LEATHER, 0.75, 1, 2], [BONE, 0.4, 1, 2]], donkey: [[LEATHER, 0.75, 1, 2], [BONE, 0.4, 1, 2]], camel: [[LEATHER, 0.75, 1, 2], [WOOL, 0.35, 1, 1], [BONE, 0.4, 1, 2]] };
   function beastGuarded(a) {   // 잡을 수 없는 짐승: 안장 얹은 것·내 우리에 기르는 것·새끼·놀이·이야기의 양·타고 있는 것
     if (a === riding || a.saddled || a.kept || a.herd || a === lostSheep) return a.saddled ? '안장을 얹은 짐승은 잡을 수 없어요' : '기르는 짐승은 잡을 수 없어요';   // 11/21 새끼도 잡을 수 있음
     return '';
@@ -1024,7 +1027,7 @@
     scene.remove(a.mesh); var ai = animals.indexOf(a); if (ai >= 0) animals.splice(ai, 1);
     sparkle(a.x, a.y + 1, a.z, 0xe8e0d0, 16, { size: 0.45, life: 0.9, v: 2.6, up: 1.4 }); sfx('pop', 400);
     var got = [];
-    (BEAST_DROP[a.kind] || []).forEach(function (q) { var lo = a.baby ? Math.min(q[1], 1) : q[1], hi = a.baby ? Math.ceil(q[2] / 2) : q[2], c = lo + Math.floor(Math.random() * (hi - lo + 1)); /* 새끼는 조금만 */ if (c > 0) { dropItem(a.x, a.y + 0.8, a.z, q[0], c); got.push(B[q[0]][0] + ' ' + c); } });
+    (BEAST_DROP[a.kind] || []).forEach(function (q) { if (Math.random() >= q[1] * (a.baby ? 0.6 : 1)) return; var hi = a.baby ? Math.max(1, Math.ceil(q[3] / 2)) : q[3], c = q[2] + Math.floor(Math.random() * (hi - q[2] + 1)); if (c > 0) { dropItem(a.x, a.y + 0.8, a.z, q[0], c); got.push(B[q[0]][0] + ' ' + c); } });
     if (!S.huntTold) { S.huntTold = 1; saveSettings(); showVerseCard('🍖', '먹을 것', '모든 산 동물은 너희의 먹을 것이 될지라 채소 같이 내가 이것을 다 너희에게 주노라', '창세기 9:3', '고기는 모닥불(돌 3 + 통나무 2)이나 화덕과 솥 가까이에서 석탄·숯·통나무를 땔감으로 구워 먹어요 — 가까이 가서 주워요'); }
     else toast((got.length ? got.join(' · ') : '아무것도 나오지 않았어요') + ' — 가까이 가서 주워요');
     if (a.kind === 'pig' && !S.pigTold) { S.pigTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🐖', '먹지 못할 것', '돼지는 굽이 갈라져 쪽발이로되 새김질을 못하므로 너희에게 부정하니', '레위기 11:7', '돼지는 고기 대신 가죽이 나와요'); }, 600); }
