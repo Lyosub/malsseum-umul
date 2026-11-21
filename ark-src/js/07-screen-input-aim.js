@@ -253,6 +253,7 @@
         // 왼쪽 클릭: 그림자를 겨누고 있으면 치기, 아니면 캐기
         var cs2 = pickCreature(screenDir(), (pickCenter() || {}).t);
         if (cs2 && cs2.shadow) { hitShadow(cs2.shadow); return; }
+        if (cs2 && cs2.a && cs2.t < REACH + camDist + 1 && hitAnimal(cs2.a)) return;   // 11/21 짐승 치기
         mouseMining = true; return;
       }
       if (e.button === 2) { if (isBowId(HOTBAR[sel]) && have(HOTBAR[sel]) > 0 && bowStart()) return; tapAt(); return; }

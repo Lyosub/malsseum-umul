@@ -3,7 +3,7 @@
   var HP = 20, FOOD = 20, AIRV = 10, EXH = 0, regenT = 0, starveT = 0, drownT = 0, fallTop = null, SPAWN = null, vitT = 0;
   var FOODS = {}; FOODS[BREAD] = 6; FOODS[FIG] = 3; FOODS[MANNA] = 4;
   [[613,3],[614,2],[616,2],[617,4],[618,1],[619,2],[620,1],[622,4],
-   [HONEY,3],[POMEGRANATE,4],[STEW,7],[COOKED_FISH,6],[COOKED_LAMB,8],[FLATBREAD,4]]
+   [HONEY,3],[POMEGRANATE,4],[STEW,7],[COOKED_FISH,6],[COOKED_LAMB,8],[FLATBREAD,4],[COOKED_BEEF,8],[COOKED_GOAT,7]]
     .forEach(function(d){FOODS[d[0]]=d[1];});
   function vitalsOn() { return started && !isAdm(); }
   // ── 믿음(✦, 11/20): 어둠의 그림자에게 맞으면 깎이고(입은 방패가 불화살을 막음, 파티원이 곁에 있으면 덜 깎임 — 전 4:12), 다 깨지면 「유혹에 넘어졌어요」 → 집에서 다시 일어남(눅 15:20).
@@ -72,10 +72,11 @@
   }
   function eatItem(id) {
     if (!vitalsOn()) return deny('관리자는 배고프지 않아요');
-    if (FOOD >= 20) return deny('배가 불러요');
+    if (FOOD >= 20 && HP >= 20) return deny('배가 불러요');
     if (have(id) < 1) return;
-    take(id, 1); FOOD = Math.min(20, FOOD + FOODS[id]); EXH = 0; sfx('pop', 600); bagChanged(); renderVitals(); stateDirty(); unlock('eat');
-    toast(jo(B[id][0], '을', '를') + ' 먹었어요 — 기운 +' + FOODS[id] + (id === BREAD ? ' (마 4:4)' : ''));
+    var heal = Math.min(20 - HP, Math.ceil(FOODS[id] / 2));   // 11/21: 먹으면 체력도 바로 조금 참(고기는 4)
+    take(id, 1); FOOD = Math.min(20, FOOD + FOODS[id]); HP += heal; EXH = 0; sfx('pop', 600); bagChanged(); renderVitals(); stateDirty(); unlock('eat');
+    toast(jo(B[id][0], '을', '를') + ' 먹었어요 — 기운 +' + FOODS[id] + (heal > 0 ? ' · 체력 +' + heal : '') + (id === BREAD ? ' (마 4:4)' : ''));
   }
   // ── 농사: 풀·꽃을 캐면 가끔 밀 씨 → 흙·풀 위에 심으면 싹 → 자람 → 이삭 → 익음(물이 가까우면 빨리) ──
   var CROPS = [];
@@ -89,7 +90,7 @@
     return (40 + Math.random() * 30) * (watered ? 0.6 : 1) * sk * 1000;
   }
   function plantHeight(id) { var farm = FARM_PLANTS[id]; return farm ? 1 + (farm.height-1)*(id-farm.base)/3 : 1; }
-  var STATION_BITS = {401:1,402:2,403:4,404:8,405:1,461:16};
+  var STATION_BITS = {401:1|32,402:2,403:4,404:8,405:1,461:16,467:32};   // 32 = 굽는 불(모닥불·화덕과 솥, 11/21)
   var workshopCache = { x:null,y:null,z:null,until:0, mask:0 };
   function workshopNeeds() {
     var x=Math.floor(P.x), y=Math.floor(P.y), z=Math.floor(P.z), now=performance.now();
@@ -988,6 +989,42 @@
     SHADOWS.forEach(function (o) { if (o === s || o.dead) return; var od = Math.hypot(o.x - cx, o.z - cz) || 0.01; if (od < 3.6) { o.kx = (o.x - cx) / od * 10; o.kz = (o.z - cz) / od * 10; } });
     var n = angerCrater(Math.floor(cx), Math.floor(cy), Math.floor(cz));
     if (!S.angerTold) { S.angerTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🔥', '분노', '분을 내어도 죄를 짓지 말며 해가 지도록 분을 품지 말고', '에베소서 4:26', '「분노」 그림자가 터졌어요 — 다가오면 부풀어요. 칼로 치면 밀려나며 식고, 활·물매로 멀리서 물리치면 터지지 않아요. 물에 닿으면 꺼져요.' + (n ? ' 파인 땅은 하루 뒤 메워져요' : '')); }, 700); }
+  }
+  // ── 11/21 짐승 잡기: 치면 밀려나 달아나고, 다 잡으면 고기·털·가죽이 무작위로(창 9:3). 말·나귀·낙타는 고기 대신 가죽(레 11:4) ──
+  var BEAST_HP = { sheep: 4, goat: 4, rabbit: 2, cow: 7, horse: 7, donkey: 6, camel: 8 };
+  var BEAST_DROP = { sheep: [[RAW_LAMB, 1, 2], [WOOL, 0, 2]], goat: [[RAW_GOAT, 1, 2], [LEATHER, 0, 1]], cow: [[RAW_BEEF, 1, 3], [LEATHER, 0, 2]],
+    rabbit: [[LEATHER, 0, 1]], horse: [[LEATHER, 1, 2]], donkey: [[LEATHER, 1, 2]], camel: [[LEATHER, 1, 2], [WOOL, 0, 1]] };
+  function beastGuarded(a) {   // 잡을 수 없는 짐승: 안장 얹은 것·내 우리에 기르는 것·새끼·놀이·이야기의 양·타고 있는 것
+    if (a === riding || a.saddled || a.kept || a.baby || a.herd || a === lostSheep) return a.saddled ? '안장을 얹은 짐승은 잡을 수 없어요' : a.baby ? '새끼는 잡을 수 없어요' : '기르는 짐승은 잡을 수 없어요';
+    return '';
+  }
+  function hitAnimal(a, quiet) {
+    if (!BEAST_HP[a.kind]) return false;
+    var why = beastGuarded(a); if (why) { if (!quiet) deny(why); return !quiet; }
+    var held = HOTBAR[sel], dmg = 1;
+    if (held === SWORD && have(SWORD) > 0) dmg = 4;
+    else if (isArmSword(held) && have(held) > 0) dmg = ARM_SWORD_DMG[armOf(held, ARM_SWORD0)];
+    else if (isTool(held) && have(held) > 0 && TOOL_TYPES[typeOf(held)] === 'knife') dmg = 1.5 + tierOf(held) * 0.5;
+    else if (isTool(held) && have(held) > 0) dmg = 1.5;
+    var crit = !P.ground && P.vy < -1 && !P.swim && !P.fly; if (crit) dmg *= 1.5;
+    if (a.hp === undefined) a.hp = BEAST_HP[a.kind];
+    a.hp -= dmg; swingT = 0.25; sfx('dig', 300); animalCall(a.kind);
+    if (isTool(held)) wearTool(held);
+    var top = a.y + (CR_R[a.kind] || 1.2) * 1.8, n = Math.round(dmg * 10) / 10;
+    floatText(a.x, top, a.z, (crit ? '✦ ' : '') + n, crit ? '#ffd23a' : '#ffffff', crit ? 0.8 : 0.6, 0.6);
+    sparkle(a.x, a.y + 1, a.z, 0xfff0c0, 3, { size: 0.3, life: 0.4, v: 2, up: 0.8 });
+    var dx = a.x - P.x, dz = a.z - P.z, d = Math.hypot(dx, dz) || 1;
+    for (var k = 4; k >= 1; k--) { var nx = a.x + dx / d * k * 0.3, nz = a.z + dz / d * k * 0.3, gy = groundAt(nx, nz, a.y); if (gy !== null && Math.abs(gy - a.y) <= 1.2) { a.x = nx; a.z = nz; a.ty = gy; break; } }   // 밀려남
+    a.h = Math.atan2(dx, dz) + Math.PI; a.mode = 'walk'; a.t = 3; a.fleeUntil = performance.now() + 3500;   // 반대쪽으로 달아남
+    if (a.hp > 0) return true;
+    scene.remove(a.mesh); var ai = animals.indexOf(a); if (ai >= 0) animals.splice(ai, 1);
+    sparkle(a.x, a.y + 1, a.z, 0xe8e0d0, 16, { size: 0.45, life: 0.9, v: 2.6, up: 1.4 }); sfx('pop', 400);
+    var got = [];
+    (BEAST_DROP[a.kind] || []).forEach(function (q) { var c = q[1] + Math.floor(Math.random() * (q[2] - q[1] + 1)); if (c > 0) { dropItem(a.x, a.y + 0.8, a.z, q[0], c); got.push(B[q[0]][0] + ' ' + c); } });
+    if (!S.huntTold) { S.huntTold = 1; saveSettings(); showVerseCard('🍖', '먹을 것', '모든 산 동물은 너희의 먹을 것이 될지라 채소 같이 내가 이것을 다 너희에게 주노라', '창세기 9:3', '고기는 모닥불(돌 3 + 통나무 2)이나 화덕과 솥 가까이에서 석탄·숯·통나무를 땔감으로 구워 먹어요 — 가까이 가서 주워요'); }
+    else toast((got.length ? got.join(' · ') : '아무것도 나오지 않았어요') + ' — 가까이 가서 주워요');
+    if ((a.kind === 'camel' || a.kind === 'horse' || a.kind === 'donkey') && !S.uncleanTold) { S.uncleanTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🐪', '먹지 못할 것', '새김질하는 것이나 굽이 갈라진 짐승 중에도 너희가 먹지 못할 것은 이러하니 낙타는 새김질은 하되 굽이 갈라지지 아니하였으므로 너희에게 부정하고', '레위기 11:4', '말·나귀·낙타는 고기 대신 가죽이 나와요'); }, 600); }
+    return true;
   }
   function hitShadow(s, arrowDmg, sweep) {
     if (s.dead) return;

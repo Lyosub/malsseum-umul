@@ -242,6 +242,7 @@
   var HOE = 624, FISH_ROD = 625, FISH_NET = 626, RAW_FISH = 627, RAW_LAMB = 628,
       HONEY = 629, POMEGRANATE = 630, STEW = 631, COOKED_FISH = 632, COOKED_LAMB = 633,
       FLATBREAD = 634, FLOUR = 635, WINE = 636, OLIVE_OIL = 637;
+  var RAW_BEEF = 683, RAW_GOAT = 684, COOKED_BEEF = 685, COOKED_GOAT = 686;   // 11/21 짐승을 잡으면 나오는 고기(창 9:3)
   // 이름, 거둘 것, 식물색, 열매색, 여러 번 거두는 작물, 나무 높이.
   var FARM_TYPES = [
     ['보리','보리',0x86a64b,0xc6a551], ['포도나무','포도',0x4b803e,0x75428b,true],
@@ -264,7 +265,8 @@
     [RAW_FISH,'물고기',0x8a9fa9],[RAW_LAMB,'손질한 양고기',0xc77968],[HONEY,'꿀',0xdfa437],
     [POMEGRANATE,'석류',0xb64643],[STEW,'렌틸콩죽',0xaa5c3d],[COOKED_FISH,'구운 생선',0xb77b41],
     [COOKED_LAMB,'구운 양고기',0x9e5940],[FLATBREAD,'누룩 없는 빵',0xddb475],
-    [FLOUR,'가루',0xebd8b3],[WINE,'포도주',0x803b56],[OLIVE_OIL,'올리브 기름',0x9e8e43]];
+    [FLOUR,'가루',0xebd8b3],[WINE,'포도주',0x803b56],[OLIVE_OIL,'올리브 기름',0x9e8e43],
+    [RAW_BEEF,'소고기',0xc0554a],[RAW_GOAT,'염소고기',0xb8695a],[COOKED_BEEF,'구운 소고기',0x8e4a30],[COOKED_GOAT,'구운 염소고기',0x9a5a3a]];
   FOOD_ART.forEach(function(d) { expansionItem(d[0],d[1],'farmItem'+d[0]); });
   FARM_TYPES.forEach(function(d, i) {
     var spec = { base:410+i*4, seed:600+i, harvest:i===9 ? FIG : (i===11 ? POMEGRANATE : 612+i), perennial:!!d[4], height:d[5] || 1 };
@@ -830,16 +832,17 @@
   [
     [FLOUR,2,[[612,2]],MILL], [FLOUR,2,[[WHEAT,2]],MILL],
     [WINE,1,[[613,3]],WINE_PRESS], [OLIVE_OIL,1,[[614,3]],OIL_PRESS],
-    [STEW,1,[[615,2],[CHAR,1]],OVEN], [COOKED_FISH,1,[[RAW_FISH,1],[CHAR,1]],OVEN],
-    [COOKED_LAMB,1,[[RAW_LAMB,1],[CHAR,1]],OVEN], [FLATBREAD,2,[[FLOUR,2],[CHAR,1]],OVEN]
+    [STEW,1,[[615,2],[CHAR,1]],OVEN], [FLATBREAD,2,[[FLOUR,2],[CHAR,1]],OVEN]
   ].forEach(function(d){ RECIPES.push({out:[d[0],d[1]],need:d[2],station:d[3],cat:'block'}); });
+  // 11/21 굽기: 모닥불(또는 화덕과 솥) 가까이에서 석탄·숯·통나무를 땔감으로 — 녹이기처럼 하나에 3초
+  [[COOKED_LAMB,RAW_LAMB],[COOKED_BEEF,RAW_BEEF],[COOKED_GOAT,RAW_GOAT],[COOKED_FISH,RAW_FISH]].forEach(function(d){ RECIPES.push({out:[d[0],1],need:[[d[1],1]],station:467,fuel:true,cook:true,cat:'smelt',ref:'창 9:3'}); });
   LIFE_BLOCKS.forEach(function(d){ INV.push(d[0]); });
   LIFE_ITEMS.forEach(function(d){ INV.push(d[0]); });
   [
     [WELL,1,[[STONE,8],[GOPHER,2],[WELL_BUCKET,1]]],[LOOM,1,[[GOPHER,5],[THREAD,2]]],
     [JAR,2,[[CLAY,3],[CHAR,1]]],[OIL_JAR,1,[[JAR,1],[OLIVE_OIL,1]]],
     [ALABASTER_JAR,1,[[ALABASTER,2]]],[OIL_LAMP,1,[[CLAY,1],[OLIVE_OIL,1],[THREAD,1]]],
-    [CANDLESTICK,1,[[ING_CU,1],[HONEY,1],[THREAD,1]]],[CAMPFIRE,1,[[STONE,3],[LOG,2],[CHAR,1]]],
+    [CANDLESTICK,1,[[ING_CU,1],[HONEY,1],[THREAD,1]]],[CAMPFIRE,1,[[STONE,3],[LOG,2]]],
     [BUCKET,1,[[GOPHER,3],[ING_FE,1]]],[WATER_JAR,1,[[CLAY,3],[CHAR,1]]],
     [THREAD,3,[[WOOL,1]]],[LINEN,2,[[THREAD,3],[REED,1]],LOOM],[WOOL_CLOTH,2,[[THREAD,2],[WOOL,2]],LOOM],
     [RED_DYE,2,[[FLOWER,1],[RED_EARTH,1]]],[BLUE_DYE,2,[[THISTLE,2]]],[GOLD_DYE,2,[[CLAY,1],[SALT,1]]],
@@ -850,7 +853,7 @@
   ].forEach(function(d){RECIPES.push({out:[d[0],d[1]],need:d[2],station:d[3],cat:'block'});});
   DROP[FEAST_BREAD]=FLATBREAD; DROP[FEAST_OLIVE]=614; DROP[FEAST_FISH]=COOKED_FISH;
   Object.values(VILLAGE_FISH).forEach(function (id) {
-    RECIPES.push({out:[COOKED_FISH,1],need:[[id,1],[CHAR,1]],station:OVEN,cat:'block'});
+    RECIPES.push({out:[COOKED_FISH,1],need:[[id,1]],station:467,fuel:true,cook:true,cat:'smelt'});
   });
   [FIND_POT,FIND_LAMP,FIND_SEED,DITCH,FEAST_TABLE].forEach(function (id) { INV.push(id); });
   RECIPES.push({out:[DITCH,4],need:[[STONE,2],[CLAY,1]],cat:'shape'});

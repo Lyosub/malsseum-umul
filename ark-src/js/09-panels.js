@@ -98,7 +98,7 @@
   }
   // ── 가방·만들기 한 화면(11/20): 왼쪽 세로 그림 탭 · 가운데 칸 · 오른쪽 자세히 · 아래 단축 칸 ──
   var invSel = null, lastBC = 'bag', dropAmt = { id: 0, n: 1 };
-  var CRAFT_TABS = [['all', '🔍', '모두'], ['recent', '🕘', '최근'], ['block', '🧱', '블록'], ['shape', '🚪', '모양'], ['tool', '⛏', '도구'], ['smelt', '🔥', '녹이기'], ['wear', '👕', '옷']];
+  var CRAFT_TABS = [['all', '🔍', '모두'], ['recent', '🕘', '최근'], ['block', '🧱', '블록'], ['shape', '🚪', '모양'], ['tool', '⛏', '도구'], ['smelt', '🔥', '녹이기·굽기'], ['wear', '👕', '옷']];
   var REP_MAT_T = function (tid) { return [GOPHER, STONE, ING_CU, ING_FE, GEM_ONYX, GEM_DIA][tierOf(tid)]; };
   // 최근 만든 것: [제작법 번호, 나오는 물건] 12개까지, 새로 만든 것이 앞
   function recentRank(rc) { var a = S.recentCraft || [], i = RECIPES.indexOf(rc); for (var k = 0; k < a.length; k++) if (a[k][0] === i && a[k][1] === rc.out[0]) return k; return -1; }
@@ -330,14 +330,14 @@
     if (rc.furnace) req += '<span class="dreq' + (furnaceOK() ? '' : ' lack') + '">🔥 용광로</span>';
     if (rc.fuel) req += '<span class="dreq' + (fuelLeft(rc) >= 1 ? '' : ' lack') + '">🪵 땔감</span>';
     if (rc.table) req += '<span class="dreq' + (tableOK() ? '' : ' lack') + '">🪚 제작대</span>';
-    if (rc.station) req += '<span class="dreq">' + B[rc.station][0] + ' 가까이</span>';
+    if (rc.station) req += '<span class="dreq' + (workshopNeeds() & STATION_BITS[rc.station] ? '' : ' lack') + '">' + (rc.cook ? '🔥 모닥불·화덕 가까이' : B[rc.station][0] + ' 가까이') + '</span>';
     if (req) add('div', '', req);
     function craftN(times) {
       if (!canCraft(rc)) {
         sfx('click');
         if (rc.furnace && !furnaceOK()) $('invName').textContent = '녹이려면 용광로가 있어야 해요. 돌 8개로 만들어 가방에 넣거나 내 땅에 놓아요';
         else if (rc.fuel && fuelLeft(rc) < 1) $('invName').textContent = '땔감이 없어요. 석탄·숯·통나무를 모아요';
-        else if (rc.station) $('invName').textContent = B[rc.station][0] + ' 가까이에서 만들어요';
+        else if (rc.station) $('invName').textContent = rc.cook ? '모닥불(돌 3 + 통나무 2)이나 화덕과 솥 가까이에서 구워요' : B[rc.station][0] + ' 가까이에서 만들어요';
         else if (rc.table && !tableOK()) $('invName').textContent = '이 물건은 제작대가 있어야 만들어요. 고페르 나무 4개로 제작대를 만들어 가방에 넣거나 내 땅에 놓아요';
         else $('invName').textContent = '재료가 모자라요 — 빨간 재료를 누르면 얻는 곳을 알려 줘요';
         return;
@@ -353,11 +353,11 @@
         if (rc.out[0] === PITCH && STORY.started) { STORY.s.pitch += rc.out[1]; saveStory(); }
       }
       if (made) noteRecent(rc);
-      sfx('craft'); $('invName').textContent = rc.fuel ? '용광로에 넣었어요 — ' + B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개가 하나에 ' + SMELT_SEC + '초씩 녹아요' : B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개를 만들었어요';
+      sfx('craft'); $('invName').textContent = rc.fuel ? (rc.cook ? '불에 올렸어요 — ' + B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개가 하나에 ' + SMELT_SEC + '초씩 구워져요' : '용광로에 넣었어요 — ' + B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개가 하나에 ' + SMELT_SEC + '초씩 녹아요') : B[rc.out[0]][0] + ' ' + (rc.out[1] * made) + '개를 만들었어요';
       bagChanged();
     }
     var ok = canCraft(rc), times = craftTimes(rc);
-    var mk = btn(rc.fuel ? '🔥 녹이기' : '🔨 만들기', function () { craftN(1); }); mk.classList.add('dmake'); if (!ok) mk.classList.add('off');
+    var mk = btn(rc.cook ? '🍖 굽기' : rc.fuel ? '🔥 녹이기' : '🔨 만들기', function () { craftN(1); }); mk.classList.add('dmake'); if (!ok) mk.classList.add('off');
     if (rc.fuel) btn('×8 한꺼번에', function () { craftN(8); });
     else if (ok && times >= 2 && !isAdm()) btn('모두 만들기 (×' + Math.min(times, 64) + ')', function () { craftN(Math.min(times, 64)); });
     if (rc.fuel) fuelLine();
@@ -486,7 +486,7 @@
     if (!hud) { hud = document.createElement('div'); hud.id = 'smeltHud'; document.body.appendChild(hud); }
     if (!st) { if (sj) sj.innerHTML = ''; hud.style.display = 'none'; return; }
     var name = B[st.j.o][0], pct = Math.round(st.frac * 100);
-    if (sj) sj.innerHTML = '<div class="smrow"><img src="' + ICON[st.j.o] + '" alt=""> 녹이는 중: ' + name + ' ' + st.done + ' / ' + st.j.n + (JOBS.length > 1 ? ' · 뒤에 ' + (JOBS.length - 1) + '가지 더' : '') + '<span class="smbar"><s style="width:' + pct + '%"></s></span></div>';
+    if (sj) sj.innerHTML = '<div class="smrow"><img src="' + ICON[st.j.o] + '" alt="">' + (FOODS[st.j.o] ? ' 굽는 중: ' : ' 녹이는 중: ') + name + ' ' + st.done + ' / ' + st.j.n + (JOBS.length > 1 ? ' · 뒤에 ' + (JOBS.length - 1) + '가지 더' : '') + '<span class="smbar"><s style="width:' + pct + '%"></s></span></div>';
     hud.innerHTML = '🔥 ' + name + ' <span class="smbar"><s style="width:' + pct + '%"></s></span> ' + st.done + '/' + st.j.n;
     hud.style.display = ui === 'play' ? 'flex' : 'none';
   }

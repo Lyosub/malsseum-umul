@@ -516,7 +516,7 @@
   function dropItem(x, y, z, id, n) {
     if (!id || INV.indexOf(id) < 0 || !n) return;
     for (var i = 0; i < DROPS.length; i++) { var o0 = DROPS[i]; if (o0.id === id && !o0.dead && Math.abs(o0.x - x) < 1 && Math.abs(o0.y - y) < 1.2 && Math.abs(o0.z - z) < 1) { o0.n += n; return; } }
-    if (DROPS.length > 60 && !collectDrop(DROPS[0], true)) dropAway(DROPS[0]);
+    if (DROPS.length > 60) dropAway(DROPS[0]);   // 11/21: 너무 많으면 가장 오래된 것이 사라짐(저절로 가방에 넣지 않음)
     if (!scene || !atlasTex) { give(id, n); return; }
     dropMats();
     var flat = isFlat(id), geo = dropGeo[id] || (dropGeo[id] = flat ? itemGeometry(id) : blockGeometry(id));
@@ -534,7 +534,7 @@
     return true;
   }
   function dropAway(o) { if (o.m) { scene.remove(o.m); o.m = null; } o.dead = true; }
-  function collectAll() { DROPS.forEach(function (o) { collectDrop(o, true); }); DROPS = []; bagChanged(); }
+  function collectAll() { DROPS.forEach(function (o) { if (Math.hypot(o.x - P.x, o.z - P.z) < 2.5) collectDrop(o, true); }); DROPS = []; bagChanged(); }   // 나갈 때도 발밑 것만
   window.addEventListener('pagehide', function () { if (DROPS.length) collectAll(); });
   // ── 버리기·줍기: 버린 물건은 근처 사람 모두에게 보이고 먼저 닿는 사람이 줍는다(서버 ark_drops, 15분 뒤 사라짐) ──
   var SDROPS = {}, sdropAt = 0, sdropBusy = false, takeBusy = {};
@@ -622,9 +622,10 @@
       var wait = o.full !== undefined && o.age - o.full < 3;   // 가방이 찼거나 버린 것은 잠깐 안 끌려옴
       if (o.age > 300) { dropAway(o); continue; }   // 5분 지나면 사라짐
       if (o.manna && (dayT % DAY_LEN) / DAY_LEN > 0.3) { dropAway(o); continue; }   // 햇볕이 뜨겁게 쬐면 스러짐(출 16:21)
-      if (!wait && !o.thrown && (dist > 28 || o.age > 30)) { if (collectDrop(o, true)) got = true; continue; }
-      if (!wait && o.age > 0.35 && (o.thrown ? dist < 1.4 : (dist < 3.4 || o.age > 6))) {
-        var spd = Math.min(32, 7 + (3.4 - Math.min(dist, 3.4)) * 9 + (o.age > 6 ? 12 : 0));
+      // 11/21 전도사님: 캔 것·버린 것 모두 1~2칸 안에 있을 때만 빨려 들어옴 — 멀리 있으면 그 자리에 5분 동안 남음
+      var hd = Math.hypot(dx, dz);
+      if (!wait && o.age > 0.35 && hd < 2.2 && Math.abs(dy) < 2.4) {
+        var spd = Math.min(32, 7 + (3.4 - Math.min(dist, 3.4)) * 9);
         o.x += dx / dist * spd * dt; o.y += dy / dist * spd * dt; o.z += dz / dist * spd * dt;
         if (dist < 0.9) { got = true; if (!collectDrop(o)) { o.vx = (Math.random() - 0.5) * 3; o.vz = (Math.random() - 0.5) * 3; o.vy = 3; } continue; }
       } else {

@@ -64,7 +64,7 @@
     }
     var moving = false;
     if (a.mode === 'walk') {
-      var s = a.sp.speed * dt, nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
+      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : 1), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
       // 11/20 땅 칸: 남의 땅은 못 들어감. 내 땅은 밀·지팡이로 불러 데려올 때만 들어오고, 들어온 동물은 부르지 않으면 내 땅(우리) 밖으로 나가지 않음
       var np = plotAt(nx | 0, nz | 0), cp = plotAt(a.x | 0, a.z | 0), lured = a.luredUntil > Date.now();
       var plotBlock = np >= 0 && (np !== myPlot || myPlot < 0 || (cp !== np && !lured));
@@ -506,6 +506,7 @@
     }
     if (c && c.a && BREEDS[c.a.kind] && HOTBAR[sel] === WHEAT && have(WHEAT) > 0) return feedAnimal(c.a);
     if (c && c.a && harvestAnimal(c.a)) return;
+    if (c && c.a && (held === SWORD || isArmSword(held)) && have(held) > 0 && c.t < REACH + camDist + 1 && hitAnimal(c.a, true)) return;   // 11/21 칼을 들고 누르면 짐승 잡기
     if (c) return c.a && c.a.sp.seat ? tapRideable(c.a) : showCard(c.kind);
     if (h) act('place', h);
     else if (WEARINFO[HOTBAR[sel]]) wearItem(HOTBAR[sel]);
