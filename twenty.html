@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko" data-tone="purple">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>인물 스무고개 | 말씀우물</title>
+<meta name="description" content="한 사람이 성경 인물을 마음에 정하고, 나머지가 스무 번 안에 질문으로 맞히는 놀이입니다.">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/app-v2.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6a35d8">
+<link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+<script src="assets/text-size.js"></script>
+<script defer src="assets/pwa.js"></script>
+<style>
+  .qr-code { font-size:clamp(44px, 14vw, 120px); font-weight:800; letter-spacing:.12em; color:var(--well-deep); text-align:center; line-height:1.1; }
+  .qr-join { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; }
+  .qr-join img { width:150px; height:150px; border:1px solid #d9deea; border-radius:10px; background:#fff; }
+  .qr-people { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .qr-people button, .qr-people span { border:1.5px solid var(--well); background:#fff; color:var(--well-deep); border-radius:999px; padding:6px 12px; font:inherit; font-weight:700; font-size:14px; }
+  .qr-people button { cursor:pointer; }
+  .qr-q { font-size:clamp(19px, 4.6vw, 34px); font-weight:800; color:#1d2433; line-height:1.4; word-break:keep-all; text-align:center; margin:6px 0 14px; }
+  .qr-meta { display:flex; justify-content:space-between; font-weight:700; color:var(--text-soft); font-size:14px; }
+  .qr-bar { height:10px; border-radius:6px; background:#e6e9f2; overflow:hidden; margin:8px 0 4px; } .qr-bar i { display:block; height:100%; background:var(--well); width:100%; transition:width .25s linear; }
+  .qr-choices { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .qr-choices button { min-height:64px; border-radius:16px; border:2px solid var(--well); background:#fff; color:var(--well-deep); font:inherit; font-weight:800; font-size:18px; cursor:pointer; padding:8px; word-break:keep-all; }
+  .qr-choices button.pick { background:var(--well); color:#fff; }
+  .qr-choices button.ok { background:#1f9d57; border-color:#1f9d57; color:#fff; } .qr-choices button.no { background:#fff; border-color:#c9cfdb; color:#9aa3b5; }
+  .qr-choices button:disabled { cursor:default; }
+  .qr-rank { list-style:none; margin:10px 0 0; padding:0; } .qr-rank li { display:flex; gap:10px; align-items:center; padding:8px 10px; border-radius:10px; font-weight:700; } .qr-rank li:nth-child(odd) { background:#f3f5fa; }
+  .qr-rank li b { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .qr-rank li.me { box-shadow:inset 0 0 0 2px var(--well); }
+  .qr-big { text-align:center; font-size:22px; font-weight:800; color:var(--well-deep); margin:6px 0; }
+  .qr-seg { display:flex; gap:6px; flex-wrap:wrap; } .qr-seg button { flex:1; min-width:90px; padding:10px 6px; border-radius:12px; border:2px solid var(--well); background:#fff; color:var(--well-deep); font:inherit; font-weight:700; cursor:pointer; } .qr-seg button[aria-pressed="true"] { background:var(--well); color:#fff; }
+  .qr-in { box-sizing:border-box; background:#fff; color:#1d2433; width:100%; font:inherit; font-size:20px; padding:12px; border:2px solid #c9cfdb; border-radius:12px; text-align:center; }
+  .tw-log { list-style:decimal; margin:8px 0 0; padding-left:22px; font-size:14.5px; } .tw-log li { padding:5px 0; border-bottom:1px solid #eceff5; }
+  .tw-log li > span { display:inline-block; width:calc(100% - 92px); vertical-align:top; word-break:keep-all; } .tw-log small { color:var(--text-soft); }
+  .tw-log b { display:inline-block; width:86px; text-align:right; color:#5d6676; } .tw-log b.y { color:#1f9d57; } .tw-log b.n { color:#c0432c; }
+  .tw-qs { display:grid; grid-template-columns:1fr 1fr; gap:6px; } .tw-qs button { min-height:48px; border-radius:12px; border:1.5px solid var(--well); background:#fff; color:var(--well-deep); font:inherit; font-weight:700; font-size:13.5px; padding:6px; cursor:pointer; word-break:keep-all; }
+  .tw-qs button:disabled { border-color:#d5dae6; color:#a7afbf; cursor:default; }
+</style>
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="index.html"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#2540d8" d="M12 1.500s-6.200 6.400-6.200 10.600a6.200 6.200 0 0 0 12.400 0C18.200 7.900 12 1.500 12 1.500Z"/><path fill="none" stroke="#17287e" stroke-width="1.800" stroke-linecap="round" d="M2.500 17.800c1.900 2.800 5.400 4.600 9.500 4.600s7.600-1.800 9.500-4.600"/></svg>말씀우물</a>
+  <nav>
+    <a href="login.html" id="navLogin">로그인</a>
+    <a href="mypage.html" id="navMypage" style="display:none;">마이페이지</a>
+  </nav>
+</header>
+<div class="wrap">
+  <div class="page-hd">
+    <h1>🕵️ 인물 스무고개</h1>
+    <p>한 사람이 성경 인물을 정하면, 나머지가 「예·아니오」 질문 스무 번 안에 맞혀요.</p>
+  </div>
+  <div id="twApp"></div>
+</div>
+<footer class="site">
+  <img src="assets/logos/logos-color.png" alt="로고스교회 로고" style="width:34px;height:34px;object-fit:contain;">
+  <p style="margin:6px 0 10px;color:var(--well-deep);font-weight:600;font-size:12.5px;">100명의 훈련된 예수 제자를 세워가는 로고스교회 중등부</p>
+  말씀우물 · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a>
+</footer>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/vendor/supabase-js.js"></script>
+<script src="assets/vendor/qrcode.min.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/chosung-quiz-data.js"></script>
+<script src="assets/twenty.js"></script>
+<script>
+  initTwenty();
+  initHeaderAuthState();
+</script>
+<script src="assets/appshell.js"></script>
+</body>
+</html>
