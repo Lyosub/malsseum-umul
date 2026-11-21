@@ -17,6 +17,21 @@
 <link rel="apple-touch-icon" href="assets/icons/icon-512.png">
 <script src="assets/text-size.js"></script>
 <script defer src="assets/pwa.js"></script>
+<style>
+  /* 11/21 게임 카드: 게임 화면 + 아래·왼쪽 어둡게 + 제목·버튼 */
+  .game-banner { position:relative; display:block; overflow:hidden; border-radius:20px; min-height:190px; margin:0 0 12px; text-decoration:none; color:#fff; background:#1c1a2e; border:2px solid rgba(255,255,255,.14); box-shadow:0 14px 30px rgba(0,0,0,.28); -webkit-tap-highlight-color:transparent; transition:transform .15s; }
+  .game-banner:active { transform:scale(.98); }
+  .game-banner .gb-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .game-banner::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,8,20,.82) 0%, rgba(10,8,20,.55) 45%, rgba(10,8,20,0) 75%), linear-gradient(0deg, rgba(10,8,20,.55) 0%, rgba(10,8,20,0) 45%); }
+  .game-banner .gb-body { position:relative; z-index:1; display:flex; flex-direction:column; align-items:flex-start; gap:4px; padding:18px 18px 16px; max-width:72%; }
+  .gb-tag { font-size:11px; font-weight:800; letter-spacing:.04em; padding:4px 9px; border-radius:999px; background:rgba(255,255,255,.16); backdrop-filter:blur(4px); }
+  .gb-tag b { margin-left:4px; color:#ffcf7a; }
+  .gb-title { font-size:26px; font-weight:900; letter-spacing:-.02em; line-height:1.15; margin-top:4px; text-shadow:0 2px 8px rgba(0,0,0,.5); }
+  .gb-sub { font-size:13px; line-height:1.5; opacity:.92; text-shadow:0 1px 4px rgba(0,0,0,.6); }
+  .gb-go { margin-top:8px; font-size:13px; font-weight:800; padding:8px 14px; border-radius:999px; box-shadow:0 4px 12px rgba(0,0,0,.25); }
+  .gb-ody .gb-title { color:#ffe2a8; } .gb-ody .gb-go { background:#f2b544; color:#3a1d07; }
+  .gb-ark .gb-title { color:#c9f59a; } .gb-ark .gb-go { background:#7ed957; color:#16330a; }
+</style>
 </head>
 <body>
 <header class="site">
@@ -42,24 +57,24 @@
     <a href="harvest.html" class="pill-lime" style="background:#f2d27a;color:#2a3a12;">열매 모으러 가기 ›</a>
   </div>
 
-  <!-- In Odyssey 성경 모험 게임 — 2026-10-04 19:30부터 모두에게 공개 -->
-  <a href="odyssey/" id="odysseyCard" class="card" style="display:none;align-items:center;gap:12px;text-decoration:none;">
-    <span class="ico-circle">🧭</span>
-    <div style="flex:1 1 auto;min-width:0;">
-      <div style="font-weight:800;color:var(--well-deep);">In Odyssey — 성경 모험 게임</div>
-      <div style="font-size:12px;color:var(--text-soft);">성경 이야기 속을 직접 걸어요 · 로그인하면 이어서 모험해요</div>
-    </div>
-    <span style="color:var(--text-soft);">›</span>
+  <!-- 11/21 큰 게임 카드 둘: 실제 게임 화면을 배경으로 — In Odyssey(2026-10-04 19:30부터 모두에게 공개) · 나그네 마을(시험 중: 관리자 + 지정한 학생에게만, DB 함수 can_see_ark) -->
+  <a href="odyssey/" id="odysseyCard" class="game-banner gb-ody" style="display:none">
+    <img class="gb-img" src="assets/games/odyssey-banner.jpg" alt="" loading="lazy">
+    <span class="gb-body">
+      <span class="gb-tag">🧭 성경 모험 · 3D</span>
+      <span class="gb-title">In Odyssey</span>
+      <span class="gb-sub">성경 이야기 속을 직접 걸어요<br>로그인하면 이어서 모험해요</span>
+      <span class="gb-go">모험 떠나기 ›</span>
+    </span>
   </a>
-
-  <!-- 나그네 마을 블록 게임 — 시험 중: 관리자 + 지정한 학생에게만(DB 함수 can_see_ark) -->
-  <a href="ark.html" id="arkCard" class="card" style="display:none;align-items:center;gap:12px;text-decoration:none;margin-top:10px;">
-    <span class="ico-circle">🏕️</span>
-    <div style="flex:1 1 auto;min-width:0;">
-      <div style="font-weight:800;color:var(--well-deep);">나그네 마을 — 블록 게임 <span style="font-size:11px;font-weight:700;color:#b8481f;">시험 중</span></div>
-      <div style="font-size:12px;color:var(--text-soft);">재료를 캐고 옷을 지어 입고, 친구들과 함께 마을을 꾸며요</div>
-    </div>
-    <span style="color:var(--text-soft);">›</span>
+  <a href="ark.html" id="arkCard" class="game-banner gb-ark" style="display:none">
+    <img class="gb-img" src="assets/games/ark-banner.jpg" alt="" loading="lazy">
+    <span class="gb-body">
+      <span class="gb-tag">🏕️ 블록 게임 <b>시험 중</b></span>
+      <span class="gb-title">나그네 마을</span>
+      <span class="gb-sub">재료를 캐고 옷을 지어 입고<br>친구들과 함께 마을을 꾸며요</span>
+      <span class="gb-go">마을로 들어가기 ›</span>
+    </span>
   </a>
 
 <!-- 게임들 -->
@@ -167,12 +182,12 @@
   (function () {
     var card = document.getElementById("odysseyCard");
     if (!card) return;
-    if (Date.now() >= new Date("2026-10-04T19:30:00+09:00").getTime()) { card.style.display = "flex"; return; }
+    if (Date.now() >= new Date("2026-10-04T19:30:00+09:00").getTime()) { card.style.display = "block"; return; }
     if (typeof getClient !== "function" || !getClient()) return;
     getSession().then(function (session) {
       if (!session) return;
       getClient().rpc("can_see_odyssey").then(function (res) {
-        if (res && res.data === true) card.style.display = "flex";
+        if (res && res.data === true) card.style.display = "block";
       });
     });
   })();
@@ -183,7 +198,7 @@
     getSession().then(function (session) {
       if (!session) return;
       getClient().rpc("can_see_ark").then(function (res) {
-        if (res && res.data === true) card.style.display = "flex";
+        if (res && res.data === true) card.style.display = "block";
       });
     });
   })();
