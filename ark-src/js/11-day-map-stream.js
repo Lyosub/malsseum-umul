@@ -1,5 +1,5 @@
   // ───────── 해·밤, 비 ─────────
-  var FOG_FAR = (isTouch ? 5 : 7) * 32 - 12;
+  var FOG_FAR = (isTouch ? 5 : 7) * 32 - 6;
   var DAY_LEN = 1200, dayT = DAY_LEN * 0.06, rain = 0, rainOn = false, rainTimer = 300;   // 11/20: 하루 15분 → 20분(낮 약 12분·밤 약 8분), 처음 5분은 맑게
   var storm = false, thunderT = 8, flashK = 0, stormTold = false;   // 뇌우: 비가 올 때 열에 넷쯤(노아 때 비는 늘 뇌우)
   var LU = { uDay: { value: 1 }, uTint: { value: new THREE.Color(1, 1, 1) }, uTime: { value: 0 }, uHand: { value: new THREE.Vector4(0, -999, 0, 0) } };   // uHand: 손에 든 횃불(위치, 세기)
@@ -131,7 +131,7 @@
     skyC.copy(C_NIGHT).lerp(C_DAY, dayF).lerp(C_DUSK, dusk * 0.5).lerp(C_RAIN, rain * 0.6 * dayF);
     scene.background.copy(skyC);
     fogC.copy(skyC).lerp(C_WHITE, 0.18 * dayF);
-    scene.fog.color.copy(fogC); scene.fog.near = FOG_FAR * 0.4 * (1 - 0.45 * rain); scene.fog.far = FOG_FAR * (1 - 0.3 * rain);
+    scene.fog.color.copy(fogC); scene.fog.near = FOG_FAR * 0.65 * (1 - 0.2 * rain); scene.fog.far = FOG_FAR * (1 - 0.1 * rain);   // 11/21 안개를 멀리·옅게
     LU.uDay.value = (0.24 + 0.76 * dayF) * (1 - 0.22 * rain);
     if (flashK > 0) { var fk = flashK * (1 - caveK) * (flashK > 0.55 && flashK < 0.75 ? 0.35 : 1); LU.uDay.value = Math.min(1.25, LU.uDay.value + fk * 0.9); skyC.lerp(C_WHITE, fk * 0.75); scene.background.copy(skyC); }
     // 횃불·등을 손에 들면 내 둘레 7칸이 밝아짐(밤·굴에서)
@@ -568,12 +568,12 @@
   // ───────── 가까운 곳 만들고 지우기 ─────────
   var R_MESH = isTouch ? 5 : 7, R_GEN = R_MESH + 1, R_DROP = R_MESH + 4;
   function applyLightMode() {
-    var radius = S.lightMode ? 3 : (isTouch ? 5 : 7);
+    var radius = S.lightMode ? 4 : (isTouch ? 5 : 7);
     R_MESH = radius; R_GEN = radius + 1; R_DROP = radius + 4;
-    FOG_FAR = radius * CS - 12;
+    FOG_FAR = radius * CS - 6;
     if (!renderer || !camera) return;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, S.lightMode ? 1 : (isTouch ? 1.6 : 2)));
-    scene.fog.near = FOG_FAR * .4;
+    scene.fog.near = FOG_FAR * .65;
     scene.fog.far = FOG_FAR;
     camera.far = FOG_FAR + 60;
     if (rainLines) rainLines.geometry.setDrawRange(0, (S.lightMode ? 240 : RAIN_N) * 2);

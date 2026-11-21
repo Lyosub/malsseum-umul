@@ -65,7 +65,7 @@
     }
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x9fcdee);
-    scene.fog = new THREE.Fog(0xc4e2f4, FOG_FAR * 0.4, FOG_FAR);
+    scene.fog = new THREE.Fog(0xc4e2f4, FOG_FAR * 0.65, FOG_FAR);
     camera = new THREE.PerspectiveCamera(70, 1, 0.08, FOG_FAR + 60);
     scene.add(camera);
     atlasTex = new THREE.CanvasTexture(atlas);
