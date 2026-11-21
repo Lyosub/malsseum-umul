@@ -274,7 +274,7 @@
       top(id, B[id][0], kind + ' · ' + fmtN(have(id)) + '개');
       if (WEARINFO[id]) btn((WEARINFO[id].slot === 'shield' ? '🛡 ' : '👕 ') + SLOT_NAME[WEARINFO[id].slot] + ' 칸에 입기' + (WORN[WEARINFO[id].slot] ? ' (입던 것은 가방으로)' : ''), function () { bagPick = null; wearItem(id); $('invName').textContent = jo(B[id][0], '을', '를') + ' 입었어요'; renderInv(); }).classList.add('dmake');
       if (isTool(id) && WEAR[id] !== undefined && !isAdm()) { var f = WEAR[id] / toolMax(id); add('div', 'ddur', '<s style="width:' + Math.max(4, Math.round(f * 100)) + '%;background:' + (f > 0.5 ? '#4fd14f' : f > 0.2 ? '#e8c53a' : '#e0473a') + '"></s>'); add('div', 'dhint', '남은 힘 ' + wearLeft(id) + ' / ' + toolMax(id) + ' — 만들기 → ⛏ 도구에서 고쳐요'); }
-      if (FOODS[id] !== undefined && vitalsOn()) btn('🍞 먹기 (기운 +' + FOODS[id] + ')', function () { eatItem(id); bagPick = null; renderInv(); });
+      if (FOODS[id] !== undefined && vitalsOn()) btn('🍞 먹기 (기운 +' + FOODS[id] + ' · 체력 +' + healOf(id) + ')', function () { eatItem(id); bagPick = null; renderInv(); });
       if (p.from === 'bag') {
         add('div', 'dhint', '⬇ 아래 단축 칸을 누르면 손에 들어요');
         if (!isAdm()) {

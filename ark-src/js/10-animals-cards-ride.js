@@ -25,6 +25,13 @@
       [1.0, 1.0, 2.2, 0x8e8a86, 0, 2.0, 0], [0.55, 1.0, 0.65, 0x8e8a86, 0, 2.7, -1.05], [0.56, 0.56, 1.1, 0x8e8a86, 0, 3.15, -1.5], [0.46, 0.42, 0.3, 0xe2ded6, 0, 3.0, -2.06],
       [0.15, 0.75, 0.15, 0x7a7672, -0.18, 3.75, -1.3], [0.15, 0.75, 0.15, 0x7a7672, 0.18, 3.75, -1.3], [0.08, 0.1, 0.1, 0x111111, -0.29, 3.25, -1.7], [0.08, 0.1, 0.1, 0x111111, 0.29, 3.25, -1.7],
       [0.14, 0.9, 0.3, 0x3e3a38, 0, 3.0, -0.95], [0.14, 1.0, 0.14, 0x3e3a38, 0, 1.85, 1.15], [1.02, 0.05, 0.3, 0x3e3a38, 0, 2.51, -0.3], [0.3, 0.05, 2.2, 0x3e3a38, 0, 2.51, 0], [1.0, 0.25, 1.6, 0xd8d2c8, 0, 1.5, 0]] },
+    // 11/21 돼지(눅 15:16)·닭(마 23:37) — 닭은 앞뒤 다리를 겹쳐 두 다리로 보이게
+    pig: { name: '돼지', n: 10, speed: 1.5, leg: [0.32, 0.7, 0xd88f8a], lx: 0.42, lz: 0.68, parts: [
+      [1.2, 1.0, 1.9, 0xeba6a0, 0, 1.15, 0], [0.82, 0.78, 0.72, 0xeba6a0, 0, 1.3, -1.18], [0.5, 0.34, 0.16, 0xd98a86, 0, 1.18, -1.6], [0.09, 0.1, 0.04, 0x6a3a38, -0.12, 1.18, -1.69], [0.09, 0.1, 0.04, 0x6a3a38, 0.12, 1.18, -1.69],
+      [0.24, 0.22, 0.12, 0xd88f8a, -0.3, 1.74, -1.06], [0.24, 0.22, 0.12, 0xd88f8a, 0.3, 1.74, -1.06], [0.08, 0.1, 0.05, 0x141210, -0.22, 1.45, -1.55], [0.08, 0.1, 0.05, 0x141210, 0.22, 1.45, -1.55], [0.1, 0.1, 0.26, 0xd88f8a, 0, 1.42, 1.0]] },
+    chicken: { name: '닭', n: 14, speed: 1.8, leg: [0.08, 0.45, 0xe0a030], lx: 0.12, lz: 0.001, parts: [
+      [0.55, 0.5, 0.7, 0xf4f0e6, 0, 0.7, 0], [0.32, 0.38, 0.32, 0xf4f0e6, 0, 1.08, -0.35], [0.14, 0.1, 0.16, 0xe8a030, 0, 1.06, -0.57], [0.08, 0.16, 0.24, 0xd83a2a, 0, 1.33, -0.35], [0.08, 0.12, 0.06, 0xd83a2a, 0, 0.95, -0.52],
+      [0.05, 0.06, 0.04, 0x111111, -0.165, 1.13, -0.45], [0.05, 0.06, 0.04, 0x111111, 0.165, 1.13, -0.45], [0.36, 0.32, 0.12, 0xece6d6, 0, 0.92, 0.4], [0.08, 0.3, 0.46, 0xe6e0d0, -0.31, 0.72, 0], [0.08, 0.3, 0.46, 0xe6e0d0, 0.31, 0.72, 0]] },
     rabbit: { name: '토끼', n: 16, speed: 3.2, hop: true, leg: [0.16, 0.3, 0xa89074], lx: 0.2, lz: 0.3, parts: [
       [0.6, 0.55, 0.9, 0xb8a088, 0, 0.58, 0], [0.5, 0.5, 0.5, 0xb8a088, 0, 0.98, -0.5], [0.12, 0.55, 0.12, 0xb8a088, -0.12, 1.45, -0.45], [0.12, 0.55, 0.12, 0xb8a088, 0.12, 1.45, -0.45], [0.25, 0.25, 0.2, 0xffffff, 0, 0.68, 0.5]] }
   };
@@ -63,8 +70,12 @@
       else a.t = 3;
     }
     var moving = false;
+    if (a.mom && a.baby) {   // 11/21 새끼: 어미가 3칸보다 멀면 어미 쪽으로
+      if (a.mom.mesh.parent && !a.mom.dead) { var mdx = a.mom.x - a.x, mdz = a.mom.z - a.z; if (mdx * mdx + mdz * mdz > 9 && !(a.fleeUntil > performance.now())) { a.h = Math.atan2(-mdx, -mdz); a.mode = 'walk'; a.t = 0.5; } }
+      else a.mom = null;
+    }
     if (a.mode === 'walk') {
-      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : 1), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
+      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : (a.mom && a.baby ? 1.6 : 1)), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
       // 11/20 땅 칸: 남의 땅은 못 들어감. 내 땅은 밀·지팡이로 불러 데려올 때만 들어오고, 들어온 동물은 부르지 않으면 내 땅(우리) 밖으로 나가지 않음
       var np = plotAt(nx | 0, nz | 0), cp = plotAt(a.x | 0, a.z | 0), lured = a.luredUntil > Date.now();
       var plotBlock = np >= 0 && (np !== myPlot || myPlot < 0 || (cp !== np && !lured));
@@ -142,9 +153,11 @@
     raven: { emoji: '🐦', name: '까마귀', ref: '창세기 8:7', text: '까마귀를 내놓으매 까마귀가 물이 땅에서 마르기까지 날아 왕래하였더라' },
     horse: { emoji: '🐎', name: '말', ref: '욥기 39:19', text: '말의 힘을 네가 주었느냐 그 목에 흩날리는 갈기를 네가 입혔느냐' },
     donkey: { emoji: '🐴', name: '나귀', ref: '스가랴 9:9', text: '시온의 딸아 크게 기뻐할지어다 예루살렘의 딸아 즐거이 부를지어다 보라 네 왕이 네게 임하시나니 그는 공의로우시며 구원을 베푸시며 겸손하여서 나귀를 타시나니 나귀의 작은 것 곧 나귀 새끼니라' },
+    pig: { emoji: '🐖', name: '돼지', ref: '누가복음 15:16', text: '그가 돼지 먹는 쥐엄 열매로 배를 채우고자 하되 주는 자가 없는지라' },
+    chicken: { emoji: '🐔', name: '닭', ref: '마태복음 23:37', text: '예루살렘아 예루살렘아 선지자들을 죽이고 네게 파송된 자들을 돌로 치는 자여 암탉이 그 새끼를 날개 아래에 모음 같이 내가 네 자녀를 모으려 한 일이 몇 번이더냐 그러나 너희가 원하지 아니하였도다' },
     fish: { emoji: '🐟', name: '물고기', ref: '창세기 1:21', text: '하나님이 큰 바다 짐승들과 물에서 번성하여 움직이는 모든 생물을 그 종류대로, 날개 있는 모든 새를 그 종류대로 창조하시니 하나님이 보시기에 좋았더라' }
   };
-  var CREATURE_KEYS = ['sheep', 'goat', 'cow', 'camel', 'horse', 'donkey', 'rabbit', 'dove', 'raven', 'fish'];
+  var CREATURE_KEYS = ['sheep', 'goat', 'cow', 'camel', 'horse', 'donkey', 'pig', 'chicken', 'rabbit', 'dove', 'raven', 'fish'];
   var REWARD_ANIMALS = ['sheep', 'goat', 'cow', 'camel', 'rabbit', 'dove', 'raven', 'fish'];   // 달란트 기준(서버 claim_ark_dex와 같은 8가지)
   var DEX_MATS = [LOG, LEAF, STONE, LIME, BASALT, SAND, DIRT, CLAY, TAR, REED, FLOWER];
   var DEX = {};
@@ -211,7 +224,7 @@
     stats.tapped++; tutorialEvent('animal'); questCheck();
   }
   // 화면의 한 점에서 나가는 광선에 맞는 동물(블록보다 가까울 때만)
-  var CR_R = { peer: 1.6, npc: 1.8, shadow: 1.6, sheep: 1.3, goat: 1.2, cow: 1.7, camel: 2.3, rabbit: 0.8, dove: 1.1, raven: 1.1, fish: 0.8, horse: 2.1, donkey: 1.7 };
+  var CR_R = { peer: 1.6, npc: 1.8, shadow: 1.6, sheep: 1.3, goat: 1.2, cow: 1.7, camel: 2.3, rabbit: 0.8, pig: 1.2, chicken: 0.7, dove: 1.1, raven: 1.1, fish: 0.8, horse: 2.1, donkey: 1.7 };
   function pickCreature(dir, blockT) {
     var o = camera.position, best = null, bt = blockT === undefined ? 1e9 : blockT;
     function test(kindC, cx, cy, cz, maxT, obj) {
@@ -504,7 +517,7 @@
     if (c && c.a && held===STAFF && have(STAFF) && c.a===lostSheep && !c.a.found) {
       c.a.found=true; animalCall('sheep'); toast('잃은 양을 찾았어요. 지팡이를 들고 목자에게 함께 가요'); return;
     }
-    if (c && c.a && BREEDS[c.a.kind] && HOTBAR[sel] === WHEAT && have(WHEAT) > 0) return feedAnimal(c.a);
+    if (c && c.a && BREEDS[c.a.kind] && !c.a.saddled && (HOTBAR[sel] === WHEAT || (c.a.kind === 'chicken' && HOTBAR[sel] === SEED)) && have(HOTBAR[sel]) > 0) return feedAnimal(c.a, HOTBAR[sel]);
     if (c && c.a && harvestAnimal(c.a)) return;
     if (c && c.a && (held === SWORD || isArmSword(held)) && have(held) > 0 && c.t < REACH + camDist + 1 && hitAnimal(c.a, true)) return;   // 11/21 칼을 들고 누르면 짐승 잡기
     if (c) return c.a && c.a.sp.seat ? tapRideable(c.a) : showCard(c.kind);

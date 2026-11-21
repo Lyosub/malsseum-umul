@@ -1097,7 +1097,7 @@
   var HOE = 624, FISH_ROD = 625, FISH_NET = 626, RAW_FISH = 627, RAW_LAMB = 628,
       HONEY = 629, POMEGRANATE = 630, STEW = 631, COOKED_FISH = 632, COOKED_LAMB = 633,
       FLATBREAD = 634, FLOUR = 635, WINE = 636, OLIVE_OIL = 637;
-  var RAW_BEEF = 683, RAW_GOAT = 684, COOKED_BEEF = 685, COOKED_GOAT = 686;   // 11/21 짐승을 잡으면 나오는 고기(창 9:3)
+  var RAW_BEEF = 683, RAW_GOAT = 684, COOKED_BEEF = 685, COOKED_GOAT = 686, RAW_CHICKEN = 687, COOKED_CHICKEN = 688, FEATHER = 689;   // 11/21 짐승을 잡으면 나오는 고기(창 9:3)
   // 이름, 거둘 것, 식물색, 열매색, 여러 번 거두는 작물, 나무 높이.
   var FARM_TYPES = [
     ['보리','보리',0x86a64b,0xc6a551], ['포도나무','포도',0x4b803e,0x75428b,true],
@@ -1121,7 +1121,8 @@
     [POMEGRANATE,'석류',0xb64643],[STEW,'렌틸콩죽',0xaa5c3d],[COOKED_FISH,'구운 생선',0xb77b41],
     [COOKED_LAMB,'구운 양고기',0x9e5940],[FLATBREAD,'누룩 없는 빵',0xddb475],
     [FLOUR,'가루',0xebd8b3],[WINE,'포도주',0x803b56],[OLIVE_OIL,'올리브 기름',0x9e8e43],
-    [RAW_BEEF,'소고기',0xc0554a],[RAW_GOAT,'염소고기',0xb8695a],[COOKED_BEEF,'구운 소고기',0x8e4a30],[COOKED_GOAT,'구운 염소고기',0x9a5a3a]];
+    [RAW_BEEF,'소고기',0xc0554a],[RAW_GOAT,'염소고기',0xb8695a],[COOKED_BEEF,'구운 소고기',0x8e4a30],[COOKED_GOAT,'구운 염소고기',0x9a5a3a],
+    [RAW_CHICKEN,'닭고기',0xe8b8a0],[COOKED_CHICKEN,'구운 닭고기',0xc0844a],[FEATHER,'깃털',0xf6f2ea]];
   FOOD_ART.forEach(function(d) { expansionItem(d[0],d[1],'farmItem'+d[0]); });
   FARM_TYPES.forEach(function(d, i) {
     var spec = { base:410+i*4, seed:600+i, harvest:i===9 ? FIG : (i===11 ? POMEGRANATE : 612+i), perennial:!!d[4], height:d[5] || 1 };
@@ -1559,6 +1560,7 @@
     { out: [RAILF0, 6], need: [[ING_AU, 6], [STICK, 1]], cat: 'shape' },
     { out: [CART, 1], need: [[ING_FE, 5]], cat: 'tool' },
     { out: [ARROW, 4], need: [[STICK, 1], [FLINT, 1]], cat: 'tool' },
+    { out: [ARROW, 8], need: [[STICK, 1], [FLINT, 1], [689, 1]], cat: 'tool' },   // 11/21 깃털을 달면 화살이 두 배
     { out: [FRAME, 1], need: [[STICK, 8], [LEATHER, 1]], cat: 'shape' },
     { out: [SLAB_S, 6], need: [[STONE, 3]] },
     { out: [STAIR_S, 4], need: [[STONE, 6]] },
@@ -1690,7 +1692,7 @@
     [STEW,1,[[615,2],[CHAR,1]],OVEN], [FLATBREAD,2,[[FLOUR,2],[CHAR,1]],OVEN]
   ].forEach(function(d){ RECIPES.push({out:[d[0],d[1]],need:d[2],station:d[3],cat:'block'}); });
   // 11/21 굽기: 모닥불(또는 화덕과 솥) 가까이에서 석탄·숯·통나무를 땔감으로 — 녹이기처럼 하나에 3초
-  [[COOKED_LAMB,RAW_LAMB],[COOKED_BEEF,RAW_BEEF],[COOKED_GOAT,RAW_GOAT],[COOKED_FISH,RAW_FISH]].forEach(function(d){ RECIPES.push({out:[d[0],1],need:[[d[1],1]],station:467,fuel:true,cook:true,cat:'smelt',ref:'창 9:3'}); });
+  [[COOKED_LAMB,RAW_LAMB],[COOKED_BEEF,RAW_BEEF],[COOKED_GOAT,RAW_GOAT],[COOKED_CHICKEN,RAW_CHICKEN],[COOKED_FISH,RAW_FISH]].forEach(function(d){ RECIPES.push({out:[d[0],1],need:[[d[1],1]],station:467,fuel:true,cook:true,cat:'smelt',ref:'창 9:3'}); });
   LIFE_BLOCKS.forEach(function(d){ INV.push(d[0]); });
   LIFE_ITEMS.forEach(function(d){ INV.push(d[0]); });
   [
@@ -3115,6 +3117,7 @@
     H[COAL] = '석탄 광석을 곡괭이로 캐면 나와요 — 산 속과 땅속에 흔해요'; H[CHAR] = '용광로에서 통나무를 녹이면 숯이 돼요(요 21:9)';
     H[WOOL] = '작은 칼을 들고 양을 누르면 깎고, 양을 잡아도 나와요'; H[LEATHER] = '작은 칼을 들고 소·염소·낙타를 누르거나, 짐승을 잡으면 나와요';
     H[RAW_BEEF] = '소를 잡으면 나와요 — 모닥불에서 구워요'; H[RAW_GOAT] = '염소를 잡으면 나와요 — 모닥불에서 구워요';
+    H[RAW_CHICKEN] = '닭을 잡으면 나와요 — 모닥불에서 구워요'; H[COOKED_CHICKEN] = '닭고기를 모닥불·화덕 가까이에서 구워요'; H[FEATHER] = '닭을 잡으면 나와요 — 화살에 달면 두 배로 만들어요';
     H[COOKED_BEEF] = '소고기를 모닥불·화덕 가까이에서 구워요'; H[COOKED_GOAT] = '염소고기를 모닥불·화덕 가까이에서 구워요';
     H[GEM_ONYX] = '깊은 땅속 호마노 광석을 철 곡괭이 이상으로 캐요 — 호마노로 호마노 곡괭이를 만들어요'; H[GEM_SAPH] = '아주 깊은 곳 청옥 광석을 호마노 곡괭이로 캐요'; H[GEM_DIA] = '맨 아래 가까이 금강석 광석을 호마노 곡괭이로 캐요';
     [[ING_CU, ORE_CU], [ING_FE, ORE_FE], [ING_AG, ORE_AG], [ING_AU, ORE_AU]].forEach(function (q) { H[q[0]] = B[q[1]][0] + '을 캐서 용광로에서 녹여요(욥 28:2)'; });
@@ -4809,7 +4812,7 @@
       top(id, B[id][0], kind + ' · ' + fmtN(have(id)) + '개');
       if (WEARINFO[id]) btn((WEARINFO[id].slot === 'shield' ? '🛡 ' : '👕 ') + SLOT_NAME[WEARINFO[id].slot] + ' 칸에 입기' + (WORN[WEARINFO[id].slot] ? ' (입던 것은 가방으로)' : ''), function () { bagPick = null; wearItem(id); $('invName').textContent = jo(B[id][0], '을', '를') + ' 입었어요'; renderInv(); }).classList.add('dmake');
       if (isTool(id) && WEAR[id] !== undefined && !isAdm()) { var f = WEAR[id] / toolMax(id); add('div', 'ddur', '<s style="width:' + Math.max(4, Math.round(f * 100)) + '%;background:' + (f > 0.5 ? '#4fd14f' : f > 0.2 ? '#e8c53a' : '#e0473a') + '"></s>'); add('div', 'dhint', '남은 힘 ' + wearLeft(id) + ' / ' + toolMax(id) + ' — 만들기 → ⛏ 도구에서 고쳐요'); }
-      if (FOODS[id] !== undefined && vitalsOn()) btn('🍞 먹기 (기운 +' + FOODS[id] + ')', function () { eatItem(id); bagPick = null; renderInv(); });
+      if (FOODS[id] !== undefined && vitalsOn()) btn('🍞 먹기 (기운 +' + FOODS[id] + ' · 체력 +' + healOf(id) + ')', function () { eatItem(id); bagPick = null; renderInv(); });
       if (p.from === 'bag') {
         add('div', 'dhint', '⬇ 아래 단축 칸을 누르면 손에 들어요');
         if (!isAdm()) {
@@ -5390,6 +5393,13 @@
       [1.0, 1.0, 2.2, 0x8e8a86, 0, 2.0, 0], [0.55, 1.0, 0.65, 0x8e8a86, 0, 2.7, -1.05], [0.56, 0.56, 1.1, 0x8e8a86, 0, 3.15, -1.5], [0.46, 0.42, 0.3, 0xe2ded6, 0, 3.0, -2.06],
       [0.15, 0.75, 0.15, 0x7a7672, -0.18, 3.75, -1.3], [0.15, 0.75, 0.15, 0x7a7672, 0.18, 3.75, -1.3], [0.08, 0.1, 0.1, 0x111111, -0.29, 3.25, -1.7], [0.08, 0.1, 0.1, 0x111111, 0.29, 3.25, -1.7],
       [0.14, 0.9, 0.3, 0x3e3a38, 0, 3.0, -0.95], [0.14, 1.0, 0.14, 0x3e3a38, 0, 1.85, 1.15], [1.02, 0.05, 0.3, 0x3e3a38, 0, 2.51, -0.3], [0.3, 0.05, 2.2, 0x3e3a38, 0, 2.51, 0], [1.0, 0.25, 1.6, 0xd8d2c8, 0, 1.5, 0]] },
+    // 11/21 돼지(눅 15:16)·닭(마 23:37) — 닭은 앞뒤 다리를 겹쳐 두 다리로 보이게
+    pig: { name: '돼지', n: 10, speed: 1.5, leg: [0.32, 0.7, 0xd88f8a], lx: 0.42, lz: 0.68, parts: [
+      [1.2, 1.0, 1.9, 0xeba6a0, 0, 1.15, 0], [0.82, 0.78, 0.72, 0xeba6a0, 0, 1.3, -1.18], [0.5, 0.34, 0.16, 0xd98a86, 0, 1.18, -1.6], [0.09, 0.1, 0.04, 0x6a3a38, -0.12, 1.18, -1.69], [0.09, 0.1, 0.04, 0x6a3a38, 0.12, 1.18, -1.69],
+      [0.24, 0.22, 0.12, 0xd88f8a, -0.3, 1.74, -1.06], [0.24, 0.22, 0.12, 0xd88f8a, 0.3, 1.74, -1.06], [0.08, 0.1, 0.05, 0x141210, -0.22, 1.45, -1.55], [0.08, 0.1, 0.05, 0x141210, 0.22, 1.45, -1.55], [0.1, 0.1, 0.26, 0xd88f8a, 0, 1.42, 1.0]] },
+    chicken: { name: '닭', n: 14, speed: 1.8, leg: [0.08, 0.45, 0xe0a030], lx: 0.12, lz: 0.001, parts: [
+      [0.55, 0.5, 0.7, 0xf4f0e6, 0, 0.7, 0], [0.32, 0.38, 0.32, 0xf4f0e6, 0, 1.08, -0.35], [0.14, 0.1, 0.16, 0xe8a030, 0, 1.06, -0.57], [0.08, 0.16, 0.24, 0xd83a2a, 0, 1.33, -0.35], [0.08, 0.12, 0.06, 0xd83a2a, 0, 0.95, -0.52],
+      [0.05, 0.06, 0.04, 0x111111, -0.165, 1.13, -0.45], [0.05, 0.06, 0.04, 0x111111, 0.165, 1.13, -0.45], [0.36, 0.32, 0.12, 0xece6d6, 0, 0.92, 0.4], [0.08, 0.3, 0.46, 0xe6e0d0, -0.31, 0.72, 0], [0.08, 0.3, 0.46, 0xe6e0d0, 0.31, 0.72, 0]] },
     rabbit: { name: '토끼', n: 16, speed: 3.2, hop: true, leg: [0.16, 0.3, 0xa89074], lx: 0.2, lz: 0.3, parts: [
       [0.6, 0.55, 0.9, 0xb8a088, 0, 0.58, 0], [0.5, 0.5, 0.5, 0xb8a088, 0, 0.98, -0.5], [0.12, 0.55, 0.12, 0xb8a088, -0.12, 1.45, -0.45], [0.12, 0.55, 0.12, 0xb8a088, 0.12, 1.45, -0.45], [0.25, 0.25, 0.2, 0xffffff, 0, 0.68, 0.5]] }
   };
@@ -5428,8 +5438,12 @@
       else a.t = 3;
     }
     var moving = false;
+    if (a.mom && a.baby) {   // 11/21 새끼: 어미가 3칸보다 멀면 어미 쪽으로
+      if (a.mom.mesh.parent && !a.mom.dead) { var mdx = a.mom.x - a.x, mdz = a.mom.z - a.z; if (mdx * mdx + mdz * mdz > 9 && !(a.fleeUntil > performance.now())) { a.h = Math.atan2(-mdx, -mdz); a.mode = 'walk'; a.t = 0.5; } }
+      else a.mom = null;
+    }
     if (a.mode === 'walk') {
-      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : 1), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
+      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : (a.mom && a.baby ? 1.6 : 1)), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
       // 11/20 땅 칸: 남의 땅은 못 들어감. 내 땅은 밀·지팡이로 불러 데려올 때만 들어오고, 들어온 동물은 부르지 않으면 내 땅(우리) 밖으로 나가지 않음
       var np = plotAt(nx | 0, nz | 0), cp = plotAt(a.x | 0, a.z | 0), lured = a.luredUntil > Date.now();
       var plotBlock = np >= 0 && (np !== myPlot || myPlot < 0 || (cp !== np && !lured));
@@ -5507,9 +5521,11 @@
     raven: { emoji: '🐦', name: '까마귀', ref: '창세기 8:7', text: '까마귀를 내놓으매 까마귀가 물이 땅에서 마르기까지 날아 왕래하였더라' },
     horse: { emoji: '🐎', name: '말', ref: '욥기 39:19', text: '말의 힘을 네가 주었느냐 그 목에 흩날리는 갈기를 네가 입혔느냐' },
     donkey: { emoji: '🐴', name: '나귀', ref: '스가랴 9:9', text: '시온의 딸아 크게 기뻐할지어다 예루살렘의 딸아 즐거이 부를지어다 보라 네 왕이 네게 임하시나니 그는 공의로우시며 구원을 베푸시며 겸손하여서 나귀를 타시나니 나귀의 작은 것 곧 나귀 새끼니라' },
+    pig: { emoji: '🐖', name: '돼지', ref: '누가복음 15:16', text: '그가 돼지 먹는 쥐엄 열매로 배를 채우고자 하되 주는 자가 없는지라' },
+    chicken: { emoji: '🐔', name: '닭', ref: '마태복음 23:37', text: '예루살렘아 예루살렘아 선지자들을 죽이고 네게 파송된 자들을 돌로 치는 자여 암탉이 그 새끼를 날개 아래에 모음 같이 내가 네 자녀를 모으려 한 일이 몇 번이더냐 그러나 너희가 원하지 아니하였도다' },
     fish: { emoji: '🐟', name: '물고기', ref: '창세기 1:21', text: '하나님이 큰 바다 짐승들과 물에서 번성하여 움직이는 모든 생물을 그 종류대로, 날개 있는 모든 새를 그 종류대로 창조하시니 하나님이 보시기에 좋았더라' }
   };
-  var CREATURE_KEYS = ['sheep', 'goat', 'cow', 'camel', 'horse', 'donkey', 'rabbit', 'dove', 'raven', 'fish'];
+  var CREATURE_KEYS = ['sheep', 'goat', 'cow', 'camel', 'horse', 'donkey', 'pig', 'chicken', 'rabbit', 'dove', 'raven', 'fish'];
   var REWARD_ANIMALS = ['sheep', 'goat', 'cow', 'camel', 'rabbit', 'dove', 'raven', 'fish'];   // 달란트 기준(서버 claim_ark_dex와 같은 8가지)
   var DEX_MATS = [LOG, LEAF, STONE, LIME, BASALT, SAND, DIRT, CLAY, TAR, REED, FLOWER];
   var DEX = {};
@@ -5576,7 +5592,7 @@
     stats.tapped++; tutorialEvent('animal'); questCheck();
   }
   // 화면의 한 점에서 나가는 광선에 맞는 동물(블록보다 가까울 때만)
-  var CR_R = { peer: 1.6, npc: 1.8, shadow: 1.6, sheep: 1.3, goat: 1.2, cow: 1.7, camel: 2.3, rabbit: 0.8, dove: 1.1, raven: 1.1, fish: 0.8, horse: 2.1, donkey: 1.7 };
+  var CR_R = { peer: 1.6, npc: 1.8, shadow: 1.6, sheep: 1.3, goat: 1.2, cow: 1.7, camel: 2.3, rabbit: 0.8, pig: 1.2, chicken: 0.7, dove: 1.1, raven: 1.1, fish: 0.8, horse: 2.1, donkey: 1.7 };
   function pickCreature(dir, blockT) {
     var o = camera.position, best = null, bt = blockT === undefined ? 1e9 : blockT;
     function test(kindC, cx, cy, cz, maxT, obj) {
@@ -5869,7 +5885,7 @@
     if (c && c.a && held===STAFF && have(STAFF) && c.a===lostSheep && !c.a.found) {
       c.a.found=true; animalCall('sheep'); toast('잃은 양을 찾았어요. 지팡이를 들고 목자에게 함께 가요'); return;
     }
-    if (c && c.a && BREEDS[c.a.kind] && HOTBAR[sel] === WHEAT && have(WHEAT) > 0) return feedAnimal(c.a);
+    if (c && c.a && BREEDS[c.a.kind] && !c.a.saddled && (HOTBAR[sel] === WHEAT || (c.a.kind === 'chicken' && HOTBAR[sel] === SEED)) && have(HOTBAR[sel]) > 0) return feedAnimal(c.a, HOTBAR[sel]);
     if (c && c.a && harvestAnimal(c.a)) return;
     if (c && c.a && (held === SWORD || isArmSword(held)) && have(held) > 0 && c.t < REACH + camDist + 1 && hitAnimal(c.a, true)) return;   // 11/21 칼을 들고 누르면 짐승 잡기
     if (c) return c.a && c.a.sp.seat ? tapRideable(c.a) : showCard(c.kind);
@@ -6385,6 +6401,8 @@
     else if (k === 'horse') tone('sawtooth', 820, 420, 0.7, vol, 28);
     else if (k === 'donkey') { tone('square', 620, 560, 0.35, vol * 0.8); setTimeout(function () { tone('square', 260, 220, 0.45, vol * 0.8); }, 380); }
     else if (k === 'dove') { tone('sine', 520, 470, 0.28, vol); setTimeout(function () { tone('sine', 500, 450, 0.36, vol); }, 330); }
+    else if (k === 'pig') { tone('square', 180, 140, 0.18, vol * 0.8); setTimeout(function () { tone('square', 170, 130, 0.2, vol * 0.8); }, 220); }
+    else if (k === 'chicken') { tone('square', 900, 1100, 0.08, vol * 0.6); setTimeout(function () { tone('square', 1000, 760, 0.16, vol * 0.6); }, 140); }
     else if (k === 'raven') { tone('square', 880, 700, 0.17, vol * 0.7); setTimeout(function () { tone('square', 860, 690, 0.17, vol * 0.7); }, 230); }
     else tone('sine', 900, 1300, 0.08, vol * 0.5);
   }
@@ -6792,8 +6810,8 @@
     }
     terrain(x0 + 16, z0 + 16);
     var kinds = reg === 'desert' ? ['camel', 'camel', 'donkey'] : (reg === 'west' || reg === 'ararat' ? ['goat', 'goat', 'sheep', 'donkey'] : (reg === 'sea' || reg === 'lake' || reg === 'oasis' ? (reg === 'oasis' ? ['camel', 'donkey'] : []) :
-      (reg === 'taiga' ? ['goat', 'rabbit', 'sheep'] : reg === 'hermon' ? ['goat'] : reg === 'galilee' ? ['sheep', 'cow'] : reg === 'jordan' ? ['sheep', 'donkey'] : reg === 'sinai' ? ['camel', 'goat'] : (reg === 'southsea' || reg === 'sisle') ? [] : reg === 'meadow' ? ['sheep', 'cow', 'horse', 'rabbit', 'donkey', 'sheep'] :
-      (reg === 'cedar' ? ['sheep', 'goat', 'rabbit'] : (reg === 'wild' ? ['goat', 'donkey', 'camel'] : (reg === 'salt' ? ['goat'] : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey']))))));
+      (reg === 'taiga' ? ['goat', 'rabbit', 'sheep'] : reg === 'hermon' ? ['goat'] : reg === 'galilee' ? ['sheep', 'cow', 'pig', 'chicken'] : reg === 'jordan' ? ['sheep', 'donkey', 'chicken'] : reg === 'sinai' ? ['camel', 'goat'] : (reg === 'southsea' || reg === 'sisle') ? [] : reg === 'meadow' ? ['sheep', 'cow', 'horse', 'rabbit', 'donkey', 'sheep'] :
+      (reg === 'cedar' ? ['sheep', 'goat', 'rabbit'] : (reg === 'wild' ? ['goat', 'donkey', 'camel'] : (reg === 'salt' ? ['goat'] : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey', 'pig', 'chicken', 'chicken']))))));
     // 11/20 동물이 너무 많아 반쯤으로(한 무리 1~2마리, 기둥 열에 하나꼴), 가까이 40마리가 넘으면 더 만들지 않음
     if (!kinds.length || animals.length > 40 || hash2(cx, cz, 31) > (reg === 'desert' ? 0.07 : 0.14)) return;
     var kn = kinds[Math.floor(hash2(cx, cz, 32) * kinds.length)], n = 1 + Math.floor(hash2(cx, cz, 33) * 2);
@@ -6802,7 +6820,11 @@
       if (inTown(hx | 0, hz | 0) || plotAt(hx | 0, hz | 0) >= 0) continue;
       var gy = groundAt(hx, hz, SY - 3); if (gy === null) continue;
       terrain(hx | 0, hz | 0); if (gy !== T.h + 1 || T.wtop >= 0 || inCity(hx | 0, hz | 0)) continue;   // 자연 땅 위에만(성벽·지붕·나무 위 금지)
-      animals.push(makeBeast(kn, hx, hz));
+      var ad = makeBeast(kn, hx, hz); animals.push(ad);
+      if (hash2(cx + i, cz, 36) < 0.45) {   // 11/21 새끼가 어미 곁에(5분 뒤 다 자람)
+        var bx = hx + 1.2, bz = hz + 0.8, bgy = groundAt(bx, bz, SY - 3);
+        if (bgy !== null && Math.abs(bgy - gy) <= 1) { var bb = makeBeast(kn, bx, bz); bb.baby = true; bb.growAt = Date.now() + 300000; bb.mesh.scale.setScalar(0.55); bb.mom = ad; animals.push(bb); }
+      }
     }
   }
   function despawnFar(px, pz) {
@@ -7189,8 +7211,11 @@
   var HP = 20, FOOD = 20, AIRV = 10, EXH = 0, regenT = 0, starveT = 0, drownT = 0, fallTop = null, SPAWN = null, vitT = 0;
   var FOODS = {}; FOODS[BREAD] = 6; FOODS[FIG] = 3; FOODS[MANNA] = 4;
   [[613,3],[614,2],[616,2],[617,4],[618,1],[619,2],[620,1],[622,4],
-   [HONEY,3],[POMEGRANATE,4],[STEW,7],[COOKED_FISH,6],[COOKED_LAMB,8],[FLATBREAD,4],[COOKED_BEEF,8],[COOKED_GOAT,7]]
+   [HONEY,3],[POMEGRANATE,4],[STEW,7],[FLATBREAD,4]]
     .forEach(function(d){FOODS[d[0]]=d[1];});
+  // 11/21 구운 고기마다 회복이 다름: [기운, 체력] — 소 > 양 > 염소 > 닭 > 생선
+  var HEAL = {}; [[COOKED_BEEF,10,7],[COOKED_LAMB,8,5],[COOKED_GOAT,7,4],[COOKED_CHICKEN,6,3],[COOKED_FISH,5,2]].forEach(function (d) { FOODS[d[0]] = d[1]; HEAL[d[0]] = d[2]; });
+  function healOf(id) { return HEAL[id] !== undefined ? HEAL[id] : Math.ceil((FOODS[id] || 0) / 2); }
   function vitalsOn() { return started && !isAdm(); }
   // ── 믿음(✦, 11/20): 어둠의 그림자에게 맞으면 깎이고(입은 방패가 불화살을 막음, 파티원이 곁에 있으면 덜 깎임 — 전 4:12), 다 깨지면 「유혹에 넘어졌어요」 → 집에서 다시 일어남(눅 15:20).
   //    잠시 맞지 않으면 조금씩, 말씀 두루마리를 읽거나 제단에서 기도하면 다 채워짐 ──
@@ -7260,7 +7285,7 @@
     if (!vitalsOn()) return deny('관리자는 배고프지 않아요');
     if (FOOD >= 20 && HP >= 20) return deny('배가 불러요');
     if (have(id) < 1) return;
-    var heal = Math.min(20 - HP, Math.ceil(FOODS[id] / 2));   // 11/21: 먹으면 체력도 바로 조금 참(고기는 4)
+    var heal = Math.min(20 - HP, healOf(id));   // 11/21: 먹으면 체력도 바로 참(고기마다 다름)
     take(id, 1); FOOD = Math.min(20, FOOD + FOODS[id]); HP += heal; EXH = 0; sfx('pop', 600); bagChanged(); renderVitals(); stateDirty(); unlock('eat');
     toast(jo(B[id][0], '을', '를') + ' 먹었어요 — 기운 +' + FOODS[id] + (heal > 0 ? ' · 체력 +' + heal : '') + (id === BREAD ? ' (마 4:4)' : ''));
   }
@@ -7370,25 +7395,25 @@
   }
   setInterval(stepCrops,1000);
   // ── 동물 기르기: 밀을 들고 있으면 양·소·염소가 따라오고, 밀을 먹인 둘이 가까이 있으면 새끼가 태어남. 내 땅 안의 동물은 저장 ──
-  var BREEDS = { sheep: 1, cow: 1, goat: 1 }, HERD = [];
+  var BREEDS = { sheep: 1, cow: 1, goat: 1, pig: 1, chicken: 1, horse: 1, donkey: 1, camel: 1, rabbit: 1 }, HERD = [];   // 11/21 모든 짐승이 새끼를 낳음
   try { HERD = JSON.parse(localStorage.getItem('arkVillage.herd') || '[]') || []; } catch (e) { HERD = []; }
   var pendingHerd = HERD.slice(), herdT = 0;
-  function feedAnimal(a) {
-    var now = Date.now();
+  function feedAnimal(a, food) {
+    var now = Date.now(); food = food || WHEAT;
     if (a.baby) return deny('새끼는 아직 어려요');
     if (a.breedAt && now < a.breedAt) return deny('조금 쉬었다가 다시 먹여요');
-    take(WHEAT, 1); bagChanged(); a.love = now + 30000; animalCall(a.kind); heartAt(a);
+    take(food, 1); bagChanged(); a.love = now + 30000; animalCall(a.kind); heartAt(a);
     var mate = animals.filter(function (b) { return b !== a && b.kind === a.kind && b.love > now && !b.baby && Math.hypot(b.x - a.x, b.z - a.z) < 10; })[0];
     if (mate) {
       var baby = makeBeast(a.kind, (a.x + mate.x) / 2, (a.z + mate.z) / 2); baby.baby = true; baby.growAt = now + 180000; baby.mesh.scale.setScalar(0.55); animals.push(baby);
       a.love = mate.love = 0; a.breedAt = mate.breedAt = now + 60000; heartAt(baby);
       toast('♥ 새끼가 태어났어요! 3분 지나면 다 자라요. 내 땅 안에 있으면 저장돼요'); unlock('breed'); saveHerd();
-    } else toast('밀을 먹었어요 ♥ — 가까이 있는 같은 동물에게도 먹이면 새끼가 태어나요');
+    } else toast(jo(B[food][0], '을', '를') + ' 먹었어요 ♥ — 가까이 있는 같은 동물에게도 먹이면 새끼가 태어나요');
   }
   function heartAt(a) { var s = textSprite('♥', 'rgba(0,0,0,0)', '#ff5a7a', 0.9); s.position.set(a.x, a.y + 2.6, a.z); scene.add(s); var t0 = performance.now(); (function up() { var k = (performance.now() - t0) / 1400; if (k >= 1) { disposeSprite(s); return; } s.position.y += 0.02; s.material.opacity = 1 - k; requestAnimationFrame(up); })(); }
   function inMyPlot(x, z) { return myPlot >= 0 && plotAt(Math.floor(x), Math.floor(z)) === myPlot; }
   function saveHerd() {
-    var a = animals.filter(function (x) { return BREEDS[x.kind] && inMyPlot(x.x, x.z); }).slice(0, 16).map(function (x) { return { k: x.kind, x: Math.round(x.x * 10) / 10, z: Math.round(x.z * 10) / 10, b: x.baby ? 1 : 0 }; });
+    var a = animals.filter(function (x) { return BREEDS[x.kind] && !x.saddled && inMyPlot(x.x, x.z); }).slice(0, 16).map(function (x) { return { k: x.kind, x: Math.round(x.x * 10) / 10, z: Math.round(x.z * 10) / 10, b: x.baby ? 1 : 0 }; });
     pendingHerd.forEach(function (o) { if (a.length < 16) a.push(o); });
     var had = HERD.length; HERD = a; try { localStorage.setItem('arkVillage.herd', JSON.stringify(HERD)); } catch (e) {} stateDirty();
     if (!had && HERD.length) questCheck();
@@ -7448,12 +7473,12 @@
   }
   function stepHerd(dt) {
     var now=Date.now(), held=HOTBAR[sel], active=have(held)>0 && ui==='play';
-    var lure=active&&held===WHEAT, staff=active&&held===STAFF;
+    var lure=active&&held===WHEAT, seedLure=active&&held===SEED, staff=active&&held===STAFF;
     animals.forEach(function (a) {
       if (!BREEDS[a.kind]) return;
       if (a.baby && now > a.growAt) { a.baby = false; a.mesh.scale.setScalar(1); }
       a.kept = inMyPlot(a.x, a.z);
-      if ((lure || (staff && a.kind==='sheep' && (a!==lostSheep || a.found))) && a !== riding) {
+      if ((lure || (seedLure && a.kind==='chicken') || (staff && a.kind==='sheep' && (a!==lostSheep || a.found))) && a !== riding && !a.saddled) {
         var dx = P.x - a.x, dz = P.z - a.z, d = Math.hypot(dx, dz);
         if (d < 14 && d > 3) { a.h = Math.atan2(-dx, -dz); a.mode = 'walk'; a.t = 0.6; a.luredUntil = now + 1500; }
         else if (d <= 3 && a.mode === 'walk') { a.mode = 'idle'; a.t = 1; }
@@ -8177,8 +8202,9 @@
     if (!S.angerTold) { S.angerTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🔥', '분노', '분을 내어도 죄를 짓지 말며 해가 지도록 분을 품지 말고', '에베소서 4:26', '「분노」 그림자가 터졌어요 — 다가오면 부풀어요. 칼로 치면 밀려나며 식고, 활·물매로 멀리서 물리치면 터지지 않아요. 물에 닿으면 꺼져요.' + (n ? ' 파인 땅은 하루 뒤 메워져요' : '')); }, 700); }
   }
   // ── 11/21 짐승 잡기: 치면 밀려나 달아나고, 다 잡으면 고기·털·가죽이 무작위로(창 9:3). 말·나귀·낙타는 고기 대신 가죽(레 11:4) ──
-  var BEAST_HP = { sheep: 4, goat: 4, rabbit: 2, cow: 7, horse: 7, donkey: 6, camel: 8 };
+  var BEAST_HP = { sheep: 4, goat: 4, rabbit: 2, cow: 7, horse: 7, donkey: 6, camel: 8, pig: 5, chicken: 2 };
   var BEAST_DROP = { sheep: [[RAW_LAMB, 1, 2], [WOOL, 0, 2]], goat: [[RAW_GOAT, 1, 2], [LEATHER, 0, 1]], cow: [[RAW_BEEF, 1, 3], [LEATHER, 0, 2]],
+    pig: [[LEATHER, 1, 2]], chicken: [[RAW_CHICKEN, 1, 2], [FEATHER, 0, 2]],
     rabbit: [[LEATHER, 0, 1]], horse: [[LEATHER, 1, 2]], donkey: [[LEATHER, 1, 2]], camel: [[LEATHER, 1, 2], [WOOL, 0, 1]] };
   function beastGuarded(a) {   // 잡을 수 없는 짐승: 안장 얹은 것·내 우리에 기르는 것·새끼·놀이·이야기의 양·타고 있는 것
     if (a === riding || a.saddled || a.kept || a.baby || a.herd || a === lostSheep) return a.saddled ? '안장을 얹은 짐승은 잡을 수 없어요' : a.baby ? '새끼는 잡을 수 없어요' : '기르는 짐승은 잡을 수 없어요';
@@ -8209,6 +8235,7 @@
     (BEAST_DROP[a.kind] || []).forEach(function (q) { var c = q[1] + Math.floor(Math.random() * (q[2] - q[1] + 1)); if (c > 0) { dropItem(a.x, a.y + 0.8, a.z, q[0], c); got.push(B[q[0]][0] + ' ' + c); } });
     if (!S.huntTold) { S.huntTold = 1; saveSettings(); showVerseCard('🍖', '먹을 것', '모든 산 동물은 너희의 먹을 것이 될지라 채소 같이 내가 이것을 다 너희에게 주노라', '창세기 9:3', '고기는 모닥불(돌 3 + 통나무 2)이나 화덕과 솥 가까이에서 석탄·숯·통나무를 땔감으로 구워 먹어요 — 가까이 가서 주워요'); }
     else toast((got.length ? got.join(' · ') : '아무것도 나오지 않았어요') + ' — 가까이 가서 주워요');
+    if (a.kind === 'pig' && !S.pigTold) { S.pigTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🐖', '먹지 못할 것', '돼지는 굽이 갈라져 쪽발이로되 새김질을 못하므로 너희에게 부정하니', '레위기 11:7', '돼지는 고기 대신 가죽이 나와요'); }, 600); }
     if ((a.kind === 'camel' || a.kind === 'horse' || a.kind === 'donkey') && !S.uncleanTold) { S.uncleanTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🐪', '먹지 못할 것', '새김질하는 것이나 굽이 갈라진 짐승 중에도 너희가 먹지 못할 것은 이러하니 낙타는 새김질은 하되 굽이 갈라지지 아니하였으므로 너희에게 부정하고', '레위기 11:4', '말·나귀·낙타는 고기 대신 가죽이 나와요'); }, 600); }
     return true;
   }
@@ -9244,7 +9271,8 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 16, NEWS = [
+  var NEWS_VER = 17, NEWS = [
+    ['farm2', '🐔', '돼지·닭과 새끼들', '들판에 돼지(눅 15:16)와 닭(마 23:37)이 생겼어요. 어떤 짐승은 새끼를 데리고 다니고, 새끼는 어미를 따라다니다 5분 뒤 다 자라요. 이제 모든 짐승이 밀을 먹으면 새끼를 낳아요(닭은 밀 씨도). 닭을 잡으면 닭고기·깃털이 나오고, 깃털을 달면 화살을 두 배로 만들어요. 구운 고기는 회복이 달라요: 소 기운 10·체력 7 / 양 8·5 / 염소 7·4 / 닭 6·3 / 생선 5·2. 돼지는 고기 대신 가죽이 나와요(레 11:7).', 0],
     ['hunt', '🍖', '짐승 잡기·굽기', '양·염소·소·말·나귀·낙타·토끼를 칼로 치면 달아나다가 잡혀요. 양은 양고기·양털, 염소는 염소고기·가죽, 소는 소고기·가죽, 말·나귀·낙타는 가죽이 무작위로 나와요(창 9:3, 레 11:4). 고기는 모닥불(돌 3 + 통나무 2)이나 화덕과 솥 가까이에서 석탄·숯·통나무를 땔감으로 「녹이기·굽기」에서 구워 먹으면 기운과 체력이 차요. 안장 얹은 짐승·기르는 짐승·새끼는 잡을 수 없어요. 양털로는 침대·양털 블록·실·옷을 만들어요.', 0],
     ['pickup', '🧲', '떨어진 물건은 가까이 가야 주워요', '캔 것·버린 것·짐승에게서 나온 것은 1~2칸 안으로 가야 가방에 들어와요. 멀리 있으면 그 자리에 5분 동안 남아 있어요.', 0],
     ['sens', '🎯', '감도(화면 돌리는 빠르기)', '게임 메뉴(⏸) 맨 위에서 감도를 바꿀 수 있어요. 막대를 밀거나 − + 를 누르면 10%씩, 「보통」을 누르면 처음대로(100%). 20%~300%까지 돼요.', 0],
@@ -11456,7 +11484,7 @@
         for (var k in cols) { var cc = cols[k], col = colAt(cc[0], cc[1]); for (var lz2 = 0; lz2 < CS; lz2++) for (var lx2 = 0; lx2 < CS; lx2++) skyScan(col, lx2, lz2); }
         var n = 0; for (var k2 in ch) { var q = k2.split(',').map(Number); if (q[1] < CYMIN || q[1] >= CY || !inWorldC(q[0], q[2]) || !meshedCols[q[2] * NC + q[0]]) continue; buildChunk(q[0], q[1], q[2]); n++; }
         return n;
-      } }; }, frame: function (q) { return canvasEl.toDataURL('image/jpeg', q || 0.92); }, avatar: function (v) { if (avatar) avatar.visible = v; heldMesh.visible = false; }, key: function (c, v) { keys[c] = v; }, thunder: function () { thunderStrike(); }, rainbow: function (sec) { rainbowUntil = dayT + (sec || 40); }, rain: function (on, st) { rainOn = on; rain = on ? 1 : 0; storm = !!st; } }, openFeedback: function () { openFeedback(); }, openFeedbackAdmin: function () { openFeedbackAdmin(); }, railScanCost: function (n) { var t = performance.now(); for (var i = 0; i < (n || 20); i++) railScanStep(); return (performance.now() - t) / (n || 20); }, setPlotName: function (u, t) { if (t) PLOT_NAMES[u] = t; else delete PLOT_NAMES[u]; refreshPlotSigns(); }, plotSigns: function () { var o = {}; for (var k in plotSignObjs) o[k] = plotSignObjs[k].txt; return o; }, setPlotUser: function (p, u, nick) { plotUser[p] = u; plotOwners[p] = 1; if (nick) NET.names[u] = nick; }, fakeNet: function (c, id) { client = c; me = { id: id }; }, projectCells: function (k) { return projectCells(k).length; }, perf: function () { return perfAcc; }, home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, dropAt: function (x, y, z, id, n) { dropItem(x, y, z, id, n); return DROPS.length; }, hitAnimal: function (a) { return hitAnimal(a); }, setB: function (x, y, z, id) { setBlock(x, y, z, id); }, canCook: function (o) { var rc = RECIPES.filter(function (r) { return r.cook && r.out[0] === o; })[0]; return rc ? { can: canCraft(rc), st: workshopNeeds(), fuel: fuelLeft(rc) } : null; }, vit: function () { return { HP: HP, FOOD: FOOD }; }, setVit: function (h, f) { HP = h; FOOD = f; }, eat: function (id) { eatItem(id); }, roofOver: function (x, y, z) { return roofOver(x, y, z); }, shadowWhy: function (x, z) { var gy = groundAt(x, z, SY - 3); return { tut: tutorialStep, town: inTown(Math.floor(P.x), Math.floor(P.z)), safe: safeZone(Math.floor(x), Math.floor(z)), gy: gy, lit: gy === null ? null : litNear(Math.floor(x), gy, Math.floor(z), 7), b2: gy === null ? null : isSolid(get(Math.floor(x), gy - 2, Math.floor(z))), b3: gy === null ? null : isSolid(get(Math.floor(x), gy - 3, Math.floor(z))), py: P.y, roof: gy === null ? null : roofOver(Math.floor(x), gy, Math.floor(z)) }; }, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+      } }; }, frame: function (q) { return canvasEl.toDataURL('image/jpeg', q || 0.92); }, avatar: function (v) { if (avatar) avatar.visible = v; heldMesh.visible = false; }, key: function (c, v) { keys[c] = v; }, thunder: function () { thunderStrike(); }, rainbow: function (sec) { rainbowUntil = dayT + (sec || 40); }, rain: function (on, st) { rainOn = on; rain = on ? 1 : 0; storm = !!st; } }, openFeedback: function () { openFeedback(); }, openFeedbackAdmin: function () { openFeedbackAdmin(); }, railScanCost: function (n) { var t = performance.now(); for (var i = 0; i < (n || 20); i++) railScanStep(); return (performance.now() - t) / (n || 20); }, setPlotName: function (u, t) { if (t) PLOT_NAMES[u] = t; else delete PLOT_NAMES[u]; refreshPlotSigns(); }, plotSigns: function () { var o = {}; for (var k in plotSignObjs) o[k] = plotSignObjs[k].txt; return o; }, setPlotUser: function (p, u, nick) { plotUser[p] = u; plotOwners[p] = 1; if (nick) NET.names[u] = nick; }, fakeNet: function (c, id) { client = c; me = { id: id }; }, projectCells: function (k) { return projectCells(k).length; }, perf: function () { return perfAcc; }, home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, beast: function (k, x, z, baby, mom) { var a = makeBeast(k, x, z); if (baby) { a.baby = true; a.growAt = Date.now() + 300000; a.mesh.scale.setScalar(0.55); a.mom = mom || null; } animals.push(a); return a; }, healOf: function (id) { return [FOODS[id], healOf(id)]; }, dropAt: function (x, y, z, id, n) { dropItem(x, y, z, id, n); return DROPS.length; }, hitAnimal: function (a) { return hitAnimal(a); }, setB: function (x, y, z, id) { setBlock(x, y, z, id); }, canCook: function (o) { var rc = RECIPES.filter(function (r) { return r.cook && r.out[0] === o; })[0]; return rc ? { can: canCraft(rc), st: workshopNeeds(), fuel: fuelLeft(rc) } : null; }, vit: function () { return { HP: HP, FOOD: FOOD }; }, setVit: function (h, f) { HP = h; FOOD = f; }, eat: function (id) { eatItem(id); }, roofOver: function (x, y, z) { return roofOver(x, y, z); }, shadowWhy: function (x, z) { var gy = groundAt(x, z, SY - 3); return { tut: tutorialStep, town: inTown(Math.floor(P.x), Math.floor(P.z)), safe: safeZone(Math.floor(x), Math.floor(z)), gy: gy, lit: gy === null ? null : litNear(Math.floor(x), gy, Math.floor(z), 7), b2: gy === null ? null : isSolid(get(Math.floor(x), gy - 2, Math.floor(z))), b3: gy === null ? null : isSolid(get(Math.floor(x), gy - 3, Math.floor(z))), py: P.y, roof: gy === null ? null : roofOver(Math.floor(x), gy, Math.floor(z)) }; }, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, FX: function () { return FX; }, ADV: function () { return ADV; }, openQuests: openQuests, questEvent: questEvent, regionTick: regionTick, inLandmark: inLandmark, LMK: { TBX: TBX, TBZ: TBZ, CTX: CTX, CTZ: CTZ, TCX: TCX, TCZ: TCZ, LOTX: LOTX, LOTZ: LOTZ, TWY: TWY, SAX: SAX, SAZ: SAZ, CEX: CEX, CEZ: CEZ }, region: region, getB: function (x, y, z) { return get(x, y, z); }, oreBase: oreBase, P2: function () { return P; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, playTap: function (x, y, z) { return tryPlaySpot({ x: x, y: y, z: z }); }, angerBurst: function (s) { angerBurst(s); }, playY: playY, PEN: function () { return PEN; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); }, icon: function (id) { return ICON[id]; } };

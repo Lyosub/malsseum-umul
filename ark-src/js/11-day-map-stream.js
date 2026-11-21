@@ -252,6 +252,8 @@
     else if (k === 'horse') tone('sawtooth', 820, 420, 0.7, vol, 28);
     else if (k === 'donkey') { tone('square', 620, 560, 0.35, vol * 0.8); setTimeout(function () { tone('square', 260, 220, 0.45, vol * 0.8); }, 380); }
     else if (k === 'dove') { tone('sine', 520, 470, 0.28, vol); setTimeout(function () { tone('sine', 500, 450, 0.36, vol); }, 330); }
+    else if (k === 'pig') { tone('square', 180, 140, 0.18, vol * 0.8); setTimeout(function () { tone('square', 170, 130, 0.2, vol * 0.8); }, 220); }
+    else if (k === 'chicken') { tone('square', 900, 1100, 0.08, vol * 0.6); setTimeout(function () { tone('square', 1000, 760, 0.16, vol * 0.6); }, 140); }
     else if (k === 'raven') { tone('square', 880, 700, 0.17, vol * 0.7); setTimeout(function () { tone('square', 860, 690, 0.17, vol * 0.7); }, 230); }
     else tone('sine', 900, 1300, 0.08, vol * 0.5);
   }
@@ -659,8 +661,8 @@
     }
     terrain(x0 + 16, z0 + 16);
     var kinds = reg === 'desert' ? ['camel', 'camel', 'donkey'] : (reg === 'west' || reg === 'ararat' ? ['goat', 'goat', 'sheep', 'donkey'] : (reg === 'sea' || reg === 'lake' || reg === 'oasis' ? (reg === 'oasis' ? ['camel', 'donkey'] : []) :
-      (reg === 'taiga' ? ['goat', 'rabbit', 'sheep'] : reg === 'hermon' ? ['goat'] : reg === 'galilee' ? ['sheep', 'cow'] : reg === 'jordan' ? ['sheep', 'donkey'] : reg === 'sinai' ? ['camel', 'goat'] : (reg === 'southsea' || reg === 'sisle') ? [] : reg === 'meadow' ? ['sheep', 'cow', 'horse', 'rabbit', 'donkey', 'sheep'] :
-      (reg === 'cedar' ? ['sheep', 'goat', 'rabbit'] : (reg === 'wild' ? ['goat', 'donkey', 'camel'] : (reg === 'salt' ? ['goat'] : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey']))))));
+      (reg === 'taiga' ? ['goat', 'rabbit', 'sheep'] : reg === 'hermon' ? ['goat'] : reg === 'galilee' ? ['sheep', 'cow', 'pig', 'chicken'] : reg === 'jordan' ? ['sheep', 'donkey', 'chicken'] : reg === 'sinai' ? ['camel', 'goat'] : (reg === 'southsea' || reg === 'sisle') ? [] : reg === 'meadow' ? ['sheep', 'cow', 'horse', 'rabbit', 'donkey', 'sheep'] :
+      (reg === 'cedar' ? ['sheep', 'goat', 'rabbit'] : (reg === 'wild' ? ['goat', 'donkey', 'camel'] : (reg === 'salt' ? ['goat'] : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey', 'pig', 'chicken', 'chicken']))))));
     // 11/20 동물이 너무 많아 반쯤으로(한 무리 1~2마리, 기둥 열에 하나꼴), 가까이 40마리가 넘으면 더 만들지 않음
     if (!kinds.length || animals.length > 40 || hash2(cx, cz, 31) > (reg === 'desert' ? 0.07 : 0.14)) return;
     var kn = kinds[Math.floor(hash2(cx, cz, 32) * kinds.length)], n = 1 + Math.floor(hash2(cx, cz, 33) * 2);
@@ -669,7 +671,11 @@
       if (inTown(hx | 0, hz | 0) || plotAt(hx | 0, hz | 0) >= 0) continue;
       var gy = groundAt(hx, hz, SY - 3); if (gy === null) continue;
       terrain(hx | 0, hz | 0); if (gy !== T.h + 1 || T.wtop >= 0 || inCity(hx | 0, hz | 0)) continue;   // 자연 땅 위에만(성벽·지붕·나무 위 금지)
-      animals.push(makeBeast(kn, hx, hz));
+      var ad = makeBeast(kn, hx, hz); animals.push(ad);
+      if (hash2(cx + i, cz, 36) < 0.45) {   // 11/21 새끼가 어미 곁에(5분 뒤 다 자람)
+        var bx = hx + 1.2, bz = hz + 0.8, bgy = groundAt(bx, bz, SY - 3);
+        if (bgy !== null && Math.abs(bgy - gy) <= 1) { var bb = makeBeast(kn, bx, bz); bb.baby = true; bb.growAt = Date.now() + 300000; bb.mesh.scale.setScalar(0.55); bb.mom = ad; animals.push(bb); }
+      }
     }
   }
   function despawnFar(px, pz) {

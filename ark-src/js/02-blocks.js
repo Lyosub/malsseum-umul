@@ -242,7 +242,7 @@
   var HOE = 624, FISH_ROD = 625, FISH_NET = 626, RAW_FISH = 627, RAW_LAMB = 628,
       HONEY = 629, POMEGRANATE = 630, STEW = 631, COOKED_FISH = 632, COOKED_LAMB = 633,
       FLATBREAD = 634, FLOUR = 635, WINE = 636, OLIVE_OIL = 637;
-  var RAW_BEEF = 683, RAW_GOAT = 684, COOKED_BEEF = 685, COOKED_GOAT = 686;   // 11/21 짐승을 잡으면 나오는 고기(창 9:3)
+  var RAW_BEEF = 683, RAW_GOAT = 684, COOKED_BEEF = 685, COOKED_GOAT = 686, RAW_CHICKEN = 687, COOKED_CHICKEN = 688, FEATHER = 689;   // 11/21 짐승을 잡으면 나오는 고기(창 9:3)
   // 이름, 거둘 것, 식물색, 열매색, 여러 번 거두는 작물, 나무 높이.
   var FARM_TYPES = [
     ['보리','보리',0x86a64b,0xc6a551], ['포도나무','포도',0x4b803e,0x75428b,true],
@@ -266,7 +266,8 @@
     [POMEGRANATE,'석류',0xb64643],[STEW,'렌틸콩죽',0xaa5c3d],[COOKED_FISH,'구운 생선',0xb77b41],
     [COOKED_LAMB,'구운 양고기',0x9e5940],[FLATBREAD,'누룩 없는 빵',0xddb475],
     [FLOUR,'가루',0xebd8b3],[WINE,'포도주',0x803b56],[OLIVE_OIL,'올리브 기름',0x9e8e43],
-    [RAW_BEEF,'소고기',0xc0554a],[RAW_GOAT,'염소고기',0xb8695a],[COOKED_BEEF,'구운 소고기',0x8e4a30],[COOKED_GOAT,'구운 염소고기',0x9a5a3a]];
+    [RAW_BEEF,'소고기',0xc0554a],[RAW_GOAT,'염소고기',0xb8695a],[COOKED_BEEF,'구운 소고기',0x8e4a30],[COOKED_GOAT,'구운 염소고기',0x9a5a3a],
+    [RAW_CHICKEN,'닭고기',0xe8b8a0],[COOKED_CHICKEN,'구운 닭고기',0xc0844a],[FEATHER,'깃털',0xf6f2ea]];
   FOOD_ART.forEach(function(d) { expansionItem(d[0],d[1],'farmItem'+d[0]); });
   FARM_TYPES.forEach(function(d, i) {
     var spec = { base:410+i*4, seed:600+i, harvest:i===9 ? FIG : (i===11 ? POMEGRANATE : 612+i), perennial:!!d[4], height:d[5] || 1 };
@@ -704,6 +705,7 @@
     { out: [RAILF0, 6], need: [[ING_AU, 6], [STICK, 1]], cat: 'shape' },
     { out: [CART, 1], need: [[ING_FE, 5]], cat: 'tool' },
     { out: [ARROW, 4], need: [[STICK, 1], [FLINT, 1]], cat: 'tool' },
+    { out: [ARROW, 8], need: [[STICK, 1], [FLINT, 1], [689, 1]], cat: 'tool' },   // 11/21 깃털을 달면 화살이 두 배
     { out: [FRAME, 1], need: [[STICK, 8], [LEATHER, 1]], cat: 'shape' },
     { out: [SLAB_S, 6], need: [[STONE, 3]] },
     { out: [STAIR_S, 4], need: [[STONE, 6]] },
@@ -835,7 +837,7 @@
     [STEW,1,[[615,2],[CHAR,1]],OVEN], [FLATBREAD,2,[[FLOUR,2],[CHAR,1]],OVEN]
   ].forEach(function(d){ RECIPES.push({out:[d[0],d[1]],need:d[2],station:d[3],cat:'block'}); });
   // 11/21 굽기: 모닥불(또는 화덕과 솥) 가까이에서 석탄·숯·통나무를 땔감으로 — 녹이기처럼 하나에 3초
-  [[COOKED_LAMB,RAW_LAMB],[COOKED_BEEF,RAW_BEEF],[COOKED_GOAT,RAW_GOAT],[COOKED_FISH,RAW_FISH]].forEach(function(d){ RECIPES.push({out:[d[0],1],need:[[d[1],1]],station:467,fuel:true,cook:true,cat:'smelt',ref:'창 9:3'}); });
+  [[COOKED_LAMB,RAW_LAMB],[COOKED_BEEF,RAW_BEEF],[COOKED_GOAT,RAW_GOAT],[COOKED_CHICKEN,RAW_CHICKEN],[COOKED_FISH,RAW_FISH]].forEach(function(d){ RECIPES.push({out:[d[0],1],need:[[d[1],1]],station:467,fuel:true,cook:true,cat:'smelt',ref:'창 9:3'}); });
   LIFE_BLOCKS.forEach(function(d){ INV.push(d[0]); });
   LIFE_ITEMS.forEach(function(d){ INV.push(d[0]); });
   [

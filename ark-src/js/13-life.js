@@ -3,8 +3,11 @@
   var HP = 20, FOOD = 20, AIRV = 10, EXH = 0, regenT = 0, starveT = 0, drownT = 0, fallTop = null, SPAWN = null, vitT = 0;
   var FOODS = {}; FOODS[BREAD] = 6; FOODS[FIG] = 3; FOODS[MANNA] = 4;
   [[613,3],[614,2],[616,2],[617,4],[618,1],[619,2],[620,1],[622,4],
-   [HONEY,3],[POMEGRANATE,4],[STEW,7],[COOKED_FISH,6],[COOKED_LAMB,8],[FLATBREAD,4],[COOKED_BEEF,8],[COOKED_GOAT,7]]
+   [HONEY,3],[POMEGRANATE,4],[STEW,7],[FLATBREAD,4]]
     .forEach(function(d){FOODS[d[0]]=d[1];});
+  // 11/21 구운 고기마다 회복이 다름: [기운, 체력] — 소 > 양 > 염소 > 닭 > 생선
+  var HEAL = {}; [[COOKED_BEEF,10,7],[COOKED_LAMB,8,5],[COOKED_GOAT,7,4],[COOKED_CHICKEN,6,3],[COOKED_FISH,5,2]].forEach(function (d) { FOODS[d[0]] = d[1]; HEAL[d[0]] = d[2]; });
+  function healOf(id) { return HEAL[id] !== undefined ? HEAL[id] : Math.ceil((FOODS[id] || 0) / 2); }
   function vitalsOn() { return started && !isAdm(); }
   // ── 믿음(✦, 11/20): 어둠의 그림자에게 맞으면 깎이고(입은 방패가 불화살을 막음, 파티원이 곁에 있으면 덜 깎임 — 전 4:12), 다 깨지면 「유혹에 넘어졌어요」 → 집에서 다시 일어남(눅 15:20).
   //    잠시 맞지 않으면 조금씩, 말씀 두루마리를 읽거나 제단에서 기도하면 다 채워짐 ──
@@ -74,7 +77,7 @@
     if (!vitalsOn()) return deny('관리자는 배고프지 않아요');
     if (FOOD >= 20 && HP >= 20) return deny('배가 불러요');
     if (have(id) < 1) return;
-    var heal = Math.min(20 - HP, Math.ceil(FOODS[id] / 2));   // 11/21: 먹으면 체력도 바로 조금 참(고기는 4)
+    var heal = Math.min(20 - HP, healOf(id));   // 11/21: 먹으면 체력도 바로 참(고기마다 다름)
     take(id, 1); FOOD = Math.min(20, FOOD + FOODS[id]); HP += heal; EXH = 0; sfx('pop', 600); bagChanged(); renderVitals(); stateDirty(); unlock('eat');
     toast(jo(B[id][0], '을', '를') + ' 먹었어요 — 기운 +' + FOODS[id] + (heal > 0 ? ' · 체력 +' + heal : '') + (id === BREAD ? ' (마 4:4)' : ''));
   }
@@ -184,25 +187,25 @@
   }
   setInterval(stepCrops,1000);
   // ── 동물 기르기: 밀을 들고 있으면 양·소·염소가 따라오고, 밀을 먹인 둘이 가까이 있으면 새끼가 태어남. 내 땅 안의 동물은 저장 ──
-  var BREEDS = { sheep: 1, cow: 1, goat: 1 }, HERD = [];
+  var BREEDS = { sheep: 1, cow: 1, goat: 1, pig: 1, chicken: 1, horse: 1, donkey: 1, camel: 1, rabbit: 1 }, HERD = [];   // 11/21 모든 짐승이 새끼를 낳음
   try { HERD = JSON.parse(localStorage.getItem('arkVillage.herd') || '[]') || []; } catch (e) { HERD = []; }
   var pendingHerd = HERD.slice(), herdT = 0;
-  function feedAnimal(a) {
-    var now = Date.now();
+  function feedAnimal(a, food) {
+    var now = Date.now(); food = food || WHEAT;
     if (a.baby) return deny('새끼는 아직 어려요');
     if (a.breedAt && now < a.breedAt) return deny('조금 쉬었다가 다시 먹여요');
-    take(WHEAT, 1); bagChanged(); a.love = now + 30000; animalCall(a.kind); heartAt(a);
+    take(food, 1); bagChanged(); a.love = now + 30000; animalCall(a.kind); heartAt(a);
     var mate = animals.filter(function (b) { return b !== a && b.kind === a.kind && b.love > now && !b.baby && Math.hypot(b.x - a.x, b.z - a.z) < 10; })[0];
     if (mate) {
       var baby = makeBeast(a.kind, (a.x + mate.x) / 2, (a.z + mate.z) / 2); baby.baby = true; baby.growAt = now + 180000; baby.mesh.scale.setScalar(0.55); animals.push(baby);
       a.love = mate.love = 0; a.breedAt = mate.breedAt = now + 60000; heartAt(baby);
       toast('♥ 새끼가 태어났어요! 3분 지나면 다 자라요. 내 땅 안에 있으면 저장돼요'); unlock('breed'); saveHerd();
-    } else toast('밀을 먹었어요 ♥ — 가까이 있는 같은 동물에게도 먹이면 새끼가 태어나요');
+    } else toast(jo(B[food][0], '을', '를') + ' 먹었어요 ♥ — 가까이 있는 같은 동물에게도 먹이면 새끼가 태어나요');
   }
   function heartAt(a) { var s = textSprite('♥', 'rgba(0,0,0,0)', '#ff5a7a', 0.9); s.position.set(a.x, a.y + 2.6, a.z); scene.add(s); var t0 = performance.now(); (function up() { var k = (performance.now() - t0) / 1400; if (k >= 1) { disposeSprite(s); return; } s.position.y += 0.02; s.material.opacity = 1 - k; requestAnimationFrame(up); })(); }
   function inMyPlot(x, z) { return myPlot >= 0 && plotAt(Math.floor(x), Math.floor(z)) === myPlot; }
   function saveHerd() {
-    var a = animals.filter(function (x) { return BREEDS[x.kind] && inMyPlot(x.x, x.z); }).slice(0, 16).map(function (x) { return { k: x.kind, x: Math.round(x.x * 10) / 10, z: Math.round(x.z * 10) / 10, b: x.baby ? 1 : 0 }; });
+    var a = animals.filter(function (x) { return BREEDS[x.kind] && !x.saddled && inMyPlot(x.x, x.z); }).slice(0, 16).map(function (x) { return { k: x.kind, x: Math.round(x.x * 10) / 10, z: Math.round(x.z * 10) / 10, b: x.baby ? 1 : 0 }; });
     pendingHerd.forEach(function (o) { if (a.length < 16) a.push(o); });
     var had = HERD.length; HERD = a; try { localStorage.setItem('arkVillage.herd', JSON.stringify(HERD)); } catch (e) {} stateDirty();
     if (!had && HERD.length) questCheck();
@@ -262,12 +265,12 @@
   }
   function stepHerd(dt) {
     var now=Date.now(), held=HOTBAR[sel], active=have(held)>0 && ui==='play';
-    var lure=active&&held===WHEAT, staff=active&&held===STAFF;
+    var lure=active&&held===WHEAT, seedLure=active&&held===SEED, staff=active&&held===STAFF;
     animals.forEach(function (a) {
       if (!BREEDS[a.kind]) return;
       if (a.baby && now > a.growAt) { a.baby = false; a.mesh.scale.setScalar(1); }
       a.kept = inMyPlot(a.x, a.z);
-      if ((lure || (staff && a.kind==='sheep' && (a!==lostSheep || a.found))) && a !== riding) {
+      if ((lure || (seedLure && a.kind==='chicken') || (staff && a.kind==='sheep' && (a!==lostSheep || a.found))) && a !== riding && !a.saddled) {
         var dx = P.x - a.x, dz = P.z - a.z, d = Math.hypot(dx, dz);
         if (d < 14 && d > 3) { a.h = Math.atan2(-dx, -dz); a.mode = 'walk'; a.t = 0.6; a.luredUntil = now + 1500; }
         else if (d <= 3 && a.mode === 'walk') { a.mode = 'idle'; a.t = 1; }
@@ -991,8 +994,9 @@
     if (!S.angerTold) { S.angerTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🔥', '분노', '분을 내어도 죄를 짓지 말며 해가 지도록 분을 품지 말고', '에베소서 4:26', '「분노」 그림자가 터졌어요 — 다가오면 부풀어요. 칼로 치면 밀려나며 식고, 활·물매로 멀리서 물리치면 터지지 않아요. 물에 닿으면 꺼져요.' + (n ? ' 파인 땅은 하루 뒤 메워져요' : '')); }, 700); }
   }
   // ── 11/21 짐승 잡기: 치면 밀려나 달아나고, 다 잡으면 고기·털·가죽이 무작위로(창 9:3). 말·나귀·낙타는 고기 대신 가죽(레 11:4) ──
-  var BEAST_HP = { sheep: 4, goat: 4, rabbit: 2, cow: 7, horse: 7, donkey: 6, camel: 8 };
+  var BEAST_HP = { sheep: 4, goat: 4, rabbit: 2, cow: 7, horse: 7, donkey: 6, camel: 8, pig: 5, chicken: 2 };
   var BEAST_DROP = { sheep: [[RAW_LAMB, 1, 2], [WOOL, 0, 2]], goat: [[RAW_GOAT, 1, 2], [LEATHER, 0, 1]], cow: [[RAW_BEEF, 1, 3], [LEATHER, 0, 2]],
+    pig: [[LEATHER, 1, 2]], chicken: [[RAW_CHICKEN, 1, 2], [FEATHER, 0, 2]],
     rabbit: [[LEATHER, 0, 1]], horse: [[LEATHER, 1, 2]], donkey: [[LEATHER, 1, 2]], camel: [[LEATHER, 1, 2], [WOOL, 0, 1]] };
   function beastGuarded(a) {   // 잡을 수 없는 짐승: 안장 얹은 것·내 우리에 기르는 것·새끼·놀이·이야기의 양·타고 있는 것
     if (a === riding || a.saddled || a.kept || a.baby || a.herd || a === lostSheep) return a.saddled ? '안장을 얹은 짐승은 잡을 수 없어요' : a.baby ? '새끼는 잡을 수 없어요' : '기르는 짐승은 잡을 수 없어요';
@@ -1023,6 +1027,7 @@
     (BEAST_DROP[a.kind] || []).forEach(function (q) { var c = q[1] + Math.floor(Math.random() * (q[2] - q[1] + 1)); if (c > 0) { dropItem(a.x, a.y + 0.8, a.z, q[0], c); got.push(B[q[0]][0] + ' ' + c); } });
     if (!S.huntTold) { S.huntTold = 1; saveSettings(); showVerseCard('🍖', '먹을 것', '모든 산 동물은 너희의 먹을 것이 될지라 채소 같이 내가 이것을 다 너희에게 주노라', '창세기 9:3', '고기는 모닥불(돌 3 + 통나무 2)이나 화덕과 솥 가까이에서 석탄·숯·통나무를 땔감으로 구워 먹어요 — 가까이 가서 주워요'); }
     else toast((got.length ? got.join(' · ') : '아무것도 나오지 않았어요') + ' — 가까이 가서 주워요');
+    if (a.kind === 'pig' && !S.pigTold) { S.pigTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🐖', '먹지 못할 것', '돼지는 굽이 갈라져 쪽발이로되 새김질을 못하므로 너희에게 부정하니', '레위기 11:7', '돼지는 고기 대신 가죽이 나와요'); }, 600); }
     if ((a.kind === 'camel' || a.kind === 'horse' || a.kind === 'donkey') && !S.uncleanTold) { S.uncleanTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🐪', '먹지 못할 것', '새김질하는 것이나 굽이 갈라진 짐승 중에도 너희가 먹지 못할 것은 이러하니 낙타는 새김질은 하되 굽이 갈라지지 아니하였으므로 너희에게 부정하고', '레위기 11:4', '말·나귀·낙타는 고기 대신 가죽이 나와요'); }, 600); }
     return true;
   }
