@@ -764,6 +764,7 @@
     on('mAim', function () { S.aim = S.aim === 'cross' ? 'finger' : 'cross'; saveSettings(); updateMenuLabels(); sfx('click'); });
     $('mSens').addEventListener('input', function () { S.sens = +this.value / 100; saveSettings(); updateMenuLabels(); });
     function sensStep(d) { S.sens = Math.max(0.2, Math.min(3, Math.round((S.sens + d) * 20) / 20)); saveSettings(); updateMenuLabels(); sfx('click'); }   // 11/21 아이들이 감도를 쉽게: −·+ 10%씩, 「보통」은 100%
+    $('deadGo').addEventListener('click', function () { deadRise(); });   // 11/21 쓰러진 화면
     $('mSensDn').addEventListener('click', function () { sensStep(-0.1); });
     $('mSensUp').addEventListener('click', function () { sensStep(0.1); });
     $('mSensReset').addEventListener('click', function () { S.sens = 1; saveSettings(); updateMenuLabels(); sfx('click'); });

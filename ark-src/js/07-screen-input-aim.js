@@ -3,7 +3,7 @@
   var isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   var lockOn = false, canvasEl;
   function showUI(name) {
-    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party', 'friends', 'practice', 'villageWork', 'frontierChest'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
+    ['title', 'pause', 'inv', 'book', 'help', 'map', 'chest', 'chat', 'looks', 'tips', 'signs', 'visit', 'story', 'ending', 'party', 'friends', 'practice', 'villageWork', 'frontierChest', 'dead'].forEach(function (n) { $(n).classList.toggle('show', n === name); });
     document.body.classList.toggle('playing', name === 'play');
     if (name === 'play') setTimeout(function () { fitBottomBar(); }, 60);   // 단축 칸 폭을 방향키에 맞춤
     document.body.classList.toggle('menu', name !== 'play');
@@ -223,6 +223,7 @@
     window.addEventListener('blur', resetInput);
     document.addEventListener('visibilitychange', function () { if (document.hidden) resetInput(); });
     window.addEventListener('keydown', function (e) {
+      if (ui === 'dead') { if ((e.code === 'Enter' || e.code === 'Space') && !e.repeat) { deadRise(); e.preventDefault(); } return; }   // 11/21 쓰러진 화면
       if (ui === 'chat') { if (e.code === 'Escape') { closePanel(); e.preventDefault(); } return; }
       if ((e.code === 'KeyT' || e.code === 'Enter') && ui === 'play' && !e.repeat) { openChat(); e.preventDefault(); return; }
       if (e.code === 'KeyE' && (ui === 'play' || ui === 'inv' || ui === 'chest')) { if (ui !== 'play') closePanel(); else openPanel('inv'); e.preventDefault(); return; }

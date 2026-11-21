@@ -29,9 +29,9 @@
   function fallTemptation(who) {
     FAITH = 20; faithHitT = 0;
     SHADOWS.forEach(function (s) { s.dead = true; }); clearFireArrows();
-    document.body.classList.add('faint'); setTimeout(function () { document.body.classList.remove('faint'); }, 1400);
-    respawn(); renderVitals(); stateDirty();
-    showVerseCard('🏠', '집으로 돌아왔어요', '이에 일어나서 아버지께로 돌아가니라 아직도 거리가 먼데 아버지가 그를 보고 측은히 여겨 달려가 목을 안고 입을 맞추니', '누가복음 15:20', (who || '어둠의 그림자') + '의 유혹에 넘어졌어요. ' + (SPAWN ? '침대' : '내 자리') + '에서 다시 일어났고 믿음도 다시 채워졌어요 (가진 것은 그대로예요)');
+    renderVitals(); stateDirty();
+    var whoT = (who || '어둠의 그림자');
+    showDeath('유혹에 넘어졌어요', whoT + '의 유혹에 넘어졌어요', function () { showVerseCard('🏠', '집으로 돌아왔어요', '이에 일어나서 아버지께로 돌아가니라 아직도 거리가 먼데 아버지가 그를 보고 측은히 여겨 달려가 목을 안고 입을 맞추니', '누가복음 15:20', whoT + '의 유혹에 넘어졌어요. ' + spawnInfo().label + '에서 다시 일어났고 믿음도 다시 채워졌어요 (가진 것은 그대로예요)'); });
   }
   function refillFaith() { if (vitalsOn() && FAITH < 20) { FAITH = 20; renderVitals(); stateDirty(); setTimeout(function () { toast('✦ 믿음이 다시 채워졌어요'); }, 400); } }
   function exhaust(v) { if (!vitalsOn()) return; EXH += v * (has('abraham') ? 0.7 : 1); while (EXH >= 4) { EXH -= 4; if (FOOD > 0) { FOOD--; renderVitals(); stateDirty(); } } }
@@ -43,12 +43,37 @@
   }
   function faint(why) {
     HP = 20; FOOD = Math.max(FOOD, 12); AIRV = 10; fallTop = null;
+    renderVitals(); stateDirty();
+    showDeath('쓰러졌어요', why, function () { toast(spawnInfo().label + '에서 다시 일어났어요 (가진 것은 그대로예요)'); });
+  }
+  // ── 11/21 쓰러진 화면: 「다시 일어나기」를 누르면 다시 일어날 곳으로 — 내 침대(한 번이라도 누웠던 침대) → 내 땅(집) → 마을 처음 자리 ──
+  var deadAfter = null;
+  function spawnInfo() {
+    if (SPAWN && get(SPAWN.x, SPAWN.y - 1, SPAWN.z) !== BED && colAt(SPAWN.x, SPAWN.z)) { SPAWN = null; stateDirty(); return spawnInfo2('침대가 없어졌어요'); }
+    return spawnInfo2('');
+  }
+  function spawnInfo2(note) {
+    if (SPAWN) return { k: 'bed', label: '🛏 내 침대', note: note };
+    if (myPlot >= 0) return { k: 'home', label: '🏠 내 땅(집 앞)', note: note || '내 집 침대에 한 번 누우면 다음부터 그 침대에서 일어나요' };
+    return { k: 'start', label: '⛵ 마을 처음 자리', note: note };
+  }
+  function showDeath(title, why, after) {
+    deadAfter = after || null;
+    if (riding) dismount(true);
+    var sp = spawnInfo();
+    $('deadTitle').textContent = title; $('deadWhy').textContent = why || '';
+    $('deadWhere').textContent = '다시 일어날 곳: ' + sp.label + (sp.note ? ' — ' + sp.note : '');
     document.body.classList.add('faint'); setTimeout(function () { document.body.classList.remove('faint'); }, 1400);
-    respawn(); renderVitals(); stateDirty();
-    toast('쓰러졌어요 — ' + why + '. ' + (SPAWN ? '침대에서' : '처음 자리에서') + ' 다시 일어났어요 (가진 것은 그대로예요)');
+    sfx('break', 200); showUI('dead');
+  }
+  function deadRise() {
+    if (ui !== 'dead') return;
+    respawn(); resume(); sfx('pop', 500);
+    var f = deadAfter; deadAfter = null; if (f) setTimeout(f, 250);
   }
   function respawn() {
     if (riding) dismount(true);
+    spawnInfo();
     if (SPAWN) teleport(SPAWN.x + 0.5, SPAWN.y, SPAWN.z + 0.5);
     else if (myPlot >= 0) { var o = plotOrigin(myPlot); teleport(o.x + OLD_PLOT / 2, G, o.z - 2, Math.PI); }
     else teleport(XM + 0.5, G, PZ0 - 9, Math.PI);
@@ -332,7 +357,9 @@
   }
   function useBed(x, y, z) {
     if (!beginFurnitureRest('lie', x, y, z, BED)) return;
+    var newSpawn = !SPAWN || SPAWN.x !== x || SPAWN.y !== y + 1 || SPAWN.z !== z;
     SPAWN = { x: x, y: y + 1, z: z }; stateDirty();
+    if (newSpawn) toast('🛏 이 침대가 다시 일어나는 자리가 됐어요 — 쓰러지면 여기서 일어나요');
     if (!isNight()) return;
     var rest = furnitureRest, bday = Math.floor(dayT / DAY_LEN);
     document.body.classList.add('sleep');

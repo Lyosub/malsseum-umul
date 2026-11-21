@@ -56,6 +56,9 @@
   .sbar { display:inline-block; width:90px; height:7px; background:#3a3a3a; border:1px solid #000; vertical-align:middle; margin:0 4px; } .sbar s { display:block; height:100%; background:#7ac84a; }
   .sgems { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:3px; margin-top:4px; }
   .sg { background:rgba(255,255,255,.45); padding:3px 5px; font-size:12px; } .sg.got { background:#e8f4d8; } .sg small { display:block; font-size:10px; color:#666; }
+  #dead { background:radial-gradient(circle at 50% 45%, rgba(110,20,20,0.55) 0%, rgba(40,6,6,0.82) 100%); z-index:21; }
+  .deadbox { text-align:center; color:#fff; text-shadow:2px 2px 0 #3a0c0c; max-width:420px; display:flex; flex-direction:column; gap:10px; align-items:center; }
+  .deadbox h1 { font-size:34px; margin:0; } #deadWhy { font-size:16px; } #deadWhere { font-size:15px; color:#ffe6a8; } .deadbox .mc { min-width:240px; height:46px; font-size:18px; } .deadbox small { color:#e8cfcf; }
   #ending { background:radial-gradient(circle at 50% 35%, #fff8e0 0%, #f0d890 35%, #8a6a30 100%); z-index:20; }
   .endbox { width:min(640px, 94vw); max-height:100%; overflow:auto; text-align:center; color:#3a2a10; padding:16px; }
   .endbox h1 { font-size:26px; font-weight:400; margin-bottom:10px; text-shadow:0 2px 0 #fff; }
@@ -945,6 +948,13 @@
   <div id="partyBody"></div>
   <div class="pfoot"><button id="partyDone" class="mc" style="width:120px">닫기</button></div>
 </div></div>
+<div id="dead" class="screen"><div class="deadbox">
+  <h1 id="deadTitle">쓰러졌어요</h1>
+  <div id="deadWhy"></div>
+  <div id="deadWhere"></div>
+  <button id="deadGo" class="mc wide">🏠 다시 일어나기</button>
+  <small>가진 것은 그대로예요</small>
+</div></div>
 <div id="ending" class="screen"><div class="endbox">
   <h1>🏙 본향에 이르렀어요</h1>
   <div id="endingText"></div>
@@ -1071,6 +1081,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=a66fa68b0c"></script>
+<script src="assets/ark-game.js?v=aa897d61d6"></script>
 </body>
 </html>
