@@ -142,7 +142,7 @@
         }
         if (started) { updateMobileBuild(now); updateFrontierTools(now); tickBlueprint(now); }
         if (started) stepFrontier(now,dt);
-        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); refreshFrames(); tickParked(); newsTick(); pingTick(); nightWatchTick(); checkHome(); refreshPlotSigns(); spawnZoneSigns(); } }
+        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); refreshFrames(); tickParked(); newsTick(); pingTick(); nightWatchTick(); craterTick(); checkHome(); refreshPlotSigns(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);
           if (ui === 'play' || ui === 'map') {

@@ -765,6 +765,7 @@
     lie: { name: '거짓', eye: 0xc060ff, hp: 2, dmg: 2, speed: 5.0, h: 0.95, blink: true },
     pride: { name: '교만', eye: 0xffc840, hp: 5, dmg: 3, speed: 3.0, h: 1.25 },
     doubt: { name: '의심', eye: 0x6ad0ff, hp: 3, dmg: 2, speed: 3.4, h: 1.05, ranged: true },   // 멀찍이 서서 불화살(엡 6:16)
+    anger: { name: '분노', eye: 0xff5a1a, hp: 7, dmg: 5, speed: 3.8, h: 0.95, fuse: true },   // 11/21 가까이 오면 부풀다 터짐(엡 4:26) — 칼로 치면 밀려나며 식고, 물에 닿으면 꺼짐(잠 15:1)
     great: { name: '큰 그림자', eye: 0xff8a2a, hp: 10, dmg: 4, speed: 4.6, h: 1.45 }   // 골짜기에만
   };
   function shadowsOn() { return S.shadows !== false; }
@@ -780,10 +781,15 @@
     box(8.4, 13, 4.4, 0, 18, 0); box(7, 8, 3.6, 0, 7, 0); box(3, 9, 3, -6, 19, 0); box(3, 9, 3, 6, 19, 0);
     var head = box(8, 8, 8, 0, 28.5, 0), eyeM = new THREE.MeshBasicMaterial({ color: sp.eye, fog: false });
     box(1.6, 1.2, 0.4, -1.8, 29, -4.1, eyeM); box(1.6, 1.2, 0.4, 1.8, 29, -4.1, eyeM);
+    var crackM = null;
+    if (sp.fuse) {   // 분노: 몸에 빨간 금(숯덩이처럼) — 부풀수록 밝아짐
+      crackM = new THREE.MeshBasicMaterial({ color: 0x5a1a0a, fog: false });
+      [[0.5, 9, 4.6, -2, 18, 0], [0.5, 6, 4.6, 2.4, 20, 0], [5, 0.5, 4.6, 0.3, 14.5, 0], [3, 0.5, 4.6, 1.2, 22.5, 0], [0.5, 4, 8.2, 1.4, 29, 0], [3.4, 0.5, 8.2, -1.4, 26.5, 0]].forEach(function (q) { box(q[0], q[1], q[2], q[3], q[4], q[5], crackM); });
+    }
     var tag = textSprite(sp.name, 'rgba(0,0,0,0.55)', '#' + sp.eye.toString(16).padStart(6, '0'), 0.55); tag.position.y = HT * sp.h + 0.6; root.add(tag);
     var y = groundAt(x, z, SY - 3); if (y === null) y = P.y;
     root.position.set(x, y, z); scene.add(root);
-    return { kind: kind, sp: sp, mesh: root, tag: tag, x: x, y: y, z: z, hp: sp.hp, hitT: 0, t: Math.random() * 6, fade: 0, dead: false };
+    return { kind: kind, sp: sp, mesh: root, tag: tag, crack: crackM, fuse: 0, x: x, y: y, z: z, hp: sp.hp, hitT: 0, t: Math.random() * 6, fade: 0, dead: false };
   }
   function litNear(x, y, z, r) {
     for (var dz = -1; dz <= 1; dz++) for (var dx = -1; dx <= 1; dx++) {
@@ -861,16 +867,25 @@
       var dx = P.x - s.x, dz = P.z - s.z, dist = Math.hypot(dx, dz) || 0.01;
       var sun = !cave && !inDungeon(Math.floor(s.x), Math.floor(s.y), Math.floor(s.z)) && !isNight() && skyLight(Math.floor(s.x), Math.floor(s.y) + 1, Math.floor(s.z)) > 0.6;
       if (s.dead || sun || dist > 44 || safeZone(Math.floor(s.x), Math.floor(s.z))) { s.fade += dt * 1.5; }
+      else if (!s.dead && s.sp.fuse && get(Math.floor(s.x), Math.floor(s.y), Math.floor(s.z)) === WATER) {   // 분노가 물에 닿으면 꺼짐
+        s.dead = true; s.fade = 0.5; sparkle(s.x, s.y + 1, s.z, 0xe8eef2, 18, { size: 0.45, life: 1.2, up: 2, v: 1.2 }); tone('sine', 900, 300, 0.4, 0.04);
+        if (!S.angerWaterTold) { S.angerWaterTold = 1; saveSettings(); showVerseCard('💧', '분노가 꺼졌어요', '유순한 대답은 분노를 쉬게 하여도 과격한 말은 노를 격동하느니라', '잠언 15:1', '「분노」 그림자는 물에 닿으면 터지지 않고 꺼져요'); }
+      }
       else if (!s.dead) {
         var want = s.sp.ranged ? (torch ? 11 : 9) : (torch ? 6 : 1.2), mv = 0;
         if (dist > want + 0.3) mv = s.sp.speed * dt; else if ((torch || s.sp.ranged) && dist < want - 0.5) mv = -s.sp.speed * 0.6 * dt;
         if (s.sp.ranged) { s.fireT = (s.fireT === undefined ? 1.5 + Math.random() : s.fireT) - dt; if (s.fireT <= 0 && dist < 20 && Math.abs(P.y - s.y) < 6) { s.fireT = 2.8 + Math.random() * 1.2; shootFireArrow(s); } }
         if (s.sp.blink && dist > 6 && Math.random() < dt * 0.25) mv = Math.min(dist - 3, 4);   // 거짓: 갑자기 가까이
-        if (mv && !(s.wind > 0)) {
+        if (mv && !(s.wind > 0) && !(s.sp.fuse && Math.abs(s.kx || 0) + Math.abs(s.kz || 0) > 1)) {   // 분노는 밀려나는 동안 다가오지 않음
           var nx = s.x + dx / dist * mv, nz = s.z + dz / dist * mv, ny = groundAt(nx, nz, s.y + 2);
           if (ny !== null && Math.abs(ny - s.y) <= 1.6 && !litNear(Math.floor(nx), ny, Math.floor(nz), 4)) { s.x = nx; s.z = nz; s.y = ny; }
         }
-        if (!s.sp.ranged && !(s.wind > 0) && dist < 1.9 && Math.abs(P.y - s.y) < 2.5 && now - s.hitT > 1200) { s.wind = 0.45; s.hitT = now; }
+        if (s.sp.fuse) {   // 분노: 2.4칸 안이면 1.5초 동안 부풀다 터짐, 멀어지면 다시 식음
+          if (dist < 2.4 && Math.abs(P.y - s.y) < 2.5) { if (!s.fuse) tone('sawtooth', 70, 150, 1.4, 0.05); s.fuse += dt; }
+          else if (s.fuse > 0) s.fuse = Math.max(0, s.fuse - dt * 1.2);
+          if (s.fuse >= 1.5) angerBurst(s);
+        }
+        if (!s.sp.ranged && !s.sp.fuse && !(s.wind > 0) && dist < 1.9 && Math.abs(P.y - s.y) < 2.5 && now - s.hitT > 1200) { s.wind = 0.45; s.hitT = now; }
         if (s.wind > 0 && (s.wind -= dt) <= 0) {   // 공격 신호(몸을 젖힘) 0.45초 뒤에 덮침 — 그 사이 물러서면 피함
           s.wind = 0; s.hitT = now; s.lunge = 1;
           if (dist < 2.3 && Math.abs(P.y - s.y) < 2.5) { var g = armorGuard(), dmg = Math.round(s.sp.dmg * (1 - g));
@@ -880,6 +895,7 @@
         }
       }
       shadowFxStep(s, dt);
+      if (s.crack) { var ff = Math.min(1, s.fuse / 1.5); s.mesh.scale.setScalar(1 + ff * 0.3 + (ff > 0.6 ? Math.sin(s.t * 40) * 0.03 : 0)); s.crack.color.setRGB(0.4 + 0.6 * ff, 0.06 + 0.4 * ff, 0.02 + 0.08 * ff); }
       s.mesh.position.set(s.x, s.y + Math.sin(s.t * 2) * 0.12, s.z);
       s.mesh.rotation.y = Math.atan2(-dx, -dz);
       var op = Math.max(0, 0.78 * (1 - s.fade)) * (0.85 + Math.sin(s.t * 5) * 0.15);
@@ -889,6 +905,50 @@
     tidyShadowTags();
     if (SHADOWS.length) shadowMat.opacity = Math.max(0.15, Math.min.apply(null, SHADOWS.map(function (s) { return s.op; })));
     SHADOWS = SHADOWS.filter(function (s) { if (s.fade >= 1) { removeShadow(s); return false; } return true; });
+  }
+  // ── 11/21 분노가 터짐: 3.6칸 안은 다치고 밀려남, 자연 땅(흙·돌·모래·눈·진흙)만 둥글게 파이고 하루(게임 속 하루) 뒤 메워짐 ──
+  var CRATERS = [], CRATER_OK = {}; [GRASS, DIRT, STONE, SAND, SNOW, CLAY].forEach(function (id) { CRATER_OK[id] = 1; });
+  function editedCell(x, y, z) { var e = EDITS[(z >> 5) * NC + (x >> 5)]; return !!(e && e[(y * CS + (z & 31)) * CS + (x & 31)] !== undefined); }
+  function rebuildCells(cells) { var seen = {}; cells.forEach(function (c) { var k = (c[0] >> 5) + ',' + (c[1] >> 5) + ',' + (c[2] >> 5); if (seen[k]) return; seen[k] = 1; rebuildAround(c[0], c[1], c[2]); }); }
+  function angerCrater(x0, y0, z0) {
+    if (!wildSpot(x0, z0) || safeZone(x0, z0)) return 0;
+    var cells = [];
+    for (var dy = -3; dy <= 1; dy++) for (var dz = -3; dz <= 3; dz++) for (var dx = -3; dx <= 3; dx++) {
+      if (dx * dx + dy * dy * 1.4 + dz * dz > 2.3 * 2.3) continue;
+      var x = x0 + dx, y = y0 + dy, z = z0 + dz, id = get(x, y, z);
+      if (!CRATER_OK[id] || !wildSpot(x, z) || safeZone(x, z) || editedCell(x, y, z) || get(x, y + 1, z) === WATER) continue;
+      cells.push([x, y, z, id]); setRaw(x, y, z, AIR);
+    }
+    if (!cells.length) return 0;
+    cells.forEach(function (c) { updateSky(c[0], c[2]); }); rebuildCells(cells);
+    CRATERS.push({ cells: cells, at: dayT + DAY_LEN });
+    return cells.length;
+  }
+  function craterTick() {   // 1초마다: 하루 지난 구덩이를 메움(그 사이 누가 놓은 블록·고친 칸은 그대로)
+    if (!CRATERS.length) return;
+    CRATERS = CRATERS.filter(function (cr) {
+      if (dayT < cr.at) return true;
+      var back = [];
+      cr.cells.forEach(function (c) { if (get(c[0], c[1], c[2]) !== AIR || editedCell(c[0], c[1], c[2])) return; setRaw(c[0], c[1], c[2], c[3]); updateSky(c[0], c[2]); back.push(c); });
+      if (back.length) { rebuildCells(back); if (collides(P.x, P.y, P.z)) { var gy = groundAt(P.x, P.z, P.y + 5); if (gy !== null) P.y = gy; } }
+      return false;
+    });
+  }
+  function angerBurst(s) {
+    if (s.dead) return;
+    s.dead = true; s.fade = 0.75;
+    var cx = s.x, cy = s.y, cz = s.z, d = Math.hypot(P.x - cx, P.z - cz) || 0.01;
+    sparkle(cx, cy + 1, cz, 0xff7a2a, 30, { size: 0.5, life: 0.9, v: 5, up: 2 });
+    sparkle(cx, cy + 0.6, cz, 0x6a5a50, 22, { size: 0.6, life: 1.3, v: 3, up: 1.4, g: 3 });
+    tone('sawtooth', 180, 40, 0.6, 0.12); tone('square', 90, 30, 0.5, 0.08); vibrate('break');
+    if (d < 3.6 && Math.abs(P.y - cy) < 3) {
+      var g = armorGuard(), dmg = Math.round(s.sp.dmg * (1 - d / 3.6 * 0.5) * (1 - g));
+      if (dmg > 0) hurtFaith(dmg, '「분노」'); else if (vitalsOn()) toast('🛡 하나님의 전신 갑주가 막아 주었어요 (엡 6:11)');
+      P.vx += (P.x - cx) / d * 9; P.vz += (P.z - cz) / d * 9; P.vy = Math.max(P.vy, 6);
+    }
+    SHADOWS.forEach(function (o) { if (o === s || o.dead) return; var od = Math.hypot(o.x - cx, o.z - cz) || 0.01; if (od < 3.6) { o.kx = (o.x - cx) / od * 10; o.kz = (o.z - cz) / od * 10; } });
+    var n = angerCrater(Math.floor(cx), Math.floor(cy), Math.floor(cz));
+    if (!S.angerTold) { S.angerTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🔥', '분노', '분을 내어도 죄를 짓지 말며 해가 지도록 분을 품지 말고', '에베소서 4:26', '「분노」 그림자가 터졌어요 — 다가오면 부풀어요. 칼로 치면 밀려나며 식고, 활·물매로 멀리서 물리치면 터지지 않아요. 물에 닿으면 꺼져요.' + (n ? ' 파인 땅은 하루 뒤 메워져요' : '')); }, 700); }
   }
   function hitShadow(s, arrowDmg, sweep) {
     if (s.dead) return;
@@ -905,6 +965,7 @@
     s.hp -= dmg; if (!sweep) { swingT = 0.25; sfx('dig', 300); }
     combatFx(s, dmg, crit);
     var dx = s.x - P.x, dz = s.z - P.z, d = Math.hypot(dx, dz) || 1, kb = crit ? 11 : (arrowDmg ? 4 : 8); s.kx = dx / d * kb; s.kz = dz / d * kb;   // 밀려남
+    if (s.sp.fuse) { s.fuse = 0; s.kx *= 2; s.kz *= 2; }   // 분노: 맞으면 크게 밀려나며 식음(다시 다가와 부풂)
     if ((held === SWORD || isArmSword(held)) && !arrowDmg && have(held) > 0) sweepHit(s);
     if (isTool(held)) wearTool(held);
     if (s.hp <= 0) {
