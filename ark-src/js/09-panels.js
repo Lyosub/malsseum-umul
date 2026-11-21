@@ -682,6 +682,8 @@
     on('frontierChestDone',closePanel);
     on('btnBag', function () { openPanel('inv'); sfx('click'); });
     on('btnChat', openChat);
+    on('btnPing', function () { togglePingMenu(); sfx('click'); });
+    Array.prototype.forEach.call(document.querySelectorAll('#pingMenu [data-k]'), function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); sendPing(b.getAttribute('data-k')); }); });
     on('chatSend', sendChat);
     on('chatDone', function () { $('chatInput').blur(); closePanel(); });
     $('chatInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendChat(); } });

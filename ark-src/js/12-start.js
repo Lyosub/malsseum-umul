@@ -142,7 +142,7 @@
         }
         if (started) { updateMobileBuild(now); updateFrontierTools(now); tickBlueprint(now); }
         if (started) stepFrontier(now,dt);
-        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); refreshFrames(); tickParked(); newsTick(); checkHome(); refreshPlotSigns(); spawnZoneSigns(); } }
+        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); refreshFrames(); tickParked(); newsTick(); pingTick(); nightWatchTick(); checkHome(); refreshPlotSigns(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);
           if (ui === 'play' || ui === 'map') {
@@ -350,7 +350,8 @@
         if (isSolid(get(Math.floor(qx), Math.floor(qy), Math.floor(qz)))) { d -= 0.45; break; }
         d += 0.25;
       }
-      camDist = Math.max(0.6, Math.min(want, d));
+      var camT = Math.max(0.6, Math.min(want, d));   // 11/21 벽에 막히면 바로 당기고, 풀리면 천천히 물러남
+      camDist = camT < camDist || camDist < 0.6 ? camT : camDist + (camT - camDist) * Math.min(1, dt * 6);
       camera.position.set(ex + fwd.x * dir * camDist, ey + fwd.y * dir * camDist, ez + fwd.z * dir * camDist);
       camera.lookAt(ex, ey, ez);
       avatar.visible = true; heldMesh.visible = false; if (fpShield) fpShield.visible = false;

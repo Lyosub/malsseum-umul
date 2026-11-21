@@ -646,7 +646,8 @@
           if (kind === 0) { a = y2; b = x2; } else if (kind === 1) { a = x2; b = y2; }
           else { var r = Math.hypot(x2 + 0.5 - C[0], y2 + 0.5 - C[1]); b = r - 0.5; a = Math.atan2(y2 + 0.5 - C[1], x2 + 0.5 - C[0]) * 8; if (b < 0 || b > 15.5) continue; }
           var tie = ((Math.floor(a) % 4) + 4) % 4 < 2 && b > 1 && b < 14.5, rail = Math.abs(b - 3.5) < 0.8 || Math.abs(b - 11.5) < 0.8;
-          if (rail) px(x2, y2, gold ? 0xe8c53a : 0xb9bec2, 0.9 + R() * 0.15); else if (tie) px(x2, y2, 0x7a5232, 0.85 + R() * 0.2);
+          if (rail) px(x2, y2, gold ? 0xe8c53a : 0xb9bec2, 0.9 + R() * 0.15); else if (gold && Math.abs(b - 7.5) < 1.1 && ((Math.floor(a) % 8) + 8) % 8 < 3) px(x2, y2, 0xffe27a, 1);   // 11/21 빠른 레일: 가운데 노란 표식(멀리서도 구분)
+          else if (tie) px(x2, y2, 0x7a5232, 0.85 + R() * 0.2);
         }
       });
     }
@@ -2233,6 +2234,18 @@
       for (var j = 0; j < 4; j++) setRaw(sx + 7, sh + 1 + j, sz, LOG);
       setRaw(sx + 7, sh + 5, sz + 1, WOOL_W); setRaw(sx + 7, sh + 4, sz + 1, WOOL_W);
     }
+    // 11/21 배 대는 부두(GPT 검토 27): 밧모·멜리데 남쪽 물가에도 — 배를 타고 가서 내릴 곳이 멀리서 보이게(나무 데크 + 등불 + 청색 깃 기둥)
+    [[P0[1], P0[2], P0[3]], [M0[1] - 30, M0[2], M0[3]]].forEach(function (q) {
+      if (!near(q[0], q[1] + q[2], q[2] + 20)) return;
+      var dx0 = q[0], zs = null;
+      for (var z = q[1]; z < q[1] + q[2] * 2; z++) { terrain(dx0, z); if (T.h < G) { zs = z; break; } }
+      if (zs === null || !near(dx0, zs + 4, 10)) return;
+      for (var k = -2; k < 9; k++) {
+        var zz = zs + k; for (var ddx = -1; ddx <= 1; ddx++) setRaw(dx0 + ddx, G, zz, GOPHER);
+        if (k % 4 === 0 || k === 8) { setRaw(dx0 - 2, G, zz, LOG); setRaw(dx0 - 2, G + 1, zz, FENCE); setRaw(dx0 - 2, G + 2, zz, LAMP); setRaw(dx0 + 2, G, zz, LOG); for (var yy = G - 4; yy < G; yy++) { setRaw(dx0 - 1, yy, zz, LOG); setRaw(dx0 + 1, yy, zz, LOG); } }
+      }
+      for (var yb = 1; yb <= 3; yb++) setRaw(dx0 + 2, G + yb, zs + 8, yb === 3 ? WOOL_B : FENCE);
+    });
     // 구브로: 남쪽 물가로 나온 나무 부두와 등불
     if (near(C0[1], C0[2] + 150, 24)) {
       var cx2 = C0[1], cz2 = C0[2] + 128;
@@ -2860,7 +2873,7 @@
     fpShield.visible = !!id && !furnitureRest;
     if (!fpShield.visible) return;
     fpShieldMat.color.copy(avatarMat.color);
-    fpShield.position.set(-0.74, -0.6 + bob * 0.3 + sw * 0.02, -1.08);
+    fpShield.position.set(-0.7, -0.7 + bob * 0.3 + sw * 0.02, -1.1); fpShield.scale.setScalar(isTouch ? 0.72 : 0.85);   // 11/21 작게·아래로(방향키·하트와 덜 겹치게)
     fpShield.rotation.set(0.05, 0.32, 0.04);
   }
   // ───────── 플레이어 ─────────
@@ -3495,7 +3508,8 @@
       keys[e.code] = true;
       if (e.code === 'Space' && !e.repeat) jumpPress();
       if (e.code === 'KeyF') toggleFly();
-      if (e.code === 'KeyG' && ui === 'play' && !e.repeat) waveHand();   // G: 손 흔들기
+      if (e.code === 'KeyG' && ui === 'play' && !e.repeat) waveHand();
+      if (e.code === 'KeyP' && ui === 'play' && !e.repeat) togglePingMenu();   // 11/21 P: 모이기 표식   // G: 손 흔들기
       if (e.code === 'KeyQ' && ui === 'play' && !e.repeat) throwItem(HOTBAR[sel], e.shiftKey ? Math.min(64, have(HOTBAR[sel])) : 1);   // Q 버리기, Shift+Q 모두
       if (e.code === 'KeyG' && !e.repeat) rotateBuild();
       if (e.code === 'KeyZ' && !e.repeat) undoBuild();
@@ -5148,6 +5162,8 @@
     on('frontierChestDone',closePanel);
     on('btnBag', function () { openPanel('inv'); sfx('click'); });
     on('btnChat', openChat);
+    on('btnPing', function () { togglePingMenu(); sfx('click'); });
+    Array.prototype.forEach.call(document.querySelectorAll('#pingMenu [data-k]'), function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); sendPing(b.getAttribute('data-k')); }); });
     on('chatSend', sendChat);
     on('chatDone', function () { $('chatInput').blur(); closePanel(); });
     $('chatInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendChat(); } });
@@ -6101,13 +6117,14 @@
   function seasonIndex(){return Math.floor(dayT/DAY_LEN)%WEATHER.length;}
   function makeRainbow(){
     [0xdd746d,0xe5a966,0xe7d68a,0x93c78d,0x80abc8,0xb39ccc].forEach(function(color,i){
-      var points=[];
-      for(var k=0;k<=32;k++){
-        var angle=k*Math.PI/32,r=75-i*1.6;
-        points.push(new THREE.Vector3(Math.cos(angle)*r,Math.sin(angle)*r*.55,0));
+      var pos=[];   // 11/21 가는 선 대신 띠(두께 1.7)로 — 작은 화면에서도 보이게
+      for(var k=0;k<32;k++){
+        var a0=k*Math.PI/32,a1=(k+1)*Math.PI/32,r0=75-i*1.7,r1=r0-1.7;
+        var P0=[Math.cos(a0)*r0,Math.sin(a0)*r0*.55],P1=[Math.cos(a1)*r0,Math.sin(a1)*r0*.55],Q0=[Math.cos(a0)*r1,Math.sin(a0)*r1*.55],Q1=[Math.cos(a1)*r1,Math.sin(a1)*r1*.55];
+        pos.push(P0[0],P0[1],0,Q0[0],Q0[1],0,P1[0],P1[1],0, P1[0],P1[1],0,Q0[0],Q0[1],0,Q1[0],Q1[1],0);
       }
-      var line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),
-        new THREE.LineBasicMaterial({color:color,transparent:true,opacity:.46,depthWrite:false,fog:false}));
+      var gg=new THREE.BufferGeometry(); gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+      var line=new THREE.Mesh(gg,new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:.45,depthWrite:false,fog:false,side:THREE.DoubleSide}));
       line.visible=false;scene.add(line);rainbow.push(line);
     });
   }
@@ -6187,7 +6204,7 @@
     if (caveK > 0.01) scene.fog.color.lerp(C_CAVE, caveK * 0.9);
     if (heldMesh) heldMesh.material.color.setScalar(1 - caveK * 0.6);   // 굴 속에서는 손에 든 것도 어둡게
     avatarMat.color.setScalar(Math.max(0.32, LU.uDay.value) * (1 - caveK * 0.55));
-    cloudMat.color.setScalar(0.35 + 0.65 * dayF);
+    cloudMat.color.setRGB(0.30 + 0.65 * dayF, 0.345 + 0.61 * dayF, 0.45 + 0.475 * dayF); cloudMat.opacity = 0.6 + 0.28 * dayF;   // 11/21 밤 구름은 푸른 잿빛으로 옅게
     clouds.forEach(function (cl) {
       cl.position.x += dt * 1.5;
       if (cl.position.x - camera.position.x > 300) cl.position.x -= 600; else if (camera.position.x - cl.position.x > 300) cl.position.x += 600;
@@ -6512,6 +6529,7 @@
              Math.hypot(b.x - (P.x-ox)*scale, b.y - (P.z-oz)*scale);
     });
     shown = shown.slice(0, 48);
+    drawMapPings(ctx, big, ox, oz, scale);
     shown.forEach(function (dot) {
       ctx.beginPath(); ctx.arc(dot.x, dot.y, big ? 5 : 3, 0, Math.PI * 2);
       ctx.fillStyle = dot.color; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = '#26302a'; ctx.stroke();
@@ -6865,7 +6883,7 @@
         }
         if (started) { updateMobileBuild(now); updateFrontierTools(now); tickBlueprint(now); }
         if (started) stepFrontier(now,dt);
-        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); refreshFrames(); tickParked(); newsTick(); checkHome(); refreshPlotSigns(); spawnZoneSigns(); } }
+        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); refreshFrames(); tickParked(); newsTick(); pingTick(); nightWatchTick(); checkHome(); refreshPlotSigns(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);
           if (ui === 'play' || ui === 'map') {
@@ -7073,7 +7091,8 @@
         if (isSolid(get(Math.floor(qx), Math.floor(qy), Math.floor(qz)))) { d -= 0.45; break; }
         d += 0.25;
       }
-      camDist = Math.max(0.6, Math.min(want, d));
+      var camT = Math.max(0.6, Math.min(want, d));   // 11/21 벽에 막히면 바로 당기고, 풀리면 천천히 물러남
+      camDist = camT < camDist || camDist < 0.6 ? camT : camDist + (camT - camDist) * Math.min(1, dt * 6);
       camera.position.set(ex + fwd.x * dir * camDist, ey + fwd.y * dir * camDist, ez + fwd.z * dir * camDist);
       camera.lookAt(ex, ey, ez);
       avatar.visible = true; heldMesh.visible = false; if (fpShield) fpShield.visible = false;
@@ -7878,7 +7897,7 @@
     var tag = textSprite(sp.name, 'rgba(0,0,0,0.55)', '#' + sp.eye.toString(16).padStart(6, '0'), 0.55); tag.position.y = HT * sp.h + 0.6; root.add(tag);
     var y = groundAt(x, z, SY - 3); if (y === null) y = P.y;
     root.position.set(x, y, z); scene.add(root);
-    return { kind: kind, sp: sp, mesh: root, x: x, y: y, z: z, hp: sp.hp, hitT: 0, t: Math.random() * 6, fade: 0, dead: false };
+    return { kind: kind, sp: sp, mesh: root, tag: tag, x: x, y: y, z: z, hp: sp.hp, hitT: 0, t: Math.random() * 6, fade: 0, dead: false };
   }
   function litNear(x, y, z, r) {
     for (var dz = -1; dz <= 1; dz++) for (var dx = -1; dx <= 1; dx++) {
@@ -7981,6 +8000,7 @@
       s.mesh.children.forEach(function (m) { if (m.material && m.material !== shadowMat) m.material.opacity = 1 - s.fade; });
       s.op = op;
     });
+    tidyShadowTags();
     if (SHADOWS.length) shadowMat.opacity = Math.max(0.15, Math.min.apply(null, SHADOWS.map(function (s) { return s.op; })));
     SHADOWS = SHADOWS.filter(function (s) { if (s.fade >= 1) { removeShadow(s); return false; } return true; });
   }
@@ -8006,7 +8026,7 @@
       dropItem(s.x, s.y + 1, s.z, SHARD, s.kind === 'great' ? 3 : 1);   // 빛 조각 — 횃불·등롱 재료
       if (!S.shardTold) { S.shardTold = 1; saveSettings(); setTimeout(function () { showVerseCard('✨', '빛 조각', '빛이 어둠에 비치되 어둠이 깨닫지 못하더라', '요한복음 1:5', '그림자를 물리친 자리에 빛 조각이 남았어요 — 주워서 횃불·등롱을 만들어요'); }, ACH.shadow ? 300 : 9500); }
       if (!ACH.shadow) { $('cardEmoji').textContent = '⚔'; $('cardName').textContent = '성령의 검'; $('cardText').textContent = '구원의 투구와 성령의 검 곧 하나님의 말씀을 가지라'; $('cardRef').textContent = '에베소서 6:17'; $('cardNew').textContent = '어둠의 그림자 「' + s.sp.name + '」을(를) 물리쳤어요'; $('card').classList.add('show'); clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, 9000); }
-      unlock('shadow');
+      unlock('shadow'); nightNote('shadow');
       partyAdd('shadows', 1);
       if (STORY.started) { STORY.s.shadows++; if (isNight()) STORY.s.night++; saveStory(); }
     }
@@ -8092,7 +8112,7 @@
           gone = true; var g = armorGuard(), dmg = Math.round(f.dmg * (1 - g)), sh = WORN.shield, fl = Math.hypot(f.vx, f.vz) || 1;
           var front = (-Math.sin(P.yaw)) * (-f.vx / fl) + (-Math.cos(P.yaw)) * (-f.vz / fl) > 0.3;
           var shBlock = armOf(sh, ARM_SHIELD0) >= 0 ? ARM_SHIELD_BLOCK[armOf(sh, ARM_SHIELD0)] : ({ 156: 0.5, 157: 0.75, 158: 1 }[sh] || 0);
-          if (sh && front && Math.random() < shBlock) { newsMark('shield'); vibrate('block'); sfx('place', 'metal'); burst(Math.floor(f.x), Math.floor(f.y), Math.floor(f.z), LAMP); var nowB = performance.now(); if (nowB - shieldToldT > 5000) { shieldToldT = nowB; toast(sh === 158 ? '🛡 믿음의 방패로 불화살을 막았어요 (엡 6:16)' : '🛡 ' + nameOf(sh) + '로 불화살을 막았어요'); } break; }
+          if (sh && front && Math.random() < shBlock) { newsMark('shield'); nightNote('block'); vibrate('block'); sfx('place', 'metal'); burst(Math.floor(f.x), Math.floor(f.y), Math.floor(f.z), LAMP); var nowB = performance.now(); if (nowB - shieldToldT > 5000) { shieldToldT = nowB; toast(sh === 158 ? '🛡 믿음의 방패로 불화살을 막았어요 (엡 6:16)' : '🛡 ' + nameOf(sh) + '로 불화살을 막았어요'); } break; }
           if (dmg > 0) hurtFaith(dmg, '「' + f.who + '」'); else if (vitalsOn()) toast('🛡 하나님의 전신 갑주가 불화살을 막아 주었어요 (엡 6:16)');
         }
       }
@@ -8668,6 +8688,7 @@
     if (!client || !me || NET.chan) return;
     var ch = NET.chan = client.channel('ark-world', { config: { private: true, presence: { key: me.id }, broadcast: { self: false } } });
     ch.on('broadcast', { event: 'pos' }, function (r) { onPos(r.payload); })
+      .on('broadcast', { event: 'ping' }, function (r) { onPing(r.payload); })
       // 블록 바꿈은 휴대폰끼리 직접 주고받지 않고, 서버가 검사해서 받은 것만(DB 변경 알림)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ark_world_edits' }, function (r) { var w = r.new; if (w && w.user_id !== me.id) queueRemote(w.user_id, [w.x, w.y, w.z, w.id]); })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'ark_world_edits' }, function (r) { var w = r.new; if (w && w.user_id !== me.id) queueRemote(w.user_id, [w.x, w.y, w.z, w.id]); })
@@ -9014,7 +9035,10 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 10, NEWS = [
+  var NEWS_VER = 11, NEWS = [
+    ['ping', '📍', '모이기 표식', '위쪽 📍 표식(P)을 누르고 「여기로 와요·여기 도와줘요·여기 조심」 중 하나를 고르면, 보는 곳에 빛기둥이 서서 일행(일행이 없으면 친구)에게 45초 동안 보여요. 작은 지도에도 마름모로 나와요(느 4:20).', 0],
+    ['nightwatch', '🌅', '밤을 함께 지키기', '밤에 그림자를 물리치거나 방패로 불화살을 막으면, 새벽에 그 밤 동안 함께 한 일을 카드로 보여 줘요(느 4:17). 친구 곁에서 막으면 「함께 막았어요」가 떠요. 큰 그림자의 힘은 화면 위 한 줄로 보여요.', 0],
+    ['docks', '⚓', '섬 부두', '밧모섬과 멜리데섬 남쪽 물가에 나무 부두와 등불이 생겼어요 — 배를 타고 가서 내릴 곳을 멀리서도 찾을 수 있어요.', 0],
     ['equip', '🛡', '가방 방어구 칸', '가방 오른쪽 위에 방어구 칸(머리·몸·허리·발·방패)과 지금 내 모습이 보여요. 가방에서 투구·옷·방패를 누르고 빛나는 칸을 누르면 입고, 입은 칸을 누르면 벗어요. 방패를 입으면 1인칭 화면 왼쪽 아래에 방패가 보여요.', 158],
     ['boat', '⛵', '배', '고페르 나무 5 + 역청 칠한 나무 1로 배를 만들어요(창 6:14). 배를 들고 물 위를 누르면 띄워서 타요 — 헤엄보다 세 배 빨라 섬에 가기 좋아요. 물에서는 가만히 있으면 가라앉고, 점프를 누르면 떠올라요. 오래 잠기면 숨이 막혀요.', 291],
     ['bigworld', '🗺', '두 배로 넓어진 세상', '세상이 동쪽·남쪽으로 두 배 넓어졌어요. 눈 덮인 헐몬 산, 동쪽 큰 숲, 갈릴리 호수와 요단 강, 시내 산, 푸른 들판, 남쪽 큰 바다와 섬을 찾아가 보세요.', 0],
@@ -9060,6 +9084,7 @@
   var newsTold = false, newsT = 0;
   function newsTick() {   // 1초마다: 들어온 지 6초 뒤 한 번 알림
     if (newsTold || !started || ui !== 'play' || S.newsSeen === NEWS_VER) return;
+    if (tutorialStep < 9) return;   // 11/21 처음 안내가 끝난 뒤에 알림(화면을 한꺼번에 가리지 않게)
     if (++newsT < 6) return;
     newsTold = true; toast('✨ 새 기능 ' + NEWS.length + '가지 — 메뉴 → ✨ 새 기능');
   }
@@ -9540,13 +9565,13 @@
     s.bar.material.map.needsUpdate = true; s.bar.visible = true; s.barT = 4;
   }
   function combatFx(s, dmg, crit) {
-    if (!flashMat) flashMat = new THREE.MeshBasicMaterial({ color: 0xfff6d8, transparent: true, opacity: 0.95 });
+    if (!flashMat) flashMat = new THREE.MeshBasicMaterial({ color: 0x8a7a9a, transparent: true, opacity: 0.85 });   // 11/21 맞을 때 하얗게 번쩍이지 않고 잠깐 밝은 잿빛으로
     s.mesh.children.forEach(function (m) { if (m.material === shadowMat) m.material = flashMat; });
-    s.flashT = 0.12;
+    s.flashT = 0.1;
     hpBarDraw(s);
-    var top = s.y + HT * s.sp.h + 0.5, n = Math.round(dmg * 10) / 10;
-    floatText(s.x, top, s.z, (crit ? '✦ ' : '') + n, crit ? '#ffd23a' : '#ffffff', crit ? 0.8 : 0.6);
-    sparkle(s.x, s.y + 1.6 * s.sp.h, s.z, crit ? 0xffd23a : 0xfff0c0, crit ? 8 : 4, { size: 0.35, life: 0.5, v: 2.4, up: 0.8 });
+    var top = s.y + HT * s.sp.h + 1.1, n = Math.round(dmg * 10) / 10;   // 11/21 숫자는 이름표보다 위에, 0.6초
+    floatText(s.x, top, s.z, (crit ? '✦ ' : '') + n, crit ? '#ffd23a' : '#ffffff', crit ? 0.8 : 0.6, 0.6);
+    sparkle(s.x, s.y + 1.6 * s.sp.h, s.z, crit ? 0xffd23a : 0xfff0c0, crit ? 5 : 2, { size: 0.35, life: 0.5, v: 2.4, up: 0.8 });
     if (crit) { newsMark('crit'); tone('square', 520, 1040, 0.12, 0.04); vibrate('break'); if (s.hp <= 0) questEvent('crit'); }
   }
   function shadowFxStep(s, dt) {
@@ -9950,6 +9975,111 @@
       WALK_KEYS.forEach(function (k) { var right = document.createElement('b'); right.textContent = ADV.regions[k] ? '✔' : '?'; right.style.color = ADV.regions[k] ? '#8be08b' : '#999'; row(ADV.regions[k] ? REGION_INFO[k][0] : '아직 밟지 않은 땅', null, right); });
     }
     fbBtn(box, '닫기', function () { box.remove(); });
+  }
+  // ───────── 11/21 함께 하기(GPT 검토 03·04·23·24) ─────────
+  // ① 모이기 표식: 📍 → 여기로 와요·도와줘요·조심 — 일행(일행이 없으면 친구)에게 45초 보임(느 4:20)
+  var PINGS = {}, pingAt = 0, PING_LIFE = 45000;
+  var PING_KIND = { come: ['📍', '여기로 와요', '#7ed957'], help: ['🙋', '여기 도와줘요', '#ffcf4a'], warn: ['⚠️', '여기 조심', '#ff6a5a'] };
+  function pingSpot() {
+    var h = null; try { h = pickCenter(); } catch (e) {}
+    if (h && h.px !== undefined && Math.hypot(h.px - P.x, h.pz - P.z) < 40) return [h.px + 0.5, h.py + 0.1, h.pz + 0.5];
+    return [P.x, P.y + 0.1, P.z];
+  }
+  function togglePingMenu(show) {
+    var m = $('pingMenu'); if (!m) return;
+    m.hidden = show === undefined ? !m.hidden : !show;
+  }
+  function sendPing(kind) {
+    togglePingMenu(false);
+    var now = performance.now();
+    if (now < pingAt) { toast('조금 뒤에 다시 찍을 수 있어요'); return; }
+    pingAt = now + 3000;
+    var p = pingSpot(), k = PING_KIND[kind];
+    showPing(me ? me.id : 'me', kind, p[0], p[1], p[2], '나');
+    if (NET.ch && me) NET.ch.send({ type: 'broadcast', event: 'ping', payload: { u: me.id, k: kind, x: +p[0].toFixed(1), y: +p[1].toFixed(1), z: +p[2].toFixed(1) } });
+    sfx('pop');
+    if (!S.pingTold) { S.pingTold = 1; saveSettings(); showVerseCard('📯', '모이기 표식', '너희는 어디서든지 나팔 소리를 듣거든 그리로 모여서 우리에게로 나아오라 우리 하나님이 우리를 위하여 싸우시리라', '느헤미야 4:20', k[0] + ' 「' + k[1] + '」을 찍었어요 — ' + (inParty() ? '일행' : '친구') + '에게 45초 동안 보여요'); }
+    else toast(k[0] + ' ' + k[1] + ' — ' + (inParty() ? '일행' : '친구') + '에게 45초 동안 보여요');
+  }
+  function onPing(m) {
+    if (!m || !PING_KIND[m.k] || !Number.isFinite(m.x) || !Number.isFinite(m.y) || !Number.isFinite(m.z)) return;
+    if (!(partyMate(m.u) || (!inParty() && FRIENDS.accepted.has(m.u)))) return;
+    var nick = NET.names[m.u] || '친구', k = PING_KIND[m.k];
+    showPing(m.u, m.k, m.x, m.y, m.z, nick);
+    sfx('pop'); toast(k[0] + ' ' + nick + ': ' + k[1] + ' (' + Math.round(Math.hypot(m.x - P.x, m.z - P.z)) + '칸)');
+  }
+  function clearPing(u) {
+    var p = PINGS[u]; if (!p) return;
+    disposeSprite(p.tag); p.beam.geometry.dispose(); p.beam.material.dispose(); scene.remove(p.g); delete PINGS[u];
+  }
+  function pingLabel(p) {
+    var k = PING_KIND[p.kind], d = Math.round(Math.hypot(p.x - P.x, p.z - P.z));
+    if (p.tag) disposeSprite(p.tag);
+    p.tag = textSprite(k[0] + ' ' + p.nick + ' · ' + k[1] + (d > 3 ? ' · ' + d + '칸' : ''), 'rgba(0,0,0,0.62)', k[2], 0.62);
+    p.tag.material.depthTest = false; p.tag.renderOrder = 22; p.tag.position.y = 5.4; p.g.add(p.tag);
+  }
+  function showPing(u, kind, x, y, z, nick) {
+    if (!scene) return;
+    clearPing(u);
+    var k = PING_KIND[kind], g = new THREE.Group();
+    var beam = new THREE.Mesh(new THREE.BoxGeometry(0.14, 5, 0.14), new THREE.MeshBasicMaterial({ color: parseInt(k[2].slice(1), 16), transparent: true, opacity: 0.6, depthWrite: false, fog: false }));
+    beam.position.y = 2.5; g.add(beam); g.position.set(x, y, z); scene.add(g);
+    var p = PINGS[u] = { g: g, beam: beam, tag: null, kind: kind, nick: nick, x: x, y: y, z: z, until: performance.now() + PING_LIFE };
+    pingLabel(p);
+  }
+  function pingTick() {   // 1초마다: 거리 글자 고치고, 45초 지나면 지움
+    var now = performance.now();
+    for (var u in PINGS) { var p = PINGS[u]; if (now > p.until) clearPing(u); else pingLabel(p); }
+  }
+  function drawMapPings(ctx, big, ox, oz, scale) {
+    for (var u in PINGS) {
+      var p = PINGS[u], x = (p.x - ox) * scale, y = (p.z - oz) * scale, r = big ? 7 : 4;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = PING_KIND[p.kind][2]; ctx.fillRect(-r / 2, -r / 2, r, r); ctx.lineWidth = 1; ctx.strokeStyle = '#1d1a14'; ctx.strokeRect(-r / 2, -r / 2, r, r);
+      ctx.restore();
+    }
+  }
+
+  // ② 그림자 이름·체력 정리: 가까운 둘(10칸 안)과 방금 맞힌 것만 이름을 보이고, 큰 그림자 체력은 화면 위 한 줄로
+  function tidyShadowTags() {
+    var live = SHADOWS.filter(function (s) { return !s.dead && s.tag; });
+    live.forEach(function (s) { s.dist = Math.hypot(P.x - s.x, P.z - s.z); });
+    live.sort(function (a, b) { return a.dist - b.dist; });
+    live.forEach(function (s, i) { s.tag.visible = (i < 2 && s.dist < 10) || (s.bar && s.bar.visible && s.kind !== 'great'); });
+    var g = live.filter(function (s) { return s.kind === 'great' && s.dist < 28; })[0], bb = $('bossBar');
+    if (!bb) return;
+    if (g) {
+      if (g.bar) g.bar.visible = false;
+      if (g.tag) g.tag.visible = false;
+      bb.hidden = false; $('bossFill').style.width = Math.max(0, Math.round(100 * g.hp / g.sp.hp)) + '%';
+    } else bb.hidden = true;
+  }
+
+  // ③ 밤을 함께 지키기: 밤 동안 물리친 그림자·막은 불화살·곁에 있던 친구를 모아 새벽에 카드로(느 4:17)
+  var NIGHTW = { on: false, shadows: 0, blocks: 0, mates: {} }, togetherToldT = 0;
+  function nearMates(r) {
+    var out = [];
+    for (var u in NET.peers) { var p = NET.peers[u]; if (p && Number.isFinite(p.x) && Math.hypot(p.x - P.x, p.z - P.z) < r && performance.now() - (p.t || 0) < 8000) out.push(u); }
+    return out;
+  }
+  function nightNote(kind) {
+    if (kind === 'shadow') NIGHTW.shadows++; else if (kind === 'block') NIGHTW.blocks++;
+    var ms = nearMates(16); ms.forEach(function (u) { NIGHTW.mates[u] = 1; });
+    if (kind === 'block' && nearMates(8).length) {
+      var now = performance.now();
+      if (now - togetherToldT > 20000) { togetherToldT = now; floatText(P.x, P.y + HT + 0.6, P.z, '🛡 함께 막았어요', '#bfe8ff', 0.6, 1.2); }
+    }
+  }
+  function nightWatchTick() {   // 1초마다
+    var night = isNight();
+    if (night && !NIGHTW.on) { NIGHTW = { on: true, shadows: 0, blocks: 0, mates: {} }; return; }
+    if (!night && NIGHTW.on) {
+      NIGHTW.on = false;
+      var n = Object.keys(NIGHTW.mates).length;
+      if (!started || ui !== 'play' || (NIGHTW.shadows + NIGHTW.blocks) < 1) return;
+      showVerseCard('🌅', n ? '밤을 함께 지켰어요' : '밤을 지켜 냈어요', '성을 건축하는 자와 짐을 나르는 자는 다 각각 한 손으로 일을 하며 한 손에는 병기를 잡았는데', '느헤미야 4:17',
+        '물리친 그림자 ' + NIGHTW.shadows + ' · 막은 불화살 ' + NIGHTW.blocks + (n ? ' · 곁에 있던 친구 ' + n + '명 — 고마워요!' : ''));
+    }
   }
   // ── 마을 소식 · 선물 · 건축 사진 · 설계도 나누기(서버: sql-migrations/2026-11-19-ark-village-social.sql) ──
   // 자유 글은 쓰지 않는다: 소식은 종류+숫자, 사진 제목과 설계도 이름은 고르기

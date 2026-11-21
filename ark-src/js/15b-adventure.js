@@ -91,13 +91,13 @@
     s.bar.material.map.needsUpdate = true; s.bar.visible = true; s.barT = 4;
   }
   function combatFx(s, dmg, crit) {
-    if (!flashMat) flashMat = new THREE.MeshBasicMaterial({ color: 0xfff6d8, transparent: true, opacity: 0.95 });
+    if (!flashMat) flashMat = new THREE.MeshBasicMaterial({ color: 0x8a7a9a, transparent: true, opacity: 0.85 });   // 11/21 맞을 때 하얗게 번쩍이지 않고 잠깐 밝은 잿빛으로
     s.mesh.children.forEach(function (m) { if (m.material === shadowMat) m.material = flashMat; });
-    s.flashT = 0.12;
+    s.flashT = 0.1;
     hpBarDraw(s);
-    var top = s.y + HT * s.sp.h + 0.5, n = Math.round(dmg * 10) / 10;
-    floatText(s.x, top, s.z, (crit ? '✦ ' : '') + n, crit ? '#ffd23a' : '#ffffff', crit ? 0.8 : 0.6);
-    sparkle(s.x, s.y + 1.6 * s.sp.h, s.z, crit ? 0xffd23a : 0xfff0c0, crit ? 8 : 4, { size: 0.35, life: 0.5, v: 2.4, up: 0.8 });
+    var top = s.y + HT * s.sp.h + 1.1, n = Math.round(dmg * 10) / 10;   // 11/21 숫자는 이름표보다 위에, 0.6초
+    floatText(s.x, top, s.z, (crit ? '✦ ' : '') + n, crit ? '#ffd23a' : '#ffffff', crit ? 0.8 : 0.6, 0.6);
+    sparkle(s.x, s.y + 1.6 * s.sp.h, s.z, crit ? 0xffd23a : 0xfff0c0, crit ? 5 : 2, { size: 0.35, life: 0.5, v: 2.4, up: 0.8 });
     if (crit) { newsMark('crit'); tone('square', 520, 1040, 0.12, 0.04); vibrate('break'); if (s.hp <= 0) questEvent('crit'); }
   }
   function shadowFxStep(s, dt) {

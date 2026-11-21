@@ -316,6 +316,7 @@
     if (!client || !me || NET.chan) return;
     var ch = NET.chan = client.channel('ark-world', { config: { private: true, presence: { key: me.id }, broadcast: { self: false } } });
     ch.on('broadcast', { event: 'pos' }, function (r) { onPos(r.payload); })
+      .on('broadcast', { event: 'ping' }, function (r) { onPing(r.payload); })
       // 블록 바꿈은 휴대폰끼리 직접 주고받지 않고, 서버가 검사해서 받은 것만(DB 변경 알림)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ark_world_edits' }, function (r) { var w = r.new; if (w && w.user_id !== me.id) queueRemote(w.user_id, [w.x, w.y, w.z, w.id]); })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'ark_world_edits' }, function (r) { var w = r.new; if (w && w.user_id !== me.id) queueRemote(w.user_id, [w.x, w.y, w.z, w.id]); })
@@ -662,7 +663,10 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 10, NEWS = [
+  var NEWS_VER = 11, NEWS = [
+    ['ping', '📍', '모이기 표식', '위쪽 📍 표식(P)을 누르고 「여기로 와요·여기 도와줘요·여기 조심」 중 하나를 고르면, 보는 곳에 빛기둥이 서서 일행(일행이 없으면 친구)에게 45초 동안 보여요. 작은 지도에도 마름모로 나와요(느 4:20).', 0],
+    ['nightwatch', '🌅', '밤을 함께 지키기', '밤에 그림자를 물리치거나 방패로 불화살을 막으면, 새벽에 그 밤 동안 함께 한 일을 카드로 보여 줘요(느 4:17). 친구 곁에서 막으면 「함께 막았어요」가 떠요. 큰 그림자의 힘은 화면 위 한 줄로 보여요.', 0],
+    ['docks', '⚓', '섬 부두', '밧모섬과 멜리데섬 남쪽 물가에 나무 부두와 등불이 생겼어요 — 배를 타고 가서 내릴 곳을 멀리서도 찾을 수 있어요.', 0],
     ['equip', '🛡', '가방 방어구 칸', '가방 오른쪽 위에 방어구 칸(머리·몸·허리·발·방패)과 지금 내 모습이 보여요. 가방에서 투구·옷·방패를 누르고 빛나는 칸을 누르면 입고, 입은 칸을 누르면 벗어요. 방패를 입으면 1인칭 화면 왼쪽 아래에 방패가 보여요.', 158],
     ['boat', '⛵', '배', '고페르 나무 5 + 역청 칠한 나무 1로 배를 만들어요(창 6:14). 배를 들고 물 위를 누르면 띄워서 타요 — 헤엄보다 세 배 빨라 섬에 가기 좋아요. 물에서는 가만히 있으면 가라앉고, 점프를 누르면 떠올라요. 오래 잠기면 숨이 막혀요.', 291],
     ['bigworld', '🗺', '두 배로 넓어진 세상', '세상이 동쪽·남쪽으로 두 배 넓어졌어요. 눈 덮인 헐몬 산, 동쪽 큰 숲, 갈릴리 호수와 요단 강, 시내 산, 푸른 들판, 남쪽 큰 바다와 섬을 찾아가 보세요.', 0],
@@ -708,6 +712,7 @@
   var newsTold = false, newsT = 0;
   function newsTick() {   // 1초마다: 들어온 지 6초 뒤 한 번 알림
     if (newsTold || !started || ui !== 'play' || S.newsSeen === NEWS_VER) return;
+    if (tutorialStep < 9) return;   // 11/21 처음 안내가 끝난 뒤에 알림(화면을 한꺼번에 가리지 않게)
     if (++newsT < 6) return;
     newsTold = true; toast('✨ 새 기능 ' + NEWS.length + '가지 — 메뉴 → ✨ 새 기능');
   }

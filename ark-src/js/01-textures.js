@@ -646,7 +646,8 @@
           if (kind === 0) { a = y2; b = x2; } else if (kind === 1) { a = x2; b = y2; }
           else { var r = Math.hypot(x2 + 0.5 - C[0], y2 + 0.5 - C[1]); b = r - 0.5; a = Math.atan2(y2 + 0.5 - C[1], x2 + 0.5 - C[0]) * 8; if (b < 0 || b > 15.5) continue; }
           var tie = ((Math.floor(a) % 4) + 4) % 4 < 2 && b > 1 && b < 14.5, rail = Math.abs(b - 3.5) < 0.8 || Math.abs(b - 11.5) < 0.8;
-          if (rail) px(x2, y2, gold ? 0xe8c53a : 0xb9bec2, 0.9 + R() * 0.15); else if (tie) px(x2, y2, 0x7a5232, 0.85 + R() * 0.2);
+          if (rail) px(x2, y2, gold ? 0xe8c53a : 0xb9bec2, 0.9 + R() * 0.15); else if (gold && Math.abs(b - 7.5) < 1.1 && ((Math.floor(a) % 8) + 8) % 8 < 3) px(x2, y2, 0xffe27a, 1);   // 11/21 빠른 레일: 가운데 노란 표식(멀리서도 구분)
+          else if (tie) px(x2, y2, 0x7a5232, 0.85 + R() * 0.2);
         }
       });
     }

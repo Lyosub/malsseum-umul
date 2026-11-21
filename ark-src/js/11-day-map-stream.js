@@ -56,13 +56,14 @@
   function seasonIndex(){return Math.floor(dayT/DAY_LEN)%WEATHER.length;}
   function makeRainbow(){
     [0xdd746d,0xe5a966,0xe7d68a,0x93c78d,0x80abc8,0xb39ccc].forEach(function(color,i){
-      var points=[];
-      for(var k=0;k<=32;k++){
-        var angle=k*Math.PI/32,r=75-i*1.6;
-        points.push(new THREE.Vector3(Math.cos(angle)*r,Math.sin(angle)*r*.55,0));
+      var pos=[];   // 11/21 가는 선 대신 띠(두께 1.7)로 — 작은 화면에서도 보이게
+      for(var k=0;k<32;k++){
+        var a0=k*Math.PI/32,a1=(k+1)*Math.PI/32,r0=75-i*1.7,r1=r0-1.7;
+        var P0=[Math.cos(a0)*r0,Math.sin(a0)*r0*.55],P1=[Math.cos(a1)*r0,Math.sin(a1)*r0*.55],Q0=[Math.cos(a0)*r1,Math.sin(a0)*r1*.55],Q1=[Math.cos(a1)*r1,Math.sin(a1)*r1*.55];
+        pos.push(P0[0],P0[1],0,Q0[0],Q0[1],0,P1[0],P1[1],0, P1[0],P1[1],0,Q0[0],Q0[1],0,Q1[0],Q1[1],0);
       }
-      var line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),
-        new THREE.LineBasicMaterial({color:color,transparent:true,opacity:.46,depthWrite:false,fog:false}));
+      var gg=new THREE.BufferGeometry(); gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+      var line=new THREE.Mesh(gg,new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:.45,depthWrite:false,fog:false,side:THREE.DoubleSide}));
       line.visible=false;scene.add(line);rainbow.push(line);
     });
   }
@@ -142,7 +143,7 @@
     if (caveK > 0.01) scene.fog.color.lerp(C_CAVE, caveK * 0.9);
     if (heldMesh) heldMesh.material.color.setScalar(1 - caveK * 0.6);   // 굴 속에서는 손에 든 것도 어둡게
     avatarMat.color.setScalar(Math.max(0.32, LU.uDay.value) * (1 - caveK * 0.55));
-    cloudMat.color.setScalar(0.35 + 0.65 * dayF);
+    cloudMat.color.setRGB(0.30 + 0.65 * dayF, 0.345 + 0.61 * dayF, 0.45 + 0.475 * dayF); cloudMat.opacity = 0.6 + 0.28 * dayF;   // 11/21 밤 구름은 푸른 잿빛으로 옅게
     clouds.forEach(function (cl) {
       cl.position.x += dt * 1.5;
       if (cl.position.x - camera.position.x > 300) cl.position.x -= 600; else if (camera.position.x - cl.position.x > 300) cl.position.x += 600;
@@ -467,6 +468,7 @@
              Math.hypot(b.x - (P.x-ox)*scale, b.y - (P.z-oz)*scale);
     });
     shown = shown.slice(0, 48);
+    drawMapPings(ctx, big, ox, oz, scale);
     shown.forEach(function (dot) {
       ctx.beginPath(); ctx.arc(dot.x, dot.y, big ? 5 : 3, 0, Math.PI * 2);
       ctx.fillStyle = dot.color; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = '#26302a'; ctx.stroke();

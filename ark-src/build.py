@@ -21,7 +21,7 @@ PARTS = [
     '01-textures', '01b-sprites', '02-blocks', '03-world-gen', '04-mesh', '05-people-player',
     '06-bag-craft-sound', '07-screen-input-aim', '08-mine-place-save', '09-panels',
     '10-animals-cards-ride', '11-day-map-stream', '12-start', '13-life', '14-journey',
-    '15-together', '15b-adventure', '16-social-seasons',
+    '15-together', '15b-adventure', '15c-team', '16-social-seasons',
 ]
 
 

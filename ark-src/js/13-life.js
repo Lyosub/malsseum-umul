@@ -783,7 +783,7 @@
     var tag = textSprite(sp.name, 'rgba(0,0,0,0.55)', '#' + sp.eye.toString(16).padStart(6, '0'), 0.55); tag.position.y = HT * sp.h + 0.6; root.add(tag);
     var y = groundAt(x, z, SY - 3); if (y === null) y = P.y;
     root.position.set(x, y, z); scene.add(root);
-    return { kind: kind, sp: sp, mesh: root, x: x, y: y, z: z, hp: sp.hp, hitT: 0, t: Math.random() * 6, fade: 0, dead: false };
+    return { kind: kind, sp: sp, mesh: root, tag: tag, x: x, y: y, z: z, hp: sp.hp, hitT: 0, t: Math.random() * 6, fade: 0, dead: false };
   }
   function litNear(x, y, z, r) {
     for (var dz = -1; dz <= 1; dz++) for (var dx = -1; dx <= 1; dx++) {
@@ -886,6 +886,7 @@
       s.mesh.children.forEach(function (m) { if (m.material && m.material !== shadowMat) m.material.opacity = 1 - s.fade; });
       s.op = op;
     });
+    tidyShadowTags();
     if (SHADOWS.length) shadowMat.opacity = Math.max(0.15, Math.min.apply(null, SHADOWS.map(function (s) { return s.op; })));
     SHADOWS = SHADOWS.filter(function (s) { if (s.fade >= 1) { removeShadow(s); return false; } return true; });
   }
@@ -911,7 +912,7 @@
       dropItem(s.x, s.y + 1, s.z, SHARD, s.kind === 'great' ? 3 : 1);   // 빛 조각 — 횃불·등롱 재료
       if (!S.shardTold) { S.shardTold = 1; saveSettings(); setTimeout(function () { showVerseCard('✨', '빛 조각', '빛이 어둠에 비치되 어둠이 깨닫지 못하더라', '요한복음 1:5', '그림자를 물리친 자리에 빛 조각이 남았어요 — 주워서 횃불·등롱을 만들어요'); }, ACH.shadow ? 300 : 9500); }
       if (!ACH.shadow) { $('cardEmoji').textContent = '⚔'; $('cardName').textContent = '성령의 검'; $('cardText').textContent = '구원의 투구와 성령의 검 곧 하나님의 말씀을 가지라'; $('cardRef').textContent = '에베소서 6:17'; $('cardNew').textContent = '어둠의 그림자 「' + s.sp.name + '」을(를) 물리쳤어요'; $('card').classList.add('show'); clearTimeout(cardT); cardT = setTimeout(function () { $('card').classList.remove('show'); }, 9000); }
-      unlock('shadow');
+      unlock('shadow'); nightNote('shadow');
       partyAdd('shadows', 1);
       if (STORY.started) { STORY.s.shadows++; if (isNight()) STORY.s.night++; saveStory(); }
     }
@@ -997,7 +998,7 @@
           gone = true; var g = armorGuard(), dmg = Math.round(f.dmg * (1 - g)), sh = WORN.shield, fl = Math.hypot(f.vx, f.vz) || 1;
           var front = (-Math.sin(P.yaw)) * (-f.vx / fl) + (-Math.cos(P.yaw)) * (-f.vz / fl) > 0.3;
           var shBlock = armOf(sh, ARM_SHIELD0) >= 0 ? ARM_SHIELD_BLOCK[armOf(sh, ARM_SHIELD0)] : ({ 156: 0.5, 157: 0.75, 158: 1 }[sh] || 0);
-          if (sh && front && Math.random() < shBlock) { newsMark('shield'); vibrate('block'); sfx('place', 'metal'); burst(Math.floor(f.x), Math.floor(f.y), Math.floor(f.z), LAMP); var nowB = performance.now(); if (nowB - shieldToldT > 5000) { shieldToldT = nowB; toast(sh === 158 ? '🛡 믿음의 방패로 불화살을 막았어요 (엡 6:16)' : '🛡 ' + nameOf(sh) + '로 불화살을 막았어요'); } break; }
+          if (sh && front && Math.random() < shBlock) { newsMark('shield'); nightNote('block'); vibrate('block'); sfx('place', 'metal'); burst(Math.floor(f.x), Math.floor(f.y), Math.floor(f.z), LAMP); var nowB = performance.now(); if (nowB - shieldToldT > 5000) { shieldToldT = nowB; toast(sh === 158 ? '🛡 믿음의 방패로 불화살을 막았어요 (엡 6:16)' : '🛡 ' + nameOf(sh) + '로 불화살을 막았어요'); } break; }
           if (dmg > 0) hurtFaith(dmg, '「' + f.who + '」'); else if (vitalsOn()) toast('🛡 하나님의 전신 갑주가 불화살을 막아 주었어요 (엡 6:16)');
         }
       }

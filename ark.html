@@ -644,7 +644,11 @@
   .wslot.want { outline:2px solid #ffe27a; outline-offset:-2px; animation:eqWant 0.8s ease-in-out infinite alternate; } @keyframes eqWant { to { outline-color:#fff6c8; } }
   .eqe { display:block; height:26px; line-height:26px; font-size:16px; opacity:.35; text-align:center; }
   .eqme { flex:1; min-width:0; width:100%; height:212px; object-fit:contain; background:#000; }
-  .dhint { opacity:.8; font-size:11px; margin-top:6px; } .dempty { opacity:.8; padding:6px 2px; }
+  .dhint { opacity:.8; font-size:11px; margin-top:6px; }
+  #pingMenu { position:fixed; top:64px; right:8px; z-index:30; display:flex; flex-direction:column; gap:5px; width:190px; padding:8px; background:rgba(20,18,30,.88); border:2px solid #8b8b8b; color:#fff; font-size:13px; }
+  #pingMenu[hidden] { display:none; } #pingMenu .mc { height:40px; font-size:14px; text-align:left; padding:0 10px; } #pingMenu small { font-size:10px; opacity:.75; }
+  #bossBar { position:fixed; top:60px; left:50%; transform:translateX(-50%); z-index:25; width:min(320px, 60vw); text-align:center; color:#ffb070; font-size:13px; text-shadow:1px 1px 0 #000; pointer-events:none; }
+  #bossBar[hidden] { display:none; } #bossBar i { display:block; height:8px; margin-top:3px; background:rgba(0,0,0,.65); border:1px solid #000; } #bossBar s { display:block; height:100%; width:100%; background:linear-gradient(#ffb070,#ff7a2a); } .dempty { opacity:.8; padding:6px 2px; }
   .ddur { height:5px; background:#000; margin:4px 0; } .ddur s { display:block; height:100%; }
   #invName { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:18px; }
   .bagEmpty { grid-column:1 / -1; font-size:12px; color:#eee; padding:12px 6px; }
@@ -708,6 +712,7 @@
 <div id="topRight" class="hud">
   <button id="qMini" class="mc ibtn lbl" aria-label="안내 펴기"><span>📜</span><small>안내</small></button>
   <button id="btnFold" class="mc ibtn lbl" aria-label="버튼 접기"><span>▶</span><small>접기</small></button>
+  <button id="btnPing" class="mc ibtn lbl" aria-label="모이기 표식 (P)"><span>📍</span><small>표식<b class="k">P</b></small></button>
   <button id="btnChat" class="mc ibtn lbl" aria-label="채팅 (T)"><span>💬</span><small>채팅<b class="k">T</b></small></button>
   <button id="btnBag" class="mc ibtn lbl" aria-label="가방·만들기 (E)"><span>🎒</span><small>가방<b class="k">E</b></small></button>
   <button id="btnLook" class="mc ibtn lbl" aria-label="내 모습·옷 (C)"><span>👤</span><small>옷<b class="k">C</b></small></button>
@@ -715,6 +720,8 @@
   <button id="btnRotate" class="mc ibtn lbl" aria-label="가로·세로 바꾸기"><span>🔄</span><small>화면</small></button>
   <button id="btnPause" class="mc ibtn lbl" aria-label="게임 메뉴 (Esc)"><span>❚❚</span><small>메뉴<b class="k">Esc</b></small></button>
 </div>
+<div id="pingMenu" class="hud" hidden><b>📯 모이기 표식 <small>(느 4:20)</small></b><button class="mc" data-k="come">📍 여기로 와요</button><button class="mc" data-k="help">🙋 여기 도와줘요</button><button class="mc" data-k="warn">⚠️ 여기 조심</button><small>보는 곳에 찍혀요 · 일행(없으면 친구)에게 45초</small></div>
+<div id="bossBar" class="hud" hidden><span>큰 그림자</span><i><s id="bossFill"></s></i></div>
 <div id="mapCap" class="hud sh">지도<b class="k">M</b></div>
 <div id="keys" class="hud">
   <div class="kt">⌨ 조작 키 <b>H</b> 숨기기</div>
@@ -1063,6 +1070,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=8c6f10e9a4"></script>
+<script src="assets/ark-game.js?v=666ff523dc"></script>
 </body>
 </html>

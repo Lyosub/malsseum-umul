@@ -165,7 +165,7 @@
     fpShield.visible = !!id && !furnitureRest;
     if (!fpShield.visible) return;
     fpShieldMat.color.copy(avatarMat.color);
-    fpShield.position.set(-0.74, -0.6 + bob * 0.3 + sw * 0.02, -1.08);
+    fpShield.position.set(-0.7, -0.7 + bob * 0.3 + sw * 0.02, -1.1); fpShield.scale.setScalar(isTouch ? 0.72 : 0.85);   // 11/21 작게·아래로(방향키·하트와 덜 겹치게)
     fpShield.rotation.set(0.05, 0.32, 0.04);
   }
   // ───────── 플레이어 ─────────

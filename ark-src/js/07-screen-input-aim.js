@@ -236,7 +236,8 @@
       keys[e.code] = true;
       if (e.code === 'Space' && !e.repeat) jumpPress();
       if (e.code === 'KeyF') toggleFly();
-      if (e.code === 'KeyG' && ui === 'play' && !e.repeat) waveHand();   // G: 손 흔들기
+      if (e.code === 'KeyG' && ui === 'play' && !e.repeat) waveHand();
+      if (e.code === 'KeyP' && ui === 'play' && !e.repeat) togglePingMenu();   // 11/21 P: 모이기 표식   // G: 손 흔들기
       if (e.code === 'KeyQ' && ui === 'play' && !e.repeat) throwItem(HOTBAR[sel], e.shiftKey ? Math.min(64, have(HOTBAR[sel])) : 1);   // Q 버리기, Shift+Q 모두
       if (e.code === 'KeyG' && !e.repeat) rotateBuild();
       if (e.code === 'KeyZ' && !e.repeat) undoBuild();

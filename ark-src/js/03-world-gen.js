@@ -544,6 +544,18 @@
       for (var j = 0; j < 4; j++) setRaw(sx + 7, sh + 1 + j, sz, LOG);
       setRaw(sx + 7, sh + 5, sz + 1, WOOL_W); setRaw(sx + 7, sh + 4, sz + 1, WOOL_W);
     }
+    // 11/21 배 대는 부두(GPT 검토 27): 밧모·멜리데 남쪽 물가에도 — 배를 타고 가서 내릴 곳이 멀리서 보이게(나무 데크 + 등불 + 청색 깃 기둥)
+    [[P0[1], P0[2], P0[3]], [M0[1] - 30, M0[2], M0[3]]].forEach(function (q) {
+      if (!near(q[0], q[1] + q[2], q[2] + 20)) return;
+      var dx0 = q[0], zs = null;
+      for (var z = q[1]; z < q[1] + q[2] * 2; z++) { terrain(dx0, z); if (T.h < G) { zs = z; break; } }
+      if (zs === null || !near(dx0, zs + 4, 10)) return;
+      for (var k = -2; k < 9; k++) {
+        var zz = zs + k; for (var ddx = -1; ddx <= 1; ddx++) setRaw(dx0 + ddx, G, zz, GOPHER);
+        if (k % 4 === 0 || k === 8) { setRaw(dx0 - 2, G, zz, LOG); setRaw(dx0 - 2, G + 1, zz, FENCE); setRaw(dx0 - 2, G + 2, zz, LAMP); setRaw(dx0 + 2, G, zz, LOG); for (var yy = G - 4; yy < G; yy++) { setRaw(dx0 - 1, yy, zz, LOG); setRaw(dx0 + 1, yy, zz, LOG); } }
+      }
+      for (var yb = 1; yb <= 3; yb++) setRaw(dx0 + 2, G + yb, zs + 8, yb === 3 ? WOOL_B : FENCE);
+    });
     // 구브로: 남쪽 물가로 나온 나무 부두와 등불
     if (near(C0[1], C0[2] + 150, 24)) {
       var cx2 = C0[1], cz2 = C0[2] + 128;
