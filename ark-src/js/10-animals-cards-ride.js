@@ -290,7 +290,7 @@
       if (held === COMPASS) return { label: '방향 보기' };
       if (held === SHOFAR) return { label: '나팔 불기' };
       if (held === SLING) return { label: '물매 연습' };
-      if (isBowId(held)) return { label: '꾹 눌러 활 당기기' };
+      if (isBowId(held)) return { label: '꾹 눌러 활 당기기' };   // 화면도 0.25초 가만히 누르면 당김
       if (isSlingId(held)) return { label: '물매 던지기' };
       if (held === BOAT) return { label: '배 띄우기' };
     }

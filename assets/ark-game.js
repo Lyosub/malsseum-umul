@@ -3609,7 +3609,9 @@
         // 걷기는 왼쪽 아래 방향키로 하고, 화면은 어디를 끌어도 둘러보기
         if (!tLook) {
           tLook = { id: t.identifier, lx: t.clientX, ly: t.clientY, t0: performance.now(), moved: 0 };
-          if (isBowId(HOTBAR[sel]) && have(HOTBAR[sel]) > 0 && bowStart()) tLook.bow = true;   // 활: 누르고 있는 동안 당김(끌어서 겨눔), 떼면 쏨
+          if (isBowId(HOTBAR[sel]) && have(HOTBAR[sel]) > 0) {   // 11/21 활: 끌면 둘러보기만. 손가락을 0.25초 가만히 대고 있으면 그때부터 당김(끌어서 겨눔), 떼면 쏨
+            var tl = tLook; tl.bowWait = setTimeout(function () { tl.bowWait = 0; if (tLook === tl && tl.moved < 12 && ui === 'play' && bowStart()) tl.bow = true; }, 250);
+          }
           else hold = { x: t.clientX, y: t.clientY, t0: performance.now(), dug: false };
         }
       }
@@ -3639,7 +3641,9 @@
         var t = e.changedTouches[i];
         if (tMove && t.identifier === tMove.id) { tMove = null; joy.x = joy.y = 0; stickHome(); }
         else if (tLook && t.identifier === tLook.id) {
+          if (tLook.bowWait) { clearTimeout(tLook.bowWait); tLook.bowWait = 0; }
           if (tLook.bow) { if (e.type === 'touchend' && ui === 'play') bowRelease(screenDir()); else bowCancel(); stopHold(); tLook = null; continue; }
+          if (isBowId(HOTBAR[sel])) { stopHold(); tLook = null; continue; }   // 활을 든 채 끌거나 톡 치면 쏘지 않음
           var tap = tLook.moved < 12 && performance.now() - tLook.t0 < 260 && hold && !hold.dug;
           if (e.type === 'touchend' && ui === 'play' && tap) tapAt(tLook.lx, tLook.ly);
           stopHold(); tLook = null;
@@ -5661,7 +5665,7 @@
       if (held === COMPASS) return { label: '방향 보기' };
       if (held === SHOFAR) return { label: '나팔 불기' };
       if (held === SLING) return { label: '물매 연습' };
-      if (isBowId(held)) return { label: '꾹 눌러 활 당기기' };
+      if (isBowId(held)) return { label: '꾹 눌러 활 당기기' };   // 화면도 0.25초 가만히 누르면 당김
       if (isSlingId(held)) return { label: '물매 던지기' };
       if (held === BOAT) return { label: '배 띄우기' };
     }
@@ -9317,7 +9321,8 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 18, NEWS = [
+  var NEWS_VER = 19, NEWS = [
+    ['bowtouch', '🏹', '활: 둘러볼 때는 쏘지 않아요', '휴대폰에서 활을 들고 화면을 끌면 둘러보기만 해요. 쏘려면 화면을 0.25초 가만히 누르고 있다가(당기는 막대가 나와요) 끌어서 겨눈 뒤 떼거나, 오른쪽 「꾹 눌러 활 당기기」 버튼을 누르고 있다가 떼요.', 0],
     ['respawn', '🏠', '다시 일어나기', '쓰러지거나 유혹에 넘어지면 「다시 일어나기」 화면이 나와요. 내 침대에 한 번이라도 누웠으면 그 침대에서, 아니면 내 집 둘레 어딘가(12~28칸)에서, 땅이 없으면 마을 처음 자리에서 일어나요. 가진 것은 그대로예요.', 0],
     ['farm2', '🐔', '돼지·닭과 새끼들', '들판에 돼지(눅 15:16)와 닭(마 23:37)이 생겼어요. 들에는 새끼들도 따로 거닐다가 5분 뒤 다 자라요. 새끼도 잡을 수 있지만 조금만 나와요. 이제 모든 짐승이 밀을 먹으면 새끼를 낳아요(닭은 밀 씨도). 짐승을 잡으면 고기·털·가죽·깃털·뼈가 하나하나 확률로 나와요(아무것도 안 나올 때도 있어요). 뼈로는 화살을 만들고, 깃털을 달면 화살을 두 배로 만들어요. 구운 고기는 회복이 달라요: 소 기운 10·체력 7 / 양 8·5 / 염소 7·4 / 닭 6·3 / 생선 5·2. 돼지는 고기 대신 가죽이 나와요(레 11:7).', 0],
     ['hunt', '🍖', '짐승 잡기·굽기', '양·염소·소·말·나귀·낙타·토끼를 칼로 치면 달아나다가 잡혀요. 양은 양고기·양털, 염소는 염소고기·가죽, 소는 소고기·가죽, 말·나귀·낙타는 가죽이 무작위로 나와요(창 9:3, 레 11:4). 고기는 모닥불(돌 3 + 통나무 2)이나 화덕과 솥 가까이에서 석탄·숯·통나무를 땔감으로 「녹이기·굽기」에서 구워 먹으면 기운과 체력이 차요. 안장 얹은 짐승·기르는 짐승·새끼는 잡을 수 없어요. 양털로는 침대·양털 블록·실·옷을 만들어요.', 0],

@@ -281,7 +281,9 @@
         // 걷기는 왼쪽 아래 방향키로 하고, 화면은 어디를 끌어도 둘러보기
         if (!tLook) {
           tLook = { id: t.identifier, lx: t.clientX, ly: t.clientY, t0: performance.now(), moved: 0 };
-          if (isBowId(HOTBAR[sel]) && have(HOTBAR[sel]) > 0 && bowStart()) tLook.bow = true;   // 활: 누르고 있는 동안 당김(끌어서 겨눔), 떼면 쏨
+          if (isBowId(HOTBAR[sel]) && have(HOTBAR[sel]) > 0) {   // 11/21 활: 끌면 둘러보기만. 손가락을 0.25초 가만히 대고 있으면 그때부터 당김(끌어서 겨눔), 떼면 쏨
+            var tl = tLook; tl.bowWait = setTimeout(function () { tl.bowWait = 0; if (tLook === tl && tl.moved < 12 && ui === 'play' && bowStart()) tl.bow = true; }, 250);
+          }
           else hold = { x: t.clientX, y: t.clientY, t0: performance.now(), dug: false };
         }
       }
@@ -311,7 +313,9 @@
         var t = e.changedTouches[i];
         if (tMove && t.identifier === tMove.id) { tMove = null; joy.x = joy.y = 0; stickHome(); }
         else if (tLook && t.identifier === tLook.id) {
+          if (tLook.bowWait) { clearTimeout(tLook.bowWait); tLook.bowWait = 0; }
           if (tLook.bow) { if (e.type === 'touchend' && ui === 'play') bowRelease(screenDir()); else bowCancel(); stopHold(); tLook = null; continue; }
+          if (isBowId(HOTBAR[sel])) { stopHold(); tLook = null; continue; }   // 활을 든 채 끌거나 톡 치면 쏘지 않음
           var tap = tLook.moved < 12 && performance.now() - tLook.t0 < 260 && hold && !hold.dug;
           if (e.type === 'touchend' && ui === 'play' && tap) tapAt(tLook.lx, tLook.ly);
           stopHold(); tLook = null;
