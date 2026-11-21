@@ -856,7 +856,8 @@
     wasNight = night;
   }
   function nearSafeHome(x, z) { if (!homeSafe || myPlot < 0) return false; var o = plotOrigin(myPlot); return x >= o.x - 10 && x < o.x + PLOT + 10 && z >= o.z - 10 && z < o.z + PLOT + 10; }
-  function safeZone(x, z) { return nearSafeHome(x, z) || inTown(x, z) || inCommons(x, z) || plotAt(x, z) >= 0 || inArk(x, G + 2, z) || inCity(x, z) || !!inLandmark(x, z); }
+  // 11/21: 밤에는 마을 마당·방주 둘레·명소 둘레에도 그림자가 나와요 — 방주 안·명소 안·성읍 성벽 안·땅(내 땅·공동 터)은 그대로 안전
+  function safeZone(x, z) { return nearSafeHome(x, z) || inCommons(x, z) || plotAt(x, z) >= 0 || inArk(x, G + 2, z) || cityInside(x, z) || !!landmarkAt(x, z, 0); }
   function removeShadow(s) {
     var materials = new Set();
     s.mesh.traverse(function (o) {
@@ -878,7 +879,7 @@
     if (shadowT <= 0) {
       var inDun = inDungeon(px, Math.floor(P.y), pz);   // 골짜기: 더 자주, 더 많이, 큰 그림자도
       shadowT = inDun ? 1.5 + Math.random() * 2 : 4 + Math.random() * 5;
-      if ((dark || inDun) && ui === 'play' && SHADOWS.length < (inDun ? 8 : 4) && !safeZone(px, pz) && !riding) {
+      if ((dark || inDun) && ui === 'play' && SHADOWS.length < (inDun ? 8 : 4) && !safeZone(px, pz) && !riding && !(inTown(px, pz) && tutorialStep < 9)) {
         var ang = Math.random() * Math.PI * 2, d = inDun ? 8 + Math.random() * 10 : 14 + Math.random() * 8, sx = P.x + Math.cos(ang) * d, sz = P.z + Math.sin(ang) * d;
         if (inDun) {   // 미로: 가까운 칸(2~3칸 떨어진) 한가운데에서
           var ci = Math.floor((P.x - DUN.x0) / DUN.cs) + (Math.random() < 0.5 ? -1 : 1) * (2 + (Math.random() * 2 | 0)), cj = Math.floor((P.z - DUN.z0) / DUN.cs) + ((Math.random() * 5 | 0) - 2);
@@ -887,10 +888,11 @@
         }
         var gy = cave || inDun ? null : groundAt(sx, sz, SY - 3);
         if (cave || inDun) { for (var yy = Math.floor(P.y) + 3; yy > Math.floor(P.y) - 6; yy--) if (!isSolid(get(Math.floor(sx), yy, Math.floor(sz))) && !isSolid(get(Math.floor(sx), yy + 1, Math.floor(sz))) && isSolid(get(Math.floor(sx), yy - 1, Math.floor(sz)))) { gy = yy; break; } }
-        if (gy !== null && !safeZone(Math.floor(sx), Math.floor(sz)) && !litNear(Math.floor(sx), gy, Math.floor(sz), 7) && get(Math.floor(sx), gy, Math.floor(sz)) !== WATER) {
+        var onRoof = gy !== null && !cave && !inDun && !(isSolid(get(Math.floor(sx), gy - 2, Math.floor(sz))) && isSolid(get(Math.floor(sx), gy - 3, Math.floor(sz))));   // 집 지붕 위(아래가 빈 방)는 빼요
+        if (gy !== null && !onRoof && !safeZone(Math.floor(sx), Math.floor(sz)) && !litNear(Math.floor(sx), gy, Math.floor(sz), 7) && get(Math.floor(sx), gy, Math.floor(sz)) !== WATER) {
           var keys2 = Object.keys(SH_KINDS).filter(function (k) { return k !== 'great'; }), kk = inDun && Math.random() < 0.4 ? 'great' : keys2[Math.random() * keys2.length | 0];
           var s = makeShadow(kk, sx, sz); s.y = gy; s.mesh.position.y = gy; SHADOWS.push(s);
-          if (!shadowTold) { shadowTold = true; toast('어둠 속에 그림자가 있어요 — 횃불을 들거나, 칼·성령의 검으로 물리쳐요(엡 6:17). 마을과 불빛 곁은 안전해요'); }
+          if (!shadowTold) { shadowTold = true; toast('어둠 속에 그림자가 있어요 — 횃불을 들거나, 칼·성령의 검으로 물리쳐요(엡 6:17). 불빛 곁·방주 안·명소 안은 안전해요'); }
         }
       }
     }
