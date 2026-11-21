@@ -33,15 +33,6 @@
     <div class="hand-note">놀면서 자라는<br>믿음의 하루!</div>
   </div>
 
-  <!-- 가을 원정대 (11/8 중등부 가을 야유회 미션) — 10/25 01:00~11/15에만 보인다(관리자 계정은 그 전에도). 그 전에는 팀 코드로 들어와 본 휴대폰에만 -->
-  <div class="feature-card" id="expeditionCard" style="display:none;background-image:linear-gradient(150deg,#e0812a 0%,#b8481f 60%,#6e2a10 100%);box-shadow:0 14px 30px rgba(184,72,31,.28);margin-bottom:16px;">
-    <img class="fc-art" src="assets/picnic/card.png" alt="" onerror="this.remove()">
-    <p class="fc-kicker" style="color:#f2b544;opacity:1;">중등부 가을 야유회 · 11/8 서울대공원</p>
-    <h2>🍁 가을 원정대</h2>
-    <p>팀 코드로 들어와서<br>우리 팀 미션을 함께 해요!</p>
-    <a href="expedition.html" class="pill-lime" style="background:#f2b544;color:#3a1d07;">원정 떠나기 ›</a>
-  </div>
-
   <!-- 감사의 광주리 (추수감사 행사) — 행사가 끝날 때까지 보인다(시작 전에는 안내용). assets/harvest.js -->
   <div class="feature-card" id="harvestLink" data-show="block" style="display:none;background-image:linear-gradient(150deg,#7c8a2e 0%,#4f6420 58%,#2a3a12 100%);box-shadow:0 14px 30px rgba(79,100,32,.28);margin-bottom:16px;">
     <div class="fc-art" data-basket aria-hidden="true" style="width:132px;right:6px;bottom:6px;"></div>
@@ -168,20 +159,8 @@
 <script>
   initHeaderAuthState();
   (function () {
-    var card = document.getElementById("expeditionCard");
-    if (!card) return;
+    // 11/21 가을 원정대 카드는 행사가 끝나 놀이터에서 뺌(expedition.html 기록 화면은 그대로)
     if (window.fillHarvestLink) window.fillHarvestLink(document.getElementById("harvestLink"));
-    var now = Date.now(), joined = false;
-    try { joined = !!(JSON.parse(localStorage.getItem("msu_expedition_autumn2026") || "{}") || {}).code; } catch (e) {}
-    if (joined || (now >= new Date("2026-10-25T01:00:00+09:00").getTime() && now < new Date("2026-11-16T00:00:00+09:00").getTime())) { card.style.display = "block"; return; }
-    // 그 전에도 관리자 계정에는 미리 보여 준다(DB 함수 can_see_expedition)
-    if (typeof getClient !== "function" || !getClient()) return;
-    getSession().then(function (session) {
-      if (!session) return;
-      getClient().rpc("can_see_expedition").then(function (res) {
-        if (res && res.data === true) card.style.display = "block";
-      });
-    });
   })();
   // In Odyssey 카드: 2026-10-04 19:30(KST)부터 누구에게나 보여 준다(로그인하지 않으면 게임 안에서 조작 연습까지만).
   // 그 전에는 관리자 + 시험 참여로 지정한 학생에게만(DB 함수 can_see_odyssey).
