@@ -621,7 +621,8 @@
     $('mShadow').textContent = '어둠의 그림자: ' + (S.shadows === false ? '안 나옴' : '나옴');
     $('mAutoJump').textContent = '자동 점프: ' + (S.autoJump === false ? '끔' : '켬');
     $('mAim').textContent = '겨누기: ' + (S.aim === 'cross' ? '가운데 십자선' : '손가락 자리');
-    $('mSensLabel').textContent = '둘러보기 속도: ' + Math.round(S.sens * 100) + '%';
+    var sp = Math.round(S.sens * 100);
+    $('mSensLabel').textContent = '🎯 감도 ' + sp + '% · ' + (sp < 70 ? '느리게' : sp <= 130 ? '보통' : sp <= 200 ? '빠르게' : '아주 빠르게');
     $('mSens').value = Math.round(S.sens * 100);
     document.body.classList.toggle('aimcross', S.aim === 'cross');
   }
@@ -661,8 +662,7 @@
         together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch', 'mFeedbackAdmin'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
-      var sl = grid.querySelector('.slider'); if (sl) sl.setAttribute('data-g', 'settings');
-      Array.prototype.forEach.call(grid.children, function (el) { if (!el.hasAttribute('data-g') && el.id !== 'mResume' && el.tagName !== 'A') el.setAttribute('data-g', 'game'); });
+      Array.prototype.forEach.call(grid.children, function (el) { if (!el.hasAttribute('data-g') && el.id !== 'mResume' && !el.classList.contains('sensBox') && el.tagName !== 'A') el.setAttribute('data-g', 'game'); });
       var tabs = document.createElement('div'); tabs.id = 'pauseTabs';
       function pick(g) {
         S.pauseTab = g; Array.prototype.forEach.call(grid.children, function (el) { el.classList.toggle('gon', el.getAttribute('data-g') === g); });
@@ -763,6 +763,10 @@
     on('mSound', function () { S.sound = !S.sound; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mAim', function () { S.aim = S.aim === 'cross' ? 'finger' : 'cross'; saveSettings(); updateMenuLabels(); sfx('click'); });
     $('mSens').addEventListener('input', function () { S.sens = +this.value / 100; saveSettings(); updateMenuLabels(); });
+    function sensStep(d) { S.sens = Math.max(0.2, Math.min(3, Math.round((S.sens + d) * 20) / 20)); saveSettings(); updateMenuLabels(); sfx('click'); }   // 11/21 아이들이 감도를 쉽게: −·+ 10%씩, 「보통」은 100%
+    $('mSensDn').addEventListener('click', function () { sensStep(-0.1); });
+    $('mSensUp').addEventListener('click', function () { sensStep(0.1); });
+    $('mSensReset').addEventListener('click', function () { S.sens = 1; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('bookDone', function () { closePanel(); });
     on('helpDone', function () { closePanel(); });
     on('invDone', function () { closePanel(); });

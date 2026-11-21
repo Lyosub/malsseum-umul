@@ -311,6 +311,7 @@
   .slider label { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:15px; color:#e0e0e0; text-shadow:2px 2px 0 #383838; pointer-events:none; }
   .slider input { -webkit-appearance:none; appearance:none; width:100%; height:100%; background:transparent; margin:0; }
   .slider input::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:36px; background:#c6c6c6; border:2px solid #000; box-shadow:inset -2px -2px 0 #555, inset 2px 2px 0 #fff; }
+  .sensBox { grid-column:1 / -1; display:flex; gap:6px; align-items:stretch; } .sensBox .slider { flex:1; grid-column:auto; } .sensBox .mc { flex:none; min-width:46px; padding:0 8px; height:auto; font-size:18px; } .sensBox #mSensReset { font-size:14px; }
   .slider input::-moz-range-thumb { width:14px; height:36px; background:#c6c6c6; border:2px solid #000; border-radius:0; }
 
   /* 첫 화면 */
@@ -802,6 +803,7 @@
   <div class="grid3">
     <button id="mResume" class="mc wide">게임으로 돌아가기</button>
     <div id="goalCard" class="goalCard"></div>
+    <div class="sensBox"><button id="mSensDn" class="mc" aria-label="감도 낮추기">−</button><div class="slider"><input id="mSens" type="range" min="20" max="300" step="5" value="100" aria-label="감도(둘러보기 속도)"><label id="mSensLabel">🎯 감도: 100%</label></div><button id="mSensUp" class="mc" aria-label="감도 높이기">+</button><button id="mSensReset" class="mc">보통</button></div>
     <button id="mBook" class="mc">📜 창세기 6장</button>
     <button id="mHelp" class="mc">조작 방법</button>
     <button id="mTour" class="mc">🧭 화면 안내 다시 보기</button>
@@ -836,9 +838,7 @@
     <button id="mLake" class="mc">🌊 남쪽 호수</button>
     <button id="mMap" class="mc">🗺 지도</button>
     <button id="mMapVisible" class="mc">지도에 내 위치: 표시</button>
-    <button id="mLook" class="mc">👤 내 모습·옷</button>
     <button id="mAim" class="mc">겨누기: 손가락 자리</button>
-    <div class="slider"><input id="mSens" type="range" min="40" max="200" step="5" value="100" aria-label="둘러보기 속도"><label id="mSensLabel">둘러보기 속도: 100%</label></div>
     <a class="mc wide" href="index.html" style="text-decoration:none">말씀우물로 나가기</a>
   </div>
 </div>
@@ -1071,6 +1071,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=702cb00316"></script>
+<script src="assets/ark-game.js?v=17cfa946d3"></script>
 </body>
 </html>

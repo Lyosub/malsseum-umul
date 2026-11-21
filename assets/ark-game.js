@@ -5149,7 +5149,8 @@
     $('mShadow').textContent = '어둠의 그림자: ' + (S.shadows === false ? '안 나옴' : '나옴');
     $('mAutoJump').textContent = '자동 점프: ' + (S.autoJump === false ? '끔' : '켬');
     $('mAim').textContent = '겨누기: ' + (S.aim === 'cross' ? '가운데 십자선' : '손가락 자리');
-    $('mSensLabel').textContent = '둘러보기 속도: ' + Math.round(S.sens * 100) + '%';
+    var sp = Math.round(S.sens * 100);
+    $('mSensLabel').textContent = '🎯 감도 ' + sp + '% · ' + (sp < 70 ? '느리게' : sp <= 130 ? '보통' : sp <= 200 ? '빠르게' : '아주 빠르게');
     $('mSens').value = Math.round(S.sens * 100);
     document.body.classList.toggle('aimcross', S.aim === 'cross');
   }
@@ -5189,8 +5190,7 @@
         together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch', 'mFeedbackAdmin'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
-      var sl = grid.querySelector('.slider'); if (sl) sl.setAttribute('data-g', 'settings');
-      Array.prototype.forEach.call(grid.children, function (el) { if (!el.hasAttribute('data-g') && el.id !== 'mResume' && el.tagName !== 'A') el.setAttribute('data-g', 'game'); });
+      Array.prototype.forEach.call(grid.children, function (el) { if (!el.hasAttribute('data-g') && el.id !== 'mResume' && !el.classList.contains('sensBox') && el.tagName !== 'A') el.setAttribute('data-g', 'game'); });
       var tabs = document.createElement('div'); tabs.id = 'pauseTabs';
       function pick(g) {
         S.pauseTab = g; Array.prototype.forEach.call(grid.children, function (el) { el.classList.toggle('gon', el.getAttribute('data-g') === g); });
@@ -5291,6 +5291,10 @@
     on('mSound', function () { S.sound = !S.sound; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('mAim', function () { S.aim = S.aim === 'cross' ? 'finger' : 'cross'; saveSettings(); updateMenuLabels(); sfx('click'); });
     $('mSens').addEventListener('input', function () { S.sens = +this.value / 100; saveSettings(); updateMenuLabels(); });
+    function sensStep(d) { S.sens = Math.max(0.2, Math.min(3, Math.round((S.sens + d) * 20) / 20)); saveSettings(); updateMenuLabels(); sfx('click'); }   // 11/21 아이들이 감도를 쉽게: −·+ 10%씩, 「보통」은 100%
+    $('mSensDn').addEventListener('click', function () { sensStep(-0.1); });
+    $('mSensUp').addEventListener('click', function () { sensStep(0.1); });
+    $('mSensReset').addEventListener('click', function () { S.sens = 1; saveSettings(); updateMenuLabels(); sfx('click'); });
     on('bookDone', function () { closePanel(); });
     on('helpDone', function () { closePanel(); });
     on('invDone', function () { closePanel(); });
@@ -9195,7 +9199,8 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 14, NEWS = [
+  var NEWS_VER = 15, NEWS = [
+    ['sens', '🎯', '감도(화면 돌리는 빠르기)', '게임 메뉴(⏸) 맨 위에서 감도를 바꿀 수 있어요. 막대를 밀거나 − + 를 누르면 10%씩, 「보통」을 누르면 처음대로(100%). 20%~300%까지 돼요.', 0],
     ['townnight', '🌙', '밤에는 마을에도 그림자가', '밤이 되면 마을 마당·방주 둘레·명소 둘레의 어두운 곳에도 그림자가 나와요. 방주 안, 명소 안, 성읍 성벽 안, 불빛 곁은 그대로 안전해요. 내 땅·친구 땅·공동 터에는 그림자가 생겨나지 않지만 밖에서 걸어 들어올 수는 있어요 — 지붕 있는 집 안으로는 못 들어와요. 땅 둘레를 횃불로 밝혀 「🏠 안전한 집」을 만들어 봐요.', 0],
     ['playspots', '🎲', '함께 하는 놀이 다섯 곳', '① 개척지 서쪽 수로 시험: 수문 열기와 지렛대 신호를 10초 안에 맞추면 밭에 물이 흘러요(전 4:9). ② 함께 짓는 터 남쪽 연습 구획: 빛나는 칸 12개를 채우면 벽 완성, 블록은 돌려받아요(느 2:18). ③ 마을 동쪽 양 우리: 목자 말뚝을 누르고 양 두 마리를 2분 안에 데려와요(눅 15:6). ④ 동쪽 사막 레일: 서쪽 정거장에서 짐을 싣고 동쪽 정거장에 내려놓아요(갈 6:2). ⑤ 전시 마당 말뚝에서 친구들 집 구경. 친구와 함께 하면 보상이 더 커요.', 0],
     ['cavemark', '↩️', '동굴 길 표식', '📍 표식에 「돌아가는 길」「물가」가 생겼어요 — 동굴에서 일행이 길을 잃지 않게 한 사람이 4개까지, 10분 동안 보여요.', 0],
