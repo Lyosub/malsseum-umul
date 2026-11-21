@@ -107,6 +107,11 @@
     </section>
 
     <section class="hv-section">
+      <div class="hv-section-head"><h2>함께 채우는 우물</h2></div>
+      <div id="wellFill"></div>
+    </section>
+
+    <section class="hv-section">
       <div class="hv-section-head"><h2>함께 나누기</h2></div>
       <div class="hv-share">
         <a href="mypage.html?open=greeting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-8-4.900L3 21l4.900-1a9 9 0 0 0 4.100 1Z"/></svg>하루 인사</a>
@@ -165,6 +170,7 @@
   성경 인용: 개역개정판, ⓒ 대한성서공회
 </footer>
 <script src="assets/qt-data.js"></script>
+<script src="assets/well-fill.js"></script>
 <script src="assets/verses-data.js"></script>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
@@ -180,6 +186,7 @@
 <script>
   initHomeCard();
   initHeaderAuthState();
+  if (window.initWellFill) initWellFill("wellFill");
   initPublicFeed();
 </script>
 <script src="assets/home-v2.js"></script>
