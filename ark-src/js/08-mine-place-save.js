@@ -536,7 +536,7 @@
   function dropAway(o) { if (o.m) { scene.remove(o.m); o.m = null; } o.dead = true; }
   function collectAll() { DROPS.forEach(function (o) { if (Math.hypot(o.x - P.x, o.z - P.z) < 2.5) collectDrop(o, true); }); DROPS = []; bagChanged(); }   // 나갈 때도 발밑 것만
   window.addEventListener('pagehide', function () { if (DROPS.length) collectAll(); });
-  // ── 버리기·줍기: 버린 물건은 근처 사람 모두에게 보이고 먼저 닿는 사람이 줍는다(서버 ark_drops, 15분 뒤 사라짐) ──
+  // ── 버리기·줍기: 버린 물건은 근처 사람 모두에게 보이고 먼저 닿는 사람이 줍는다(서버 ark_drops, 5분 뒤 사라짐) ──
   var SDROPS = {}, sdropAt = 0, sdropBusy = false, takeBusy = {};
   function throwItem(id, n) {
     if (!id || INV.indexOf(id) < 0) { toast('버릴 것을 골라요'); return; }
@@ -564,7 +564,7 @@
     var ix = Math.floor(d.x), iz = Math.floor(d.z), gy = d.y;
     for (var yy = Math.min(SY - 1, Math.floor(d.y)); yy > YMIN; yy--) { if (isSolid(get(ix, yy - 1, iz))) { gy = yy + 0.18; break; } }
     m.position.set(d.x, gy, d.z); scene.add(m);
-    SDROPS[d.id] = { id: d.id, item: d.item, n: d.amount, x: d.x, y: gy, z: d.z, m: m, hold: d.mine ? performance.now() + 3000 : 0, rot: Math.random() * 6, fullT: 0 };
+    SDROPS[d.id] = { id: d.id, item: d.item, n: d.amount, x: d.x, y: gy, z: d.z, m: m, hold: d.mine ? performance.now() + 3000 : 0, rot: Math.random() * 6, fullT: 0, born: performance.now() - (d.age_s || 0) * 1000 };
   }
   function removeSDrop(id) { var s = SDROPS[id]; if (!s) return; if (s.m) scene.remove(s.m); delete SDROPS[id]; }
   function fetchSDrops() {
@@ -582,6 +582,8 @@
     for (var k in SDROPS) {
       var s = SDROPS[k]; s.rot += dt * 1.8;
       s.m.position.y = s.y + Math.sin(now / 330 + s.id) * 0.06; s.m.rotation.y = s.rot;
+      var sa = (now - s.born) / 1000; s.m.visible = !(sa > 280 && Math.floor(sa * (sa > 293 ? 10 : 5)) % 2);   // 11/21 버린 것도 5분(서버), 20초 전부터 깜빡임
+      if (sa > 302) { removeSDrop(k); continue; }
       var dx = P.x - s.x, dy = (P.y + 0.6) - s.y, dz = P.z - s.z;
       if (Math.abs(dx) > 90 || Math.abs(dz) > 90) { removeSDrop(k); continue; }
       if (now < s.hold || takeBusy[k] || dx * dx + dy * dy + dz * dz > 2.6) continue;
