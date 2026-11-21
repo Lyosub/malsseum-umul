@@ -4678,7 +4678,13 @@
             else $('invName').textContent = '내려놓았어요';
             bagPick = null; renderInv(); return;
           }
-          if (bagPick && bagPick.from === 'hot') {   // 단축 칸에서 집은 것을 가방에 놓으면 단축 칸이 빈다
+          if (bagPick && bagPick.from === 'hot' && id) {   // 11/21: 단축 칸을 먼저 누르고 가방 물건을 누르면 그 칸이 이 물건으로 바뀐다(반대 순서와 같게)
+            var hi2 = bagPick.i, hj2 = HOTBAR.indexOf(id);
+            if (hj2 >= 0 && hj2 !== hi2) HOTBAR[hj2] = HOTBAR[hi2];   // 같은 것이 다른 칸에 있으면 서로 바꿈
+            HOTBAR[hi2] = id; saveSettings(); bagPick = null; setSel(hi2, true); renderHotbar(); renderInv();
+            $('invName').textContent = B[id][0] + ' → ' + (hi2 + 1) + '번 단축 칸'; return;
+          }
+          if (bagPick && bagPick.from === 'hot') {   // 단축 칸에서 집은 것을 가방 빈 칸에 놓으면 단축 칸이 빈다
             var hid = HOTBAR[bagPick.i]; HOTBAR[bagPick.i] = 0; saveSettings(); renderHotbar(); setSel(sel, true);
             $('invName').textContent = (bagPick.i + 1) + '번 단축 칸을 비웠어요' + (hid ? ' (' + jo(B[hid][0], '은', '는') + ' 가방에 그대로 있어요)' : '');
             bagPick = null; renderInv(); return;
@@ -4709,8 +4715,8 @@
           bagPick = null; setSel(i, true); renderHotbar(); renderInv(); return;
         }
         setSel(i, true); renderHotbar();
-        if (id) { bagPick = { from: 'hot', i: i, id: id }; if (invTab !== 'bag') invTab = 'bag'; $('invName').textContent = (i + 1) + '번 칸 — 다른 단축 칸을 누르면 자리 바꾸기, 가방 칸을 누르면 이 칸 비우기'; }
-        else $('invName').textContent = (i + 1) + '번 칸은 비어 있어요. 가방 칸을 먼저 누르고 여기를 눌러요';
+        if (id) { bagPick = { from: 'hot', i: i, id: id }; if (invTab !== 'bag') invTab = 'bag'; $('invName').textContent = (i + 1) + '번 칸 — 가방 물건을 누르면 그것으로 바꾸기, 다른 단축 칸을 누르면 자리 바꾸기, 가방 빈 칸을 누르면 이 칸 비우기'; }
+        else { bagPick = { from: 'hot', i: i, id: 0 }; $('invName').textContent = (i + 1) + '번 칸은 비어 있어요 — 가방 물건을 누르면 여기에 넣어요'; }
         renderInv();
       });
       row.appendChild(d);
