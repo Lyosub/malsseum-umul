@@ -638,6 +638,7 @@
       }
       o.rot += dt * 1.8;
       o.m.position.set(o.x, o.y + Math.sin(o.age * 3) * 0.06, o.z); o.m.rotation.y = o.rot;
+      o.m.visible = !(o.age > 280 && Math.floor(o.age * (o.age > 293 ? 10 : 5)) % 2);   // 11/21 사라지기 20초 전부터 깜빡임(마지막 7초는 더 빨리)
     }
     DROPS = DROPS.filter(function (o) { return !o.dead; });
     if (got) bagChanged();
