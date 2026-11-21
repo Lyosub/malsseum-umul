@@ -2843,6 +2843,26 @@
     });
   }
 
+  // 11/21 1인칭 방패: 방패를 입으면 화면 왼쪽 아래에 뒷면(나무 널판·테·가죽 끈)이 보이게, 앞면은 앞(적 쪽)을 향함
+  var fpShield = null, fpShieldMat = null, fpShieldId = -1;
+  function buildFpShield(id) {
+    while (fpShield.children.length) { var c = fpShield.children.pop(); c.geometry.dispose(); }
+    fpShieldId = id; if (!id || !WEARINFO[id]) return;
+    var wi = WEARINFO[id], col = wi.col, G = wi.shape.slice(-1) === 'G', rim = G ? 0xf0c840 : (col === 0xa77a48 ? 0x6a4628 : col);
+    function bx(w, h, d, hex, x, y, z) { var m = new THREE.Mesh(boxGeo(w, h, d, hex), fpShieldMat); m.position.set(x, y, z); m.renderOrder = 10; fpShield.add(m); }
+    for (var k = 0; k < 4; k++) bx(0.12, 0.66, 0.03, k % 2 ? 0x8a5a32 : 0x9c6a3c, -0.18 + k * 0.12, 0, 0);
+    bx(0.56, 0.05, 0.05, rim, 0, 0.35, 0.005); bx(0.56, 0.05, 0.05, rim, 0, -0.35, 0.005); bx(0.05, 0.75, 0.05, rim, -0.265, 0, 0.005); bx(0.05, 0.75, 0.05, rim, 0.265, 0, 0.005);
+    bx(0.44, 0.045, 0.03, 0x3a2414, 0, 0.13, 0.03); bx(0.44, 0.045, 0.03, 0x3a2414, 0, -0.13, 0.03);
+  }
+  function showFpShield(bob, sw) {
+    if (!fpShield) return;
+    var id = WORN.shield || 0; if (id !== fpShieldId) buildFpShield(id);
+    fpShield.visible = !!id && !furnitureRest;
+    if (!fpShield.visible) return;
+    fpShieldMat.color.copy(avatarMat.color);
+    fpShield.position.set(-0.74, -0.6 + bob * 0.3 + sw * 0.02, -1.08);
+    fpShield.rotation.set(0.05, 0.32, 0.04);
+  }
   // ───────── 플레이어 ─────────
   var P = { x: XM + 0.5, y: G, z: PZ0 - 9, vx: 0, vy: 0, vz: 0, yaw: Math.PI, pitch: -0.12, ground: false, fly: false, camY: 0, walk: 0, stepAcc: 0, sprint: false, swim: false };
   function collides(px, py, pz, barrierOnly) {
@@ -4672,6 +4692,29 @@
     });
     if (!items.length) { var e = document.createElement('div'); e.className = 'bagEmpty'; e.textContent = craftQuery ? '찾는 제작법이 없어요' : (craftCat === 'recent' ? '아직 만든 것이 없어요 — 만들면 여기에 모여요' : '아직 이 분류의 제작법이 없어요'); list.appendChild(e); }
   }
+  // 11/21 방어구 칸(가방 오른쪽 위): 머리·몸·허리·발·방패 다섯 칸 + 지금 내 모습 — 칸을 누르면 벗고, 입을 것을 고른 뒤 누르면 입어요
+  var eqShotK = '', eqShotU = '', EQ_EMPTY = { head: '⛑', body: '👕', belt: '🎗', feet: '👡', shield: '🛡' };
+  function equipBox() {
+    var det = $('invDetail'), h = document.createElement('div'); h.className = 'eqh'; h.textContent = '방어구'; det.appendChild(h);
+    var box = document.createElement('div'); box.className = 'eqbox'; det.appendChild(box);
+    var col = document.createElement('div'); col.className = 'eqslots'; box.appendChild(col);
+    var pk = bagPick && bagPick.id && WEARINFO[bagPick.id] ? WEARINFO[bagPick.id].slot : '';
+    SLOTS.forEach(function (slot) {
+      var wid = WORN[slot], b = document.createElement('button'); b.className = 'wslot eq' + (pk === slot ? ' want' : '');
+      b.innerHTML = (wid ? '<img src="' + ICON[wid] + '" alt="">' : '<span class="eqe">' + EQ_EMPTY[slot] + '</span>') + '<small>' + SLOT_NAME[slot] + '</small>';
+      b.title = wid ? B[wid][0] + ' — 누르면 벗어요' : SLOT_NAME[slot] + ' 칸 — 비었어요';
+      b.addEventListener('click', function (e) {
+        e.stopPropagation(); sfx('click');
+        if (pk === slot) { var id = bagPick.id; bagPick = null; wearItem(id); $('invName').textContent = jo(B[id][0], '을', '를') + ' 입었어요'; renderInv(); return; }
+        if (wid) { unwear(slot); $('invName').textContent = jo(B[wid][0], '을', '를') + ' 벗어서 가방에 넣었어요'; renderInv(); return; }
+        $('invName').textContent = SLOT_NAME[slot] + ' 칸이 비었어요 — 가방에서 입을 것을 누르고 여기를 눌러요';
+      });
+      col.appendChild(b);
+    });
+    var k = wornString(); if (eqShotK !== k) { eqShotK = k; eqShotU = lookShot(LOOK, WORN); }
+    var pic = document.createElement('img'); pic.className = 'eqme'; pic.alt = '지금 내 모습'; if (eqShotU) pic.src = eqShotU; box.appendChild(pic);
+    var g = document.createElement('div'); g.className = 'eqg'; g.textContent = '🛡 지킴 ' + Math.round(armorGuard() * 100) + '%'; det.appendChild(g);
+  }
   // 오른쪽 자세히: 가방에서 고른 것 / 고른 제작법
   function renderInvDetail() {
     var det = $('invDetail'); det.innerHTML = '';
@@ -4681,6 +4724,7 @@
     function fuelLine() { var fl = Math.floor(fuelLeft() * 2) / 2; add('div', 'dhint', '🔥 땔감: 석탄·숯 1개 = 8번 · 통나무 1개 = 1.5번 · 석탄 블록 = 72번<br><b>지금 ' + fl + '번 녹일 수 있어요</b>' + (HEAT > 0 ? ' (남은 불 ' + HEAT + ')' : '')); }
     if (invTab === 'bag') {
       var p = bagPick;
+      equipBox();
       if (!p || !p.id || !B[p.id]) {
         add('div', 'dempty', '🎒 가방 칸을 누르면 여기에 자세히 나와요.<br><br>누른 다음 <b>아래 단축 칸</b>을 누르면 손에 들 수 있어요.');
         btn('↕ 가방 정리', function () { $('bagSort').click(); });
@@ -4688,6 +4732,7 @@
       }
       var id = p.id, kind = { block: '블록', tool: '도구·옷', food: '먹을 것', item: '재료', deco: '꾸미기' }[bagCat(id)];
       top(id, B[id][0], kind + ' · ' + fmtN(have(id)) + '개');
+      if (WEARINFO[id]) btn((WEARINFO[id].slot === 'shield' ? '🛡 ' : '👕 ') + SLOT_NAME[WEARINFO[id].slot] + ' 칸에 입기' + (WORN[WEARINFO[id].slot] ? ' (입던 것은 가방으로)' : ''), function () { bagPick = null; wearItem(id); $('invName').textContent = jo(B[id][0], '을', '를') + ' 입었어요'; renderInv(); }).classList.add('dmake');
       if (isTool(id) && WEAR[id] !== undefined && !isAdm()) { var f = WEAR[id] / toolMax(id); add('div', 'ddur', '<s style="width:' + Math.max(4, Math.round(f * 100)) + '%;background:' + (f > 0.5 ? '#4fd14f' : f > 0.2 ? '#e8c53a' : '#e0473a') + '"></s>'); add('div', 'dhint', '남은 힘 ' + wearLeft(id) + ' / ' + toolMax(id) + ' — 만들기 → ⛏ 도구에서 고쳐요'); }
       if (FOODS[id] !== undefined && vitalsOn()) btn('🍞 먹기 (기운 +' + FOODS[id] + ')', function () { eatItem(id); bagPick = null; renderInv(); });
       if (p.from === 'bag') {
@@ -6766,6 +6811,8 @@
     crackMesh.scale.setScalar(1.004); crackMesh.visible = false; crackMesh.renderOrder = 3; scene.add(crackMesh);
     heldMesh = new THREE.Mesh(HOTBAR[0] ? blockGeometry(HOTBAR[0]) : new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({ map: atlasTex, vertexColors: true, depthTest: false, depthWrite: false, transparent: true }));
     lightPatch(heldMesh.material); heldMesh.renderOrder = 10; heldMesh.scale.setScalar(0.34); camera.add(heldMesh);
+    fpShieldMat = avatarMat.clone(); fpShieldMat.depthTest = false; fpShieldMat.depthWrite = false; fpShieldMat.transparent = true;
+    fpShield = new THREE.Group(); fpShield.visible = false; camera.add(fpShield);
     refreshMyAvatar(); avatar.visible = false;
     makeSky(); makeRainbow(); makeBethlehemStar();
     cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.88, fog: false });
@@ -6801,7 +6848,7 @@
           var cxr = XM, czr = AZ0 + AW / 2 + 40;
           camera.position.set(cxr + Math.cos(orbit) * 190, G + 66, czr + Math.sin(orbit) * 140);
           camera.lookAt(cxr, G + 10, AZ0 + AW / 2 + 20);
-          heldMesh.visible = false; hl.visible = false;
+          heldMesh.visible = false; hl.visible = false; if (fpShield) fpShield.visible = false;
         } else {
           if (ui === 'play') step(dt); else placeCamera(dt);
           var h = null;
@@ -7010,6 +7057,7 @@
       camera.position.set(ex + Math.cos(P.yaw) * sway, ey + Math.abs(bob), ez - Math.sin(P.yaw) * sway);
       camera.lookAt(camera.position.x + fwd.x, camera.position.y + fwd.y, camera.position.z + fwd.z);
       avatar.visible = false; heldMesh.visible = true;
+      showFpShield(bob, sw);
       if (heldMesh.userData.weapon) {   // 칼·검: 오른쪽 아래에서 위로 비스듬히 세워 들고, 휘두르면 내려침
         heldMesh.position.set(0.48 + Math.cos(P.walk) * 0.02 * bobAmp, -0.38 + Math.abs(Math.sin(P.walk * 2)) * 0.025 * bobAmp - sw * 0.1, -0.8 - sw * 0.12);
         heldMesh.rotation.set(-0.15 - sw * 0.5, 0.35, sw * 1.1);
@@ -7028,7 +7076,7 @@
       camDist = Math.max(0.6, Math.min(want, d));
       camera.position.set(ex + fwd.x * dir * camDist, ey + fwd.y * dir * camDist, ez + fwd.z * dir * camDist);
       camera.lookAt(ex, ey, ez);
-      avatar.visible = true; heldMesh.visible = false;
+      avatar.visible = true; heldMesh.visible = false; if (fpShield) fpShield.visible = false;
       avatar.position.set(P.x, P.y + P.camY + (riding ? riding.sp.seat - 1.2 : 0), P.z);
       avatar.rotation.set(0, P.yaw, 0, 'YXZ');
       var pr = avatar.userData, swing = riding ? 0 : Math.sin(P.walk * 1.6) * 0.75 * bobAmp;
@@ -8966,7 +9014,8 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 9, NEWS = [
+  var NEWS_VER = 10, NEWS = [
+    ['equip', '🛡', '가방 방어구 칸', '가방 오른쪽 위에 방어구 칸(머리·몸·허리·발·방패)과 지금 내 모습이 보여요. 가방에서 투구·옷·방패를 누르고 빛나는 칸을 누르면 입고, 입은 칸을 누르면 벗어요. 방패를 입으면 1인칭 화면 왼쪽 아래에 방패가 보여요.', 158],
     ['boat', '⛵', '배', '고페르 나무 5 + 역청 칠한 나무 1로 배를 만들어요(창 6:14). 배를 들고 물 위를 누르면 띄워서 타요 — 헤엄보다 세 배 빨라 섬에 가기 좋아요. 물에서는 가만히 있으면 가라앉고, 점프를 누르면 떠올라요. 오래 잠기면 숨이 막혀요.', 291],
     ['bigworld', '🗺', '두 배로 넓어진 세상', '세상이 동쪽·남쪽으로 두 배 넓어졌어요. 눈 덮인 헐몬 산, 동쪽 큰 숲, 갈릴리 호수와 요단 강, 시내 산, 푸른 들판, 남쪽 큰 바다와 섬을 찾아가 보세요.', 0],
     ['isles', '🏝', '북쪽 바다의 섬', '북쪽 바다에 밧모섬(계 1:9)·멜리데섬(행 28:1)·구브로섬(행 13:4)과 작은 섬들이 생겼어요. 작은 지도를 누르고 섬을 고르면 길을 알려 줘요.', 0],

@@ -88,6 +88,8 @@
     crackMesh.scale.setScalar(1.004); crackMesh.visible = false; crackMesh.renderOrder = 3; scene.add(crackMesh);
     heldMesh = new THREE.Mesh(HOTBAR[0] ? blockGeometry(HOTBAR[0]) : new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({ map: atlasTex, vertexColors: true, depthTest: false, depthWrite: false, transparent: true }));
     lightPatch(heldMesh.material); heldMesh.renderOrder = 10; heldMesh.scale.setScalar(0.34); camera.add(heldMesh);
+    fpShieldMat = avatarMat.clone(); fpShieldMat.depthTest = false; fpShieldMat.depthWrite = false; fpShieldMat.transparent = true;
+    fpShield = new THREE.Group(); fpShield.visible = false; camera.add(fpShield);
     refreshMyAvatar(); avatar.visible = false;
     makeSky(); makeRainbow(); makeBethlehemStar();
     cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.88, fog: false });
@@ -123,7 +125,7 @@
           var cxr = XM, czr = AZ0 + AW / 2 + 40;
           camera.position.set(cxr + Math.cos(orbit) * 190, G + 66, czr + Math.sin(orbit) * 140);
           camera.lookAt(cxr, G + 10, AZ0 + AW / 2 + 20);
-          heldMesh.visible = false; hl.visible = false;
+          heldMesh.visible = false; hl.visible = false; if (fpShield) fpShield.visible = false;
         } else {
           if (ui === 'play') step(dt); else placeCamera(dt);
           var h = null;
@@ -332,6 +334,7 @@
       camera.position.set(ex + Math.cos(P.yaw) * sway, ey + Math.abs(bob), ez - Math.sin(P.yaw) * sway);
       camera.lookAt(camera.position.x + fwd.x, camera.position.y + fwd.y, camera.position.z + fwd.z);
       avatar.visible = false; heldMesh.visible = true;
+      showFpShield(bob, sw);
       if (heldMesh.userData.weapon) {   // 칼·검: 오른쪽 아래에서 위로 비스듬히 세워 들고, 휘두르면 내려침
         heldMesh.position.set(0.48 + Math.cos(P.walk) * 0.02 * bobAmp, -0.38 + Math.abs(Math.sin(P.walk * 2)) * 0.025 * bobAmp - sw * 0.1, -0.8 - sw * 0.12);
         heldMesh.rotation.set(-0.15 - sw * 0.5, 0.35, sw * 1.1);
@@ -350,7 +353,7 @@
       camDist = Math.max(0.6, Math.min(want, d));
       camera.position.set(ex + fwd.x * dir * camDist, ey + fwd.y * dir * camDist, ez + fwd.z * dir * camDist);
       camera.lookAt(ex, ey, ez);
-      avatar.visible = true; heldMesh.visible = false;
+      avatar.visible = true; heldMesh.visible = false; if (fpShield) fpShield.visible = false;
       avatar.position.set(P.x, P.y + P.camY + (riding ? riding.sp.seat - 1.2 : 0), P.z);
       avatar.rotation.set(0, P.yaw, 0, 'YXZ');
       var pr = avatar.userData, swing = riding ? 0 : Math.sin(P.walk * 1.6) * 0.75 * bobAmp;

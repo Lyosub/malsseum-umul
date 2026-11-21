@@ -226,6 +226,29 @@
     });
     if (!items.length) { var e = document.createElement('div'); e.className = 'bagEmpty'; e.textContent = craftQuery ? '찾는 제작법이 없어요' : (craftCat === 'recent' ? '아직 만든 것이 없어요 — 만들면 여기에 모여요' : '아직 이 분류의 제작법이 없어요'); list.appendChild(e); }
   }
+  // 11/21 방어구 칸(가방 오른쪽 위): 머리·몸·허리·발·방패 다섯 칸 + 지금 내 모습 — 칸을 누르면 벗고, 입을 것을 고른 뒤 누르면 입어요
+  var eqShotK = '', eqShotU = '', EQ_EMPTY = { head: '⛑', body: '👕', belt: '🎗', feet: '👡', shield: '🛡' };
+  function equipBox() {
+    var det = $('invDetail'), h = document.createElement('div'); h.className = 'eqh'; h.textContent = '방어구'; det.appendChild(h);
+    var box = document.createElement('div'); box.className = 'eqbox'; det.appendChild(box);
+    var col = document.createElement('div'); col.className = 'eqslots'; box.appendChild(col);
+    var pk = bagPick && bagPick.id && WEARINFO[bagPick.id] ? WEARINFO[bagPick.id].slot : '';
+    SLOTS.forEach(function (slot) {
+      var wid = WORN[slot], b = document.createElement('button'); b.className = 'wslot eq' + (pk === slot ? ' want' : '');
+      b.innerHTML = (wid ? '<img src="' + ICON[wid] + '" alt="">' : '<span class="eqe">' + EQ_EMPTY[slot] + '</span>') + '<small>' + SLOT_NAME[slot] + '</small>';
+      b.title = wid ? B[wid][0] + ' — 누르면 벗어요' : SLOT_NAME[slot] + ' 칸 — 비었어요';
+      b.addEventListener('click', function (e) {
+        e.stopPropagation(); sfx('click');
+        if (pk === slot) { var id = bagPick.id; bagPick = null; wearItem(id); $('invName').textContent = jo(B[id][0], '을', '를') + ' 입었어요'; renderInv(); return; }
+        if (wid) { unwear(slot); $('invName').textContent = jo(B[wid][0], '을', '를') + ' 벗어서 가방에 넣었어요'; renderInv(); return; }
+        $('invName').textContent = SLOT_NAME[slot] + ' 칸이 비었어요 — 가방에서 입을 것을 누르고 여기를 눌러요';
+      });
+      col.appendChild(b);
+    });
+    var k = wornString(); if (eqShotK !== k) { eqShotK = k; eqShotU = lookShot(LOOK, WORN); }
+    var pic = document.createElement('img'); pic.className = 'eqme'; pic.alt = '지금 내 모습'; if (eqShotU) pic.src = eqShotU; box.appendChild(pic);
+    var g = document.createElement('div'); g.className = 'eqg'; g.textContent = '🛡 지킴 ' + Math.round(armorGuard() * 100) + '%'; det.appendChild(g);
+  }
   // 오른쪽 자세히: 가방에서 고른 것 / 고른 제작법
   function renderInvDetail() {
     var det = $('invDetail'); det.innerHTML = '';
@@ -235,6 +258,7 @@
     function fuelLine() { var fl = Math.floor(fuelLeft() * 2) / 2; add('div', 'dhint', '🔥 땔감: 석탄·숯 1개 = 8번 · 통나무 1개 = 1.5번 · 석탄 블록 = 72번<br><b>지금 ' + fl + '번 녹일 수 있어요</b>' + (HEAT > 0 ? ' (남은 불 ' + HEAT + ')' : '')); }
     if (invTab === 'bag') {
       var p = bagPick;
+      equipBox();
       if (!p || !p.id || !B[p.id]) {
         add('div', 'dempty', '🎒 가방 칸을 누르면 여기에 자세히 나와요.<br><br>누른 다음 <b>아래 단축 칸</b>을 누르면 손에 들 수 있어요.');
         btn('↕ 가방 정리', function () { $('bagSort').click(); });
@@ -242,6 +266,7 @@
       }
       var id = p.id, kind = { block: '블록', tool: '도구·옷', food: '먹을 것', item: '재료', deco: '꾸미기' }[bagCat(id)];
       top(id, B[id][0], kind + ' · ' + fmtN(have(id)) + '개');
+      if (WEARINFO[id]) btn((WEARINFO[id].slot === 'shield' ? '🛡 ' : '👕 ') + SLOT_NAME[WEARINFO[id].slot] + ' 칸에 입기' + (WORN[WEARINFO[id].slot] ? ' (입던 것은 가방으로)' : ''), function () { bagPick = null; wearItem(id); $('invName').textContent = jo(B[id][0], '을', '를') + ' 입었어요'; renderInv(); }).classList.add('dmake');
       if (isTool(id) && WEAR[id] !== undefined && !isAdm()) { var f = WEAR[id] / toolMax(id); add('div', 'ddur', '<s style="width:' + Math.max(4, Math.round(f * 100)) + '%;background:' + (f > 0.5 ? '#4fd14f' : f > 0.2 ? '#e8c53a' : '#e0473a') + '"></s>'); add('div', 'dhint', '남은 힘 ' + wearLeft(id) + ' / ' + toolMax(id) + ' — 만들기 → ⛏ 도구에서 고쳐요'); }
       if (FOODS[id] !== undefined && vitalsOn()) btn('🍞 먹기 (기운 +' + FOODS[id] + ')', function () { eatItem(id); bagPick = null; renderInv(); });
       if (p.from === 'bag') {

@@ -148,6 +148,26 @@
     });
   }
 
+  // 11/21 1인칭 방패: 방패를 입으면 화면 왼쪽 아래에 뒷면(나무 널판·테·가죽 끈)이 보이게, 앞면은 앞(적 쪽)을 향함
+  var fpShield = null, fpShieldMat = null, fpShieldId = -1;
+  function buildFpShield(id) {
+    while (fpShield.children.length) { var c = fpShield.children.pop(); c.geometry.dispose(); }
+    fpShieldId = id; if (!id || !WEARINFO[id]) return;
+    var wi = WEARINFO[id], col = wi.col, G = wi.shape.slice(-1) === 'G', rim = G ? 0xf0c840 : (col === 0xa77a48 ? 0x6a4628 : col);
+    function bx(w, h, d, hex, x, y, z) { var m = new THREE.Mesh(boxGeo(w, h, d, hex), fpShieldMat); m.position.set(x, y, z); m.renderOrder = 10; fpShield.add(m); }
+    for (var k = 0; k < 4; k++) bx(0.12, 0.66, 0.03, k % 2 ? 0x8a5a32 : 0x9c6a3c, -0.18 + k * 0.12, 0, 0);
+    bx(0.56, 0.05, 0.05, rim, 0, 0.35, 0.005); bx(0.56, 0.05, 0.05, rim, 0, -0.35, 0.005); bx(0.05, 0.75, 0.05, rim, -0.265, 0, 0.005); bx(0.05, 0.75, 0.05, rim, 0.265, 0, 0.005);
+    bx(0.44, 0.045, 0.03, 0x3a2414, 0, 0.13, 0.03); bx(0.44, 0.045, 0.03, 0x3a2414, 0, -0.13, 0.03);
+  }
+  function showFpShield(bob, sw) {
+    if (!fpShield) return;
+    var id = WORN.shield || 0; if (id !== fpShieldId) buildFpShield(id);
+    fpShield.visible = !!id && !furnitureRest;
+    if (!fpShield.visible) return;
+    fpShieldMat.color.copy(avatarMat.color);
+    fpShield.position.set(-0.74, -0.6 + bob * 0.3 + sw * 0.02, -1.08);
+    fpShield.rotation.set(0.05, 0.32, 0.04);
+  }
   // ───────── 플레이어 ─────────
   var P = { x: XM + 0.5, y: G, z: PZ0 - 9, vx: 0, vy: 0, vz: 0, yaw: Math.PI, pitch: -0.12, ground: false, fly: false, camY: 0, walk: 0, stepAcc: 0, sprint: false, swim: false };
   function collides(px, py, pz, barrierOnly) {
