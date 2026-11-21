@@ -5438,12 +5438,8 @@
       else a.t = 3;
     }
     var moving = false;
-    if (a.mom && a.baby) {   // 11/21 새끼: 어미가 3칸보다 멀면 어미 쪽으로
-      if (a.mom.mesh.parent && !a.mom.dead) { var mdx = a.mom.x - a.x, mdz = a.mom.z - a.z; if (mdx * mdx + mdz * mdz > 9 && !(a.fleeUntil > performance.now())) { a.h = Math.atan2(-mdx, -mdz); a.mode = 'walk'; a.t = 0.5; } }
-      else a.mom = null;
-    }
     if (a.mode === 'walk') {
-      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : (a.mom && a.baby ? 1.6 : 1)), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
+      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : 1), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
       // 11/20 땅 칸: 남의 땅은 못 들어감. 내 땅은 밀·지팡이로 불러 데려올 때만 들어오고, 들어온 동물은 부르지 않으면 내 땅(우리) 밖으로 나가지 않음
       var np = plotAt(nx | 0, nz | 0), cp = plotAt(a.x | 0, a.z | 0), lured = a.luredUntil > Date.now();
       var plotBlock = np >= 0 && (np !== myPlot || myPlot < 0 || (cp !== np && !lured));
@@ -6821,9 +6817,9 @@
       var gy = groundAt(hx, hz, SY - 3); if (gy === null) continue;
       terrain(hx | 0, hz | 0); if (gy !== T.h + 1 || T.wtop >= 0 || inCity(hx | 0, hz | 0)) continue;   // 자연 땅 위에만(성벽·지붕·나무 위 금지)
       var ad = makeBeast(kn, hx, hz); animals.push(ad);
-      if (hash2(cx + i, cz, 36) < 0.45) {   // 11/21 새끼가 어미 곁에(5분 뒤 다 자람)
+      if (hash2(cx + i, cz, 36) < 0.45) {   // 11/21 새끼도 들에(어미를 따라다니지 않고 따로 거닒, 5분 뒤 다 자람)
         var bx = hx + 1.2, bz = hz + 0.8, bgy = groundAt(bx, bz, SY - 3);
-        if (bgy !== null && Math.abs(bgy - gy) <= 1) { var bb = makeBeast(kn, bx, bz); bb.baby = true; bb.growAt = Date.now() + 300000; bb.mesh.scale.setScalar(0.55); bb.mom = ad; animals.push(bb); }
+        if (bgy !== null && Math.abs(bgy - gy) <= 1) { var bb = makeBeast(kn, bx, bz); bb.baby = true; bb.growAt = Date.now() + 300000; bb.mesh.scale.setScalar(0.55); animals.push(bb); }
       }
     }
   }
@@ -8207,7 +8203,7 @@
     pig: [[LEATHER, 1, 2]], chicken: [[RAW_CHICKEN, 1, 2], [FEATHER, 0, 2]],
     rabbit: [[LEATHER, 0, 1]], horse: [[LEATHER, 1, 2]], donkey: [[LEATHER, 1, 2]], camel: [[LEATHER, 1, 2], [WOOL, 0, 1]] };
   function beastGuarded(a) {   // 잡을 수 없는 짐승: 안장 얹은 것·내 우리에 기르는 것·새끼·놀이·이야기의 양·타고 있는 것
-    if (a === riding || a.saddled || a.kept || a.baby || a.herd || a === lostSheep) return a.saddled ? '안장을 얹은 짐승은 잡을 수 없어요' : a.baby ? '새끼는 잡을 수 없어요' : '기르는 짐승은 잡을 수 없어요';
+    if (a === riding || a.saddled || a.kept || a.herd || a === lostSheep) return a.saddled ? '안장을 얹은 짐승은 잡을 수 없어요' : '기르는 짐승은 잡을 수 없어요';   // 11/21 새끼도 잡을 수 있음
     return '';
   }
   function hitAnimal(a, quiet) {
@@ -8219,7 +8215,7 @@
     else if (isTool(held) && have(held) > 0 && TOOL_TYPES[typeOf(held)] === 'knife') dmg = 1.5 + tierOf(held) * 0.5;
     else if (isTool(held) && have(held) > 0) dmg = 1.5;
     var crit = !P.ground && P.vy < -1 && !P.swim && !P.fly; if (crit) dmg *= 1.5;
-    if (a.hp === undefined) a.hp = BEAST_HP[a.kind];
+    if (a.hp === undefined) a.hp = a.baby ? Math.ceil(BEAST_HP[a.kind] / 2) : BEAST_HP[a.kind];   // 새끼는 체력 절반
     a.hp -= dmg; swingT = 0.25; sfx('dig', 300); animalCall(a.kind);
     if (isTool(held)) wearTool(held);
     var top = a.y + (CR_R[a.kind] || 1.2) * 1.8, n = Math.round(dmg * 10) / 10;
@@ -8232,7 +8228,7 @@
     scene.remove(a.mesh); var ai = animals.indexOf(a); if (ai >= 0) animals.splice(ai, 1);
     sparkle(a.x, a.y + 1, a.z, 0xe8e0d0, 16, { size: 0.45, life: 0.9, v: 2.6, up: 1.4 }); sfx('pop', 400);
     var got = [];
-    (BEAST_DROP[a.kind] || []).forEach(function (q) { var c = q[1] + Math.floor(Math.random() * (q[2] - q[1] + 1)); if (c > 0) { dropItem(a.x, a.y + 0.8, a.z, q[0], c); got.push(B[q[0]][0] + ' ' + c); } });
+    (BEAST_DROP[a.kind] || []).forEach(function (q) { var lo = a.baby ? Math.min(q[1], 1) : q[1], hi = a.baby ? Math.ceil(q[2] / 2) : q[2], c = lo + Math.floor(Math.random() * (hi - lo + 1)); /* 새끼는 조금만 */ if (c > 0) { dropItem(a.x, a.y + 0.8, a.z, q[0], c); got.push(B[q[0]][0] + ' ' + c); } });
     if (!S.huntTold) { S.huntTold = 1; saveSettings(); showVerseCard('🍖', '먹을 것', '모든 산 동물은 너희의 먹을 것이 될지라 채소 같이 내가 이것을 다 너희에게 주노라', '창세기 9:3', '고기는 모닥불(돌 3 + 통나무 2)이나 화덕과 솥 가까이에서 석탄·숯·통나무를 땔감으로 구워 먹어요 — 가까이 가서 주워요'); }
     else toast((got.length ? got.join(' · ') : '아무것도 나오지 않았어요') + ' — 가까이 가서 주워요');
     if (a.kind === 'pig' && !S.pigTold) { S.pigTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🐖', '먹지 못할 것', '돼지는 굽이 갈라져 쪽발이로되 새김질을 못하므로 너희에게 부정하니', '레위기 11:7', '돼지는 고기 대신 가죽이 나와요'); }, 600); }
@@ -9272,7 +9268,7 @@
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
   var NEWS_VER = 17, NEWS = [
-    ['farm2', '🐔', '돼지·닭과 새끼들', '들판에 돼지(눅 15:16)와 닭(마 23:37)이 생겼어요. 어떤 짐승은 새끼를 데리고 다니고, 새끼는 어미를 따라다니다 5분 뒤 다 자라요. 이제 모든 짐승이 밀을 먹으면 새끼를 낳아요(닭은 밀 씨도). 닭을 잡으면 닭고기·깃털이 나오고, 깃털을 달면 화살을 두 배로 만들어요. 구운 고기는 회복이 달라요: 소 기운 10·체력 7 / 양 8·5 / 염소 7·4 / 닭 6·3 / 생선 5·2. 돼지는 고기 대신 가죽이 나와요(레 11:7).', 0],
+    ['farm2', '🐔', '돼지·닭과 새끼들', '들판에 돼지(눅 15:16)와 닭(마 23:37)이 생겼어요. 들에는 새끼들도 따로 거닐다가 5분 뒤 다 자라요. 새끼도 잡을 수 있지만 조금만 나와요. 이제 모든 짐승이 밀을 먹으면 새끼를 낳아요(닭은 밀 씨도). 닭을 잡으면 닭고기·깃털이 나오고, 깃털을 달면 화살을 두 배로 만들어요. 구운 고기는 회복이 달라요: 소 기운 10·체력 7 / 양 8·5 / 염소 7·4 / 닭 6·3 / 생선 5·2. 돼지는 고기 대신 가죽이 나와요(레 11:7).', 0],
     ['hunt', '🍖', '짐승 잡기·굽기', '양·염소·소·말·나귀·낙타·토끼를 칼로 치면 달아나다가 잡혀요. 양은 양고기·양털, 염소는 염소고기·가죽, 소는 소고기·가죽, 말·나귀·낙타는 가죽이 무작위로 나와요(창 9:3, 레 11:4). 고기는 모닥불(돌 3 + 통나무 2)이나 화덕과 솥 가까이에서 석탄·숯·통나무를 땔감으로 「녹이기·굽기」에서 구워 먹으면 기운과 체력이 차요. 안장 얹은 짐승·기르는 짐승·새끼는 잡을 수 없어요. 양털로는 침대·양털 블록·실·옷을 만들어요.', 0],
     ['pickup', '🧲', '떨어진 물건은 가까이 가야 주워요', '캔 것·버린 것·짐승에게서 나온 것은 1~2칸 안으로 가야 가방에 들어와요. 멀리 있으면 그 자리에 5분 동안 남아 있어요.', 0],
     ['sens', '🎯', '감도(화면 돌리는 빠르기)', '게임 메뉴(⏸) 맨 위에서 감도를 바꿀 수 있어요. 막대를 밀거나 − + 를 누르면 10%씩, 「보통」을 누르면 처음대로(100%). 20%~300%까지 돼요.', 0],

@@ -70,12 +70,8 @@
       else a.t = 3;
     }
     var moving = false;
-    if (a.mom && a.baby) {   // 11/21 새끼: 어미가 3칸보다 멀면 어미 쪽으로
-      if (a.mom.mesh.parent && !a.mom.dead) { var mdx = a.mom.x - a.x, mdz = a.mom.z - a.z; if (mdx * mdx + mdz * mdz > 9 && !(a.fleeUntil > performance.now())) { a.h = Math.atan2(-mdx, -mdz); a.mode = 'walk'; a.t = 0.5; } }
-      else a.mom = null;
-    }
     if (a.mode === 'walk') {
-      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : (a.mom && a.baby ? 1.6 : 1)), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
+      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : 1), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
       // 11/20 땅 칸: 남의 땅은 못 들어감. 내 땅은 밀·지팡이로 불러 데려올 때만 들어오고, 들어온 동물은 부르지 않으면 내 땅(우리) 밖으로 나가지 않음
       var np = plotAt(nx | 0, nz | 0), cp = plotAt(a.x | 0, a.z | 0), lured = a.luredUntil > Date.now();
       var plotBlock = np >= 0 && (np !== myPlot || myPlot < 0 || (cp !== np && !lured));

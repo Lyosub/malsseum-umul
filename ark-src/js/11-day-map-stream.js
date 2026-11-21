@@ -672,9 +672,9 @@
       var gy = groundAt(hx, hz, SY - 3); if (gy === null) continue;
       terrain(hx | 0, hz | 0); if (gy !== T.h + 1 || T.wtop >= 0 || inCity(hx | 0, hz | 0)) continue;   // 자연 땅 위에만(성벽·지붕·나무 위 금지)
       var ad = makeBeast(kn, hx, hz); animals.push(ad);
-      if (hash2(cx + i, cz, 36) < 0.45) {   // 11/21 새끼가 어미 곁에(5분 뒤 다 자람)
+      if (hash2(cx + i, cz, 36) < 0.45) {   // 11/21 새끼도 들에(어미를 따라다니지 않고 따로 거닒, 5분 뒤 다 자람)
         var bx = hx + 1.2, bz = hz + 0.8, bgy = groundAt(bx, bz, SY - 3);
-        if (bgy !== null && Math.abs(bgy - gy) <= 1) { var bb = makeBeast(kn, bx, bz); bb.baby = true; bb.growAt = Date.now() + 300000; bb.mesh.scale.setScalar(0.55); bb.mom = ad; animals.push(bb); }
+        if (bgy !== null && Math.abs(bgy - gy) <= 1) { var bb = makeBeast(kn, bx, bz); bb.baby = true; bb.growAt = Date.now() + 300000; bb.mesh.scale.setScalar(0.55); animals.push(bb); }
       }
     }
   }
