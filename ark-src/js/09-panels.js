@@ -614,13 +614,13 @@
     if ($('mBtnSize')) $('mBtnSize').textContent = '버튼 크기: ' + (BTN_SIZES[S.btnSize === undefined ? 1 : S.btnSize] || BTN_SIZES[1])[0];
     $('mLight').textContent = '가벼운 화면: ' + (S.lightMode ? '켬' : '끔');
     $('mLight').setAttribute('aria-pressed', String(!!S.lightMode));
-    $('mMapVisible').textContent = '지도에 내 위치: ' + (S.mapVisible === false ? '숨김' : '표시');
+    $('mMapVisible').textContent = '내 위치: ' + (S.mapVisible === false ? '숨김' : '보임');
     $('mView').textContent = '시점: ' + VIEW_NAMES[S.view];
     $('mSound').textContent = '소리: ' + (S.sound ? '켬' : '끔');
     $('mMusic').textContent = '음악: ' + (S.music === false ? '끔' : '켬');
     $('mShadow').textContent = '어둠의 그림자: ' + (S.shadows === false ? '안 나옴' : '나옴');
     $('mAutoJump').textContent = '자동 점프: ' + (S.autoJump === false ? '끔' : '켬');
-    $('mAim').textContent = '겨누기: ' + (S.aim === 'cross' ? '가운데 십자선' : '손가락 자리');
+    $('mAim').textContent = '겨누기: ' + (S.aim === 'cross' ? '십자선' : '손가락');
     var sp = Math.round(S.sens * 100);
     $('mSensLabel').textContent = '🎯 감도 ' + sp + '% · ' + (sp < 70 ? '느리게' : sp <= 130 ? '보통' : sp <= 200 ? '빠르게' : '아주 빠르게');
     $('mSens').value = Math.round(S.sens * 100);
@@ -659,7 +659,7 @@
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
       var G = { game: ['mNews', 'mQuest', 'mFeedback', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
-        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch', 'mFeedbackAdmin'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
+        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch', 'mFeedbackAdmin'], settings: ['mRotate', 'mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim', 'mQBox'] };   // 11/21 가로·세로는 설정 맨 앞
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
       Array.prototype.forEach.call(grid.children, function (el) { if (!el.hasAttribute('data-g') && el.id !== 'mResume' && !el.classList.contains('sensBox') && el.tagName !== 'A') el.setAttribute('data-g', 'game'); });

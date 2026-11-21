@@ -54,7 +54,7 @@
     ['#quest', '📜 할 일 안내', '지금 해 볼 일을 알려 줘요. ▴를 누르면 접혀요.'],
     ['#info', '📍 지금 있는 곳', '장소 · 계절 · 함께 있는 사람 수가 나와요.'],
     [null, '🤝 다른 나그네', '다른 사람을 두 번 누르면 친구 신청 · 파티 초대를 할 수 있어요.'],
-    [null, '✅ 준비 끝!', '이제 할 일 안내를 따라 해 보세요. 메뉴 → 게임 → 「화면 안내 다시 보기」로 언제든 다시 볼 수 있어요.']
+    [null, '✅ 준비 끝!', '이제 할 일 안내를 따라 해 보세요. 메뉴 → 게임 → 「화면 안내」로 언제든 다시 볼 수 있어요.']
   ];
   var tourBox = null;
   function tourVisible(el) { if (!el) return false; var r = el.getBoundingClientRect(), cs = getComputedStyle(el); return r.width > 0 && r.height > 0 && cs.display !== 'none' && cs.visibility !== 'hidden'; }
@@ -370,7 +370,7 @@
     var so = screen.orientation, cur = (so && so.type) || (innerWidth > innerHeight ? 'landscape' : 'portrait');
     var want = cur.indexOf('portrait') === 0 ? 'landscape' : 'portrait';
     function done() { toast(want === 'landscape' ? '📱 가로 화면으로 바꿨어요' : '📱 세로 화면으로 바꿨어요'); }
-    function fail() { toast('이 휴대폰에서는 버튼으로 돌릴 수 없어요. 휴대폰 자동 회전을 켜고 직접 돌려 주세요'); }
+    function fail() { var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); toast(ios ? '아이폰은 버튼으로 돌릴 수 없어요 — 제어 센터에서 🔒「화면 방향 고정」을 끄고 휴대폰을 옆으로 돌려 주세요' : '이 휴대폰에서는 버튼으로 돌릴 수 없어요. 휴대폰 자동 회전을 켜고 직접 돌려 주세요'); }
     if (!so || !so.lock) return fail();
     so.lock(want).then(done, function () {
       var el = document.documentElement, rf = el.requestFullscreen || el.webkitRequestFullscreen;

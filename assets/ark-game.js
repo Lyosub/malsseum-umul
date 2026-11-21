@@ -3382,7 +3382,7 @@
     ['#quest', '📜 할 일 안내', '지금 해 볼 일을 알려 줘요. ▴를 누르면 접혀요.'],
     ['#info', '📍 지금 있는 곳', '장소 · 계절 · 함께 있는 사람 수가 나와요.'],
     [null, '🤝 다른 나그네', '다른 사람을 두 번 누르면 친구 신청 · 파티 초대를 할 수 있어요.'],
-    [null, '✅ 준비 끝!', '이제 할 일 안내를 따라 해 보세요. 메뉴 → 게임 → 「화면 안내 다시 보기」로 언제든 다시 볼 수 있어요.']
+    [null, '✅ 준비 끝!', '이제 할 일 안내를 따라 해 보세요. 메뉴 → 게임 → 「화면 안내」로 언제든 다시 볼 수 있어요.']
   ];
   var tourBox = null;
   function tourVisible(el) { if (!el) return false; var r = el.getBoundingClientRect(), cs = getComputedStyle(el); return r.width > 0 && r.height > 0 && cs.display !== 'none' && cs.visibility !== 'hidden'; }
@@ -3698,7 +3698,7 @@
     var so = screen.orientation, cur = (so && so.type) || (innerWidth > innerHeight ? 'landscape' : 'portrait');
     var want = cur.indexOf('portrait') === 0 ? 'landscape' : 'portrait';
     function done() { toast(want === 'landscape' ? '📱 가로 화면으로 바꿨어요' : '📱 세로 화면으로 바꿨어요'); }
-    function fail() { toast('이 휴대폰에서는 버튼으로 돌릴 수 없어요. 휴대폰 자동 회전을 켜고 직접 돌려 주세요'); }
+    function fail() { var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); toast(ios ? '아이폰은 버튼으로 돌릴 수 없어요 — 제어 센터에서 🔒「화면 방향 고정」을 끄고 휴대폰을 옆으로 돌려 주세요' : '이 휴대폰에서는 버튼으로 돌릴 수 없어요. 휴대폰 자동 회전을 켜고 직접 돌려 주세요'); }
     if (!so || !so.lock) return fail();
     so.lock(want).then(done, function () {
       var el = document.documentElement, rf = el.requestFullscreen || el.webkitRequestFullscreen;
@@ -5154,13 +5154,13 @@
     if ($('mBtnSize')) $('mBtnSize').textContent = '버튼 크기: ' + (BTN_SIZES[S.btnSize === undefined ? 1 : S.btnSize] || BTN_SIZES[1])[0];
     $('mLight').textContent = '가벼운 화면: ' + (S.lightMode ? '켬' : '끔');
     $('mLight').setAttribute('aria-pressed', String(!!S.lightMode));
-    $('mMapVisible').textContent = '지도에 내 위치: ' + (S.mapVisible === false ? '숨김' : '표시');
+    $('mMapVisible').textContent = '내 위치: ' + (S.mapVisible === false ? '숨김' : '보임');
     $('mView').textContent = '시점: ' + VIEW_NAMES[S.view];
     $('mSound').textContent = '소리: ' + (S.sound ? '켬' : '끔');
     $('mMusic').textContent = '음악: ' + (S.music === false ? '끔' : '켬');
     $('mShadow').textContent = '어둠의 그림자: ' + (S.shadows === false ? '안 나옴' : '나옴');
     $('mAutoJump').textContent = '자동 점프: ' + (S.autoJump === false ? '끔' : '켬');
-    $('mAim').textContent = '겨누기: ' + (S.aim === 'cross' ? '가운데 십자선' : '손가락 자리');
+    $('mAim').textContent = '겨누기: ' + (S.aim === 'cross' ? '십자선' : '손가락');
     var sp = Math.round(S.sens * 100);
     $('mSensLabel').textContent = '🎯 감도 ' + sp + '% · ' + (sp < 70 ? '느리게' : sp <= 130 ? '보통' : sp <= 200 ? '빠르게' : '아주 빠르게');
     $('mSens').value = Math.round(S.sens * 100);
@@ -5199,7 +5199,7 @@
     (function () {
       var grid = document.querySelector('#pause .grid3'); if (!grid) return;
       var G = { game: ['mNews', 'mQuest', 'mFeedback', 'mBook', 'mStory', 'mVillageWork', 'mPhoto', 'mLook', 'mMap', 'mTour', 'mTutorial', 'mPractice', 'mHelp'], go: ['mArk', 'mHome', 'mForest', 'mHill', 'mLake'],
-        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch', 'mFeedbackAdmin'], settings: ['mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim'] };
+        together: ['goalCard', 'mParty', 'mFriends', 'mVisit', 'mRevert', 'mWatch', 'mFeedbackAdmin'], settings: ['mRotate', 'mLight', 'mBtnSize', 'mView', 'mSound', 'mMusic', 'mShadow', 'mAutoJump', 'mMapVisible', 'mAim', 'mQBox'] };   // 11/21 가로·세로는 설정 맨 앞
       var NAMES = { game: '🎮 게임', go: '🧭 이동', together: '🤝 함께', settings: '⚙ 설정' };
       Object.keys(G).forEach(function (g) { G[g].forEach(function (id) { var el = $(id); if (el) el.setAttribute('data-g', g); }); });
       Array.prototype.forEach.call(grid.children, function (el) { if (!el.hasAttribute('data-g') && el.id !== 'mResume' && !el.classList.contains('sensBox') && el.tagName !== 'A') el.setAttribute('data-g', 'game'); });

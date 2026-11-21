@@ -699,6 +699,15 @@
   body.touch #dpad .dk.on { background:rgba(255,255,255,.38) !important; }
   body.touch .tbtn, body.touch #touchAction, body.touch #slabMode { opacity:.72; }
   body.touch #vitals b { font-size:12px !important; }
+  /* 11/21 메뉴 글자 한 줄 · 세로 화면 겹침 */
+  #pause .grid3 .mc { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  @media (orientation:portrait) {
+    #pause .grid3 .mc { font-size:13px; padding-left:4px; padding-right:4px; }
+    body.touch #touchAction { right:calc(14px + var(--sar)); bottom:calc(232px + var(--sab)); max-width:calc(100vw - 32px); }
+    body.touch #touchAction:not([hidden]) ~ #btnRun { right:calc(86px + var(--sar)); }
+    body.touch #slabMode { right:calc(14px + var(--sar)); bottom:calc(282px + var(--sab)); }
+    body.touch #toast { bottom:calc(292px + var(--sab)); } body.touch #pickup { bottom:calc(326px + var(--sab)); }
+  }
 </style>
 </head>
 <body class="menu">
@@ -809,7 +818,7 @@
     <div class="sensBox"><button id="mSensDn" class="mc" aria-label="감도 낮추기">−</button><div class="slider"><input id="mSens" type="range" min="20" max="300" step="5" value="100" aria-label="감도(둘러보기 속도)"><label id="mSensLabel">🎯 감도: 100%</label></div><button id="mSensUp" class="mc" aria-label="감도 높이기">+</button><button id="mSensReset" class="mc">보통</button></div>
     <button id="mBook" class="mc">📜 창세기 6장</button>
     <button id="mHelp" class="mc">조작 방법</button>
-    <button id="mTour" class="mc">🧭 화면 안내 다시 보기</button>
+    <button id="mTour" class="mc">🧭 화면 안내</button>
     <button id="mTutorial" class="mc">튜토리얼 다시 보기</button>
     <button id="mPractice" class="mc">첫 집 연습터</button>
     <button id="mNews" class="mc">✨ 새 기능</button>
@@ -820,8 +829,8 @@
     <button id="mBtnSize" class="mc touchonly">버튼 크기: 보통</button>
     <button id="mView" class="mc">시점: 1인칭</button>
     <button id="mLook" class="mc">👤 내 모습·옷</button>
-    <button id="mRotate" class="mc touchonly">🔄 가로·세로 바꾸기</button>
-    <button id="mQBox" class="mc">📜 안내 상자 접기·펴기</button>
+    <button id="mRotate" class="mc touchonly">🔄 가로·세로</button>
+    <button id="mQBox" class="mc">📜 안내 상자</button>
     <button id="mArk" class="mc">⛵ 방주 앞</button>
     <button id="mHome" class="mc">🏠 내 땅</button>
     <button id="mPhoto" class="mc">📷 사진 저장 <small class="k">F2</small></button>
@@ -840,8 +849,8 @@
     <button id="mHill" class="mc">⛰ 서쪽 산</button>
     <button id="mLake" class="mc">🌊 남쪽 호수</button>
     <button id="mMap" class="mc">🗺 지도</button>
-    <button id="mMapVisible" class="mc">지도에 내 위치: 표시</button>
-    <button id="mAim" class="mc">겨누기: 손가락 자리</button>
+    <button id="mMapVisible" class="mc">내 위치: 보임</button>
+    <button id="mAim" class="mc">겨누기: 손가락</button>
     <a class="mc wide" href="index.html" style="text-decoration:none">말씀우물로 나가기</a>
   </div>
 </div>
@@ -1030,7 +1039,7 @@
     <div><h3>휴대폰</h3>
       왼쪽 아래 방향키 = 걷기 · ▲ 두 번 누르고 있기(또는 🏃) = 달리기 · 가운데 톡톡 두 번 = 웅크리기 · 1칸 높이는 그냥 걸어 올라가요<br>
       화면을 끌면 둘러보기 · 가운데 ＋가 겨누는 곳<br>
-      꾹 = ＋ 자리 캐기 · 톡 = ＋ 자리에 놓기 (메뉴에서 「겨누기: 손가락 자리」로 바꿀 수 있어요)<br>
+      꾹 = ＋ 자리 캐기 · 톡 = ＋ 자리에 놓기 (메뉴 → 설정에서 「겨누기」로 바꿀 수 있어요)<br>
       ▲ 점프 · 두 번 톡 = 날기 · 물에선 ▲ 헤엄<br>
       동물·문을 톡 = 말씀 카드 · 문 열고 닫기<br>
       오른쪽 위: 💬 채팅 · 🎒 가방·만들기 · 👤 옷 · 👁 1인칭/3인칭 · ❚❚ 메뉴<br>
@@ -1081,6 +1090,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=fafccbaf5a"></script>
+<script src="assets/ark-game.js?v=d910e0b05d"></script>
 </body>
 </html>
