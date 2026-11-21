@@ -2,6 +2,7 @@
   var client = null, me = null, myPlot = -1, plotOwners = {}, plotUser = {}, saveTimer = null, dirty = false, started = false;
   function canMine(x, y, z) {
     if (isAdm()) return y <= 0 ? '맨 아래 바닥은 캘 수 없어요' : '';   // 관리자는 어디서든(다른 사람 땅·방주 포함)
+    if (funProtect(x, z)) return '놀이 자리는 그대로 둬요';
     var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
     if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
@@ -21,6 +22,7 @@
   }
   function canPlace(x, y, z, id) {
     if (isAdm()) return '';
+    if (funProtect(x, z)) return '놀이 자리는 그대로 둬요';
     var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
     if(client && !frontierEnabled && id>=ROPE && id<=ARCH_SIDE) return '개척 도구를 서버에서 준비하는 중이에요';
     if (client && !villageProjectsEnabled && id>=FIND_POT && id<=FEAST_FISH) return '마을 새 재료를 서버에서 준비하는 중이에요';
@@ -117,6 +119,7 @@
       if (tgt === LEVER || tgt === LEVER + 1) return useLever(h.x, h.y, h.z);
       if (INSTR[tgt]) return playInstrument(tgt, h.x, h.y, h.z);
       if (inHoreb(h.x, h.y, h.z) && get(h.x, h.y, h.z) === BASALT) return strikeRock();
+      if (tgt === MANGER) xmasGift();
       if (tgt === MANGER) return showVerseCard('🌟', '구유', '첫아들을 낳아 강보로 싸서 구유에 뉘었으니 이는 여관에 있을 곳이 없음이러라', '누가복음 2:7', '오늘 다윗의 동네에 너희를 위하여 구주가 나셨으니 곧 그리스도 주시니라 (눅 2:11)');
       if (SHAPE[tgt] && SHAPE[tgt].type === 'sign' && plotAt(h.x, h.z) === myPlot && myPlot >= 0) return openSignPick(h.x, h.y, h.z);
       var item = HOTBAR[sel];

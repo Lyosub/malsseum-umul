@@ -289,6 +289,7 @@
       if (held === HAND_MAP) return { label: '지도 열기' };
       if (held === COMPASS) return { label: '방향 보기' };
       if (held === SHOFAR) return { label: '나팔 불기' };
+      if (held === FIREWORK) return { label: '폭죽 쏘기' };
       if (held === SLING) return { label: '물매 연습' };
       if (isBowId(held)) return { label: '꾹 눌러 활 당기기' };   // 화면도 0.25초 가만히 누르면 당김
       if (isSlingId(held)) return { label: '물매 던지기' };
@@ -491,6 +492,7 @@
       if(held===HAND_MAP && have(held)) {openPanel('map');drawMap($('bigmapc'),true);return;}
       if(held===COMPASS && have(held)) return toast('지금 보는 방향: '+headingName());
       if(held===SHOFAR && have(held)) return callShofar();
+      if(held===FIREWORK && (have(held) || isAdm())) return fireworkUse();
       if(isSlingId(held) && have(held)) { var sh0=pickDir(dir); if(sh0 && get(sh0.x,sh0.y,sh0.z)===SLING_TARGET) return slingPractice(sh0); return slingThrow(dir); }
       if(isBowId(held) && have(held)) return shootArrow(dir);
       if(held===BOAT && (have(held) || isAdm())) return useBoat(dir);
@@ -498,7 +500,7 @@
     var h = pickDir(dir), c = pickCreature(dir, blockCover(h));
     if (c && riding && c.a && c.a.sp.seat) c = null;
     if (c && c.shadow) return hitShadow(c.shadow);
-    if (c && c.peer) return tapPeer(c.peer);
+    if (c && c.peer) { if (hsTapPeer(c.peer)) return; return tapPeer(c.peer); }
     if (c && c.npc) {
       var npc=c.npc; showNpc(npc);
       if (villageNpcTap(npc)) return;
