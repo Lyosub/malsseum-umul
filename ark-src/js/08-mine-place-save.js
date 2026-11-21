@@ -516,7 +516,7 @@
   function dropItem(x, y, z, id, n) {
     if (!id || INV.indexOf(id) < 0 || !n) return;
     for (var i = 0; i < DROPS.length; i++) { var o0 = DROPS[i]; if (o0.id === id && !o0.dead && Math.abs(o0.x - x) < 1 && Math.abs(o0.y - y) < 1.2 && Math.abs(o0.z - z) < 1) { o0.n += n; return; } }
-    if (DROPS.length > 60) dropAway(DROPS[0]);   // 11/21: 너무 많으면 가장 오래된 것이 사라짐(저절로 가방에 넣지 않음)
+    while (DROPS.length > 160) dropAway(DROPS.shift());   // 11/21 한꺼번에 많이 떨어져도 160개를 넘지 않게(전에는 이미 지운 첫 칸만 거듭 지워 끝없이 쌓임)   // 11/21: 너무 많으면 가장 오래된 것이 사라짐(저절로 가방에 넣지 않음)
     if (!scene || !atlasTex) { give(id, n); return; }
     dropMats();
     var flat = isFlat(id), geo = dropGeo[id] || (dropGeo[id] = flat ? itemGeometry(id) : blockGeometry(id));
