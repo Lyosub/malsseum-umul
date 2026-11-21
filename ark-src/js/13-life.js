@@ -54,7 +54,7 @@
   }
   function spawnInfo2(note) {
     if (SPAWN) return { k: 'bed', label: '🛏 내 침대', note: note };
-    if (myPlot >= 0) return { k: 'home', label: '🏠 내 땅(집 앞)', note: note || '내 집 침대에 한 번 누우면 다음부터 그 침대에서 일어나요' };
+    if (myPlot >= 0) return { k: 'home', label: '🏠 집 둘레 어딘가', note: note || '내 집 침대에 한 번 누우면 다음부터 그 침대에서 일어나요' };
     return { k: 'start', label: '⛵ 마을 처음 자리', note: note };
   }
   function showDeath(title, why, after) {
@@ -75,10 +75,27 @@
     if (riding) dismount(true);
     spawnInfo();
     if (SPAWN) teleport(SPAWN.x + 0.5, SPAWN.y, SPAWN.z + 0.5);
-    else if (myPlot >= 0) { var o = plotOrigin(myPlot); teleport(o.x + OLD_PLOT / 2, G, o.z - 2, Math.PI); }
+    else if (myPlot >= 0) { var o = plotOrigin(myPlot); teleport(o.x + OLD_PLOT / 2, G, o.z - 2, Math.PI); scatter = { t: performance.now(), n: 0 }; }   // 11/21 침대가 없으면 집 둘레 12~28칸 어딘가로(아래 scatterStep)
     else teleport(XM + 0.5, G, PZ0 - 9, Math.PI);
   }
+  // 집 둘레 아무 데나: 땅이 불러와지면 집 가운데에서 12~28칸 떨어진 빈 땅(남의 땅·물·방주 밖)을 골라 옮김 — 못 찾으면 집 앞 그대로
+  var scatter = null;
+  function scatterStep() {
+    if (!scatter || myPlot < 0) { scatter = null; return; }
+    if (performance.now() - scatter.t > 4000) { scatter = null; return; }
+    var o = plotOrigin(myPlot), cx = o.x + PLOT / 2, cz = o.z + PLOT / 2;
+    for (var k = 0; k < 6 && scatter; k++) {
+      scatter.n++;
+      var ang = Math.random() * Math.PI * 2, r = 12 + Math.random() * 16, x = cx + Math.cos(ang) * r, z = cz + Math.sin(ang) * r, ix = Math.floor(x), iz = Math.floor(z);
+      if (!colAt(ix, iz)) continue;
+      var pa = plotAt(ix, iz); if (pa >= 0 && pa !== myPlot) continue;
+      var gy = groundAt(x, z, SY - 3); if (gy === null || inArk(ix, gy, iz) || get(ix, gy, iz) === WATER || get(ix, gy - 1, iz) === WATER) continue;
+      if (isSolid(get(ix, gy, iz)) || isSolid(get(ix, gy + 1, iz))) continue;
+      teleport(ix + 0.5, gy, iz + 0.5, Math.atan2(ix + 0.5 - cx, iz + 0.5 - cz)); scatter = null; return;   // 집 쪽을 바라봄
+    }
+  }
   function stepVitals(dt) {
+    scatterStep();
     if (!vitalsOn()) { if ($('vitals').innerHTML) $('vitals').innerHTML = ''; return; }
     var headWater = get(Math.floor(P.x), Math.floor(P.y + EYE + P.camY), Math.floor(P.z)) === WATER;
     if (headWater) { AIRV -= dt; if (AIRV <= 0) { AIRV = 0; drownT -= dt; if (drownT <= 0) { drownT = 1; hurt(2, '물속에서 숨이 막혔어요'); } } }
