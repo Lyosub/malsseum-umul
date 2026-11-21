@@ -91,6 +91,7 @@
     } else {
       var tgt = get(h.x, h.y, h.z);
       if (tryFrontierDevice(tgt,h)) return;
+      if (tryPlaySpot(h)) return;
       if (SHAPE[tgt] && SHAPE[tgt].type === 'gate') return toggleGate(h.x, h.y, h.z, tgt);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'door') return toggleDoor(h.x, h.y, h.z);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'trapdoor') return toggleTrap(h.x, h.y, h.z, tgt);

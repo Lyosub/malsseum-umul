@@ -1,7 +1,8 @@
   // ───────── 11/21 함께 하기(GPT 검토 03·04·23·24) ─────────
   // ① 모이기 표식: 📍 → 여기로 와요·도와줘요·조심 — 일행(일행이 없으면 친구)에게 45초 보임(느 4:20)
   var PINGS = {}, pingAt = 0, PING_LIFE = 45000;
-  var PING_KIND = { come: ['📍', '여기로 와요', '#7ed957'], help: ['🙋', '여기 도와줘요', '#ffcf4a'], warn: ['⚠️', '여기 조심', '#ff6a5a'] };
+  var PING_KIND = { come: ['📍', '여기로 와요', '#7ed957'], help: ['🙋', '여기 도와줘요', '#ffcf4a'], warn: ['⚠️', '여기 조심', '#ff6a5a'], back: ['↩️', '돌아가는 길', '#9fd0ff'], water: ['💧', '물가', '#5fb8ff'] };
+  var PING_CAVE = { back: 1, water: 1 }, caveSeq = 0;   // 동굴 길 표식(GPT 검토 30): 한 사람이 4개까지, 10분
   function pingSpot() {
     var h = null; try { h = pickCenter(); } catch (e) {}
     if (h && h.px !== undefined && Math.hypot(h.px - P.x, h.pz - P.z) < 40) return [h.px + 0.5, h.py + 0.1, h.pz + 0.5];
@@ -16,18 +17,18 @@
     var now = performance.now();
     if (now < pingAt) { toast('조금 뒤에 다시 찍을 수 있어요'); return; }
     pingAt = now + 3000;
-    var p = pingSpot(), k = PING_KIND[kind];
-    showPing(me ? me.id : 'me', kind, p[0], p[1], p[2], '나');
-    if (NET.ch && me) NET.ch.send({ type: 'broadcast', event: 'ping', payload: { u: me.id, k: kind, x: +p[0].toFixed(1), y: +p[1].toFixed(1), z: +p[2].toFixed(1) } });
+    var p = pingSpot(), k = PING_KIND[kind], ci = PING_CAVE[kind] ? caveSeq++ % 4 : -1, myId = me ? me.id : 'me';
+    showPing(ci >= 0 ? myId + ':c' + ci : myId, kind, p[0], p[1], p[2], '나');
+    if (NET.ch && me) NET.ch.send({ type: 'broadcast', event: 'ping', payload: { u: me.id, k: kind, i: ci, x: +p[0].toFixed(1), y: +p[1].toFixed(1), z: +p[2].toFixed(1) } });
     sfx('pop');
     if (!S.pingTold) { S.pingTold = 1; saveSettings(); showVerseCard('📯', '모이기 표식', '너희는 어디서든지 나팔 소리를 듣거든 그리로 모여서 우리에게로 나아오라 우리 하나님이 우리를 위하여 싸우시리라', '느헤미야 4:20', k[0] + ' 「' + k[1] + '」을 찍었어요 — ' + (inParty() ? '일행' : '친구') + '에게 45초 동안 보여요'); }
-    else toast(k[0] + ' ' + k[1] + ' — ' + (inParty() ? '일행' : '친구') + '에게 45초 동안 보여요');
+    else toast(k[0] + ' ' + k[1] + ' — ' + (inParty() ? '일행' : '친구') + '에게 ' + (ci >= 0 ? '10분' : '45초') + ' 동안 보여요');
   }
   function onPing(m) {
     if (!m || !PING_KIND[m.k] || !Number.isFinite(m.x) || !Number.isFinite(m.y) || !Number.isFinite(m.z)) return;
     if (!(partyMate(m.u) || (!inParty() && FRIENDS.accepted.has(m.u)))) return;
     var nick = NET.names[m.u] || '친구', k = PING_KIND[m.k];
-    showPing(m.u, m.k, m.x, m.y, m.z, nick);
+    showPing(m.i >= 0 && m.i < 4 ? m.u + ':c' + (m.i | 0) : m.u, m.k, m.x, m.y, m.z, nick);
     sfx('pop'); toast(k[0] + ' ' + nick + ': ' + k[1] + ' (' + Math.round(Math.hypot(m.x - P.x, m.z - P.z)) + '칸)');
   }
   function clearPing(u) {
@@ -46,7 +47,7 @@
     var k = PING_KIND[kind], g = new THREE.Group();
     var beam = new THREE.Mesh(new THREE.BoxGeometry(0.14, 5, 0.14), new THREE.MeshBasicMaterial({ color: parseInt(k[2].slice(1), 16), transparent: true, opacity: 0.6, depthWrite: false, fog: false }));
     beam.position.y = 2.5; g.add(beam); g.position.set(x, y, z); scene.add(g);
-    var p = PINGS[u] = { g: g, beam: beam, tag: null, kind: kind, nick: nick, x: x, y: y, z: z, until: performance.now() + PING_LIFE };
+    var p = PINGS[u] = { g: g, beam: beam, tag: null, kind: kind, nick: nick, x: x, y: y, z: z, until: performance.now() + (PING_CAVE[kind] ? 600000 : PING_LIFE) };
     pingLabel(p);
   }
   function pingTick() {   // 1초마다: 거리 글자 고치고, 45초 지나면 지움

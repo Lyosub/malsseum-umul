@@ -252,6 +252,7 @@
   function blockActionLabel(h, held) {
     var id = get(h.x, h.y, h.z), shape = SHAPE[id];
     var frontierAction=frontierActionLabel(id,h); if(frontierAction) return frontierAction;
+    var playA = playLabel(h); if (playA) return playA;
     if (shape && (shape.type === 'door' || shape.type === 'gate' || shape.type === 'trapdoor')) return shape.open ? '문 닫기' : '문 열기';
     if (shape && shape.type === 'mrail' && (held === CART || parkedAt(h.x, h.y, h.z))) return '수레 타기';
     if (shape && shape.type === 'frame') return myPlot >= 0 && plotAt(h.x, h.z) === myPlot ? '액자' : '';

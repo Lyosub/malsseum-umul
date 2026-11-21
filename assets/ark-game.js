@@ -2146,10 +2146,12 @@
     carveCaves(col, cx, cz, tops, wtops);
     buildFrontierCave(x0,z0,tops);
     if (z0 < SEA_Z) buildIsleMarks(x0, z0);
+    buildPlaySpots(x0, z0);   // 11/21 함께 하는 놀이 자리
     // 나무: 7칸 격자마다 한 그루 후보(옆 기둥 나무도 걸치게)
     for (var gz = Math.floor((z0 - 6) / 7); gz <= Math.floor((z0 + CS + 6) / 7); gz++) for (var gx = Math.floor((x0 - 6) / 7); gx <= Math.floor((x0 + CS + 6) / 7); gx++) {
       var tx = gx * 7 + Math.floor(hash2(gx, gz, 21) * 6), tz = gz * 7 + Math.floor(hash2(gx, gz, 22) * 6);
       if (landmarkAt(tx, tz, 13)) continue;
+      if (playAt(tx, tz, 5)) continue;   // 11/21 놀이 자리엔 나무 없이
       if (inTown(tx, tz) || distOut(tx, tz) < 6 || plotAt(tx, tz) >= 0 || (tx >= COMMONS[0] - 4 && tx <= COMMONS[2] + 4 && tz >= COMMONS[1] - 4 && tz <= COMMONS[3] + 4)) continue;
       terrain(tx, tz);
       if (T.wtop >= 0) continue;
@@ -3842,6 +3844,7 @@
     } else {
       var tgt = get(h.x, h.y, h.z);
       if (tryFrontierDevice(tgt,h)) return;
+      if (tryPlaySpot(h)) return;
       if (SHAPE[tgt] && SHAPE[tgt].type === 'gate') return toggleGate(h.x, h.y, h.z, tgt);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'door') return toggleDoor(h.x, h.y, h.z);
       if (SHAPE[tgt] && SHAPE[tgt].type === 'trapdoor') return toggleTrap(h.x, h.y, h.z, tgt);
@@ -5597,6 +5600,7 @@
   function blockActionLabel(h, held) {
     var id = get(h.x, h.y, h.z), shape = SHAPE[id];
     var frontierAction=frontierActionLabel(id,h); if(frontierAction) return frontierAction;
+    var playA = playLabel(h); if (playA) return playA;
     if (shape && (shape.type === 'door' || shape.type === 'gate' || shape.type === 'trapdoor')) return shape.open ? '문 닫기' : '문 열기';
     if (shape && shape.type === 'mrail' && (held === CART || parkedAt(h.x, h.y, h.z))) return '수레 타기';
     if (shape && shape.type === 'frame') return myPlot >= 0 && plotAt(h.x, h.z) === myPlot ? '액자' : '';
@@ -6933,7 +6937,7 @@
         }
         if (started) { updateMobileBuild(now); updateFrontierTools(now); tickBlueprint(now); }
         if (started) stepFrontier(now,dt);
-        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); refreshFrames(); tickParked(); newsTick(); pingTick(); nightWatchTick(); craterTick(); checkHome(); refreshPlotSigns(); spawnZoneSigns(); } }
+        if (started) { stepVitals(dt); stepHerd(dt); stepMusic(dt); stepShadows(dt); storyTick(dt); partyTick(dt); npcT -= dt; if (npcT <= 0) { npcT = 1; spawnNpcs(); refreshSigns(); refreshFrames(); tickParked(); newsTick(); pingTick(); nightWatchTick(); craterTick(); playTick(); checkHome(); refreshPlotSigns(); spawnZoneSigns(); } }
         if (started) {
           updateDay(dt); updateAmbient(dt);
           if (ui === 'play' || ui === 'map') {
@@ -9179,7 +9183,9 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 12, NEWS = [
+  var NEWS_VER = 13, NEWS = [
+    ['playspots', '🎲', '함께 하는 놀이 다섯 곳', '① 개척지 서쪽 수로 시험: 수문 열기와 지렛대 신호를 10초 안에 맞추면 밭에 물이 흘러요(전 4:9). ② 함께 짓는 터 남쪽 연습 구획: 빛나는 칸 12개를 채우면 벽 완성, 블록은 돌려받아요(느 2:18). ③ 마을 동쪽 양 우리: 목자 말뚝을 누르고 양 두 마리를 2분 안에 데려와요(눅 15:6). ④ 동쪽 사막 레일: 서쪽 정거장에서 짐을 싣고 동쪽 정거장에 내려놓아요(갈 6:2). ⑤ 전시 마당 말뚝에서 친구들 집 구경. 친구와 함께 하면 보상이 더 커요.', 0],
+    ['cavemark', '↩️', '동굴 길 표식', '📍 표식에 「돌아가는 길」「물가」가 생겼어요 — 동굴에서 일행이 길을 잃지 않게 한 사람이 4개까지, 10분 동안 보여요.', 0],
     ['anger', '🔥', '새 그림자 「분노」', '밤 들판과 굴에 빨간 금이 간 「분노」 그림자가 나와요. 가까이 오면 1.5초 동안 부풀다 터져요 — 칼로 치면 밀려나며 식고, 활·물매로 멀리서 물리치면 터지지 않아요. 물에 닿으면 꺼져요(잠 15:1). 터진 자리의 흙·돌은 파이지만 하루 뒤 메워지고, 집·내 땅·마을·개척 땅은 부서지지 않아요(엡 4:26).', 0],
     ['ping', '📍', '모이기 표식', '위쪽 📍 표식(P)을 누르고 「여기로 와요·여기 도와줘요·여기 조심」 중 하나를 고르면, 보는 곳에 빛기둥이 서서 일행(일행이 없으면 친구)에게 45초 동안 보여요. 작은 지도에도 마름모로 나와요(느 4:20).', 0],
     ['nightwatch', '🌅', '밤을 함께 지키기', '밤에 그림자를 물리치거나 방패로 불화살을 막으면, 새벽에 그 밤 동안 함께 한 일을 카드로 보여 줘요(느 4:17). 친구 곁에서 막으면 「함께 막았어요」가 떠요. 큰 그림자의 힘은 화면 위 한 줄로 보여요.', 0],
@@ -10124,7 +10130,8 @@
   // ───────── 11/21 함께 하기(GPT 검토 03·04·23·24) ─────────
   // ① 모이기 표식: 📍 → 여기로 와요·도와줘요·조심 — 일행(일행이 없으면 친구)에게 45초 보임(느 4:20)
   var PINGS = {}, pingAt = 0, PING_LIFE = 45000;
-  var PING_KIND = { come: ['📍', '여기로 와요', '#7ed957'], help: ['🙋', '여기 도와줘요', '#ffcf4a'], warn: ['⚠️', '여기 조심', '#ff6a5a'] };
+  var PING_KIND = { come: ['📍', '여기로 와요', '#7ed957'], help: ['🙋', '여기 도와줘요', '#ffcf4a'], warn: ['⚠️', '여기 조심', '#ff6a5a'], back: ['↩️', '돌아가는 길', '#9fd0ff'], water: ['💧', '물가', '#5fb8ff'] };
+  var PING_CAVE = { back: 1, water: 1 }, caveSeq = 0;   // 동굴 길 표식(GPT 검토 30): 한 사람이 4개까지, 10분
   function pingSpot() {
     var h = null; try { h = pickCenter(); } catch (e) {}
     if (h && h.px !== undefined && Math.hypot(h.px - P.x, h.pz - P.z) < 40) return [h.px + 0.5, h.py + 0.1, h.pz + 0.5];
@@ -10139,18 +10146,18 @@
     var now = performance.now();
     if (now < pingAt) { toast('조금 뒤에 다시 찍을 수 있어요'); return; }
     pingAt = now + 3000;
-    var p = pingSpot(), k = PING_KIND[kind];
-    showPing(me ? me.id : 'me', kind, p[0], p[1], p[2], '나');
-    if (NET.ch && me) NET.ch.send({ type: 'broadcast', event: 'ping', payload: { u: me.id, k: kind, x: +p[0].toFixed(1), y: +p[1].toFixed(1), z: +p[2].toFixed(1) } });
+    var p = pingSpot(), k = PING_KIND[kind], ci = PING_CAVE[kind] ? caveSeq++ % 4 : -1, myId = me ? me.id : 'me';
+    showPing(ci >= 0 ? myId + ':c' + ci : myId, kind, p[0], p[1], p[2], '나');
+    if (NET.ch && me) NET.ch.send({ type: 'broadcast', event: 'ping', payload: { u: me.id, k: kind, i: ci, x: +p[0].toFixed(1), y: +p[1].toFixed(1), z: +p[2].toFixed(1) } });
     sfx('pop');
     if (!S.pingTold) { S.pingTold = 1; saveSettings(); showVerseCard('📯', '모이기 표식', '너희는 어디서든지 나팔 소리를 듣거든 그리로 모여서 우리에게로 나아오라 우리 하나님이 우리를 위하여 싸우시리라', '느헤미야 4:20', k[0] + ' 「' + k[1] + '」을 찍었어요 — ' + (inParty() ? '일행' : '친구') + '에게 45초 동안 보여요'); }
-    else toast(k[0] + ' ' + k[1] + ' — ' + (inParty() ? '일행' : '친구') + '에게 45초 동안 보여요');
+    else toast(k[0] + ' ' + k[1] + ' — ' + (inParty() ? '일행' : '친구') + '에게 ' + (ci >= 0 ? '10분' : '45초') + ' 동안 보여요');
   }
   function onPing(m) {
     if (!m || !PING_KIND[m.k] || !Number.isFinite(m.x) || !Number.isFinite(m.y) || !Number.isFinite(m.z)) return;
     if (!(partyMate(m.u) || (!inParty() && FRIENDS.accepted.has(m.u)))) return;
     var nick = NET.names[m.u] || '친구', k = PING_KIND[m.k];
-    showPing(m.u, m.k, m.x, m.y, m.z, nick);
+    showPing(m.i >= 0 && m.i < 4 ? m.u + ':c' + (m.i | 0) : m.u, m.k, m.x, m.y, m.z, nick);
     sfx('pop'); toast(k[0] + ' ' + nick + ': ' + k[1] + ' (' + Math.round(Math.hypot(m.x - P.x, m.z - P.z)) + '칸)');
   }
   function clearPing(u) {
@@ -10169,7 +10176,7 @@
     var k = PING_KIND[kind], g = new THREE.Group();
     var beam = new THREE.Mesh(new THREE.BoxGeometry(0.14, 5, 0.14), new THREE.MeshBasicMaterial({ color: parseInt(k[2].slice(1), 16), transparent: true, opacity: 0.6, depthWrite: false, fog: false }));
     beam.position.y = 2.5; g.add(beam); g.position.set(x, y, z); scene.add(g);
-    var p = PINGS[u] = { g: g, beam: beam, tag: null, kind: kind, nick: nick, x: x, y: y, z: z, until: performance.now() + PING_LIFE };
+    var p = PINGS[u] = { g: g, beam: beam, tag: null, kind: kind, nick: nick, x: x, y: y, z: z, until: performance.now() + (PING_CAVE[kind] ? 600000 : PING_LIFE) };
     pingLabel(p);
   }
   function pingTick() {   // 1초마다: 거리 글자 고치고, 45초 지나면 지움
@@ -10226,6 +10233,187 @@
         '물리친 그림자 ' + NIGHTW.shadows + ' · 막은 불화살 ' + NIGHTW.blocks + (n ? ' · 곁에 있던 친구 ' + n + '명 — 고마워요!' : ''));
     }
   }
+  // ───────── 11/21 함께 하는 놀이 여섯(GPT 검토 25·26·28·29·30·31) ─────────
+  // 자리는 땅을 만들 때(buildPlaySpots) 들판에 놓고, 놀이 중 바뀌는 것(물길·불·연습 블록 표시)은 내 화면에서만 바꾼다.
+  var PLAY = {
+    water: { x0: 1194, z0: 1150, x1: 1214, z1: 1160 },    // 수로 시험(개척지 서쪽)
+    practice: { x0: 1026, z0: 822, x1: 1037, z1: 832 },   // 함께 짓는 터 남쪽 연습 구획(4×3 벽)
+    gallery: { x0: 1008, z0: 822, x1: 1022, z1: 832 },    // 작품 전시 마당
+    pen: { x0: 1154, z0: 994, x1: 1171, z1: 1010 },       // 양 우리
+    rail: { x0: 1318, z0: 1008, x1: 1356, z1: 1018 }      // 레일 짐 나르기(동쪽 사막)
+  };
+  function playY(k) { var s = PLAY[k]; if (s.y === undefined) { terrain((s.x0 + s.x1) >> 1, (s.z0 + s.z1) >> 1); s.y = Math.max(G, T.h); } return s.y; }
+  function playAt(x, z, m) { for (var k in PLAY) { var s = PLAY[k]; if (x >= s.x0 - m && x <= s.x1 + m && z >= s.z0 - m && z <= s.z1 + m) return k; } return ''; }
+  function inPlay(k, x, z) { var s = PLAY[k]; return x >= s.x0 && x <= s.x1 && z >= s.z0 && z <= s.z1; }
+  function playNear(x0, z0, k) { var s = PLAY[k]; return s.x1 + 2 >= x0 && s.x0 - 2 < x0 + CS && s.z1 + 2 >= z0 && s.z0 - 2 < z0 + CS; }
+  function flatten(k, top) {   // 놀이 자리 바닥을 고르게(위는 비우고 아래는 흙)
+    var s = PLAY[k], y = playY(k);
+    fill(s.x0, y + 1, s.z0, s.x1, y + 12, s.z1, AIR); fill(s.x0, y - 3, s.z0, s.x1, y - 1, s.z1, DIRT); fill(s.x0, y, s.z0, s.x1, y, s.z1, top || GRASS);
+  }
+  // 놀이마다 누를 블록 자리
+  var WATER_GATE = [1200, 1154], WATER_LEVER = [1208, 1157], WATER_LAMPS = [[1211, 1158], [1212, 1158], [1213, 1158]];
+  var PEN_POST = [1162, 1008], GALLERY_POST = [1015, 830], RAIL_A = [1322, 1015], RAIL_B = [1352, 1015];
+  var PRACTICE_CELLS = []; (function () { for (var dy = 1; dy <= 3; dy++) for (var x = 1030; x <= 1033; x++) PRACTICE_CELLS.push([x, dy, 826]); })();
+  function buildPlaySpots(x0, z0) {
+    var y;
+    if (playNear(x0, z0, 'water')) {   // 동서로 흐르는 좁은 물길 + 나무 수문 + 물레방아 + 신호 지렛대 + 등 세 개
+      flatten('water'); y = playY('water');
+      fill(1196, y - 1, 1154, 1213, y, 1154, AIR); fill(1196, y - 2, 1154, 1213, y - 2, 1154, CLAY);
+      fill(1196, y - 1, 1154, 1199, y - 1, 1154, WATER); fill(1196, y, 1153, 1213, y, 1153, STONE); fill(1196, y, 1155, 1213, y, 1155, STONE);
+      setRaw(WATER_GATE[0], y - 1, WATER_GATE[1], GOPHER); setRaw(WATER_GATE[0], y, WATER_GATE[1], GOPHER);
+      setRaw(1205, y, 1156, WATERWHEEL); setRaw(1205, y + 1, 1156, WATERWHEEL);
+      setRaw(WATER_LEVER[0], y + 1, WATER_LEVER[1], LOG); setRaw(WATER_LEVER[0], y + 2, WATER_LEVER[1], GOPHER);
+      WATER_LAMPS.forEach(function (q) { setRaw(q[0], y + 1, q[1], FENCE); setRaw(q[0], y + 2, q[1], GOPHER); });
+      for (var fx = 1203; fx <= 1213; fx++) for (var fz = 1157; fz <= 1159; fz++) if (fz !== 1158 || fx < 1210) setRaw(fx, y, fz, FARM_SOIL);
+    }
+    if (playNear(x0, z0, 'practice')) {   // 연습 구획: 바닥 석회암 + 네 모서리 울타리
+      flatten('practice', PATH); y = playY('practice');
+      fill(1029, y, 825, 1034, y, 827, LIME);
+      [[1028, 824], [1035, 824], [1028, 828], [1035, 828]].forEach(function (q) { setRaw(q[0], y + 1, q[1], FENCE); setRaw(q[0], y + 2, q[1], LANTERN); });
+    }
+    if (playNear(x0, z0, 'gallery')) {   // 전시 마당: 받침돌 셋 위에 의자·잔치 상·등잔, 가운데 말뚝(집 구경)
+      flatten('gallery', PATH); y = playY('gallery');
+      [[1011, CHAIR], [1015, FEAST_TABLE], [1019, OIL_LAMP]].forEach(function (q) { fill(q[0] - 1, y + 1, 825, q[0] + 1, y + 1, 827, LIME); setRaw(q[0], y + 2, 826, q[1]); });
+      setRaw(GALLERY_POST[0], y + 1, GALLERY_POST[1], LOG); setRaw(GALLERY_POST[0], y + 2, GALLERY_POST[1], LANTERN);
+    }
+    if (playNear(x0, z0, 'pen')) {   // 양 우리: 울타리(남쪽 가운데 문 자리 비움) + 목자 말뚝
+      flatten('pen'); y = playY('pen');
+      for (var px = 1158; px <= 1167; px++) for (var pz = 998; pz <= 1005; pz++) {
+        if (px > 1158 && px < 1167 && pz > 998 && pz < 1005) continue;
+        if (pz === 1005 && (px === 1162 || px === 1163)) continue;
+        setRaw(px, y + 1, pz, FENCE);
+      }
+      setRaw(PEN_POST[0], y + 1, PEN_POST[1], LOG); setRaw(PEN_POST[0], y + 2, PEN_POST[1], LANTERN);
+    }
+    if (playNear(x0, z0, 'rail')) {   // 짧은 레일(동서) + 두 정거장 승강장과 짐 상자
+      flatten('rail', SAND); y = playY('rail');
+      fill(1320, y, 1012, 1354, y, 1012, GOPHER);
+      for (var rx = 1320; rx <= 1354; rx++) setRaw(rx, y + 1, 1012, RAIL0 + 1);
+      [RAIL_A, RAIL_B].forEach(function (q) { fill(q[0] - 1, y, 1013, q[0] + 2, y, 1016, GOPHER); setRaw(q[0], y + 1, q[1], CHEST); setRaw(q[0] + 2, y + 1, 1016, FENCE); setRaw(q[0] + 2, y + 2, 1016, LANTERN); });
+    }
+  }
+  function playLocal(cells) {   // 내 화면에서만 블록을 바꿈(기록·서버에 안 남음)
+    var seen = {};
+    cells.forEach(function (c) { setRaw(c[0], c[1], c[2], c[3]); updateSky(c[0], c[2]); var k = (c[0] >> 5) + ',' + (c[1] >> 5) + ',' + (c[2] >> 5); if (!seen[k]) { seen[k] = 1; rebuildAround(c[0], c[1], c[2]); } });
+  }
+  function mateWith(r) { return nearMates(r).length > 0; }
+  function playReward(id, n, what) { if (!isAdm()) { give(id, n); bagChanged(); } toast('🎁 ' + what + ' — ' + nameOf(id) + ' ' + n + '개'); }
+
+  // ① 수로 시험(전 4:9): 수문 열기 + 지렛대 신호를 10초 안에 둘 다 → 밭 끝 등 셋이 차례로 켜짐
+  var WATERG = { open: 0, sig: 0, done: 0 };
+  function waterReset() {
+    var y = playY('water'), c = [[WATER_GATE[0], y - 1, WATER_GATE[1], GOPHER], [WATER_GATE[0], y, WATER_GATE[1], GOPHER]];
+    for (var x = 1201; x <= 1213; x++) c.push([x, y - 1, 1154, AIR]);
+    WATER_LAMPS.forEach(function (q) { c.push([q[0], y + 2, q[1], GOPHER]); });
+    playLocal(c); WATERG = { open: 0, sig: 0, done: 0 };
+  }
+  function waterTry(which) {
+    var now = performance.now(), y = playY('water');
+    if (WATERG.done && now < WATERG.done + 60000) { toast('💧 물길이 흐르고 있어요 — 잠시 뒤 다시 할 수 있어요'); return; }
+    if (WATERG.done) waterReset();
+    if (which === 'gate') {
+      WATERG.open = now; var c = [[WATER_GATE[0], y - 1, WATER_GATE[1], AIR], [WATER_GATE[0], y, WATER_GATE[1], AIR]];
+      for (var x = WATER_GATE[0]; x <= 1213; x++) c.push([x, y - 1, 1154, WATER]);
+      playLocal(c); sfx('place', 'wood'); toast('💧 수문을 열었어요 — 10초 안에 물레방아 옆 지렛대로 신호를 보내요');
+      setTimeout(function () { if (!WATERG.done && WATERG.open === now) { waterReset(); toast('💧 신호가 늦었어요 — 수문이 다시 닫혔어요(둘이 나눠 맡으면 쉬워요)'); } }, 10000);
+    } else {
+      WATERG.sig = now; sfx('click'); toast(WATERG.open ? '📣 신호를 보냈어요' : '📣 신호를 보냈어요 — 10초 안에 수문을 열어요');
+      setTimeout(function () { if (!WATERG.done && WATERG.sig === now && !WATERG.open) toast('📣 신호가 사라졌어요 — 다시 해 봐요'); }, 10000);
+    }
+    if (WATERG.open && WATERG.sig && Math.abs(WATERG.open - WATERG.sig) < 10000) {
+      WATERG.done = now;
+      WATER_LAMPS.forEach(function (q, i) { setTimeout(function () { playLocal([[q[0], y + 2, q[1], LAMP]]); sparkle(q[0] + 0.5, y + 2.6, q[1] + 0.5, 0xffe27a, 10, { size: 0.35, life: 0.8, up: 1, v: 1.2 }); sfx('pop'); }, 500 + i * 600); });
+      var mate = mateWith(12);
+      setTimeout(function () {
+        showVerseCard('💧', mate ? '함께 물길을 열었어요' : '물길이 흘러요', '두 사람이 한 사람보다 나음은 그들이 수고함으로 좋은 상을 얻을 것임이라', '전도서 4:9', mate ? '친구와 수문·신호를 나눠 맡아 밭에 물을 댔어요' : '혼자서도 해냈어요 — 친구와 나눠 맡으면 더 쉬워요');
+        playReward(SEED, mate ? 6 : 3, '수로 시험');
+      }, 2300);
+      setTimeout(waterReset, 60000);
+    }
+  }
+
+  // ② 연습 구획(느 2:18): 석회암 바닥 위 4×3 벽 자리(빛나는 칸)를 아무 블록으로 다 채우면 완성 → 블록은 가방으로 돌려줌
+  var practiceGhost = null, practiceDone = 0;
+  function practiceTick() {   // 1초마다: 가까우면 남은 칸을 보여 줌
+    var near = Math.abs(P.x - 1031) < 16 && Math.abs(P.z - 826) < 16, y = playY('practice');
+    if (!practiceGhost && near && scene) {
+      practiceGhost = new THREE.Group(); var mat = new THREE.MeshBasicMaterial({ color: 0x9be2b3, transparent: true, opacity: 0.28, depthWrite: false });
+      PRACTICE_CELLS.forEach(function (c) { var m = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.98, 0.98), mat); m.position.set(c[0] + 0.5, y + c[1] + 0.5, c[2] + 0.5); practiceGhost.add(m); });
+      scene.add(practiceGhost);
+    }
+    if (!practiceGhost) return;
+    practiceGhost.visible = near;
+    if (!near) return;
+    var filled = 0;
+    PRACTICE_CELLS.forEach(function (c, i) { var id = get(c[0], y + c[1], c[2]), on = id !== AIR && isSolid(id); practiceGhost.children[i].visible = !on; if (on) filled++; });
+    if (filled === PRACTICE_CELLS.length && performance.now() > practiceDone + 5000) {
+      practiceDone = performance.now();
+      var back = {};
+      PRACTICE_CELLS.forEach(function (c) { var id = get(c[0], y + c[1], c[2]); back[id] = (back[id] || 0) + 1; setBlock(c[0], y + c[1], c[2], AIR); });
+      if (!isAdm()) { for (var k in back) give(+k, back[k]); bagChanged(); }
+      burst(1031, y + 2, 826, LAMP); sfx('craft');
+      showVerseCard('🧱', '벽 하나를 세웠어요', '또 그들에게 하나님의 선한 손이 나를 도우신 일과 왕이 내게 이른 말씀을 전하였더니 그들의 말이 일어나 건축하자 하고 모두 힘을 내어 이 선한 일을 하려 하매', '느헤미야 2:18', '연습 끝 — 놓은 블록은 가방으로 돌려받았어요. 이제 북쪽 「함께 짓는 터」에서 함께 지어요');
+    } else if (filled && filled < PRACTICE_CELLS.length && !S.practiceTold) { S.practiceTold = 1; saveSettings(); toast('🧱 연습 구획 — 빛나는 칸 12개를 아무 블록으로 채우면 완성(블록은 돌려받아요)'); }
+  }
+
+  // ③ 양 몰고 오기(눅 15:6): 목자 말뚝을 누르면 양 두 마리가 우리 밖 멀리 나타남 → 밀이나 지팡이를 들고 우리 안으로 2분 안에
+  var PEN = null;
+  function penStart() {
+    if (PEN && performance.now() < PEN.until) { toast('🐑 양 ' + PEN.sheep.length + '마리를 우리 안으로 데려와요 — 밀이나 지팡이를 들면 따라와요'); return; }
+    var y = playY('pen'), list = [];
+    [[1150, 1018], [1176, 1020]].forEach(function (q) { var a = makeBeast('sheep', q[0] + Math.random() * 3, q[1] + Math.random() * 3); a.herd = true; animals.push(a); list.push(a); });
+    PEN = { sheep: list, until: performance.now() + 120000 };
+    toast('🐑 우리 밖 남쪽에 양 두 마리가 있어요 — 밀이나 지팡이를 들고 2분 안에 우리 안으로 데려와요');
+  }
+  function penTick() {
+    if (!PEN) return;
+    var inside = PEN.sheep.filter(function (a) { return a.x > 1159 && a.x < 1167 && a.z > 999 && a.z < 1005; }).length;
+    if (inside >= PEN.sheep.length) {
+      var mate = mateWith(16); PEN = null;
+      showVerseCard('🐑', '양을 찾아 데려왔어요', '집에 와서 그 벗과 이웃을 불러 모으고 말하되 나와 함께 즐기자 나의 잃은 양을 찾아내었노라 하리라', '누가복음 15:6', mate ? '친구와 함께 양 두 마리를 우리로 데려왔어요' : '양 두 마리를 우리로 데려왔어요');
+      playReward(WOOL, mate ? 4 : 2, '양 몰고 오기');
+    } else if (performance.now() > PEN.until) {
+      toast('🐑 시간이 지났어요 — 목자 말뚝을 눌러 다시 해 봐요');
+      PEN.sheep.forEach(function (a) { a.herd = false; }); PEN = null;
+    }
+  }
+
+  // ④ 레일 짐 나르기(갈 6:2): 서쪽 정거장 짐 상자에서 짐 3개를 싣고 → 동쪽 정거장 상자에 내려놓기(수레·걸음 모두 됨)
+  var CARGO = null;
+  function cargoTap(st) {
+    var now = performance.now();
+    if (st === 'A') {
+      if (CARGO) { toast('📦 짐을 이미 실었어요 — 동쪽 정거장 상자로 가져가요'); return; }
+      CARGO = { t: now }; toast('📦 짐 3개를 실었어요 — 레일을 따라 동쪽 정거장(30칸) 상자에 내려놓아요' + (have(CART) ? '' : ' (수레가 없으면 걸어가도 돼요)')); sfx('place', 'wood'); return;
+    }
+    if (!CARGO) { toast('📦 서쪽 정거장 상자에서 짐을 먼저 실어요'); return; }
+    var sec = Math.round((now - CARGO.t) / 1000), mate = mateWith(14); CARGO = null;
+    sfx('craft');
+    showVerseCard('📦', '짐을 날랐어요', '너희가 짐을 서로 지라 그리하여 그리스도의 법을 성취하라', '갈라디아서 6:2', '짐 3개를 ' + sec + '초 만에 날랐어요' + (mate ? ' — 친구와 함께!' : ''));
+    playReward(BREAD, mate ? 3 : 2, '레일 짐 나르기');
+  }
+
+  // ⑤ 작품 전시 마당: 받침돌 위 가구 + 말뚝을 누르면 「집 구경」(친구들이 지은 집 보기)
+  // ⑥ 동굴 길 표식은 모이기 표식(15c)에 「돌아가는 길·물가」 두 가지로 더함(10분)
+
+  function playLabel(h) {
+    var x = h.x, z = h.z;
+    if (x === WATER_GATE[0] && z === WATER_GATE[1]) return '수문 열기';
+    if (x === WATER_LEVER[0] && z === WATER_LEVER[1]) return '신호 보내기';
+    if (x === PEN_POST[0] && z === PEN_POST[1]) return '양 몰고 오기';
+    if (x === GALLERY_POST[0] && z === GALLERY_POST[1]) return '집 구경 보기';
+    if (x === RAIL_A[0] && z === RAIL_A[1] && get(x, h.y, z) === CHEST) return '짐 싣기';
+    if (x === RAIL_B[0] && z === RAIL_B[1] && get(x, h.y, z) === CHEST) return '짐 내려놓기';
+    return '';
+  }
+  function tryPlaySpot(h) {
+    var l = playLabel(h); if (!l) return false;
+    if (l === '수문 열기') waterTry('gate'); else if (l === '신호 보내기') waterTry('sig');
+    else if (l === '양 몰고 오기') penStart(); else if (l === '집 구경 보기') openVillageWork('showcase');
+    else if (l === '짐 싣기') cargoTap('A'); else if (l === '짐 내려놓기') cargoTap('B');
+    return true;
+  }
+  function playTick() { practiceTick(); penTick(); }
   // ── 마을 소식 · 선물 · 건축 사진 · 설계도 나누기(서버: sql-migrations/2026-11-19-ark-village-social.sql) ──
   // 자유 글은 쓰지 않는다: 소식은 종류+숫자, 사진 제목과 설계도 이름은 고르기
   var SOCIAL = { feed: [], feedAt: 0, lastSeen: 0, gifts: [], giftAt: 0, giftN: -1, photos: [], photoAt: 0, plans: null, planAt: 0, imgs: {}, busy: {} };
@@ -11205,7 +11393,7 @@
         return n;
       } }; }, frame: function (q) { return canvasEl.toDataURL('image/jpeg', q || 0.92); }, avatar: function (v) { if (avatar) avatar.visible = v; heldMesh.visible = false; }, key: function (c, v) { keys[c] = v; }, thunder: function () { thunderStrike(); }, rainbow: function (sec) { rainbowUntil = dayT + (sec || 40); }, rain: function (on, st) { rainOn = on; rain = on ? 1 : 0; storm = !!st; } }, openFeedback: function () { openFeedback(); }, openFeedbackAdmin: function () { openFeedbackAdmin(); }, railScanCost: function (n) { var t = performance.now(); for (var i = 0; i < (n || 20); i++) railScanStep(); return (performance.now() - t) / (n || 20); }, setPlotName: function (u, t) { if (t) PLOT_NAMES[u] = t; else delete PLOT_NAMES[u]; refreshPlotSigns(); }, plotSigns: function () { var o = {}; for (var k in plotSignObjs) o[k] = plotSignObjs[k].txt; return o; }, setPlotUser: function (p, u, nick) { plotUser[p] = u; plotOwners[p] = 1; if (nick) NET.names[u] = nick; }, fakeNet: function (c, id) { client = c; me = { id: id }; }, projectCells: function (k) { return projectCells(k).length; }, perf: function () { return perfAcc; }, home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
-    gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, FX: function () { return FX; }, ADV: function () { return ADV; }, openQuests: openQuests, questEvent: questEvent, regionTick: regionTick, inLandmark: inLandmark, LMK: { TBX: TBX, TBZ: TBZ, CTX: CTX, CTZ: CTZ, TCX: TCX, TCZ: TCZ, LOTX: LOTX, LOTZ: LOTZ, TWY: TWY, SAX: SAX, SAZ: SAZ, CEX: CEX, CEZ: CEZ }, region: region, getB: function (x, y, z) { return get(x, y, z); }, oreBase: oreBase, P2: function () { return P; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
+    gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, FX: function () { return FX; }, ADV: function () { return ADV; }, openQuests: openQuests, questEvent: questEvent, regionTick: regionTick, inLandmark: inLandmark, LMK: { TBX: TBX, TBZ: TBZ, CTX: CTX, CTZ: CTZ, TCX: TCX, TCZ: TCZ, LOTX: LOTX, LOTZ: LOTZ, TWY: TWY, SAX: SAX, SAZ: SAZ, CEX: CEX, CEZ: CEZ }, region: region, getB: function (x, y, z) { return get(x, y, z); }, oreBase: oreBase, P2: function () { return P; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, playTap: function (x, y, z) { return tryPlaySpot({ x: x, y: y, z: z }); }, playY: playY, PEN: function () { return PEN; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); }, icon: function (id) { return ICON[id]; } };
   if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__arkDebug = ARK_DBG;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
