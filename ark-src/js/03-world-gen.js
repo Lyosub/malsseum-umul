@@ -420,11 +420,12 @@
     buildFrontierCave(x0,z0,tops);
     if (z0 < SEA_Z) buildIsleMarks(x0, z0);
     buildPlaySpots(x0, z0);   // 11/21 함께 하는 놀이 자리
+    buildFunSpots(x0, z0);    // 11/21 달리기 출발 기둥
     // 나무: 7칸 격자마다 한 그루 후보(옆 기둥 나무도 걸치게)
     for (var gz = Math.floor((z0 - 6) / 7); gz <= Math.floor((z0 + CS + 6) / 7); gz++) for (var gx = Math.floor((x0 - 6) / 7); gx <= Math.floor((x0 + CS + 6) / 7); gx++) {
       var tx = gx * 7 + Math.floor(hash2(gx, gz, 21) * 6), tz = gz * 7 + Math.floor(hash2(gx, gz, 22) * 6);
       if (landmarkAt(tx, tz, 13)) continue;
-      if (playAt(tx, tz, 5)) continue;   // 11/21 놀이 자리엔 나무 없이
+      if (playAt(tx, tz, 5) || funAt(tx, tz, 4)) continue;   // 11/21 놀이 자리엔 나무 없이
       if (inTown(tx, tz) || distOut(tx, tz) < 6 || plotAt(tx, tz) >= 0 || (tx >= COMMONS[0] - 4 && tx <= COMMONS[2] + 4 && tz >= COMMONS[1] - 4 && tz <= COMMONS[3] + 4)) continue;
       terrain(tx, tz);
       if (T.wtop >= 0) continue;

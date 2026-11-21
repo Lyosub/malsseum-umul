@@ -465,7 +465,7 @@
     advDaily();
     var box = fbBox('📜 퀘스트');
     var tabs = document.createElement('div'); tabs.style.cssText = 'display:flex;gap:6px'; box.appendChild(tabs);
-    [['today', '오늘의 부탁'], ['adv', '모험 ' + ADVS.filter(function (a) { return ADV.done[a[0]]; }).length + '/' + ADVS.length], ['walk', '땅 밟기 ' + WALK_KEYS.filter(function (k) { return ADV.regions[k]; }).length + '/' + WALK_KEYS.length]].forEach(function (t) {
+    [['today', '오늘의 부탁'], ['adv', '모험 ' + ADVS.filter(function (a) { return ADV.done[a[0]]; }).length + '/' + ADVS.length], ['walk', '땅 밟기 ' + WALK_KEYS.filter(function (k) { return ADV.regions[k]; }).length + '/' + WALK_KEYS.length], ['fun', '놀이']].forEach(function (t) {
       var b = fbBtn(tabs, t[1], function () { openQuests(t[0]); }); b.style.flex = '1'; b.style.fontSize = '13px'; if (questTab === t[0]) b.style.boxShadow = 'inset 0 0 0 2px #ffe27a';
     });
     var body = document.createElement('div'); body.style.cssText = 'display:flex;flex-direction:column;gap:6px;font-size:13px'; box.appendChild(body);
@@ -497,6 +497,8 @@
       [['🌲 백향목 숲', CTX + 0.5, CTZ + 9.5], ['🏜 광야 성막', TBX + 56.5, TBZ + 0.5], ['🌊 소금 바다', TCX + 0.5, TCZ + 18.5]].forEach(function (g) {
         fbBtn(go, g[0] + ' 길 안내', function () { $('fbBox').remove(); startFrontierGuide([Math.floor(g[1]), Math.floor(g[2])], g[0].replace(/^\S+ /, '')); resume(); }).style.fontSize = '12px';
       });
+    } else if (questTab === 'fun') {
+      renderFunTab(row, body);
     } else {
       WALK_KEYS.forEach(function (k) { var right = document.createElement('b'); right.textContent = ADV.regions[k] ? '✔' : '?'; right.style.color = ADV.regions[k] ? '#8be08b' : '#999'; row(ADV.regions[k] ? REGION_INFO[k][0] : '아직 밟지 않은 땅', null, right); });
     }

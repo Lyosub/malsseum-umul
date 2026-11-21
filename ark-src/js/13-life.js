@@ -172,29 +172,7 @@
     CROPS=CROPS.filter(function(c){return c.x!==x||c.y!==y||c.z!==z;});
     CROPS.push({x:x,y:y,z:z,s:stage,base:base,t:Date.now()+cropTime(x,y,z)}); saveCrops();
   }
-  var fishing=null;
-  function useFishing(item,dir) {
-    if (!have(item)) return;
-    var now=performance.now();
-    if (fishing && fishing.item===item && now<fishing.ready) return deny('물고기가 물 때까지 기다려요');
-    if (fishing && fishing.item===item && now<=fishing.until && Math.hypot(P.x-fishing.x,P.z-fishing.z)<5) {
-      var count=item===FISH_NET ? 2 : 1;
-      var caught=VILLAGE_FISH[fishing.region]||RAW_FISH;
-      if (room(caught)<count) return bagFull();
-      give(caught,count); bagChanged(); recordVillageFish(fishing.region,count); fishing=null; toast(nameOf(caught)+' '+count+'마리를 건졌어요'); return;
-    }
-    var origin=camera.position, water=false, fishRegion=null;
-    for(var t=.25;t<=REACH+camDist+.5;t+=.25) {
-      var x=origin.x+dir.x*t,y=origin.y+dir.y*t,z=origin.z+dir.z*t;
-      var id=get(Math.floor(x),Math.floor(y),Math.floor(z));
-      if(id===WATER&&Math.hypot(x-P.x,y-(P.y+EYE),z-P.z)<=REACH+.5){water=true;fishRegion=villageWaterRegion(x,z);break;}
-      if(isSolid(id))break;
-    }
-    if (!water) return deny('가까운 물을 겨누고 눌러요');
-    var line={item:item,x:P.x,z:P.z,region:fishRegion,ready:now+2200,until:now+8500}; fishing=line;
-    toast(item===FISH_NET?'그물을 던졌어요':'낚싯줄을 던졌어요');
-    setTimeout(function(){if(fishing===line&&ui==='play')toast('물고기가 왔어요! 다시 눌러 건져요');},2200);
-  }
+  function useFishing(item,dir) { return fishTap(item,dir); }   // 11/21 타이밍 낚시(15e-fun.js)
   function plantSeed(h, seedId) {
     seedId=seedId || SEED;
     var farm=FARM_SEEDS[seedId];
