@@ -3775,7 +3775,7 @@
   // ───────── 캐기·놓기 권한, 저장 ─────────
   var client = null, me = null, myPlot = -1, plotOwners = {}, plotUser = {}, saveTimer = null, dirty = false, started = false;
   function canMine(x, y, z) {
-    if (isAdm()) return y <= 0 ? '맨 아래 바닥은 캘 수 없어요' : '';   // 관리자는 어디서든(다른 사람 땅·방주 포함)
+    if (isAdm()) return y <= YMIN ? '맨 아래 바닥은 캘 수 없어요' : '';   // 관리자는 어디서든(다른 사람 땅·방주 포함)
     if (funProtect(x, z)) return '놀이 자리는 그대로 둬요';
     var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
     if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
@@ -3784,11 +3784,11 @@
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
     if (inLandmark(x, z)) return '「' + REGION_INFO[inLandmark(x, z)][0] + '」은(는) 함께 구경하는 곳이라 지켜져 있어요';
     if (inDungeon(x, y, z) && get(x, y, z) !== TORCH && !(get(x, y, z) >= 170 && get(x, y, z) < 174) && get(x, y, z) !== LADDER + 3) return '골짜기의 벽은 깨지지 않아요 — 길을 찾아 지나가요(시 23:4)';
-    if (y <= 0) return '맨 아래 바닥은 캘 수 없어요';
+    if (y <= YMIN) return '맨 아래 바닥은 캘 수 없어요';   // 11/22 y 0에서 막히던 것(11/20 땅속을 -32까지 넓히고 이 줄을 안 고쳤음)
     var p = plotAt(x, z);
     if (p >= 0) {
       if (!me || p !== myPlot) return (p + 1) + '번 땅은 ' + (me ? '다른 사람의 땅이에요' : '주인이 있는 땅이에요');
-      if (y < PY0 || y >= G + PH) return '땅 높이 안에서만 지을 수 있어요';
+      if (y >= G + PH) return '땅 위로는 ' + PH + '칸까지만 지을 수 있어요';   // 11/22 아래쪽 제한 없앰(전도사님 「바닥 제한을 풀어 줬으면」) — 내 땅 아래는 주인만
       return '';
     }
     if (inTown(x, z) && y >= G - 4 && kind(get(x, y, z)) !== 'plant') return '마을 길과 마당은 캘 수 없어요. 숲·산·호수로 가 보세요';
@@ -3811,7 +3811,8 @@
     if (p < 0) return inTown(x, z) && y >= G - 4 ? '마을 마당에는 놓을 수 없어요' : '';
     if (!me) return '로그인하면 내 땅을 받아 집을 지을 수 있어요';
     if (p !== myPlot) return (p + 1) + '번 땅은 다른 사람의 땅이에요';
-    if (y < PY0 || y >= G + PH) return '땅 높이 안에서만 지을 수 있어요(아래 3칸 ~ 위 ' + PH + '칸)';
+    if (y <= YMIN) return '맨 아래 바닥이에요';
+    if (y >= G + PH) return '땅 위로는 ' + PH + '칸까지만 지을 수 있어요';
     return '';
   }
   var lastDeny = '', lastDenyT = 0;
@@ -4071,7 +4072,7 @@
   function setBlock(x, y, z, id) {
     var was = readBlock(x, y, z), c0 = colAt(x, z);
     setRaw(x, y, z, id); updateFrontierMachine(c0,x,y,z,id); updateSky(x, z); plotWrite(x, y, z, id);
-    if (plotAt(x, z) < 0) recordEdit(x, y, z, id);
+    if (plotAt(x, z) < 0 || y < PY0) recordEdit(x, y, z, id);   // 땅 아래(PY0 밑)는 땅 기록이 아니라 땅 밖 수정으로 남김
     if (c0) c0.mod = true;
     if (LIGHTS[was] || LIGHTS[id]) {
       if (c0) { if (LIGHTS[id]) c0.lamps.push([x, y, z]); else c0.lamps = c0.lamps.filter(function (l) { return l[0] !== x || l[1] !== y || l[2] !== z; }); }
@@ -4457,7 +4458,7 @@
   try { SAPS = JSON.parse(localStorage.getItem('arkVillage.saps') || '[]') || []; } catch (e) { SAPS = []; }
   function saveSaps() { try { localStorage.setItem('arkVillage.saps', JSON.stringify(SAPS)); } catch (e) {} }
   // 블록 여러 개를 한꺼번에 바꾸고 그림은 한 번만 다시 그림
-  function setQuiet(x, y, z, id) { setRaw(x, y, z, id); plotWrite(x, y, z, id); if (plotAt(x, z) < 0) recordEdit(x, y, z, id); var c0 = colAt(x, z); if (c0) c0.mod = true; netEdit(x, y, z, id); }
+  function setQuiet(x, y, z, id) { setRaw(x, y, z, id); plotWrite(x, y, z, id); if (plotAt(x, z) < 0 || y < PY0) recordEdit(x, y, z, id); var c0 = colAt(x, z); if (c0) c0.mod = true; netEdit(x, y, z, id); }
   function rebuildBox(x0, y0, z0, x1, y1, z1) {
     for (var cz = Math.floor(z0 / CS); cz <= Math.floor(z1 / CS); cz++) for (var cx = Math.floor(x0 / CS); cx <= Math.floor(x1 / CS); cx++) {
       if (!inWorldC(cx, cz) || !meshedCols[cz * NC + cx]) continue;
@@ -8850,6 +8851,7 @@
   function netEdit(x, y, z, id) {
     if (NET.applying || !NET.ready) return;
     var p = plotAt(x, z), adm = isAdm();
+    if (y < PY0 && (p === myPlot || p < 0 || adm)) p = -1;   // 내 땅 아래는 땅 밖 수정으로 보냄(서버가 주인인지 확인)
     if (p >= 0 && p !== myPlot) {   // 다른 사람 땅은 관리자만: 블록 부분 저장 + 실시간으로 주인·다른 사람에게
       if (!adm) return;
       adminPlotDirty(p); NET.pp[x + ',' + y + ',' + z] = id; if (!NET.flushT) NET.flushT = setTimeout(netFlush, 150); return;
@@ -8924,7 +8926,7 @@
         var e = list[i]; if (!e || e.length !== 4) continue;
         var x = e[0] | 0, y = e[1] | 0, z = e[2] | 0, id = e[3] | 0;
         if (y < YMIN + 1 || y >= SY || x < 0 || z < 0 || x >= WS || z >= WS || (id !== AIR && !B[id])) continue;
-        var p = plotAt(x, z);
+        var p = y < PY0 ? -1 : plotAt(x, z);
         if (p >= 0) {
           if (ARK_ADMINS[u]) { plotPut(p, x, y, z, id); if (p === myPlot) adminTouchedMine = true; }   // 관리자가 고친 것은 주인 기기에도 반영
           else {
@@ -8966,7 +8968,7 @@
       r.data.split(';').forEach(function (s) {
         var a = s.split(','); if (a.length !== 4) return;
         var x = +a[0], y = +a[1], z = +a[2], id = +a[3];
-        if (x < 0 || z < 0 || x >= WS || z >= WS || y < YMIN + 1 || y >= SY || plotAt(x, z) >= 0) return;
+        if (x < 0 || z < 0 || x >= WS || z >= WS || y < YMIN + 1 || y >= SY || (plotAt(x, z) >= 0 && y >= PY0)) return;
         if (NET.pm[x + ',' + y + ',' + z] !== undefined) return;   // 내가 아직 보내는 중인 것은 그대로
         var k = (z >> 5) * NC + (x >> 5), li = (y * CS + (z & 31)) * CS + (x & 31);
         if (EDITS[k] && EDITS[k][li] === id && (!COLS[k] || readBlock(x, y, z) === id)) return;
@@ -9020,7 +9022,7 @@
       for (var li in ed) {
         if (n >= 1400) return;
         var l = +li, lx = ((l % CS) + CS) % CS, r0 = (l - lx) / CS, lz = ((r0 % CS) + CS) % CS, y = (r0 - lz) / CS, x = cx * CS + lx, z = cz * CS + lz;
-        if (y < YMIN + 1 || plotAt(x, z) >= 0 || inArk(x, y, z)) continue;
+        if (y < YMIN + 1 || (plotAt(x, z) >= 0 && y >= PY0) || inArk(x, y, z)) continue;
         NET.pm[x + ',' + y + ',' + z] = ed[li]; n++;
       }
     }
@@ -9037,7 +9039,7 @@
       if (NET.edits) NET.edits.split(';').forEach(function (s) {
         var a = s.split(','); if (a.length !== 4) return;
         var x = +a[0], y = +a[1], z = +a[2];
-        if (plotAt(x, z) >= 0) return;   // 방주 안 고침도 받는다(서버가 관리자만 허용)
+        if (plotAt(x, z) >= 0 && y >= PY0) return;   // 방주 안 고침도 받는다(서버가 관리자만 허용)
         recordEdit(x, y, z, +a[3]); delete NET.pm[x + ',' + y + ',' + z];
       });
       NET.edits = null; NET.ready = true;
@@ -9400,7 +9402,7 @@
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
   var NEWS_VER = 23, NEWS = [
-    ['fun6', '⚔', '더 강한 그림자·무기 재료·물', '① 어둠의 그림자가 더 튼튼하고 세졌어요. 함께 싸우고 방어구를 챙겨요. ② 검·활·물매·방패와 옷·갑옷을 만드는 재료가 늘었어요. 활과 물매도 제작대에서 만들고, 하나님의 전신갑주(구원의 투구·의의 호심경·진리의 허리 띠·평안의 복음의 신·믿음의 방패)는 구리·철·은·금·호마노·청옥·금강석이 하나씩 다 들어가요. ③ 물에서는 가라앉아요. 점프를 누르고 있으면 떠오르고, 물가에서 점프를 두 번 누르면 뭍으로 올라서요. ④ 말과 나귀는 탄 채로 물을 건널 수 있고, 물에 빠진 짐승은 헤엄쳐 나와요. 멀리 갔다 오면 집 안 횃불·등불 빛이 꺼지던 것도 고쳤어요. ⑤ 새 버전이 나오면 화면 위에 「🔄 새 버전」 단추가 떠요.', 0],
+    ['fun6', '⚔', '더 강한 그림자·무기 재료·물', '① 어둠의 그림자가 더 튼튼하고 세졌어요. 함께 싸우고 방어구를 챙겨요. ⑥ 땅속을 맨 아래(-31)까지 팔 수 있고, 내 땅 아래로도 굴을 팔 수 있어요(내 땅 아래는 주인만). ② 검·활·물매·방패와 옷·갑옷을 만드는 재료가 늘었어요. 활과 물매도 제작대에서 만들고, 하나님의 전신갑주(구원의 투구·의의 호심경·진리의 허리 띠·평안의 복음의 신·믿음의 방패)는 구리·철·은·금·호마노·청옥·금강석이 하나씩 다 들어가요. ③ 물에서는 가라앉아요. 점프를 누르고 있으면 떠오르고, 물가에서 점프를 두 번 누르면 뭍으로 올라서요. ④ 말과 나귀는 탄 채로 물을 건널 수 있고, 물에 빠진 짐승은 헤엄쳐 나와요. 멀리 갔다 오면 집 안 횃불·등불 빛이 꺼지던 것도 고쳤어요. ⑤ 새 버전이 나오면 화면 위에 「🔄 새 버전」 단추가 떠요.', 0],
     ['fun5', '🪨', '벧엘 돌·큰 지도·짐승 치기·물에서 나오기', '① 벧엘 돌: 빛 조각 2개와 돌 1개로 만들어요. 밖에서 쓰면 집(마지막에 누운 침대, 없으면 내 땅 앞)으로 가고, 집에서 쓰면 떠났던 곳으로 돌아가요. 한 번 쓰면 없어져요(창 28:15). ② 작은 지도를 누르면 큰 지도가 다시 보여요. ③ 손이 비었거나 칼·검·도구를 들고 짐승을 누르면 쳐요(처음 보는 짐승은 카드부터). 활과 물매도 짐승에 맞아요. ④ 물에 빠지면 가만히 있어도 떠오르고, 물가로 헤엄치면 올라가요. 「🏊 뭍으로 나가기」를 누르면 가까운 물가로 나와요. ⑤ 침대에 누우면 그 침대가 다시 일어나는 자리가 돼요(마지막에 누운 침대).', 0],
     ['fun4', '🎆', '폭죽·등불 잡기·숨바꼭질', '① 폭죽: 갈대 1개와 숯 1개로 3개를 만들어요. 들고 누르면 하늘에서 터지고 함께 있는 사람에게도 보여요. 성탄 절기에는 마구간 구유를 누르면 하루 한 번 폭죽과 떡을 선물로 받아요. ② 등불 잡기: 달리기 출발 기둥 옆 돌기둥 아홉 가운데 하나를 누르면 30초 동안 켜지는 등불을 따라 눌러요. ③ 숨바꼭질: 함께 있는 사람들과 한곳에 모여 메뉴 → 퀘스트 → 「놀이」에서 「내가 술래」를 눌러요. 30초 동안 숨고, 술래는 가까이 가서 눌러 찾아요(술래에게는 이름표와 지도 점이 안 보여요). 「놀이」 탭에서 놀이 마당마다 길 안내도 받을 수 있어요.', 0],
     ['fun3', '🎣', '낚시 타이밍·보물찾기·달리기 경주', '① 낚시: 낚싯대를 들고 물을 누르면 찌가 떠요. 찌가 쑥 들어가면 막대가 나오고, 움직이는 표시가 초록 칸에 왔을 때 한 번 더 누르면 낚아요(가운데 노란 칸이면 한 마리 더). 호수·강·바다마다 물고기가 다르고 크기가 적혀요. ② 보물찾기: 월요일마다 땅 어딘가에 보물이 숨겨져요. 메뉴 → 퀘스트 → 「놀이」에서 실마리(두 곳에서 잰 거리)를 보고 찾아가요. ③ 달리기 경주: 마을 동쪽 들판의 출발 기둥(등 달린 울타리)을 누르고 깃발 다섯을 돌아와요. 내 최고 기록이 남아요.', 0],

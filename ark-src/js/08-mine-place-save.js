@@ -1,7 +1,7 @@
   // ───────── 캐기·놓기 권한, 저장 ─────────
   var client = null, me = null, myPlot = -1, plotOwners = {}, plotUser = {}, saveTimer = null, dirty = false, started = false;
   function canMine(x, y, z) {
-    if (isAdm()) return y <= 0 ? '맨 아래 바닥은 캘 수 없어요' : '';   // 관리자는 어디서든(다른 사람 땅·방주 포함)
+    if (isAdm()) return y <= YMIN ? '맨 아래 바닥은 캘 수 없어요' : '';   // 관리자는 어디서든(다른 사람 땅·방주 포함)
     if (funProtect(x, z)) return '놀이 자리는 그대로 둬요';
     var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
     if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
@@ -10,11 +10,11 @@
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
     if (inLandmark(x, z)) return '「' + REGION_INFO[inLandmark(x, z)][0] + '」은(는) 함께 구경하는 곳이라 지켜져 있어요';
     if (inDungeon(x, y, z) && get(x, y, z) !== TORCH && !(get(x, y, z) >= 170 && get(x, y, z) < 174) && get(x, y, z) !== LADDER + 3) return '골짜기의 벽은 깨지지 않아요 — 길을 찾아 지나가요(시 23:4)';
-    if (y <= 0) return '맨 아래 바닥은 캘 수 없어요';
+    if (y <= YMIN) return '맨 아래 바닥은 캘 수 없어요';   // 11/22 y 0에서 막히던 것(11/20 땅속을 -32까지 넓히고 이 줄을 안 고쳤음)
     var p = plotAt(x, z);
     if (p >= 0) {
       if (!me || p !== myPlot) return (p + 1) + '번 땅은 ' + (me ? '다른 사람의 땅이에요' : '주인이 있는 땅이에요');
-      if (y < PY0 || y >= G + PH) return '땅 높이 안에서만 지을 수 있어요';
+      if (y >= G + PH) return '땅 위로는 ' + PH + '칸까지만 지을 수 있어요';   // 11/22 아래쪽 제한 없앰(전도사님 「바닥 제한을 풀어 줬으면」) — 내 땅 아래는 주인만
       return '';
     }
     if (inTown(x, z) && y >= G - 4 && kind(get(x, y, z)) !== 'plant') return '마을 길과 마당은 캘 수 없어요. 숲·산·호수로 가 보세요';
@@ -37,7 +37,8 @@
     if (p < 0) return inTown(x, z) && y >= G - 4 ? '마을 마당에는 놓을 수 없어요' : '';
     if (!me) return '로그인하면 내 땅을 받아 집을 지을 수 있어요';
     if (p !== myPlot) return (p + 1) + '번 땅은 다른 사람의 땅이에요';
-    if (y < PY0 || y >= G + PH) return '땅 높이 안에서만 지을 수 있어요(아래 3칸 ~ 위 ' + PH + '칸)';
+    if (y <= YMIN) return '맨 아래 바닥이에요';
+    if (y >= G + PH) return '땅 위로는 ' + PH + '칸까지만 지을 수 있어요';
     return '';
   }
   var lastDeny = '', lastDenyT = 0;
@@ -297,7 +298,7 @@
   function setBlock(x, y, z, id) {
     var was = readBlock(x, y, z), c0 = colAt(x, z);
     setRaw(x, y, z, id); updateFrontierMachine(c0,x,y,z,id); updateSky(x, z); plotWrite(x, y, z, id);
-    if (plotAt(x, z) < 0) recordEdit(x, y, z, id);
+    if (plotAt(x, z) < 0 || y < PY0) recordEdit(x, y, z, id);   // 땅 아래(PY0 밑)는 땅 기록이 아니라 땅 밖 수정으로 남김
     if (c0) c0.mod = true;
     if (LIGHTS[was] || LIGHTS[id]) {
       if (c0) { if (LIGHTS[id]) c0.lamps.push([x, y, z]); else c0.lamps = c0.lamps.filter(function (l) { return l[0] !== x || l[1] !== y || l[2] !== z; }); }
@@ -683,7 +684,7 @@
   try { SAPS = JSON.parse(localStorage.getItem('arkVillage.saps') || '[]') || []; } catch (e) { SAPS = []; }
   function saveSaps() { try { localStorage.setItem('arkVillage.saps', JSON.stringify(SAPS)); } catch (e) {} }
   // 블록 여러 개를 한꺼번에 바꾸고 그림은 한 번만 다시 그림
-  function setQuiet(x, y, z, id) { setRaw(x, y, z, id); plotWrite(x, y, z, id); if (plotAt(x, z) < 0) recordEdit(x, y, z, id); var c0 = colAt(x, z); if (c0) c0.mod = true; netEdit(x, y, z, id); }
+  function setQuiet(x, y, z, id) { setRaw(x, y, z, id); plotWrite(x, y, z, id); if (plotAt(x, z) < 0 || y < PY0) recordEdit(x, y, z, id); var c0 = colAt(x, z); if (c0) c0.mod = true; netEdit(x, y, z, id); }
   function rebuildBox(x0, y0, z0, x1, y1, z1) {
     for (var cz = Math.floor(z0 / CS); cz <= Math.floor(z1 / CS); cz++) for (var cx = Math.floor(x0 / CS); cx <= Math.floor(x1 / CS); cx++) {
       if (!inWorldC(cx, cz) || !meshedCols[cz * NC + cx]) continue;
