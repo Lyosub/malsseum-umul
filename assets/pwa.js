@@ -19,3 +19,29 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+
+// 2026-11-22 아이폰 홈 화면 앱은 닫았다 다시 열어도 멈춰 두었던 화면을 그대로 되살려, 며칠 전 판이 계속 보였다.
+// 30분 넘게 다른 앱에 있다가 돌아오면 새로 받는다(글을 쓰던 중이거나 함께 하는 방에 들어가 있으면 그대로 둔다).
+(function () {
+  var hiddenAt = 0, LIVE = /\/(quizroom|twenty|expedition|harvest|star)[^\/]*\.html$/;
+  function typing() {
+    var els = document.querySelectorAll("input, textarea");
+    for (var i = 0; i < els.length; i++) {
+      var e = els[i], ty = (e.type || "").toLowerCase();
+      if (ty === "hidden" || ty === "checkbox" || ty === "radio" || ty === "button" || ty === "submit") continue;
+      if (e.value && e.value !== e.defaultValue) return true;
+    }
+    var a = document.activeElement;
+    return !!(a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable));
+  }
+  function maybeReload() {
+    if (!hiddenAt || Date.now() - hiddenAt < 30 * 60 * 1000) return;
+    hiddenAt = 0;
+    if (LIVE.test(location.pathname) || typing()) return;
+    try { if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(function (r) { if (r) r.update(); }); } catch (e) {}
+    location.reload();
+  }
+  document.addEventListener("visibilitychange", function () { if (document.hidden) hiddenAt = Date.now(); else maybeReload(); });
+  window.addEventListener("pagehide", function () { hiddenAt = Date.now(); });
+  window.addEventListener("pageshow", function (e) { if (e.persisted) maybeReload(); });
+})();

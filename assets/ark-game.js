@@ -7852,7 +7852,7 @@
   function openVisit() {
     if (!me || !client || !NET.ok) { toast('로그인하면 친구 집을 구경할 수 있어요'); return; }
     openPanel('visit'); $('visitList').innerHTML = '<div class="empty">불러오는 중…</div>';
-    Promise.all([client.rpc('get_ark_showcase'),client.rpc('get_ark_showcase_details').catch(function(){return {data:[]};})]).then(function (ans) {
+    Promise.all([client.rpc('get_ark_showcase'),Promise.resolve(client.rpc('get_ark_showcase_details')).catch(function(){return {data:[]};})]).then(function (ans) {
       var r=ans[0],details = Array.isArray(ans[1].data)?ans[1].data:[];
       var L = $('visitList'); L.innerHTML = ''; var rows = r.data || [], mine = rows.filter(function (x) { return x.mine; })[0];
       var sel = $('visitIntro'); sel.innerHTML = ''; INTROS.forEach(function (t, i) { var o = document.createElement('option'); o.value = i; o.textContent = t; sel.appendChild(o); });
