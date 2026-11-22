@@ -1,13 +1,33 @@
 {
-  "generated_kst": "2026-11-21 12:16",
+  "generated_kst": "2026-11-22 11:20",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 142,
     "follows_count": 110,
-    "media_count": 176
+    "media_count": 178
   },
   "posts": [
+    {
+      "id": "18021264536958451",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-11-22T02:02:59+0000",
+      "permalink": "https://www.instagram.com/reel/DgBr8CyGVkv/",
+      "caption_first_line": "🏡 나그네 마을 — 곧 공개",
+      "likes": 1,
+      "comments": 1
+    },
+    {
+      "id": "18203235064376546",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-11-21T04:02:35+0000",
+      "permalink": "https://www.instagram.com/reel/Df_U3JFE3BS/",
+      "caption_first_line": "로마에 갇혀 있던 사도 바울이 편지 한 통을 썼습니다.",
+      "likes": 5,
+      "comments": 1
+    },
     {
       "id": "18128480356927641",
       "type": "FEED",
@@ -25,7 +45,7 @@
       "timestamp_utc": "2026-11-17T10:33:13+0000",
       "permalink": "https://www.instagram.com/p/Df1uZNmlftR/",
       "caption_first_line": "내가 애쓴 건데, 왜 \"주께서 주신\" 걸까요?",
-      "likes": 10,
+      "likes": 11,
       "comments": 1
     },
     {
@@ -236,26 +256,6 @@
       "permalink": "https://www.instagram.com/reel/DenugU6jVBD/",
       "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「행함으로 믿음을 보이는 자」 (야고보서 2장 14-26절)",
       "likes": 4,
-      "comments": 1
-    },
-    {
-      "id": "18115347548127155",
-      "type": "REELS",
-      "media_type": "VIDEO",
-      "timestamp_utc": "2026-10-17T04:03:05+0000",
-      "permalink": "https://www.instagram.com/reel/DelNE1qjxkV/",
-      "caption_first_line": "날마다 \"하나님은 한 분이시다\"를 외우던 성도들에게",
-      "likes": 9,
-      "comments": 1
-    },
-    {
-      "id": "18145974115592881",
-      "type": "FEED",
-      "media_type": "IMAGE",
-      "timestamp_utc": "2026-10-15T10:32:29+0000",
-      "permalink": "https://www.instagram.com/p/DegwFDgoHfE/",
-      "caption_first_line": "먼저 자리를 내어 주는 것, 시작은 작습니다.",
-      "likes": 7,
       "comments": 1
     }
   ]
