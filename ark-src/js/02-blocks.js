@@ -409,15 +409,16 @@
   FRONTIER_RECIPES.forEach(function (r) { regShape(r[0],r[1],r[4],r[0],r[2]); });
   for (var si=0;si<8;si++) regShape(SLUICE+si,'수문','sluice',SLUICE,GOPHER,si>>1,si%2);
   regShape(ARCH_SIDE,B[ARCH][0],'arch',ARCH,SHAPE[ARCH].mat,1);
-  var WORD_SHELF=480, ALTAR=481, SLING_TARGET=482;
+  var WORD_SHELF=480, ALTAR=481, SLING_TARGET=482, BETHEL_BLOCK=483;   // 11/22 세워 둔 벧엘 돌
   var WORD_SCROLL=660, STAFF=661, HAND_MAP=662, COMPASS=663, SHOFAR=664, SLING=665, ROUND_STONE=666, FIREWORK=667, HOME_STONE=668;   // 11/21 폭죽
   var WORD_BLOCKS=[[WORD_SHELF,'말씀 서재',0x99693e,'study'],[ALTAR,'돌 제단',0x9b9081,'altar'],
-    [SLING_TARGET,'물매 연습 표적',0xbb8454,'target']];
+    [SLING_TARGET,'물매 연습 표적',0xbb8454,'target'],[BETHEL_BLOCK,'세워 둔 벧엘 돌',0x7fd3e8,'bethel']];
   var WORD_ITEMS=[[WORD_SCROLL,'말씀 두루마리',0xead6a2],[STAFF,'양치기 지팡이',0x856145],
     [HAND_MAP,'두루마리 지도',0xdfbf88],[COMPASS,'방향 바늘',0x9f7949],[SHOFAR,'쇼파르',0xd6ab71],
     [SLING,'물매',0x9a7052],[ROUND_STONE,'매끄러운 돌',0xa4adad],[FIREWORK,'폭죽',0xd8483a],[HOME_STONE,'벧엘 돌',0x7fd3e8]];
   EXT_BOXES.study=[[.07,0,.14,.93,.19,.86],[.09,.19,.72,.91,.87,.85],[.07,.52,.2,.93,.62,.74],[.07,.87,.14,.93,1,.86]];
   EXT_BOXES.altar=[[.03,0,.03,.97,.25,.97],[.15,.25,.15,.85,.73,.85],[.03,.73,.03,.97,.9,.97]];
+  EXT_BOXES.bethel=[[.12,0,.12,.88,.2,.88],[.24,.2,.24,.76,1,.76]];
   EXT_BOXES.target=[[.39,0,.38,.61,.65,.62],[.1,.47,.40,.9,1,.60]];
   WORD_BLOCKS.forEach(function(d){
     buildShape(d[0],d[1],'word'+d[0],'extension',STONE); SHAPE[d[0]].boxes=d[3];
@@ -863,7 +864,8 @@
   [FIND_POT,FIND_LAMP,FIND_SEED,DITCH,FEAST_TABLE].forEach(function (id) { INV.push(id); });
   RECIPES.push({out:[DITCH,4],need:[[STONE,2],[CLAY,1]],cat:'shape'});
   RECIPES.push({out:[FEAST_TABLE,1],need:[[GOPHER,4],[REED,1]],cat:'shape'});
-  WORD_BLOCKS.forEach(function(d){INV.push(d[0]);});
+  WORD_BLOCKS.forEach(function(d){ if (d[0] !== BETHEL_BLOCK) INV.push(d[0]); });
+  DROP[BETHEL_BLOCK] = HOME_STONE; LIGHTS[BETHEL_BLOCK] = 1; B[BETHEL_BLOCK][5] = 1;   // 부수면 벧엘 돌 물건으로, 스스로 빛남
   WORD_ITEMS.forEach(function(d){INV.push(d[0]);});
   [
     [WORD_SHELF,1,[[SHELF,1],[WORD_SCROLL,1]]],[ALTAR,1,[[STONE,6]]],

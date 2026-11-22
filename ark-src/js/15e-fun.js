@@ -287,7 +287,9 @@
   }
   function atHome(h) { return Math.hypot(P.x - h.x, P.z - h.z) < 20 || (myPlot >= 0 && plotAt(Math.floor(P.x), Math.floor(P.z)) === myPlot); }
   function homeStoneLabel() { return '벧엘 돌 세우기'; }
-  // 세워 둔 벧엘 돌(한 사람당 하나, 내 화면에만 보임): { x, y, z } — 이 기기와 계정에 저장
+  // 세워 둔 벧엘 돌(한 사람당 하나): { x, y, z = 돌 블록 칸 가운데, ax, ay, az = 내가 서 있던 자리 } — 블록(483)은 모두에게 보이고, 누구 것인지는 이 기기와 계정에 저장
+  function bethelMine(x, y, z) { return !!BETHEL && Math.floor(BETHEL.x) === x && Math.floor(BETHEL.y) === y && Math.floor(BETHEL.z) === z; }
+  function bethelBroken() { if (!BETHEL) return; BETHEL = null; saveBethel(); bethelTick(); toast('🪨 벧엘 돌을 거뒀어요 — 다른 곳에 다시 세울 수 있어요'); }
   var BETHEL = null, bethelOut = null, bethelHome = null, bethelNear = '';
   try { BETHEL = JSON.parse(localStorage.getItem('arkVillage.bethel') || 'null'); } catch (e) { BETHEL = null; }
   function saveBethel() { try { localStorage.setItem('arkVillage.bethel', JSON.stringify(BETHEL)); } catch (e) {} stateDirty(); }
@@ -298,12 +300,19 @@
     if (atHome(h)) return deny('집에서 멀리 나가서 세워요 — 세운 자리와 집을 오갈 수 있어요');
     if (RACE || HS) return deny('놀이 중에는 세울 수 없어요');
     if (!P.ground || P.swim || riding || boatRide || cartRide) return deny('땅 위에 서서 세워요');
-    var why = canPlace(Math.floor(P.x), Math.floor(P.y), Math.floor(P.z), STONE); if (why) return deny(why);
+    // 내 앞 칸의 땅 위에 세움
+    var bx = Math.floor(P.x - Math.sin(P.yaw) * 1.6), bz = Math.floor(P.z - Math.cos(P.yaw) * 1.6), by = null;
+    for (var gy0 = Math.floor(P.y) + 1; gy0 >= Math.floor(P.y) - 2; gy0--) if (isSolid(get(bx, gy0, bz))) { by = gy0 + 1; break; }
+    if (by === null || Math.abs(by - P.y) > 1.6) return deny('앞이 평평한 땅일 때 세워요');
+    var at0 = get(bx, by, bz); if ((at0 !== AIR && kind(at0) !== 'plant') || get(bx, by + 1, bz) === WATER) return deny('앞 칸이 비어 있어야 세울 수 있어요');
+    var why = canPlace(bx, by, bz, BETHEL_BLOCK); if (why) return deny(why);
+    if (plotAt(bx, bz) >= 0) return deny('벧엘 돌은 땅 밖(숲·산·들)에 세워요');
     if (!isAdm()) { take(HOME_STONE, 1); bagChanged(); }
-    BETHEL = { x: Math.floor(P.x) + 0.5, y: P.y, z: Math.floor(P.z) + 0.5 }; saveBethel(); bethelTick();
+    setBlock(bx, by, bz, BETHEL_BLOCK);
+    BETHEL = { x: bx + 0.5, y: by, z: bz + 0.5, ax: P.x, ay: P.y, az: P.z }; saveBethel(); bethelTick();
     sparkle(BETHEL.x, BETHEL.y + 1, BETHEL.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); sfx('craft', 1500); vibrate('place');
     toast('🪨 벧엘 돌을 세웠어요 — 이 돌과 집(' + h.label + ')을 몇 번이든 오갈 수 있어요');
-    if (!S.bethelTold) { S.bethelTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🪨', '벧엘 돌', '내가 너와 함께 있어 네가 어디로 가든지 너를 지키며 너를 이끌어 이 땅으로 돌아오게 할지라', '창세기 28:15', '벧엘은 「하나님의 집」이에요. 밖에 하나를 세우면 그 자리와 집(마지막에 누운 침대)을 몇 번이든 오갈 수 있어요. 한 사람이 하나만 세울 수 있고, 돌 곁에서 「거두기」를 누르면 가방으로 돌아와요.'); }, 500); }
+    if (!S.bethelTold) { S.bethelTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🪨', '벧엘 돌', '내가 너와 함께 있어 네가 어디로 가든지 너를 지키며 너를 이끌어 이 땅으로 돌아오게 할지라', '창세기 28:15', '벧엘은 「하나님의 집」이에요. 밖에 하나를 세우면 그 자리와 집(마지막에 누운 침대)을 몇 번이든 오갈 수 있어요. 한 사람이 하나만 세울 수 있고, 내 돌은 나만 쓸 수 있어요. 부수거나 「거두기」를 누르면 가방으로 돌아와요.'); }, 500); }
   }
   function bethelMark(label, col) {
     var g = new THREE.Group(), m = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.1, 0.7), new THREE.MeshBasicMaterial({ color: col, fog: false }));
@@ -317,22 +326,26 @@
     if (riding) dismount(true);
     sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); sfx('craft', 1500);
     if (bethelNear === 'out') { teleport(h.x, h.y, h.z + 1.2, P.yaw); toast('✨ ' + h.label + '(으)로 왔어요'); }
-    else { teleport(BETHEL.x, BETHEL.y, BETHEL.z + 1.2, P.yaw); toast('✨ 벧엘 돌로 왔어요'); }
+    else { teleport(BETHEL.ax !== undefined ? BETHEL.ax : BETHEL.x, BETHEL.ay !== undefined ? BETHEL.ay : BETHEL.y, BETHEL.az !== undefined ? BETHEL.az : BETHEL.z + 1.2, P.yaw); toast('✨ 벧엘 돌로 왔어요'); }
     setTimeout(function () { sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); bethelTick(); }, 150);
   }
   function bethelTake() {
     if (!BETHEL || bethelNear !== 'out') return;
     if (!isAdm()) { if (!give(HOME_STONE, 1)) return bagFull(); bagChanged(); }
-    BETHEL = null; saveBethel(); bethelTick(); sfx('pop'); toast('🪨 벧엘 돌을 거뒀어요 — 다른 곳에 다시 세울 수 있어요');
+    var tx = Math.floor(BETHEL.x), ty = Math.floor(BETHEL.y), tz = Math.floor(BETHEL.z);
+    if (get(tx, ty, tz) === BETHEL_BLOCK) setBlock(tx, ty, tz, AIR);
+    sfx('pop'); bethelBroken();
   }
   function bethelTick() {
     var h = started ? homeSpot() : null, on = !!(BETHEL && h);
-    if (on && !bethelOut) { bethelOut = bethelMark('🪨 벧엘 돌', 0x7fd3e8); bethelHome = bethelMark('🪨 벧엘 돌로', 0xbfeeff); bethelHome.children[0].scale.set(0.6, 0.5, 0.6); }
+    if (on && !bethelOut) { bethelOut = bethelMark('🪨 내 벧엘 돌', 0x7fd3e8); bethelOut.children[0].visible = false; bethelHome = bethelMark('🪨 벧엘 돌로', 0xbfeeff); bethelHome.children[0].scale.set(0.6, 0.5, 0.6); }
     if (bethelOut) { bethelOut.visible = bethelHome.visible = on; }
     bethelNear = '';
     if (on) {
       bethelOut.position.set(BETHEL.x, BETHEL.y, BETHEL.z); bethelHome.position.set(h.x, h.y, h.z);
-      if (ui === 'play' && Math.abs(P.y - BETHEL.y) < 4 && Math.hypot(P.x - BETHEL.x, P.z - BETHEL.z) < 3) bethelNear = 'out';
+      // 블록 없이 표식만 세웠던 것(앞 판)은 그 자리에 블록을 세움
+      if (BETHEL.ax === undefined && colAt(Math.floor(BETHEL.x), Math.floor(BETHEL.z)) && Math.hypot(P.x - BETHEL.x, P.z - BETHEL.z) < 12) { var ox = Math.floor(BETHEL.x), oy = Math.floor(BETHEL.y), oz = Math.floor(BETHEL.z); BETHEL.ax = BETHEL.x; BETHEL.ay = BETHEL.y; BETHEL.az = BETHEL.z + 1.2; if (get(ox, oy, oz) === AIR && !canPlace(ox, oy, oz, BETHEL_BLOCK)) setBlock(ox, oy, oz, BETHEL_BLOCK); saveBethel(); }
+      if (ui === 'play' && Math.abs(P.y - BETHEL.y) < 4 && Math.hypot(P.x - BETHEL.x, P.z - BETHEL.z) < 3.5) bethelNear = 'out';
       else if (ui === 'play' && Math.abs(P.y - h.y) < 4 && Math.hypot(P.x - h.x, P.z - h.z) < 3) bethelNear = 'home';
     }
     var go = $('bethelGo'), tk = $('bethelTake'); if (!go) return;

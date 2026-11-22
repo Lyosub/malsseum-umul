@@ -10,6 +10,7 @@
     if (inCity(x, z)) return '거룩한 성은 지켜져 있어요';
     if (inLandmark(x, z)) return '「' + REGION_INFO[inLandmark(x, z)][0] + '」은(는) 함께 구경하는 곳이라 지켜져 있어요';
     if (inDungeon(x, y, z) && get(x, y, z) !== TORCH && !(get(x, y, z) >= 170 && get(x, y, z) < 174) && get(x, y, z) !== LADDER + 3) return '골짜기의 벽은 깨지지 않아요 — 길을 찾아 지나가요(시 23:4)';
+    if (get(x, y, z) === BETHEL_BLOCK && !bethelMine(x, y, z)) return '다른 사람이 세운 벧엘 돌이에요';
     if (y <= YMIN) return '맨 아래 바닥은 캘 수 없어요';   // 11/22 y 0에서 막히던 것(11/20 땅속을 -32까지 넓히고 이 줄을 안 고쳤음)
     var p = plotAt(x, z);
     if (p >= 0) {
@@ -79,6 +80,7 @@
     if (kindA === 'break') {
       var why = canMine(h.x, h.y, h.z); if (why) return deny(why);
       var old = get(h.x, h.y, h.z), usedTool = mineInfo(old).tool || 0;
+      if (old === BETHEL_BLOCK) bethelBroken();
       if (SHAPE[old] && SHAPE[old].type === 'door') {
         // 문은 한 줄(4칸)을 통째로
         var dc = doorColumn(h.x, h.y, h.z);
