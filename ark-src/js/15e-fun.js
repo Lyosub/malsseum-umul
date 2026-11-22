@@ -304,7 +304,7 @@
       teleport(h.x, h.y, h.z, P.yaw); toast('✨ ' + h.label + '(으)로 왔어요 — 집에서 한 번 더 쓰면 떠났던 곳으로 돌아가요');
     }
     setTimeout(function () { sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); }, 120);
-    if (!S.bethelTold) { S.bethelTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🪨', '벧엘 돌', '내가 너와 함께 있어 네가 어디로 가든지 너를 지키며 너를 이끌어 이 땅으로 돌아오게 할지라', '창세기 28:15', '벧엘은 「하나님의 집」이에요. 빛 조각 2 + 돌 1로 만들어요. 밖에서 쓰면 집(마지막에 누운 침대)으로, 집에서 쓰면 떠났던 곳으로 돌아가요. 한 번 쓰면 없어져요.'); }, 500); }
+    if (!S.bethelTold) { S.bethelTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🪨', '벧엘 돌', '내가 너와 함께 있어 네가 어디로 가든지 너를 지키며 너를 이끌어 이 땅으로 돌아오게 할지라', '창세기 28:15', '벧엘은 「하나님의 집」이에요. 빛 조각 8 + 금 덩이 2 + 금강석 1로 제작대에서 만들어요. 밖에서 쓰면 집(마지막에 누운 침대)으로, 집에서 쓰면 떠났던 곳으로 돌아가요. 한 번 쓰면 없어져요.'); }, 500); }
   }
   // ── 11/22 물에 빠졌을 때: 1.5초 넘게 헤엄치면 「뭍으로 나가기」 버튼 → 가까운 물가 땅 위로 ──
   var swimHeld = 0;
