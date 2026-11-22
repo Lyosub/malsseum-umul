@@ -1233,7 +1233,7 @@
   function stateDirty() { stateDirtyF = true; }
   function stateGather() {
     var horses = []; try { horses = JSON.parse(localStorage.getItem('arkVillage.horses') || '[]'); } catch (e) {}
-    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, faith: FAITH, spawn: SPAWN, ach: ACH, noah: NOAH, quest: { stats: stats, step: qStep }, story: STORY, tutorial: tutorialStep, titles: { t: MYTITLE, got: GOTTITLES }, adv: ADV };
+    return { v: 1, hot: HOTBAR, slots: BAGSLOT, jobs: JOBS, horses: horses, herd: HERD, crops: CROPS, saps: SAPS, hp: HP, food: FOOD, faith: FAITH, spawn: SPAWN, bethel: BETHEL, ach: ACH, noah: NOAH, quest: { stats: stats, step: qStep }, story: STORY, tutorial: tutorialStep, titles: { t: MYTITLE, got: GOTTITLES }, adv: ADV };
   }
   function stateApply(d) {
     if (!d || d.v !== 1) return;
@@ -1245,7 +1245,7 @@
     if (d.crops) CROPS = d.crops; if (d.saps) { SAPS = d.saps; saveSaps(); }
     if (typeof d.faith === 'number') FAITH = Math.max(1, Math.min(20, d.faith));
     if (typeof d.hp === 'number') HP = Math.max(1, Math.min(20, d.hp)); if (typeof d.food === 'number') FOOD = Math.max(0, Math.min(20, d.food));
-    SPAWN = d.spawn || null; if (d.ach) ACH = d.ach;
+    SPAWN = d.spawn || null; if (d.bethel !== undefined) { BETHEL = d.bethel || null; try { localStorage.setItem('arkVillage.bethel', JSON.stringify(BETHEL)); } catch (e) {} } if (d.ach) ACH = d.ach;
     if (d.noah && typeof d.noah.step === 'number' && ((d.noah.done || 0) > (NOAH.done || 0) || d.noah.step > NOAH.step)) { NOAH = d.noah; try { localStorage.setItem('arkVillage.noah', JSON.stringify(NOAH)); } catch (e) {} }
     if (d.titles) { for (var tk in (d.titles.got || {})) if (TITLES[+tk]) GOTTITLES[tk] = d.titles.got[tk]; if (typeof d.titles.t === 'number' && (d.titles.t < 0 || GOTTITLES[d.titles.t])) MYTITLE = d.titles.t; try { localStorage.setItem('arkVillage.title', String(MYTITLE)); localStorage.setItem('arkVillage.titles', JSON.stringify(GOTTITLES)); } catch (e) {} }
     if (d.adv) advMerge(d.adv);

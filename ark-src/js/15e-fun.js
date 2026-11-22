@@ -279,33 +279,67 @@
 
   // ⑥ 숨바꼭질: 「놀이」 탭에서 시작한 사람이 술래. 60칸 안에 함께 있는 사람이 숨는다(30초), 술래는 2분 30초 동안 찾는다.
   //    술래 화면에서는 이름표와 지도 점이 가려진다. 가까이(7칸) 가서 사람을 누르면 「찾았다」.
-  // ── 11/22 벧엘 돌(창 28:15): 밖에서 쓰면 집(마지막에 누운 침대, 없으면 내 땅 앞)으로, 집에서 쓰면 마지막으로 떠난 곳으로. 쓸 때마다 하나 ──
+  // ── 11/22 벧엘 돌(창 28:15): 밖에 하나를 세우면 그 자리와 집(마지막에 누운 침대, 없으면 내 땅 앞)을 몇 번이든 오감. 한 사람당 하나, 거두면 가방으로 ──
   function homeSpot() {
     if (SPAWN) return { x: SPAWN.x + 0.5, y: SPAWN.y, z: SPAWN.z + 0.5, label: '🛏 내 침대' };
     if (myPlot >= 0) { var o = plotOrigin(myPlot); return { x: o.x + OLD_PLOT / 2, y: G, z: o.z - 2, label: '🏠 내 땅(' + (myPlot + 1) + '번) 앞' }; }
     return null;
   }
   function atHome(h) { return Math.hypot(P.x - h.x, P.z - h.z) < 20 || (myPlot >= 0 && plotAt(Math.floor(P.x), Math.floor(P.z)) === myPlot); }
-  function homeStoneLabel() { var h = homeSpot(); return h && atHome(h) && villageBook.away ? '떠난 곳으로' : '집으로 가기'; }
+  function homeStoneLabel() { return '벧엘 돌 세우기'; }
+  // 세워 둔 벧엘 돌(한 사람당 하나, 내 화면에만 보임): { x, y, z } — 이 기기와 계정에 저장
+  var BETHEL = null, bethelOut = null, bethelHome = null, bethelNear = '';
+  try { BETHEL = JSON.parse(localStorage.getItem('arkVillage.bethel') || 'null'); } catch (e) { BETHEL = null; }
+  function saveBethel() { try { localStorage.setItem('arkVillage.bethel', JSON.stringify(BETHEL)); } catch (e) {} stateDirty(); }
   function homeStoneUse() {
     var h = homeSpot();
-    if (!h) return deny('로그인해서 내 땅을 받거나 침대에 한 번 누우면 벧엘 돌이 그곳으로 이어져요');
-    if (RACE) return deny('달리기 중에는 쓸 수 없어요');
-    if (HS) return deny('숨바꼭질 중에는 쓸 수 없어요');
-    var back = atHome(h);
-    if (back && !villageBook.away) return deny('여기가 집이에요 — 밖에서 쓰면 집으로, 집에서 쓰면 마지막으로 떠난 곳으로 돌아가요');
+    if (!h) return deny('로그인해서 내 땅을 받거나 침대에 한 번 누우면 벧엘 돌이 그곳과 이어져요');
+    if (BETHEL) return deny('벧엘 돌은 하나만 세울 수 있어요 — 세워 둔 돌(X ' + Math.floor(BETHEL.x) + ', Z ' + Math.floor(BETHEL.z) + ') 곁에서 「거두기」를 누르면 가방으로 돌아와요');
+    if (atHome(h)) return deny('집에서 멀리 나가서 세워요 — 세운 자리와 집을 오갈 수 있어요');
+    if (RACE || HS) return deny('놀이 중에는 세울 수 없어요');
+    if (!P.ground || P.swim || riding || boatRide || cartRide) return deny('땅 위에 서서 세워요');
+    var why = canPlace(Math.floor(P.x), Math.floor(P.y), Math.floor(P.z), STONE); if (why) return deny(why);
     if (!isAdm()) { take(HOME_STONE, 1); bagChanged(); }
-    sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); sfx('craft', 1500); vibrate('place');
-    if (back) {
-      var a = villageBook.away; villageBook.away = null; saveVillageBook();
-      teleport(a.x, a.y, a.z, a.yaw); toast('✨ 떠났던 곳으로 돌아왔어요');
-    } else {
-      villageBook.away = { x: P.x, y: P.y, z: P.z, yaw: P.yaw }; saveVillageBook();
-      teleport(h.x, h.y, h.z, P.yaw); toast('✨ ' + h.label + '(으)로 왔어요 — 집에서 한 번 더 쓰면 떠났던 곳으로 돌아가요');
-    }
-    setTimeout(function () { sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); }, 120);
-    if (!S.bethelTold) { S.bethelTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🪨', '벧엘 돌', '내가 너와 함께 있어 네가 어디로 가든지 너를 지키며 너를 이끌어 이 땅으로 돌아오게 할지라', '창세기 28:15', '벧엘은 「하나님의 집」이에요. 빛 조각 8 + 금 덩이 2 + 금강석 1로 제작대에서 만들어요. 밖에서 쓰면 집(마지막에 누운 침대)으로, 집에서 쓰면 떠났던 곳으로 돌아가요. 한 번 쓰면 없어져요.'); }, 500); }
+    BETHEL = { x: Math.floor(P.x) + 0.5, y: P.y, z: Math.floor(P.z) + 0.5 }; saveBethel(); bethelTick();
+    sparkle(BETHEL.x, BETHEL.y + 1, BETHEL.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); sfx('craft', 1500); vibrate('place');
+    toast('🪨 벧엘 돌을 세웠어요 — 이 돌과 집(' + h.label + ')을 몇 번이든 오갈 수 있어요');
+    if (!S.bethelTold) { S.bethelTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🪨', '벧엘 돌', '내가 너와 함께 있어 네가 어디로 가든지 너를 지키며 너를 이끌어 이 땅으로 돌아오게 할지라', '창세기 28:15', '벧엘은 「하나님의 집」이에요. 밖에 하나를 세우면 그 자리와 집(마지막에 누운 침대)을 몇 번이든 오갈 수 있어요. 한 사람이 하나만 세울 수 있고, 돌 곁에서 「거두기」를 누르면 가방으로 돌아와요.'); }, 500); }
   }
+  function bethelMark(label, col) {
+    var g = new THREE.Group(), m = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.1, 0.7), new THREE.MeshBasicMaterial({ color: col, fog: false }));
+    m.position.y = 0.55; g.add(m);
+    var t = textSprite(label, 'rgba(0,0,0,0.5)', '#bfeeff', 0.5); t.position.y = 1.9; g.add(t);
+    scene.add(g); return g;
+  }
+  function bethelGo() {
+    var h = homeSpot(); if (!BETHEL || !h || !bethelNear) return;
+    if (RACE || HS) return deny('놀이 중에는 쓸 수 없어요');
+    if (riding) dismount(true);
+    sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); sfx('craft', 1500);
+    if (bethelNear === 'out') { teleport(h.x, h.y, h.z + 1.2, P.yaw); toast('✨ ' + h.label + '(으)로 왔어요'); }
+    else { teleport(BETHEL.x, BETHEL.y, BETHEL.z + 1.2, P.yaw); toast('✨ 벧엘 돌로 왔어요'); }
+    setTimeout(function () { sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); bethelTick(); }, 150);
+  }
+  function bethelTake() {
+    if (!BETHEL || bethelNear !== 'out') return;
+    if (!isAdm()) { if (!give(HOME_STONE, 1)) return bagFull(); bagChanged(); }
+    BETHEL = null; saveBethel(); bethelTick(); sfx('pop'); toast('🪨 벧엘 돌을 거뒀어요 — 다른 곳에 다시 세울 수 있어요');
+  }
+  function bethelTick() {
+    var h = started ? homeSpot() : null, on = !!(BETHEL && h);
+    if (on && !bethelOut) { bethelOut = bethelMark('🪨 벧엘 돌', 0x7fd3e8); bethelHome = bethelMark('🪨 벧엘 돌로', 0xbfeeff); bethelHome.children[0].scale.set(0.6, 0.5, 0.6); }
+    if (bethelOut) { bethelOut.visible = bethelHome.visible = on; }
+    bethelNear = '';
+    if (on) {
+      bethelOut.position.set(BETHEL.x, BETHEL.y, BETHEL.z); bethelHome.position.set(h.x, h.y, h.z);
+      if (ui === 'play' && Math.abs(P.y - BETHEL.y) < 4 && Math.hypot(P.x - BETHEL.x, P.z - BETHEL.z) < 3) bethelNear = 'out';
+      else if (ui === 'play' && Math.abs(P.y - h.y) < 4 && Math.hypot(P.x - h.x, P.z - h.z) < 3) bethelNear = 'home';
+    }
+    var go = $('bethelGo'), tk = $('bethelTake'); if (!go) return;
+    go.hidden = !bethelNear; tk.hidden = bethelNear !== 'out';
+    if (bethelNear) go.textContent = bethelNear === 'out' ? '🪨 집으로 가기' : '🪨 벧엘 돌로 가기';
+  }
+  setInterval(bethelTick, 300);
   // ── 11/22 물에 빠졌을 때: 1.5초 넘게 헤엄치면 「뭍으로 나가기」 버튼 → 가까운 물가 땅 위로 ──
   var swimHeld = 0;
   setInterval(function () {
