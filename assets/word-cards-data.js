@@ -1,6 +1,8 @@
 // 매주 중등부 설교 때 함께 소개하는 "성경 알아가기" 원어 카드 아카이브.
 // 새 주차가 생기면 이 배열 맨 앞에 한 줄 추가하고, 이미지를 assets/word-cards/에 넣으면 된다.
 var WORD_CARDS = [
+  { date: "2026-11-22", word: "에이콘", orig: "εἰκών", sermonTitle: "만물의 으뜸",
+    ref: "골로새서 1장 15절", img: "assets/word-cards/2026-11-22.jpg" },
   { date: "2026-11-15", word: "레쉬트", orig: "רֵאשִׁית", sermonTitle: "감사의 광주리",
     ref: "신명기 26장 2절", img: "assets/word-cards/2026-11-15.jpg" },
   { date: "2026-11-08", word: "호모이오파데스", orig: "ὁμοιοπαθής", sermonTitle: "서로 기도하는 자",
