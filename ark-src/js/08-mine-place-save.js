@@ -209,6 +209,7 @@
       if (item === RAIL0 || item === RAILF0) railFixNeighbors(bx, by, bz);
       if (item === TRAP) newsMark('trap');
       if (isGrav(id)) startFall(bx, by, bz);
+      if (id === DIRT) noteDirt(bx, by, bz);   // 11/22 옆에 풀이 있으면 다시 풀이 자람
       if (id === SAPLING) { SAPS.push({ x: bx, y: by, z: bz, t: Date.now() + (90 + Math.random() * 90) * 1000 }); saveSaps(); toast('묘목을 심었어요. 조금 지나면 나무로 자라요 (시 1:3)'); }
       partyAdd('build', 1);
       tutorialEvent('place');

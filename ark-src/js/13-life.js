@@ -206,6 +206,36 @@
     if (ch) saveCrops();
   }
   setInterval(stepCrops,1000);
+  // ── 풀 다시 자라기(11/22 전도사님 「잔디 흙을 파고 흙을 다시 채우면 주변 잔디가 있을 때 다시 잔디가 자라게」) ──
+  // 내가 놓은 흙만 지켜본다. 위가 비어 있고(꽃·풀은 괜찮음) 둘레 3×3×3 안에 풀이 있으면 10~25초 뒤 풀이 된다. 조건이 안 되면 조금 뒤 다시 본다.
+  var DIRTS = [];
+  try { DIRTS = (JSON.parse(localStorage.getItem('arkVillage.dirt') || '[]') || []).slice(-300); } catch (e) { DIRTS = []; }
+  function saveDirts() { try { localStorage.setItem('arkVillage.dirt', JSON.stringify(DIRTS)); } catch (e) {} }
+  function noteDirt(x, y, z) {
+    DIRTS = DIRTS.filter(function (d) { return d.x !== x || d.y !== y || d.z !== z; });
+    DIRTS.push({ x: x, y: y, z: z, t: Date.now() + (10 + Math.random() * 15) * 1000 });
+    if (DIRTS.length > 300) DIRTS.shift();
+    saveDirts();
+  }
+  function grassNear(x, y, z) {
+    for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) for (var dz = -1; dz <= 1; dz++)
+      if ((dx || dz) && get(x + dx, y + dy, z + dz) === GRASS) return true;
+    return false;
+  }
+  function stepDirts() {
+    if (!DIRTS.length || !started) return;
+    var now = Date.now(), ch = false;
+    DIRTS = DIRTS.filter(function (d) {
+      if (!colAt(d.x, d.z)) return true;
+      if (get(d.x, d.y, d.z) !== DIRT) { ch = true; return false; }
+      if (now < d.t) return true;
+      var up = get(d.x, d.y + 1, d.z);
+      if ((up !== AIR && kind(up) !== 'plant') || !grassNear(d.x, d.y, d.z) || canPlace(d.x, d.y, d.z, GRASS)) { d.t = now + (8 + Math.random() * 12) * 1000; ch = true; return true; }
+      setBlock(d.x, d.y, d.z, GRASS); ch = true; return false;
+    });
+    if (ch) saveDirts();
+  }
+  setInterval(stepDirts, 2000);
   // ── 동물 기르기: 밀을 들고 있으면 양·소·염소가 따라오고, 밀을 먹인 둘이 가까이 있으면 새끼가 태어남. 내 땅 안의 동물은 저장 ──
   var BREEDS = { sheep: 1, cow: 1, goat: 1, pig: 1, chicken: 1, horse: 1, donkey: 1, camel: 1, rabbit: 1 }, HERD = [];   // 11/21 모든 짐승이 새끼를 낳음
   try { HERD = JSON.parse(localStorage.getItem('arkVillage.herd') || '[]') || []; } catch (e) { HERD = []; }
