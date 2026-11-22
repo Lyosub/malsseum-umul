@@ -700,7 +700,7 @@
     { out: [FENCE, 3], need: [[GOPHER, 2], [LOG, 1]] },
     { out: [DOOR, 1], need: [[GOPHER, 6]] },
     { out: [TRAP, 2], need: [[GOPHER, 6]], cat: 'shape' },
-    { out: [BOW, 1], need: [[STICK, 3], [THREAD, 3]], cat: 'tool' },
+    { out: [BOW, 1], need: [[STICK, 4], [THREAD, 4]], cat: 'tool', table: true },
     { out: [RAIL0, 16], need: [[ING_FE, 6], [STICK, 1]], cat: 'shape' },
     { out: [RAILF0, 6], need: [[ING_AU, 6], [STICK, 1]], cat: 'shape' },
     { out: [CART, 1], need: [[ING_FE, 5]], cat: 'tool' },
@@ -744,14 +744,14 @@
   RECIPES.push({ out: [SBRICK, 4], need: [[STONE, 4]], cat: 'block' });
   RECIPES.push({ out: [CARPET, 3], need: [[WOOL_R, 2]], cat: 'shape' });
   RECIPES.push({ out: [LANTERN, 1], need: [[ING_FE, 1], [TORCH, 1]], cat: 'shape' });
-  RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 2], [ING_AU, 1], [STICK, 1]], cat: 'wear', table: true, ref: '엡 6:17' });
+  RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 4], [ING_AU, 2], [STICK, 2]], cat: 'wear', table: true, ref: '엡 6:17' });
   RECIPES.push({ out: [BOAT, 1], need: [[GOPHER, 5], [PITCH, 1]], cat: 'tool', ref: '창 6:14' });   // 11/20 배: 역청을 칠해 물이 새지 않게
-  // 광물 무기·방패 만들기: 검(재료 2 + 막대기) · 방패(재료 4 + 고페르 나무 2) · 물매(가죽 + 실 2 + 재료) · 활(막대기 3 + 실 3 + 재료) · 화살 4개(막대기 + 재료)
+  // 광물 무기·방패 만들기: 검(재료 4 + 막대기 2) · 방패(재료 4 + 고페르 나무 2) · 물매(가죽 2 + 실 3 + 재료 2) · 활(막대기 4 + 실 4 + 재료 3) · 화살 4개(막대기 + 재료)
   [STONE, ING_CU, ING_AG, ING_AU, GEM_ONYX, GEM_SAPH, GEM_DIA].forEach(function (mt, m) {
-    RECIPES.push({ out: [ARM_SWORD0 + m, 1], need: [[mt, 2], [STICK, 1]], cat: 'wear', table: true });
+    RECIPES.push({ out: [ARM_SWORD0 + m, 1], need: [[mt, 4], [STICK, 2]], cat: 'wear', table: true });   // 11/22 무기 재료를 늘림(전도사님 「무기 만드는 난이도를 좀 더 높이고」)
     RECIPES.push({ out: [ARM_SHIELD0 + m, 1], need: [[mt, 4], [GOPHER, 2]], cat: 'wear', table: true });
-    RECIPES.push({ out: [ARM_SLING0 + m, 1], need: [[LEATHER, 1], [THREAD, 2], [mt, 1]], cat: 'tool' });
-    RECIPES.push({ out: [ARM_BOW0 + m, 1], need: [[STICK, 3], [THREAD, 3], [mt, 1]], cat: 'tool' });
+    RECIPES.push({ out: [ARM_SLING0 + m, 1], need: [[LEATHER, 2], [THREAD, 3], [mt, 2]], cat: 'tool', table: true });
+    RECIPES.push({ out: [ARM_BOW0 + m, 1], need: [[STICK, 4], [THREAD, 4], [mt, 3]], cat: 'tool', table: true });
     RECIPES.push({ out: [ARM_ARROW0 + m, 4], need: [[STICK, 1], [mt, 1]], cat: 'tool' });
   });
   FRONTIER_RECIPES.forEach(function(r){RECIPES.push({out:[r[0],1],need:r[3],cat:'shape'});});
@@ -868,7 +868,7 @@
     [SLING_TARGET,1,[[REED,4],[STICK,2]]],[WORD_SCROLL,1,[[REED,3],[THREAD,1]]],
     [STAFF,1,[[LOG,1],[STICK,2]]],[HAND_MAP,1,[[REED,3],[CHAR,1]]],
     [COMPASS,1,[[ING_FE,1],[GOPHER,2]]],[SHOFAR,1,[[CLAY,2],[WOOL,1]]],
-    [SLING,1,[[LEATHER,1],[THREAD,2]]],[ROUND_STONE,4,[[STONE,1]]],[FIREWORK,3,[[REED,1],[CHAR,1]]],[HOME_STONE,1,[[SHARD,2],[STONE,1]]]
+    [SLING,1,[[LEATHER,2],[THREAD,3]]],[ROUND_STONE,4,[[STONE,1]]],[FIREWORK,3,[[REED,1],[CHAR,1]]],[HOME_STONE,1,[[SHARD,2],[STONE,1]]]
   ].forEach(function(d){RECIPES.push({out:[d[0],d[1]],need:d[2],cat:d[0]<600?'shape':'tool'});});
   RECIPES.forEach(function (r) { if (!r.cat) r.cat = SHAPE[r.out[0]] ? 'shape' : 'block'; });
   function canCraft(rc) { return isAdm() || rc.need.every(function (n) { return have(n[0]) >= n[1]; }) && (!rc.station || (workshopNeeds() & STATION_BITS[rc.station])) && (!rc.furnace || furnaceOK()) && (!rc.table || tableOK()) && (!rc.fuel || fuelLeft(rc) >= 1); }

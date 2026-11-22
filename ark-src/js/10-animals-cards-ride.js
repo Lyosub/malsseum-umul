@@ -60,10 +60,16 @@
     root.position.set(x, y, z); scene.add(root);
     return { sp: sp, kind: kindName, mesh: root, body: body, legs: legs, x: x, y: y, ty: y, z: z, h: Math.random() * 6.28, mode: 'idle', t: Math.random() * 3, walk: 0 };
   }
+  function beastWaterTop(x, z, y) {   // 그 자리(높이 y 둘레)가 물이면 물 위쪽 끝 높이, 아니면 null
+    var ix = Math.floor(x), iz = Math.floor(z), yy = Math.floor(y + 0.6);
+    if (get(ix, yy, iz) !== WATER) { if (get(ix, yy + 1, iz) === WATER) yy++; else if (get(ix, yy - 1, iz) === WATER) yy--; else return null; }   // 물 위에 살짝 떠 있어도 물로 침
+    while (get(ix, yy + 1, iz) === WATER && yy < SY - 2) yy++;
+    return yy + 1;
+  }
   function stepBeast(a, dt) {
     if (a === riding) return;
     a.t -= dt;
-    if (a.saddled && a.mode === 'walk') a.mode = 'idle';
+    if (a.saddled && a.mode === 'walk' && !a.swimming) a.mode = 'idle';
     if (a.t <= 0) {
       if (a.mode === 'walk') { a.mode = 'idle'; a.t = 1.5 + Math.random() * 4; }
       else if (!a.saddled) { a.mode = 'walk'; a.t = 2 + Math.random() * 4; a.h += (Math.random() - 0.5) * 2.6; }
@@ -72,6 +78,8 @@
     var moving = false;
     if (a.mode === 'walk') {
       var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : 1), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
+      // 11/22 물에 빠진 짐승은 물 위로 헤엄쳐 뭍으로(전도사님 「말이 물에 빠지면 못 나오고」) — 스스로 물에 들어가지는 않음
+      var wet = beastWaterTop(a.x, a.z, a.y); if (wet !== null) { var wn = beastWaterTop(nx, nz, a.y); if (gy === null && wn !== null) gy = wn - 0.9; else if (gy !== null && gy - a.y < 2.3) { a.y = Math.max(a.y, gy - 1.1); } }
       // 11/20 땅 칸: 남의 땅은 못 들어감. 내 땅은 밀·지팡이로 불러 데려올 때만 들어오고, 들어온 동물은 부르지 않으면 내 땅(우리) 밖으로 나가지 않음
       var np = plotAt(nx | 0, nz | 0), cp = plotAt(a.x | 0, a.z | 0), lured = a.luredUntil > Date.now();
       var plotBlock = np >= 0 && (np !== myPlot || myPlot < 0 || (cp !== np && !lured));
@@ -79,6 +87,17 @@
       if (gy === null || Math.abs(gy - a.y) > 1.2 || plotBlock || inArk(nx | 0, gy | 0, nz | 0) || Math.hypot(nx - P.x, nz - P.z) < 1.4) {
         a.h += Math.PI * (0.5 + Math.random()); a.mode = 'idle'; a.t = 0.4;
       } else { a.x = nx; a.z = nz; a.ty = gy; a.walk += s * 2.4; moving = true; }
+    }
+    // 물속이면 떠올라 가장 가까운 뭍 쪽으로 헤엄침(안장 얹은 짐승도)
+    var wt0 = beastWaterTop(a.x, a.z, a.y);
+    if (wt0 === null) a.swimming = false;
+    else if (a.mode !== 'walk') {
+      a.ty = wt0 - 0.9; a.swimming = true;
+      if (Math.abs(a.y - a.ty) < 0.5) {
+        var bh = null;
+        for (var sr = 1; sr <= 40 && bh === null; sr += 1) for (var sk = 0; sk < 16; sk++) { var sx = a.x + Math.cos(sk * Math.PI / 8) * sr, sz = a.z + Math.sin(sk * Math.PI / 8) * sr, sg = groundAt(sx, sz, wt0 + 2); if (sg !== null && sg >= wt0 - 1 && sg <= wt0 + 2) { bh = Math.atan2(-(sx - a.x), -(sz - a.z)); break; } }
+        if (bh !== null) { a.h = bh; a.mode = 'walk'; a.t = 5; }
+      }
     }
     a.y += (a.ty - a.y) * Math.min(1, 10 * dt);
     var hop = a.sp.hop && moving ? Math.abs(Math.sin(a.walk * 1.2)) * 0.5 : 0;
@@ -619,7 +638,6 @@
   // 탄 동안 짐승이 나를 따라 움직임
   function stepRide(dt, moved) {
     var a = riding; if (!a) return;
-    if (P.swim) { dismount(true); toast('물에서는 내려서 헤엄쳐요'); return; }
     a.x = P.x; a.z = P.z; a.y = a.ty = P.y; a.h = P.yaw;
     a.mesh.position.set(P.x, P.y, P.z); a.mesh.rotation.y = P.yaw;
     a.walk += moved * 1.1;

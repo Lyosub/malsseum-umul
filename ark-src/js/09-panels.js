@@ -679,6 +679,7 @@
     on('btnRotate', rotateScreen);
     applyFold();
     on('swimOut', function () { swimOut(); });
+    on('verNew', function () { verReload(); });
     on('restUp', function () { if (cartRide) leaveCart(); else if (boatRide) leaveBoat(); else standFromFurniture(); });
     on('forestCancel', cancelForestRoute);
     on('go_frontier', function(){ startFrontierGuide(FRONTIER_ENTRY,'자유 개척지'); });

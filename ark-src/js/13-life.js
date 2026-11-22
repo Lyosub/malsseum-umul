@@ -817,12 +817,12 @@
   //    횃불을 들면 가까이 못 오고, 햇빛에 사라짐. 갑옷은 덜 다치게, 전신 갑주를 다 입으면 다치지 않음. 칼·성령의 검(엡 6:17)으로 물리침 ──
   var SHADOWS = [], shadowT = 3, shadowMat = null, shadowOutM = null, shadowTold = false;
   var SH_KINDS = {
-    hate: { name: '미움', eye: 0xff3a3a, hp: 3, dmg: 2, speed: 4.2, h: 1 },
-    lie: { name: '거짓', eye: 0xc060ff, hp: 2, dmg: 2, speed: 5.0, h: 0.95, blink: true },
-    pride: { name: '교만', eye: 0xffc840, hp: 5, dmg: 3, speed: 3.0, h: 1.25 },
-    doubt: { name: '의심', eye: 0x6ad0ff, hp: 3, dmg: 2, speed: 3.4, h: 1.05, ranged: true },   // 멀찍이 서서 불화살(엡 6:16)
-    anger: { name: '분노', eye: 0xff5a1a, hp: 7, dmg: 5, speed: 3.8, h: 1.2, fuse: true },   // 11/21 가까이 오면 부풀다 터짐(엡 4:26) — 칼로 치면 밀려나며 식고, 물에 닿으면 꺼짐(잠 15:1)
-    great: { name: '큰 그림자', eye: 0xff8a2a, hp: 10, dmg: 4, speed: 4.6, h: 1.45 }   // 골짜기에만
+    hate: { name: '미움', eye: 0xff3a3a, hp: 5, dmg: 3, speed: 4.6, h: 1 },
+    lie: { name: '거짓', eye: 0xc060ff, hp: 4, dmg: 3, speed: 5.4, h: 0.95, blink: true },
+    pride: { name: '교만', eye: 0xffc840, hp: 9, dmg: 4, speed: 3.3, h: 1.25 },
+    doubt: { name: '의심', eye: 0x6ad0ff, hp: 5, dmg: 3, speed: 3.7, h: 1.05, ranged: true },   // 멀찍이 서서 불화살(엡 6:16)
+    anger: { name: '분노', eye: 0xff5a1a, hp: 11, dmg: 6, speed: 4.1, h: 1.2, fuse: true },   // 11/21 가까이 오면 부풀다 터짐(엡 4:26) — 칼로 치면 밀려나며 식고, 물에 닿으면 꺼짐(잠 15:1)
+    great: { name: '큰 그림자', eye: 0xff8a2a, hp: 16, dmg: 5, speed: 4.9, h: 1.45 }   // 골짜기에만
   };
   function shadowsOn() { return S.shadows !== false; }
   function armorGuard() {   // 0~1: 줄여 주는 몫

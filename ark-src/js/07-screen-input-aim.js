@@ -209,6 +209,7 @@
   function jumpPress() {
     if (furnitureRest) return standFromFurniture();
     var now = performance.now();
+    if (P.swim && !riding && !P.fly && now - lastJumpTap < 700 && swimOut(3.5, true)) { lastJumpTap = 0; jumpHeld = false; return; }   // 11/22 물가에서 점프 두 번 = 뭍으로 올라섬
     lastJumpTap = now;   // 점프 두 번으로 날기를 켜지 않는다 — 굴에서 턱을 넘다 모르게 켜졌음(11/19), 날기는 「날기」 버튼·F 키로만
     jumpHeld = true;
   }

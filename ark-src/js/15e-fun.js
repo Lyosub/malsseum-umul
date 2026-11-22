@@ -314,20 +314,38 @@
     swimHeld = on ? swimHeld + 0.25 : 0;
     var el = $('swimOut'); if (el) el.hidden = swimHeld < 1.5;
   }, 250);
-  function swimOut() {
+  function swimOut(maxR, quiet) {   // maxR: 찾을 거리(버튼은 18칸, 점프 두 번은 3.5칸)
+    maxR = maxR || 18;
     var bx = P.x, bz = P.z, sy = Math.floor(P.y + 1);
     while (get(Math.floor(bx), sy + 1, Math.floor(bz)) === WATER && sy < SY - 2) sy++;   // 물 위쪽 끝
-    for (var r = 1.5; r <= 18; r += 1) for (var k = 0; k < 16; k++) {
+    for (var r = 1; r <= maxR; r += 0.5) for (var k = 0; k < 16; k++) {
       var x = bx + Math.cos(k * Math.PI / 8) * r, z = bz + Math.sin(k * Math.PI / 8) * r, ix = Math.floor(x), iz = Math.floor(z);
       if (!colAt(ix, iz)) continue;
-      var gy = groundAt(ix + 0.5, iz + 0.5, sy + 6); if (gy === null || gy < sy || gy > sy + 5) continue;
-      if (get(ix, gy - 1, iz) === WATER || get(ix, gy, iz) === WATER || get(ix, gy + 1, iz) === WATER) continue;
+      var gy = null; for (var yy = sy + 5; yy >= sy - 1; yy--) { var gid = get(ix, yy, iz); if (isSolid(gid) && gid !== LEAF && gid !== CEDAR_LEAF) { gy = yy + 1; break; } }
+      if (gy === null || gy < sy || gy > sy + 5 || get(ix, gy + 1, iz) === WATER) continue;   // 머리가 물 밖에 나오는 자리
+      if (!quiet && get(ix, gy, iz) === WATER) continue;   // 단추는 마른 땅으로, 점프 두 번은 발목 물(서서 걸을 수 있는 곳)도
       if (collides(ix + 0.5, gy, iz + 0.5)) continue;
       P.x = ix + 0.5; P.y = gy; P.z = iz + 0.5; P.vx = P.vy = P.vz = 0; swimHeld = 0; $('swimOut').hidden = true;
-      sfx('pop', 500); toast('🏊 뭍으로 나왔어요'); return;
+      sfx('pop', 500); if (!quiet) toast('🏊 뭍으로 나왔어요'); return true;
     }
-    toast('가까운 뭍이 없어요 — 가만히 있으면 떠올라요. 물가로 헤엄치면 올라갈 수 있어요');
+    if (!quiet) toast('가까운 뭍이 없어요 — 점프를 누르고 있으면 떠올라요. 물가에서 점프를 두 번 누르면 올라서요');
+    return false;
   }
+  // ── 11/22 새 버전 알림(전도사님 「아이폰에서는 왜 다 업데이트가 안 되지」): 아이폰은 열어 둔 화면을 며칠씩 그대로 되살려 옛 게임이 계속 돎 ──
+  // 5분마다·화면으로 돌아올 때 ark.html을 새로 받아 게임 파일 번호가 달라졌으면 알림 단추를 띄움(첫 화면이면 바로 새로 받음)
+  var verMine = (function () { var s = document.querySelector('script[src*="ark-game.js"]'), m = s && /v=([a-z0-9]+)/.exec(s.src); return m ? m[1] : ''; })(), verAt = 0;
+  function verCheck() {
+    var now = Date.now(); if (!verMine || now - verAt < 60000 || /^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return; verAt = now;
+    fetch('ark.html?vc=' + now, { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
+      var m = /ark-game\.js\?v=([a-z0-9]+)/.exec(t || ''); if (!m || m[1] === verMine) return;
+      if (!started) { location.replace('ark.html?u=' + m[1]); return; }
+      var b = $('verNew'); if (b) b.hidden = false;
+    }).catch(function () {});
+  }
+  function verReload() { try { stateSave(true); saveEdits(); if (dirty) savePlot(); } catch (e) {} setTimeout(function () { location.replace('ark.html?u=' + Date.now()); }, 400); }
+  setInterval(verCheck, 300000); setTimeout(verCheck, 20000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) verCheck(); });
+  window.addEventListener('pageshow', function (e) { if (e.persisted) verCheck(); });
   var HS = null, hsT = null, hsShade = null, HS_HIDE = 30000, HS_SEEK = 150000;
   function hsBlind() { return !!HS && HS.role === 'seek'; }
   function hsName(u) { return (NET.names && NET.names[u]) || '나그네'; }

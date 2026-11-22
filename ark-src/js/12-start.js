@@ -268,7 +268,7 @@
     P.sprint = !P.swim && !P.sneak && (keys.ControlLeft || keys.KeyR || runLock) && mz < -0.3 && (FOOD > 6 || !vitalsOn());
     if (!P.sprint && (keys.ControlLeft || runLock) && mz < -0.3 && FOOD <= 6 && vitalsOn() && !sprintTold) { sprintTold = true; toast('기운이 없어서 달릴 수 없어요 — 떡이나 무화과를 먹어요'); }
     // 걷기 8.5→6.5칸/초(11/19 전도사님 「이동하는 속도가 너무 빨라」), 달리기는 1.5배
-    var sp = (P.fly ? 20 : (P.swim ? (has('moses') ? 8 : 5) : (riding ? riding.sp.ride : 6.5 * (has('enoch') ? 1.1 : 1)))) * (P.sprint && !riding ? 1.5 : 1) * (P.sneak ? 0.35 : 1);
+    var sp = (P.fly ? 20 : (P.swim ? (riding ? 6 : (has('moses') ? 8 : 5)) : (riding ? riding.sp.ride : 6.5 * (has('enoch') ? 1.1 : 1)))) * (P.sprint && !riding ? 1.5 : 1) * (P.sneak ? 0.35 : 1);
     document.body.classList.toggle('sneaking', !!P.sneak);
     var sin = Math.sin(P.yaw), cos = Math.cos(P.yaw);
     var wx = (mx * cos + mz * sin) * sp, wz = (-mx * sin + mz * cos) * sp;
@@ -279,10 +279,11 @@
       P.vy += (vy * 14 - P.vy) * Math.min(1, 10 * dt);
     } else if (P.swim) {
       // 11/22 전도사님 「물에 빠졌을 때 나오게 하는 기능」: 가만히 있으면 저절로 떠오르고, 웅크리기(Shift·C·두 번 톡)를 하면 잠수
-      var dive = keys.ShiftLeft || keys.ShiftRight || keys.KeyC || flyDown || sneakLock;
-      if (jumpHeld || keys.Space) P.vy = 6;
-      else if (dive || performance.now() < (P.climbT || 0)) { P.vy -= 12 * dt; if (P.vy < -4) P.vy = -4; }
-      else P.vy += (2.2 - P.vy) * Math.min(1, 3 * dt);
+      // 11/22 오후 전도사님 「기본적으로는 가라앉는 거고, 점프키가 올라가는 거고」: 탄 짐승만 물 위에 뜸
+      if (riding) P.vy += (3 - P.vy) * Math.min(1, 4 * dt);
+      else if (performance.now() < (P.climbT || 0)) { P.vy -= 12 * dt; }
+      else if (jumpHeld || keys.Space) P.vy = 6;
+      else { P.vy -= 12 * dt; if (P.vy < -4) P.vy = -4; }
     } else if (P.ladder) {
       // 사닥다리: 앞으로 밀거나 점프하면 오르고, 가만히 있으면 천천히 내려간다(창 28:12)
       if (jumpHeld || keys.Space || mz < -0.2) P.vy = has('jacob') ? 11 : 5.5;

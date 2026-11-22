@@ -524,7 +524,8 @@
   .frontierStock select { min-height:38px; max-width:100%; }
   #restUp { left:50%; bottom:calc(92px + var(--sab)); transform:translateX(-50%); min-height:44px; z-index:8; }
   #swimOut { left:50%; bottom:calc(150px + var(--sab)); transform:translateX(-50%); min-height:44px; z-index:8; }
-  #swimOut[hidden] { display:none; }
+  #swimOut[hidden], #verNew[hidden] { display:none; }
+  #verNew { left:50%; top:calc(8px + var(--sat)); transform:translateX(-50%); min-height:40px; z-index:9; background:#4f8a34; color:#fff; white-space:nowrap; }
   body.sleep:before { opacity:0; animation:bedFadeIn .55s .55s forwards; }
   @keyframes bedFadeIn { to { opacity:.85; } }
   /* 11/20 길 안내는 가운데를 가리지 않게 왼쪽 위 정보 아래로, 작게 */
@@ -726,6 +727,7 @@
 </div>
 <button id="restUp" type="button" class="mc hud" hidden>일어나기</button>
 <button id="swimOut" type="button" class="mc hud" hidden>🏊 뭍으로 나가기</button>
+<button id="verNew" type="button" class="mc hud" hidden>🔄 새 버전이 나왔어요 — 눌러서 새로 받기</button>
 <div id="topRight" class="hud">
   <button id="qMini" class="mc ibtn lbl" aria-label="안내 펴기"><span>📜</span><small>안내</small></button>
   <button id="btnFold" class="mc ibtn lbl" aria-label="버튼 접기"><span>▶</span><small>접기</small></button>
@@ -1093,6 +1095,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=0878954336"></script>
+<script src="assets/ark-game.js?v=49c00a672d"></script>
 </body>
 </html>
