@@ -2545,15 +2545,15 @@
     }
   }
   // 등불마다 빈칸을 따라 퍼지며(벽은 못 지나감) 닿는 칸을 표시 — 칸마다 등불 32개까지 비트로
-  var LR = CS + 16, LMASK = new Int32Array(LR * LR * LR), LQ = new Int32Array(4096 * 3);
+  var LR = CS + 16, LMASK = new Int32Array(LR * LR * LR), LMASK2 = new Int32Array(LR * LR * LR), LQ = new Int32Array(4096 * 3);
   function lightPass(id) { return isTrans(id) || !isSolid(id); }
   function lampReach(lamps, x0, y0, z0) {
-    LMASK.fill(0);
+    LMASK.fill(0); LMASK2.fill(0);   // 11/22 등불 64개까지(전에는 32개를 넘으면 먼 횃불이 빛을 못 냄 — 아이들 집 안 횃불이 꺼져 보이던 것)
     for (var i = 0; i < lamps.length; i++) {
-      var l = lamps[i], bit = 1 << i, lx = l[0], ly = l[1], lz = l[2], qh = 0, qt = 0;
+      var l = lamps[i], bit = 1 << (i & 31), LM = i < 32 ? LMASK : LMASK2, lx = l[0], ly = l[1], lz = l[2], qh = 0, qt = 0;
       var r0 = ((ly - y0 + 8) * LR + (lz - z0 + 8)) * LR + (lx - x0 + 8);
       if (lx - x0 + 8 < 0 || ly - y0 + 8 < 0 || lz - z0 + 8 < 0 || lx - x0 + 8 >= LR || ly - y0 + 8 >= LR || lz - z0 + 8 >= LR) continue;
-      LMASK[r0] |= bit; LQ[qt++] = lx; LQ[qt++] = ly; LQ[qt++] = lz;
+      LM[r0] |= bit; LQ[qt++] = lx; LQ[qt++] = ly; LQ[qt++] = lz;
       while (qh < qt && qt < LQ.length - 18) {
         var x = LQ[qh++], y = LQ[qh++], z = LQ[qh++];
         for (var f = 0; f < 6; f++) {
@@ -2561,8 +2561,8 @@
           var dx = nx - lx, dy = ny - ly, dz = nz - lz; if (dx * dx + dy * dy + dz * dz > 64) continue;
           var rx = nx - x0 + 8, ry = ny - y0 + 8, rz = nz - z0 + 8;
           if (rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR || ny < YMIN || ny >= SY) continue;
-          var ri = (ry * LR + rz) * LR + rx; if (LMASK[ri] & bit) continue;
-          LMASK[ri] |= bit;   // 벽 칸도 빛은 받음(그 면은 빈칸 쪽에서 계산), 지나가지는 못함
+          var ri = (ry * LR + rz) * LR + rx; if (LM[ri] & bit) continue;
+          LM[ri] |= bit;   // 벽 칸도 빛은 받음(그 면은 빈칸 쪽에서 계산), 지나가지는 못함
           if (lightPass(get(nx, ny, nz))) { LQ[qt++] = nx; LQ[qt++] = ny; LQ[qt++] = nz; }
         }
       }
@@ -2581,17 +2581,17 @@
     var colm = COLS[cz * NC + cx]; if (!colm) { delete chunks[key]; return; } var cd = colm.d;
     if (cy < 0 && !deepOpen(colm) && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(function (q) { var nc = inWorldC(cx + q[0], cz + q[1]) && COLS[(cz + q[1]) * NC + cx + q[0]]; return !nc || !deepOpen(nc); })) { delete chunks[key]; return; }   // 꽉 막힌 땅속 조각은 그리지 않음(보일 곳이 없음)
     var lamps = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8);
-    if (lamps.length > 32) { var mcx = x0 + 16, mcy = y0 + 16, mcz = z0 + 16; lamps.sort(function (a, b) { return (Math.abs(a[0] - mcx) + Math.abs(a[1] - mcy) + Math.abs(a[2] - mcz)) - (Math.abs(b[0] - mcx) + Math.abs(b[1] - mcy) + Math.abs(b[2] - mcz)); }); lamps.length = 32; }
+    if (lamps.length > 64) { var mcx = x0 + 16, mcy = y0 + 16, mcz = z0 + 16; lamps.sort(function (a, b) { return (Math.abs(a[0] - mcx) + Math.abs(a[1] - mcy) + Math.abs(a[2] - mcz)) - (Math.abs(b[0] - mcx) + Math.abs(b[1] - mcy) + Math.abs(b[2] - mcz)); }); lamps.length = 64; }
     if (lamps.length) lampReach(lamps, x0, y0, z0);
     // 등불 빛은 벽에 막힌다: 등불에서 빈칸을 따라 닿는 칸에만(cx,cy,cz = 빛을 받는 빈칸)
     function blk(px, py, pz, cx, cy, cz) {
       if (!lamps.length) return 0;
       var rx = cx - x0 + 8, ry = cy - y0 + 8, rz = cz - z0 + 8;
-      var mask = (rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR) ? -1 : LMASK[(ry * LR + rz) * LR + rx];
-      if (!mask) return 0;
+      var out = rx < 0 || ry < 0 || rz < 0 || rx >= LR || ry >= LR || rz >= LR, mi = (ry * LR + rz) * LR + rx, mask = out ? -1 : LMASK[mi], mask2 = out ? -1 : LMASK2[mi];
+      if (!mask && !mask2) return 0;
       var best = 0;
       for (var i = 0; i < lamps.length; i++) {
-        if (!(mask & (1 << i))) continue;
+        if (!((i < 32 ? mask : mask2) & (1 << (i & 31)))) continue;
         var l = lamps[i], dx = px - l[0] - 0.5, dy = py - l[1] - 0.5, dz = pz - l[2] - 0.5, d2 = dx * dx + dy * dy + dz * dz;
         if (d2 < 56.25) { var vv = 1 - Math.sqrt(d2) / 7.5; if (vv > best) best = vv; }
       }
