@@ -81,7 +81,7 @@
   body.touch b.k { display:none; }
   #mapCap { right:calc(10px + var(--sar)); top:calc(178px + var(--sat)); width:112px; text-align:center; font-size:11px; pointer-events:none; }
   #mapCap .coords { display:block; margin-top:2px; font-size:11px; line-height:1.3; color:#ffe9a8; white-space:nowrap; }
-  #bigmapc, #mapLegend, #mapPerson { display:none !important; }
+  /* 11/22 작은 지도를 누르면 큰 지도가 다시 보임 */
   #mapPeople { grid-column:1 / -1; display:flex; flex-direction:column; gap:4px; }
   #mapPeople .empty { font-size:12px; opacity:.8; }
   #mapPeople .prow { flex-wrap:nowrap; } #mapPeople .prow > span:first-child { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -523,6 +523,8 @@
   .frontierStock { display:flex; flex-direction:column; gap:4px; }
   .frontierStock select { min-height:38px; max-width:100%; }
   #restUp { left:50%; bottom:calc(92px + var(--sab)); transform:translateX(-50%); min-height:44px; z-index:8; }
+  #swimOut { left:50%; bottom:calc(150px + var(--sab)); transform:translateX(-50%); min-height:44px; z-index:8; }
+  #swimOut[hidden] { display:none; }
   body.sleep:before { opacity:0; animation:bedFadeIn .55s .55s forwards; }
   @keyframes bedFadeIn { to { opacity:.85; } }
   /* 11/20 길 안내는 가운데를 가리지 않게 왼쪽 위 정보 아래로, 작게 */
@@ -723,6 +725,7 @@
   <button id="forestCancel" type="button" aria-label="길 안내 끄기">×</button>
 </div>
 <button id="restUp" type="button" class="mc hud" hidden>일어나기</button>
+<button id="swimOut" type="button" class="mc hud" hidden>🏊 뭍으로 나가기</button>
 <div id="topRight" class="hud">
   <button id="qMini" class="mc ibtn lbl" aria-label="안내 펴기"><span>📜</span><small>안내</small></button>
   <button id="btnFold" class="mc ibtn lbl" aria-label="버튼 접기"><span>▶</span><small>접기</small></button>
@@ -1090,6 +1093,6 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
-<script src="assets/ark-game.js?v=a389a5e26a"></script>
+<script src="assets/ark-game.js?v=0878954336"></script>
 </body>
 </html>

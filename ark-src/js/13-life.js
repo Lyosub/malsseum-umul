@@ -1057,15 +1057,16 @@
     if (a === riding || a.saddled || a.kept || a.herd || a === lostSheep) return a.saddled ? '안장을 얹은 짐승은 잡을 수 없어요' : '기르는 짐승은 잡을 수 없어요';   // 11/21 새끼도 잡을 수 있음
     return '';
   }
-  function hitAnimal(a, quiet) {
+  function hitAnimal(a, quiet, projDmg) {   // projDmg: 화살·물매로 맞힌 세기(11/22)
     if (!BEAST_HP[a.kind]) return false;
     var why = beastGuarded(a); if (why) { if (!quiet) deny(why); return !quiet; }
-    var held = HOTBAR[sel], dmg = 1;
+    var held = projDmg ? 0 : HOTBAR[sel], dmg = 1;
     if (held === SWORD && have(SWORD) > 0) dmg = 4;
     else if (isArmSword(held) && have(held) > 0) dmg = ARM_SWORD_DMG[armOf(held, ARM_SWORD0)];
     else if (isTool(held) && have(held) > 0 && TOOL_TYPES[typeOf(held)] === 'knife') dmg = 1.5 + tierOf(held) * 0.5;
     else if (isTool(held) && have(held) > 0) dmg = 1.5;
-    var crit = !P.ground && P.vy < -1 && !P.swim && !P.fly; if (crit) dmg *= 1.5;
+    if (projDmg) dmg = projDmg;
+    var crit = !projDmg && !P.ground && P.vy < -1 && !P.swim && !P.fly; if (crit) dmg *= 1.5;
     if (a.hp === undefined) a.hp = a.baby ? Math.ceil(BEAST_HP[a.kind] / 2) : BEAST_HP[a.kind];   // 새끼는 체력 절반
     a.hp -= dmg; swingT = 0.25; sfx('dig', 300); animalCall(a.kind);
     if (isTool(held)) wearTool(held);
@@ -1179,6 +1180,11 @@
         for (var i = 0; i < SHADOWS.length; i++) {
           var s = SHADOWS[i]; if (s.dead) continue;
           var hy = a.y - s.y; if (Math.hypot(a.x - s.x, a.z - s.z) < 0.8 && hy > 0 && hy < HT * s.sp.h + 0.2) { hitShadow(s, a.dmg || 3); gone = true; break; }
+        }
+        for (var j = 0; j < animals.length && !gone; j++) {   // 11/22 화살·물매 돌이 짐승에도 맞음(기르는 짐승은 지나감)
+          var an = animals[j]; if (!an.mesh.visible || an === riding || !BEAST_HP[an.kind]) continue;
+          var ar = CR_R[an.kind] || 1.2, ay = a.y - an.y;
+          if (Math.hypot(a.x - an.x, a.z - an.z) < ar * 0.75 && ay > 0 && ay < ar * 1.7 && hitAnimal(an, true, a.dmg || 3)) gone = true;
         }
       }
       if (gone || a.t > 4 || a.y < YMIN) { scene.remove(a.mesh); return; }

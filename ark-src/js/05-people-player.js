@@ -217,6 +217,8 @@
           // 휴대폰: 2칸 턱이면 저절로 뛰어오름(자동 점프, 메뉴에서 끌 수 있음)
           if (isTouch && S.autoJump !== false && P.ground && !P.swim && P.vy <= 0 && !riding && !collides(nx, ny + 2.05, nz) && !collides(P.x, P.y + 2.4, P.z)) { P.vy = 15.2; exhaust(0.05); }
         }
+        // 11/22 헤엄치다 물가 2칸 턱에 닿으면 뛰어올라 나옴
+        if (axis !== 1 && P.swim && !P.fly && !riding && P.vy < 8 && !collides(nx, ny + 2.05, nz) && !collides(P.x, P.y + 2.4, P.z)) { P.vy = 10; P.climbT = performance.now() + 400; }
         // 말·나귀를 타고 있을 때도 2칸 턱은 저절로 뛰어넘음
         if (axis !== 1 && riding && P.ground && P.vy <= 0 && !collides(nx, ny + 2.05, nz)) P.vy = riding.sp.jump;
         return true;

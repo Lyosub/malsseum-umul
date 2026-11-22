@@ -279,6 +279,55 @@
 
   // ⑥ 숨바꼭질: 「놀이」 탭에서 시작한 사람이 술래. 60칸 안에 함께 있는 사람이 숨는다(30초), 술래는 2분 30초 동안 찾는다.
   //    술래 화면에서는 이름표와 지도 점이 가려진다. 가까이(7칸) 가서 사람을 누르면 「찾았다」.
+  // ── 11/22 벧엘 돌(창 28:15): 밖에서 쓰면 집(마지막에 누운 침대, 없으면 내 땅 앞)으로, 집에서 쓰면 마지막으로 떠난 곳으로. 쓸 때마다 하나 ──
+  function homeSpot() {
+    if (SPAWN) return { x: SPAWN.x + 0.5, y: SPAWN.y, z: SPAWN.z + 0.5, label: '🛏 내 침대' };
+    if (myPlot >= 0) { var o = plotOrigin(myPlot); return { x: o.x + OLD_PLOT / 2, y: G, z: o.z - 2, label: '🏠 내 땅(' + (myPlot + 1) + '번) 앞' }; }
+    return null;
+  }
+  function atHome(h) { return Math.hypot(P.x - h.x, P.z - h.z) < 20 || (myPlot >= 0 && plotAt(Math.floor(P.x), Math.floor(P.z)) === myPlot); }
+  function homeStoneLabel() { var h = homeSpot(); return h && atHome(h) && villageBook.away ? '떠난 곳으로' : '집으로 가기'; }
+  function homeStoneUse() {
+    var h = homeSpot();
+    if (!h) return deny('로그인해서 내 땅을 받거나 침대에 한 번 누우면 벧엘 돌이 그곳으로 이어져요');
+    if (RACE) return deny('달리기 중에는 쓸 수 없어요');
+    if (HS) return deny('숨바꼭질 중에는 쓸 수 없어요');
+    var back = atHome(h);
+    if (back && !villageBook.away) return deny('여기가 집이에요 — 밖에서 쓰면 집으로, 집에서 쓰면 마지막으로 떠난 곳으로 돌아가요');
+    if (!isAdm()) { take(HOME_STONE, 1); bagChanged(); }
+    sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); sfx('craft', 1500); vibrate('place');
+    if (back) {
+      var a = villageBook.away; villageBook.away = null; saveVillageBook();
+      teleport(a.x, a.y, a.z, a.yaw); toast('✨ 떠났던 곳으로 돌아왔어요');
+    } else {
+      villageBook.away = { x: P.x, y: P.y, z: P.z, yaw: P.yaw }; saveVillageBook();
+      teleport(h.x, h.y, h.z, P.yaw); toast('✨ ' + h.label + '(으)로 왔어요 — 집에서 한 번 더 쓰면 떠났던 곳으로 돌아가요');
+    }
+    setTimeout(function () { sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); }, 120);
+    if (!S.bethelTold) { S.bethelTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🪨', '벧엘 돌', '내가 너와 함께 있어 네가 어디로 가든지 너를 지키며 너를 이끌어 이 땅으로 돌아오게 할지라', '창세기 28:15', '벧엘은 「하나님의 집」이에요. 빛 조각 2 + 돌 1로 만들어요. 밖에서 쓰면 집(마지막에 누운 침대)으로, 집에서 쓰면 떠났던 곳으로 돌아가요. 한 번 쓰면 없어져요.'); }, 500); }
+  }
+  // ── 11/22 물에 빠졌을 때: 1.5초 넘게 헤엄치면 「뭍으로 나가기」 버튼 → 가까운 물가 땅 위로 ──
+  var swimHeld = 0;
+  setInterval(function () {
+    var wet = P.swim || get(Math.floor(P.x), Math.floor(P.y + 0.2), Math.floor(P.z)) === WATER;   // 물 위에서 떠 있을 때도(몸이 오르내려 P.swim이 깜빡임)
+    var on = started && ui === 'play' && wet && !P.fly && !boatRide && !cartRide && !riding;
+    swimHeld = on ? swimHeld + 0.25 : 0;
+    var el = $('swimOut'); if (el) el.hidden = swimHeld < 1.5;
+  }, 250);
+  function swimOut() {
+    var bx = P.x, bz = P.z, sy = Math.floor(P.y + 1);
+    while (get(Math.floor(bx), sy + 1, Math.floor(bz)) === WATER && sy < SY - 2) sy++;   // 물 위쪽 끝
+    for (var r = 1.5; r <= 18; r += 1) for (var k = 0; k < 16; k++) {
+      var x = bx + Math.cos(k * Math.PI / 8) * r, z = bz + Math.sin(k * Math.PI / 8) * r, ix = Math.floor(x), iz = Math.floor(z);
+      if (!colAt(ix, iz)) continue;
+      var gy = groundAt(ix + 0.5, iz + 0.5, sy + 6); if (gy === null || gy < sy || gy > sy + 5) continue;
+      if (get(ix, gy - 1, iz) === WATER || get(ix, gy, iz) === WATER || get(ix, gy + 1, iz) === WATER) continue;
+      if (collides(ix + 0.5, gy, iz + 0.5)) continue;
+      P.x = ix + 0.5; P.y = gy; P.z = iz + 0.5; P.vx = P.vy = P.vz = 0; swimHeld = 0; $('swimOut').hidden = true;
+      sfx('pop', 500); toast('🏊 뭍으로 나왔어요'); return;
+    }
+    toast('가까운 뭍이 없어요 — 가만히 있으면 떠올라요. 물가로 헤엄치면 올라갈 수 있어요');
+  }
   var HS = null, hsT = null, hsShade = null, HS_HIDE = 30000, HS_SEEK = 150000;
   function hsBlind() { return !!HS && HS.role === 'seek'; }
   function hsName(u) { return (NET.names && NET.names[u]) || '나그네'; }

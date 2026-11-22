@@ -1265,12 +1265,12 @@
   for (var si=0;si<8;si++) regShape(SLUICE+si,'수문','sluice',SLUICE,GOPHER,si>>1,si%2);
   regShape(ARCH_SIDE,B[ARCH][0],'arch',ARCH,SHAPE[ARCH].mat,1);
   var WORD_SHELF=480, ALTAR=481, SLING_TARGET=482;
-  var WORD_SCROLL=660, STAFF=661, HAND_MAP=662, COMPASS=663, SHOFAR=664, SLING=665, ROUND_STONE=666, FIREWORK=667;   // 11/21 폭죽
+  var WORD_SCROLL=660, STAFF=661, HAND_MAP=662, COMPASS=663, SHOFAR=664, SLING=665, ROUND_STONE=666, FIREWORK=667, HOME_STONE=668;   // 11/21 폭죽
   var WORD_BLOCKS=[[WORD_SHELF,'말씀 서재',0x99693e,'study'],[ALTAR,'돌 제단',0x9b9081,'altar'],
     [SLING_TARGET,'물매 연습 표적',0xbb8454,'target']];
   var WORD_ITEMS=[[WORD_SCROLL,'말씀 두루마리',0xead6a2],[STAFF,'양치기 지팡이',0x856145],
     [HAND_MAP,'두루마리 지도',0xdfbf88],[COMPASS,'방향 바늘',0x9f7949],[SHOFAR,'쇼파르',0xd6ab71],
-    [SLING,'물매',0x9a7052],[ROUND_STONE,'매끄러운 돌',0xa4adad],[FIREWORK,'폭죽',0xd8483a]];
+    [SLING,'물매',0x9a7052],[ROUND_STONE,'매끄러운 돌',0xa4adad],[FIREWORK,'폭죽',0xd8483a],[HOME_STONE,'벧엘 돌',0x7fd3e8]];
   EXT_BOXES.study=[[.07,0,.14,.93,.19,.86],[.09,.19,.72,.91,.87,.85],[.07,.52,.2,.93,.62,.74],[.07,.87,.14,.93,1,.86]];
   EXT_BOXES.altar=[[.03,0,.03,.97,.25,.97],[.15,.25,.15,.85,.73,.85],[.03,.73,.03,.97,.9,.97]];
   EXT_BOXES.target=[[.39,0,.38,.61,.65,.62],[.1,.47,.40,.9,1,.60]];
@@ -1723,7 +1723,7 @@
     [SLING_TARGET,1,[[REED,4],[STICK,2]]],[WORD_SCROLL,1,[[REED,3],[THREAD,1]]],
     [STAFF,1,[[LOG,1],[STICK,2]]],[HAND_MAP,1,[[REED,3],[CHAR,1]]],
     [COMPASS,1,[[ING_FE,1],[GOPHER,2]]],[SHOFAR,1,[[CLAY,2],[WOOL,1]]],
-    [SLING,1,[[LEATHER,1],[THREAD,2]]],[ROUND_STONE,4,[[STONE,1]]],[FIREWORK,3,[[REED,1],[CHAR,1]]]
+    [SLING,1,[[LEATHER,1],[THREAD,2]]],[ROUND_STONE,4,[[STONE,1]]],[FIREWORK,3,[[REED,1],[CHAR,1]]],[HOME_STONE,1,[[SHARD,2],[STONE,1]]]
   ].forEach(function(d){RECIPES.push({out:[d[0],d[1]],need:d[2],cat:d[0]<600?'shape':'tool'});});
   RECIPES.forEach(function (r) { if (!r.cat) r.cat = SHAPE[r.out[0]] ? 'shape' : 'block'; });
   function canCraft(rc) { return isAdm() || rc.need.every(function (n) { return have(n[0]) >= n[1]; }) && (!rc.station || (workshopNeeds() & STATION_BITS[rc.station])) && (!rc.furnace || furnaceOK()) && (!rc.table || tableOK()) && (!rc.fuel || fuelLeft(rc) >= 1); }
@@ -2971,6 +2971,8 @@
           // 휴대폰: 2칸 턱이면 저절로 뛰어오름(자동 점프, 메뉴에서 끌 수 있음)
           if (isTouch && S.autoJump !== false && P.ground && !P.swim && P.vy <= 0 && !riding && !collides(nx, ny + 2.05, nz) && !collides(P.x, P.y + 2.4, P.z)) { P.vy = 15.2; exhaust(0.05); }
         }
+        // 11/22 헤엄치다 물가 2칸 턱에 닿으면 뛰어올라 나옴
+        if (axis !== 1 && P.swim && !P.fly && !riding && P.vy < 8 && !collides(nx, ny + 2.05, nz) && !collides(P.x, P.y + 2.4, P.z)) { P.vy = 10; P.climbT = performance.now() + 400; }
         // 말·나귀를 타고 있을 때도 2칸 턱은 저절로 뛰어넘음
         if (axis !== 1 && riding && P.ground && P.vy <= 0 && !collides(nx, ny + 2.05, nz)) P.vy = riding.sp.jump;
         return true;
@@ -3379,7 +3381,7 @@
     ['#btnRotate', '🔄 화면', '가로 · 세로를 바꿔요.', 'touch'],
     ['#btnFold', '▶ 접기', '위쪽 버튼들을 접어 화면을 넓게 써요. 다시 누르면 펴져요.'],
     ['#btnPause', '❚❚ 메뉴', '게임 · 이동 · 함께 · 설정 탭이 있어요. 마을 수첩 · 지도 · 친구 · 파티도 여기서 열어요.'],
-    ['#mapc', '🗺 작은 지도', '누르면 길 안내가 열려요. 아래에 지금 좌표(X·Y·Z)가 보여요. 「지도」 글자를 누르면 접혀요.'],
+    ['#mapc', '🗺 작은 지도', '누르면 큰 지도와 길 안내가 열려요. 아래에 지금 좌표(X·Y·Z)가 보여요. 「지도」 글자를 누르면 접혀요.'],
     ['#quest', '📜 할 일 안내', '지금 해 볼 일을 알려 줘요. ▴를 누르면 접혀요.'],
     ['#info', '📍 지금 있는 곳', '장소 · 계절 · 함께 있는 사람 수가 나와요.'],
     [null, '🤝 다른 나그네', '다른 사람을 두 번 누르면 친구 신청 · 파티 초대를 할 수 있어요.'],
@@ -4817,8 +4819,8 @@
     function fuelLine() { var fl = Math.floor(fuelLeft() * 2) / 2; add('div', 'dhint', '🔥 땔감: 석탄·숯 1개 = 8번 · 통나무 1개 = 1.5번 · 석탄 블록 = 72번<br><b>지금 ' + fl + '번 녹일 수 있어요</b>' + (HEAT > 0 ? ' (남은 불 ' + HEAT + ')' : '')); }
     if (invTab === 'bag') {
       var p = bagPick;
-      equipBox();
       if (!p || !p.id || !B[p.id]) {
+        equipBox();
         add('div', 'dempty', '🎒 가방 칸을 누르면 여기에 자세히 나와요.<br><br>누른 다음 <b>아래 단축 칸</b>을 누르면 손에 들 수 있어요.');
         btn('↕ 가방 정리', function () { $('bagSort').click(); });
         return;
@@ -4830,7 +4832,7 @@
       if (FOODS[id] !== undefined && vitalsOn()) btn('🍞 먹기 (기운 +' + FOODS[id] + ' · 체력 +' + healOf(id) + ')', function () { eatItem(id); bagPick = null; renderInv(); });
       if (p.from === 'bag') {
         add('div', 'dhint', '⬇ 아래 단축 칸을 누르면 손에 들어요');
-        if (!isAdm()) {
+        {   // 11/22 관리자도 버리기(전도사님 「가방에서 버리는 기능이 없어졌어」 — 관리자 계정에서만 숨겨져 있었음)
           var maxN = Math.max(1, Math.min(have(id), 64));
           if (dropAmt.id !== id) dropAmt = { id: id, n: 1 };
           dropAmt.n = Math.max(1, Math.min(maxN, dropAmt.n));
@@ -4849,6 +4851,7 @@
         btn('단축 칸 비우기', function () { HOTBAR[p.i] = 0; bagPick = null; saveSettings(); renderHotbar(); setSel(sel, true); $('invName').textContent = '단축 칸을 비웠어요'; renderInv(); });
       }
       add('div', 'dhint', '📍 ' + howGet(id));
+      equipBox();   // 11/22 고른 물건(버리기 버튼 포함)을 먼저, 방어구 칸은 아래로 — 휴대폰에서 방어구 칸에 가려 버리기가 안 보이던 것
       return;
     }
     var it = invSel;
@@ -5230,6 +5233,7 @@
     on('mapCap', function () { toggleFold('map'); });
     on('btnRotate', rotateScreen);
     applyFold();
+    on('swimOut', function () { swimOut(); });
     on('restUp', function () { if (cartRide) leaveCart(); else if (boatRide) leaveBoat(); else standFromFurniture(); });
     on('forestCancel', cancelForestRoute);
     on('go_frontier', function(){ startFrontierGuide(FRONTIER_ENTRY,'자유 개척지'); });
@@ -5674,6 +5678,7 @@
       if (held === COMPASS) return { label: '방향 보기' };
       if (held === SHOFAR) return { label: '나팔 불기' };
       if (held === FIREWORK) return { label: '폭죽 쏘기' };
+      if (held === HOME_STONE) return { label: homeStoneLabel() };
       if (held === SLING) return { label: '물매 연습' };
       if (isBowId(held)) return { label: '꾹 눌러 활 당기기' };   // 화면도 0.25초 가만히 누르면 당김
       if (isSlingId(held)) return { label: '물매 던지기' };
@@ -5681,7 +5686,7 @@
     }
     var c = pickCreature(screenDir(), blockCover(h));
     if (c && !(riding && c.a && c.a.sp.seat)) {
-      return { label: c.peer ? '두 번: 친구' : c.npc ? '말 걸기' : (c.shadow ? '막기' : (c.a && c.a.sp.seat ? '타기' : '동물 누르기')) };
+      return { label: c.peer ? '두 번: 친구' : c.npc ? '말 걸기' : (c.shadow ? '치기' : (c.a && strikeReady(c.a, held) ? '치기' : (c.a && c.a.sp.seat ? '타기' : '동물 누르기'))) };
     }
     if (h) label = blockActionLabel(h, held);
     if (label) return { label: label };
@@ -5877,6 +5882,7 @@
       if(held===COMPASS && have(held)) return toast('지금 보는 방향: '+headingName());
       if(held===SHOFAR && have(held)) return callShofar();
       if(held===FIREWORK && (have(held) || isAdm())) return fireworkUse();
+      if(held===HOME_STONE && (have(held) || isAdm())) return homeStoneUse();
       if(isSlingId(held) && have(held)) { var sh0=pickDir(dir); if(sh0 && get(sh0.x,sh0.y,sh0.z)===SLING_TARGET) return slingPractice(sh0); return slingThrow(dir); }
       if(isBowId(held) && have(held)) return shootArrow(dir);
       if(held===BOAT && (have(held) || isAdm())) return useBoat(dir);
@@ -5901,11 +5907,19 @@
     }
     if (c && c.a && BREEDS[c.a.kind] && !c.a.saddled && (HOTBAR[sel] === WHEAT || (c.a.kind === 'chicken' && HOTBAR[sel] === SEED)) && have(HOTBAR[sel]) > 0) return feedAnimal(c.a, HOTBAR[sel]);
     if (c && c.a && harvestAnimal(c.a)) return;
-    if (c && c.a && (held === SWORD || isArmSword(held)) && have(held) > 0 && c.t < REACH + camDist + 1 && hitAnimal(c.a, true)) return;   // 11/21 칼을 들고 누르면 짐승 잡기
+    if (c && c.a && strikeReady(c.a, held) && c.t < REACH + camDist + 1 && hitAnimal(c.a, true)) return;   // 11/22 맨손·칼·검·도구 모두 짐승 치기(처음 보는 짐승은 먼저 카드)
     if (c) return c.a && c.a.sp.seat ? tapRideable(c.a) : showCard(c.kind);
     if (h) act('place', h);
     else if (WEARINFO[HOTBAR[sel]]) wearItem(HOTBAR[sel]);
     else if (FOODS[HOTBAR[sel]]) eatItem(HOTBAR[sel]);
+  }
+  // 11/22 전도사님 「맨손으로도 몬스터나 동물 칠 수 있게」「모든 무기로 동물 공격 가능하게」
+  // 손이 비었거나 칼·검·도구를 들었으면 친다. 도감에 아직 없는 짐승은 처음 한 번 카드부터(도감 모으기), 말·나귀는 맨손이면 타기
+  function armedFor(h) { return !!h && have(h) > 0 && (h === SWORD || isArmSword(h) || isTool(h)); }
+  function strikeReady(a, h) {
+    if (!a || !BEAST_HP[a.kind] || !DEX['c' + a.kind]) return false;
+    if (armedFor(h)) return true;
+    return (!h || have(h) < 1) && !a.sp.seat;
   }
   // 칼을 들고 양을 누르면 양털, 소·염소·낙타를 누르면 가죽(한 마리에 3분에 한 번)
   function harvestAnimal(a) {
@@ -6467,17 +6481,17 @@
   var MAPN = 1024, MSC = WS / MAPN, mapBase = document.createElement('canvas'), mapRow = 0, mapImg = null;
   mapBase.width = mapBase.height = MAPN;
   // 11/20 세계가 넓어져(4096) 지도를 32×32 조각으로 나눠 내 둘레 조각부터 조금씩(프레임마다 512점) 그림
-  var MT = 32, MTN = MAPN / MT, mapDone = new Uint8Array(MTN * MTN), mapCur = -1, mapCurRow = 0, mapDoneN = 0;
+  var MT = 32, MTN = MAPN / MT, mapDone = new Uint8Array(MTN * MTN), mapCur = -1, mapCurRow = 0, mapDoneN = 0, mapIdle = false;
   function mapTick() {
     if (mapDoneN >= MTN * MTN) { mapRow = MAPN; return; }
     var x = mapBase.getContext('2d');
     if (!mapImg) { mapImg = x.createImageData(MT, 1); x.fillStyle = '#3a4a3a'; x.fillRect(0, 0, MAPN, MAPN); }
-    var budget = 512;
+    var budget = ui === 'map' ? 2048 : 512;   // 11/22 큰 지도를 연 동안은 네 배 빨리
     while (budget > 0) {
       if (mapCur < 0) {
         var ptx = Math.max(0, Math.min(MTN - 1, Math.floor(P.x / MSC / MT))), ptz = Math.max(0, Math.min(MTN - 1, Math.floor(P.z / MSC / MT))), best = -1, bd = 1e9;
         for (var t = 0; t < MTN * MTN; t++) { if (mapDone[t]) continue; var dx = t % MTN - ptx, dz = ((t / MTN) | 0) - ptz, d = dx * dx + dz * dz; if (d < bd) { bd = d; best = t; } }
-        if (best < 0 || bd > 9) return; mapCur = best; mapCurRow = 0;   // 작은 지도에 필요한 내 둘레(조각 3칸 ≈ 384칸)만
+        if (best < 0 || bd > (ui === 'map' ? 49 : 9)) { mapIdle = true; return; } mapIdle = false; mapCur = best; mapCurRow = 0;   // 작은 지도에 필요한 내 둘레(조각 3칸 ≈ 384칸)만
       }
       var tx = mapCur % MTN, tz = (mapCur / MTN) | 0, row = tz * MT + mapCurRow;
       for (var px = 0; px < MT; px++) {
@@ -6698,7 +6712,8 @@
     var x = cv.getContext('2d'), w = cv.width, h = cv.height;
     x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = false;
     rememberNearby(performance.now());
-    var span = big ? WS : 320, ox = big ? 0 : P.x - span / 2, oz = big ? 0 : P.z - span / 2, sc = w / span;
+    // 11/22 큰 지도: 세계 전체(4096칸) 대신 내 둘레 1600칸 — 그려 둔 내 둘레만 작게 보이던 것을 고침
+    var span = big ? 1600 : 320, ox = big ? Math.max(0, Math.min(WS - span, P.x - span / 2)) : P.x - span / 2, oz = big ? Math.max(0, Math.min(WS - span, P.z - span / 2)) : P.z - span / 2, sc = w / span;
     x.fillStyle = '#26302a'; x.fillRect(0, 0, w, h);
     x.drawImage(mapBase, ox / MSC, oz / MSC, span / MSC, span / MSC, 0, 0, w, h);
     function R(wx, wz, ww, wh, col, lw) { x.strokeStyle = col; x.lineWidth = lw; x.strokeRect((wx - ox) * sc, (wz - oz) * sc, ww * sc, wh * sc); }
@@ -6709,7 +6724,7 @@
     if (big) {
       x.font = '13px Galmuri11, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
       MAP_LABELS.forEach(function (l) { var lx = (l[1] - ox) * sc, ly = (l[2] - oz) * sc; x.fillStyle = 'rgba(0,0,0,.55)'; var tw = x.measureText(l[0]).width + 10; x.fillRect(lx - tw / 2, ly - 10, tw, 20); x.fillStyle = '#fff'; x.fillText(l[0], lx, ly); });
-      if (mapRow < MAPN) { x.fillStyle = 'rgba(0,0,0,.5)'; x.fillRect(0, h - 22, w, 22); x.fillStyle = '#fff'; x.fillText('지도를 그리는 중… ' + Math.round(mapRow / MAPN * 100) + '%', w / 2, h - 11); }
+      if (!mapIdle && mapRow < MAPN) { x.fillStyle = 'rgba(0,0,0,.5)'; x.fillRect(0, h - 22, w, 22); x.fillStyle = '#fff'; x.fillText('지도를 그리는 중…', w / 2, h - 11); }
     }
     drawMapRails(x, ox, oz, sc, w, h); drawMapBed(x, big, ox, oz, sc);
     drawMapPeople(x, big, ox, oz, sc, w, h);
@@ -7127,8 +7142,11 @@
       var vy = (jumpHeld || keys.Space ? 1 : 0) - (flyDown || keys.ShiftLeft || keys.KeyC ? 1 : 0);
       P.vy += (vy * 14 - P.vy) * Math.min(1, 10 * dt);
     } else if (P.swim) {
-      P.vy -= 12 * dt; if (P.vy < -4) P.vy = -4;
+      // 11/22 전도사님 「물에 빠졌을 때 나오게 하는 기능」: 가만히 있으면 저절로 떠오르고, 웅크리기(Shift·C·두 번 톡)를 하면 잠수
+      var dive = keys.ShiftLeft || keys.ShiftRight || keys.KeyC || flyDown || sneakLock;
       if (jumpHeld || keys.Space) P.vy = 6;
+      else if (dive || performance.now() < (P.climbT || 0)) { P.vy -= 12 * dt; if (P.vy < -4) P.vy = -4; }
+      else P.vy += (2.2 - P.vy) * Math.min(1, 3 * dt);
     } else if (P.ladder) {
       // 사닥다리: 앞으로 밀거나 점프하면 오르고, 가만히 있으면 천천히 내려간다(창 28:12)
       if (jumpHeld || keys.Space || mz < -0.2) P.vy = has('jacob') ? 11 : 5.5;
@@ -8279,15 +8297,16 @@
     if (a === riding || a.saddled || a.kept || a.herd || a === lostSheep) return a.saddled ? '안장을 얹은 짐승은 잡을 수 없어요' : '기르는 짐승은 잡을 수 없어요';   // 11/21 새끼도 잡을 수 있음
     return '';
   }
-  function hitAnimal(a, quiet) {
+  function hitAnimal(a, quiet, projDmg) {   // projDmg: 화살·물매로 맞힌 세기(11/22)
     if (!BEAST_HP[a.kind]) return false;
     var why = beastGuarded(a); if (why) { if (!quiet) deny(why); return !quiet; }
-    var held = HOTBAR[sel], dmg = 1;
+    var held = projDmg ? 0 : HOTBAR[sel], dmg = 1;
     if (held === SWORD && have(SWORD) > 0) dmg = 4;
     else if (isArmSword(held) && have(held) > 0) dmg = ARM_SWORD_DMG[armOf(held, ARM_SWORD0)];
     else if (isTool(held) && have(held) > 0 && TOOL_TYPES[typeOf(held)] === 'knife') dmg = 1.5 + tierOf(held) * 0.5;
     else if (isTool(held) && have(held) > 0) dmg = 1.5;
-    var crit = !P.ground && P.vy < -1 && !P.swim && !P.fly; if (crit) dmg *= 1.5;
+    if (projDmg) dmg = projDmg;
+    var crit = !projDmg && !P.ground && P.vy < -1 && !P.swim && !P.fly; if (crit) dmg *= 1.5;
     if (a.hp === undefined) a.hp = a.baby ? Math.ceil(BEAST_HP[a.kind] / 2) : BEAST_HP[a.kind];   // 새끼는 체력 절반
     a.hp -= dmg; swingT = 0.25; sfx('dig', 300); animalCall(a.kind);
     if (isTool(held)) wearTool(held);
@@ -8401,6 +8420,11 @@
         for (var i = 0; i < SHADOWS.length; i++) {
           var s = SHADOWS[i]; if (s.dead) continue;
           var hy = a.y - s.y; if (Math.hypot(a.x - s.x, a.z - s.z) < 0.8 && hy > 0 && hy < HT * s.sp.h + 0.2) { hitShadow(s, a.dmg || 3); gone = true; break; }
+        }
+        for (var j = 0; j < animals.length && !gone; j++) {   // 11/22 화살·물매 돌이 짐승에도 맞음(기르는 짐승은 지나감)
+          var an = animals[j]; if (!an.mesh.visible || an === riding || !BEAST_HP[an.kind]) continue;
+          var ar = CR_R[an.kind] || 1.2, ay = a.y - an.y;
+          if (Math.hypot(a.x - an.x, a.z - an.z) < ar * 0.75 && ay > 0 && ay < ar * 1.7 && hitAnimal(an, true, a.dmg || 3)) gone = true;
         }
       }
       if (gone || a.t > 4 || a.y < YMIN) { scene.remove(a.mesh); return; }
@@ -9341,7 +9365,8 @@
     }
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
-  var NEWS_VER = 21, NEWS = [
+  var NEWS_VER = 22, NEWS = [
+    ['fun5', '🪨', '벧엘 돌·큰 지도·짐승 치기·물에서 나오기', '① 벧엘 돌: 빛 조각 2개와 돌 1개로 만들어요. 밖에서 쓰면 집(마지막에 누운 침대, 없으면 내 땅 앞)으로 가고, 집에서 쓰면 떠났던 곳으로 돌아가요. 한 번 쓰면 없어져요(창 28:15). ② 작은 지도를 누르면 큰 지도가 다시 보여요. ③ 손이 비었거나 칼·검·도구를 들고 짐승을 누르면 쳐요(처음 보는 짐승은 카드부터). 활과 물매도 짐승에 맞아요. ④ 물에 빠지면 가만히 있어도 떠오르고, 물가로 헤엄치면 올라가요. 「🏊 뭍으로 나가기」를 누르면 가까운 물가로 나와요. ⑤ 침대에 누우면 그 침대가 다시 일어나는 자리가 돼요(마지막에 누운 침대).', 0],
     ['fun4', '🎆', '폭죽·등불 잡기·숨바꼭질', '① 폭죽: 갈대 1개와 숯 1개로 3개를 만들어요. 들고 누르면 하늘에서 터지고 함께 있는 사람에게도 보여요. 성탄 절기에는 마구간 구유를 누르면 하루 한 번 폭죽과 떡을 선물로 받아요. ② 등불 잡기: 달리기 출발 기둥 옆 돌기둥 아홉 가운데 하나를 누르면 30초 동안 켜지는 등불을 따라 눌러요. ③ 숨바꼭질: 함께 있는 사람들과 한곳에 모여 메뉴 → 퀘스트 → 「놀이」에서 「내가 술래」를 눌러요. 30초 동안 숨고, 술래는 가까이 가서 눌러 찾아요(술래에게는 이름표와 지도 점이 안 보여요). 「놀이」 탭에서 놀이 마당마다 길 안내도 받을 수 있어요.', 0],
     ['fun3', '🎣', '낚시 타이밍·보물찾기·달리기 경주', '① 낚시: 낚싯대를 들고 물을 누르면 찌가 떠요. 찌가 쑥 들어가면 막대가 나오고, 움직이는 표시가 초록 칸에 왔을 때 한 번 더 누르면 낚아요(가운데 노란 칸이면 한 마리 더). 호수·강·바다마다 물고기가 다르고 크기가 적혀요. ② 보물찾기: 월요일마다 땅 어딘가에 보물이 숨겨져요. 메뉴 → 퀘스트 → 「놀이」에서 실마리(두 곳에서 잰 거리)를 보고 찾아가요. ③ 달리기 경주: 마을 동쪽 들판의 출발 기둥(등 달린 울타리)을 누르고 깃발 다섯을 돌아와요. 내 최고 기록이 남아요.', 0],
     ['bowtouch', '🏹', '활: 둘러볼 때는 쏘지 않아요', '휴대폰에서 활을 들고 화면을 끌면 둘러보기만 해요. 쏘려면 화면을 0.25초 가만히 누르고 있다가(당기는 막대가 나와요) 끌어서 겨눈 뒤 떼거나, 오른쪽 「꾹 눌러 활 당기기」 버튼을 누르고 있다가 떼요.', 0],
@@ -10864,6 +10889,55 @@
 
   // ⑥ 숨바꼭질: 「놀이」 탭에서 시작한 사람이 술래. 60칸 안에 함께 있는 사람이 숨는다(30초), 술래는 2분 30초 동안 찾는다.
   //    술래 화면에서는 이름표와 지도 점이 가려진다. 가까이(7칸) 가서 사람을 누르면 「찾았다」.
+  // ── 11/22 벧엘 돌(창 28:15): 밖에서 쓰면 집(마지막에 누운 침대, 없으면 내 땅 앞)으로, 집에서 쓰면 마지막으로 떠난 곳으로. 쓸 때마다 하나 ──
+  function homeSpot() {
+    if (SPAWN) return { x: SPAWN.x + 0.5, y: SPAWN.y, z: SPAWN.z + 0.5, label: '🛏 내 침대' };
+    if (myPlot >= 0) { var o = plotOrigin(myPlot); return { x: o.x + OLD_PLOT / 2, y: G, z: o.z - 2, label: '🏠 내 땅(' + (myPlot + 1) + '번) 앞' }; }
+    return null;
+  }
+  function atHome(h) { return Math.hypot(P.x - h.x, P.z - h.z) < 20 || (myPlot >= 0 && plotAt(Math.floor(P.x), Math.floor(P.z)) === myPlot); }
+  function homeStoneLabel() { var h = homeSpot(); return h && atHome(h) && villageBook.away ? '떠난 곳으로' : '집으로 가기'; }
+  function homeStoneUse() {
+    var h = homeSpot();
+    if (!h) return deny('로그인해서 내 땅을 받거나 침대에 한 번 누우면 벧엘 돌이 그곳으로 이어져요');
+    if (RACE) return deny('달리기 중에는 쓸 수 없어요');
+    if (HS) return deny('숨바꼭질 중에는 쓸 수 없어요');
+    var back = atHome(h);
+    if (back && !villageBook.away) return deny('여기가 집이에요 — 밖에서 쓰면 집으로, 집에서 쓰면 마지막으로 떠난 곳으로 돌아가요');
+    if (!isAdm()) { take(HOME_STONE, 1); bagChanged(); }
+    sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); sfx('craft', 1500); vibrate('place');
+    if (back) {
+      var a = villageBook.away; villageBook.away = null; saveVillageBook();
+      teleport(a.x, a.y, a.z, a.yaw); toast('✨ 떠났던 곳으로 돌아왔어요');
+    } else {
+      villageBook.away = { x: P.x, y: P.y, z: P.z, yaw: P.yaw }; saveVillageBook();
+      teleport(h.x, h.y, h.z, P.yaw); toast('✨ ' + h.label + '(으)로 왔어요 — 집에서 한 번 더 쓰면 떠났던 곳으로 돌아가요');
+    }
+    setTimeout(function () { sparkle(P.x, P.y + 1, P.z, 0x9fe6ff, 26, { size: 0.4, life: 0.9, v: 2.4, up: 1.6 }); }, 120);
+    if (!S.bethelTold) { S.bethelTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🪨', '벧엘 돌', '내가 너와 함께 있어 네가 어디로 가든지 너를 지키며 너를 이끌어 이 땅으로 돌아오게 할지라', '창세기 28:15', '벧엘은 「하나님의 집」이에요. 빛 조각 2 + 돌 1로 만들어요. 밖에서 쓰면 집(마지막에 누운 침대)으로, 집에서 쓰면 떠났던 곳으로 돌아가요. 한 번 쓰면 없어져요.'); }, 500); }
+  }
+  // ── 11/22 물에 빠졌을 때: 1.5초 넘게 헤엄치면 「뭍으로 나가기」 버튼 → 가까운 물가 땅 위로 ──
+  var swimHeld = 0;
+  setInterval(function () {
+    var wet = P.swim || get(Math.floor(P.x), Math.floor(P.y + 0.2), Math.floor(P.z)) === WATER;   // 물 위에서 떠 있을 때도(몸이 오르내려 P.swim이 깜빡임)
+    var on = started && ui === 'play' && wet && !P.fly && !boatRide && !cartRide && !riding;
+    swimHeld = on ? swimHeld + 0.25 : 0;
+    var el = $('swimOut'); if (el) el.hidden = swimHeld < 1.5;
+  }, 250);
+  function swimOut() {
+    var bx = P.x, bz = P.z, sy = Math.floor(P.y + 1);
+    while (get(Math.floor(bx), sy + 1, Math.floor(bz)) === WATER && sy < SY - 2) sy++;   // 물 위쪽 끝
+    for (var r = 1.5; r <= 18; r += 1) for (var k = 0; k < 16; k++) {
+      var x = bx + Math.cos(k * Math.PI / 8) * r, z = bz + Math.sin(k * Math.PI / 8) * r, ix = Math.floor(x), iz = Math.floor(z);
+      if (!colAt(ix, iz)) continue;
+      var gy = groundAt(ix + 0.5, iz + 0.5, sy + 6); if (gy === null || gy < sy || gy > sy + 5) continue;
+      if (get(ix, gy - 1, iz) === WATER || get(ix, gy, iz) === WATER || get(ix, gy + 1, iz) === WATER) continue;
+      if (collides(ix + 0.5, gy, iz + 0.5)) continue;
+      P.x = ix + 0.5; P.y = gy; P.z = iz + 0.5; P.vx = P.vy = P.vz = 0; swimHeld = 0; $('swimOut').hidden = true;
+      sfx('pop', 500); toast('🏊 뭍으로 나왔어요'); return;
+    }
+    toast('가까운 뭍이 없어요 — 가만히 있으면 떠올라요. 물가로 헤엄치면 올라갈 수 있어요');
+  }
   var HS = null, hsT = null, hsShade = null, HS_HIDE = 30000, HS_SEEK = 150000;
   function hsBlind() { return !!HS && HS.role === 'seek'; }
   function hsName(u) { return (NET.names && NET.names[u]) || '나그네'; }
@@ -11925,7 +11999,7 @@
         for (var k in cols) { var cc = cols[k], col = colAt(cc[0], cc[1]); for (var lz2 = 0; lz2 < CS; lz2++) for (var lx2 = 0; lx2 < CS; lx2++) skyScan(col, lx2, lz2); }
         var n = 0; for (var k2 in ch) { var q = k2.split(',').map(Number); if (q[1] < CYMIN || q[1] >= CY || !inWorldC(q[0], q[2]) || !meshedCols[q[2] * NC + q[0]]) continue; buildChunk(q[0], q[1], q[2]); n++; }
         return n;
-      } }; }, frame: function (q) { return canvasEl.toDataURL('image/jpeg', q || 0.92); }, avatar: function (v) { if (avatar) avatar.visible = v; heldMesh.visible = false; }, key: function (c, v) { keys[c] = v; }, thunder: function () { thunderStrike(); }, rainbow: function (sec) { rainbowUntil = dayT + (sec || 40); }, rain: function (on, st) { rainOn = on; rain = on ? 1 : 0; storm = !!st; } }, openFeedback: function () { openFeedback(); }, openFeedbackAdmin: function () { openFeedbackAdmin(); }, railScanCost: function (n) { var t = performance.now(); for (var i = 0; i < (n || 20); i++) railScanStep(); return (performance.now() - t) / (n || 20); }, setPlotName: function (u, t) { if (t) PLOT_NAMES[u] = t; else delete PLOT_NAMES[u]; refreshPlotSigns(); }, plotSigns: function () { var o = {}; for (var k in plotSignObjs) o[k] = plotSignObjs[k].txt; return o; }, setPlotUser: function (p, u, nick) { plotUser[p] = u; plotOwners[p] = 1; if (nick) NET.names[u] = nick; }, fakeNet: function (c, id) { client = c; me = { id: id }; }, projectCells: function (k) { return projectCells(k).length; }, perf: function () { return perfAcc; }, home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, beast: function (k, x, z, baby, mom) { var a = makeBeast(k, x, z); if (baby) { a.baby = true; a.growAt = Date.now() + 300000; a.mesh.scale.setScalar(0.55); a.mom = mom || null; } animals.push(a); return a; }, healOf: function (id) { return [FOODS[id], healOf(id)]; }, myPlot: function (i) { if (i !== undefined) myPlot = i; return myPlot; }, die: function (w) { hurt(99, w || '시험'); }, tempt: function () { fallTemptation('「교만」'); }, useBed: function (x, y, z) { useBed(x, y, z); }, quests: function (t) { openQuests(t); }, fw: function () { fireworkUse(); }, lamp: function (c) { lampTap(c); }, lampInfo: function () { return { g: LAMPG, y: lampY(), rec: villageBook.lamp, x: LAMP_X, z: LAMP_Z }; }, onFun: function (m) { onFun(m); }, hs: function () { return HS && { role: HS.role, players: HS.players, found: HS.found }; }, hsStart: function () { hsStart(); }, fakeMe: function () { if (!me) me = { id: 'test-me' }; return me.id; }, fxCount: function () { return FX.length; }, xmas: function () { xmasGift(); return villageBook.xmasDay; }, canMineAt: function (x, y, z) { return canMine(x, y, z); }, fun: function () { return { tre: treasureSpot(), found: treasureFound(), clue: treasureClue(), race: RACE, pts: RACE_PTS, par: racePar(), fish: fishFun && { phase: fishFun.phase, pos: fishFun.pos, zc: fishFun.zc, zw: fishFun.zw, kind: fishFun.kind, region: fishFun.region }, book: villageBook.fishBook, raceRec: villageBook.race }; }, raceStart: function () { raceStart(); }, raceY: function (i) { return raceY(i); }, fishTap: function () { return fishTap(HOTBAR[sel], screenDir()); }, fishBiteNow: function () { if (fishFun) fishFun.tBite = 0; }, terr: function (x, z) { terrain(x, z); return { h: T.h, w: T.wtop, reg: T.reg, town: inTown(x, z), plot: plotAt(x, z), lm: landmarkAt(x, z, 4), play: playAt(x, z, 6) }; }, spawnInfo: function () { return spawnInfo(); }, ui: function () { return ui; }, DROPS: function () { return DROPS; }, dropAt: function (x, y, z, id, n) { dropItem(x, y, z, id, n); return DROPS.length; }, hitAnimal: function (a) { return hitAnimal(a); }, setB: function (x, y, z, id) { setBlock(x, y, z, id); }, noteDirt: function (x, y, z) { noteDirt(x, y, z); }, dirts: function () { return DIRTS; }, stepDirts: function () { stepDirts(); }, canPlaceAt: function (x, y, z, id) { return canPlace(x, y, z, id); }, canCook: function (o) { var rc = RECIPES.filter(function (r) { return r.cook && r.out[0] === o; })[0]; return rc ? { can: canCraft(rc), st: workshopNeeds(), fuel: fuelLeft(rc) } : null; }, vit: function () { return { HP: HP, FOOD: FOOD }; }, setVit: function (h, f) { HP = h; FOOD = f; }, eat: function (id) { eatItem(id); }, roofOver: function (x, y, z) { return roofOver(x, y, z); }, shadowWhy: function (x, z) { var gy = groundAt(x, z, SY - 3); return { tut: tutorialStep, town: inTown(Math.floor(P.x), Math.floor(P.z)), safe: safeZone(Math.floor(x), Math.floor(z)), gy: gy, lit: gy === null ? null : litNear(Math.floor(x), gy, Math.floor(z), 7), b2: gy === null ? null : isSolid(get(Math.floor(x), gy - 2, Math.floor(z))), b3: gy === null ? null : isSolid(get(Math.floor(x), gy - 3, Math.floor(z))), py: P.y, roof: gy === null ? null : roofOver(Math.floor(x), gy, Math.floor(z)) }; }, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
+      } }; }, frame: function (q) { return canvasEl.toDataURL('image/jpeg', q || 0.92); }, avatar: function (v) { if (avatar) avatar.visible = v; heldMesh.visible = false; }, key: function (c, v) { keys[c] = v; }, thunder: function () { thunderStrike(); }, rainbow: function (sec) { rainbowUntil = dayT + (sec || 40); }, rain: function (on, st) { rainOn = on; rain = on ? 1 : 0; storm = !!st; } }, openFeedback: function () { openFeedback(); }, openFeedbackAdmin: function () { openFeedbackAdmin(); }, railScanCost: function (n) { var t = performance.now(); for (var i = 0; i < (n || 20); i++) railScanStep(); return (performance.now() - t) / (n || 20); }, setPlotName: function (u, t) { if (t) PLOT_NAMES[u] = t; else delete PLOT_NAMES[u]; refreshPlotSigns(); }, plotSigns: function () { var o = {}; for (var k in plotSignObjs) o[k] = plotSignObjs[k].txt; return o; }, setPlotUser: function (p, u, nick) { plotUser[p] = u; plotOwners[p] = 1; if (nick) NET.names[u] = nick; }, fakeNet: function (c, id) { client = c; me = { id: id }; }, projectCells: function (k) { return projectCells(k).length; }, perf: function () { return perfAcc; }, home: function () { checkHome(); return homeSafe; }, safeZone: function (x, z) { return safeZone(x, z); }, vib: function () { return VIB; }, news: function () { return [newsLeft(), NEWS_DONE, S.newsSeen]; }, parked: function () { return PARKED.map(function (p) { return [p.x, p.y, p.z, !!(p.mesh && p.mesh.visible)]; }); }, railMap: function () { return RAIL_MAP.size; }, spawnAt: function (x, y, z) { SPAWN = { x: x, y: y, z: z }; }, fps: function (v) { if (v !== undefined) { fpsW.low = v; } return fpsW; }, cart: function () { return cartRide ? JSON.parse(JSON.stringify(cartRide)) : null; }, startCart: function (x, y, z) { startCart(x, y, z); }, leaveCart: function () { leaveCart(); }, railShapeFor: function (x, y, z) { return railShapeFor(x, y, z, 0); }, faith: function (v) { if (v !== undefined) { FAITH = v; renderVitals(); } return FAITH; }, shoot: function (pw) { bowAt = 0; shootArrow(screenDir(), pw); return ARROWS.length; }, lastArrow: function () { var a = ARROWS[ARROWS.length - 1]; return a ? [Math.hypot(a.vx, a.vy, a.vz).toFixed(1), a.dmg] : null; }, bowDraw: function () { return !!bowDraw; }, wear: function (id) { WORN[WEARINFO[id].slot] = id; }, matesNear: function () { return matesNear(); }, arrows: function () { return [ARROWS.length, FIRES.length]; }, fire: function (s) { shootFireArrow(s); return FIRES.length; }, matTest: function () { audioOn(); var o = {}; [[STONE,'돌'],[GOPHER,'고페르'],[LOG,'통나무'],[DIRT,'흙'],[GRASS,'풀'],[SAND,'모래'],[SNOW,'눈'],[LEAF,'잎'],[GLASS,'유리'],[PANE,'유리판'],[BLK_FE,'철 블록'],[WOOL_W,'흰 양털'],[CARPET,'카펫'],[BRICK,'벽돌'],[SLAB_L,'반블록'],[STAIR_P,'계단'],[CRAFT,'제작대'],[CHEST,'궤'],[FLOWER,'꽃']].forEach(function (q) { o[q[1]] = matSound(q[0]); }); var ok = 0; ['stone','wood','dirt','sand','plant','wool','glass','metal'].forEach(function (m) { ['dig','break','place'].forEach(function (a) { if (matSfx(a, m)) ok++; }); }); o.played = ok; o.nodes = JSON.stringify(window.__n); return o; }, thunder: function () { storm = true; rainOn = true; rain = 1; thunderStrike(); return flashK; }, flash: function () { return flashK; }, photo: function () { savePhoto(); }, chestTest: function () { curChest = 'test'; CHESTS.test = CHESTS.test || {}; openPanel('chest'); renderChest(); }, dexSet: function (k) { DEX[k] = 1; saveDex(); }, noah: function () { return NOAH; }, goal: function (force) { if (force) fetchGoal(true); return GOAL; }, goalDeco: function () { return !!goalDeco; }, amb: function () { return amb ? { reg: ambReg, cave: inCave, wind: +amb.wind.gain.value.toFixed(3), leaves: +amb.leaves.gain.value.toFixed(3), surf: +amb.surf.gain.value.toFixed(3), water: +amb.water.gain.value.toFixed(3) } : null; }, stepKind: stepKind, sdrops: function () { return Object.keys(SDROPS).map(function (k) { var d = SDROPS[k]; return { id: d.id, x: d.x, y: d.y, z: d.z, item: d.item, n: d.n }; }); }, netDrop: function () { NET.testMute = true; }, netBack: function () { NET.testMute = false; try { client.realtime.conn.close(); } catch (e) {} }, netOn: function () { return NET.on; }, rinfo: function () { var i = renderer.info; return { geo: i.memory.geometries, tex: i.memory.textures, calls: i.render.calls, kids: scene.children.length, chunks: Object.keys(chunks).length }; }, reach: function (x, y, z, ch) { var x0 = (ch[0]) * CS, y0 = ch[1] * CS, z0 = ch[2] * CS, ls = lampsNear(x0 - 8, y0 - 8, z0 - 8, x0 + CS + 8, y0 + CS + 8, z0 + CS + 8); lampReach(ls, x0, y0, z0); return { ls: ls, m: LMASK[((y - y0 + 8) * LR + (z - z0 + 8)) * LR + (x - x0 + 8)] }; }, vtx: function (x0, y0, z0, x1, y1, z1) { var out = []; for (var k in chunks) (chunks[k] || []).forEach(function (m) { var g = m.geometry, p = g.attributes.position.array, c = g.attributes.color && g.attributes.color.array; if (!c) return; for (var i = 0; i < p.length; i += 3) if (p[i] >= x0 && p[i] <= x1 && p[i + 1] >= y0 && p[i + 1] <= y1 && p[i + 2] >= z0 && p[i + 2] <= z1) out.push([p[i], p[i + 1], p[i + 2], +c[i].toFixed(2), +c[i + 1].toFixed(2)]); }); return out; }, vb: function () { return villageBook; }, bpCells: function () { return blueprintCells(villageBook.plan); }, pickC: function () { var d = screenDir(), h = pickDir(d), c = pickCreature(d, blockCover(h)); return { h: h && [h.x, h.y, h.z, get(h.x, h.y, h.z), +h.t.toFixed(2)], c: c && c.kind, cn: c && c.npc && c.npc.d.name, cam: [camera.position.x, camera.position.y, camera.position.z].map(function (v) { return +v.toFixed(1); }), ui: ui }; }, PARTY: function () { return PARTY; }, partyApply: partyApply, openParty: openParty, partyAdd: partyAdd, TITLES: TITLES, inDungeon: inDungeon, beast: function (k, x, z, baby, mom) { var a = makeBeast(k, x, z); if (baby) { a.baby = true; a.growAt = Date.now() + 300000; a.mesh.scale.setScalar(0.55); a.mom = mom || null; } animals.push(a); return a; }, healOf: function (id) { return [FOODS[id], healOf(id)]; }, myPlot: function (i) { if (i !== undefined) myPlot = i; return myPlot; }, die: function (w) { hurt(99, w || '시험'); }, tempt: function () { fallTemptation('「교만」'); }, useBed: function (x, y, z) { useBed(x, y, z); }, quests: function (t) { openQuests(t); }, fw: function () { fireworkUse(); }, lamp: function (c) { lampTap(c); }, lampInfo: function () { return { g: LAMPG, y: lampY(), rec: villageBook.lamp, x: LAMP_X, z: LAMP_Z }; }, onFun: function (m) { onFun(m); }, hs: function () { return HS && { role: HS.role, players: HS.players, found: HS.found }; }, hsStart: function () { hsStart(); }, fakeMe: function () { if (!me) me = { id: 'test-me' }; return me.id; }, fxCount: function () { return FX.length; }, xmas: function () { xmasGift(); return villageBook.xmasDay; }, canMineAt: function (x, y, z) { return canMine(x, y, z); }, fun: function () { return { tre: treasureSpot(), found: treasureFound(), clue: treasureClue(), race: RACE, pts: RACE_PTS, par: racePar(), fish: fishFun && { phase: fishFun.phase, pos: fishFun.pos, zc: fishFun.zc, zw: fishFun.zw, kind: fishFun.kind, region: fishFun.region }, book: villageBook.fishBook, raceRec: villageBook.race }; }, raceStart: function () { raceStart(); }, raceY: function (i) { return raceY(i); }, fishTap: function () { return fishTap(HOTBAR[sel], screenDir()); }, fishBiteNow: function () { if (fishFun) fishFun.tBite = 0; }, terr: function (x, z) { terrain(x, z); return { h: T.h, w: T.wtop, reg: T.reg, town: inTown(x, z), plot: plotAt(x, z), lm: landmarkAt(x, z, 4), play: playAt(x, z, 6) }; }, spawnInfo: function () { return spawnInfo(); }, ui: function () { return ui; }, DROPS: function () { return DROPS; }, dropAt: function (x, y, z, id, n) { dropItem(x, y, z, id, n); return DROPS.length; }, hitAnimal: function (a) { return hitAnimal(a); }, setB: function (x, y, z, id) { setBlock(x, y, z, id); }, homeStoneUse: function () { homeStoneUse(); }, homeSpot: function () { return homeSpot(); }, swimOut: function () { swimOut(); }, strikeReady: function (a, h) { return strikeReady(a, h); }, give: function (id, n) { give(id, n); bagChanged(); }, have: function (id) { return have(id); }, P: function () { return P; }, spawnSet: function (s) { SPAWN = s; }, respawn: function () { respawn(); }, vb: function () { return villageBook; }, DEX: function () { return DEX; }, hitAnimal: function (a, q, d) { return hitAnimal(a, q, d); }, noteDirt: function (x, y, z) { noteDirt(x, y, z); }, dirts: function () { return DIRTS; }, stepDirts: function () { stepDirts(); }, canPlaceAt: function (x, y, z, id) { return canPlace(x, y, z, id); }, canCook: function (o) { var rc = RECIPES.filter(function (r) { return r.cook && r.out[0] === o; })[0]; return rc ? { can: canCraft(rc), st: workshopNeeds(), fuel: fuelLeft(rc) } : null; }, vit: function () { return { HP: HP, FOOD: FOOD }; }, setVit: function (h, f) { HP = h; FOOD = f; }, eat: function (id) { eatItem(id); }, roofOver: function (x, y, z) { return roofOver(x, y, z); }, shadowWhy: function (x, z) { var gy = groundAt(x, z, SY - 3); return { tut: tutorialStep, town: inTown(Math.floor(P.x), Math.floor(P.z)), safe: safeZone(Math.floor(x), Math.floor(z)), gy: gy, lit: gy === null ? null : litNear(Math.floor(x), gy, Math.floor(z), 7), b2: gy === null ? null : isSolid(get(Math.floor(x), gy - 2, Math.floor(z))), b3: gy === null ? null : isSolid(get(Math.floor(x), gy - 3, Math.floor(z))), py: P.y, roof: gy === null ? null : roofOver(Math.floor(x), gy, Math.floor(z)) }; }, shadowDbg: function () { return { t: shadowT, on: shadowsOn(), ui: ui, safe: safeZone(Math.floor(P.x), Math.floor(P.z)), riding: !!riding }; }, STORY: function () { return STORY; }, startStory: startStory, storyTick: function () { storyT = 0; storyTick(0.01); }, DUN: DUN, CITY: CITY, DUN_LAMPS: DUN_LAMPS, socketPos: socketPos, useLampstand: useLampstand, useSocket: useSocket, openStory: openStory, partOf: partOf,
     araratMax: function () { var m = 0, mx = 0, mz = 0; for (var x = ARX - 220; x < ARX + 220; x += 3) for (var z = ARZ - 220; z < ARZ + 220; z += 3) { if (x < 0 || z < 0) continue; terrain(x, z); if (T.reg === 'ararat' && T.h > m) { m = T.h; mx = x; mz = z; } } return [m, mx, mz]; },
     gemCount: function () { var c = {}; for (var k = 0; k < COLS.length; k++) { var col = COLS[k]; if (!col) continue; for (var i = 0; i < col.d.length; i++) { var v = col.d[i]; if ((v >= 200 && v <= 210)) c[v] = (c[v] || 0) + 1; } } return c; }, regenPlot: function (p) { var o = plotOrigin(p); for (var cz = o.z >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = o.x >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var k = cz * NC + cx; if (!COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); } } }, setMyPlot: function (p) { myPlot = p; }, queueRevert: queueRevert, queueRemote: queueRemote, openVisit: openVisit, q: function () { return qStep; }, setQ: function (n) { qStep = n; questCheck(); }, blockIds: function () { var a = [0]; for (var i = 1; i < B.length; i++) if (B[i] && B[i][6] !== 'item' && B[i][6] !== 'tool' && i !== WATER) a.push(i); return a; }, SHADOWS: function () { return SHADOWS; }, FX: function () { return FX; }, ADV: function () { return ADV; }, openQuests: openQuests, questEvent: questEvent, regionTick: regionTick, inLandmark: inLandmark, LMK: { TBX: TBX, TBZ: TBZ, CTX: CTX, CTZ: CTZ, TCX: TCX, TCZ: TCZ, LOTX: LOTX, LOTZ: LOTZ, TWY: TWY, SAX: SAX, SAZ: SAZ, CEX: CEX, CEZ: CEZ }, region: region, getB: function (x, y, z) { return get(x, y, z); }, oreBase: oreBase, P2: function () { return P; }, spawnShadow: function (k, x, z) { var s = makeShadow(k, x, z); SHADOWS.push(s); return s; }, playTap: function (x, y, z) { return tryPlaySpot({ x: x, y: y, z: z }); }, angerBurst: function (s) { angerBurst(s); }, playY: playY, PEN: function () { return PEN; }, hitShadow: hitShadow, armorGuard: armorGuard, V: function () { return { HP: HP, FOOD: FOOD, AIRV: AIRV, SPAWN: SPAWN }; }, setV: function (h, f) { HP = h; FOOD = f; renderVitals(); }, hurt: hurt, CROPS: function () { return CROPS; }, ACH: function () { return ACH; }, NPCS: function () { return NPCS; }, stateGather: stateGather, stateApply: stateApply, useLever: useLever, useBed: useBed, feedAnimal: feedAnimal, inCommons: inCommons, COMMONS: COMMONS, SIGNS: function () { return SIGNS; }, setSignText: setSignText, refreshSigns: refreshSigns, isNight: isNight, setDayT: function (v) { dayT = v; }, WORN: function () { return WORN; }, LOOK: function (i) { if (i !== undefined) { LOOK = i; saveWorn(); } return LOOK; }, wearItem: wearItem, unwear: unwear, harvestAnimal: harvestAnimal, openLooks: openLooks, tableOK: tableOK, NET: NET, applyRemote: applyRemote, onPos: onPos, addChat: addChat, removeChat: removeChat, netEdit: netEdit, netTick: netTick, peerBubble: peerBubble, openChat: openChat, setMe: function (u, nick) { me = { id: u }; NET.nick = nick; NET.ok = true; NET.ready = true; }, riding: function () { return riding; }, tapRideable: tapRideable, dismount: dismount, makeBeast: function (k, x, z) { var a = makeBeast(k, x, z); animals.push(a); return a; }, collectAll: collectAll, DROPS: function () { return DROPS; }, FALLS: function () { return FALLS; }, SAPS: function () { return SAPS; }, growTree: growTree, CHESTS: function () { return CHESTS; }, openChest: openChest, skyLight: skyLight, startFall: startFall, setBlock: setBlock, atlasURL: function () { return atlas.toDataURL(); }, JOBS: function () { return JOBS; }, smeltTick: smeltTick, SMELT: function (v) { SMELT_SEC = v; }, WEAR: function () { return WEAR; }, mineInfo: mineInfo, HEAT: function () { return HEAT; }, fuelLeft: fuelLeft, canPlace: canPlace, wearTool: function (t) { wearTool(t); bagChanged(); }, P: P, teleport: teleport, start: function () { startGame(); }, S: S, act: act, pickCenter: pickCenter, setUI: showUI, openPanel: openPanel,
     BAG: function () { return BAG; }, tapAt: function (x, y) { tapAt(x, y); }, enc: function () { return encodePlot(myPlot); }, dec: function (d) { plotData[0] = null; decodePlot(0, d, true); return !!plotData[0]; }, fakeLogin: function () { client = null; me = { id: 'test' }; myPlot = 0; }, setHot: function (i, id) { HOTBAR[i] = id; setSel(i, true); }, plotOrigin: plotOrigin, collides: collides, animals: function () { return animals; }, setDay: function (p) { dayT = DAY_LEN * p; }, rain: function (on) { rainOn = on; rain = on ? 1 : 0; rainTimer = 999; }, dex: function () { return DEX; }, q: function () { return qStep; }, camera: function () { return camera; }, counts: function () { return [animals.length, birds.length, fishes.length]; }, give: function (id, n) { give(id, n); bagChanged(); }, travel: travel, mineAt: function (dt) { mineTick(pickCenter(), dt); }, terrain: function (x, z) { terrain(x, z); return { h: T.h, top: T.top, wtop: T.wtop, reg: T.reg }; }, get: get, cols: function () { var n = 0; for (var i = 0; i < COLS.length; i++) if (COLS[i]) n++; return n; }, meshed: function () { var n = 0; for (var i = 0; i < meshedCols.length; i++) if (meshedCols[i]) n++; return n; }, mapRow: function () { return mapRow; }, setTab: function (t) { invTab = t; renderInv(); }, icon: function (id) { return ICON[id]; } };

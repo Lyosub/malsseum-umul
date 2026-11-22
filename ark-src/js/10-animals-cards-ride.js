@@ -290,6 +290,7 @@
       if (held === COMPASS) return { label: '방향 보기' };
       if (held === SHOFAR) return { label: '나팔 불기' };
       if (held === FIREWORK) return { label: '폭죽 쏘기' };
+      if (held === HOME_STONE) return { label: homeStoneLabel() };
       if (held === SLING) return { label: '물매 연습' };
       if (isBowId(held)) return { label: '꾹 눌러 활 당기기' };   // 화면도 0.25초 가만히 누르면 당김
       if (isSlingId(held)) return { label: '물매 던지기' };
@@ -297,7 +298,7 @@
     }
     var c = pickCreature(screenDir(), blockCover(h));
     if (c && !(riding && c.a && c.a.sp.seat)) {
-      return { label: c.peer ? '두 번: 친구' : c.npc ? '말 걸기' : (c.shadow ? '막기' : (c.a && c.a.sp.seat ? '타기' : '동물 누르기')) };
+      return { label: c.peer ? '두 번: 친구' : c.npc ? '말 걸기' : (c.shadow ? '치기' : (c.a && strikeReady(c.a, held) ? '치기' : (c.a && c.a.sp.seat ? '타기' : '동물 누르기'))) };
     }
     if (h) label = blockActionLabel(h, held);
     if (label) return { label: label };
@@ -493,6 +494,7 @@
       if(held===COMPASS && have(held)) return toast('지금 보는 방향: '+headingName());
       if(held===SHOFAR && have(held)) return callShofar();
       if(held===FIREWORK && (have(held) || isAdm())) return fireworkUse();
+      if(held===HOME_STONE && (have(held) || isAdm())) return homeStoneUse();
       if(isSlingId(held) && have(held)) { var sh0=pickDir(dir); if(sh0 && get(sh0.x,sh0.y,sh0.z)===SLING_TARGET) return slingPractice(sh0); return slingThrow(dir); }
       if(isBowId(held) && have(held)) return shootArrow(dir);
       if(held===BOAT && (have(held) || isAdm())) return useBoat(dir);
@@ -517,11 +519,19 @@
     }
     if (c && c.a && BREEDS[c.a.kind] && !c.a.saddled && (HOTBAR[sel] === WHEAT || (c.a.kind === 'chicken' && HOTBAR[sel] === SEED)) && have(HOTBAR[sel]) > 0) return feedAnimal(c.a, HOTBAR[sel]);
     if (c && c.a && harvestAnimal(c.a)) return;
-    if (c && c.a && (held === SWORD || isArmSword(held)) && have(held) > 0 && c.t < REACH + camDist + 1 && hitAnimal(c.a, true)) return;   // 11/21 칼을 들고 누르면 짐승 잡기
+    if (c && c.a && strikeReady(c.a, held) && c.t < REACH + camDist + 1 && hitAnimal(c.a, true)) return;   // 11/22 맨손·칼·검·도구 모두 짐승 치기(처음 보는 짐승은 먼저 카드)
     if (c) return c.a && c.a.sp.seat ? tapRideable(c.a) : showCard(c.kind);
     if (h) act('place', h);
     else if (WEARINFO[HOTBAR[sel]]) wearItem(HOTBAR[sel]);
     else if (FOODS[HOTBAR[sel]]) eatItem(HOTBAR[sel]);
+  }
+  // 11/22 전도사님 「맨손으로도 몬스터나 동물 칠 수 있게」「모든 무기로 동물 공격 가능하게」
+  // 손이 비었거나 칼·검·도구를 들었으면 친다. 도감에 아직 없는 짐승은 처음 한 번 카드부터(도감 모으기), 말·나귀는 맨손이면 타기
+  function armedFor(h) { return !!h && have(h) > 0 && (h === SWORD || isArmSword(h) || isTool(h)); }
+  function strikeReady(a, h) {
+    if (!a || !BEAST_HP[a.kind] || !DEX['c' + a.kind]) return false;
+    if (armedFor(h)) return true;
+    return (!h || have(h) < 1) && !a.sp.seat;
   }
   // 칼을 들고 양을 누르면 양털, 소·염소·낙타를 누르면 가죽(한 마리에 3분에 한 번)
   function harvestAnimal(a) {

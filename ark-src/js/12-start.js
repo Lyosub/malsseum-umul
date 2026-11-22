@@ -278,8 +278,11 @@
       var vy = (jumpHeld || keys.Space ? 1 : 0) - (flyDown || keys.ShiftLeft || keys.KeyC ? 1 : 0);
       P.vy += (vy * 14 - P.vy) * Math.min(1, 10 * dt);
     } else if (P.swim) {
-      P.vy -= 12 * dt; if (P.vy < -4) P.vy = -4;
+      // 11/22 전도사님 「물에 빠졌을 때 나오게 하는 기능」: 가만히 있으면 저절로 떠오르고, 웅크리기(Shift·C·두 번 톡)를 하면 잠수
+      var dive = keys.ShiftLeft || keys.ShiftRight || keys.KeyC || flyDown || sneakLock;
       if (jumpHeld || keys.Space) P.vy = 6;
+      else if (dive || performance.now() < (P.climbT || 0)) { P.vy -= 12 * dt; if (P.vy < -4) P.vy = -4; }
+      else P.vy += (2.2 - P.vy) * Math.min(1, 3 * dt);
     } else if (P.ladder) {
       // 사닥다리: 앞으로 밀거나 점프하면 오르고, 가만히 있으면 천천히 내려간다(창 28:12)
       if (jumpHeld || keys.Space || mz < -0.2) P.vy = has('jacob') ? 11 : 5.5;

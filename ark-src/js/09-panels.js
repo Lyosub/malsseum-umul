@@ -264,8 +264,8 @@
     function fuelLine() { var fl = Math.floor(fuelLeft() * 2) / 2; add('div', 'dhint', '🔥 땔감: 석탄·숯 1개 = 8번 · 통나무 1개 = 1.5번 · 석탄 블록 = 72번<br><b>지금 ' + fl + '번 녹일 수 있어요</b>' + (HEAT > 0 ? ' (남은 불 ' + HEAT + ')' : '')); }
     if (invTab === 'bag') {
       var p = bagPick;
-      equipBox();
       if (!p || !p.id || !B[p.id]) {
+        equipBox();
         add('div', 'dempty', '🎒 가방 칸을 누르면 여기에 자세히 나와요.<br><br>누른 다음 <b>아래 단축 칸</b>을 누르면 손에 들 수 있어요.');
         btn('↕ 가방 정리', function () { $('bagSort').click(); });
         return;
@@ -277,7 +277,7 @@
       if (FOODS[id] !== undefined && vitalsOn()) btn('🍞 먹기 (기운 +' + FOODS[id] + ' · 체력 +' + healOf(id) + ')', function () { eatItem(id); bagPick = null; renderInv(); });
       if (p.from === 'bag') {
         add('div', 'dhint', '⬇ 아래 단축 칸을 누르면 손에 들어요');
-        if (!isAdm()) {
+        {   // 11/22 관리자도 버리기(전도사님 「가방에서 버리는 기능이 없어졌어」 — 관리자 계정에서만 숨겨져 있었음)
           var maxN = Math.max(1, Math.min(have(id), 64));
           if (dropAmt.id !== id) dropAmt = { id: id, n: 1 };
           dropAmt.n = Math.max(1, Math.min(maxN, dropAmt.n));
@@ -296,6 +296,7 @@
         btn('단축 칸 비우기', function () { HOTBAR[p.i] = 0; bagPick = null; saveSettings(); renderHotbar(); setSel(sel, true); $('invName').textContent = '단축 칸을 비웠어요'; renderInv(); });
       }
       add('div', 'dhint', '📍 ' + howGet(id));
+      equipBox();   // 11/22 고른 물건(버리기 버튼 포함)을 먼저, 방어구 칸은 아래로 — 휴대폰에서 방어구 칸에 가려 버리기가 안 보이던 것
       return;
     }
     var it = invSel;
@@ -677,6 +678,7 @@
     on('mapCap', function () { toggleFold('map'); });
     on('btnRotate', rotateScreen);
     applyFold();
+    on('swimOut', function () { swimOut(); });
     on('restUp', function () { if (cartRide) leaveCart(); else if (boatRide) leaveBoat(); else standFromFurniture(); });
     on('forestCancel', cancelForestRoute);
     on('go_frontier', function(){ startFrontierGuide(FRONTIER_ENTRY,'자유 개척지'); });

@@ -304,17 +304,17 @@
   var MAPN = 1024, MSC = WS / MAPN, mapBase = document.createElement('canvas'), mapRow = 0, mapImg = null;
   mapBase.width = mapBase.height = MAPN;
   // 11/20 세계가 넓어져(4096) 지도를 32×32 조각으로 나눠 내 둘레 조각부터 조금씩(프레임마다 512점) 그림
-  var MT = 32, MTN = MAPN / MT, mapDone = new Uint8Array(MTN * MTN), mapCur = -1, mapCurRow = 0, mapDoneN = 0;
+  var MT = 32, MTN = MAPN / MT, mapDone = new Uint8Array(MTN * MTN), mapCur = -1, mapCurRow = 0, mapDoneN = 0, mapIdle = false;
   function mapTick() {
     if (mapDoneN >= MTN * MTN) { mapRow = MAPN; return; }
     var x = mapBase.getContext('2d');
     if (!mapImg) { mapImg = x.createImageData(MT, 1); x.fillStyle = '#3a4a3a'; x.fillRect(0, 0, MAPN, MAPN); }
-    var budget = 512;
+    var budget = ui === 'map' ? 2048 : 512;   // 11/22 큰 지도를 연 동안은 네 배 빨리
     while (budget > 0) {
       if (mapCur < 0) {
         var ptx = Math.max(0, Math.min(MTN - 1, Math.floor(P.x / MSC / MT))), ptz = Math.max(0, Math.min(MTN - 1, Math.floor(P.z / MSC / MT))), best = -1, bd = 1e9;
         for (var t = 0; t < MTN * MTN; t++) { if (mapDone[t]) continue; var dx = t % MTN - ptx, dz = ((t / MTN) | 0) - ptz, d = dx * dx + dz * dz; if (d < bd) { bd = d; best = t; } }
-        if (best < 0 || bd > 9) return; mapCur = best; mapCurRow = 0;   // 작은 지도에 필요한 내 둘레(조각 3칸 ≈ 384칸)만
+        if (best < 0 || bd > (ui === 'map' ? 49 : 9)) { mapIdle = true; return; } mapIdle = false; mapCur = best; mapCurRow = 0;   // 작은 지도에 필요한 내 둘레(조각 3칸 ≈ 384칸)만
       }
       var tx = mapCur % MTN, tz = (mapCur / MTN) | 0, row = tz * MT + mapCurRow;
       for (var px = 0; px < MT; px++) {
@@ -535,7 +535,8 @@
     var x = cv.getContext('2d'), w = cv.width, h = cv.height;
     x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = false;
     rememberNearby(performance.now());
-    var span = big ? WS : 320, ox = big ? 0 : P.x - span / 2, oz = big ? 0 : P.z - span / 2, sc = w / span;
+    // 11/22 큰 지도: 세계 전체(4096칸) 대신 내 둘레 1600칸 — 그려 둔 내 둘레만 작게 보이던 것을 고침
+    var span = big ? 1600 : 320, ox = big ? Math.max(0, Math.min(WS - span, P.x - span / 2)) : P.x - span / 2, oz = big ? Math.max(0, Math.min(WS - span, P.z - span / 2)) : P.z - span / 2, sc = w / span;
     x.fillStyle = '#26302a'; x.fillRect(0, 0, w, h);
     x.drawImage(mapBase, ox / MSC, oz / MSC, span / MSC, span / MSC, 0, 0, w, h);
     function R(wx, wz, ww, wh, col, lw) { x.strokeStyle = col; x.lineWidth = lw; x.strokeRect((wx - ox) * sc, (wz - oz) * sc, ww * sc, wh * sc); }
@@ -546,7 +547,7 @@
     if (big) {
       x.font = '13px Galmuri11, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
       MAP_LABELS.forEach(function (l) { var lx = (l[1] - ox) * sc, ly = (l[2] - oz) * sc; x.fillStyle = 'rgba(0,0,0,.55)'; var tw = x.measureText(l[0]).width + 10; x.fillRect(lx - tw / 2, ly - 10, tw, 20); x.fillStyle = '#fff'; x.fillText(l[0], lx, ly); });
-      if (mapRow < MAPN) { x.fillStyle = 'rgba(0,0,0,.5)'; x.fillRect(0, h - 22, w, 22); x.fillStyle = '#fff'; x.fillText('지도를 그리는 중… ' + Math.round(mapRow / MAPN * 100) + '%', w / 2, h - 11); }
+      if (!mapIdle && mapRow < MAPN) { x.fillStyle = 'rgba(0,0,0,.5)'; x.fillRect(0, h - 22, w, 22); x.fillStyle = '#fff'; x.fillText('지도를 그리는 중…', w / 2, h - 11); }
     }
     drawMapRails(x, ox, oz, sc, w, h); drawMapBed(x, big, ox, oz, sc);
     drawMapPeople(x, big, ox, oz, sc, w, h);
