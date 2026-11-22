@@ -746,10 +746,10 @@
   RECIPES.push({ out: [LANTERN, 1], need: [[ING_FE, 1], [TORCH, 1]], cat: 'shape' });
   RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 4], [ING_AU, 2], [STICK, 2]], cat: 'wear', table: true, ref: '엡 6:17' });
   RECIPES.push({ out: [BOAT, 1], need: [[GOPHER, 5], [PITCH, 1]], cat: 'tool', ref: '창 6:14' });   // 11/20 배: 역청을 칠해 물이 새지 않게
-  // 광물 무기·방패 만들기: 검(재료 4 + 막대기 2) · 방패(재료 4 + 고페르 나무 2) · 물매(가죽 2 + 실 3 + 재료 2) · 활(막대기 4 + 실 4 + 재료 3) · 화살 4개(막대기 + 재료)
+  // 광물 무기·방패 만들기: 검(재료 4 + 막대기 2) · 방패(재료 6 + 고페르 나무 3) · 물매(가죽 2 + 실 3 + 재료 2) · 활(막대기 4 + 실 4 + 재료 3) · 화살 4개(막대기 + 재료)
   [STONE, ING_CU, ING_AG, ING_AU, GEM_ONYX, GEM_SAPH, GEM_DIA].forEach(function (mt, m) {
     RECIPES.push({ out: [ARM_SWORD0 + m, 1], need: [[mt, 4], [STICK, 2]], cat: 'wear', table: true });   // 11/22 무기 재료를 늘림(전도사님 「무기 만드는 난이도를 좀 더 높이고」)
-    RECIPES.push({ out: [ARM_SHIELD0 + m, 1], need: [[mt, 4], [GOPHER, 2]], cat: 'wear', table: true });
+    RECIPES.push({ out: [ARM_SHIELD0 + m, 1], need: [[mt, 6], [GOPHER, 3]], cat: 'wear', table: true });
     RECIPES.push({ out: [ARM_SLING0 + m, 1], need: [[LEATHER, 2], [THREAD, 3], [mt, 2]], cat: 'tool', table: true });
     RECIPES.push({ out: [ARM_BOW0 + m, 1], need: [[STICK, 4], [THREAD, 4], [mt, 3]], cat: 'tool', table: true });
     RECIPES.push({ out: [ARM_ARROW0 + m, 4], need: [[STICK, 1], [mt, 1]], cat: 'tool' });
@@ -768,11 +768,13 @@
   RECIPES.push({ out: [SLAB_P, 6], need: [[PITCH, 3]], cat: 'shape' }); RECIPES.push({ out: [STAIR_P, 4], need: [[PITCH, 6]], cat: 'shape' });
   // 제작대와 옷: 옷은 제작대(가방이나 내 땅)가 있어야 만든다
   RECIPES.push({ out: [CRAFT, 1], need: [[GOPHER, 4]], cat: 'wear' });
-  [[140, [[LEATHER, 3]]], [141, [[ING_CU, 5]]], [142, [[ING_FE, 5]]], [143, [[ING_AU, 5]]], [144, [[ING_FE, 4], [ING_AU, 1]]],
-   [145, [[LEATHER, 6]]], [146, [[WOOL, 6]]], [147, [[WOOL, 6], [FLOWER, 3]]], [148, [[ING_CU, 8]]], [149, [[ING_FE, 8]]], [150, [[ING_FE, 6], [ING_AU, 2]]],
-   [151, [[LEATHER, 2]]], [152, [[LEATHER, 2], [ING_AU, 2]]],
-   [153, [[LEATHER, 3]]], [154, [[GOPHER, 3]]], [155, [[LEATHER, 3], [ING_AG, 2]]],
-   [156, [[GOPHER, 5], [STICK, 1]]], [157, [[ING_FE, 5], [GOPHER, 2]]], [158, [[ING_FE, 5], [ING_AU, 1], [GOPHER, 2]]]
+  // 11/22 방어구 재료를 늘림(전도사님 「갑옷들도 만들기 어렵게」). 하나님의 전신갑주 다섯(엡 6:13-17)은 광물 일곱 가지가 하나씩 다 들어감
+  var ALL_ORES = [[ING_CU, 1], [ING_FE, 1], [ING_AG, 1], [ING_AU, 1], [GEM_ONYX, 1], [GEM_SAPH, 1], [GEM_DIA, 1]];
+  [[140, [[LEATHER, 5]]], [141, [[ING_CU, 8]]], [142, [[ING_FE, 8]]], [143, [[ING_AU, 8]]], [144, ALL_ORES.concat([[LEATHER, 2]])],
+   [145, [[LEATHER, 10]]], [146, [[WOOL, 10]]], [147, [[WOOL, 10], [FLOWER, 4]]], [148, [[ING_CU, 12]]], [149, [[ING_FE, 12]]], [150, ALL_ORES.concat([[LEATHER, 4]])],
+   [151, [[LEATHER, 4]]], [152, ALL_ORES.concat([[LEATHER, 3]])],
+   [153, [[LEATHER, 5]]], [154, [[GOPHER, 5]]], [155, ALL_ORES.concat([[LEATHER, 3]])],
+   [156, [[GOPHER, 8], [STICK, 2]]], [157, [[ING_FE, 8], [GOPHER, 3]]], [158, ALL_ORES.concat([[GOPHER, 4]])]
   ].forEach(function (o) { RECIPES.push({ out: [o[0], 1], need: o[1], cat: 'wear', table: true, ref: WEARINFO[o[0]].ref }); });
   RECIPES.push({ out: [TORCH, 4], need: [[STICK, 1], [COAL, 1]], cat: 'block', ref: '창 15:17' });
   RECIPES.push({ out: [TORCH, 4], need: [[STICK, 1], [CHAR, 1]], cat: 'block', ref: '창 15:17' });

@@ -477,7 +477,7 @@
       var bid=col.d[q];
       if(isFrontierMachine(bid))col.machines.add(q);
       if (LIGHTS[bid]) {
-        var qx=q%CS,r0=(q-qx)/CS,qz=r0%CS,qy=(r0-qz)/CS;
+        var qx=q%CS,r0=(q-qx)/CS,qz=r0%CS,qy=(r0-qz)/CS+YMIN;   // 11/22 +YMIN: 땅속을 넓힌 뒤(11/20) 등불 높이가 32칸 위로 적혀, 땅을 다시 불러오면 횃불·등불 빛이 꺼졌음
         col.lamps.push([x0+qx,qy,z0+qz]);
       }
     }

@@ -1601,10 +1601,10 @@
   RECIPES.push({ out: [LANTERN, 1], need: [[ING_FE, 1], [TORCH, 1]], cat: 'shape' });
   RECIPES.push({ out: [SWORD, 1], need: [[ING_FE, 4], [ING_AU, 2], [STICK, 2]], cat: 'wear', table: true, ref: '엡 6:17' });
   RECIPES.push({ out: [BOAT, 1], need: [[GOPHER, 5], [PITCH, 1]], cat: 'tool', ref: '창 6:14' });   // 11/20 배: 역청을 칠해 물이 새지 않게
-  // 광물 무기·방패 만들기: 검(재료 4 + 막대기 2) · 방패(재료 4 + 고페르 나무 2) · 물매(가죽 2 + 실 3 + 재료 2) · 활(막대기 4 + 실 4 + 재료 3) · 화살 4개(막대기 + 재료)
+  // 광물 무기·방패 만들기: 검(재료 4 + 막대기 2) · 방패(재료 6 + 고페르 나무 3) · 물매(가죽 2 + 실 3 + 재료 2) · 활(막대기 4 + 실 4 + 재료 3) · 화살 4개(막대기 + 재료)
   [STONE, ING_CU, ING_AG, ING_AU, GEM_ONYX, GEM_SAPH, GEM_DIA].forEach(function (mt, m) {
     RECIPES.push({ out: [ARM_SWORD0 + m, 1], need: [[mt, 4], [STICK, 2]], cat: 'wear', table: true });   // 11/22 무기 재료를 늘림(전도사님 「무기 만드는 난이도를 좀 더 높이고」)
-    RECIPES.push({ out: [ARM_SHIELD0 + m, 1], need: [[mt, 4], [GOPHER, 2]], cat: 'wear', table: true });
+    RECIPES.push({ out: [ARM_SHIELD0 + m, 1], need: [[mt, 6], [GOPHER, 3]], cat: 'wear', table: true });
     RECIPES.push({ out: [ARM_SLING0 + m, 1], need: [[LEATHER, 2], [THREAD, 3], [mt, 2]], cat: 'tool', table: true });
     RECIPES.push({ out: [ARM_BOW0 + m, 1], need: [[STICK, 4], [THREAD, 4], [mt, 3]], cat: 'tool', table: true });
     RECIPES.push({ out: [ARM_ARROW0 + m, 4], need: [[STICK, 1], [mt, 1]], cat: 'tool' });
@@ -1623,11 +1623,13 @@
   RECIPES.push({ out: [SLAB_P, 6], need: [[PITCH, 3]], cat: 'shape' }); RECIPES.push({ out: [STAIR_P, 4], need: [[PITCH, 6]], cat: 'shape' });
   // 제작대와 옷: 옷은 제작대(가방이나 내 땅)가 있어야 만든다
   RECIPES.push({ out: [CRAFT, 1], need: [[GOPHER, 4]], cat: 'wear' });
-  [[140, [[LEATHER, 3]]], [141, [[ING_CU, 5]]], [142, [[ING_FE, 5]]], [143, [[ING_AU, 5]]], [144, [[ING_FE, 4], [ING_AU, 1]]],
-   [145, [[LEATHER, 6]]], [146, [[WOOL, 6]]], [147, [[WOOL, 6], [FLOWER, 3]]], [148, [[ING_CU, 8]]], [149, [[ING_FE, 8]]], [150, [[ING_FE, 6], [ING_AU, 2]]],
-   [151, [[LEATHER, 2]]], [152, [[LEATHER, 2], [ING_AU, 2]]],
-   [153, [[LEATHER, 3]]], [154, [[GOPHER, 3]]], [155, [[LEATHER, 3], [ING_AG, 2]]],
-   [156, [[GOPHER, 5], [STICK, 1]]], [157, [[ING_FE, 5], [GOPHER, 2]]], [158, [[ING_FE, 5], [ING_AU, 1], [GOPHER, 2]]]
+  // 11/22 방어구 재료를 늘림(전도사님 「갑옷들도 만들기 어렵게」). 하나님의 전신갑주 다섯(엡 6:13-17)은 광물 일곱 가지가 하나씩 다 들어감
+  var ALL_ORES = [[ING_CU, 1], [ING_FE, 1], [ING_AG, 1], [ING_AU, 1], [GEM_ONYX, 1], [GEM_SAPH, 1], [GEM_DIA, 1]];
+  [[140, [[LEATHER, 5]]], [141, [[ING_CU, 8]]], [142, [[ING_FE, 8]]], [143, [[ING_AU, 8]]], [144, ALL_ORES.concat([[LEATHER, 2]])],
+   [145, [[LEATHER, 10]]], [146, [[WOOL, 10]]], [147, [[WOOL, 10], [FLOWER, 4]]], [148, [[ING_CU, 12]]], [149, [[ING_FE, 12]]], [150, ALL_ORES.concat([[LEATHER, 4]])],
+   [151, [[LEATHER, 4]]], [152, ALL_ORES.concat([[LEATHER, 3]])],
+   [153, [[LEATHER, 5]]], [154, [[GOPHER, 5]]], [155, ALL_ORES.concat([[LEATHER, 3]])],
+   [156, [[GOPHER, 8], [STICK, 2]]], [157, [[ING_FE, 8], [GOPHER, 3]]], [158, ALL_ORES.concat([[GOPHER, 4]])]
   ].forEach(function (o) { RECIPES.push({ out: [o[0], 1], need: o[1], cat: 'wear', table: true, ref: WEARINFO[o[0]].ref }); });
   RECIPES.push({ out: [TORCH, 4], need: [[STICK, 1], [COAL, 1]], cat: 'block', ref: '창 15:17' });
   RECIPES.push({ out: [TORCH, 4], need: [[STICK, 1], [CHAR, 1]], cat: 'block', ref: '창 15:17' });
@@ -2210,7 +2212,7 @@
       var bid=col.d[q];
       if(isFrontierMachine(bid))col.machines.add(q);
       if (LIGHTS[bid]) {
-        var qx=q%CS,r0=(q-qx)/CS,qz=r0%CS,qy=(r0-qz)/CS;
+        var qx=q%CS,r0=(q-qx)/CS,qz=r0%CS,qy=(r0-qz)/CS+YMIN;   // 11/22 +YMIN: 땅속을 넓힌 뒤(11/20) 등불 높이가 32칸 위로 적혀, 땅을 다시 불러오면 횃불·등불 빛이 꺼졌음
         col.lamps.push([x0+qx,qy,z0+qz]);
       }
     }
@@ -8992,6 +8994,17 @@
     for (var cz = (o.z - 1) >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = (o.x - 1) >> 5; cx <= (o.x + PLOT) >> 5; cx++) {
       var k = cz * NC + cx; if (!inWorldC(cx, cz) || !COLS[k]) continue; var was = meshedCols[k]; genColumn(cx, cz); if (was) { unmeshColumn(cx, cz); meshColumn(cx, cz); }
     }
+    // 11/22 둘레 기둥도 다시 그림: 땅 기록이 늦게 도착하면 이웃 기둥은 그 땅의 횃불·등불 빛 없이 이미 그려져 있어, 집이 기둥 경계에 걸치면 반쪽이 어두웠음(부수고 다시 놓으면 켜지던 것)
+    var lit = plotLampsNear(o), c0x = (o.x - 1) >> 5, c1x = (o.x + PLOT) >> 5, c0z = (o.z - 1) >> 5, c1z = (o.z + PLOT) >> 5;
+    for (var nz = c0z - 1; nz <= c1z + 1; nz++) for (var nx = c0x - 1; nx <= c1x + 1; nx++) {
+      if (nx >= c0x && nx <= c1x && nz >= c0z && nz <= c1z) continue;
+      var nk = nz * NC + nx; if (!lit || !inWorldC(nx, nz) || !COLS[nk] || !meshedCols[nk]) continue;
+      unmeshColumn(nx, nz); meshColumn(nx, nz);
+    }
+  }
+  function plotLampsNear(o) {   // 그 땅에 빛나는 것이 하나라도 있나(없으면 둘레를 다시 그릴 필요 없음)
+    for (var cz = (o.z - 1) >> 5; cz <= (o.z + PLOT) >> 5; cz++) for (var cx = (o.x - 1) >> 5; cx <= (o.x + PLOT) >> 5; cx++) { var c = inWorldC(cx, cz) && COLS[cz * NC + cx]; if (c && c.lamps.length) return true; }
+    return false;
   }
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) hiddenAt = performance.now();
@@ -9387,7 +9400,7 @@
   }
   // ── 새 기능 안내(11/20): 해 보면 저절로 ✅ — 처음 들어오면 한 번 알림, 메뉴의 「✨ 새 기능」·마을 수첩에서 봄 ──
   var NEWS_VER = 23, NEWS = [
-    ['fun6', '⚔', '더 강한 그림자·무기 재료·물', '① 어둠의 그림자가 더 튼튼하고 세졌어요. 함께 싸우고 방어구를 챙겨요. ② 검·활·물매를 만드는 재료가 늘었고, 활과 물매도 제작대에서 만들어요. ③ 물에서는 가라앉아요. 점프를 누르고 있으면 떠오르고, 물가에서 점프를 두 번 누르면 뭍으로 올라서요. ④ 말과 나귀는 탄 채로 물을 건널 수 있고, 물에 빠진 짐승은 헤엄쳐 나와요. ⑤ 새 버전이 나오면 화면 위에 「🔄 새 버전」 단추가 떠요.', 0],
+    ['fun6', '⚔', '더 강한 그림자·무기 재료·물', '① 어둠의 그림자가 더 튼튼하고 세졌어요. 함께 싸우고 방어구를 챙겨요. ② 검·활·물매·방패와 옷·갑옷을 만드는 재료가 늘었어요. 활과 물매도 제작대에서 만들고, 하나님의 전신갑주(구원의 투구·의의 호심경·진리의 허리 띠·평안의 복음의 신·믿음의 방패)는 구리·철·은·금·호마노·청옥·금강석이 하나씩 다 들어가요. ③ 물에서는 가라앉아요. 점프를 누르고 있으면 떠오르고, 물가에서 점프를 두 번 누르면 뭍으로 올라서요. ④ 말과 나귀는 탄 채로 물을 건널 수 있고, 물에 빠진 짐승은 헤엄쳐 나와요. 멀리 갔다 오면 집 안 횃불·등불 빛이 꺼지던 것도 고쳤어요. ⑤ 새 버전이 나오면 화면 위에 「🔄 새 버전」 단추가 떠요.', 0],
     ['fun5', '🪨', '벧엘 돌·큰 지도·짐승 치기·물에서 나오기', '① 벧엘 돌: 빛 조각 2개와 돌 1개로 만들어요. 밖에서 쓰면 집(마지막에 누운 침대, 없으면 내 땅 앞)으로 가고, 집에서 쓰면 떠났던 곳으로 돌아가요. 한 번 쓰면 없어져요(창 28:15). ② 작은 지도를 누르면 큰 지도가 다시 보여요. ③ 손이 비었거나 칼·검·도구를 들고 짐승을 누르면 쳐요(처음 보는 짐승은 카드부터). 활과 물매도 짐승에 맞아요. ④ 물에 빠지면 가만히 있어도 떠오르고, 물가로 헤엄치면 올라가요. 「🏊 뭍으로 나가기」를 누르면 가까운 물가로 나와요. ⑤ 침대에 누우면 그 침대가 다시 일어나는 자리가 돼요(마지막에 누운 침대).', 0],
     ['fun4', '🎆', '폭죽·등불 잡기·숨바꼭질', '① 폭죽: 갈대 1개와 숯 1개로 3개를 만들어요. 들고 누르면 하늘에서 터지고 함께 있는 사람에게도 보여요. 성탄 절기에는 마구간 구유를 누르면 하루 한 번 폭죽과 떡을 선물로 받아요. ② 등불 잡기: 달리기 출발 기둥 옆 돌기둥 아홉 가운데 하나를 누르면 30초 동안 켜지는 등불을 따라 눌러요. ③ 숨바꼭질: 함께 있는 사람들과 한곳에 모여 메뉴 → 퀘스트 → 「놀이」에서 「내가 술래」를 눌러요. 30초 동안 숨고, 술래는 가까이 가서 눌러 찾아요(술래에게는 이름표와 지도 점이 안 보여요). 「놀이」 탭에서 놀이 마당마다 길 안내도 받을 수 있어요.', 0],
     ['fun3', '🎣', '낚시 타이밍·보물찾기·달리기 경주', '① 낚시: 낚싯대를 들고 물을 누르면 찌가 떠요. 찌가 쑥 들어가면 막대가 나오고, 움직이는 표시가 초록 칸에 왔을 때 한 번 더 누르면 낚아요(가운데 노란 칸이면 한 마리 더). 호수·강·바다마다 물고기가 다르고 크기가 적혀요. ② 보물찾기: 월요일마다 땅 어딘가에 보물이 숨겨져요. 메뉴 → 퀘스트 → 「놀이」에서 실마리(두 곳에서 잰 거리)를 보고 찾아가요. ③ 달리기 경주: 마을 동쪽 들판의 출발 기둥(등 달린 울타리)을 누르고 깃발 다섯을 돌아와요. 내 최고 기록이 남아요.', 0],
