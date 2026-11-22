@@ -630,11 +630,13 @@
       "id": "2026-11-22-recap",
       "type": "reels",
       "publish_at": "2026-11-22 19:30",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-11-22-recap.txt",
       "first_comment_file": "instagram/captions/2026-11-22-recap.tags.txt",
       "video": "instagram/2026-11-22-recap.mp4",
-      "note": "주일 설교 요약 릴스 — 11/22 「만물의 으뜸」(골 1:15-20). 제미나이 영상 3개(전도사님 생성) + Claude 글자(설교문 대지 문장 3개·골 1:18 원문·한 주 소식) + BGM 「제미나이」, 29.8초. 전도사님 컨펌 2026-11-17."
+      "note": "주일 설교 요약 릴스 — 11/22 「만물의 으뜸」(골 1:15-20). 제미나이 영상 3개(전도사님 생성) + Claude 글자(설교문 대지 문장 3개·골 1:18 원문·한 주 소식) + BGM 「제미나이」, 29.8초. 전도사님 컨펌 2026-11-17.",
+      "media_id": "18098772524677040",
+      "posted_at": "2026-11-22 19:32"
     },
     {
       "id": "2026-11-22-verse",
