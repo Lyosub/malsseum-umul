@@ -143,7 +143,8 @@
     { k: 'tower', x0: CTX - 6, z0: CTZ - 6, x1: CTX + 6, z1: CTZ + 6, flat: 4 },
     { k: 'tents', x0: TCX - 16, z0: TCZ - 16, x1: TCX + 16, z1: TCZ + 16, flat: 1 },
     { k: 'lot', x0: LOTX - 2, z0: LOTZ - 2, x1: LOTX + 2, z1: LOTZ + 2, flat: 1 }
-  ];
+  ].concat(FAR_CITIES.map(function (c) { return { k: c.k, x0: c.x - c.r - 4, z0: c.z - c.r - 4, x1: c.x + c.r + 4, z1: c.z + c.r + 4, flat: 0, far: 1 }; }),
+    [{ k: 'jonah', x0: JONAH_X - 5, z0: JONAH_Z - 5, x1: JONAH_X + 5, z1: JONAH_Z + 5, flat: 0, far: 1 }]);   // 11/24 먼 나라(지켜지는 곳, 짓기는 17-far-lands)
   function landmarkAt(x, z, m) {
     if (!LANDMARKS) return '';
     m = m || 0;
@@ -184,6 +185,7 @@
   }
   function buildLandmarks(x0, z0) {
     LANDMARKS.forEach(function (L) {
+      if (L.far) return;
       if (x0 + CS <= L.x0 - 4 || x0 > L.x1 + 4 || z0 + CS <= L.z0 - 4 || z0 > L.z1 + 4) return;
       if (L.k === 'tabernacle') buildTabernacle(); else if (L.k === 'tower') buildCedarTower(); else if (L.k === 'tents') buildTentCamp(); else buildLotPillar();
     });
@@ -301,7 +303,16 @@
     sinai: ['시내 산', '여호와께서 시내 산 곧 그 산 꼭대기에 강림하시고 모세를 그리로 부르시니 모세가 올라가매', '출애굽기 19:20'],
     meadow: ['푸른 들판', '그가 나를 푸른 풀밭에 누이시며 쉴 만한 물 가로 인도하시는도다', '시편 23:2'],
     southsea: ['남쪽 큰 바다', '배들을 바다에 띄우며 큰 물에서 일을 하는 자는', '시편 107:23'],
-    sisle: ['남쪽 바다의 섬']
+    sisle: ['남쪽 바다의 섬'],
+    // 11/24 먼 나라·먼 땅(개역개정 원문 대조, bskorea)
+    babylon: ['바벨론', '너희는 내가 사로잡혀 가게 한 그 성읍의 평안을 구하고 그를 위하여 여호와께 기도하라 이는 그 성읍이 평안함으로 너희도 평안할 것임이라', '예레미야 29:7'],
+    nineveh: ['니느웨', '하물며 이 큰 성읍 니느웨에는 좌우를 분변하지 못하는 자가 십이만여 명이요 가축도 많이 있나니 내가 어찌 아끼지 아니하겠느냐 하시니라', '요나 4:11'],
+    egypt: ['애굽 국고성', '쌓아 둔 곡식이 바다 모래 같이 심히 많아 세기를 그쳤으니 그 수가 한이 없음이었더라', '창세기 41:49'],
+    jonah: ['요나의 초막', '요나가 성읍에서 나가서 그 성읍 동쪽에 앉아 거기서 자기를 위하여 초막을 짓고 그 성읍에 무슨 일이 일어나는가를 보려고 그 그늘 아래에 앉았더라', '요나 4:5'],
+    shinar: ['시날 평지', '이에 그들이 동방으로 옮기다가 시날 평지를 만나 거기 거류하며', '창세기 11:2'],
+    egyptland: ['나일 강가', '더 숨길 수 없게 되매 그를 위하여 갈대 상자를 가져다가 역청과 나무 진을 칠하고 아기를 거기 담아 나일 강 가 갈대 사이에 두고', '출애굽기 2:3'],
+    swamp: ['갈대 늪', '그것이 연 잎 아래에나 갈대 그늘에서나 늪 속에 엎드리니', '욥기 40:21'],
+    snow: ['눈 덮인 산', '눈을 양털 같이 내리시며 서리를 재 같이 흩으시며', '시편 147:16']
   };
   var WALK_KEYS = ['town', 'east', 'west', 'sea', 'desert', 'oasis', 'ararat', 'lake', 'tar', 'south', 'cedar', 'wild', 'salt', 'patmos', 'malta', 'cyprus', 'hermon', 'taiga', 'galilee', 'jordan', 'sinai', 'meadow', 'southsea'];
   var ADV = { day: '', list: [], done: {}, regions: {}, tour: 0, total: 0, bonus: '' };
@@ -364,6 +375,7 @@
     if (!ADV.done.tents && inLandmark(Math.floor(x), Math.floor(z)) === 'tents' && isNight()) advDone('tents');
     if (!ADV.done.salt10 && have(SALT) >= 10) advDone('salt10');
     if (!ADV.done.walk && WALK_KEYS.every(function (k2) { return ADV.regions[k2]; })) advDone('walk');
+    farTick(k);   // 11/24 먼 나라 찾기
   }
   // 모험(한 번만): [키, 이름, 할 일, 보상, 카드(그림·이름·말씀·장절) 또는 null]
   var ADVS = [

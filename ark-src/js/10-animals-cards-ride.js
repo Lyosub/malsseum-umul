@@ -33,7 +33,11 @@
       [0.55, 0.5, 0.7, 0xf4f0e6, 0, 0.7, 0], [0.32, 0.38, 0.32, 0xf4f0e6, 0, 1.08, -0.35], [0.14, 0.1, 0.16, 0xe8a030, 0, 1.06, -0.57], [0.08, 0.16, 0.24, 0xd83a2a, 0, 1.33, -0.35], [0.08, 0.12, 0.06, 0xd83a2a, 0, 0.95, -0.52],
       [0.05, 0.06, 0.04, 0x111111, -0.165, 1.13, -0.45], [0.05, 0.06, 0.04, 0x111111, 0.165, 1.13, -0.45], [0.36, 0.32, 0.12, 0xece6d6, 0, 0.92, 0.4], [0.08, 0.3, 0.46, 0xe6e0d0, -0.31, 0.72, 0], [0.08, 0.3, 0.46, 0xe6e0d0, 0.31, 0.72, 0]] },
     rabbit: { name: '토끼', n: 16, speed: 3.2, hop: true, leg: [0.16, 0.3, 0xa89074], lx: 0.2, lz: 0.3, parts: [
-      [0.6, 0.55, 0.9, 0xb8a088, 0, 0.58, 0], [0.5, 0.5, 0.5, 0xb8a088, 0, 0.98, -0.5], [0.12, 0.55, 0.12, 0xb8a088, -0.12, 1.45, -0.45], [0.12, 0.55, 0.12, 0xb8a088, 0.12, 1.45, -0.45], [0.25, 0.25, 0.2, 0xffffff, 0, 0.68, 0.5]] }
+      [0.6, 0.55, 0.9, 0xb8a088, 0, 0.58, 0], [0.5, 0.5, 0.5, 0xb8a088, 0, 0.98, -0.5], [0.12, 0.55, 0.12, 0xb8a088, -0.12, 1.45, -0.45], [0.12, 0.55, 0.12, 0xb8a088, 0.12, 1.45, -0.45], [0.25, 0.25, 0.2, 0xffffff, 0, 0.68, 0.5]] },
+    // 11/24 개구리(출 8:6) — 갈대 늪과 나일 강가에서 폴짝
+    frog: { name: '개구리', n: 12, speed: 2.4, hop: true, leg: [0.16, 0.22, 0x4f7a2e], lx: 0.24, lz: 0.22, parts: [
+      [0.62, 0.34, 0.72, 0x5f9a38, 0, 0.36, 0], [0.5, 0.26, 0.34, 0x6aa840, 0, 0.5, -0.36], [0.16, 0.16, 0.16, 0xf2e8a0, -0.18, 0.66, -0.4], [0.16, 0.16, 0.16, 0xf2e8a0, 0.18, 0.66, -0.4],
+      [0.07, 0.08, 0.04, 0x141210, -0.18, 0.68, -0.49], [0.07, 0.08, 0.04, 0x141210, 0.18, 0.68, -0.49], [0.5, 0.06, 0.4, 0xd8d0a0, 0, 0.21, -0.05], [0.22, 0.14, 0.5, 0x4f7a2e, -0.36, 0.3, 0.18], [0.22, 0.14, 0.5, 0x4f7a2e, 0.36, 0.3, 0.18]] }
   };
   var animals = [], birds = [], fishes = [], aniGeo = {};
   function groundAt(x, z, fromY) {
@@ -170,9 +174,10 @@
     donkey: { emoji: '🐴', name: '나귀', ref: '스가랴 9:9', text: '시온의 딸아 크게 기뻐할지어다 예루살렘의 딸아 즐거이 부를지어다 보라 네 왕이 네게 임하시나니 그는 공의로우시며 구원을 베푸시며 겸손하여서 나귀를 타시나니 나귀의 작은 것 곧 나귀 새끼니라' },
     pig: { emoji: '🐖', name: '돼지', ref: '누가복음 15:16', text: '그가 돼지 먹는 쥐엄 열매로 배를 채우고자 하되 주는 자가 없는지라' },
     chicken: { emoji: '🐔', name: '닭', ref: '마태복음 23:37', text: '예루살렘아 예루살렘아 선지자들을 죽이고 네게 파송된 자들을 돌로 치는 자여 암탉이 그 새끼를 날개 아래에 모음 같이 내가 네 자녀를 모으려 한 일이 몇 번이더냐 그러나 너희가 원하지 아니하였도다' },
+    frog: { emoji: '🐸', name: '개구리', ref: '출애굽기 8:6', text: '아론이 애굽 물들 위에 그의 손을 내밀매 개구리가 올라와서 애굽 땅에 덮이니' },
     fish: { emoji: '🐟', name: '물고기', ref: '창세기 1:21', text: '하나님이 큰 바다 짐승들과 물에서 번성하여 움직이는 모든 생물을 그 종류대로, 날개 있는 모든 새를 그 종류대로 창조하시니 하나님이 보시기에 좋았더라' }
   };
-  var CREATURE_KEYS = ['sheep', 'goat', 'cow', 'camel', 'horse', 'donkey', 'pig', 'chicken', 'rabbit', 'dove', 'raven', 'fish'];
+  var CREATURE_KEYS = ['sheep', 'goat', 'cow', 'camel', 'horse', 'donkey', 'pig', 'chicken', 'rabbit', 'dove', 'raven', 'fish', 'frog'];
   var REWARD_ANIMALS = ['sheep', 'goat', 'cow', 'camel', 'rabbit', 'dove', 'raven', 'fish'];   // 달란트 기준(서버 claim_ark_dex와 같은 8가지)
   var DEX_MATS = [LOG, LEAF, STONE, LIME, BASALT, SAND, DIRT, CLAY, TAR, REED, FLOWER];
   var DEX = {};
@@ -442,6 +447,7 @@
   }
   function villageNpcTap(npc) {
     var nm = npc.d.name;
+    if (npc.d.shop) { openShop(npc.d); return true; }   // 11/24 장사하는 사람(17-far-lands)
     if (nm === '노아') { openNoah(); return true; }
     if (nm === '상인') { openTrade(); return true; }
     if (nm === '농부') {
@@ -481,6 +487,7 @@
       });
       box.appendChild(b);
     });
+    farRumors(box);   // 11/24 먼 나라 소문(은 1)
     var c = document.createElement('button'); c.className = 'mc'; c.textContent = '닫기'; c.style.cssText = 'display:block;width:100%;margin-top:6px';
     c.addEventListener('click', function (e) { e.stopPropagation(); box.remove(); }); box.appendChild(c);
     document.body.appendChild(box); sfx('pop');

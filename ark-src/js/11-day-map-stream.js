@@ -662,7 +662,7 @@
     }
     terrain(x0 + 16, z0 + 16);
     var kinds = reg === 'desert' ? ['camel', 'camel', 'donkey'] : (reg === 'west' || reg === 'ararat' ? ['goat', 'goat', 'sheep', 'donkey'] : (reg === 'sea' || reg === 'lake' || reg === 'oasis' ? (reg === 'oasis' ? ['camel', 'donkey'] : []) :
-      (reg === 'taiga' ? ['goat', 'rabbit', 'sheep'] : reg === 'hermon' ? ['goat'] : reg === 'galilee' ? ['sheep', 'cow', 'pig', 'chicken'] : reg === 'jordan' ? ['sheep', 'donkey', 'chicken'] : reg === 'sinai' ? ['camel', 'goat'] : (reg === 'southsea' || reg === 'sisle') ? [] : reg === 'meadow' ? ['sheep', 'cow', 'horse', 'rabbit', 'donkey', 'sheep'] :
+      (reg === 'taiga' ? ['goat', 'rabbit', 'sheep'] : reg === 'hermon' ? ['goat'] : reg === 'galilee' ? ['sheep', 'cow', 'pig', 'chicken'] : reg === 'jordan' ? ['sheep', 'donkey', 'chicken'] : reg === 'swamp' ? ['frog', 'frog', 'frog', 'cow'] : reg === 'snow' ? ['goat', 'rabbit', 'sheep'] : reg === 'shinar' ? ['sheep', 'camel', 'donkey', 'cow'] : reg === 'egyptland' ? ['camel', 'frog', 'cow', 'donkey'] : reg === 'sinai' ? ['camel', 'goat'] : (reg === 'southsea' || reg === 'sisle') ? [] : reg === 'meadow' ? ['sheep', 'cow', 'horse', 'rabbit', 'donkey', 'sheep'] :
       (reg === 'cedar' ? ['sheep', 'goat', 'rabbit'] : (reg === 'wild' ? ['goat', 'donkey', 'camel'] : (reg === 'salt' ? ['goat'] : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey', 'pig', 'chicken', 'chicken']))))));
     // 11/20 동물이 너무 많아 반쯤으로(한 무리 1~2마리, 기둥 열에 하나꼴), 가까이 40마리가 넘으면 더 만들지 않음
     if (!kinds.length || animals.length > 40 || hash2(cx, cz, 31) > (reg === 'desert' ? 0.07 : 0.14)) return;
@@ -671,7 +671,7 @@
       var hx = x0 + 4 + hash2(cx + i, cz, 34) * 24, hz = z0 + 4 + hash2(cx, cz + i, 35) * 24;
       if (inTown(hx | 0, hz | 0) || plotAt(hx | 0, hz | 0) >= 0) continue;
       var gy = groundAt(hx, hz, SY - 3); if (gy === null) continue;
-      terrain(hx | 0, hz | 0); if (gy !== T.h + 1 || T.wtop >= 0 || inCity(hx | 0, hz | 0)) continue;   // 자연 땅 위에만(성벽·지붕·나무 위 금지)
+      terrain(hx | 0, hz | 0); if (gy !== T.h + 1 || T.wtop >= 0 || inCity(hx | 0, hz | 0) || farCityAt(hx | 0, hz | 0, 6)) continue;   // 자연 땅 위에만(성벽·지붕·나무 위 금지)
       var ad = makeBeast(kn, hx, hz); animals.push(ad);
       if (hash2(cx + i, cz, 36) < 0.45) {   // 11/21 새끼도 들에(어미를 따라다니지 않고 따로 거닒, 5분 뒤 다 자람)
         var bx = hx + 1.2, bz = hz + 0.8, bgy = groundAt(bx, bz, SY - 3);

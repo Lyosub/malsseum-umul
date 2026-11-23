@@ -80,6 +80,46 @@
       var d = Math.hypot(dx, dz) + (vnoise(x, z, 22, 70 + i) - 0.5) * I[2] * 0.55; if (d < I[2]) return [i, 1 - d / I[2]]; }
     return null;
   }
+  // ───────── 11/24 먼 땅(전도사님: 「다른 도시들은 나그네 마을과 멀리 떨어져 있게 해 발견하게 쉽지 않게」) ─────────
+  // 마을(약 1024, 1100)에서 1600~2900칸. 지도 이름·길 안내에 없고, 처음 밟아야 큰 지도에 이름이 생긴다.
+  // 동쪽 끝 유브라데 강가: 시날 평지의 바벨론(창 11:2, 시 137:1)과 북쪽 큰 성읍 니느웨(욘 3:3)
+  // 서남쪽 끝 나일 강가: 애굽 국고성과 곡식 창고(출 1:11, 창 41:49) · 요단 강 서쪽 갈대 늪(욥 40:21) · 동쪽 큰 숲 서쪽 눈 덮인 산(시 147:16)
+  var FAR_CITIES = [
+    { k: 'babylon', x: 3760, z: 2350, r: 64 },
+    { k: 'nineveh', x: 3812, z: 1650, r: 70 },
+    { k: 'egypt', x: 470, z: 2650, r: 58 }
+  ];
+  var JONAH_X = 3904, JONAH_Z = 1650;   // 요나의 초막: 니느웨 동쪽(욘 4:5)
+  var SWX = 2330, SWZ = 2480, SWR = 175, SNX = 2560, SNZ = 980, SNR = 240, SHX = 3740, SHZ = 2350, SHR = 330, EGX = 430, EGZ = 2650, EGR = 330;
+  var EUPH = [[3690, 1250], [3700, 1560], [3672, 1900], [3628, 2250], [3612, 2600], [3660, 3000], [3630, 3600]];
+  var NILE = [[340, 2160], [352, 2500], [326, 2800], [346, 3150], [332, 3600]];
+  function lineDist(L, x, z, wig) {
+    var best = 99;
+    for (var s = 0; s + 1 < L.length; s++) {
+      var a = L[s], b = L[s + 1], vx = b[0] - a[0], vz = b[1] - a[1], len = Math.hypot(vx, vz);
+      var u = clamp01(((x - a[0]) * vx + (z - a[1]) * vz) / (len * len)) * len;
+      var px = a[0] + vx * u / len + Math.sin(u * 0.04 + s * 3) * wig, pz = a[1] + vz * u / len;
+      var d = Math.hypot(x - px, z - pz); if (d < best) best = d;
+    }
+    return best;
+  }
+  function farRiverDist(x, z) {   // 유브라데·나일(요단 강처럼 넓게 판다)
+    var d = 99;
+    if (x > 3540 && z > 1180) d = lineDist(EUPH, x, z, 7);
+    if (x < 470 && z > 2100) d = Math.min(d, lineDist(NILE, x, z, 6));
+    return d;
+  }
+  function farCityAt(x, z, m) {
+    for (var i = 0; i < FAR_CITIES.length; i++) { var c = FAR_CITIES[i]; if (Math.abs(x - c.x) <= c.r + m && Math.abs(z - c.z) <= c.r + m) return c; }
+    return null;
+  }
+  function farFlatK(x, z) {   // 성 둘레는 평평하게(성벽 밖 해자까지 + 16칸에 걸쳐 원래 땅과 이음)
+    for (var i = 0; i < FAR_CITIES.length; i++) {
+      var c = FAR_CITIES[i], dx = Math.max(Math.abs(x - c.x) - c.r - 7, 0), dz = Math.max(Math.abs(z - c.z) - c.r - 7, 0);
+      if (dx < 18 && dz < 18) { var d = Math.hypot(dx, dz); if (d < 18) return 1 - sstep(0, 18, d); }
+    }
+    return 0;
+  }
   function newWorldW(x, z) { return Math.max(sstep(NW0 + 10, NW0 + 170, x), sstep(NW0 + 10, NW0 + 170, z)); }
   function galE(x, z) { var dx = (x - GALX) / GALRX, dz = (z - GALZ) / GALRZ; return dx * dx + dz * dz; }
   function T_newTop(nt, h) { return nt.top !== GRASS || h >= G; }
@@ -87,6 +127,11 @@
     if (x < NW0 + 70 && z < NW0 + 70) return '';
     var n = (vnoise(x, z, 60, 91) - 0.5) * 60;
     if (z > SSEA_Z + n) { var si = sIsleAt(x, z); return si && si[1] > 0.06 ? 'sisle' : 'southsea'; }
+    var fc = farCityAt(x, z, 8); if (fc) return fc.k;   // 11/24 먼 땅
+    if (Math.hypot(x - SWX, z - SWZ) + n < SWR) return 'swamp';
+    if (Math.hypot(x - SNX, z - SNZ) + n < SNR) return 'snow';
+    if (Math.hypot(x - SHX, z - SHZ) + n < SHR) return 'shinar';
+    if (Math.hypot(x - EGX, z - EGZ) + n < EGR) return 'egyptland';
     if (galE(x, z) < 1.7) return 'galilee';
     if (Math.hypot(x - HERX, z - HERZ) + n < HERR) return 'hermon';
     if (Math.hypot(x - SINX, z - SINZ) + n < SINR) return 'sinai';
@@ -111,8 +156,17 @@
     // 갈릴리 호수(마 4:18)
     var ge = galE(x, z);
     if (ge < 1.6) { var lakeH = base - 1 - Math.floor(9 * Math.max(0, 1 - ge)); h = ge < 1 ? lakeH : h * sstep(1, 1.6, ge) + (base + 1) * (1 - sstep(1, 1.6, ge)); }
+    // 11/24 눈 덮인 산(시 147:16): 둥근 봉우리 여럿
+    var snd = Math.hypot(x - SNX, z - SNZ), snw = sstep(SNR + 60, SNR - 40, snd + n);
+    if (snw > 0) h += snw * (8 + 30 * ridge * vnoise(x, z, 55, 96) + 6 * roll2);
+    // 갈대 늪(욥 40:21): 낮고 평평한 땅에 얕은 웅덩이
+    var swd = Math.hypot(x - SWX, z - SWZ), sww = sstep(SWR + 40, SWR - 30, swd + n), pool = false;
+    if (sww > 0) { pool = vnoise(x, z, 14, 97) > 0.56 || vnoise(x, z, 6, 98) > 0.8; h = h * (1 - sww) + (pool ? base - 1 : base + (roll2 > 0.62 ? 1 : 0)) * sww; }
+    // 시날 평지(창 11:2)·애굽 땅: 낮고 평평하게
+    var shw = sstep(SHR + 40, SHR - 60, Math.hypot(x - SHX, z - SHZ) + n), egw = sstep(EGR + 40, EGR - 60, Math.hypot(x - EGX, z - EGZ) + n), flw = Math.max(shw, egw);
+    if (flw > 0) h = h * (1 - flw) + (base + 1 + roll2 * 2.5) * flw;
     // 요단 강(마 3:13): 갈릴리에서 남쪽으로
-    var jd = z > GALZ + 100 ? jordanDist(x, z) : 99;
+    var jd = z > GALZ + 100 ? jordanDist(x, z) : 99, frd = farRiverDist(x, z); if (frd < jd) jd = frd;
     if (jd < 16) { var vf = clamp01((jd - 4) / 12); vf = vf * vf; h = base + (h - base) * vf; if (jd <= 2.6) h = base - 2; }
     // 남쪽 큰 바다(시 107:23)와 섬
     var ssd = z - (SSEA_Z + n);
@@ -127,6 +181,10 @@
     else if ((hm > 0.3 || hm2 > 0.3) && h > base + 24 + roll2 * 6) { top = STONE; sub = STONE; }
     if (h <= base + 1 && (ge < 1.35 || jd < 4.5 || ssd > -14)) { top = SAND; sub = SAND; }
     if (sik > 0 && h >= base) { if (h <= base + 1 || sik < 0.22) { top = SAND; sub = SAND; } else { top = GRASS; sub = DIRT; } }
+    if (snw > 0.5 && h >= base && top !== STONE) { top = SNOW; sub = DIRT; }
+    if (sww > 0.5 && h >= base) { top = hash2(x, z, 5) < 0.22 ? CLAY : GRASS; sub = CLAY; }
+    if (egw > 0.5 && h >= base) { top = jd < 13 ? GRASS : SAND; sub = SAND; }
+    else if (shw > 0.5 && h >= base && top === GRASS && vnoise(x, z, 24, 99) > 0.62) { top = SAND; sub = SAND; }
     NT.h = h; NT.top = top; NT.sub = sub; NT.reg = newRegion(x, z) || 'meadow'; NT.jd = jd;
     return NT;
   }
@@ -259,6 +317,7 @@
     if (rd < 15) { var vf = clamp01((rd - 4) / 11); vf = vf * vf; h = Math.round(G - 1 + (h - (G - 1)) * vf); }
     var nwW = newWorldW(x, z), nT = null;
     if (nwW > 0 && seaD < -12) { nT = newTerrain(x, z, ridge); h = Math.round(h * (1 - nwW) + nT.h * nwW); if (nT.jd < 99 && nwW > 0.5) rd = Math.min(rd, nT.jd); }
+    var ffk = nwW > 0 ? farFlatK(x, z) : 0; if (ffk > 0) h = Math.round(h * (1 - ffk) + (G - 1) * ffk);   // 11/24 먼 나라 성터
     var isleK = 0, isleI = -1;
     if (z < SEA_Z - 40) { var il = isleAt(x, z); if (il) { isleK = il[1]; isleI = il[0]; var IH = ISLES[isleI][4];
       var ih = G - 4 + Math.round(sstep(0, 0.28, isleK) * 4.5 + Math.pow(Math.max(0, isleK - 0.2) / 0.8, 1.4) * IH * (0.55 + 0.7 * n1)); if (ih > h) h = ih; } }
@@ -278,6 +337,7 @@
     else if (h > G + 46 + n2 * 4) { top = SNOW; sub = STONE; }
     else if ((westW > 0 || ar > 0.25) && h > G + 15 + vnoise(x, z, 9, 3) * 9) { top = STONE; sub = STONE; }
     if (nT && nwW > 0.5 && h >= G - 1 && T_newTop(nT, h)) { top = nT.top; sub = nT.sub; }
+    if (nT && nwW > 0.5 && wtop >= 0 && nT.reg === 'swamp') { top = CLAY; sub = CLAY; }   // 늪 웅덩이 바닥은 진흙
     if (isleK > 0 && h >= G - 1) { var IHt = ISLES[isleI][4]; wtop = -1; if (h <= G || isleK < 0.22) { top = SAND; sub = SAND; } else if (h > G + IHt * 0.75 + n2 * 3 && IHt > 12) { top = STONE; sub = STONE; } else { top = GRASS; sub = DIRT; } }
     T.h = h; T.top = top; T.sub = sub; T.wtop = wtop; T.reg = reg; T.rd = rd; T.isle = isleK;
     return T;
@@ -410,7 +470,7 @@
       if (T.wtop < 0) {
         var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), hh = hash2(x, z, 11);
         if (T.reg === 'salt' && T.top === SALT_CRUST && hh < 0.005 && h + 6 < SY && !landmarkAt(x, z, 4)) { var sk = 2 + Math.floor(hash2(x, z, 12) * 5); for (var sy = 1; sy <= sk; sy++) d[((h + sy) * CS + lz) * CS + lx + YOFF] = SALT_ROCK; }
-        else if (((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 && h + 1 < SY) d[((h + 1) * CS + lz) * CS + lx + YOFF] = REED;
+        else if ((((le >= 1 && le < 1.22) || (od >= 11 && od < 13.5) || (T.rd > 2.2 && T.rd < 3.6)) && hh < 0.45 || (T.reg === 'swamp' && hh < 0.3)) && h + 1 < SY && !landmarkAt(x, z, 2)) d[((h + 1) * CS + lz) * CS + lx + YOFF] = REED;
         else if (T.top===GRASS && hh>.92 && hh<=.955 && !inTown(x,z) && !inCommons(x,z) && h+1<SY)
           d[((h+1)*CS+lz)*CS+lx+YOFF]=le<2.1 || T.rd<12?LILY:(z>1210||x>VX1+70?THORN:THISTLE);
         else if (T.top === GRASS && hh > 0.955 && plotAt(x, z) < 0 && !(z > AZ0 - 5 && z < AZ1 + 5 && x > AX0 - 5 && x < AX1 + 5)) d[((h + 1) * CS + lz) * CS + lx + YOFF] = FLOWER;
@@ -430,13 +490,15 @@
       terrain(tx, tz);
       if (T.wtop >= 0) continue;
       var reg = T.reg, grove = vnoise(tx, tz, 40, 94) > 0.68, p = reg === 'taiga' ? 0.62 : reg === 'hermon' ? (T.h < G + 26 ? 0.3 : 0) : reg === 'meadow' ? (grove ? 0.4 : 0.02) : reg === 'galilee' ? 0.1 : reg === 'jordan' ? 0.25 : reg === 'sinai' ? 0 : reg === 'sisle' ? 0.25 : reg === 'cyprus' ? 0.4 : reg === 'malta' ? 0.16 : reg === 'patmos' ? 0.06 : reg === 'islet' ? 0.22 : reg === 'cedar' ? 0.62 : reg === 'wild' ? 0.035 : reg === 'salt' ? 0 : reg === 'east' ? 0.6 : (reg === 'south' ? 0.16 : (reg === 'west' || reg === 'ararat' ? 0.14 : (reg === 'other' ? 0.1 : 0)));
-      var palm = reg === 'oasis' || (reg === 'desert' && hash2(gx, gz, 24) < 0.015) || ((reg === 'malta' || reg === 'islet' || reg === 'cyprus' || reg === 'sisle' || reg === 'jordan' || reg === 'sinai') && T.top === SAND);
-      if (palm) p = reg === 'oasis' ? 0.7 : (reg === 'desert' ? 1 : (reg === 'sinai' ? 0.006 : (reg === 'jordan' ? 0.15 : (reg === 'cyprus' ? 0.25 : 0.4))));
+      if (reg === 'snow') p = 0.3; else if (reg === 'swamp') p = 0.16; else if (reg === 'shinar') p = T.rd < 16 ? 0.6 : 0.01; else if (reg === 'egyptland') p = 0.004;   // 11/24 먼 땅
+      var palm = (reg === 'egyptland' && T.top === SAND && T.rd < 26) || reg === 'oasis' || (reg === 'desert' && hash2(gx, gz, 24) < 0.015) || ((reg === 'malta' || reg === 'islet' || reg === 'cyprus' || reg === 'sisle' || reg === 'jordan' || reg === 'sinai') && T.top === SAND);
+      if (palm) p = reg === 'egyptland' ? 0.4 : reg === 'oasis' ? 0.7 : (reg === 'desert' ? 1 : (reg === 'sinai' ? 0.006 : (reg === 'jordan' ? 0.15 : (reg === 'cyprus' ? 0.25 : 0.4))));
       if (hash2(gx, gz, 23) > p) continue;
       if (palm) { if (T.top === SAND) palmTree(tx, T.h + 1, tz, 8 + Math.floor(hash2(gx, gz, 25) * 4)); continue; }
-      if (T.top !== GRASS && !(reg === 'wild' && T.top === SAND)) continue;
+      if (T.top !== GRASS && !(reg === 'wild' && T.top === SAND) && !(reg === 'snow' && T.top === SNOW)) continue;
       var t2 = T.h; terrain(tx + 1, tz + 1); if (T.h !== t2) continue;
-      if (reg === 'cedar' || reg === 'taiga' || reg === 'hermon' || (reg === 'cyprus' && hash2(gx, gz, 27) < 0.35) || (reg === 'meadow' && hash2(gx, gz, 27) < 0.3)) cedarTree(tx, t2 + 1, tz, (reg === 'cedar' ? 14 : 9) + Math.floor(hash2(gx, gz, 26) * (reg === 'taiga' ? 9 : 7)));
+      if (reg === 'swamp' || (reg === 'shinar' && T.rd < 16)) willowTree(tx, t2 + 1, tz, 6 + Math.floor(hash2(gx, gz, 26) * 3));   // 버드나무(시 137:2)
+      else if (reg === 'cedar' || reg === 'taiga' || reg === 'hermon' || reg === 'snow' || (reg === 'cyprus' && hash2(gx, gz, 27) < 0.35) || (reg === 'meadow' && hash2(gx, gz, 27) < 0.3)) cedarTree(tx, t2 + 1, tz, (reg === 'cedar' ? 14 : 9) + Math.floor(hash2(gx, gz, 26) * (reg === 'taiga' ? 9 : 7)));
       else if (reg === 'wild') acaciaTree(tx, t2 + 1, tz, 5 + Math.floor(hash2(gx, gz, 26) * 3));
       else tree(tx, t2 + 1, tz, 7 + Math.floor(hash2(gx, gz, 26) * 5));
     }
@@ -466,6 +528,7 @@
       if (plotData[i]) { var a = plotData[i], k = 0; for (y = PY0; y < G + PH; y++) for (z = 0; z < PLOT; z++) for (x = 0; x < PLOT; x++) setRaw(po.x + x, y, po.z + z, a[k++]); }
     }
     buildLandmarks(x0, z0);
+    buildFarLands(x0, z0);   // 11/24 먼 나라
     if (HOREB_X >= x0 - 2 && HOREB_X < x0 + CS + 2 && HOREB_Z >= z0 - 2 && HOREB_Z < z0 + CS + 2) buildHoreb();
     markPlots();
     var ed = EDITS[cz * NC + cx]; if (ed) for (var li in ed) { var lj = +li + YOFF; if (lj >= 0 && lj < col.d.length) col.d[lj] = ed[li]; }
@@ -646,6 +709,7 @@
     fill(PX0 - PGAP, G, PZ0 - PGAP, VX1, G, VZ1, AIR);
     buildArk();
     buildNativity();
+    buildMarketStalls();   // 11/24 마을 장터
   }
 
   function buildArk() {
