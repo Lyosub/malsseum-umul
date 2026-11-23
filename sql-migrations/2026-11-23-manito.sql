@@ -67,3 +67,62 @@ begin
 end $$;
 
 grant execute on function public.manito_save(text, int, boolean, text), public.manito_mine(text), public.manito_all(text) to anon, authenticated;
+
+-- ===== 증거 사진(11/23 추가): 주차마다 3장까지, 폰에서 줄인 JPEG(위치 정보 없음)를 data URL로 저장 =====
+create table if not exists public.manito_photos (
+  id bigserial primary key,
+  label text not null references public.manito_members(label) on delete cascade,
+  week int not null check (week between 1 and 5),
+  data text not null check (char_length(data) <= 700000 and data like 'data:image/jpeg;base64,%'),
+  created_at timestamptz not null default now()
+);
+create index if not exists manito_photos_label_week on public.manito_photos(label, week);
+alter table public.manito_photos enable row level security;
+revoke all on public.manito_photos from anon, authenticated;
+
+create or replace function public.manito_photo_add(p_token text, p_week int, p_data text)
+returns bigint language plpgsql security definer set search_path = public as $$
+declare v text := public.manito_who(p_token, false); n int; new_id bigint;
+begin
+  if v is null then raise exception 'bad token'; end if;
+  if p_week is null or p_week < 1 or p_week > public.manito_open_week() then raise exception 'not open'; end if;
+  select count(*) into n from public.manito_photos where label = v and week = p_week;
+  if n >= 3 then raise exception 'too many'; end if;
+  insert into public.manito_photos(label, week, data) values (v, p_week, p_data) returning id into new_id;
+  return new_id;
+end $$;
+
+create or replace function public.manito_photo_mine(p_token text)
+returns table(id bigint, week int, data text, created_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+declare v text := public.manito_who(p_token, false);
+begin
+  if v is null then raise exception 'bad token'; end if;
+  return query select ph.id, ph.week, ph.data, ph.created_at from public.manito_photos ph where ph.label = v order by ph.week, ph.id;
+end $$;
+
+create or replace function public.manito_photo_del(p_token text, p_id bigint)
+returns void language plpgsql security definer set search_path = public as $$
+declare v text := public.manito_who(p_token, false);
+begin
+  if v is null then raise exception 'bad token'; end if;
+  delete from public.manito_photos where id = p_id and label = v;
+end $$;
+
+create or replace function public.manito_photo_meta(p_token text)
+returns table(id bigint, label text, week int, created_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if public.manito_who(p_token, true) is null then raise exception 'bad token'; end if;
+  return query select ph.id, ph.label, ph.week, ph.created_at from public.manito_photos ph order by ph.label, ph.week, ph.id;
+end $$;
+
+create or replace function public.manito_photo_get(p_token text, p_id bigint)
+returns text language plpgsql stable security definer set search_path = public as $$
+begin
+  if public.manito_who(p_token, true) is null then raise exception 'bad token'; end if;
+  return (select data from public.manito_photos where id = p_id);
+end $$;
+
+grant execute on function public.manito_photo_add(text, int, text), public.manito_photo_mine(text), public.manito_photo_del(text, bigint),
+  public.manito_photo_meta(text), public.manito_photo_get(text, bigint) to anon, authenticated;
