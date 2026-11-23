@@ -22,11 +22,11 @@ alter table public.manito_members enable row level security;
 alter table public.manito_reports enable row level security;
 revoke all on public.manito_members, public.manito_reports from anon, authenticated;
 
--- 지금 열린 주차(0~5): 11/29, 12/6, 12/13, 12/20 한국 시간 0시(최종 미션은 4주 차와 함께 12/20에 미리 열림)
+-- 지금 열린 주차(0~5): 1주 차는 처음부터 열림(11/23), 12/6, 12/13, 12/20 한국 시간 0시(최종 미션은 4주 차와 함께 12/20에 미리 열림)
 create or replace function public.manito_open_week() returns int
 language sql stable set search_path = public as $$
   select count(*)::int from unnest(array[
-    '2026-11-29 00:00+09','2026-12-06 00:00+09','2026-12-13 00:00+09','2026-12-20 00:00+09','2026-12-20 00:00+09'
+    '2026-11-23 00:00+09','2026-12-06 00:00+09','2026-12-13 00:00+09','2026-12-20 00:00+09','2026-12-20 00:00+09'
   ]::timestamptz[]) t where t <= now();
 $$;
 
