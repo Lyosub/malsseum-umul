@@ -126,3 +126,21 @@ end $$;
 
 grant execute on function public.manito_photo_add(text, int, text), public.manito_photo_mine(text), public.manito_photo_del(text, bigint),
   public.manito_photo_meta(text), public.manito_photo_get(text, bigint) to anon, authenticated;
+
+-- ===== 관리자 페이지 「마니또」 탭(11/23 추가) =====
+-- 숨은 페이지 주소와 전도사님 확인 코드는 저장소에 두지 않고 이 표에만 넣는다(값은 따로 넣음).
+-- 말씀우물 관리자(profiles.is_admin)로 로그인한 사람에게만 돌려준다.
+create table if not exists public.manito_settings (k text primary key, v text not null);
+alter table public.manito_settings enable row level security;
+revoke all on public.manito_settings from anon, authenticated;
+
+create or replace function public.manito_admin_link() returns json
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not exists (select 1 from public.profiles where user_id = auth.uid() and is_admin = true) then
+    raise exception 'not admin';
+  end if;
+  return (select json_object_agg(k, v) from public.manito_settings where k in ('path', 'code'));
+end $$;
+revoke all on function public.manito_admin_link() from public, anon;
+grant execute on function public.manito_admin_link() to authenticated;
