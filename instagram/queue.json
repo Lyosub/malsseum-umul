@@ -702,6 +702,39 @@
       "first_comment_file": "instagram/captions/2026-11-29-recap.tags.txt",
       "video": "instagram/2026-11-29-recap.mp4",
       "note": "주일 설교 요약 릴스 — 11/29 「작을지라도」(미 5:2-5). 제미나이 영상 3개(전도사님 생성) + Claude 글자(설교문 대지 제목 3개·미 5:2 원문·한 주 소식) + BGM 「묵상 2」, 29.8초. 전도사님 컨펌 2026-11-23."
+    },
+    {
+      "id": "2026-11-29-verse",
+      "type": "carousel",
+      "publish_at": "2026-12-01 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-29-verse.txt",
+      "first_comment_file": "instagram/captions/2026-11-29-verse.tags.txt",
+      "images": [
+        "instagram/2026-11-29-verse-01.jpg",
+        "instagram/2026-11-29-verse-02.jpg",
+        "instagram/2026-11-29-verse-03.jpg",
+        "instagram/2026-11-29-verse-04.jpg",
+        "instagram/2026-11-29-verse-05.jpg",
+        "instagram/2026-11-29-verse-06.jpg",
+        "instagram/2026-11-29-verse-07.jpg",
+        "instagram/2026-11-29-verse-08.jpg",
+        "instagram/2026-11-29-verse-09.jpg",
+        "instagram/2026-11-29-verse-10.jpg"
+      ],
+      "note": "말씀게시물 — 11/29 설교 「작을지라도」(미 5:2-5). 10장 캐러셀, 표지 「작을지라도」(전도사님 수정), 2장 올림픽 이야기 뺌(전도사님 수정), 4장 미 5:2, 10장 이번 주 찬양(피아워십). 배경 밤의 작은 마을·양 떼(GPT). 전도사님 컨펌 2026-11-23."
+    },
+    {
+      "id": "2026-11-29-cartoon",
+      "type": "image",
+      "publish_at": "2026-12-03 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-29-cartoon.txt",
+      "first_comment_file": "instagram/captions/2026-11-29-cartoon.tags.txt",
+      "images": [
+        "instagram/2026-11-29-cartoon.jpg"
+      ],
+      "note": "말씀카툰 #011 「그 자리에서」 — 11/29 설교. 발표를 앞두고 무대 뒤에서 떨던 지호가 그 자리에서 기도하고 나간다. 하단 띠 요 20:19. 전도사님 컨펌 2026-11-23."
     }
   ],
   "skip_days": [
