@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-11-22 11:20",
+  "generated_kst": "2026-11-23 11:54",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 142,
     "follows_count": 110,
-    "media_count": 178
+    "media_count": 179
   },
   "posts": [
+    {
+      "id": "18098772524677040",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-11-22T10:32:51+0000",
+      "permalink": "https://www.instagram.com/reel/DgCmTBPFXhC/",
+      "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「만물의 으뜸」 (골로새서 1장 15-20절)",
+      "likes": 6,
+      "comments": 1
+    },
     {
       "id": "18021264536958451",
       "type": "REELS",
@@ -15,7 +25,7 @@
       "timestamp_utc": "2026-11-22T02:02:59+0000",
       "permalink": "https://www.instagram.com/reel/DgBr8CyGVkv/",
       "caption_first_line": "🏡 나그네 마을 — 곧 공개",
-      "likes": 1,
+      "likes": 5,
       "comments": 1
     },
     {
@@ -246,16 +256,6 @@
       "permalink": "https://www.instagram.com/p/DetoH8JFQ59/",
       "caption_first_line": "살아 있는 믿음은 움직입니다.",
       "likes": 11,
-      "comments": 1
-    },
-    {
-      "id": "18073763201770410",
-      "type": "REELS",
-      "media_type": "VIDEO",
-      "timestamp_utc": "2026-10-18T03:33:38+0000",
-      "permalink": "https://www.instagram.com/reel/DenugU6jVBD/",
-      "caption_first_line": "오늘 중등부 예배에서 함께 나눈 말씀, 「행함으로 믿음을 보이는 자」 (야고보서 2장 14-26절)",
-      "likes": 4,
       "comments": 1
     }
   ]
