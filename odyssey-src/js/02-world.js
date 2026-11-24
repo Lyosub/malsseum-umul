@@ -951,6 +951,85 @@
     x.fillStyle = g; x.beginPath(); x.moveTo(32, 4); x.bezierCurveTo(60, 60, 58, 120, 32, 124); x.bezierCurveTo(6, 120, 4, 60, 32, 4); x.fill();
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
   })();
+  // ── 11/24 성탄 트리(전도사님 「교회 로비 트리처럼 곳곳에」): 대림절 첫 주일 ~ 주현절(1/6, 한국 시간), 두루마리마을에만 ──
+  //   이야기 마을(애굽·광야 등)은 그 시대 모습을 지키려고 두지 않는다. ?season=xmas 로 미리 보기, 다른 season 값이면 끔
+  function xmasDecoOn(){
+    const q = (location.search.match(/[?&]season=(\w+)/) || [])[1];
+    if (q === 'xmas' || q === 'christmas') return true; if (q) return false;
+    const k = new Date(Date.now() + 9 * 3600e3), y = k.getUTCFullYear(), m = k.getUTCMonth(), d = k.getUTCDate();
+    const c = new Date(Date.UTC(y, 11, 25)), adv = 25 - ((c.getUTCDay() || 7) + 21);   // 대림절 첫 주일(12월 날짜, 0 이하면 11월로 넘어감)
+    const t = Date.UTC(y, m, d);
+    return t >= Date.UTC(y, 11, adv) || t <= Date.UTC(y, 0, 6);
+  }
+  // [x, z, 크기(1 = 3.2m), 눈 덮임] · 선물·그루터기·포인세티아는 트리 둘레에 자동으로
+  const XMAS_TREES = [
+    [-4.6, 12.6, 1.0, 0], [4.6, 12.6, 1.0, 0],                              // 처음 서는 자리 양옆
+    [-5.2, -18.6, 0.95, 0], [-8.4, -20.2, 0.7, 1], [5.2, -18.6, 0.95, 0],  // 빛나는 문 앞
+    [18.5, -2.5, 0.75, 1], [20.6, -0.2, 0.9, 0], [22.6, -2.8, 1.05, 0],    // 기념 전시관 옆 세 그루
+    [-37.5, 38.5, 0.85, 0],                                                 // 내 장막 마당 옆
+  ];
+  function xmasPrep(){ if (Z && Z.id === 'alpha' && xmasDecoOn()) XMAS_TREES.forEach(t => CLEAR_ZONES.push([t[0], t[1], 3.2 * t[2] + 1.5])); }
+  function buildXmasDeco(){
+    if (!Z || Z.id !== 'alpha' || !xmasDecoOn()) return;
+    let sd = 7; const rr = () => { sd = (sd * 16807) % 2147483647; return (sd - 1) / 2147483646; };
+    const T = (c, o = {}) => new THREE.MeshToonMaterial(Object.assign({ color: c, gradientMap: toonGradient }, o));
+    const mGreen = T(0x2d5a3c), mGreen2 = T(0x3a6e48), mTrunk = T(0x5a3a22), mSnow = T(0xf2f6f8), mFur = T(0xf4f2ee),
+      mRed = T(0xd0202a, { emissive: 0x300000 }), mGold = T(0xe2b440, { emissive: 0x302000 }), mSilver = T(0xd8dce2), mBow = T(0xc8141e),
+      mLight = T(0xfff2b0, { emissive: 0xffd870, emissiveIntensity: 0.9 }), mStar = T(0xffd84a, { emissive: 0x907010 }),
+      mStump = T(0x8a6a48), mStumpTop = T(0xd8c49a), mPot = T(0x6a4a2a), mLeaf = T(0x2a5030), mPoin = T(0xc8102a), mRib = T(0xf6f2ea), mGift = T(0x2f7a4a);
+    const g = new THREE.Group(); g.userData.ownGPU = true; zoneRoot.add(g);
+    const S = WPM, sph = new THREE.SphereGeometry(1, 10, 8), box = new THREE.BoxGeometry(1, 1, 1);
+    const add = (geo, mat, x, y, z, sx, sy, sz, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy === undefined ? sx : sy, sz === undefined ? sx : sz); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
+    const starSh = new THREE.Shape(); for (let i = 0; i < 10; i++){ const r = i % 2 ? 0.16 : 0.38, a = i / 10 * Math.PI * 2 + Math.PI / 2; i ? starSh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : starSh.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+    const starGeo = new THREE.ExtrudeGeometry(starSh, { depth: 0.1, bevelEnabled: false }); starGeo.translate(0, 0, -0.05);
+    function gift(x, z, w, h, d, mat, ry){
+      const y = heightAt(x, z); add(box, mat, x, y + h / 2, z, w, h, d, ry);
+      add(box, mRib, x, y + h / 2, z, w + 0.02, h + 0.02, 0.07 * S, ry); add(box, mRib, x, y + h / 2, z, 0.07 * S, h + 0.02, d + 0.02, ry);
+      add(sph, mRib, x, y + h + 0.05, z, 0.09 * S, 0.06 * S, 0.14 * S, ry + 0.8); add(sph, mRib, x, y + h + 0.05, z, 0.09 * S, 0.06 * S, 0.14 * S, ry - 0.8);
+    }
+    function tree(x, z, k, snowy){
+      const H = 3.2 * S * k, R = 1.25 * S * k, y0 = heightAt(x, z);
+      add(new THREE.CylinderGeometry(R * 1.25, R * 1.3, 0.12, 20), mFur, x, y0 + 0.06, z, 1);                  // 흰 깔개
+      add(new THREE.CylinderGeometry(0.12 * S * k, 0.16 * S * k, H * 0.25, 8), mTrunk, x, y0 + H * 0.12, z, 1);
+      const tiers = 4;
+      for (let i = 0; i < tiers; i++){
+        const f = i / tiers, r = R * (1 - f * 0.72), h = H * 0.36, cy = y0 + H * (0.16 + f * 0.62) + h / 2;
+        add(new THREE.ConeGeometry(r, h, 12), i % 2 ? mGreen2 : mGreen, x, cy, z, 1, 1, 1, i * 0.4);
+        if (snowy){
+          for (let j = 0; j < 7; j++){ const a = rr() * 6.28, rd = r * (0.45 + rr() * 0.4); add(sph, mSnow, x + Math.cos(a) * rd, cy - h * 0.1 + rr() * h * 0.2, z + Math.sin(a) * rd, 0.16 * S * k, 0.08 * S * k, 0.16 * S * k); }
+          add(new THREE.ConeGeometry(r * 0.9, h * 0.5, 12), mSnow, x, cy + h * 0.28, z, 0.55, 1, 0.55);
+        }
+        // 장식 공 · 리본 · 작은 등: 원뿔 겉면에
+        const n = Math.round(9 * (1 - f * 0.55));
+        for (let j = 0; j < n; j++){
+          const a = (j / n) * 6.28 + rr() * 0.5 + i, t = 0.15 + rr() * 0.6, rd = r * (1 - t) + 0.06, yy = cy - h / 2 + h * t;
+          const px = x + Math.cos(a) * rd, pz = z + Math.sin(a) * rd, q = rr();
+          if (q < 0.55) add(sph, q < 0.08 ? mSilver : (q < 0.16 ? mGold : mRed), px, yy, pz, (0.09 + rr() * 0.05) * S * k);
+          else if (q < 0.72){ add(sph, mBow, px, yy, pz, 0.1 * S * k, 0.07 * S * k, 0.03 * S * k, -a + Math.PI / 2 + 0.7); add(sph, mBow, px, yy, pz, 0.1 * S * k, 0.07 * S * k, 0.03 * S * k, -a + Math.PI / 2 - 0.7); }
+          else add(sph, mLight, px, yy, pz, 0.045 * S * k);
+        }
+      }
+      const st = new THREE.Mesh(starGeo, mStar); st.position.set(x, y0 + H + 0.25 * S * k, z); st.scale.setScalar(1.1 * S * k); g.add(st);   // 꼭대기 별(마 2:9)
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff0a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.6 }));
+      glow.scale.set(1.3 * S * k, 1.3 * S * k, 1); glow.position.copy(st.position); g.add(glow);
+      obstacles.push({ x, z, r: R * 0.9 });
+      // 둘레 소품: 선물 상자 · 그루터기 · 포인세티아(마을 가운데 쪽을 향해)
+      const front = Math.atan2(-x, -z) + (rr() - 0.5) * 0.6, giftMats = [mGold, mRed, mSilver, mGift, mGold];
+      for (let j = 0; j < 3; j++){
+        const a = front + (j - 1) * 0.75, d = R * 1.15 + rr() * 0.3, gx = x + Math.sin(a) * d, gz = z + Math.cos(a) * d;
+        gift(gx, gz, (0.45 + rr() * 0.35) * S, (0.3 + rr() * 0.25) * S, (0.35 + rr() * 0.25) * S, giftMats[Math.floor(rr() * giftMats.length)], rr() * 1.5);
+      }
+      { const a = front + 1.6, gx = x + Math.sin(a) * R * 1.2, gz = z + Math.cos(a) * R * 1.2, y = heightAt(gx, gz), sh = 0.45 * S;
+        add(new THREE.CylinderGeometry(0.22 * S, 0.25 * S, sh, 10), mStump, gx, y + sh / 2, gz, 1); add(new THREE.CylinderGeometry(0.22 * S, 0.22 * S, 0.02, 10), mStumpTop, gx, y + sh + 0.01, gz, 1); }
+      { const a = front - 1.6, gx = x + Math.sin(a) * R * 1.25, gz = z + Math.cos(a) * R * 1.25, y = heightAt(gx, gz);
+        add(new THREE.CylinderGeometry(0.2 * S, 0.16 * S, 0.3 * S, 10), mPot, gx, y + 0.15 * S, gz, 1);
+        add(sph, mLeaf, gx, y + 0.38 * S, gz, 0.26 * S, 0.12 * S, 0.26 * S);
+        for (let j = 0; j < 6; j++){ const b = j / 6 * 6.28; add(sph, mPoin, gx + Math.cos(b) * 0.13 * S, y + 0.46 * S, gz + Math.sin(b) * 0.13 * S, 0.12 * S, 0.035 * S, 0.06 * S, -b); }
+        add(sph, mGold, gx, y + 0.48 * S, gz, 0.035 * S); }
+    }
+    XMAS_TREES.forEach(t => tree(t[0], t[1], t[2], t[3]));
+    g.traverse(o => { o.updateMatrixWorld(true); o.matrixAutoUpdate = false; });
+  }
   const fires = [];
   function addFire(x, z, y0, size = 1, withLight = true){
     const grp = new THREE.Group(); grp.position.set(x, heightAt(x, z) + y0, z);

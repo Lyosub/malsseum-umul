@@ -3,6 +3,7 @@
   function canMine(x, y, z) {
     if (isAdm()) return y <= YMIN ? '맨 아래 바닥은 캘 수 없어요' : '';   // 관리자는 어디서든(다른 사람 땅·방주 포함)
     if (funProtect(x, z)) return '놀이 자리는 그대로 둬요';
+    if (xmasProtect(x, z)) return '성탄 트리는 다 함께 보는 장식이라 그대로 둬요';
     var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
     if (protectedExcursion(x,z)) return '이곳은 함께 구경하는 장소예요';
     if (villageProjectLocked(x,z)) return '완성한 공사장이에요. 선생님에게 문의해요';
@@ -24,6 +25,7 @@
   function canPlace(x, y, z, id) {
     if (isAdm()) return '';
     if (funProtect(x, z)) return '놀이 자리는 그대로 둬요';
+    if (xmasProtect(x, z)) return '성탄 트리는 다 함께 보는 장식이라 그대로 둬요';
     var frontierReason=frontierEditReason(x,z); if(frontierReason) return frontierReason;
     if(client && !frontierEnabled && id>=ROPE && id<=ARCH_SIDE) return '개척 도구를 서버에서 준비하는 중이에요';
     if (client && !villageProjectsEnabled && id>=FIND_POT && id<=FEAST_FISH) return '마을 새 재료를 서버에서 준비하는 중이에요';

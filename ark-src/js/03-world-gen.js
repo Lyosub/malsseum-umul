@@ -734,6 +734,48 @@
     setRaw(x0 + 2, y, z0 + 2, OIL_LAMP); setRaw(x0 + 2, y, z1 - 2, OIL_LAMP);
     for (var z = AZ1 + 2; z < PZ0 - 1; z += 4) { setRaw(XM - 5, y, z, LANTERN); setRaw(XM + 4, y, z, LANTERN); }   // 마을 길 등불
   }
+  // ── 11/24 성탄 트리(전도사님 「교회 로비 트리처럼 곳곳에」): 대림절 첫 주일 ~ 주현절에만, 방주 앞 광장 여러 곳 ──
+  //   빨간 장식 공(붉은 양털) · 금 장식 · 작은 등 · 꼭대기 금별, 흰 깔개(흰 양털) 위에 선물 상자 · 그루터기 · 꽃. 눈 덮인 트리도 하나씩.
+  //   [가운데 x, z, 트리들 [dx, dz, 높이, 눈 덮임], 선물·소품 [dx, dz, 블록, 높이]]
+  var XMAS_SPOTS = [
+    [XM - 17, AZ1 + 7, [[0, 0, 12, 0]], [[-3, 4, WOOL_R, 1], [-2, 4, WOOL_R, 1], [2, 4, CLOTH_Y, 1], [3, 4, BLK_AU, 1], [4, 2, WOOL_W, 1], [-4, 2, LOG, 1], [-5, 3, FLOWER, 1], [5, 4, FLOWER, 1], [0, 5, BLK_AU, 1], [1, 5, WOOL_R, 2]]],
+    [XM + 16, AZ1 + 7, [[0, 0, 12, 0]], [[-3, 4, BLK_AU, 1], [-2, 4, BLK_AU, 1], [2, 4, WOOL_R, 1], [3, 4, WOOL_R, 2], [-4, 2, WOOL_B, 1], [4, 2, LOG, 1], [5, 3, FLOWER, 1], [-5, 4, FLOWER, 1], [0, 5, WOOL_W, 1], [-1, 5, CLOTH_G, 1]]],
+    [XM - 54, AZ1 + 6, [[0, 0, 8, 1]], [[-2, 3, WOOL_R, 1], [2, 3, BLK_AU, 1], [3, 2, FLOWER, 1], [-3, 2, LOG, 1]]],
+    [XM + 87, AZ1 + 6, [[-6, 0, 9, 1], [0, -1, 10, 0], [6, 0, 12, 0]], [[-3, 3, WOOL_R, 1], [-2, 4, LOG, 1], [1, 4, CLOTH_Y, 1], [2, 4, CLOTH_Y, 2], [4, 4, WOOL_R, 1], [8, 4, CLOTH_G, 1], [9, 4, CLOTH_G, 2], [10, 3, WOOL_R, 1], [-9, 3, FLOWER, 1], [3, 5, FLOWER, 1], [7, 5, LOG, 1]]],
+    [XM - 92, AZ1 + 6, [[-3, 0, 8, 1], [3, 0, 10, 0]], [[0, 3, WOOL_R, 1], [1, 4, BLK_AU, 1], [-1, 4, LOG, 1], [5, 3, WOOL_W, 1], [-5, 3, FLOWER, 1], [6, 2, FLOWER, 1]]]
+  ];
+  var XMAS_BOX = XMAS_SPOTS.map(function (q) { return [q[0] - 14, q[1] - 6, q[0] + 14, q[1] + 6]; });
+  function xmasProtect(x, z) { if (!FESTIVE) return false; for (var i = 0; i < XMAS_BOX.length; i++) { var b = XMAS_BOX[i]; if (x >= b[0] && x <= b[2] && z >= b[1] && z <= b[3]) return true; } return false; }
+  function xmasTree(cx, cz, h, snowy) {
+    var y = G, R = Math.max(2, Math.round(h * 0.34)), k, dx, dz;
+    for (dz = -R; dz <= R; dz++) for (dx = -R; dx <= R; dx++) if (dx * dx + dz * dz <= R * R - 1) setRaw(cx + dx, y - 1, cz + dz, WOOL_W);   // 흰 트리 깔개
+    fill(cx, y, cz, cx, y + h - 3, cz, CEDAR_LOG);
+    for (k = 1; k <= h - 2; k++) {
+      var t = (k - 1) / (h - 2), r = R * (1 - t) + 0.35 - (k % 3 === 0 && k > 1 ? 0.7 : 0);   // 세 켜마다 조금 들어가 층층이
+      if (r < 0.7) { setRaw(cx, y + k, cz, CEDAR_LEAF); continue; }
+      var ri = Math.ceil(r);
+      for (dz = -ri; dz <= ri; dz++) for (dx = -ri; dx <= ri; dx++) {
+        var d2 = dx * dx + dz * dz; if (d2 > r * r + 0.5) continue;
+        if (!dx && !dz && k <= h - 3) continue;
+        var id = CEDAR_LEAF;
+        if (d2 > (r - 1) * (r - 1) + 0.2) {   // 겉면에만 장식
+          var hv = hash2(cx * 7 + dx * 13 + k * 101, cz * 5 + dz * 17 - k * 29, 431);
+          if (hv < 0.12) id = WOOL_R; else if (hv < 0.16) id = BLK_AU; else if (hv < 0.2) id = LANTERN; else if (snowy && hv > 0.52) id = SNOW;
+        }
+        setRaw(cx + dx, y + k, cz + dz, id);
+      }
+    }
+    var ty = y + h - 1;   // 꼭대기 별(마 2:9)
+    setRaw(cx, ty, cz, GOLDST); setRaw(cx, ty + 1, cz, GOLDST); setRaw(cx, ty + 2, cz, GOLDST);
+    setRaw(cx - 1, ty + 1, cz, GOLDST); setRaw(cx + 1, ty + 1, cz, GOLDST); setRaw(cx, ty + 1, cz - 1, GOLDST); setRaw(cx, ty + 1, cz + 1, GOLDST);
+  }
+  function buildXmasTrees() {
+    if (!FESTIVE) return;
+    XMAS_SPOTS.forEach(function (q) {
+      q[2].forEach(function (t) { xmasTree(q[0] + t[0], q[1] + t[1], t[2], t[3]); });
+      q[3].forEach(function (g) { var x = q[0] + g[0], z = q[1] + g[1]; if (g[2] === FLOWER) { setRaw(x, G - 1, z, GRASS); setRaw(x, G, z, FLOWER); } else fill(x, G, z, x, G + g[3] - 1, z, g[2]); });
+    });
+  }
   // ── 광야(출 13·16·17장): 호렙의 반석 · 구름 기둥과 불 기둥 · 아침 만나 ──
   var HOREB_X = DES_X + 120, HOREB_Z = OASZ - 40, HOREB_Y = -1;
   function horebY() { if (HOREB_Y < 0) { terrain(HOREB_X, HOREB_Z); HOREB_Y = T.h + 1; } return HOREB_Y; }
@@ -762,6 +804,7 @@
     fill(PX0 - PGAP, G, PZ0 - PGAP, VX1, G, VZ1, AIR);
     buildArk();
     buildNativity();
+    buildXmasTrees();   // 11/24 성탄 트리
     buildMarketStalls();   // 11/24 마을 장터
   }
 
