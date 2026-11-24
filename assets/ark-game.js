@@ -5672,6 +5672,7 @@
     a.legs[0].rotation.x = sw; a.legs[3].rotation.x = sw; a.legs[1].rotation.x = -sw; a.legs[2].rotation.x = -sw;
     // 서 있을 때 가끔 고개 숙여 풀 뜯기
     a.body.rotation.x = a.mode === 'idle' && a.t > 1 && !a.sp.hop ? Math.min(0.12, (a.t - 1) * 0.1) : 0;
+    beastFx(a, dt);   // 11/24 밀려남·덤비는 동작
   }
   // 새: 비둘기(흰색)·까마귀(검정) — 창 8:7-12
   function spawnBirds() {
@@ -8512,13 +8513,13 @@
     if (a.hp === undefined) a.hp = a.baby ? Math.ceil(BEAST_HP[a.kind] / 2) : BEAST_HP[a.kind];   // 새끼는 체력 절반
     var now = performance.now(); if (now < (a.iframeUntil || 0)) { swingT = 0.25; return true; }   // 11/24 맞은 뒤 0.5초는 다시 안 다침(마인크래프트)
     a.iframeUntil = now + 500;
-    a.hp -= dmg; hurtTint(a.mesh, 0.4); beastBar(a, a.baby ? Math.ceil(BEAST_HP[a.kind] / 2) : BEAST_HP[a.kind]); swingT = 0.25; sfx('dig', 300); animalCall(a.kind);
+    a.hp -= dmg; hurtTint(a.mesh, 0.4);   // 11/24 체력 막대는 뺌(마인크래프트처럼 — 붉게 번쩍·밀려남만) swingT = 0.25; sfx('dig', 300); animalCall(a.kind);
     if (isTool(held)) wearTool(held);
     var top = a.y + (CR_R[a.kind] || 1.2) * 1.8, n = Math.round(dmg * 10) / 10;
     floatText(a.x, top, a.z, (crit ? '✦ ' : '') + n, crit ? '#ffd23a' : '#ffffff', crit ? 0.8 : 0.6, 0.6);
     sparkle(a.x, a.y + 1, a.z, 0xfff0c0, 3, { size: 0.3, life: 0.4, v: 2, up: 0.8 });
     var dx = a.x - P.x, dz = a.z - P.z, d = Math.hypot(dx, dz) || 1;
-    for (var k = 4; k >= 1; k--) { var nx = a.x + dx / d * k * 0.3, nz = a.z + dz / d * k * 0.3, gy = groundAt(nx, nz, a.y); if (gy !== null && Math.abs(gy - a.y) <= 1.2) { a.x = nx; a.z = nz; a.ty = gy; break; } }   // 밀려남
+    knockBeast(a, dx / d, dz / d, crit ? 1.4 : 1);   // 11/24 살짝 떠오르며 뒤로 밀려남(마인크래프트)
     a.h = Math.atan2(dx, dz) + Math.PI; a.mode = 'walk'; a.t = 3; a.fleeUntil = performance.now() + 3500;   // 반대쪽으로 달아남
     if (a.sp.pred) { a.fleeUntil = 0; a.angryUntil = performance.now() + 20000; a.target = 'player'; }   // 11/24 맹수는 달아나지 않고 덤빔
     if (a.hp > 0) return true;
@@ -11480,16 +11481,49 @@
     pendingPets.forEach(function (o) { if (a.length < 24) a.push(o); });   // 아직 안 불러온 우리 안 짐승도 잃지 않게
     PETS = a; try { localStorage.setItem('arkVillage.pets', JSON.stringify(PETS)); } catch (e) {}
   }
+  // ── 11/24 마인크래프트처럼: 맞으면 살짝 떠오르며 뒤로 밀려나고, 맹수는 덤빌 때 달려들기(곰은 뒷발로 일어섰다 내리침) ──
+  function knockBeast(a, ux, uz, k) {
+    k = k || 1; a.kvx = ux * 6.5 * k; a.kvz = uz * 6.5 * k; a.kvy = 5.2 * Math.min(k, 1.25); a.ky = a.ky || 0;
+  }
+  function atkTime(a) { return a.kind === 'bear' ? 0.6 : 0.42; }
+  function beastFx(a, dt) {
+    if (!a.fxInit) { a.mesh.rotation.order = 'YXZ'; a.fxInit = 1; }
+    var oy = 0;
+    if (a.kvy || a.ky > 0 || a.kvx || a.kvz) {   // 밀려남: 포물선으로 살짝 떴다가 내려앉음
+      a.ky = (a.ky || 0) + (a.kvy || 0) * dt; a.kvy = (a.kvy || 0) - 24 * dt;
+      if (a.ky <= 0) { a.ky = 0; a.kvy = 0; a.kvx *= 0.35; a.kvz *= 0.35; }
+      var nx = a.x + (a.kvx || 0) * dt, nz = a.z + (a.kvz || 0) * dt, gy = groundAt(nx, nz, a.y + 1.2);
+      if (gy !== null && gy - a.y <= 1.1 && a.y - gy <= 2.5 && !penBlocked(a, nx, nz, gy) && !wildBlocked(a, nx, nz) && plotAt(nx | 0, nz | 0) === plotAt(a.x | 0, a.z | 0)) { a.x = nx; a.z = nz; a.ty = gy; }
+      else { a.kvx = a.kvz = 0; }
+      var f = Math.exp(-2.5 * dt); a.kvx *= f; a.kvz *= f; if (Math.abs(a.kvx) + Math.abs(a.kvz) < 0.08) a.kvx = a.kvz = 0;
+      a.mesh.position.x = a.x; a.mesh.position.z = a.z; oy += a.ky;
+    }
+    if (a.atk > 0) {   // 덤비기
+      a.atk -= dt; var T = atkTime(a), t = 1 - Math.max(0, a.atk) / T, s = Math.sin(Math.PI * t), ry = a.mesh.rotation.y;
+      if (a.kind === 'bear') { a.mesh.rotation.x = 0.9 * s; oy += 0.7 * s; a.legs[0].rotation.x = a.legs[1].rotation.x = 1.2 * s; }
+      else { var wind = t < 0.35 ? -Math.sin(t / 0.35 * Math.PI) * 0.12 : 0;   // 몸을 낮췄다가
+        a.mesh.rotation.x = -0.22 * s + wind; var fw = 0.9 * s; a.mesh.position.x -= Math.sin(ry) * fw; a.mesh.position.z -= Math.cos(ry) * fw;   // 앞으로 달려듦
+        a.legs[0].rotation.x = a.legs[1].rotation.x = 0.8 * s; a.legs[2].rotation.x = a.legs[3].rotation.x = -0.5 * s; oy += 0.35 * s; }
+      if (a.atk <= 0) { a.atk = 0; a.mesh.rotation.x = 0; }
+    }
+    a.mesh.position.y += oy;
+  }
+  function pounce(a, fn) {   // 달려든 뒤 가장 앞으로 나간 순간에 물기
+    a.atk = atkTime(a);
+    setTimeout(function () { if (animals.indexOf(a) >= 0 && !a.dead) fn(); }, atkTime(a) * 500);
+  }
   function bitePlayer(a) {
+    if (Math.hypot(P.x - a.x, P.z - a.z) > 3) return;   // 그 사이 피했으면 빗나감
     var why = a.sp.name + '에게 물렸어요';
     var g = armorGuard(), dmg = Math.round(a.sp.bite * (1 - g)); if (dmg <= 0) { if (vitalsOn()) toast('🛡 갑옷이 막아 주었어요'); } else hurt(dmg, why);
-    var dx = P.x - a.x, dz = P.z - a.z, d = Math.hypot(dx, dz) || 1; P.vx = (P.vx || 0) + dx / d * 6; P.vz = (P.vz || 0) + dz / d * 6;
+    var dx = P.x - a.x, dz = P.z - a.z, d = Math.hypot(dx, dz) || 1; P.vx = (P.vx || 0) + dx / d * 7; P.vz = (P.vz || 0) + dz / d * 7; if (!P.fly && !P.swim && P.vy <= 0.5) P.vy = 4.5;   // 나도 살짝 떠서 밀려남
     animalCall(a.kind, 1);
   }
   function biteBeast(a, v) {
     if (v.hp === undefined) v.hp = v.baby ? Math.ceil(BEAST_HP[v.kind] / 2) : BEAST_HP[v.kind];
     var now = performance.now(); if (now < (v.iframeUntil || 0)) return; v.iframeUntil = now + 500;
     v.hp -= a.sp.bite; hurtTint(v.mesh, 0.4); animalCall(v.kind);
+    { var bx = v.x - a.x, bz = v.z - a.z, bd = Math.hypot(bx, bz) || 1; knockBeast(v, bx / bd, bz / bd, 0.9); }
     if (!v.sp.pred) { v.h = Math.atan2(v.x - a.x, v.z - a.z) + Math.PI; v.mode = 'walk'; v.t = 3; v.fleeUntil = now + 3500; }
     else if (!v.tamed) { v.chasing = true; v.target = a; }
     if (v.hp <= 0) { var i = animals.indexOf(v); if (i >= 0) animals.splice(i, 1); beastDie(v); if (v.petTag) { disposeSprite(v.petTag); v.petTag = null; } if (v.tamed) { toast('「' + v.sp.name + '」이(가) 쓰러졌어요'); savePets(); } }
@@ -11525,7 +11559,7 @@
         }
         if (tgt) {
           var dt2 = Math.hypot(tgt.x - a.x, tgt.z - a.z); a.chasing = true; a.h = Math.atan2(-(tgt.x - a.x), -(tgt.z - a.z)); a.mode = 'walk'; a.t = 0.6;
-          if (dt2 < 2.2 && !(a.cool > 0)) { a.cool = 1.0; if (tgt.sh) hitShadow(tgt.sh, a.sp.bite); else biteBeast(a, tgt.a); }
+          if (dt2 < 2.2 && !(a.cool > 0)) { a.cool = 1.0; pounce(a, function () { if (tgt.sh) { if (!tgt.sh.dead) hitShadow(tgt.sh, a.sp.bite); } else if (animals.indexOf(tgt.a) >= 0) biteBeast(a, tgt.a); }); }
           return;
         }
         a.chasing = dP > 9;
@@ -11550,7 +11584,7 @@
       if (a.target === 'player' && !wildSeen[a.kind] && !DEX['c' + a.kind]) { wildSeen[a.kind] = 1; showCard(a.kind); }
       var tx = a.target === 'player' ? P.x : a.target.x, tz = a.target === 'player' ? P.z : a.target.z, d = Math.hypot(tx - a.x, tz - a.z);
       a.chasing = true; a.h = Math.atan2(-(tx - a.x), -(tz - a.z)); a.mode = d < 1.6 ? 'idle' : 'walk'; a.t = 0.6;
-      if (d < 2.1 && !(a.cool > 0)) { a.cool = 1.6; if (a.target === 'player') bitePlayer(a); else biteBeast(a, a.target); }
+      if (d < 2.1 && !(a.cool > 0)) { a.cool = 1.6; var tg = a.target; pounce(a, function () { if (tg === 'player') bitePlayer(a); else if (animals.indexOf(tg) >= 0 && Math.hypot(tg.x - a.x, tg.z - a.z) < 3) biteBeast(a, tg); }); }
     });
     petsT -= 0.4; if (petsT <= 0) { petsT = 6; if (animals.some(function (x) { return x.tamed; })) savePets(); }
   }

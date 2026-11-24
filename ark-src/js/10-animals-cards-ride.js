@@ -112,6 +112,7 @@
     a.legs[0].rotation.x = sw; a.legs[3].rotation.x = sw; a.legs[1].rotation.x = -sw; a.legs[2].rotation.x = -sw;
     // 서 있을 때 가끔 고개 숙여 풀 뜯기
     a.body.rotation.x = a.mode === 'idle' && a.t > 1 && !a.sp.hop ? Math.min(0.12, (a.t - 1) * 0.1) : 0;
+    beastFx(a, dt);   // 11/24 밀려남·덤비는 동작
   }
   // 새: 비둘기(흰색)·까마귀(검정) — 창 8:7-12
   function spawnBirds() {

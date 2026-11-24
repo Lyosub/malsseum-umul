@@ -1072,13 +1072,13 @@
     if (a.hp === undefined) a.hp = a.baby ? Math.ceil(BEAST_HP[a.kind] / 2) : BEAST_HP[a.kind];   // 새끼는 체력 절반
     var now = performance.now(); if (now < (a.iframeUntil || 0)) { swingT = 0.25; return true; }   // 11/24 맞은 뒤 0.5초는 다시 안 다침(마인크래프트)
     a.iframeUntil = now + 500;
-    a.hp -= dmg; hurtTint(a.mesh, 0.4); beastBar(a, a.baby ? Math.ceil(BEAST_HP[a.kind] / 2) : BEAST_HP[a.kind]); swingT = 0.25; sfx('dig', 300); animalCall(a.kind);
+    a.hp -= dmg; hurtTint(a.mesh, 0.4);   // 11/24 체력 막대는 뺌(마인크래프트처럼 — 붉게 번쩍·밀려남만) swingT = 0.25; sfx('dig', 300); animalCall(a.kind);
     if (isTool(held)) wearTool(held);
     var top = a.y + (CR_R[a.kind] || 1.2) * 1.8, n = Math.round(dmg * 10) / 10;
     floatText(a.x, top, a.z, (crit ? '✦ ' : '') + n, crit ? '#ffd23a' : '#ffffff', crit ? 0.8 : 0.6, 0.6);
     sparkle(a.x, a.y + 1, a.z, 0xfff0c0, 3, { size: 0.3, life: 0.4, v: 2, up: 0.8 });
     var dx = a.x - P.x, dz = a.z - P.z, d = Math.hypot(dx, dz) || 1;
-    for (var k = 4; k >= 1; k--) { var nx = a.x + dx / d * k * 0.3, nz = a.z + dz / d * k * 0.3, gy = groundAt(nx, nz, a.y); if (gy !== null && Math.abs(gy - a.y) <= 1.2) { a.x = nx; a.z = nz; a.ty = gy; break; } }   // 밀려남
+    knockBeast(a, dx / d, dz / d, crit ? 1.4 : 1);   // 11/24 살짝 떠오르며 뒤로 밀려남(마인크래프트)
     a.h = Math.atan2(dx, dz) + Math.PI; a.mode = 'walk'; a.t = 3; a.fleeUntil = performance.now() + 3500;   // 반대쪽으로 달아남
     if (a.sp.pred) { a.fleeUntil = 0; a.angryUntil = performance.now() + 20000; a.target = 'player'; }   // 11/24 맹수는 달아나지 않고 덤빔
     if (a.hp > 0) return true;
