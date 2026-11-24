@@ -41,6 +41,7 @@
   CONDS.philistiaOpen = () => { const p = ST.sp && ST.sp.judges; return !!((p && p.ch >= 7) || (ST.sp && ST.sp.ruth) || DEV_SCROLL); };   // 5편 8장(삿 13:2 소라)부터, 6편에서도
   CONDS.bethlehemOpen = () => !!((ST.sp && ST.sp.ruth) || DEV_SCROLL);   // 6편을 펼친 뒤부터
   CONDS.gibeahOpen = () => !!((ST.sp && ST.sp.saul) || DEV_SCROLL);   // 7편을 펼친 뒤부터
+  CONDS.jerusalemOpen = () => !!((ST.sp && ST.sp.david) || DEV_SCROLL);   // 8편을 펼친 뒤부터
   CONDS.judahOpen = () => { const p = ST.sp && ST.sp.saul; return !!((p && p.ch >= 11) || DEV_SCROLL); };   // 7편 12장(삼상 22:1 아둘람 굴)부터
   CONDS.kadeshOpen = () => !!((ST.sp && ST.sp.sinai2 && ST.sp.sinai2.cleared) || ST.cur === 'wild3' || DEV_SCROLL);
   const SCROLL_Q = window.__odyQ = window.__odyQ || [];
@@ -167,8 +168,8 @@
   function warpTargets(){
     const q = curStep(), done = chaptersDone(), out = [];
     const exitTo = q && q.exit ? ((ZONES[q.zone].points.find(p => p.id === q.exit) || {}).to) : null;
-    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5, rephidim: 6, sinai: 8, kadesh: 99, moab: 99, gilgal: 99, ai: 99, gibeon: 99, hebron: 99, shiloh: 99, jezreel: 99, philistia: 99, bethlehem: 99, gibeah: 99, judah: 99 };
-    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab', 'gilgal', 'ai', 'gibeon', 'hebron', 'shiloh', 'jezreel', 'philistia', 'bethlehem', 'gibeah', 'judah']){
+    const need = { alpha: 0, midian: 1, egypt: 2, redsea: 4, wild: 5, rephidim: 6, sinai: 8, kadesh: 99, moab: 99, gilgal: 99, ai: 99, gibeon: 99, hebron: 99, shiloh: 99, jezreel: 99, philistia: 99, bethlehem: 99, gibeah: 99, judah: 99, jerusalem: 99 };
+    for (const z of ['alpha', 'midian', 'egypt', 'redsea', 'wild', 'rephidim', 'sinai', 'kadesh', 'moab', 'gilgal', 'ai', 'gibeon', 'hebron', 'shiloh', 'jezreel', 'philistia', 'bethlehem', 'gibeah', 'judah', 'jerusalem']){
       const story = q && (q.zone === z || exitTo === z);
       if (z === 'kadesh' && !story && !CONDS.kadeshOpen()) continue;
       if (z === 'moab' && !story && !CONDS.moabOpen()) continue;   // 3편 마을은 2편을 마친 뒤부터 목록에 보임
@@ -182,7 +183,8 @@
       if (z === 'bethlehem' && !story && !CONDS.bethlehemOpen()) continue;   // 베들레헴은 6편부터
       if (z === 'gibeah' && !story && !CONDS.gibeahOpen()) continue;   // 기브아와 믹마스는 7편부터
       if (z === 'judah' && !story && !CONDS.judahOpen()) continue;   // 유다 광야는 7편 12장부터
-      const ok = z === 'alpha' || done >= need[z] || story || (z === 'kadesh' && CONDS.kadeshOpen()) || (z === 'moab' && CONDS.moabOpen()) || (z === 'gilgal' && CONDS.gilgalOpen()) || (z === 'ai' && CONDS.aiOpen()) || (z === 'gibeon' && CONDS.gibeonOpen()) || (z === 'jezreel' && CONDS.jezreelOpen()) || (z === 'philistia' && CONDS.philistiaOpen()) || (z === 'bethlehem' && CONDS.bethlehemOpen()) || (z === 'gibeah' && CONDS.gibeahOpen()) || (z === 'judah' && CONDS.judahOpen()) || (z === 'hebron' && CONDS.hebronOpen()) || (z === 'shiloh' && CONDS.shilohOpen());
+      if (z === 'jerusalem' && !story && !CONDS.jerusalemOpen()) continue;   // 예루살렘은 8편부터
+      const ok = z === 'alpha' || done >= need[z] || story || (z === 'kadesh' && CONDS.kadeshOpen()) || (z === 'moab' && CONDS.moabOpen()) || (z === 'gilgal' && CONDS.gilgalOpen()) || (z === 'ai' && CONDS.aiOpen()) || (z === 'gibeon' && CONDS.gibeonOpen()) || (z === 'jezreel' && CONDS.jezreelOpen()) || (z === 'philistia' && CONDS.philistiaOpen()) || (z === 'bethlehem' && CONDS.bethlehemOpen()) || (z === 'gibeah' && CONDS.gibeahOpen()) || (z === 'judah' && CONDS.judahOpen()) || (z === 'jerusalem' && CONDS.jerusalemOpen()) || (z === 'hebron' && CONDS.hebronOpen()) || (z === 'shiloh' && CONDS.shilohOpen());
       out.push({ z, ok, story, here: Z && Z.id === z, note: z === 'alpha' ? '언제든 갈 수 있어요 · 내 장막' : story ? '📜 지금 이야기가 있는 곳' : ok ? '이야기를 마친 곳' : `🔒 ${need[z]}장을 마치면` });
     }
     return out;
@@ -264,7 +266,7 @@
   const cardHTML = (id, locked) => { const v = VERSES[id]; return `<div class="vcard${locked ? ' locked' : ''}" style="background-image:url('${A('ui/game/verse-card.jpg')}')"><div class="ref">${v.ref}</div><div>${locked ? '아직 모으지 못한 구절' : v.text}</div><div class="chk">개역개정</div></div>`; };
   // 곡: title(처음 테마) · village(두루마리마을) · midian(미디안 광야) · egypt(애굽 고센) · palace(바로의 궁전 알현실)
   const BGM = { on: (() => { try { return localStorage.getItem('inodyssey-bgm') !== 'off'; } catch (e){ return true; } })(), ctx: null, src: null, gain: null, bufs: {}, cur: null, want: 'title', starting: false, titleUntil: 0 };
-  const ZONE_BGM = { alpha: 'village', midian: 'midian', egypt: 'egypt', redsea: 'redsea', wild: 'midian', rephidim: 'midian', sinai: 'midian', kadesh: 'midian', moab: 'midian', gilgal: 'midian', ai: 'midian', jezreel: 'midian', philistia: 'midian', bethlehem: 'midian', gibeah: 'midian', judah: 'midian' };
+  const ZONE_BGM = { alpha: 'village', midian: 'midian', egypt: 'egypt', redsea: 'redsea', wild: 'midian', rephidim: 'midian', sinai: 'midian', kadesh: 'midian', moab: 'midian', gilgal: 'midian', ai: 'midian', jezreel: 'midian', philistia: 'midian', bethlehem: 'midian', gibeah: 'midian', jerusalem: 'midian', judah: 'midian' };
   function bgmWanted(){
     if (performance.now() < BGM.titleUntil) return 'title';                      // 시작할 때 테마를 한 바퀴
     if (Z && Z.room && inRoom(player.position.x, player.position.z)) return 'palace';

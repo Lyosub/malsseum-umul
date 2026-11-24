@@ -441,6 +441,8 @@
   ROUTE.gibeah = {}; Object.keys(ROUTE).forEach(z => { if (z === 'gibeah') return; ROUTE.gibeah[z] = 'to-gibeon-g'; ROUTE[z].gibeah = z === 'gibeon' ? 'to-gibeah' : ROUTE[z].gibeon; });
   // 7편 12장: 유다 광야는 헤브론 산지에서 동쪽 길로만 이어진다
   ROUTE.judah = {}; Object.keys(ROUTE).forEach(z => { if (z === 'judah') return; ROUTE.judah[z] = 'to-hebron-w'; ROUTE[z].judah = z === 'hebron' ? 'to-judah' : ROUTE[z].hebron; });
+  // 8편: 예루살렘은 베들레헴에서 동북쪽 길로만 이어진다
+  ROUTE.jerusalem = {}; Object.keys(ROUTE).forEach(z => { if (z === 'jerusalem') return; ROUTE.jerusalem[z] = 'to-bethlehem-j'; ROUTE[z].jerusalem = z === 'bethlehem' ? 'to-jerusalem' : ROUTE[z].bethlehem; });
   ROUTE.redsea.rephidim = 'to-wild'; ROUTE.redsea.sinai = 'to-wild';
   let doorTarget = null;
   function targetPos(){

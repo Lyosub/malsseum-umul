@@ -424,7 +424,7 @@
     infoPoints.forEach(p => CLEAR_ZONES.push([p.x, p.z, p.model ? 2.5 : 5]));
     createMarkers(); refreshShow();
     await Promise.all([loadProps(zoneAssets(id).props), loadNPCs()]);
-    xmasPrep(); buildWorld(); buildXmasDeco();   // 11/24 성탄 트리(두루마리마을)
+    xmasPrep(); jeruPrep(); buildWorld(); buildXmasDeco(); buildJerusalem();   // 11/24 성탄 트리(두루마리마을)
     const bushM = markers.find(m => m.isBush);
     if (bushM){ placeProp('dry-bush', bushM.data.x, bushM.data.z, 0.5, 1.2); addFire(bushM.data.x, bushM.data.z, 0.5, 1.1); }
     (Z.fires || []).forEach(f => addFire(...f));

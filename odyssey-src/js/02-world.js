@@ -637,10 +637,11 @@
         ['env-rocks-strata', -38, 36, 1.2], ['dry-bush', -20, 4, 0], ['dry-bush', 32, 14, 0],
       ],
       scatter: [['dry-bush', 6, 20, 50], ['rock-group', 8, 22, 50]],
-      clear: [[0, 36, 6], [-8, -6, 7], [0, -25, 14], [4, 16, 11], [14, 8, 5], [26, 2, 5], [0, -48, 17], [0, 42, 4]],
+      clear: [[0, 36, 6], [-8, -6, 7], [0, -25, 14], [4, 16, 11], [14, 8, 5], [26, 2, 5], [0, -48, 17], [0, 42, 4], [38, -18, 6]],
       fires: [],
       points: [
         { id: 'to-hebron-b', x: 0, z: 42, type: 'exit', title: "남쪽 길로 헤브론 산지에 가기", to: 'hebron', spawn: [-36, -16] },
+        { id: 'to-jerusalem', x: 42, z: -20, type: 'exit', title: "동북쪽 길로 예루살렘에 올라가기", to: 'jerusalem', spawn: [-34, 40], cond: 'jerusalemOpen' },
       ],
     },
     // ══ 7편 「사울과 다윗」 — 기브아와 믹마스(삼상 10:26 사울의 집 기브아 · 9:5 숩 땅의 성읍과 산당 · 10:5 하나님의 산과 블레셋 사람들의 영문 · 13:2 믹마스 · 14:4 두 바위).
@@ -675,6 +676,25 @@
       fires: [],
       points: [
         { id: 'to-hebron-w', x: 42, z: 0, type: 'exit', title: "동쪽 길로 헤브론 산지에 올라가기", to: 'hebron', spawn: [36, -8] },
+      ],
+    },
+    // ══ 8편 「다윗 왕」 — 예루살렘(삼하 5:7 시온 산성 곧 다윗 성 · 5:11 백향목 궁 · 6:17 궤를 둔 장막 · 15:30 감람 산 · 5:18 르바임 골짜기 · 24:18 아라우나의 타작 마당).
+    //    가운데가 성벽으로 두른 다윗 성(남·동·북 성문), 북쪽 언덕이 모리아, 동쪽이 감람 산, 서쪽이 르바임 골짜기. 9편(솔로몬과 성전)도 이 마을을 이어 쓴다.
+    //    성벽·궁·장막·집·모리아 단은 buildJerusalem()이 세운다 ══
+    jerusalem: {
+      name: '예루살렘', questTitle: '📜 퀘스트 — 다윗 왕',
+      env: { ground: 0xe4d8a8, top: 0x5a8fcc, bottom: 0xe0d8b0, fog: 0xdcd4ae, fogD: 0.010, sun: 0xfff3d6, sunDir: [0.5, 0.45, -0.55], cloud: 0.3, cloudCol: 0xffffff, stars: 0, far: 'far-mountains' },
+      center: [0, 4], spawn: [-34, 40],
+      mountain: { x: 54, z: 6, r: 15, h: 12 },
+      layout: [
+        ['env-rock-hill', -46, -40, 0.4], ['env-rock-hill', 30, -46, 2.0], ['env-rocks-strata', -48, 18, 1.2], ['env-rocks-strata', 34, 40, 0.6],
+        ['dry-bush', -26, 22, 0], ['dry-bush', 28, 30, 0], ['dry-bush', -28, -30, 0],
+      ],
+      scatter: [['dry-bush', 6, 30, 56], ['rock-group', 8, 30, 56]],
+      clear: [[0, 5, 27], [0, -40, 12], [-34, 40, 7], [-42, 44, 4], [-20, 32, 6], [40, 5, 13], [-42, -8, 13], [12, -28, 5]],
+      fires: [],
+      points: [
+        { id: 'to-bethlehem-j', x: -44, z: 44, type: 'exit', title: "서남쪽 길로 베들레헴에 내려가기", to: 'bethlehem', spawn: [36, -18] },
       ],
     },
   };
@@ -905,6 +925,134 @@
     if (!Z || !Z.room) return;
     const on = inRoom(player.position.x, player.position.z) || inRoom(camera.position.x, camera.position.z);
     if (on !== roomObjs.shown){ roomObjs.forEach(o => o.visible = on); roomObjs.shown = on; }
+  }
+  // ── 8편 예루살렘(다윗 성): 성벽·성문·망대, 백향목 궁(삼하 5:11), 궤를 둔 장막(6:17), 집들, 모리아의 타작 마당(24:18), 감람 산 비탈의 감람나무, 르바임 골짜기의 뽕나무 ──
+  //   이야기(두루마리)와 상관없이 늘 서 있는 마을 모습. 9편 성전도 모리아 단 위에 세운다.
+  const JERU = { x0: -20, x1: 20, z0: -14, z1: 24, wallH: 4.2, gateW: 5.2, gates: { s: 0, e: 5, n: 0 }, palace: [-8, -4], tent: [8, -6], moriah: [0, -40] };
+  function jeruPrep(){
+    if (!Z || Z.id !== 'jerusalem') return;
+    const J = JERU;   // 길은 흩어 놓기를 피하게
+    for (let z = J.z1; z < 44; z += 6) CLEAR_ZONES.push([0, z, 4]);
+    for (let x = J.x1; x < 42; x += 6) CLEAR_ZONES.push([x, J.gates.e, 4]);
+    for (let z = J.z0; z > -30; z -= 6) CLEAR_ZONES.push([0, z, 4]);
+  }
+  function buildJerusalem(){
+    if (!Z || Z.id !== 'jerusalem') return;
+    const J = JERU, T = c => new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient });
+    const mStone = T(0xdccca0), mStone2 = T(0xc9b68a), mCope = T(0xbfa97c), mDark = T(0x3a3028), mCedar = T(0x7a4a2a), mCedar2 = T(0x9a6238),
+      mPlaster = T(0xeee2c4), mRoof = T(0xb89870), mCloth = T(0xf2ece0), mBlue = T(0x3a5a9a), mPurple = T(0x6a3a7a), mGold = T(0xd8b048),
+      mRoad = T(0xd8c89a), mFloor = T(0xd2c29a), mOliveLeaf = T(0x7a8a5a), mOliveLeaf2 = T(0x8f9c6a), mTrunk = T(0x6a5038), mMulLeaf = T(0x5f8a3e), mGrass = T(0xbfc488);
+    const g = new THREE.Group(); g.userData.ownGPU = true; zoneRoot.add(g);
+    const box = new THREE.BoxGeometry(1, 1, 1), sph = new THREE.SphereGeometry(1, 9, 7), cyl = new THREE.CylinderGeometry(1, 1, 1, 12);
+    const add = (geo, mat, x, y, z, sx, sy, sz, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
+    const lo = (x0, z0, x1, z1) => Math.min(heightAt(x0, z0), heightAt(x1, z1), heightAt((x0 + x1) / 2, (z0 + z1) / 2)) - 0.4;
+    const solid = (x, z, hx, hz, top) => boxes.push({ x, z, rot: 0, hx, hz, top, stand: false });
+    // 성벽 한 토막(축에 나란한 상자) + 총안(凸) + 충돌
+    function wall(x0, z0, x1, z1){
+      const len = Math.hypot(x1 - x0, z1 - z0); if (len < 0.5) return;
+      const n = Math.ceil(len / 4), alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0);
+      for (let i = 0; i < n; i++){
+        const ax = x0 + (x1 - x0) * i / n, az = z0 + (z1 - z0) * i / n, bx = x0 + (x1 - x0) * (i + 1) / n, bz = z0 + (z1 - z0) * (i + 1) / n;
+        const cx = (ax + bx) / 2, cz = (az + bz) / 2, L = len / n, y = lo(ax, az, bx, bz), H = J.wallH + (heightAt(cx, cz) - y);
+        const sx = alongX ? L + 0.02 : 1.4, sz = alongX ? 1.4 : L + 0.02;
+        add(box, i % 2 ? mStone : mStone2, cx, y + H / 2, cz, sx, H, sz);
+        add(box, mCope, cx, y + H + 0.12, cz, alongX ? L + 0.1 : 1.6, 0.25, alongX ? 1.6 : L + 0.1);
+        for (let k = 0; k < 2; k++){ const t = (k + 0.5) / 2, mx = ax + (bx - ax) * t, mz = az + (bz - az) * t; add(box, mStone, mx, y + H + 0.6, mz, alongX ? 0.9 : 1.2, 0.8, alongX ? 1.2 : 0.9); }
+        solid(cx, cz, sx / 2, sz / 2, y + H);
+      }
+    }
+    function tower(x, z, w = 3.4, h = 6.2){
+      const y = heightAt(x, z) - 0.4, H = h + 0.4;
+      add(box, mStone2, x, y + H / 2, z, w, H, w); add(box, mCope, x, y + H + 0.15, z, w + 0.3, 0.3, w + 0.3);
+      for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) add(box, mStone, x + dx * (w / 2 - 0.35), y + H + 0.7, z + dz * (w / 2 - 0.35), 0.7, 0.8, 0.7);
+      add(box, mDark, x, y + H * 0.62, z + w / 2 + 0.01, 0.3, 0.7, 0.05); add(box, mDark, x, y + H * 0.62, z - w / 2 - 0.01, 0.3, 0.7, 0.05);   // 활 쏘는 창
+      solid(x, z, w / 2, w / 2, y + H);
+    }
+    // 성문: 양쪽 망대 + 위 들보, 가운데는 지나갈 수 있게
+    function gate(x, z, alongX){
+      const hw = J.gateW / 2, w = 3.2;
+      if (alongX){ tower(x - hw - w / 2, z, w, 6.6); tower(x + hw + w / 2, z, w, 6.6); }
+      else { tower(x, z - hw - w / 2, w, 6.6); tower(x, z + hw + w / 2, w, 6.6); }
+      const y = heightAt(x, z) - 0.2;
+      add(box, mStone2, x, y + 5.6, z, alongX ? J.gateW + 0.4 : 1.8, 1.6, alongX ? 1.8 : J.gateW + 0.4);
+      add(box, mCedar, x, y + 4.7, z, alongX ? J.gateW : 1.5, 0.3, alongX ? 1.5 : J.gateW);   // 문 위 백향목 들보
+      add(box, mFloor, x, y + 0.24, z, alongX ? J.gateW : 2.4, 0.08, alongX ? 2.4 : J.gateW);
+    }
+    // ① 성벽 — 남(z1)·동(x1)·북(z0) 가운데에 성문, 서쪽은 막힘. 네 모퉁이에 망대
+    const G = J.gateW / 2 + 3.2;
+    wall(J.x0, J.z1, J.gates.s - G, J.z1); wall(J.gates.s + G, J.z1, J.x1, J.z1);
+    wall(J.x0, J.z0, J.gates.n - G, J.z0); wall(J.gates.n + G, J.z0, J.x1, J.z0);
+    wall(J.x1, J.z0, J.x1, J.gates.e - G); wall(J.x1, J.gates.e + G, J.x1, J.z1);
+    wall(J.x0, J.z0, J.x0, J.z1);
+    [[J.x0, J.z0], [J.x1, J.z0], [J.x0, J.z1], [J.x1, J.z1]].forEach(([x, z]) => tower(x, z, 4, 7));
+    tower(J.x0, (J.z0 + J.z1) / 2, 3.4, 6.4);
+    gate(J.gates.s, J.z1, true); gate(J.gates.n, J.z0, true); gate(J.x1, J.gates.e, false);
+    // ② 길 — 남문에서 베들레헴 길로, 성 안 큰길, 동문에서 감람 산, 북문에서 모리아
+    const road = (x0, z0, x1, z1, w) => {   // 땅 높이를 따라 휘는 띠
+      const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(2, Math.ceil(L / 1.5)), geo = new THREE.PlaneGeometry(w, L, 2, n); geo.rotateX(-Math.PI / 2);
+      const ang = Math.atan2(x1 - x0, z1 - z0), ca = Math.cos(ang), sa = Math.sin(ang), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, pa = geo.attributes.position;
+      for (let i = 0; i < pa.count; i++){ const lx = pa.getX(i), lz = pa.getZ(i), wx = cx + lx * ca + lz * sa, wz = cz - lx * sa + lz * ca; pa.setY(i, heightAt(wx, wz) + 0.06); }
+      geo.computeVertexNormals(); const m = new THREE.Mesh(geo, mRoad); m.position.set(cx, 0, cz); m.rotation.y = ang; m.receiveShadow = true; g.add(m); };
+    road(-40, 42, -20, 34, 3); road(-20, 34, 0, J.z1 + 3, 3); road(0, J.z1, 0, J.z0, 3.4); road(J.x1, J.gates.e, 42, J.gates.e, 2.6); road(0, J.z0, 0, -32, 2.8);
+    road(-14, 10, 14, 10, 2.4);
+    // ③ 백향목 궁(삼하 5:11 "히람이 … 백향목과 목수와 석수를 보내매 그들이 다윗을 위하여 집을 지으니")
+    { const [px, pz] = J.palace, y = heightAt(px, pz) - 0.3;
+      add(box, mStone2, px, y + 0.4, pz, 12, 0.8, 9);                                        // 돌 기단
+      add(box, mPlaster, px, y + 0.8 + 2.2, pz - 0.6, 10.4, 4.4, 6.6);                         // 아래층
+      for (const by of [1.6, 3.2, 4.9]) add(box, mCedar, px, y + 0.8 + by, pz - 0.6, 10.6, 0.22, 6.8);   // 백향목 띠(나무 들보)
+      for (let i = 0; i < 6; i++) add(cyl, mCedar2, px - 4.5 + i * 1.8, y + 0.8 + 2.2, pz + 3.1, 0.24, 4.4, 0.24);   // 앞 주랑 기둥
+      add(box, mCedar, px, y + 0.8 + 4.5, pz + 3.0, 10.4, 0.3, 1.4);                         // 주랑 지붕
+      add(box, mRoof, px, y + 0.8 + 4.6, pz - 0.6, 10.9, 0.35, 7.1);                          // 평평한 지붕
+      for (const [dx, dz, sx, sz] of [[0, -3.85, 10.9, 0.3], [0, 2.65, 10.9, 0.3], [-5.3, -0.6, 0.3, 6.8], [5.3, -0.6, 0.3, 6.8]]) add(box, mPlaster, px + dx, y + 0.8 + 5.15, pz + dz, sx, 0.7, sz);   // 지붕 난간
+      add(box, mPlaster, px - 2.5, y + 0.8 + 6.0, pz - 1.6, 4, 2.4, 3.4); add(box, mCedar, px - 2.5, y + 0.8 + 7.3, pz - 1.6, 4.3, 0.28, 3.7);   // 지붕 위 다락
+      add(box, mDark, px, y + 0.8 + 1.4, pz + 2.76, 1.8, 2.8, 0.1);                           // 문
+      for (const dx of [-3.4, 3.4]) add(box, mDark, px + dx, y + 0.8 + 2.8, pz + 2.76, 1, 1, 0.1);   // 창
+      add(box, mStone, px, y + 0.4, pz + 5.2, 4, 0.5, 1.6);                                   // 계단
+      solid(px, pz - 0.6, 5.4, 3.6, y + 6);
+    }
+    // ④ 궤를 둔 장막(6:17 "다윗이 그것을 위하여 친 장막 가운데") — 흰 휘장 뜰 + 청·자색 장막
+    { const [tx, tz] = J.tent, y = heightAt(tx, tz);
+      const pole = (x, z) => add(cyl, mCedar2, x, y + 0.9, z, 0.08, 1.8, 0.08);
+      for (let i = 0; i <= 6; i++){ const x = tx - 5 + i * (10 / 6); pole(x, tz - 4); if (i !== 3) pole(x, tz + 4); }
+      for (let i = 0; i <= 4; i++){ pole(tx - 5, tz - 4 + i * 2); pole(tx + 5, tz - 4 + i * 2); }
+      add(box, mCloth, tx, y + 0.9, tz - 4, 10, 1.6, 0.06); add(box, mCloth, tx - 5, y + 0.9, tz, 0.06, 1.6, 8); add(box, mCloth, tx + 5, y + 0.9, tz, 0.06, 1.6, 8);
+      add(box, mCloth, tx - 3.4, y + 0.9, tz + 4, 3.2, 1.6, 0.06); add(box, mCloth, tx + 3.4, y + 0.9, tz + 4, 3.2, 1.6, 0.06);   // 앞(남쪽) 가운데가 입구
+      add(box, mBlue, tx, y + 1.3, tz - 1.4, 4.2, 2.6, 3); add(box, mPurple, tx, y + 2.75, tz - 1.4, 4.5, 0.3, 3.3);   // 장막
+      add(box, mGold, tx, y + 2.95, tz - 1.4, 4.6, 0.08, 0.2);
+      solid(tx, tz - 4, 5, 0.2, y + 1.7); solid(tx - 5, tz, 0.2, 4, y + 1.7); solid(tx + 5, tz, 0.2, 4, y + 1.7); solid(tx - 3.4, tz + 4, 1.6, 0.2, y + 1.7); solid(tx + 3.4, tz + 4, 1.6, 0.2, y + 1.7);
+      solid(tx, tz - 1.4, 2.1, 1.5, y + 2.6);
+    }
+    // ⑤ 집들 — 계단식으로 붙은 평지붕 집(한두 층)
+    const house = (x, z, w, d, two, ry = 0) => { const y = heightAt(x, z) - 0.3, h = two ? 4.4 : 2.7;
+      add(box, mPlaster, x, y + h / 2, z, w, h, d, ry); add(box, mRoof, x, y + h + 0.15, z, w + 0.3, 0.3, d + 0.3, ry);
+      add(box, mDark, x + Math.sin(ry) * (d / 2 + 0.02), y + 0.9, z + Math.cos(ry) * (d / 2 + 0.02), 0.9, 1.8, 0.08, ry);
+      if (two) add(box, mPlaster, x - Math.cos(ry) * w * 0.22, y + h + 0.9, z + Math.sin(ry) * w * 0.22, w * 0.45, 1.5, d * 0.6, ry);
+      solid(x, z, w / 2 + 0.2, d / 2 + 0.2, y + h); };
+    [[-15, 18, 4, 3.4, 1], [-9, 19, 3.6, 3, 0], [8, 19, 3.6, 3.2, 1], [14, 18, 4, 3.4, 0], [15, 11, 3.4, 3, 0], [-15, 11, 3.6, 3.2, 1],
+     [-15, 3.5, 3.2, 3, 0], [15.5, -3, 3, 3.4, 1], [-16, -9.5, 3.4, 2.8, 0], [15, -10, 3.6, 3, 0], [-5, 15, 3, 2.8, 0], [6, 14, 3, 2.8, 1]].forEach(([x, z, w, d, two]) => house(x, z, w, d, !!two));
+    // ⑥ 모리아 — 북쪽 언덕의 아라우나 타작 마당(24:18), 9편 성전 터
+    { const [mx, mz] = J.moriah, y = heightAt(mx, mz) - 0.2;
+      add(box, mStone2, mx, y + 0.7, mz, 18, 1.4, 15);
+      for (let i = 0; i < 4; i++) add(box, mStone, mx, y + 0.18 + i * 0.35, mz + 7.5 + 2.2 - i * 0.55, 6, 0.36, 1.2);   // 남쪽 계단
+      add(new THREE.CylinderGeometry(4.2, 4.4, 0.25, 28), mFloor, mx, y + 1.5, mz - 0.5, 1, 1, 1);   // 타작 마당(둥글게 다진 바닥)
+      for (let i = 0; i < 24; i++){ const a = i / 24 * Math.PI * 2; add(box, mStone, mx + Math.cos(a) * 4.5, y + 1.6, mz - 0.5 + Math.sin(a) * 4.5, 0.6, 0.35, 0.5, -a); }
+      for (const [dx, dz] of [[-6.5, -5], [6.2, -4.6], [-6.8, 4.6]]) add(sph, T(0xd8b860), mx + dx, y + 1.7, mz + dz, 0.9, 0.5, 0.9);   // 곡식 더미
+      boxes.push({ x: mx, z: mz, rot: 0, hx: 9, hz: 7.5, top: y + 1.4, stand: true });   // 단 위에 올라설 수 있음
+    }
+    // ⑦ 감람 산 비탈의 감람나무(15:30) — 동쪽
+    const olive = (x, z, k) => { const y = heightAt(x, z);
+      add(cyl, mTrunk, x, y + 0.7 * k, z, 0.22 * k, 1.4 * k, 0.22 * k, 0.3); add(cyl, mTrunk, x + 0.2 * k, y + 1.4 * k, z, 0.14 * k, 0.9 * k, 0.14 * k).rotation.z = 0.5;
+      add(sph, mOliveLeaf, x, y + 2.1 * k, z, 1.5 * k, 0.9 * k, 1.4 * k); add(sph, mOliveLeaf2, x + 0.8 * k, y + 1.9 * k, z + 0.4 * k, 1.0 * k, 0.7 * k, 1.0 * k);
+      obstacles.push({ x, z, r: 0.5 * k }); };
+    [[34, -8, 1], [38, 14, 1.1], [42, -2, 0.9], [36, 22, 1], [44, 18, 1.2], [33, 30, 0.9], [46, -12, 1], [40, 30, 1.1], [30, -18, 0.9]].forEach(([x, z, k]) => olive(x, z, k));
+    // ⑧ 르바임 골짜기(5:18) — 서쪽 풀밭과 뽕나무 수풀(5:23) (8편 3장에서 소리 듣기)
+    add(new THREE.CylinderGeometry(12, 12, 0.08, 30), mGrass, -42, heightAt(-42, -8) + 0.04, -8, 1, 1, 1).castShadow = false;
+    const mulberry = (x, z, k) => { const y = heightAt(x, z);
+      add(cyl, mTrunk, x, y + 1.6 * k, z, 0.2 * k, 3.2 * k, 0.2 * k);
+      for (const [dy, s] of [[3.4, 1.3], [4.3, 1.0], [5.0, 0.7]]) add(sph, mMulLeaf, x, y + dy * k, z, s * k * 1.2, s * k * 0.7, s * k * 1.2);
+      obstacles.push({ x, z, r: 0.45 * k }); };
+    [[-50, -14, 1], [-46, -2, 1.1], [-52, 2, 0.9], [-38, -18, 1], [-44, -20, 1.2], [-54, -8, 1]].forEach(([x, z, k]) => mulberry(x, z, k));
+    Z._jeru = { gates: { s: [J.gates.s, J.z1], e: [J.x1, J.gates.e], n: [J.gates.n, J.z0] }, palace: J.palace, tent: J.tent, moriah: J.moriah, rephaim: [-46, -8], olives: [40, 6] };
   }
   function buildWorld(){
     Z.layout.forEach(([n, x, z, r, sc]) => placeProp(n, x, z, r, sc || 1));
