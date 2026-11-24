@@ -12,7 +12,7 @@
   const at = (ch, a = 0, b = 99) => () => { const p = cur(); return !!p && p.ch === ch && !p.cleared && p.step >= a && p.step <= b; };
   const any = (...fs) => () => fs.some(f => f());
   // 인물 모델 — 11/24 GPT 14차 원화를 Meshy 3D로 교체(사울은 1·2부 젊은 왕, 3부부터 늙은 왕). 나머지(사환·장로 등)는 기존 공용 모델
-  const M_ = { samuel: 's7-samuel-old', saul: 's7-saul-young', saulOld: 's7-saul-old', servant: 'ca-water-boy', kish: 'he-father', uncle: 'he-grandpa', girls: 'he-girl-hb', elders: 'ca-israel-elder',
+  const M_ = { samuel: 's7-samuel-old', saul: 's7-saul-young2', saulOld: 's7-saul-old', servant: 'ca-water-boy', kish: 'he-father', uncle: 'he-grandpa', girls: 'he-girl-hb', elders: 'ca-israel-elder',
     prophets: 'he-levite', people: 'he-brickmaker', nahash: 'j5-midianite', messenger: 'ca-horn-blower', jonathan: 's7-jonathan', armor: 's7-armor-bearer',
     david: 's7-david-boy', davidY: 's7-david-young', jesse: 's7-jesse', eliab: 's7-eliab', goliath: 's7-goliath', shield: 'j5-midianite', michal: 's7-michal', women: 'ca-singer-f', arrowBoy: 'ca-water-boy',
     ahimelech: 's7-ahimelech', abishai: 's7-abishai', abner: 'j5-midianite', nabal: 's7-nabal', abigail: 's7-abigail', nabalboy: 'ca-water-boy', abiathar: 'he-levite', egyptian: 's7-egyptian-boy', jabesh: 'he-brickmaker' };
