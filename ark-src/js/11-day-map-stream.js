@@ -665,6 +665,7 @@
       (reg === 'taiga' ? ['goat', 'rabbit', 'sheep'] : reg === 'hermon' ? ['goat'] : reg === 'galilee' ? ['sheep', 'cow', 'pig', 'chicken'] : reg === 'jordan' ? ['sheep', 'donkey', 'chicken'] : reg === 'swamp' ? ['frog', 'frog', 'frog', 'cow'] : reg === 'snow' ? ['goat', 'rabbit', 'sheep'] : reg === 'shinar' ? ['sheep', 'camel', 'donkey', 'cow'] : reg === 'egyptland' ? ['camel', 'frog', 'cow', 'donkey'] : reg === 'sinai' ? ['camel', 'goat'] : (reg === 'southsea' || reg === 'sisle') ? [] : reg === 'meadow' ? ['sheep', 'cow', 'horse', 'rabbit', 'donkey', 'sheep'] :
       (reg === 'cedar' ? ['sheep', 'goat', 'rabbit'] : (reg === 'wild' ? ['goat', 'donkey', 'camel'] : (reg === 'salt' ? ['goat'] : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey', 'pig', 'chicken', 'chicken']))))));
     // 11/20 동물이 너무 많아 반쯤으로(한 무리 1~2마리, 기둥 열에 하나꼴), 가까이 40마리가 넘으면 더 만들지 않음
+    wildSpawn(cx, cz, x0, z0, reg);   // 11/24 맹수
     if (!kinds.length || animals.length > 40 || hash2(cx, cz, 31) > (reg === 'desert' ? 0.07 : 0.14)) return;
     var kn = kinds[Math.floor(hash2(cx, cz, 32) * kinds.length)], n = 1 + Math.floor(hash2(cx, cz, 33) * 2);
     for (i = 0; i < n; i++) {
@@ -681,7 +682,7 @@
   }
   function despawnFar(px, pz) {
     var far = (R_DROP * CS) * (R_DROP * CS);
-    animals = animals.filter(function (a) { var ok = a.saddled || a.kept || (a.x - px) * (a.x - px) + (a.z - pz) * (a.z - pz) < far; if (!ok) scene.remove(a.mesh); return ok; });
+    animals = animals.filter(function (a) { var ok = a.saddled || a.kept || a.tamed || (a.x - px) * (a.x - px) + (a.z - pz) * (a.z - pz) < far; if (!ok) scene.remove(a.mesh); return ok; });
     fishes = fishes.filter(function (f) { var ok = (f.x - px) * (f.x - px) + (f.z - pz) * (f.z - pz) < far; if (!ok) scene.remove(f.mesh); return ok; });
   }
 

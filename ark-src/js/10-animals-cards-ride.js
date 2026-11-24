@@ -81,14 +81,14 @@
     }
     var moving = false;
     if (a.mode === 'walk') {
-      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : 1), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
+      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : wildSpeed(a)), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
       // 11/22 물에 빠진 짐승은 물 위로 헤엄쳐 뭍으로(전도사님 「말이 물에 빠지면 못 나오고」) — 스스로 물에 들어가지는 않음
       var wet = beastWaterTop(a.x, a.z, a.y); if (wet !== null) { var wn = beastWaterTop(nx, nz, a.y); if (gy === null && wn !== null) gy = wn - 0.9; else if (gy !== null && gy - a.y < 2.3) { a.y = Math.max(a.y, gy - 1.1); } }
       // 11/20 땅 칸: 남의 땅은 못 들어감. 내 땅은 밀·지팡이로 불러 데려올 때만 들어오고, 들어온 동물은 부르지 않으면 내 땅(우리) 밖으로 나가지 않음
       var np = plotAt(nx | 0, nz | 0), cp = plotAt(a.x | 0, a.z | 0), lured = a.luredUntil > Date.now();
       var plotBlock = np >= 0 && (np !== myPlot || myPlot < 0 || (cp !== np && !lured));
       if (myPlot >= 0 && cp === myPlot && np !== myPlot && !lured) plotBlock = true;
-      if (gy === null || Math.abs(gy - a.y) > 1.2 || plotBlock || inArk(nx | 0, gy | 0, nz | 0) || Math.hypot(nx - P.x, nz - P.z) < 1.4) {
+      if (gy === null || Math.abs(gy - a.y) > 1.2 || plotBlock || wildBlocked(a, nx, nz) || penBlocked(a, nx, nz, gy) || inArk(nx | 0, gy | 0, nz | 0) || Math.hypot(nx - P.x, nz - P.z) < 1.4) {
         a.h += Math.PI * (0.5 + Math.random()); a.mode = 'idle'; a.t = 0.4;
       } else { a.x = nx; a.z = nz; a.ty = gy; a.walk += s * 2.4; moving = true; }
     }
@@ -543,6 +543,7 @@
     if (c && c.a && held===STAFF && have(STAFF) && c.a===lostSheep && !c.a.found) {
       c.a.found=true; animalCall('sheep'); toast('잃은 양을 찾았어요. 지팡이를 들고 목자에게 함께 가요'); return;
     }
+    if (c && c.a && tameTap(c.a, HOTBAR[sel])) return;   // 11/24 길들이기·앉아/따라와
     if (c && c.a && BREEDS[c.a.kind] && !c.a.saddled && (HOTBAR[sel] === WHEAT || (c.a.kind === 'chicken' && HOTBAR[sel] === SEED)) && have(HOTBAR[sel]) > 0) return feedAnimal(c.a, HOTBAR[sel]);
     if (c && c.a && harvestAnimal(c.a)) return;
     if (c && c.a && strikeReady(c.a, held) && c.t < REACH + camDist + 1 && hitAnimal(c.a, true)) return;   // 11/22 맨손·칼·검·도구 모두 짐승 치기(처음 보는 짐승은 먼저 카드)
@@ -555,7 +556,7 @@
   // 손이 비었거나 칼·검·도구를 들었으면 친다. 도감에 아직 없는 짐승은 처음 한 번 카드부터(도감 모으기), 말·나귀는 맨손이면 타기
   function armedFor(h) { return !!h && have(h) > 0 && (h === SWORD || isArmSword(h) || isTool(h)); }
   function strikeReady(a, h) {
-    if (!a || !BEAST_HP[a.kind] || !DEX['c' + a.kind]) return false;
+    if (!a || !BEAST_HP[a.kind] || (!DEX['c' + a.kind] && !a.sp.pred)) return false;   // 맹수는 도감에 없어도 맞서 칠 수 있게
     if (armedFor(h)) return true;
     return (!h || have(h) < 1) && !a.sp.seat;
   }

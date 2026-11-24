@@ -5641,14 +5641,14 @@
     }
     var moving = false;
     if (a.mode === 'walk') {
-      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : 1), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
+      var s = a.sp.speed * dt * (a.fleeUntil > performance.now() ? 2.6 : wildSpeed(a)), nx = a.x - Math.sin(a.h) * s, nz = a.z - Math.cos(a.h) * s, gy = groundAt(nx, nz, a.y);
       // 11/22 물에 빠진 짐승은 물 위로 헤엄쳐 뭍으로(전도사님 「말이 물에 빠지면 못 나오고」) — 스스로 물에 들어가지는 않음
       var wet = beastWaterTop(a.x, a.z, a.y); if (wet !== null) { var wn = beastWaterTop(nx, nz, a.y); if (gy === null && wn !== null) gy = wn - 0.9; else if (gy !== null && gy - a.y < 2.3) { a.y = Math.max(a.y, gy - 1.1); } }
       // 11/20 땅 칸: 남의 땅은 못 들어감. 내 땅은 밀·지팡이로 불러 데려올 때만 들어오고, 들어온 동물은 부르지 않으면 내 땅(우리) 밖으로 나가지 않음
       var np = plotAt(nx | 0, nz | 0), cp = plotAt(a.x | 0, a.z | 0), lured = a.luredUntil > Date.now();
       var plotBlock = np >= 0 && (np !== myPlot || myPlot < 0 || (cp !== np && !lured));
       if (myPlot >= 0 && cp === myPlot && np !== myPlot && !lured) plotBlock = true;
-      if (gy === null || Math.abs(gy - a.y) > 1.2 || plotBlock || inArk(nx | 0, gy | 0, nz | 0) || Math.hypot(nx - P.x, nz - P.z) < 1.4) {
+      if (gy === null || Math.abs(gy - a.y) > 1.2 || plotBlock || wildBlocked(a, nx, nz) || penBlocked(a, nx, nz, gy) || inArk(nx | 0, gy | 0, nz | 0) || Math.hypot(nx - P.x, nz - P.z) < 1.4) {
         a.h += Math.PI * (0.5 + Math.random()); a.mode = 'idle'; a.t = 0.4;
       } else { a.x = nx; a.z = nz; a.ty = gy; a.walk += s * 2.4; moving = true; }
     }
@@ -6103,6 +6103,7 @@
     if (c && c.a && held===STAFF && have(STAFF) && c.a===lostSheep && !c.a.found) {
       c.a.found=true; animalCall('sheep'); toast('잃은 양을 찾았어요. 지팡이를 들고 목자에게 함께 가요'); return;
     }
+    if (c && c.a && tameTap(c.a, HOTBAR[sel])) return;   // 11/24 길들이기·앉아/따라와
     if (c && c.a && BREEDS[c.a.kind] && !c.a.saddled && (HOTBAR[sel] === WHEAT || (c.a.kind === 'chicken' && HOTBAR[sel] === SEED)) && have(HOTBAR[sel]) > 0) return feedAnimal(c.a, HOTBAR[sel]);
     if (c && c.a && harvestAnimal(c.a)) return;
     if (c && c.a && strikeReady(c.a, held) && c.t < REACH + camDist + 1 && hitAnimal(c.a, true)) return;   // 11/22 맨손·칼·검·도구 모두 짐승 치기(처음 보는 짐승은 먼저 카드)
@@ -6115,7 +6116,7 @@
   // 손이 비었거나 칼·검·도구를 들었으면 친다. 도감에 아직 없는 짐승은 처음 한 번 카드부터(도감 모으기), 말·나귀는 맨손이면 타기
   function armedFor(h) { return !!h && have(h) > 0 && (h === SWORD || isArmSword(h) || isTool(h)); }
   function strikeReady(a, h) {
-    if (!a || !BEAST_HP[a.kind] || !DEX['c' + a.kind]) return false;
+    if (!a || !BEAST_HP[a.kind] || (!DEX['c' + a.kind] && !a.sp.pred)) return false;   // 맹수는 도감에 없어도 맞서 칠 수 있게
     if (armedFor(h)) return true;
     return (!h || have(h) < 1) && !a.sp.seat;
   }
@@ -7039,6 +7040,7 @@
       (reg === 'taiga' ? ['goat', 'rabbit', 'sheep'] : reg === 'hermon' ? ['goat'] : reg === 'galilee' ? ['sheep', 'cow', 'pig', 'chicken'] : reg === 'jordan' ? ['sheep', 'donkey', 'chicken'] : reg === 'swamp' ? ['frog', 'frog', 'frog', 'cow'] : reg === 'snow' ? ['goat', 'rabbit', 'sheep'] : reg === 'shinar' ? ['sheep', 'camel', 'donkey', 'cow'] : reg === 'egyptland' ? ['camel', 'frog', 'cow', 'donkey'] : reg === 'sinai' ? ['camel', 'goat'] : (reg === 'southsea' || reg === 'sisle') ? [] : reg === 'meadow' ? ['sheep', 'cow', 'horse', 'rabbit', 'donkey', 'sheep'] :
       (reg === 'cedar' ? ['sheep', 'goat', 'rabbit'] : (reg === 'wild' ? ['goat', 'donkey', 'camel'] : (reg === 'salt' ? ['goat'] : ['sheep', 'goat', 'cow', 'rabbit', 'sheep', 'cow', 'rabbit', 'horse', 'horse', 'donkey', 'pig', 'chicken', 'chicken']))))));
     // 11/20 동물이 너무 많아 반쯤으로(한 무리 1~2마리, 기둥 열에 하나꼴), 가까이 40마리가 넘으면 더 만들지 않음
+    wildSpawn(cx, cz, x0, z0, reg);   // 11/24 맹수
     if (!kinds.length || animals.length > 40 || hash2(cx, cz, 31) > (reg === 'desert' ? 0.07 : 0.14)) return;
     var kn = kinds[Math.floor(hash2(cx, cz, 32) * kinds.length)], n = 1 + Math.floor(hash2(cx, cz, 33) * 2);
     for (i = 0; i < n; i++) {
@@ -7055,7 +7057,7 @@
   }
   function despawnFar(px, pz) {
     var far = (R_DROP * CS) * (R_DROP * CS);
-    animals = animals.filter(function (a) { var ok = a.saddled || a.kept || (a.x - px) * (a.x - px) + (a.z - pz) * (a.z - pz) < far; if (!ok) scene.remove(a.mesh); return ok; });
+    animals = animals.filter(function (a) { var ok = a.saddled || a.kept || a.tamed || (a.x - px) * (a.x - px) + (a.z - pz) * (a.z - pz) < far; if (!ok) scene.remove(a.mesh); return ok; });
     fishes = fishes.filter(function (f) { var ok = (f.x - px) * (f.x - px) + (f.z - pz) * (f.z - pz) < far; if (!ok) scene.remove(f.mesh); return ok; });
   }
 
@@ -7683,9 +7685,9 @@
     if (a.baby) return deny('새끼는 아직 어려요');
     if (a.breedAt && now < a.breedAt) return deny('조금 쉬었다가 다시 먹여요');
     take(food, 1); bagChanged(); a.love = now + 30000; animalCall(a.kind); heartAt(a);
-    var mate = animals.filter(function (b) { return b !== a && b.kind === a.kind && b.love > now && !b.baby && Math.hypot(b.x - a.x, b.z - a.z) < 10; })[0];
+    var mate = animals.filter(function (b) { return b !== a && b.kind === a.kind && b.love > now && !b.baby && (!a.sp.pred || b.tamed) && Math.hypot(b.x - a.x, b.z - a.z) < 10; })[0];
     if (mate) {
-      var baby = makeBeast(a.kind, (a.x + mate.x) / 2, (a.z + mate.z) / 2); baby.baby = true; baby.growAt = now + 180000; baby.mesh.scale.setScalar(0.55); animals.push(baby);
+      var baby = makeBeast(a.kind, (a.x + mate.x) / 2, (a.z + mate.z) / 2); baby.baby = true; baby.growAt = now + 180000; baby.mesh.scale.setScalar(0.55); animals.push(baby); if (a.tamed || mate.tamed) tameBeast(baby);
       a.love = mate.love = 0; a.breedAt = mate.breedAt = now + 60000; heartAt(baby);
       toast('♥ 새끼가 태어났어요! 3분 지나면 다 자라요. 내 땅 안에 있으면 저장돼요'); unlock('breed'); saveHerd();
     } else toast(jo(B[food][0], '을', '를') + ' 먹었어요 ♥ — 가까이 있는 같은 동물에게도 먹이면 새끼가 태어나요');
@@ -7693,7 +7695,7 @@
   function heartAt(a) { var s = textSprite('♥', 'rgba(0,0,0,0)', '#ff5a7a', 0.9); s.position.set(a.x, a.y + 2.6, a.z); scene.add(s); var t0 = performance.now(); (function up() { var k = (performance.now() - t0) / 1400; if (k >= 1) { disposeSprite(s); return; } s.position.y += 0.02; s.material.opacity = 1 - k; requestAnimationFrame(up); })(); }
   function inMyPlot(x, z) { return myPlot >= 0 && plotAt(Math.floor(x), Math.floor(z)) === myPlot; }
   function saveHerd() {
-    var a = animals.filter(function (x) { return BREEDS[x.kind] && !x.saddled && inMyPlot(x.x, x.z); }).slice(0, 16).map(function (x) { return { k: x.kind, x: Math.round(x.x * 10) / 10, z: Math.round(x.z * 10) / 10, b: x.baby ? 1 : 0 }; });
+    var a = animals.filter(function (x) { return BREEDS[x.kind] && !x.saddled && !x.tamed && !x.sp.pred && inMyPlot(x.x, x.z); }).slice(0, 16).map(function (x) { return { k: x.kind, x: Math.round(x.x * 10) / 10, z: Math.round(x.z * 10) / 10, b: x.baby ? 1 : 0 }; });
     pendingHerd.forEach(function (o) { if (a.length < 16) a.push(o); });
     var had = HERD.length; HERD = a; try { localStorage.setItem('arkVillage.herd', JSON.stringify(HERD)); } catch (e) {} stateDirty();
     if (!had && HERD.length) questCheck();
@@ -7752,13 +7754,14 @@
     toast('목장 바깥 '+(point[0]>n.x?'동쪽':'서쪽')+'에서 길 잃은 양을 찾아 눌러요');
   }
   function stepHerd(dt) {
+    wildTick(dt);
     var now=Date.now(), held=HOTBAR[sel], active=have(held)>0 && ui==='play';
     var lure=active&&held===WHEAT, seedLure=active&&held===SEED, staff=active&&held===STAFF;
     animals.forEach(function (a) {
       if (!BREEDS[a.kind]) return;
       if (a.baby && now > a.growAt) { a.baby = false; a.mesh.scale.setScalar(1); }
       a.kept = inMyPlot(a.x, a.z);
-      if ((lure || (seedLure && a.kind==='chicken') || (staff && a.kind==='sheep' && (a!==lostSheep || a.found))) && a !== riding && !a.saddled) {
+      if (!a.sp.pred && (lure || (seedLure && a.kind==='chicken') || (staff && a.kind==='sheep' && (a!==lostSheep || a.found))) && a !== riding && !a.saddled) {
         var dx = P.x - a.x, dz = P.z - a.z, d = Math.hypot(dx, dz);
         if (d < 14 && d > 3) { a.h = Math.atan2(-dx, -dz); a.mode = 'walk'; a.t = 0.6; a.luredUntil = now + 1500; }
         else if (d <= 3 && a.mode === 'walk') { a.mode = 'idle'; a.t = 1; }
@@ -8255,12 +8258,12 @@
   //    횃불을 들면 가까이 못 오고, 햇빛에 사라짐. 갑옷은 덜 다치게, 전신 갑주를 다 입으면 다치지 않음. 칼·성령의 검(엡 6:17)으로 물리침 ──
   var SHADOWS = [], shadowT = 3, shadowMat = null, shadowOutM = null, shadowTold = false;
   var SH_KINDS = {
-    hate: { name: '미움', eye: 0xff3a3a, hp: 5, dmg: 3, speed: 4.6, h: 1 },
-    lie: { name: '거짓', eye: 0xc060ff, hp: 4, dmg: 3, speed: 5.4, h: 0.95, blink: true },
-    pride: { name: '교만', eye: 0xffc840, hp: 9, dmg: 4, speed: 3.3, h: 1.25 },
-    doubt: { name: '의심', eye: 0x6ad0ff, hp: 5, dmg: 3, speed: 3.7, h: 1.05, ranged: true },   // 멀찍이 서서 불화살(엡 6:16)
-    anger: { name: '분노', eye: 0xff5a1a, hp: 11, dmg: 6, speed: 4.1, h: 1.2, fuse: true },   // 11/21 가까이 오면 부풀다 터짐(엡 4:26) — 칼로 치면 밀려나며 식고, 물에 닿으면 꺼짐(잠 15:1)
-    great: { name: '큰 그림자', eye: 0xff8a2a, hp: 16, dmg: 5, speed: 4.9, h: 1.45 }   // 골짜기에만
+    hate: { name: '미움', eye: 0xff3a3a, hp: 15, dmg: 3, speed: 4.6, h: 1 },
+    lie: { name: '거짓', eye: 0xc060ff, hp: 12, dmg: 3, speed: 5.4, h: 0.95, blink: true },
+    pride: { name: '교만', eye: 0xffc840, hp: 24, dmg: 4, speed: 3.3, h: 1.25 },
+    doubt: { name: '의심', eye: 0x6ad0ff, hp: 14, dmg: 3, speed: 3.7, h: 1.05, ranged: true },   // 멀찍이 서서 불화살(엡 6:16)
+    anger: { name: '분노', eye: 0xff5a1a, hp: 27, dmg: 6, speed: 4.1, h: 1.2, fuse: true },   // 11/21 가까이 오면 부풀다 터짐(엡 4:26) — 칼로 치면 밀려나며 식고, 물에 닿으면 꺼짐(잠 15:1)
+    great: { name: '큰 그림자', eye: 0xff8a2a, hp: 42, dmg: 5, speed: 4.9, h: 1.45 }   // 골짜기에만
   };
   function shadowsOn() { return S.shadows !== false; }
   function armorGuard() {   // 0~1: 줄여 주는 몫
@@ -8484,7 +8487,7 @@
     if (!S.angerTold) { S.angerTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🔥', '분노', '분을 내어도 죄를 짓지 말며 해가 지도록 분을 품지 말고', '에베소서 4:26', '「분노」 그림자가 터졌어요 — 다가오면 부풀어요. 칼로 치면 밀려나며 식고, 활·물매로 멀리서 물리치면 터지지 않아요. 물에 닿으면 꺼져요.' + (n ? ' 파인 땅은 하루 뒤 메워져요' : '')); }, 700); }
   }
   // ── 11/21 짐승 잡기: 치면 밀려나 달아나고, 다 잡으면 고기·털·가죽이 무작위로(창 9:3). 말·나귀·낙타는 고기 대신 가죽(레 11:4) ──
-  var BEAST_HP = { sheep: 4, goat: 4, rabbit: 2, cow: 7, horse: 7, donkey: 6, camel: 8, pig: 5, chicken: 2 };
+  var BEAST_HP = { sheep: 12, goat: 12, rabbit: 5, cow: 15, horse: 22, donkey: 20, camel: 24, pig: 15, chicken: 6 };   // 11/24 두 번 올림(전도사님 「더 늘리자」) — 칼(4)로 양 3번·소 4번
   // 11/21 나오는 것은 하나하나 확률로: [물건, 나올 확률, 최소, 최대] — 아무것도 안 나올 수도 있음(새끼는 확률 0.6배·개수 절반)
   var BEAST_DROP = {
     sheep: [[RAW_LAMB, 0.8, 1, 2], [WOOL, 0.6, 1, 2], [BONE, 0.3, 1, 1]], goat: [[RAW_GOAT, 0.8, 1, 2], [LEATHER, 0.5, 1, 1], [BONE, 0.3, 1, 1]],
@@ -8492,6 +8495,7 @@
     chicken: [[RAW_CHICKEN, 0.75, 1, 1], [FEATHER, 0.6, 1, 2], [BONE, 0.2, 1, 1]], rabbit: [[LEATHER, 0.5, 1, 1], [BONE, 0.2, 1, 1]],
     horse: [[LEATHER, 0.75, 1, 2], [BONE, 0.4, 1, 2]], donkey: [[LEATHER, 0.75, 1, 2], [BONE, 0.4, 1, 2]], camel: [[LEATHER, 0.75, 1, 2], [WOOL, 0.35, 1, 1], [BONE, 0.4, 1, 2]] };
   function beastGuarded(a) {   // 잡을 수 없는 짐승: 안장 얹은 것·내 우리에 기르는 것·새끼·놀이·이야기의 양·타고 있는 것
+    if (a.tamed) return '내가 길들인 짐승이에요';
     if (a === riding || a.saddled || a.kept || a.herd || a === lostSheep) return a.saddled ? '안장을 얹은 짐승은 잡을 수 없어요' : '기르는 짐승은 잡을 수 없어요';   // 11/21 새끼도 잡을 수 있음
     return '';
   }
@@ -8506,7 +8510,9 @@
     if (projDmg) dmg = projDmg;
     var crit = !projDmg && !P.ground && P.vy < -1 && !P.swim && !P.fly; if (crit) dmg *= 1.5;
     if (a.hp === undefined) a.hp = a.baby ? Math.ceil(BEAST_HP[a.kind] / 2) : BEAST_HP[a.kind];   // 새끼는 체력 절반
-    a.hp -= dmg; swingT = 0.25; sfx('dig', 300); animalCall(a.kind);
+    var now = performance.now(); if (now < (a.iframeUntil || 0)) { swingT = 0.25; return true; }   // 11/24 맞은 뒤 0.5초는 다시 안 다침(마인크래프트)
+    a.iframeUntil = now + 500;
+    a.hp -= dmg; hurtTint(a.mesh, 0.4); beastBar(a, a.baby ? Math.ceil(BEAST_HP[a.kind] / 2) : BEAST_HP[a.kind]); swingT = 0.25; sfx('dig', 300); animalCall(a.kind);
     if (isTool(held)) wearTool(held);
     var top = a.y + (CR_R[a.kind] || 1.2) * 1.8, n = Math.round(dmg * 10) / 10;
     floatText(a.x, top, a.z, (crit ? '✦ ' : '') + n, crit ? '#ffd23a' : '#ffffff', crit ? 0.8 : 0.6, 0.6);
@@ -8514,9 +8520,10 @@
     var dx = a.x - P.x, dz = a.z - P.z, d = Math.hypot(dx, dz) || 1;
     for (var k = 4; k >= 1; k--) { var nx = a.x + dx / d * k * 0.3, nz = a.z + dz / d * k * 0.3, gy = groundAt(nx, nz, a.y); if (gy !== null && Math.abs(gy - a.y) <= 1.2) { a.x = nx; a.z = nz; a.ty = gy; break; } }   // 밀려남
     a.h = Math.atan2(dx, dz) + Math.PI; a.mode = 'walk'; a.t = 3; a.fleeUntil = performance.now() + 3500;   // 반대쪽으로 달아남
+    if (a.sp.pred) { a.fleeUntil = 0; a.angryUntil = performance.now() + 20000; a.target = 'player'; }   // 11/24 맹수는 달아나지 않고 덤빔
     if (a.hp > 0) return true;
-    scene.remove(a.mesh); var ai = animals.indexOf(a); if (ai >= 0) animals.splice(ai, 1);
-    sparkle(a.x, a.y + 1, a.z, 0xe8e0d0, 16, { size: 0.45, life: 0.9, v: 2.6, up: 1.4 }); sfx('pop', 400);
+    var ai = animals.indexOf(a); if (ai >= 0) animals.splice(ai, 1);
+    beastDie(a); sfx('pop', 400);   // 11/24 옆으로 쓰러졌다가 사라짐
     var got = [];
     (BEAST_DROP[a.kind] || []).forEach(function (q) { if (Math.random() >= q[1] * (a.baby ? 0.6 : 1)) return; var hi = a.baby ? Math.max(1, Math.ceil(q[3] / 2)) : q[3], c = q[2] + Math.floor(Math.random() * (hi - q[2] + 1)); if (c > 0) { dropItem(a.x, a.y + 0.8, a.z, q[0], c); got.push(B[q[0]][0] + ' ' + c); } });
     if (!S.huntTold) { S.huntTold = 1; saveSettings(); showVerseCard('🍖', '먹을 것', '모든 산 동물은 너희의 먹을 것이 될지라 채소 같이 내가 이것을 다 너희에게 주노라', '창세기 9:3', '고기는 모닥불(돌 3 + 통나무 2)이나 화덕과 솥 가까이에서 석탄·숯·통나무를 땔감으로 구워 먹어요 — 가까이 가서 주워요'); }
@@ -8536,6 +8543,8 @@
     if (has('jericho')) dmg += 1;
     var crit = !arrowDmg && !P.ground && P.vy < -1 && !P.swim && !P.fly;   // 떨어지면서 치면 강한 일격
     if (crit) dmg *= 1.5;
+    var now = performance.now(); if (now < (s.iframeUntil || 0)) { if (!sweep) swingT = 0.25; return; }   // 11/24 맞은 뒤 0.5초는 다시 안 다침
+    s.iframeUntil = now + 500;
     if (s.wind > 0 && !arrowDmg) { s.wind = 0; s.hitT = performance.now(); }   // 덮치려던 순간에 맞으면 멈칫
     s.hp -= dmg; if (!sweep) { swingT = 0.25; sfx('dig', 300); }
     combatFx(s, dmg, crit);
@@ -10061,7 +10070,55 @@
     var s = textSprite(t, 'rgba(0,0,0,0)', color, hgt || 0.6); s.position.set(x, y, z); scene.add(s);
     FX.push({ m: s, vx: (Math.random() - 0.5) * 0.6, vy: 1.6, vz: (Math.random() - 0.5) * 0.6, g: 1.2, life: life || 0.9, t: 0, text: true });
   }
+  // 11/24 맞으면 잠깐 붉게(마인크래프트), 죽으면 옆으로 쓰러졌다가 연기처럼 사라짐, 짐승 체력 막대
+  var HURT_MATS = {}, HURTS = [], DYING = [];
+  function hurtTint(mesh, sec) {
+    if (!mesh) return;
+    for (var i = 0; i < HURTS.length; i++) if (HURTS[i].mesh === mesh) { HURTS[i].t = Math.max(HURTS[i].t, sec); return; }
+    var sw = [];
+    mesh.traverse(function (o) {
+      if (!o.isMesh || !o.material || Array.isArray(o.material) || o.isSprite) return;
+      var m0 = o.material, hm = HURT_MATS[m0.uuid];
+      if (!hm) { hm = m0.clone(); if (hm.color) hm.color.setRGB(1, 0.32, 0.32); if (hm.emissive) hm.emissive.setRGB(0.3, 0, 0); HURT_MATS[m0.uuid] = hm; }
+      o.material = hm; sw.push([o, m0]);
+    });
+    HURTS.push({ mesh: mesh, t: sec, sw: sw });
+  }
+  function beastBar(a, max) {
+    if (!a.bar) {
+      var c = document.createElement('canvas'); c.width = 64; c.height = 10;
+      var tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.NearestFilter; tex.magFilter = THREE.NearestFilter;
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, fog: false }));
+      sp.scale.set(1.1, 0.17, 1); sp.renderOrder = 21; scene.add(sp); a.bar = sp; a.barC = c;
+    }
+    var g = a.barC.getContext('2d'), f = Math.max(0, a.hp) / max;
+    g.clearRect(0, 0, 64, 10); g.fillStyle = 'rgba(0,0,0,0.7)'; g.fillRect(0, 0, 64, 10);
+    g.fillStyle = f > 0.5 ? '#7be06a' : (f > 0.25 ? '#ffae4a' : '#ff6a4a'); g.fillRect(2, 2, Math.round(60 * f), 6);
+    a.bar.material.map.needsUpdate = true; a.bar.visible = true; a.barT = 4;
+    if (HURTS.indexOf(a) < 0 && BARS.indexOf(a) < 0) BARS.push(a);
+  }
+  var BARS = [];
+  function beastDie(a) {
+    hurtTint(a.mesh, 0.9);
+    if (a.bar) { a.bar.visible = false; scene.remove(a.bar); a.bar.material.map.dispose(); a.bar.material.dispose(); a.bar = null; }
+    DYING.push({ a: a, t: 0 });
+  }
+  function stepHurts(dt) {
+    if (HURTS.length) HURTS = HURTS.filter(function (h) { h.t -= dt; if (h.t > 0) return true; h.sw.forEach(function (q) { q[0].material = q[1]; }); return false; });
+    if (BARS.length) BARS = BARS.filter(function (a) {
+      if (!a.bar) return false;
+      a.barT -= dt; a.bar.position.set(a.x, a.y + (CR_R[a.kind] || 1.2) * 1.8 + 0.25, a.z);
+      if (animals.indexOf(a) < 0) { scene.remove(a.bar); a.bar.material.map.dispose(); a.bar.material.dispose(); a.bar = null; return false; }
+      if (a.barT <= 0) { a.bar.visible = false; return false; } return true; });
+    if (DYING.length) DYING = DYING.filter(function (d) {
+      d.t += dt; var a = d.a, k = Math.min(1, d.t / 0.35);
+      a.mesh.rotation.z = k * k * Math.PI / 2; a.mesh.position.y = a.y + k * 0.3;
+      if (d.t < 0.9) return true;
+      scene.remove(a.mesh); sparkle(a.x, a.y + 0.8, a.z, 0xe8e0d0, 16, { size: 0.45, life: 0.9, v: 2.6, up: 1.4 });
+      return false; });
+  }
   function stepFx(dt) {
+    stepHurts(dt);
     if (!FX.length) return;
     FX = FX.filter(function (f) {
       f.t += dt; f.vy -= f.g * dt;
@@ -11312,6 +11369,192 @@
     row('💧 수로 시험', '수문과 신호 지렛대를 10초 안에 둘 다 — 둘이 하면 쉬워요.', go('길 안내', [WATER_GATE[0] + 0.5, WATER_GATE[1] + 3.5], '수로 시험'));
     row('🛤 레일 짐 나르기', '동쪽 사막의 궤에서 궤로 수레에 짐을 실어 날라요.', go('길 안내', [RAIL_A[0] + 0.5, RAIL_A[1] + 2.5], '레일 짐 나르기'));
   }
+  // ───────── 11/24 맹수(이리·사자·곰·표범)와 길들이기 ─────────
+  // 맹수: 사자·곰은 가까이 가면 덤빔(삼상 17:34), 이리는 들의 양·염소·닭·토끼를 노리다 건드리면 덤빔, 표범은 건드릴 때만. 마을·땅 칸·안전한 곳엔 못 들어옴.
+  // 길들이기: 모든 짐승 — 풀 먹는 짐승은 밀(닭은 씨앗), 맹수는 고기를 먹이면 3번에 1번꼴로 길듦(♥). 길든 짐승은 따라오고, 빈손으로 누르면 앉아/따라와.
+  //   길든 짐승끼리 먹이를 주면 새끼(새끼도 길든 채로). 길든 맹수는 주인 곁의 그림자·맹수와 싸움. 이 기기에 저장(12마리까지).
+  Object.assign(BEASTS, {
+    wolf: { name: '이리', n: 0, speed: 2.2, chase: 2.2, pred: 'hunt', bite: 2, leg: [0.24, 0.95, 0x5e5a56], lx: 0.32, lz: 0.62, parts: [
+      [0.86, 0.8, 1.7, 0x8a847c, 0, 1.38, 0], [0.92, 0.86, 0.55, 0x9a948c, 0, 1.5, -0.6], [0.62, 0.6, 0.6, 0x8a847c, 0, 1.72, -1.1], [0.36, 0.28, 0.4, 0x6e6a64, 0, 1.6, -1.5],
+      [0.12, 0.08, 0.06, 0x141210, 0, 1.72, -1.71], [0.16, 0.26, 0.1, 0x6e6a64, -0.2, 2.12, -1.02], [0.16, 0.26, 0.1, 0x6e6a64, 0.2, 2.12, -1.02],
+      [0.08, 0.08, 0.04, 0xe8c040, -0.17, 1.86, -1.41], [0.08, 0.08, 0.04, 0xe8c040, 0.17, 1.86, -1.41], [0.22, 0.22, 0.85, 0x7a746c, 0, 1.3, 1.15], [0.5, 0.3, 0.5, 0xd8d2c8, 0, 1.12, -0.55]] },
+    lion: { name: '사자', n: 0, speed: 2.0, chase: 2.2, pred: 'fierce', bite: 3, leg: [0.36, 1.15, 0xb08a50], lx: 0.45, lz: 0.85, parts: [
+      [1.15, 1.05, 2.3, 0xc8a062, 0, 1.75, 0], [1.5, 1.5, 0.95, 0x7a4e22, 0, 2.15, -1.05], [0.82, 0.8, 0.7, 0xd2ac6c, 0, 2.15, -1.6], [0.48, 0.36, 0.3, 0xe2c08a, 0, 1.92, -2.0],
+      [0.14, 0.1, 0.06, 0x2a1a10, 0, 2.06, -2.16], [0.1, 0.1, 0.05, 0x1a120a, -0.22, 2.32, -1.96], [0.1, 0.1, 0.05, 0x1a120a, 0.22, 2.32, -1.96],
+      [0.18, 0.18, 1.2, 0xc8a062, 0, 1.95, 1.55], [0.3, 0.3, 0.3, 0x5a3818, 0, 1.95, 2.2]] },
+    bear: { name: '곰', n: 0, speed: 1.7, chase: 2.0, pred: 'fierce', bite: 3, leg: [0.48, 1.0, 0x3e2a1c], lx: 0.5, lz: 0.75, parts: [
+      [1.5, 1.35, 2.3, 0x5a3e2a, 0, 1.75, 0], [1.3, 1.25, 0.7, 0x5a3e2a, 0, 2.05, -0.9], [0.95, 0.9, 0.8, 0x624430, 0, 2.15, -1.45], [0.5, 0.42, 0.4, 0x8a6a4e, 0, 1.95, -1.95],
+      [0.16, 0.12, 0.06, 0x141210, 0, 2.1, -2.16], [0.1, 0.1, 0.05, 0x141210, -0.24, 2.36, -1.86], [0.1, 0.1, 0.05, 0x141210, 0.24, 2.36, -1.86],
+      [0.26, 0.24, 0.14, 0x4a3222, -0.36, 2.66, -1.4], [0.26, 0.24, 0.14, 0x4a3222, 0.36, 2.66, -1.4]] },
+    leopard: { name: '표범', n: 0, speed: 2.4, chase: 2.4, pred: 'shy', bite: 2, leg: [0.24, 1.0, 0xc8a050], lx: 0.34, lz: 0.75, parts: [
+      [0.85, 0.75, 2.0, 0xd8b05c, 0, 1.4, 0], [0.62, 0.6, 0.62, 0xd8b05c, 0, 1.62, -1.2], [0.36, 0.26, 0.24, 0xe8cc8a, 0, 1.5, -1.58], [0.12, 0.08, 0.05, 0x2a1a10, 0, 1.58, -1.71],
+      [0.09, 0.09, 0.05, 0x1a2a10, -0.17, 1.76, -1.52], [0.09, 0.09, 0.05, 0x1a2a10, 0.17, 1.76, -1.52], [0.14, 0.18, 0.08, 0xc09848, -0.2, 2.0, -1.12], [0.14, 0.18, 0.08, 0xc09848, 0.2, 2.0, -1.12],
+      [0.16, 0.16, 1.3, 0xd8b05c, 0, 1.45, 1.6], [0.18, 0.06, 0.18, 0x3a2a18, -0.25, 1.78, -0.5], [0.18, 0.06, 0.18, 0x3a2a18, 0.2, 1.78, 0.2], [0.18, 0.06, 0.18, 0x3a2a18, -0.1, 1.78, 0.7],
+      [0.06, 0.18, 0.18, 0x3a2a18, -0.43, 1.45, -0.3], [0.06, 0.18, 0.18, 0x3a2a18, 0.43, 1.55, 0.35], [0.06, 0.18, 0.18, 0x3a2a18, -0.43, 1.35, 0.6], [0.06, 0.18, 0.18, 0x3a2a18, 0.43, 1.3, -0.5]] }
+  });
+  Object.assign(BEAST_HP, { wolf: 16, lion: 30, bear: 32, leopard: 22 });
+  Object.assign(BEAST_DROP, { wolf: [[LEATHER, 0.7, 1, 2], [BONE, 0.6, 1, 2]], lion: [[LEATHER, 0.8, 1, 3], [BONE, 0.6, 1, 2]], bear: [[LEATHER, 0.85, 2, 3], [BONE, 0.6, 1, 2]], leopard: [[LEATHER, 0.8, 1, 2], [BONE, 0.5, 1, 1]] });
+  Object.assign(BREEDS, { wolf: 1, lion: 1, bear: 1, leopard: 1 });
+  Object.assign(CR_R, { wolf: 1.3, lion: 1.8, bear: 1.8, leopard: 1.4 });
+  // 말씀 카드(개역개정 원문, bible.py로 확인 11/24)
+  Object.assign(CREATURE, {
+    wolf: { emoji: '🐺', name: '이리', ref: '마태복음 10:16', text: '보라 내가 너희를 보냄이 양을 이리 가운데로 보냄과 같도다 그러므로 너희는 뱀 같이 지혜롭고 비둘기 같이 순결하라' },
+    lion: { emoji: '🦁', name: '사자', ref: '사무엘상 17:34', text: '다윗이 사울에게 말하되 주의 종이 아버지의 양을 지킬 때에 사자나 곰이 와서 양 떼에서 새끼를 물어가면' },
+    bear: { emoji: '🐻', name: '곰', ref: '이사야 11:7', text: '암소와 곰이 함께 먹으며 그것들의 새끼가 함께 엎드리며 사자가 소처럼 풀을 먹을 것이며' },
+    leopard: { emoji: '🐆', name: '표범', ref: '이사야 11:6', text: '그 때에 이리가 어린 양과 함께 살며 표범이 어린 염소와 함께 누우며 송아지와 어린 사자와 살진 짐승이 함께 있어 어린 아이에게 끌리며' }
+  });
+  ['wolf', 'lion', 'bear', 'leopard'].forEach(function (k) { if (CREATURE_KEYS.indexOf(k) < 0) CREATURE_KEYS.push(k); });
+  var MEATS = [RAW_LAMB, RAW_GOAT, RAW_BEEF, RAW_CHICKEN, RAW_FISH, COOKED_LAMB, COOKED_GOAT, COOKED_BEEF, COOKED_CHICKEN, COOKED_FISH];
+  var PREY = { sheep: 1, goat: 1, chicken: 1, rabbit: 1 };
+  // 어느 땅에 어떤 맹수: 요단 수풀의 사자(렘 49:19), 레바논·헤르몬 산의 표범·사자(아 4:8), 숲·눈 땅의 곰, 들·광야의 이리
+  var WILD_REG = { jordan: ['lion', 'wolf'], wild: ['wolf', 'wolf', 'leopard', 'lion'], cedar: ['bear', 'leopard', 'wolf'], hermon: ['leopard', 'bear', 'lion'], taiga: ['bear', 'wolf', 'wolf'], snow: ['bear', 'wolf'],
+    meadow: ['wolf'], sinai: ['leopard', 'lion'], ararat: ['bear', 'wolf'], west: ['wolf', 'bear'], galilee: ['wolf'] };
+  function tameFood(a, id) {
+    if (!id) return false;
+    if (a.sp.pred) return MEATS.indexOf(id) >= 0;
+    if (a.kind === 'chicken' || a.kind === 'frog') return id === SEED;
+    return id === WHEAT;
+  }
+  function isWild(a) { return a.sp && a.sp.pred && !a.tamed; }
+  function wildSpawn(cx, cz, x0, z0, reg) {
+    var list = WILD_REG[reg]; if (!list) return;
+    if (hash2(cx, cz, 61) > 0.05) return;
+    var nWild = 0; for (var i = 0; i < animals.length; i++) if (isWild(animals[i])) nWild++;
+    if (nWild >= 6) return;
+    var kn = list[Math.floor(hash2(cx, cz, 62) * list.length)], n = kn === 'wolf' ? 2 + Math.floor(hash2(cx, cz, 63) * 2) : 1;
+    for (i = 0; i < n; i++) {
+      var hx = x0 + 6 + hash2(cx + i, cz, 64) * 20, hz = z0 + 6 + hash2(cx, cz + i, 65) * 20;
+      if (inTown(hx | 0, hz | 0) || safeZone(hx | 0, hz | 0)) continue;
+      var gy = groundAt(hx, hz, SY - 3); if (gy === null) continue;
+      terrain(hx | 0, hz | 0); if (gy !== T.h + 1 || T.wtop >= 0 || inCity(hx | 0, hz | 0) || farCityAt(hx | 0, hz | 0, 8)) continue;
+      if (Math.hypot(hx - P.x, hz - P.z) < 28) continue;   // 눈앞에서 갑자기 생기지 않게
+      animals.push(makeBeast(kn, hx, hz));
+    }
+  }
+  // 맹수가 들어가면 안 되는 곳(마을·땅 칸·집 둘레·방주 등) — stepBeast에서 막음
+  function wildSafe(x, z) { return inTown(x | 0, z | 0) || safeZone(x | 0, z | 0); }
+  function wildBlocked(a, x, z) { return isWild(a) && wildSafe(x, z) && !wildSafe(a.x, a.z); }   // 들어가는 것만 막음(이미 안에 있으면 나갈 수 있게)
+  // 11/24 울타리·닫힌 울타리 문은 짐승이 넘지 못함(마인크래프트처럼) — 어디에 둘러도 우리가 됨
+  function fenceId(id) { var s = SHAPE[id]; return !!s && (s.type === 'fence' || s.type === 'wall' || (s.type === 'gate' && !s.open)); }
+  function penBlocked(a, x, z, gy) {
+    var ix = Math.floor(x), iz = Math.floor(z), fy = Math.floor(a.y + 0.2);
+    if (fenceId(get(ix, fy, iz)) || fenceId(get(ix, fy + 1, iz))) return true;
+    return gy !== null && fenceId(get(ix, gy - 1, iz));
+  }
+  function wildSpeed(a) { return a.chasing ? (a.sp.chase || 1.8) : 1; }
+  // 길들이기 —— 누를 때(먹이·빈손). 처리했으면 true
+  function tameTap(a, held) {
+    if (!a || !a.sp || a.sp.seat && a.saddled) return false;
+    var food = have(held) > 0 && tameFood(a, held);
+    if (a.tamed && !food && (!held || have(held) < 1)) {   // 빈손: 앉아/따라와
+      a.sit = !a.sit; a.mode = 'idle'; a.t = 1; savePets();
+      toast(a.sit ? '「' + a.sp.name + '」이(가) 여기 머물러요 — 울타리 안이면 그 안에서 지내요 (다시 누르면 따라와요)' : '「' + a.sp.name + '」이(가) 나를 따라와요'); animalCall(a.kind); return true;
+    }
+    if (!food) return false;
+    if (a.baby) { deny('새끼는 아직 어려요'); return true; }
+    if (a.tamed) { if (a.sp.pred) { feedAnimal(a, held); return true; } return false; }   // 길든 풀 먹는 짐승은 원래 먹이기(새끼 낳기)로
+    if (!a.sp.pred) {   // 들의 풀 먹는 짐승: 먹이면(원래처럼 새끼 낳을 준비도 하고) 3번에 1번꼴로 길듦
+      if (a.breedAt && Date.now() < a.breedAt) return false;
+      var ok = Math.random() < 1 / 3; feedAnimal(a, held);
+      if (ok) { tameBeast(a); heartAt(a); setTimeout(function () { toast('♥ 「' + a.sp.name + '」을(를) 길들였어요! 나를 따라와요 — 빈손으로 누르면 그 자리(울타리 안)에 머물러요'); }, 1200); }
+      return true;
+    }
+    if (a.chasing && a.target === 'player') { deny('화가 나 있어서 먹지 않아요 — 조금 떨어져 있다가 다시 해 봐요'); return true; }
+    take(held, 1); bagChanged(); animalCall(a.kind);
+    if (Math.random() < 1 / 3) { tameBeast(a); heartAt(a); toast('♥ 「' + a.sp.name + '」을(를) 길들였어요! 나를 따라와요 — 빈손으로 누르면 그 자리(울타리 안)에 머물러요'); unlock('tame');
+      if (!S.tameTold) { S.tameTold = 1; saveSettings(); setTimeout(function () { showVerseCard('🐑', '함께 사는 짐승', CREATURE.leopard.text, '이사야 11:6', '길든 짐승은 나를 따라오고, 빈손으로 누르면 울타리 안에 머물러요. 길든 짐승 둘에게 먹이를 주면 새끼가 태어나요'); }, 900); }
+    } else { sparkle(a.x, a.y + 1.6, a.z, 0x9a9a9a, 6, { size: 0.35, life: 0.7, v: 1.2, up: 1 }); toast('먹었지만 아직 마음을 열지 않았어요 — 한 번 더 먹여 봐요'); }
+    return true;
+  }
+  function tameBeast(a, quiet) {
+    a.tamed = true; a.sit = false; a.chasing = false; a.target = null; a.fleeUntil = 0;
+    if (!a.petTag) { a.petTag = textSprite('♥ ' + a.sp.name, 'rgba(0,0,0,0.35)', '#ffd0dc', 0.42); scene.add(a.petTag); }
+    if (!quiet) savePets();
+  }
+  // 저장: 따라다니는 길든 짐승(앉혀 둔 것도) — 다음에 들어오면 내 곁에 다시 나옴
+  var PETS = [];
+  try { PETS = JSON.parse(localStorage.getItem('arkVillage.pets') || '[]') || []; } catch (e) { PETS = []; }
+  var pendingPets = PETS.slice(), petsT = 0;
+  function savePets() {
+    var a = animals.filter(function (x) { return x.tamed; }).slice(0, 24).map(function (x) { return { k: x.kind, b: x.baby ? 1 : 0, s: x.sit ? 1 : 0, x: Math.round(x.x * 10) / 10, z: Math.round(x.z * 10) / 10 }; });
+    pendingPets.forEach(function (o) { if (a.length < 24) a.push(o); });   // 아직 안 불러온 우리 안 짐승도 잃지 않게
+    PETS = a; try { localStorage.setItem('arkVillage.pets', JSON.stringify(PETS)); } catch (e) {}
+  }
+  function bitePlayer(a) {
+    var why = a.sp.name + '에게 물렸어요';
+    var g = armorGuard(), dmg = Math.round(a.sp.bite * (1 - g)); if (dmg <= 0) { if (vitalsOn()) toast('🛡 갑옷이 막아 주었어요'); } else hurt(dmg, why);
+    var dx = P.x - a.x, dz = P.z - a.z, d = Math.hypot(dx, dz) || 1; P.vx = (P.vx || 0) + dx / d * 6; P.vz = (P.vz || 0) + dz / d * 6;
+    animalCall(a.kind, 1);
+  }
+  function biteBeast(a, v) {
+    if (v.hp === undefined) v.hp = v.baby ? Math.ceil(BEAST_HP[v.kind] / 2) : BEAST_HP[v.kind];
+    var now = performance.now(); if (now < (v.iframeUntil || 0)) return; v.iframeUntil = now + 500;
+    v.hp -= a.sp.bite; hurtTint(v.mesh, 0.4); animalCall(v.kind);
+    if (!v.sp.pred) { v.h = Math.atan2(v.x - a.x, v.z - a.z) + Math.PI; v.mode = 'walk'; v.t = 3; v.fleeUntil = now + 3500; }
+    else if (!v.tamed) { v.chasing = true; v.target = a; }
+    if (v.hp <= 0) { var i = animals.indexOf(v); if (i >= 0) animals.splice(i, 1); beastDie(v); if (v.petTag) { disposeSprite(v.petTag); v.petTag = null; } if (v.tamed) { toast('「' + v.sp.name + '」이(가) 쓰러졌어요'); savePets(); } }
+  }
+  // 맹수·길든 짐승의 생각(0.4초마다) + 이동 방향 정하기
+  var wildT = 0, wildSeen = {};
+  function wildTick(dt) {
+    if (pendingPets.length && started) pendingPets = pendingPets.filter(function (o, i) {
+      var x = P.x + 2 + (i % 4), z = P.z + 2 + ((i / 4) | 0);
+      if (o.s) { if (!colAt(o.x | 0, o.z | 0) || Math.hypot(o.x - P.x, o.z - P.z) > 120) return true; x = o.x; z = o.z; }   // 앉혀 둔 짐승은 그 자리(우리 안)에서 기다림
+      if (!colAt(x | 0, z | 0) || groundAt(x, z, SY - 3) === null) return true;
+      var a = makeBeast(o.k, x, z); if (o.b) { a.baby = true; a.growAt = Date.now() + 120000; a.mesh.scale.setScalar(0.55); } tameBeast(a, true); a.sit = !!o.s; animals.push(a); return false;
+    });
+    var now = performance.now();
+    for (var i = 0; i < animals.length; i++) {
+      var a = animals[i];
+      if (a.petTag) { a.petTag.position.set(a.x, a.y + (CR_R[a.kind] || 1.2) * 1.8 + 0.6, a.z); a.petTag.visible = a.mesh.visible && Math.hypot(a.x - P.x, a.z - P.z) < 14; }
+      if (a.cool > 0) a.cool -= dt;
+    }
+    wildT -= dt; if (wildT > 0) return; wildT = 0.4;
+    var safeMe = safeZone(Math.floor(P.x), Math.floor(P.z)) || inTown(Math.floor(P.x), Math.floor(P.z)), alive = ui === 'play' && !furnitureRest;
+    animals.forEach(function (a) {
+      if (!a.sp) return;
+      var dP = Math.hypot(a.x - P.x, a.z - P.z), tgt = null;
+      if (a.tamed) {
+        if (a.sit || a === riding || a.saddled) return;
+        // 길든 맹수: 주인 곁 그림자나 주인을 노리는 맹수와 싸움
+        if (a.sp.pred && !a.baby) {
+          var best = null, bd = 10;
+          SHADOWS.forEach(function (s) { if (s.dead) return; var d = Math.hypot(s.x - P.x, s.z - P.z); if (d < bd) { bd = d; best = { sh: s }; } });
+          animals.forEach(function (b) { if (b !== a && isWild(b) && b.chasing && b.target === 'player') { var d = Math.hypot(b.x - P.x, b.z - P.z); if (d < bd) { bd = d; best = { a: b }; } } });
+          if (best) tgt = best.sh ? { x: best.sh.x, z: best.sh.z, sh: best.sh } : { x: best.a.x, z: best.a.z, a: best.a };
+        }
+        if (tgt) {
+          var dt2 = Math.hypot(tgt.x - a.x, tgt.z - a.z); a.chasing = true; a.h = Math.atan2(-(tgt.x - a.x), -(tgt.z - a.z)); a.mode = 'walk'; a.t = 0.6;
+          if (dt2 < 2.2 && !(a.cool > 0)) { a.cool = 1.0; if (tgt.sh) hitShadow(tgt.sh, a.sp.bite); else biteBeast(a, tgt.a); }
+          return;
+        }
+        a.chasing = dP > 9;
+        if (dP > 40) { var gy = groundAt(P.x + 1.5, P.z + 1.5, P.y + 3); if (gy !== null) { a.x = P.x + 1.5; a.z = P.z + 1.5; a.y = a.ty = gy; } return; }
+        if (dP > 5) { a.h = Math.atan2(-(P.x - a.x), -(P.z - a.z)); a.mode = 'walk'; a.t = 0.6; a.luredUntil = Date.now() + 1500; }
+        else if (a.mode === 'walk' && dP < 3.5) { a.mode = 'idle'; a.t = 1.5; }
+        return;
+      }
+      if (!a.sp.pred || a.baby) return;
+      // 야생 맹수
+      if (a.target === 'player' && (!alive || safeMe || dP > 22)) { a.chasing = false; a.target = null; }
+      if (a.target && a.target !== 'player' && (animals.indexOf(a.target) < 0 || Math.hypot(a.target.x - a.x, a.target.z - a.z) > 20)) { a.chasing = false; a.target = null; }
+      if (!a.target && alive && !safeMe) {
+        if (a.angryUntil > now && dP < 22) a.target = 'player';
+        else if (a.sp.pred === 'fierce' && dP < 7) a.target = 'player';
+      }
+      if (!a.target && a.sp.pred === 'hunt') {   // 이리: 들에 사는(길들지 않은) 양·염소·닭·토끼
+        var prey = null, pd = 12; animals.forEach(function (b) { if (PREY[b.kind] && !b.tamed && !b.kept && !b.herd && b !== lostSheep) { var d = Math.hypot(b.x - a.x, b.z - a.z); if (d < pd) { pd = d; prey = b; } } });
+        if (prey) a.target = prey;
+      }
+      if (!a.target) { a.chasing = false; return; }
+      if (a.target === 'player' && !wildSeen[a.kind] && !DEX['c' + a.kind]) { wildSeen[a.kind] = 1; showCard(a.kind); }
+      var tx = a.target === 'player' ? P.x : a.target.x, tz = a.target === 'player' ? P.z : a.target.z, d = Math.hypot(tx - a.x, tz - a.z);
+      a.chasing = true; a.h = Math.atan2(-(tx - a.x), -(tz - a.z)); a.mode = d < 1.6 ? 'idle' : 'walk'; a.t = 0.6;
+      if (d < 2.1 && !(a.cool > 0)) { a.cool = 1.6; if (a.target === 'player') bitePlayer(a); else biteBeast(a, a.target); }
+    });
+    petsT -= 0.4; if (petsT <= 0) { petsT = 6; if (animals.some(function (x) { return x.tamed; })) savePets(); }
+  }
+  if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__arkWild = { tameTap: tameTap, tameBeast: tameBeast, savePets: savePets, pets: function () { return PETS; }, animals: function () { return animals; }, wildSpawn: wildSpawn, setSel: function (id) { HOTBAR[sel] = id; } };
   // ════════ 2026-11-24 먼 나라·먼 땅·장사하는 사람 ════════
   // 전도사님: 「사막, 늪, 설산, 아라랏 산, 다른 민족(바벨론, 앗수르 등), 주민 등등도… 주민들이 물건도 팔고」
   //           「다른 도시들은 나그네 마을과 멀리 떨어져 있게 해 발견하게 쉽지 않게」

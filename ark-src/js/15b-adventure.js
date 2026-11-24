@@ -31,7 +31,55 @@
     var s = textSprite(t, 'rgba(0,0,0,0)', color, hgt || 0.6); s.position.set(x, y, z); scene.add(s);
     FX.push({ m: s, vx: (Math.random() - 0.5) * 0.6, vy: 1.6, vz: (Math.random() - 0.5) * 0.6, g: 1.2, life: life || 0.9, t: 0, text: true });
   }
+  // 11/24 맞으면 잠깐 붉게(마인크래프트), 죽으면 옆으로 쓰러졌다가 연기처럼 사라짐, 짐승 체력 막대
+  var HURT_MATS = {}, HURTS = [], DYING = [];
+  function hurtTint(mesh, sec) {
+    if (!mesh) return;
+    for (var i = 0; i < HURTS.length; i++) if (HURTS[i].mesh === mesh) { HURTS[i].t = Math.max(HURTS[i].t, sec); return; }
+    var sw = [];
+    mesh.traverse(function (o) {
+      if (!o.isMesh || !o.material || Array.isArray(o.material) || o.isSprite) return;
+      var m0 = o.material, hm = HURT_MATS[m0.uuid];
+      if (!hm) { hm = m0.clone(); if (hm.color) hm.color.setRGB(1, 0.32, 0.32); if (hm.emissive) hm.emissive.setRGB(0.3, 0, 0); HURT_MATS[m0.uuid] = hm; }
+      o.material = hm; sw.push([o, m0]);
+    });
+    HURTS.push({ mesh: mesh, t: sec, sw: sw });
+  }
+  function beastBar(a, max) {
+    if (!a.bar) {
+      var c = document.createElement('canvas'); c.width = 64; c.height = 10;
+      var tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.NearestFilter; tex.magFilter = THREE.NearestFilter;
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, fog: false }));
+      sp.scale.set(1.1, 0.17, 1); sp.renderOrder = 21; scene.add(sp); a.bar = sp; a.barC = c;
+    }
+    var g = a.barC.getContext('2d'), f = Math.max(0, a.hp) / max;
+    g.clearRect(0, 0, 64, 10); g.fillStyle = 'rgba(0,0,0,0.7)'; g.fillRect(0, 0, 64, 10);
+    g.fillStyle = f > 0.5 ? '#7be06a' : (f > 0.25 ? '#ffae4a' : '#ff6a4a'); g.fillRect(2, 2, Math.round(60 * f), 6);
+    a.bar.material.map.needsUpdate = true; a.bar.visible = true; a.barT = 4;
+    if (HURTS.indexOf(a) < 0 && BARS.indexOf(a) < 0) BARS.push(a);
+  }
+  var BARS = [];
+  function beastDie(a) {
+    hurtTint(a.mesh, 0.9);
+    if (a.bar) { a.bar.visible = false; scene.remove(a.bar); a.bar.material.map.dispose(); a.bar.material.dispose(); a.bar = null; }
+    DYING.push({ a: a, t: 0 });
+  }
+  function stepHurts(dt) {
+    if (HURTS.length) HURTS = HURTS.filter(function (h) { h.t -= dt; if (h.t > 0) return true; h.sw.forEach(function (q) { q[0].material = q[1]; }); return false; });
+    if (BARS.length) BARS = BARS.filter(function (a) {
+      if (!a.bar) return false;
+      a.barT -= dt; a.bar.position.set(a.x, a.y + (CR_R[a.kind] || 1.2) * 1.8 + 0.25, a.z);
+      if (animals.indexOf(a) < 0) { scene.remove(a.bar); a.bar.material.map.dispose(); a.bar.material.dispose(); a.bar = null; return false; }
+      if (a.barT <= 0) { a.bar.visible = false; return false; } return true; });
+    if (DYING.length) DYING = DYING.filter(function (d) {
+      d.t += dt; var a = d.a, k = Math.min(1, d.t / 0.35);
+      a.mesh.rotation.z = k * k * Math.PI / 2; a.mesh.position.y = a.y + k * 0.3;
+      if (d.t < 0.9) return true;
+      scene.remove(a.mesh); sparkle(a.x, a.y + 0.8, a.z, 0xe8e0d0, 16, { size: 0.45, life: 0.9, v: 2.6, up: 1.4 });
+      return false; });
+  }
   function stepFx(dt) {
+    stepHurts(dt);
     if (!FX.length) return;
     FX = FX.filter(function (f) {
       f.t += dt; f.vy -= f.g * dt;
