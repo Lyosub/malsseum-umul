@@ -34,6 +34,7 @@ SCROLLS = {
     'judges': 'judges5.js',
     'ruth': 'ruth6.js',
     'saul': 'saul7.js',
+    'david': 'david8.js',
 }
 
 

@@ -10,6 +10,7 @@
     { id: 'judges', no: '5', title: '사사들과 함께', file: 'scrolls/judges5.js', num: 5, needScroll: 'joshua' },
     { id: 'ruth', no: '6', title: '룻과 사무엘', file: 'scrolls/ruth6.js', num: 6, needScroll: 'judges' },
     { id: 'saul', no: '7', title: '사울과 다윗', file: 'scrolls/saul7.js', num: 7, needScroll: 'ruth' },
+    { id: 'david', no: '8', title: '다윗 왕', file: 'scrolls/david8.js', num: 8, needScroll: 'saul' },
     { id: 'devtest', no: 'T', title: '시험 두루마리', file: 'scrolls/devtest.js', dev: true },
   ];
   const SCROLL_DEFS = { moses: { id: 'moses', chapters: CHAPTERS } };
