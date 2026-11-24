@@ -19,6 +19,7 @@
   }
 
   // ───────── 성 짓기 공통 ─────────
+  var FB = G;   // 성 바닥(사람이 서는 높이). 예루살렘처럼 높은 터는 짓는 동안 바꾼다
   var PLASTER = 11, ROOF_TILE = 13, MUDBRICK = 20, LIMESTONE = 21, THATCH = 22, CLOTH_B = 14, CLOTH_Y = 15, CLOTH_G = 17;
   function farGround(c, pave) {   // 성터 비우기 + 바닥
     var m = c.r + 7;
@@ -35,40 +36,41 @@
     fbox(c.x - R, G - 1, c.z - g, c.x - c.r, G - 1, c.z + g, bridge); fbox(c.x + c.r, G - 1, c.z - g, c.x + R, G - 1, c.z + g, bridge);
   }
   function farWalls(c, wall, H, gate, gateH, towerEvery) {
-    var x0 = c.x - c.r, x1 = c.x + c.r, z0 = c.z - c.r, z1 = c.z + c.r, k;
-    fbox(x0, G - 1, z0, x1, G + H, z0 + 2, wall); fbox(x0, G - 1, z1 - 2, x1, G + H, z1, wall);
-    fbox(x0, G - 1, z0, x0 + 2, G + H, z1, wall); fbox(x1 - 2, G - 1, z0, x1, G + H, z1, wall);
-    for (k = x0; k <= x1; k += 2) { setRaw(k, G + H + 1, z0, wall); setRaw(k, G + H + 1, z1, wall); }
-    for (k = z0; k <= z1; k += 2) { setRaw(x0, G + H + 1, k, wall); setRaw(x1, G + H + 1, k, wall); }
-    function tower(tx, tz, s) { fbox(tx - s, G - 1, tz - s, tx + s, G + H + 3, tz + s, wall); for (var q = -s; q <= s; q += 2) { setRaw(tx + q, G + H + 4, tz - s, wall); setRaw(tx + q, G + H + 4, tz + s, wall); setRaw(tx - s, G + H + 4, tz + q, wall); setRaw(tx + s, G + H + 4, tz + q, wall); } }
+    var x0 = c.x - c.r, x1 = c.x + c.r, z0 = c.z - c.r, z1 = c.z + (c.zs || c.r), k;
+    fbox(x0, FB - 1, z0, x1, FB + H, z0 + 2, wall); fbox(x0, FB - 1, z1 - 2, x1, FB + H, z1, wall);
+    fbox(x0, FB - 1, z0, x0 + 2, FB + H, z1, wall); fbox(x1 - 2, FB - 1, z0, x1, FB + H, z1, wall);
+    for (k = x0; k <= x1; k += 2) { setRaw(k, FB + H + 1, z0, wall); setRaw(k, FB + H + 1, z1, wall); }
+    for (k = z0; k <= z1; k += 2) { setRaw(x0, FB + H + 1, k, wall); setRaw(x1, FB + H + 1, k, wall); }
+    function tower(tx, tz, s) { fbox(tx - s, FB - 1, tz - s, tx + s, FB + H + 3, tz + s, wall); for (var q = -s; q <= s; q += 2) { setRaw(tx + q, FB + H + 4, tz - s, wall); setRaw(tx + q, FB + H + 4, tz + s, wall); setRaw(tx - s, FB + H + 4, tz + q, wall); setRaw(tx + s, FB + H + 4, tz + q, wall); } }
     [[x0 + 1, z0 + 1], [x1 - 1, z0 + 1], [x0 + 1, z1 - 1], [x1 - 1, z1 - 1]].forEach(function (q) { tower(q[0], q[1], 3); });
     if (towerEvery) for (k = -c.r + towerEvery; k <= c.r - towerEvery; k += towerEvery) {
       if (Math.abs(k) <= gate + 2) continue;
       tower(c.x + k, z0 + 1, 2); tower(c.x + k, z1 - 1, 2); tower(x0 + 1, c.z + k, 2); tower(x1 - 1, c.z + k, 2);
     }
+    if (towerEvery && c.zs) for (k = c.r; k <= c.zs - towerEvery; k += towerEvery) { tower(x0 + 1, c.z + k, 2); tower(x1 - 1, c.z + k, 2); }
     var g = gate >> 1;
-    fbox(c.x - g, G, z0, c.x + g, G + gateH - 1, z0 + 2, AIR); fbox(c.x - g, G, z1 - 2, c.x + g, G + gateH - 1, z1, AIR);
-    fbox(x0, G, c.z - g, x0 + 2, G + gateH - 1, c.z + g, AIR); fbox(x1 - 2, G, c.z - g, x1, G + gateH - 1, c.z + g, AIR);
+    fbox(c.x - g, FB, z0, c.x + g, FB + gateH - 1, z0 + 2, AIR); fbox(c.x - g, FB, z1 - 2, c.x + g, FB + gateH - 1, z1, AIR);
+    fbox(x0, FB, c.z - g, x0 + 2, FB + gateH - 1, c.z + g, AIR); fbox(x1 - 2, FB, c.z - g, x1, FB + gateH - 1, c.z + g, AIR);
     // 성벽 위로 오르는 돌계단(문 안쪽 오른편) — 높은 곳에서 성을 내려다보게
-    for (k = 0; k <= H; k++) fbox(c.x + g + 3 + k, G, z1 - 3, c.x + g + 3 + k, G + k, z1 - 3, wall);
+    for (k = 0; k <= H; k++) fbox(c.x + g + 3 + k, FB, z1 - 3, c.x + g + 3 + k, FB + k, z1 - 3, wall);
   }
   // 집: 바닥 G-1, 벽 h칸, 평평한 지붕. door: 'n'|'s'|'e'|'w'
   function farHouse(x0, z0, w, d, h, wall, roof, door, seed) {
-    var x1 = x0 + w - 1, z1 = z0 + d - 1, top = G + h - 1;
-    fbox(x0, G - 1, z0, x1, G - 1, z1, PATH);
-    fbox(x0, G, z0, x1, top, z1, wall); fbox(x0 + 1, G, z0 + 1, x1 - 1, top - 1, z1 - 1, AIR); fbox(x0, top, z0, x1, top, z1, roof);
+    var x1 = x0 + w - 1, z1 = z0 + d - 1, top = FB + h - 1;
+    fbox(x0, FB - 1, z0, x1, FB - 1, z1, PATH);
+    fbox(x0, FB, z0, x1, top, z1, wall); fbox(x0 + 1, FB, z0 + 1, x1 - 1, top - 1, z1 - 1, AIR); fbox(x0, top, z0, x1, top, z1, roof);
     var mx = (x0 + x1) >> 1, mz = (z0 + z1) >> 1;
-    if (door === 'n') fbox(mx, G, z0, mx + 1, G + 3, z0, AIR); else if (door === 's') fbox(mx, G, z1, mx + 1, G + 3, z1, AIR);
-    else if (door === 'w') fbox(x0, G, mz, x0, G + 3, mz + 1, AIR); else fbox(x1, G, mz, x1, G + 3, mz + 1, AIR);
-    if (door !== 'e' && door !== 'w') { setRaw(x0, G + 2, mz, AIR); setRaw(x1, G + 2, mz, AIR); } else { setRaw(mx, G + 2, z0, AIR); setRaw(mx, G + 2, z1, AIR); }   // 작은 창
-    setRaw(x0 + 1, G, z0 + 1, LAMP); setRaw(x1 - 1, G, z0 + 1, JAR);
-    if (hash2(seed, 3, 81) < 0.5) setRaw(x1 - 1, G, z1 - 1, BED); else setRaw(x1 - 1, G, z1 - 1, CHAIR);
-    if (w > 6 && d > 6) fbox(mx - 1, G, mz - 1, mx, G, mz, CARPET);
+    if (door === 'n') fbox(mx, FB, z0, mx + 1, FB + 3, z0, AIR); else if (door === 's') fbox(mx, FB, z1, mx + 1, FB + 3, z1, AIR);
+    else if (door === 'w') fbox(x0, FB, mz, x0, FB + 3, mz + 1, AIR); else fbox(x1, FB, mz, x1, FB + 3, mz + 1, AIR);
+    if (door !== 'e' && door !== 'w') { setRaw(x0, FB + 2, mz, AIR); setRaw(x1, FB + 2, mz, AIR); } else { setRaw(mx, FB + 2, z0, AIR); setRaw(mx, FB + 2, z1, AIR); }   // 작은 창
+    setRaw(x0 + 1, FB, z0 + 1, LAMP); setRaw(x1 - 1, FB, z0 + 1, JAR);
+    if (hash2(seed, 3, 81) < 0.5) setRaw(x1 - 1, FB, z1 - 1, BED); else setRaw(x1 - 1, FB, z1 - 1, CHAIR);
+    if (w > 6 && d > 6) fbox(mx - 1, FB, mz - 1, mx, FB, mz, CARPET);
   }
   function farStall(x, z, cloth) {   // 장터 가판: 기둥 넷 + 천 지붕 + 뒤쪽 항아리
-    [[-2, -2], [2, -2], [-2, 2], [2, 2]].forEach(function (q) { fbox(x + q[0], G, z + q[1], x + q[0], G + 3, z + q[1], FENCE); });
-    fbox(x - 2, G + 4, z - 2, x + 2, G + 4, z + 2, cloth);
-    setRaw(x - 1, G, z - 2, JAR); setRaw(x + 1, G, z - 2, OIL_JAR);
+    [[-2, -2], [2, -2], [-2, 2], [2, 2]].forEach(function (q) { fbox(x + q[0], FB, z + q[1], x + q[0], FB + 3, z + q[1], FENCE); });
+    fbox(x - 2, FB + 4, z - 2, x + 2, FB + 4, z + 2, cloth);
+    setRaw(x - 1, FB, z - 2, JAR); setRaw(x + 1, FB, z - 2, OIL_JAR);
   }
   // 집 줄: 한 칸 13칸, 집 10칸 — 피할 곳(skip)을 빼고 채운다
   function farHouseGrid(c, wallFn, roof, skip) {
@@ -200,11 +202,14 @@
       return overlap(lx, lz, -19, -55, 19, -22) || overlap(lx, lz, -50, 17, -6, 52) || overlap(lx, lz, 19, -17, 48, 19) || overlap(lx, lz, -24, -16, -15, -7) || overlap(lx, lz, 14, 22, 22, 31);
     });
   }
+  var FAR_BUILD = {};   // 18-israel이 채움
   function buildFarLands(x0, z0) {
     FAR_CITIES.forEach(function (c) {
-      var m = c.r + 8;
+      var m = c.mb || c.r + 8;
       if (x0 + CS <= c.x - m || x0 > c.x + m || z0 + CS <= c.z - m || z0 > c.z + m) return;
-      if (c.k === 'babylon') buildBabylon(c); else if (c.k === 'nineveh') buildNineveh(c); else buildEgypt(c);
+      FB = G;
+      if (c.k === 'babylon') buildBabylon(c); else if (c.k === 'nineveh') buildNineveh(c); else if (c.k === 'egypt') buildEgypt(c); else if (FAR_BUILD[c.k]) FAR_BUILD[c.k](c, x0, z0);
+      FB = G;
     });
     if (x0 + CS > JONAH_X - 5 && x0 <= JONAH_X + 5 && z0 + CS > JONAH_Z - 5 && z0 <= JONAH_Z + 5) buildJonahBooth();
   }
@@ -288,7 +293,8 @@
     swamp: { label: '🐸 갈대 늪', x: SWX, z: SWZ, rumor: '요단 강에서 해 지는 쪽으로 한참 가면, 갈대가 우거지고 개구리가 우는 늪이 있대요.' },
     snow: { label: '❄ 눈 덮인 산', x: SNX, z: SNZ, rumor: '동쪽 큰 숲의 해 지는 쪽 끝에, 늘 눈이 덮인 산이 있대요.' }
   };
-  var FAR_KEYS = ['babylon', 'nineveh', 'egypt', 'swamp', 'snow'];
+  var FAR_KEYS = ['babylon', 'nineveh', 'egypt', 'swamp', 'snow'], ISR_KEYS = [], SPOT_CITY = {};   // ISR_KEYS·SPOT_CITY는 18-israel이 채움
+  function farAll() { return FAR_KEYS.concat(ISR_KEYS); }
   ADVS.push(
     ['far_babylon', '🏛 바벨론 찾기', '아주 먼 큰 강가의 벽돌 성을 찾아요 — 마을 상인에게 소문을 들을 수 있어요', [[GEM_SAPH, 2], [ING_AG, 3]], ['🏛', '바벨론', REGION_INFO.babylon[1], REGION_INFO.babylon[2]]],
     ['far_nineveh', '🏯 니느웨 찾기', '사흘 동안 걸을 만큼 큰 성읍을 찾아요', [[ING_AG, 3], [COOKED_FISH, 4]], ['🏯', '니느웨', REGION_INFO.nineveh[1], REGION_INFO.nineveh[2]]],
@@ -297,9 +303,9 @@
     ['far_snow', '❄ 눈 덮인 산 찾기', '늘 눈이 덮인 산을 찾아요', [[ING_AG, 1], [WOOL, 8]], null],
     ['far_all', '🧭 땅 끝까지', '먼 땅 다섯 곳(바벨론·니느웨·애굽·갈대 늪·눈 덮인 산)을 모두 찾아요', [[GEM_DIA, 1], [ING_AU, 3]], ['🧭', '땅 끝까지', '오직 성령이 너희에게 임하시면 너희가 권능을 받고 예루살렘과 온 유대와 사마리아와 땅 끝까지 이르러 내 증인이 되리라 하시니라', '사도행전 1:8']]
   );
-  function farKey(k) { return k === 'jonah' ? 'nineveh' : k; }
+  function farKey(k) { return k === 'jonah' ? 'nineveh' : (SPOT_CITY[k] || k); }
   function farLabels() {
-    FAR_KEYS.forEach(function (k) {
+    farAll().forEach(function (k) {
       if (!ADV.regions['far_' + k]) return;
       var f = FAR_INFO[k]; if (MAP_LABELS.some(function (l) { return l[0] === f.label; })) return;
       MAP_LABELS.push([f.label, f.x, f.z]);
@@ -308,13 +314,17 @@
   function farTick(k) {
     farLabels();
     k = farKey(k || '');
-    if (FAR_KEYS.indexOf(k) < 0 || ADV.regions['far_' + k]) return;
+    if (farAll().indexOf(k) < 0 || ADV.regions['far_' + k]) return;
     ADV.regions['far_' + k] = 1; advSave(); farLabels(); newsMark('far1');
     toast('🗺 먼 땅 「' + FAR_INFO[k].label.replace(/^\S+ /, '') + '」을(를) 찾았어요 — 큰 지도에 이름이 생겼어요');
-    setTimeout(function () { advDone('far_' + k); if (FAR_KEYS.every(function (q) { return ADV.regions['far_' + q]; })) setTimeout(function () { advDone('far_all'); }, 7000); }, 6800);
+    setTimeout(function () {
+      advDone('far_' + k);
+      if (FAR_KEYS.every(function (q) { return ADV.regions['far_' + q]; })) setTimeout(function () { advDone('far_all'); }, 7000);
+      if (ISR_KEYS.length && ISR_KEYS.every(function (q) { return ADV.regions['far_' + q]; })) setTimeout(function () { advDone('far_israel'); }, 7000);
+    }, 6800);
   }
   function farRumors(box) {
-    var left = FAR_KEYS.filter(function (k) { return !ADV.regions['far_' + k]; });
+    var left = farAll().filter(function (k) { return !ADV.regions['far_' + k]; });
     if (!left.length) return;
     var h = document.createElement('b'); h.textContent = '📜 먼 땅 소문 (은 덩이 1)'; h.style.cssText = 'display:block;font-size:14px;color:#ffe27a;margin:10px 0 2px'; box.appendChild(h);
     left.forEach(function (k) {

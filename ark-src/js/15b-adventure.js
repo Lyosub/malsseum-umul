@@ -143,7 +143,7 @@
     { k: 'tower', x0: CTX - 6, z0: CTZ - 6, x1: CTX + 6, z1: CTZ + 6, flat: 4 },
     { k: 'tents', x0: TCX - 16, z0: TCZ - 16, x1: TCX + 16, z1: TCZ + 16, flat: 1 },
     { k: 'lot', x0: LOTX - 2, z0: LOTZ - 2, x1: LOTX + 2, z1: LOTZ + 2, flat: 1 }
-  ].concat(FAR_CITIES.map(function (c) { return { k: c.k, x0: c.x - c.r - 4, z0: c.z - c.r - 4, x1: c.x + c.r + 4, z1: c.z + c.r + 4, flat: 0, far: 1 }; }),
+  ].concat(FAR_CITIES.map(function (c) { return { k: c.k, x0: c.x - c.r - 4, z0: c.z - c.r - 4, x1: c.x + c.r + 4, z1: c.z + (c.zs || c.r) + 4, flat: 0, far: 1 }; }),
     [{ k: 'jonah', x0: JONAH_X - 5, z0: JONAH_Z - 5, x1: JONAH_X + 5, z1: JONAH_Z + 5, flat: 0, far: 1 }]);   // 11/24 먼 나라(지켜지는 곳, 짓기는 17-far-lands)
   function landmarkAt(x, z, m) {
     if (!LANDMARKS) return '';
