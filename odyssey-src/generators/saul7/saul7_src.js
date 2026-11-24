@@ -11,12 +11,12 @@
   const cur = () => api.ST.cur === 'saul' && api.ST.sp.saul ? api.ST.sp.saul : null;
   const at = (ch, a = 0, b = 99) => () => { const p = cur(); return !!p && p.ch === ch && !p.cleared && p.step >= a && p.step <= b; };
   const any = (...fs) => () => fs.some(f => f());
-  // 새 인물 3D(GPT 14차 → Meshy)가 오기 전 임시 모델 — 사무엘은 6편 9장과 같은 모델
-  const M_ = { samuel: 'j5-levite-youth', saul: 'j4-spy-1', servant: 'ca-water-boy', kish: 'he-father', uncle: 'he-grandpa', girls: 'he-girl-hb', elders: 'ca-israel-elder',
-    prophets: 'he-levite', people: 'he-brickmaker', nahash: 'j5-midianite', messenger: 'ca-horn-blower', jonathan: 'j4-spy-2', armor: 'he-boy-hb',
-    david: 'shepherd-boy', davidY: 's7-david-young', jesse: 'he-grandpa', eliab: 'he-father', goliath: 'j5-philistine-lord', shield: 'j5-midianite', michal: 'r6-orpah', women: 'ca-singer-f', arrowBoy: 'ca-water-boy',
-    ahimelech: 'he-levite', abishai: 'he-boy-hb', abner: 'j5-midianite', nabal: 'he-father', abigail: 'r6-hannah', nabalboy: 'ca-water-boy', abiathar: 'he-levite', egyptian: 'ca-water-boy', jabesh: 'he-brickmaker' };
-  const TALL = 1.12;   // "키는 모든 백성보다 어깨 위만큼 더 컸더라"(삼상 9:2, 10:23)
+  // 인물 모델 — 11/24 GPT 14차 원화를 Meshy 3D로 교체(사울은 1·2부 젊은 왕, 3부부터 늙은 왕). 나머지(사환·장로 등)는 기존 공용 모델
+  const M_ = { samuel: 's7-samuel-old', saul: 's7-saul-young', saulOld: 's7-saul-old', servant: 'ca-water-boy', kish: 'he-father', uncle: 'he-grandpa', girls: 'he-girl-hb', elders: 'ca-israel-elder',
+    prophets: 'he-levite', people: 'he-brickmaker', nahash: 'j5-midianite', messenger: 'ca-horn-blower', jonathan: 's7-jonathan', armor: 's7-armor-bearer',
+    david: 's7-david-boy', davidY: 's7-david-young', jesse: 's7-jesse', eliab: 's7-eliab', goliath: 's7-goliath', shield: 'j5-midianite', michal: 's7-michal', women: 'ca-singer-f', arrowBoy: 'ca-water-boy',
+    ahimelech: 's7-ahimelech', abishai: 's7-abishai', abner: 'j5-midianite', nabal: 's7-nabal', abigail: 's7-abigail', nabalboy: 'ca-water-boy', abiathar: 'he-levite', egyptian: 's7-egyptian-boy', jabesh: 'he-brickmaker' };
+  const TALL = 1.03;   // 11/24 사울 모델을 키 1.9m로 리깅했으므로 조금만 더 키움 —   // "키는 모든 백성보다 어깨 위만큼 더 컸더라"(삼상 9:2, 10:23)
 
   // ── 자리 ──
   const RAMAH = [-30, 22];                                                                                   // 실로와 세겜: 라마(6편과 같은 자리)
@@ -147,16 +147,16 @@
   V_(ZBe, 'sl_david_b', JHOUSE, '다윗', M_.david, 'slDavidB', 0, 4.4);
   // 9장 들 → 기브아 사울의 집
   L_(ZBe, 'sl_flock', SHEEP, '들의 양 떼', 'slFlock', -2, 2);
-  V_(ZG, 'sl_saul16', KISH, '사울', M_.saul, 'slSaul16', 4.6, 1, { scale: TALL });
+  V_(ZG, 'sl_saul16', KISH, '사울', M_.saulOld, 'slSaul16', 4.6, 1, { scale: TALL });
   V_(ZG, 'sl_david_harp', KISH, '수금을 든 다윗', M_.david, 'slHarp', 1.4, 4.6);
   // 10장 엘라 골짜기 · 베들레헴
   L_(ZP, 'sl_elah', ELAHV, '엘라 골짜기 — 양편 산 사이', 'slElahV');
-  V_(ZP, 'sl_goliath', GOL, '골리앗', M_.goliath, 'slGol', 0, 0, { scale: 1.75 });
+  V_(ZP, 'sl_goliath', GOL, '골리앗', M_.goliath, 'slGol', 0, 0, { scale: 1.1 });
   V_(ZP, 'sl_shield', GOL, '방패 든 자', M_.shield, 'slGol', 3, 1.4);
   V_(ZBe, 'sl_jesse17', JHOUSE, '이새', M_.jesse, 'slJesse17', 2, 2.4);
   V_(ZP, 'sl_eliab', ISRAEL, '큰형 엘리압', M_.eliab, 'slEliab', -5, 1);
   V_(ZP, 'sl_people17', ISRAEL, '이스라엘 사람들', M_.people, 'slCamp17', -6, -2.4);
-  V_(ZP, 'sl_saul17', ISRAEL, '왕 사울', M_.saul, 'slSaul17', -1, -3, { scale: TALL });
+  V_(ZP, 'sl_saul17', ISRAEL, '왕 사울', M_.saulOld, 'slSaul17', -1, -3, { scale: TALL });
   L_(ZP, 'sl_brook', BROOK, '시내 — 매끄러운 돌', 'slStones', 1.6, 0);
   V_(ZP, 'sl_david_v', GOL, '다윗', M_.david, 'slDavidV', 7, 0.6);
   // 11장 기브아
@@ -165,7 +165,7 @@
   L_(ZG, 'sl_women', SEARCH, '길 — 노래하며 나오는 여인들', 'slWomen');
   V_(ZG, 'sl_women1', SEARCH, '여인들', M_.women, 'slWomen', 2.4, -1.2);
   V_(ZG, 'sl_women2', SEARCH, '여인들', M_.women, 'slWomen', 3.6, 1.2);
-  V_(ZG, 'sl_saul18', KISH, '창을 든 사울', M_.saul, 'slSaul18', 4.6, 1, { scale: TALL });
+  V_(ZG, 'sl_saul18', KISH, '창을 든 사울', M_.saulOld, 'slSaul18', 4.6, 1, { scale: TALL });
   V_(ZG, 'sl_david18h', KISH, '수금을 타는 다윗', M_.david, 'slSaul18', 1.4, 4.6);
   V_(ZG, 'sl_jon19', JONG, '요나단', M_.jonathan, 'slJon19', 0, 0);
   L_(ZG, 'sl_window', DHOUSE, '다윗의 집 — 창', 'slWindow', 2.8, 2);
@@ -173,7 +173,7 @@
   V_(ZG, 'sl_jon20', EZEL, '요나단', M_.jonathan, 'slJon20', 1.8, 0.6);
   V_(ZG, 'sl_david20', EZEL, '다윗', M_.david, 'slJon20', -0.8, 2.2);
   L_(ZG, 'sl_table', KISH, '초하루 식탁 — 빈자리', 'slTable', 3, 3.6);
-  V_(ZG, 'sl_saul20', KISH, '왕 사울', M_.saul, 'slTable', 5.4, 2, { scale: TALL });
+  V_(ZG, 'sl_saul20', KISH, '왕 사울', M_.saulOld, 'slTable', 5.4, 2, { scale: TALL });
   V_(ZG, 'sl_jon21', KISH, '요나단', M_.jonathan, 'slTable', 0.8, 4.8);
   L_(ZG, 'sl_ezel', EZEL, '에셀 바위 곁 — 숨은 곳', 'slEzel', 0, 2.6);
   // 12장 놉 → 유다 광야
@@ -189,7 +189,7 @@
   L_(ZJ, 'sl_maon', MAON, '마온 황무지의 바위', 'slMaon', 0, 4);
   // 13장 엔게디 · 하길라
   L_(ZJ, 'sl_cave', ENGEDI, '들염소 바위 — 양의 우리 곁 굴', 'slCave', 0, 3);
-  V_(ZJ, 'sl_saul24', ENGEDI, '자기 길을 가는 사울', M_.saul, 'slSaul24', 6, 5, { scale: TALL });
+  V_(ZJ, 'sl_saul24', ENGEDI, '자기 길을 가는 사울', M_.saulOld, 'slSaul24', 6, 5, { scale: TALL });
   V_(ZJ, 'sl_david24', ENGEDI, '다윗', M_.davidY, 'slSaul24', 1.4, 3.6);
   L_(ZJ, 'sl_hachilah', HACHILAH, '하길라 산 길 가', 'slHach', 8, -8);
   V_(ZJ, 'sl_abishai', HACHILAH, '아비새', M_.abishai, 'slAbishai', 7, -6);
@@ -841,7 +841,7 @@
     const sprites = (cx, cz, n, col, op, sx, sy, y0, spread) => { for (let i = 0; i < n; i++){ const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: softTex(), color: col, depthWrite: false, transparent: true, opacity: op })); s.position.set(cx + (Math.random() - 0.5) * spread, api.heightAt(cx, cz) + y0 + Math.random() * 3, cz + (Math.random() - 0.5) * spread); s.scale.set(sx, sy, 1); g.add(s); } };
     if (zid === 'shiloh' && (p.ch === 0 || p.ch === 7)) house(RAMAH[0], RAMAH[1], 5, 4);   // 라마의 사무엘의 집(7:17)
     if (zid === 'gibeah'){
-      needProps(['well', 'bull', 'tent-small', 'env-acacia', 'pillar'], 'gibeah');
+      needProps(['well', 'bull', 'tent-small', 'env-acacia', 'pillar', 'harp', 'bow-arrows', 'showbread'], 'gibeah');
       // 기브아: 서쪽 마을 — 기스의 집(9:1), 10:26 "사울도 기브아 자기 집으로"
       [[-28, -4], [-18, -8], [-30, 8], [-14, 12], [-24, 14]].forEach(([x, z]) => house(x, z, 3.6, 3, 0xdcc8a2));
       house(KISH[0], KISH[1] - 3, 4.6, 3.6, 0xd6c098);
@@ -869,22 +869,27 @@
         if (p.step === 4){ if (api.propTemplates.honeycomb) prop('honeycomb', HONEY[0], HONEY[1], 0.5); else put(new THREE.BoxGeometry(0.7, 0.3, 0.5), M(0xe0a93a), HONEY[0], 0.15, HONEY[1]); }   // 땅에 꿀이 있더라(14:25)
       }
     }
+    if (zid === 'gibeah' && p.ch === 8) prop('harp', KISH[0] + 2.6, KISH[1] + 4.6, -0.4);   // 다윗이 수금을 들고 와서(16:23)
     if (zid === 'gibeah' && p.ch === 8 && !harpEased) sprites(KISH[0] + 4.6, KISH[1] + 1, 5, 0x3a3648, 0.4, 1.6, 1.6, 1.4, 2.4);   // 16:14 사울을 번뇌하게 한지라 — 수금 뒤 옅어짐(16:23)
     if (zid === 'gibeah' && p.ch === 10){
       if (p.step === 6){ put(new THREE.BoxGeometry(4.2, 0.8, 1.8), M(0xa8865c), KISH[0] + 3, 0.4, KISH[1] + 2); obst(KISH[0] + 3, KISH[1] + 2, 1.6); }   // 초하루 식탁(20:24-25)
       put(new THREE.DodecahedronGeometry(1.7), M(0xa89a80), EZEL[0], 1.2, EZEL[1]); obst(EZEL[0], EZEL[1], 1.6);   // 에셀 바위(20:19)
+      prop('bow-arrows', JONG[0] + 1.6, JONG[1] - 1, 0.8);   // 요나단의 활과 화살(20:20)
     }
     if (zid === 'bethlehem' && (p.ch === 7 || p.ch === 8 || p.ch === 9)){
-      needProps(['lamb', 'env-acacia'], 'bethlehem');
+      needProps(['lamb', 'env-acacia', 'oil-horn'], 'bethlehem');
       [[-14, -24], [-6, -30], [4, -30], [10, -22], [-10, -24], [16, -28], [-2, -20]].forEach(([x, z]) => house(x, z, 3.6, 3, 0xdcc8a2));   // 성읍(6편과 같은 자리)
       put(new THREE.BoxGeometry(1.4, 4, 4), M(0xcdb896), BGATE8[0] - 2.6, 2, BGATE8[1]); put(new THREE.BoxGeometry(1.4, 4, 4), M(0xcdb896), BGATE8[0] + 2.6, 2, BGATE8[1]); put(new THREE.BoxGeometry(6.6, 0.8, 4.2), M(0xcdb896), BGATE8[0], 4.2, BGATE8[1]);
       obst(BGATE8[0] - 2.6, BGATE8[1], 1.8); obst(BGATE8[0] + 2.6, BGATE8[1], 1.8);
       prop('env-acacia', BGATE8[0] - 8, BGATE8[1] + 4, 0.4);
       [[-5, -2], [-3, 3], [0, 4], [3, 2.6], [6, -1], [-1, -4], [4, -4.4]].forEach(([dx, dz], i) => prop('lamb', SHEEP[0] + dx, SHEEP[1] + dz, i * 0.9));   // 양을 지키나이다(16:11)
       if (oil16 || (p.ch === 7 && p.step >= 5)) sprites(JHOUSE[0], JHOUSE[1] + 4.4, 3, 0xffe2a0, 0.35, 1.2, 1.2, 2.2, 1);
+      if (p.ch === 7) prop('oil-horn', JHOUSE[0] - 1.8, JHOUSE[1] + 3.2, 0.6);   // 사무엘이 기름 뿔을 가지고(16:13)
     }
     if (zid === 'philistia' && p.ch === 9){
-      needProps(['tent-small', 'tent-mid', 'env-rock-hill'], 'philistia');
+      needProps(['tent-small', 'tent-mid', 'env-rock-hill', 'saul-armor', 'sling-five-stones', 'shepherd-bag'], 'philistia');
+      prop('saul-armor', ISRAEL[0] + 2.4, ISRAEL[1] - 3, -0.6);   // 사울이 자기 군복을 다윗에게 입히고(17:38) — 다윗이 벗음(17:39)
+      prop('sling-five-stones', BROOK[0] + 1.8, BROOK[1] + 2, 0.3); prop('shepherd-bag', BROOK[0] + 2.4, BROOK[1] + 1.2, 1.2);   // 시내에서 매끄러운 돌 다섯을 골라 목자의 제구 곧 주머니에 넣고(17:40)
       prop('env-rock-hill', 38, 22, 0.4); prop('env-rock-hill', -36, 22, 1.6); prop('env-rock-hill', -36, -10, 2.4); obst(38, 22, 4); obst(-36, 22, 4); obst(-36, -10, 4);   // 양편 산(17:3)
       [[32, 14], [24, 16], [32, 6], [28, -2]].forEach(([x, z], i) => prop(i % 2 ? 'tent-small' : 'tent-mid', x, z, i * 1.1));   // 이스라엘 진영(17:2)
       [[PHILC[0], PHILC[1]], [PHILC[0] - 4, PHILC[1] + 5], [PHILC[0] + 1, PHILC[1] - 6]].forEach(([x, z], i) => prop(i % 2 ? 'tent-small' : 'tent-mid', x, z, 1 + i));   // 블레셋 진영(17:1)
@@ -892,10 +897,10 @@
       if (golDown) sprites(GOL[0], GOL[1], 7, 0xb8a890, 0.42, 3.4, 2.6, 1.6, 8);   // 17:49 뒤 — 먼지만 멀리
     }
     if (zid === 'gibeah' && p.ch === 11 && p.step === 0){   // 놉(21:1) — 제사장들의 성읍(22:19)
-      house(NOB[0] - 1, NOB[1] - 4, 4.4, 3.4, 0xdcc8a2); house(NOB[0] + 5, NOB[1] - 2, 3.2, 2.8, 0xd8c4a0); put(new THREE.BoxGeometry(1.2, 0.9, 0.7), M(0xc8b28c), NOB[0] + 0.4, 0.45, NOB[1] - 1.6);   // 떡 놓는 상
+      house(NOB[0] - 1, NOB[1] - 4, 4.4, 3.4, 0xdcc8a2); house(NOB[0] + 5, NOB[1] - 2, 3.2, 2.8, 0xd8c4a0); put(new THREE.BoxGeometry(1.2, 0.9, 0.7), M(0xc8b28c), NOB[0] + 0.4, 0.45, NOB[1] - 1.6); prop('showbread', NOB[0] + 0.4, NOB[1] - 1.6, 0, 0.9);   // 떡 놓는 상과 진설병(21:6)
     }
     if (zid === 'judah'){
-      needProps(['env-rock-hill', 'env-acacia', 'tent-small', 'tent-mid', 'lamb', 'jars', 'crates-sacks'], 'judah');
+      needProps(['env-rock-hill', 'env-acacia', 'tent-small', 'tent-mid', 'lamb', 'jars', 'crates-sacks', 'saul-spear', 'water-jug', 'abigail-gifts'], 'judah');
       const cave = (x, z) => { prop('env-rock-hill', x, z - 4, 0.5); obst(x, z - 4, 3.6); put(new THREE.BoxGeometry(2.6, 2.1, 0.5), M(0x2a2420), x, 1.05, z - 1.4); put(new THREE.BoxGeometry(3.4, 0.6, 0.8), M(0x8a7c64), x, 2.3, z - 1.3); };
       cave(ADULLAM[0], ADULLAM[1]);                                                                              // 아둘람 굴(22:1)
       [[-3, -3], [3, -2], [-1, 3.4], [5, 2.4]].forEach(([dx, dz], i) => prop('env-acacia', HERETH[0] + dx, HERETH[1] + dz, i * 1.3));   // 헤렛 수풀(22:5)
@@ -905,13 +910,13 @@
       cave(ENGEDI[0], ENGEDI[1]); [[-3, 3], [-4.6, 1], [3, 2.4], [4.4, 0.4]].forEach(([dx, dz], i) => prop('lamb', ENGEDI[0] + dx, ENGEDI[1] + dz, i));   // 길 가 양의 우리 곁 굴(24:3)
       if (p.ch === 12){   // 하길라 산 길 가의 진영(26:3-7)
         [[-6, -3], [6, -3], [-6, 5], [6, 5], [0, -6]].forEach(([dx, dz], i) => prop(i % 2 ? 'tent-small' : 'tent-mid', HACHILAH[0] + dx, HACHILAH[1] + dz, i * 1.2));
-        if (p.step <= 3){ const sp = put(new THREE.CylinderGeometry(0.05, 0.05, 2.4, 6), M(0x7a6448), HACHILAH[0], 1.2, HACHILAH[1]); sp.rotation.z = 0.08; prop('jars', HACHILAH[0] + 0.7, HACHILAH[1] + 0.5, 0.3); }   // 머리 곁 땅에 꽂힌 창과 물병(26:7)
+        if (p.step <= 3){ if (!prop('saul-spear', HACHILAH[0], HACHILAH[1], 0.3)){ const sp = put(new THREE.CylinderGeometry(0.05, 0.05, 2.4, 6), M(0x7a6448), HACHILAH[0], 1.2, HACHILAH[1]); sp.rotation.z = 0.08; } if (!prop('water-jug', HACHILAH[0] + 0.8, HACHILAH[1] + 0.5, 0.3)) prop('jars', HACHILAH[0] + 0.7, HACHILAH[1] + 0.5, 0.3); }   // 머리 곁 땅에 꽂힌 창과 물병(26:7)
         prop('env-rock-hill', FARPK[0] - 3, FARPK[1] + 3, 0.8);
       }
       if (p.ch === 13){   // 갈멜 — 양 삼천 마리(25:2)
         house(CARMEL[0], CARMEL[1] - 3, 5, 4, 0xd6c098); house(CARMEL[0] + 6, CARMEL[1] - 1, 3.4, 3, 0xdcc8a2);
         [[-7, 4], [-4, 6], [-1, 4.6], [2, 6.4], [5, 5], [8, 6], [-5, 2.6], [3, 2.6]].forEach(([dx, dz], i) => prop('lamb', CARMEL[0] + dx, CARMEL[1] + dz, i * 0.8));
-        if (p.step >= 2) prop('crates-sacks', CARMEL[0] - 7, CARMEL[1] - 3, 0.5);
+        if (p.step >= 2 && !prop('abigail-gifts', CARMEL[0] - 7, CARMEL[1] - 3, 0.5)) prop('crates-sacks', CARMEL[0] - 7, CARMEL[1] - 3, 0.5);   // 떡 이백 덩이·포도주 두 가죽 부대…(25:18)
       }
     }
     if (zid === 'philistia' && p.ch === 14){
@@ -936,9 +941,10 @@
       }
     }
     if (zid === 'gibeon' && p.ch === 1 && p.step >= 9){
-      needProps(['tent-small', 'tent-mid', 'crates-sacks', 'pilgrim-bundle'], 'gibeon');
+      needProps(['tent-small', 'tent-mid', 'crates-sacks', 'pilgrim-bundle', 'baggage-pile'], 'gibeon');
       [[-4, 2], [3, 4], [-1, -4], [6, -2]].forEach(([dx, dz], i) => prop(i % 2 ? 'tent-small' : 'tent-mid', MIZ7[0] + dx, MIZ7[1] + dz, i * 1.3));   // 미스바에 모임(10:17)
-      [[0, 0], [1.6, 0.8], [-1.4, 1], [0.6, -1.4], [-0.8, -1.2], [2.2, -0.8]].forEach(([dx, dz], i) => prop(i % 2 ? 'pilgrim-bundle' : 'crates-sacks', BAGS[0] + dx, BAGS[1] + dz, i * 1.1));   // 짐보따리들(10:22)
+      if (!prop('baggage-pile', BAGS[0], BAGS[1], 0.4)) [[0, 0], [1.6, 0.8], [-1.4, 1], [0.6, -1.4], [-0.8, -1.2], [2.2, -0.8]].forEach(([dx, dz], i) => prop(i % 2 ? 'pilgrim-bundle' : 'crates-sacks', BAGS[0] + dx, BAGS[1] + dz, i * 1.1));   // 짐보따리들(10:22)
+      else { prop('crates-sacks', BAGS[0] + 2.2, BAGS[1] - 0.8, 1.1); prop('pilgrim-bundle', BAGS[0] - 1.6, BAGS[1] + 1, 2.2); }
     }
     if (zid === 'moab' && (p.ch === 2 || p.ch === 15)){
       needProps(['tent-cluster', 'tent-mid', 'env-acacia'], 'moab');

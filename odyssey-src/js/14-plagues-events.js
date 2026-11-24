@@ -331,6 +331,19 @@
     'lamp': { h: 0.4, occ: false, shape: 'none', src: 'story3d/lamp.glb' },
     'ebenezer-stone': { h: 1.8, occ: false, shape: 'none', src: 'story3d/ebenezer-stone.glb' },
     'ebenezer-stone-sm': { h: 0.5, occ: false, shape: 'none', src: 'story3d/ebenezer-stone.glb' },
+    // 7편 「사울과 다윗」 동물·소품(GPT 14차 원화 → Meshy, 2026-11-24)
+    'bear': { h: 1.3, occ: false, shape: 'none', src: 'animals3d/bear.glb' },
+    'harp': { h: 0.8, occ: false, shape: 'none', src: 'story3d/harp.glb' },
+    'sling-five-stones': { h: 0.12, occ: false, shape: 'none', src: 'story3d/sling-five-stones.glb' },
+    'shepherd-bag': { h: 0.45, occ: false, shape: 'none', src: 'story3d/shepherd-bag.glb' },
+    'oil-horn': { h: 0.35, occ: false, shape: 'none', src: 'story3d/oil-horn.glb' },
+    'saul-armor': { h: 1.7, occ: false, shape: 'none', src: 'story3d/saul-armor.glb' },
+    'saul-spear': { h: 2.4, occ: false, shape: 'none', src: 'story3d/saul-spear.glb' },
+    'water-jug': { h: 0.5, occ: false, shape: 'none', src: 'story3d/water-jug.glb' },
+    'showbread': { h: 0.3, occ: false, shape: 'none', src: 'story3d/showbread.glb' },
+    'bow-arrows': { h: 0.25, occ: false, shape: 'none', src: 'story3d/bow-arrows.glb' },
+    'abigail-gifts': { h: 0.9, occ: false, shape: 'none', src: 'story3d/abigail-gifts.glb' },
+    'baggage-pile': { h: 1.4, occ: false, shape: 'none', src: 'story3d/baggage-pile.glb' },
   });
   const CALF = [-4, -4], ARK_WORK = [11, -7.5], TENT_MEET = [-28, -12];
   const TAB = { x0: -10, x1: 0, z: -15, hw: 2, h: 3.2, court: [-13, 13, -21, -9] };
