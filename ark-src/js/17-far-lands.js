@@ -287,11 +287,11 @@
 
   // ───────── 찾기: 처음 밟으면 지도 이름 + 모험 보상, 마을 상인의 소문 ─────────
   var FAR_INFO = {
-    babylon: { label: '🏛 바벨론', x: 3760, z: 2350, rumor: '해 뜨는 쪽 끝까지 가면 큰 강이 있고, 그 강가 평지에 벽돌로 쌓은 성이 있대요. 푸른 문이 북쪽을 바라본대요.' },
-    nineveh: { label: '🏯 니느웨', x: 3812, z: 1650, rumor: '해 뜨는 쪽 끝의 큰 강을 따라 북쪽으로 올라가면, 사흘 동안 걸을 만큼 큰 성읍이 있대요.' },
-    egypt: { label: '🌾 애굽', x: 470, z: 2650, rumor: '시내 산보다 해 지는 쪽으로 더 가면, 강가에 곡식 창고가 가득한 나라가 있대요.' },
-    swamp: { label: '🐸 갈대 늪', x: SWX, z: SWZ, rumor: '요단 강에서 해 지는 쪽으로 한참 가면, 갈대가 우거지고 개구리가 우는 늪이 있대요.' },
-    snow: { label: '❄ 눈 덮인 산', x: SNX, z: SNZ, rumor: '동쪽 큰 숲의 해 지는 쪽 끝에, 늘 눈이 덮인 산이 있대요.' }
+    babylon: { label: '🏛 바벨론', x: farC('babylon').x, z: farC('babylon').z, rumor: '해 뜨는 쪽 끝까지 가면 큰 강이 있고, 그 강가 평지에 벽돌로 쌓은 성이 있대요. 푸른 문이 북쪽을 바라본대요.' },
+    nineveh: { label: '🏯 니느웨', x: farC('nineveh').x, z: farC('nineveh').z, rumor: '해 뜨는 쪽 끝의 큰 강을 따라 북쪽으로 올라가면, 사흘 동안 걸을 만큼 큰 성읍이 있대요.' },
+    egypt: { label: '🌾 애굽', x: farC('egypt').x, z: farC('egypt').z, rumor: '시내 산보다 해 지는 쪽으로 더 가면, 강가에 곡식 창고가 가득한 나라가 있대요.' },
+    swamp: { label: '🐸 갈대 늪', x: WX(SWX), z: WZ(SWZ), rumor: '요단 강에서 해 지는 쪽으로 한참 가면, 갈대가 우거지고 개구리가 우는 늪이 있대요.' },
+    snow: { label: '❄ 눈 덮인 산', x: WX(SNX), z: WZ(SNZ), rumor: '동쪽 큰 숲의 해 지는 쪽 끝에, 늘 눈이 덮인 산이 있대요.' }
   };
   var FAR_KEYS = ['babylon', 'nineveh', 'egypt', 'swamp', 'snow'], ISR_KEYS = [], SPOT_CITY = {};   // ISR_KEYS·SPOT_CITY는 18-israel이 채움
   function farAll() { return FAR_KEYS.concat(ISR_KEYS); }

@@ -1,7 +1,7 @@
   // ───────── 월드(가까운 곳만 그때그때 만든다) ─────────
   // 1블록 = 1규빗(약 45cm), 사람 키 약 3.4칸. 세계는 4096×4096칸(11/20 두 배로 — 예전 땅 0~2047은 그대로), 높이 80칸.
   // 32×32칸 기둥을 내 둘레만 만들어 보여 주고, 멀어지면 지운다. 땅·산·강·숲은 공식으로 만들어서 같은 자리는 언제 가도 똑같다.
-  var WS = 4096, SY = 80, G = 16, CS = 32, NC = WS / CS, CY = Math.ceil(SY / CS);
+  var WS = 8192, SY = 80, G = 16, CS = 32, NC = WS / CS, CY = Math.ceil(SY / CS);
   // 11/20 땅속을 깊게: 바닥이 y 0 → YMIN(-32). 지상 좌표·저장된 자리는 그대로, 기둥 배열만 아래로 늘림(배열 칸 = 좌표 칸 + YOFF)
   var YMIN = -32, SYT = SY - YMIN, YOFF = -YMIN * CS * CS, CYMIN = Math.floor(YMIN / CS);
   var SX = WS, SZ = WS;
@@ -84,21 +84,29 @@
   // 마을(약 1024, 1100)에서 1600~2900칸. 지도 이름·길 안내에 없고, 처음 밟아야 큰 지도에 이름이 생긴다.
   // 동쪽 끝 유브라데 강가: 시날 평지의 바벨론(창 11:2, 시 137:1)과 북쪽 큰 성읍 니느웨(욘 3:3)
   // 서남쪽 끝 나일 강가: 애굽 국고성과 곡식 창고(출 1:11, 창 41:49) · 요단 강 서쪽 갈대 늪(욥 40:21) · 동쪽 큰 숲 서쪽 눈 덮인 산(시 147:16)
+  // 11/25 세계 두 배(4096 → 8192, 전도사님 「더 멀었으면 · 마을끼리도 더 멀게 · 거리 최대한」): 바깥 땅의 설계 좌표(아래 상수들)는 그대로 두고,
+  //   마을(NOX, NOZ)보다 동쪽·남쪽은 NK배로 펼쳐 세계에 놓는다. 땅 모양은 세계 좌표 → 설계 좌표(UX·UZ)로 되돌려 계산하고, 강 폭·성·건물은 세계 칸 그대로.
+  var NK = 2.2, NOX = 1024, NOZ = 950;
+  function WX(u) { return u <= NOX ? u : Math.round(NOX + (u - NOX) * NK); }
+  function WZ(v) { return v <= NOZ ? v : Math.round(NOZ + (v - NOZ) * NK); }
+  function UX(x) { return x <= NOX ? x : NOX + (x - NOX) / NK; }
+  function UZ(z) { return z <= NOZ ? z : NOZ + (z - NOZ) / NK; }
   var FAR_CITIES = [
-    { k: 'babylon', x: 3760, z: 2350, r: 64 },
-    { k: 'nineveh', x: 3812, z: 1650, r: 70 },
-    { k: 'egypt', x: 470, z: 2650, r: 58 },
+    { k: 'babylon', x: WX(3760), z: WZ(2350), r: 64 },
+    { k: 'nineveh', x: WX(3812), z: WZ(1650), r: 70 },
+    { k: 'egypt', x: WX(470), z: WZ(2650), r: 58 },
     // 11/24 이스라엘(전도사님: 「당시를 최대한 복원해서 디테일하게」 · 숨겨서 찾게 · 두 시대를 구역으로 나눠서). y = 땅 맨 위 블록 높이, mb = 짓는 범위
     // 11/25 고증 보강: 솔로몬 궁 단지(왕상 7:1-12)를 본문대로 넣으려고 예루살렘을 남쪽으로 늘림(zs = 남쪽 벽까지), 베들레헴은 그만큼 남쪽으로
-    { k: 'jerusalem', x: 2440, z: 3000, r: 100, zs: 160, y: G + 6, mb: 240 },
-    { k: 'bethlehem', x: 2460, z: 3290, r: 36, y: G + 3, mb: 90 },
+    { k: 'jerusalem', x: WX(2440), z: WZ(3000), r: 100, zs: 160, y: G + 6, mb: 240 },
+    { k: 'bethlehem', x: WX(2460), z: WZ(3290), r: 36, y: G + 3, mb: 90 },
     // 11/25 사마리아 수가(요 4:5) = 오늘의 아스카르, 야곱의 우물에서 1마일쯤(WBC 요한복음 206쪽 · 옥스포드 요한복음 301쪽). 남서쪽 그리심 산, 북쪽 에발 산(신 11:29)
-    { k: 'sychar', x: 2600, z: 2420, r: 30, y: G + 4, mb: 150 },
-    { k: 'nazareth', x: 2440, z: 1800, r: 38, y: G + 5, mb: 50 },
-    { k: 'capernaum', x: 2620, z: 1566, r: 34, y: G - 1, mb: 72 }
+    { k: 'sychar', x: WX(2600), z: WZ(2420), r: 30, y: G + 4, mb: 150 },
+    { k: 'nazareth', x: WX(2440), z: WZ(1800), r: 38, y: G + 5, mb: 50 },
+    { k: 'capernaum', x: WX(2620), z: WZ(1566) + 80, r: 34, y: G - 1, mb: 84 }
   ];
-  var JX = 2440, JZ = 3000;   // 예루살렘 가운데(성 밖 골고다·빈 무덤·겟세마네·감람산·기혼 샘은 이 둘레)
-  var JONAH_X = 3904, JONAH_Z = 1650;   // 요나의 초막: 니느웨 동쪽(욘 4:5)
+  function farC(k) { for (var i = 0; i < FAR_CITIES.length; i++) if (FAR_CITIES[i].k === k) return FAR_CITIES[i]; }
+  var JX = farC('jerusalem').x, JZ = farC('jerusalem').z;   // 예루살렘 가운데(성 밖 골고다·빈 무덤·겟세마네·감람산·기혼 샘은 이 둘레)
+  var JONAH_X = farC('nineveh').x + 110, JONAH_Z = farC('nineveh').z;   // 요나의 초막: 니느웨 동쪽(욘 4:5)
   var SWX = 2330, SWZ = 2480, SWR = 175, SNX = 2560, SNZ = 980, SNR = 240, SHX = 3740, SHZ = 2350, SHR = 330, EGX = 430, EGZ = 2650, EGR = 330;
   var EUPH = [[3690, 1250], [3700, 1560], [3672, 1900], [3628, 2250], [3612, 2600], [3660, 3000], [3630, 3600]];
   var NILE = [[340, 2160], [352, 2500], [326, 2800], [346, 3150], [332, 3600]];
@@ -130,9 +138,9 @@
     }
     return 0;
   }
-  var GERX = 2520, GERZ = 2530, EBX = 2560, EBZ = 2290;   // 그리심 산·에발 산(신 11:29), 수가 둘레
+  var SYC0 = farC('sychar'), GERX = SYC0.x - 80, GERZ = SYC0.z + 110, EBX = SYC0.x - 40, EBZ = SYC0.z - 130;   // 그리심 산·에발 산(신 11:29), 수가 둘레
   function israelBump(x, z) {   // 감람산(행 1:12)·골고다 언덕(요 19:17)·빈 무덤 바위 언덕 · 그리심 산·에발 산
-    if (Math.abs(x - 2540) < 120 && z > 2200 && z < 2620) {
+    if (Math.abs(x - SYC0.x + 60) < 120 && z > SYC0.z - 220 && z < SYC0.z + 200) {
       var dg = Math.hypot(x - GERX, z - GERZ), de = Math.hypot(x - EBX, z - EBZ), sb = 0;
       if (dg < 62) sb += 24 * (1 - dg * dg / (62 * 62));
       if (de < 56) sb += 27 * (1 - de * de / (56 * 56));
@@ -145,26 +153,31 @@
     return b;
   }
   // 11/25 이스라엘 옛길: 예루살렘 남문 → 베들레헴(눅 2:4), 예루살렘 북문 → 라헬의 묘 → 야곱의 우물 → 수가 → 나사렛(요 4:4), 동문 → 감람산 너머 베다니(눅 19:29)
-  var ISR_ROADS = [
-    [[2440, 3163], [2448, 3205], [2458, 3252]],
-    [[2440, 2897], [2446, 2836], [2492, 2700], [2566, 2494], [2600, 2452]],
-    [[2600, 2388], [2624, 2200], [2522, 2000], [2440, 1840]],
-    [[2543, 3000], [2580, 2996], [2600, 3030], [2612, 3054]]
-  ];
+  var ISR_ROADS = (function () {
+    var J = farC('jerusalem'), Bt = farC('bethlehem'), N = farC('nazareth'), S = farC('sychar');
+    function D(u, v) { return [WX(u), WZ(v)]; }
+    return [
+      [[J.x, J.z + 163], [J.x + 8, J.z + 230], D(2452, 3215), [Bt.x - 8, Bt.z - 110], [Bt.x - 2, Bt.z - 38]],
+      [[J.x, J.z - 103], [J.x + 6, J.z - 164], D(2492, 2700), [S.x - 34, S.z + 74], [S.x, S.z + 32]],
+      [[S.x, S.z - 32], D(2624, 2200), D(2522, 2000), [N.x, N.z + 40]],
+      [[J.x + 103, J.z], [J.x + 140, J.z - 4], [J.x + 160, J.z + 30], [J.x + 172, J.z + 54]]
+    ];
+  })();
   var ISR_RB = ISR_ROADS.map(function (L) { var a = [1e9, 1e9, -1e9, -1e9]; L.forEach(function (p) { a[0] = Math.min(a[0], p[0] - 6); a[1] = Math.min(a[1], p[1] - 6); a[2] = Math.max(a[2], p[0] + 6); a[3] = Math.max(a[3], p[1] + 6); }); return a; });
+  var ISR_BB = ISR_RB.reduce(function (a, b) { return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])]; }, [1e9, 1e9, -1e9, -1e9]);
   function isrRoad(x, z) {
-    if (x < 2400 || x > 2660 || z < 1800 || z > 3270) return false;
+    if (x < ISR_BB[0] || x > ISR_BB[2] || z < ISR_BB[1] || z > ISR_BB[3]) return false;
     for (var i = 0; i < ISR_ROADS.length; i++) { var b = ISR_RB[i]; if (x < b[0] || x > b[2] || z < b[1] || z > b[3]) continue; if (lineDist(ISR_ROADS[i], x, z, 2) < 1.8) return !farCityAt(x, z, 1); }
     return false;
   }
   function newWorldW(x, z) { return Math.max(sstep(NW0 + 10, NW0 + 170, x), sstep(NW0 + 10, NW0 + 170, z)); }
   function galE(x, z) { var dx = (x - GALX) / GALRX, dz = (z - GALZ) / GALRZ; return dx * dx + dz * dz; }
   function T_newTop(nt, h) { return nt.top !== GRASS || h >= G; }
-  function newRegion(x, z) {
-    if (x < NW0 + 70 && z < NW0 + 70) return '';
-    var n = (vnoise(x, z, 60, 91) - 0.5) * 60;
+  function newRegion(wx, wz) {
+    if (wx < NW0 + 70 && wz < NW0 + 70) return '';
+    var x = UX(wx), z = UZ(wz), n = (vnoise(wx, wz, 60, 91) - 0.5) * 60;
     if (z > SSEA_Z + n) { var si = sIsleAt(x, z); return si && si[1] > 0.06 ? 'sisle' : 'southsea'; }
-    var fc = farCityAt(x, z, 8); if (fc) return fc.k;   // 11/24 먼 땅
+    var fc = farCityAt(wx, wz, 8); if (fc) return fc.k;   // 11/24 먼 땅(세계 좌표)
     if (Math.hypot(x - SWX, z - SWZ) + n < SWR) return 'swamp';
     if (Math.hypot(x - SNX, z - SNZ) + n < SNR) return 'snow';
     if (Math.hypot(x - SHX, z - SHZ) + n < SHR) return 'shinar';
@@ -172,13 +185,14 @@
     if (galE(x, z) < 1.7) return 'galilee';
     if (Math.hypot(x - HERX, z - HERZ) + n < HERR) return 'hermon';
     if (Math.hypot(x - SINX, z - SINZ) + n < SINR) return 'sinai';
-    if (z > GALZ + 100 && jordanDist(x, z) < 20) return 'jordan';
+    if (z > GALZ + 100 && jordanDist(x, z) * NK < 24) return 'jordan';
     if (x > 2240 && z > 760 + n && z < 1420 + n) return 'taiga';
     return 'meadow';
   }
   var NT = { h: 0, top: 0, sub: 0, reg: '', jd: 99 };
-  function newTerrain(x, z, ridge) {
-    var base = G - 1, roll = vnoise(x, z, 90, 92), roll2 = vnoise(x, z, 28, 93), n = (vnoise(x, z, 60, 91) - 0.5) * 60;
+  function newTerrain(wx, wz, ridge) {
+    var x = UX(wx), z = UZ(wz);
+    var base = G - 1, roll = vnoise(wx, wz, 90, 92), roll2 = vnoise(wx, wz, 28, 93), n = (vnoise(wx, wz, 60, 91) - 0.5) * 60;
     var h = base + 2 + roll * 11 + roll2 * 4, top = GRASS, sub = DIRT;
     // 큰 숲: 오르내리는 언덕
     var tw = Math.min(sstep(2200, 2320, x), sstep(740, 840, z + n), sstep(1440, 1340, z + n));
@@ -203,7 +217,7 @@
     var shw = sstep(SHR + 40, SHR - 60, Math.hypot(x - SHX, z - SHZ) + n), egw = sstep(EGR + 40, EGR - 60, Math.hypot(x - EGX, z - EGZ) + n), flw = Math.max(shw, egw);
     if (flw > 0) h = h * (1 - flw) + (base + 1 + roll2 * 2.5) * flw;
     // 요단 강(마 3:13): 갈릴리에서 남쪽으로
-    var jd = z > GALZ + 100 ? jordanDist(x, z) : 99, frd = farRiverDist(x, z); if (frd < jd) jd = frd;
+    var jd = z > GALZ + 100 ? jordanDist(x, z) * NK : 99, frd = farRiverDist(x, z) * NK; if (frd < jd) jd = frd;
     if (jd < 16) { var vf = clamp01((jd - 4) / 12); vf = vf * vf; h = base + (h - base) * vf; if (jd <= 2.6) h = base - 2; }
     // 남쪽 큰 바다(시 107:23)와 섬
     var ssd = z - (SSEA_Z + n);
@@ -222,7 +236,7 @@
     if (sww > 0.5 && h >= base) { top = hash2(x, z, 5) < 0.22 ? CLAY : GRASS; sub = CLAY; }
     if (egw > 0.5 && h >= base) { top = jd < 13 ? GRASS : SAND; sub = SAND; }
     else if (shw > 0.5 && h >= base && top === GRASS && vnoise(x, z, 24, 99) > 0.62) { top = SAND; sub = SAND; }
-    NT.h = h; NT.top = top; NT.sub = sub; NT.reg = newRegion(x, z) || 'meadow'; NT.jd = jd;
+    NT.h = h; NT.top = top; NT.sub = sub; NT.reg = newRegion(wx, wz) || 'meadow'; NT.jd = jd;
     return NT;
   }
   function southReg(x, z) {
@@ -851,7 +865,7 @@
   (function () {   // 11/20 세계를 넓히며 기둥 번호가 (z*64+x) → (z*128+x)로 바뀜: 이 기기에 남은 예전 기록을 한 번 옮김
     var v = 0; try { v = +localStorage.getItem('arkVillage.editsNC') || 0; } catch (e) {}
     if (v === NC) return;
-    var o = {}; for (var k in EDITS) { var kk = +k, ox = kk % 64, oz = Math.floor(kk / 64); o[oz * NC + ox] = EDITS[k]; } EDITS = o;
+    var ON = v || 64, o = {}; for (var k in EDITS) { var kk = +k, ox = kk % ON, oz = Math.floor(kk / ON); o[oz * NC + ox] = EDITS[k]; } EDITS = o;   // 11/25 128 → 256도 같은 방법
     try { localStorage.setItem('arkVillage.edits', JSON.stringify(EDITS)); localStorage.setItem('arkVillage.editsNC', String(NC)); } catch (e) {}
   })();
   function recordEdit(x, y, z, id) {

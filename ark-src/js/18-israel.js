@@ -476,11 +476,11 @@
       farStall(X + 12, Z + 28, CLOTH_G);
     }
     // 물가: 현무암 부두, 배 두 척(돛대와 돛)
-    if (x0 + CS > X - 20 && x0 <= X + 20 && z0 + CS > Z + 20 && z0 <= Z + 72) {
-      for (var z = Z + 30; z <= Z + 66; z++) { fbox(X - 2, G - 1, z, X + 2, G - 1, z, BASALT); if (z % 6 === 0) { setRaw(X - 3, G - 1, z, BASALT); setRaw(X - 3, G, z, FENCE); setRaw(X + 3, G - 1, z, BASALT); setRaw(X + 3, G, z, FENCE); } }
-      setRaw(X - 2, G, Z + 66, LANTERN); setRaw(X + 2, G, Z + 66, LANTERN);
+    if (x0 + CS > X - 20 && x0 <= X + 20 && z0 + CS > Z + 20 && z0 <= Z + 80) {
+      for (var z = Z + 30; z <= Z + 76; z++) { fbox(X - 2, G - 1, z, X + 2, G - 1, z, BASALT); if (z % 6 === 0) { setRaw(X - 3, G - 1, z, BASALT); setRaw(X - 3, G, z, FENCE); setRaw(X + 3, G - 1, z, BASALT); setRaw(X + 3, G, z, FENCE); } }
+      setRaw(X - 2, G, Z + 76, LANTERN); setRaw(X + 2, G, Z + 76, LANTERN);
       [X - 9, X + 7].forEach(function (bx) {
-        var bz0 = Z + 56;
+        var bz0 = Z + 64;
         for (var i = 0; i < 11; i++) { var w = i < 2 || i > 8 ? 0 : 1; fbox(bx - w, G - 2, bz0 + i, bx + w, G - 2, bz0 + i, PITCH); setRaw(bx - w - 1, G - 1, bz0 + i, PITCH); setRaw(bx + w + 1, G - 1, bz0 + i, PITCH); fbox(bx - w, G - 1, bz0 + i, bx + w, G - 1, bz0 + i, AIR); }
         fbox(bx, G - 1, bz0 + 5, bx, G + 5, bz0 + 5, LOG); fbox(bx, G + 2, bz0 + 4, bx, G + 5, bz0 + 4, WOOL_W);
       });
@@ -538,7 +538,7 @@
     { name: '목자', x: BC.x + 61, z: BC.z + 10, emoji: '🐑', look: robe(0xddd0b0, 0x7a5a3a, 'scarf', { scarf: 0xeee8d8, fit: { stripes: 0x7a5a3a, staff: 0x8a6236 } }), text: '천사들이 떠나 하늘로 올라가니 목자가 서로 말하되 이제 베들레헴으로 가서 주께서 우리에게 알리신 바 이 이루어진 일을 보자 하고', ref: '누가복음 2:15' },
     { name: '보아스', x: BC.x - 64, z: BC.z - 2, shop: 'boaz', emoji: '🌾', look: robe(0x8a6a48, 0x5a4028, 'short', { fit: { beard: 0x2b1d14 } }), text: '마침 보아스가 베들레헴에서부터 와서 베는 자들에게 이르되 여호와께서 너희와 함께 하시기를 원하노라 하니 그들이 대답하되 여호와께서 당신에게 복 주시기를 원하나이다 하니라', ref: '룻기 2:4' },
     { name: '나사렛 목수', x: NC0.x + 24, z: NC0.z + 12, y: NC0.y + 1, shop: 'carpenter', emoji: '🪚', look: robe(0x8a6a48, 0x5a4028, 'short', { fit: { beard: 0x2b1d14 } }), text: '이는 그 목수의 아들이 아니냐 그 어머니는 마리아, 그 형제들은 야고보, 요셉, 시몬, 유다라 하지 않느냐', ref: '마태복음 13:55' },
-    { name: '시몬 베드로', x: CC.x, z: CC.z + 46, emoji: '🎣', look: robe(0x6a8aa0, 0x4a6a80, 'short', { fit: { beard: 0x2b1d14 } }), text: '시몬이 대답하여 이르되 선생님 우리들이 밤이 새도록 수고하였으되 잡은 것이 없지마는 말씀에 의지하여 내가 그물을 내리리이다 하고', ref: '누가복음 5:5' },
+    { name: '시몬 베드로', x: CC.x, z: CC.z + 52, emoji: '🎣', look: robe(0x6a8aa0, 0x4a6a80, 'short', { fit: { beard: 0x2b1d14 } }), text: '시몬이 대답하여 이르되 선생님 우리들이 밤이 새도록 수고하였으되 잡은 것이 없지마는 말씀에 의지하여 내가 그물을 내리리이다 하고', ref: '누가복음 5:5' },
     { name: '갈릴리 어부', x: CC.x + 12, z: CC.z + 28, y: G, shop: 'galfish', emoji: '🐟', look: shopLook(0x5a7a90, 0x3a5a70, 0, 0xb27a52, 1), text: '말씀하시되 나를 따라오라 내가 너희를 사람을 낚는 어부가 되게 하리라 하시니', ref: '마태복음 4:19' },
     { name: '세리 마태', x: CC.x - 30, z: CC.z + 26, y: G, emoji: '🪙', look: robe(0x5a5a7a, 0xd8b060, 'short', {}), text: '예수께서 그 곳을 떠나 지나가시다가 마태라 하는 사람이 세관에 앉아 있는 것을 보시고 이르시되 나를 따르라 하시니 일어나 따르니라', ref: '마태복음 9:9' }
   ];

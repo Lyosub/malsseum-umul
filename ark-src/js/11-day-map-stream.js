@@ -301,7 +301,7 @@
   }
 
   // ───────── 지도(공식으로 그려 두고, 조금씩 채운다) ─────────
-  var MAPN = 1024, MSC = WS / MAPN, mapBase = document.createElement('canvas'), mapRow = 0, mapImg = null;
+  var MAPN = 2048, MSC = WS / MAPN, mapBase = document.createElement('canvas'), mapRow = 0, mapImg = null;
   mapBase.width = mapBase.height = MAPN;
   // 11/20 세계가 넓어져(4096) 지도를 32×32 조각으로 나눠 내 둘레 조각부터 조금씩(프레임마다 512점) 그림
   var MT = 32, MTN = MAPN / MT, mapDone = new Uint8Array(MTN * MTN), mapCur = -1, mapCurRow = 0, mapDoneN = 0, mapIdle = false;
