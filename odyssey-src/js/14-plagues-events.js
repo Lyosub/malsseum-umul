@@ -344,6 +344,18 @@
     'bow-arrows': { h: 0.25, occ: false, shape: 'none', src: 'story3d/bow-arrows.glb' },
     'abigail-gifts': { h: 0.9, occ: false, shape: 'none', src: 'story3d/abigail-gifts.glb' },
     'baggage-pile': { h: 1.4, occ: false, shape: 'none', src: 'story3d/baggage-pile.glb' },
+    // 8편 「다윗 왕」 동물·소품(GPT 15차 원화 → Meshy, 2026-11-25)
+    'mule': { h: 1.6, occ: false, shape: 'none', src: 'animals3d/mule.glb' },
+    'oak-tree': { h: 5.2, occ: true, shape: 'circle', k: 0.18, src: 'story3d/oak-tree.glb' },
+    'king-table': { h: 0.6, occ: false, shape: 'none', src: 'story3d/king-table.glb' },
+    'ephod': { h: 1.2, occ: false, shape: 'none', src: 'story3d/ephod.glb' },
+    'threshing-sledge': { h: 0.5, occ: false, shape: 'none', src: 'story3d/threshing-sledge.glb' },
+    'silver-pouch': { h: 0.35, occ: false, shape: 'none', src: 'story3d/silver-pouch.glb' },
+    'cut-stones': { h: 1.1, occ: false, shape: 'none', src: 'story3d/cut-stones.glb' },
+    'cedar-beams': { h: 0.9, occ: false, shape: 'none', src: 'story3d/cedar-beams.glb' },
+    'gold-silver-chest': { h: 0.9, occ: false, shape: 'none', src: 'story3d/gold-silver-chest.glb' },
+    'temple-plan': { h: 0.3, occ: false, shape: 'none', src: 'story3d/temple-plan.glb' },
+    'harp-sm': { h: 0.55, occ: false, shape: 'none', src: 'story3d/harp.glb' },
   });
   const CALF = [-4, -4], ARK_WORK = [11, -7.5], TENT_MEET = [-28, -12];
   const TAB = { x0: -10, x1: 0, z: -15, hw: 2, h: 3.2, court: [-13, 13, -21, -9] };

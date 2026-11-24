@@ -1,5 +1,5 @@
   // ── 1. 기념 전시관: 모세 편(10장)을 마치면 첫 받침대에 두 돌판 ──
-  const PEDESTALS = [[7.2, -8.8], [8.4, -6.6], [9.9, -4.7], [11.6, -3.0], [13.4, -1.6], [15.3, -0.4], [17.3, 0.5]];
+  const PEDESTALS = [[7.2, -8.8], [8.4, -6.6], [9.9, -4.7], [11.6, -3.0], [13.4, -1.6], [15.3, -0.4], [17.3, 0.5], [19.4, 1.0]];
   let exhibitObj = null;
   async function buildExhibit(){
     if (exhibitObj){ exhibitObj.parent && exhibitObj.parent.remove(exhibitObj); exhibitObj = null; }
@@ -30,6 +30,12 @@
       if (propTemplates['ebenezer-stone-sm']){ const o = propTemplates['ebenezer-stone-sm'].holder.clone(true); o.position.set(x, y, z); exhibitObj.add(o); }
       else { const st = new THREE.Mesh(new THREE.DodecahedronGeometry(0.28, 0), new THREE.MeshToonMaterial({ color: 0xb8a888, gradientMap: toonGradient })); st.scale.set(0.8, 1.4, 0.7); st.position.set(x, y + 0.36, z); exhibitObj.add(st); }
       const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff0d0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.3 })); glow.scale.set(1.2, 1.2, 1); glow.position.set(x, y + 0.5, z); exhibitObj.add(glow);
+    }
+    if (davidDone() && PEDESTALS[7]){   // 여덟 번째 받침대: 다윗의 수금(삼하 6:5, 23:1) — 7편 수금 모델
+      await loadProps(['harp-sm']); if (!Z || Z.id !== 'alpha' || !exhibitObj) return;
+      const [x, z] = PEDESTALS[7], y = heightAt(x, z) + 1.06;
+      if (propTemplates['harp-sm']){ const o = propTemplates['harp-sm'].holder.clone(true); o.position.set(x, y, z); o.rotation.y = faceTo(x, z, 0, 0); exhibitObj.add(o); }
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff0c0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.32 })); glow.scale.set(1.3, 1.3, 1); glow.position.set(x, y + 0.5, z); exhibitObj.add(glow);
     }
     if (saulDone() && PEDESTALS[6]){   // 일곱 번째 받침대: 물매와 돌 다섯(삼상 17:40) — 도형
       const [x, z] = PEDESTALS[6], y = heightAt(x, z) + 1.06, sg = new THREE.Group(), mat = c => new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient });
@@ -74,6 +80,7 @@
   const judgesDone = () => { const p = ST.sp && ST.sp.judges; return !!(p && p.cleared && p.ch >= 11); };
   const ruthDone = () => { const p = ST.sp && ST.sp.ruth; return !!(p && p.cleared && p.ch >= 8); };
   const saulDone = () => { const p = ST.sp && ST.sp.saul; return !!(p && p.cleared && p.ch >= 15); };
+  const davidDone = () => { const p = ST.sp && ST.sp.david; return !!(p && p.cleared && p.ch >= 12); };
   const CH_NAMES = CHAPTERS.map(c => (c.clearTitle.match(/「([^」]+)」/) || [])[1] || '');
   function openExhibit(){
     const done = chaptersDone(), el = document.getElementById('exhibit-body');
@@ -92,7 +99,8 @@
     const head5 = judgesDone() ? `<div class="keyline">🏺 <b>다섯 번째 받침대 — 「사사들과 함께」의 기드온의 항아리와 횃불</b><br><span style="opacity:.8">"세 대가 나팔을 불며 항아리를 부수고 왼손에 횃불을 들고 오른손에 나팔을 들어 불며 외쳐 이르되 여호와와 기드온의 칼이다" (사사기 7:20)</span></div>` : '';
     const head6 = ruthDone() ? `<div class="keyline">🪨 <b>여섯 번째 받침대 — 「룻과 사무엘」의 에벤에셀 돌</b><br><span style="opacity:.8">"사무엘이 돌을 취하여 미스바와 센 사이에 세워 이르되 여호와께서 여기까지 우리를 도우셨다" (사무엘상 7:12)</span></div>` : '';
     const head7 = saulDone() ? `<div class="keyline">🪨 <b>일곱 번째 받침대 — 「사울과 다윗」의 물매와 돌 다섯</b><br><span style="opacity:.8">"손에 막대기를 가지고 시내에서 매끄러운 돌 다섯을 골라서 자기 목자의 제구 곧 주머니에 넣고 손에 물매를 가지고 블레셋 사람에게로 나아가니라" (사무엘상 17:40)</span></div>` : '';
-    el.innerHTML = head + rows + head2 + head3 + head4 + head5 + head6 + head7 + `<div style="margin-top:8px;font-size:12.5px;opacity:.75">${saulDone() ? '일곱 받침대가 채워졌어요. 다음 두루마리는 준비하고 있어요.' : ruthDone() ? '여섯 받침대가 채워졌어요. 일곱 번째 받침대는 7편 「사울과 다윗」을 모두 마치면 채워져요.' : judgesDone() ? '여섯 번째 받침대는 6편 「룻과 사무엘」을 모두 마치면 채워져요.' : joshuaDone() ? '다섯 번째 받침대는 5편 「사사들과 함께」를 모두 마치면 채워져요.' : wild3Done() ? '네 번째 받침대는 4편 「여호수아와 함께」를 모두 마치면 채워져요.' : sinai2Done() ? '세 번째 받침대는 3편 「광야 40년」을 모두 마치면 채워져요.' : '두 번째 받침대는 2편 「시내산의 마지막 한 달」을 모두 마치면 채워져요.'}</div>`;
+    const head8 = davidDone() ? `<div class="keyline">🎵 <b>여덟 번째 받침대 — 「다윗 왕」의 다윗의 수금</b><br><span style="opacity:.8">"다윗과 이스라엘 온 족속은 잣나무로 만든 여러 가지 악기와 수금과 비파와 소고와 양금과 제금으로 여호와 앞에서 연주하더라" (사무엘하 6:5)</span></div>` : '';
+    el.innerHTML = head + rows + head2 + head3 + head4 + head5 + head6 + head7 + head8 + `<div style="margin-top:8px;font-size:12.5px;opacity:.75">${davidDone() ? '여덟 받침대가 채워졌어요. 다음 두루마리는 준비하고 있어요.' : saulDone() ? '일곱 받침대가 채워졌어요. 다음 두루마리는 준비하고 있어요.' : ruthDone() ? '여섯 받침대가 채워졌어요. 일곱 번째 받침대는 7편 「사울과 다윗」을 모두 마치면 채워져요.' : judgesDone() ? '여섯 번째 받침대는 6편 「룻과 사무엘」을 모두 마치면 채워져요.' : joshuaDone() ? '다섯 번째 받침대는 5편 「사사들과 함께」를 모두 마치면 채워져요.' : wild3Done() ? '네 번째 받침대는 4편 「여호수아와 함께」를 모두 마치면 채워져요.' : sinai2Done() ? '세 번째 받침대는 3편 「광야 40년」을 모두 마치면 채워져요.' : '두 번째 받침대는 2편 「시내산의 마지막 한 달」을 모두 마치면 채워져요.'}</div>`;
     openModal('exhibit-modal');
   }
   document.getElementById('exhibit-replay').onclick = () => { document.querySelectorAll('.modal:not(.hidden) .close').forEach(b => b.click()); setTimeout(openReplay, 250); };

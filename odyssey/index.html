@@ -637,7 +637,7 @@
 <div id="ch-fx" class="hidden"><div class="rays"></div><div class="big"><small id="ch-fx-sub"></small><b id="ch-fx-t"></b><i id="ch-fx-n"></i></div><div class="tap">화면을 누르면 넘어가요</div></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "8de79d3a", "moses0": "c9b16a71", "sinai2": "8fcd871c", "wild3": "399f9e0d", "joshua": "dcec01a7", "judges": "257038a5", "ruth": "b0ac9b0c", "saul": "dc285af9", "david": "dbe56581"};</script>
+<script>window.__SCROLL_V={"devtest": "8de79d3a", "moses0": "c9b16a71", "sinai2": "8fcd871c", "wild3": "399f9e0d", "joshua": "dcec01a7", "judges": "257038a5", "ruth": "b0ac9b0c", "saul": "dc285af9", "david": "eb5c5b77"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -1850,12 +1850,10 @@
      [-15, 3.5, 3.2, 3, 0], [15.5, -3, 3, 3.4, 1], [-16, -9.5, 3.4, 2.8, 0], [15, -10, 3.6, 3, 0], [-5, 15, 3, 2.8, 0], [6, 14, 3, 2.8, 1]].forEach(([x, z, w, d, two]) => house(x, z, w, d, !!two));
     // ⑥ 모리아 — 북쪽 언덕의 아라우나 타작 마당(24:18), 9편 성전 터
     { const [mx, mz] = J.moriah, y = heightAt(mx, mz) - 0.2;
-      add(box, mStone2, mx, y + 0.7, mz, 18, 1.4, 15);
-      for (let i = 0; i < 4; i++) add(box, mStone, mx, y + 0.18 + i * 0.35, mz + 7.5 + 2.2 - i * 0.55, 6, 0.36, 1.2);   // 남쪽 계단
-      add(new THREE.CylinderGeometry(4.2, 4.4, 0.25, 28), mFloor, mx, y + 1.5, mz - 0.5, 1, 1, 1);   // 타작 마당(둥글게 다진 바닥)
-      for (let i = 0; i < 24; i++){ const a = i / 24 * Math.PI * 2; add(box, mStone, mx + Math.cos(a) * 4.5, y + 1.6, mz - 0.5 + Math.sin(a) * 4.5, 0.6, 0.35, 0.5, -a); }
-      for (const [dx, dz] of [[-6.5, -5], [6.2, -4.6], [-6.8, 4.6]]) add(sph, T(0xd8b860), mx + dx, y + 1.7, mz + dz, 0.9, 0.5, 0.9);   // 곡식 더미
-      boxes.push({ x: mx, z: mz, rot: 0, hx: 9, hz: 7.5, top: y + 1.4, stand: true });   // 단 위에 올라설 수 있음
+      add(box, mStone2, mx, y + 0.1, mz, 18, 0.6, 15);   // 낮은 돌 바닥(사람이 땅 높이로 서도록 낮게)
+      add(new THREE.CylinderGeometry(4.2, 4.4, 0.2, 28), mFloor, mx, y + 0.45, mz - 0.5, 1, 1, 1);   // 타작 마당(둥글게 다진 바닥)
+      for (let i = 0; i < 24; i++){ const a = i / 24 * Math.PI * 2; add(box, mStone, mx + Math.cos(a) * 4.5, y + 0.55, mz - 0.5 + Math.sin(a) * 4.5, 0.6, 0.3, 0.5, -a); }
+      for (const [dx, dz] of [[-6.5, -5], [6.2, -4.6], [-6.8, 4.6]]) add(sph, T(0xd8b860), mx + dx, y + 0.6, mz + dz, 0.9, 0.5, 0.9);   // 곡식 더미
     }
     // ⑦ 감람 산 비탈의 감람나무(15:30) — 동쪽
     const olive = (x, z, k) => { const y = heightAt(x, z);
@@ -1931,7 +1929,7 @@
   const XMAS_TREES = [
     [-4.6, 12.6, 1.0, 0], [4.6, 12.6, 1.0, 0],                              // 처음 서는 자리 양옆
     [-5.2, -18.6, 0.95, 0], [-8.4, -20.2, 0.7, 1], [5.2, -18.6, 0.95, 0],  // 빛나는 문 앞
-    [18.5, -2.5, 0.75, 1], [20.6, -0.2, 0.9, 0], [22.6, -2.8, 1.05, 0],    // 기념 전시관 옆 세 그루
+    [18.5, -2.5, 0.75, 1], [21.0, -1.6, 0.9, 0], [22.6, -2.8, 1.05, 0],    // 기념 전시관 옆 세 그루(여덟 번째 받침대 자리를 비움)
     [-37.5, 38.5, 0.85, 0],                                                 // 내 장막 마당 옆
   ];
   function xmasPrep(){ if (Z && Z.id === 'alpha' && xmasDecoOn()) XMAS_TREES.forEach(t => CLEAR_ZONES.push([t[0], t[1], 3.2 * t[2] + 1.5])); }
@@ -7567,7 +7565,8 @@
     joshua: { to: 'judges', done: () => joshuaDone(), ped: 3, what: '길갈의 열두 돌' },
     judges: { to: 'ruth', done: () => judgesDone(), ped: 4, what: '기드온의 항아리와 횃불' },
     ruth: { to: 'saul', done: () => ruthDone(), ped: 5, what: '에벤에셀 돌' },
-    saul: { to: null, done: () => saulDone(), ped: 6, what: '물매와 돌 다섯' },   // 8편은 준비 중 — 받침대만 보여 준다
+    saul: { to: 'david', done: () => saulDone(), ped: 6, what: '물매와 돌 다섯' },
+    david: { to: null, done: () => davidDone(), ped: 7, what: '다윗의 수금' },   // 9편은 준비 중 — 받침대만 보여 준다
   };
   let nsBusy = false;
   async function nextScrollCeremony(opt = {}){
@@ -7602,7 +7601,7 @@
     } finally { nsBusy = false; }
   }
   // ── 1. 기념 전시관: 모세 편(10장)을 마치면 첫 받침대에 두 돌판 ──
-  const PEDESTALS = [[7.2, -8.8], [8.4, -6.6], [9.9, -4.7], [11.6, -3.0], [13.4, -1.6], [15.3, -0.4], [17.3, 0.5]];
+  const PEDESTALS = [[7.2, -8.8], [8.4, -6.6], [9.9, -4.7], [11.6, -3.0], [13.4, -1.6], [15.3, -0.4], [17.3, 0.5], [19.4, 1.0]];
   let exhibitObj = null;
   async function buildExhibit(){
     if (exhibitObj){ exhibitObj.parent && exhibitObj.parent.remove(exhibitObj); exhibitObj = null; }
@@ -7633,6 +7632,12 @@
       if (propTemplates['ebenezer-stone-sm']){ const o = propTemplates['ebenezer-stone-sm'].holder.clone(true); o.position.set(x, y, z); exhibitObj.add(o); }
       else { const st = new THREE.Mesh(new THREE.DodecahedronGeometry(0.28, 0), new THREE.MeshToonMaterial({ color: 0xb8a888, gradientMap: toonGradient })); st.scale.set(0.8, 1.4, 0.7); st.position.set(x, y + 0.36, z); exhibitObj.add(st); }
       const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff0d0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.3 })); glow.scale.set(1.2, 1.2, 1); glow.position.set(x, y + 0.5, z); exhibitObj.add(glow);
+    }
+    if (davidDone() && PEDESTALS[7]){   // 여덟 번째 받침대: 다윗의 수금(삼하 6:5, 23:1) — 7편 수금 모델
+      await loadProps(['harp-sm']); if (!Z || Z.id !== 'alpha' || !exhibitObj) return;
+      const [x, z] = PEDESTALS[7], y = heightAt(x, z) + 1.06;
+      if (propTemplates['harp-sm']){ const o = propTemplates['harp-sm'].holder.clone(true); o.position.set(x, y, z); o.rotation.y = faceTo(x, z, 0, 0); exhibitObj.add(o); }
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xfff0c0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.32 })); glow.scale.set(1.3, 1.3, 1); glow.position.set(x, y + 0.5, z); exhibitObj.add(glow);
     }
     if (saulDone() && PEDESTALS[6]){   // 일곱 번째 받침대: 물매와 돌 다섯(삼상 17:40) — 도형
       const [x, z] = PEDESTALS[6], y = heightAt(x, z) + 1.06, sg = new THREE.Group(), mat = c => new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient });
@@ -7677,6 +7682,7 @@
   const judgesDone = () => { const p = ST.sp && ST.sp.judges; return !!(p && p.cleared && p.ch >= 11); };
   const ruthDone = () => { const p = ST.sp && ST.sp.ruth; return !!(p && p.cleared && p.ch >= 8); };
   const saulDone = () => { const p = ST.sp && ST.sp.saul; return !!(p && p.cleared && p.ch >= 15); };
+  const davidDone = () => { const p = ST.sp && ST.sp.david; return !!(p && p.cleared && p.ch >= 12); };
   const CH_NAMES = CHAPTERS.map(c => (c.clearTitle.match(/「([^」]+)」/) || [])[1] || '');
   function openExhibit(){
     const done = chaptersDone(), el = document.getElementById('exhibit-body');
@@ -7695,7 +7701,8 @@
     const head5 = judgesDone() ? `<div class="keyline">🏺 <b>다섯 번째 받침대 — 「사사들과 함께」의 기드온의 항아리와 횃불</b><br><span style="opacity:.8">"세 대가 나팔을 불며 항아리를 부수고 왼손에 횃불을 들고 오른손에 나팔을 들어 불며 외쳐 이르되 여호와와 기드온의 칼이다" (사사기 7:20)</span></div>` : '';
     const head6 = ruthDone() ? `<div class="keyline">🪨 <b>여섯 번째 받침대 — 「룻과 사무엘」의 에벤에셀 돌</b><br><span style="opacity:.8">"사무엘이 돌을 취하여 미스바와 센 사이에 세워 이르되 여호와께서 여기까지 우리를 도우셨다" (사무엘상 7:12)</span></div>` : '';
     const head7 = saulDone() ? `<div class="keyline">🪨 <b>일곱 번째 받침대 — 「사울과 다윗」의 물매와 돌 다섯</b><br><span style="opacity:.8">"손에 막대기를 가지고 시내에서 매끄러운 돌 다섯을 골라서 자기 목자의 제구 곧 주머니에 넣고 손에 물매를 가지고 블레셋 사람에게로 나아가니라" (사무엘상 17:40)</span></div>` : '';
-    el.innerHTML = head + rows + head2 + head3 + head4 + head5 + head6 + head7 + `<div style="margin-top:8px;font-size:12.5px;opacity:.75">${saulDone() ? '일곱 받침대가 채워졌어요. 다음 두루마리는 준비하고 있어요.' : ruthDone() ? '여섯 받침대가 채워졌어요. 일곱 번째 받침대는 7편 「사울과 다윗」을 모두 마치면 채워져요.' : judgesDone() ? '여섯 번째 받침대는 6편 「룻과 사무엘」을 모두 마치면 채워져요.' : joshuaDone() ? '다섯 번째 받침대는 5편 「사사들과 함께」를 모두 마치면 채워져요.' : wild3Done() ? '네 번째 받침대는 4편 「여호수아와 함께」를 모두 마치면 채워져요.' : sinai2Done() ? '세 번째 받침대는 3편 「광야 40년」을 모두 마치면 채워져요.' : '두 번째 받침대는 2편 「시내산의 마지막 한 달」을 모두 마치면 채워져요.'}</div>`;
+    const head8 = davidDone() ? `<div class="keyline">🎵 <b>여덟 번째 받침대 — 「다윗 왕」의 다윗의 수금</b><br><span style="opacity:.8">"다윗과 이스라엘 온 족속은 잣나무로 만든 여러 가지 악기와 수금과 비파와 소고와 양금과 제금으로 여호와 앞에서 연주하더라" (사무엘하 6:5)</span></div>` : '';
+    el.innerHTML = head + rows + head2 + head3 + head4 + head5 + head6 + head7 + head8 + `<div style="margin-top:8px;font-size:12.5px;opacity:.75">${davidDone() ? '여덟 받침대가 채워졌어요. 다음 두루마리는 준비하고 있어요.' : saulDone() ? '일곱 받침대가 채워졌어요. 다음 두루마리는 준비하고 있어요.' : ruthDone() ? '여섯 받침대가 채워졌어요. 일곱 번째 받침대는 7편 「사울과 다윗」을 모두 마치면 채워져요.' : judgesDone() ? '여섯 번째 받침대는 6편 「룻과 사무엘」을 모두 마치면 채워져요.' : joshuaDone() ? '다섯 번째 받침대는 5편 「사사들과 함께」를 모두 마치면 채워져요.' : wild3Done() ? '네 번째 받침대는 4편 「여호수아와 함께」를 모두 마치면 채워져요.' : sinai2Done() ? '세 번째 받침대는 3편 「광야 40년」을 모두 마치면 채워져요.' : '두 번째 받침대는 2편 「시내산의 마지막 한 달」을 모두 마치면 채워져요.'}</div>`;
     openModal('exhibit-modal');
   }
   document.getElementById('exhibit-replay').onclick = () => { document.querySelectorAll('.modal:not(.hidden) .close').forEach(b => b.click()); setTimeout(openReplay, 250); };
@@ -9132,6 +9139,18 @@
     'bow-arrows': { h: 0.25, occ: false, shape: 'none', src: 'story3d/bow-arrows.glb' },
     'abigail-gifts': { h: 0.9, occ: false, shape: 'none', src: 'story3d/abigail-gifts.glb' },
     'baggage-pile': { h: 1.4, occ: false, shape: 'none', src: 'story3d/baggage-pile.glb' },
+    // 8편 「다윗 왕」 동물·소품(GPT 15차 원화 → Meshy, 2026-11-25)
+    'mule': { h: 1.6, occ: false, shape: 'none', src: 'animals3d/mule.glb' },
+    'oak-tree': { h: 5.2, occ: true, shape: 'circle', k: 0.18, src: 'story3d/oak-tree.glb' },
+    'king-table': { h: 0.6, occ: false, shape: 'none', src: 'story3d/king-table.glb' },
+    'ephod': { h: 1.2, occ: false, shape: 'none', src: 'story3d/ephod.glb' },
+    'threshing-sledge': { h: 0.5, occ: false, shape: 'none', src: 'story3d/threshing-sledge.glb' },
+    'silver-pouch': { h: 0.35, occ: false, shape: 'none', src: 'story3d/silver-pouch.glb' },
+    'cut-stones': { h: 1.1, occ: false, shape: 'none', src: 'story3d/cut-stones.glb' },
+    'cedar-beams': { h: 0.9, occ: false, shape: 'none', src: 'story3d/cedar-beams.glb' },
+    'gold-silver-chest': { h: 0.9, occ: false, shape: 'none', src: 'story3d/gold-silver-chest.glb' },
+    'temple-plan': { h: 0.3, occ: false, shape: 'none', src: 'story3d/temple-plan.glb' },
+    'harp-sm': { h: 0.55, occ: false, shape: 'none', src: 'story3d/harp.glb' },
   });
   const CALF = [-4, -4], ARK_WORK = [11, -7.5], TENT_MEET = [-28, -12];
   const TAB = { x0: -10, x1: 0, z: -15, hw: 2, h: 3.2, court: [-13, 13, -21, -9] };

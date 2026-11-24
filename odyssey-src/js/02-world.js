@@ -1032,12 +1032,10 @@
      [-15, 3.5, 3.2, 3, 0], [15.5, -3, 3, 3.4, 1], [-16, -9.5, 3.4, 2.8, 0], [15, -10, 3.6, 3, 0], [-5, 15, 3, 2.8, 0], [6, 14, 3, 2.8, 1]].forEach(([x, z, w, d, two]) => house(x, z, w, d, !!two));
     // ⑥ 모리아 — 북쪽 언덕의 아라우나 타작 마당(24:18), 9편 성전 터
     { const [mx, mz] = J.moriah, y = heightAt(mx, mz) - 0.2;
-      add(box, mStone2, mx, y + 0.7, mz, 18, 1.4, 15);
-      for (let i = 0; i < 4; i++) add(box, mStone, mx, y + 0.18 + i * 0.35, mz + 7.5 + 2.2 - i * 0.55, 6, 0.36, 1.2);   // 남쪽 계단
-      add(new THREE.CylinderGeometry(4.2, 4.4, 0.25, 28), mFloor, mx, y + 1.5, mz - 0.5, 1, 1, 1);   // 타작 마당(둥글게 다진 바닥)
-      for (let i = 0; i < 24; i++){ const a = i / 24 * Math.PI * 2; add(box, mStone, mx + Math.cos(a) * 4.5, y + 1.6, mz - 0.5 + Math.sin(a) * 4.5, 0.6, 0.35, 0.5, -a); }
-      for (const [dx, dz] of [[-6.5, -5], [6.2, -4.6], [-6.8, 4.6]]) add(sph, T(0xd8b860), mx + dx, y + 1.7, mz + dz, 0.9, 0.5, 0.9);   // 곡식 더미
-      boxes.push({ x: mx, z: mz, rot: 0, hx: 9, hz: 7.5, top: y + 1.4, stand: true });   // 단 위에 올라설 수 있음
+      add(box, mStone2, mx, y + 0.1, mz, 18, 0.6, 15);   // 낮은 돌 바닥(사람이 땅 높이로 서도록 낮게)
+      add(new THREE.CylinderGeometry(4.2, 4.4, 0.2, 28), mFloor, mx, y + 0.45, mz - 0.5, 1, 1, 1);   // 타작 마당(둥글게 다진 바닥)
+      for (let i = 0; i < 24; i++){ const a = i / 24 * Math.PI * 2; add(box, mStone, mx + Math.cos(a) * 4.5, y + 0.55, mz - 0.5 + Math.sin(a) * 4.5, 0.6, 0.3, 0.5, -a); }
+      for (const [dx, dz] of [[-6.5, -5], [6.2, -4.6], [-6.8, 4.6]]) add(sph, T(0xd8b860), mx + dx, y + 0.6, mz + dz, 0.9, 0.5, 0.9);   // 곡식 더미
     }
     // ⑦ 감람 산 비탈의 감람나무(15:30) — 동쪽
     const olive = (x, z, k) => { const y = heightAt(x, z);
@@ -1113,7 +1111,7 @@
   const XMAS_TREES = [
     [-4.6, 12.6, 1.0, 0], [4.6, 12.6, 1.0, 0],                              // 처음 서는 자리 양옆
     [-5.2, -18.6, 0.95, 0], [-8.4, -20.2, 0.7, 1], [5.2, -18.6, 0.95, 0],  // 빛나는 문 앞
-    [18.5, -2.5, 0.75, 1], [20.6, -0.2, 0.9, 0], [22.6, -2.8, 1.05, 0],    // 기념 전시관 옆 세 그루
+    [18.5, -2.5, 0.75, 1], [21.0, -1.6, 0.9, 0], [22.6, -2.8, 1.05, 0],    // 기념 전시관 옆 세 그루(여덟 번째 받침대 자리를 비움)
     [-37.5, 38.5, 0.85, 0],                                                 // 내 장막 마당 옆
   ];
   function xmasPrep(){ if (Z && Z.id === 'alpha' && xmasDecoOn()) XMAS_TREES.forEach(t => CLEAR_ZONES.push([t[0], t[1], 3.2 * t[2] + 1.5])); }

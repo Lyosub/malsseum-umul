@@ -6,7 +6,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RAW = json.load(open(os.path.join(HERE, '2sa.json'), encoding='utf-8'))
 V = {}
 for key, vs in RAW.items():
-    b = '삼하' if key.startswith('2sa') else '대상'; c = int(key[3:])
+    b = '삼하' if key.startswith('2sa') else ('시' if key.startswith('psa') else '대상'); c = int(key[3:])
     for n, t in vs.items(): V[(b, c, int(n))] = re.sub(r'\s+', ' ', t).strip()
 def v(b, c, n): return V[(b, c, n)]
 def mid(b, c, n, a, e=None):
@@ -78,6 +78,7 @@ D['dv_judge'] = [lead(S, 12, 5, '나단에게 이르되'), say('DAVID', S, 12, 5
     guide('🙏 그때 다윗이 지은 기도, 시편 51편을 따라 읽어요.')]
 D['dv_child'] = nar(S, 12, 15, 16, 17) + [mid(S, 12, 18, '이레 만에', '죽으니라')] + nar(S, 12, 20) + [lead(S, 12, 22, '이르되'), say('DAVID', S, 12, 22, '아이가', '생각함이거니와'), say('DAVID', S, 12, 23, '지금은', '아니하리라'),
     mid(S, 12, 24, '그가 아들을 낳으매')] + nar(S, 12, 25)
+D['dv_psalm'] = [guide('다윗의 시, 선지자 나단이 그에게 왔을 때(시편 51편 표제)')] + says('DAVID', '시', 51, 1, 2, 3, 4, 10, 11, 12)
 # 8장 「내 아들 압살롬아」 — 삼하 15–18장 — 13–14장은 다루지 않음(결정 2), 18:9-15는 서술만
 D['dv_heart'] = [note('나단의 말대로(삼하 12:10) 다윗의 집에 다툼이 끊이지 않았고, 다윗의 아들 압살롬은 아버지를 몰아내고 왕이 되려 했어요.')] + nar(S, 15, 1, 6, 13) + [
     lead(S, 15, 14, '신하들에게 이르되'), say('DAVID', S, 15, 14, '일어나', '하노라'), guide('왕과 함께 성을 나가요.')]
@@ -130,10 +131,10 @@ D['dv_thanks'] = [lead(C, 29, 10, '송축하여 이르되'), say('DAVID', C, 29,
     lead(C, 29, 20, '온 회중에게 이르되'), say('DAVID', C, 29, 20, '너희는', '송축하라'), mid(C, 29, 20, '하매 회중이')] + nar(C, 29, 22)
 
 CARDS = {'2sa1-23': (S, 1, 23), '2sa2-1': (S, 2, 1), '2sa5-10': (S, 5, 10), '2sa6-14': (S, 6, 14), '2sa7-16': (S, 7, 16), '2sa9-7': (S, 9, 7), '2sa12-13': (S, 12, 13),
-         '2sa15-25': (S, 15, 25), '2sa19-23': (S, 19, 23), '2sa22-2': (S, 22, 2), '2sa23-17': (S, 23, 17), '2sa24-24': (S, 24, 24), '1ch29-14': (C, 29, 14)}
+         '2sa15-25': (S, 15, 25), '2sa19-23': (S, 19, 23), '2sa22-2': (S, 22, 2), '2sa23-17': (S, 23, 17), '2sa24-24': (S, 24, 24), '1ch29-14': (C, 29, 14), 'psa51-10': ('시', 51, 10)}
 SPEAKERS = {'DAVID': '다윗', 'YOUTH': '소식을 전한 청년', 'TRIBES': '이스라엘 모든 지파', 'MESSENGER': '어떤 사람', 'MICHAL': '미갈', 'NATHAN': '나단', 'ZIBA': '시바', 'MEPHIB': '므비보셋',
             'ITTAI': '잇대', 'SHIMEI': '시므이', 'ABISHAI': '아비새', 'CUSHITE': '구스 사람', 'BARZILLAI': '바르실래', 'JOAB': '요압', 'GAD': '갓', 'ARAUNAH': '아라우나'}
-BOOK = {'삼하': '사무엘하', '대상': '역대상'}
+BOOK = {'삼하': '사무엘하', '대상': '역대상', '시': '시편'}
 o = ['  // ── 구절 카드(개역개정 원문, gen8.py가 원문 파일에서 뽑음) ──', '  Object.assign(VERSES, {']
 for k, (b, c, n) in CARDS.items(): o.append(f"    '{k}': {{ ref: '{BOOK[b]} {c}:{n}', text: {json.dumps(v(b, c, n), ensure_ascii=False)} }},")
 o += ['  });', '  // ── 대사(개역개정 원문, gen8.py가 뽑음 — 손으로 고치지 말고 생성기를 고친다) ──', '  Object.assign(DLG, {']

@@ -245,7 +245,8 @@
     joshua: { to: 'judges', done: () => joshuaDone(), ped: 3, what: '길갈의 열두 돌' },
     judges: { to: 'ruth', done: () => judgesDone(), ped: 4, what: '기드온의 항아리와 횃불' },
     ruth: { to: 'saul', done: () => ruthDone(), ped: 5, what: '에벤에셀 돌' },
-    saul: { to: null, done: () => saulDone(), ped: 6, what: '물매와 돌 다섯' },   // 8편은 준비 중 — 받침대만 보여 준다
+    saul: { to: 'david', done: () => saulDone(), ped: 6, what: '물매와 돌 다섯' },
+    david: { to: null, done: () => davidDone(), ped: 7, what: '다윗의 수금' },   // 9편은 준비 중 — 받침대만 보여 준다
   };
   let nsBusy = false;
   async function nextScrollCeremony(opt = {}){
