@@ -684,6 +684,27 @@
       "note": "말씀카툰 #010 「제일 먼저」 — 11/22 설교. 아침에 폰부터 집으려던 지호가 먼저 기도하고 하루를 시작한다. 하단 띠 골 1:18. 전도사님 컨펌 2026-11-17."
     },
     {
+      "id": "2026-11-27-advent",
+      "type": "carousel",
+      "publish_at": "2026-11-27 19:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-27-advent.txt",
+      "first_comment_file": "instagram/captions/2026-11-27-advent.tags.txt",
+      "images": [
+        "instagram/2026-11-27-advent-01.jpg",
+        "instagram/2026-11-27-advent-02.jpg",
+        "instagram/2026-11-27-advent-03.jpg",
+        "instagram/2026-11-27-advent-04.jpg",
+        "instagram/2026-11-27-advent-05.jpg",
+        "instagram/2026-11-27-advent-06.jpg",
+        "instagram/2026-11-27-advent-07.jpg",
+        "instagram/2026-11-27-advent-08.jpg",
+        "instagram/2026-11-27-advent-09.jpg",
+        "instagram/2026-11-27-advent-10.jpg"
+      ],
+      "note": "대림절 설명 특별 게시물(설교와 별개) 10장 — 뜻·언제(진보라→흰색 초, 우리 교회 방식)·초의 색·두 번의 오심·계 22:20·나의 대림절·말씀 달력 안내. 그림책풍 GPT 배경. 전도사님 컨펌 2026-11-24."
+    },
+    {
       "id": "2026-11-28-preview",
       "type": "reels",
       "publish_at": "2026-11-28 13:00",
