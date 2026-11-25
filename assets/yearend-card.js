@@ -223,7 +223,10 @@ var YEAR_CARD_DESIGNS = [
     }
     ctx.shadowBlur = 0;
     ctx.fillStyle = th.sub; ctx.font = "600 " + Math.round(22 * u) + "px " + SANS;
-    ctx.fillText("💧 말씀우물 · logoswell.kr/2027", W / 2, key === "dawn" ? footY + 86 * u : H - (tall ? 110 : 60) * u);
+    var markY = key === "dawn" ? footY + 86 * u : H - (tall ? 110 : 60) * u;
+    if (key === "gold") markY = Math.min(markY, H - W * 0.073 - 36 * u);   // 금빛·종이 카드는 테두리 안쪽에(테두리 선과 겹치지 않게, 11/25)
+    if (key === "paper") markY = Math.min(markY, H - W * 0.084 - 36 * u);
+    ctx.fillText("💧 말씀우물 · logoswell.kr/2027", W / 2, markY);
   };
 
   // 카드 그리기 전에 글꼴을 받아 둔다. 나눔명조는 글자 묶음별로 나뉘어 있어, 쓸 글자를 함께 넘겨야 그 묶음을 받는다.
