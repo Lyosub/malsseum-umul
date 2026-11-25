@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-11-24 15:09",
+  "generated_kst": "2026-11-25 13:56",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 143,
     "follows_count": 110,
-    "media_count": 179
+    "media_count": 181
   },
   "posts": [
+    {
+      "id": "17914166895308146",
+      "type": "FEED",
+      "media_type": "CAROUSEL_ALBUM",
+      "timestamp_utc": "2026-11-24T10:33:23+0000",
+      "permalink": "https://www.instagram.com/p/DgHv-ojIMMO/",
+      "caption_first_line": "왜 예수님이 \"만물의 으뜸\"이실까요?",
+      "likes": 9,
+      "comments": 1
+    },
     {
       "id": "18098772524677040",
       "type": "REELS",
@@ -246,16 +256,6 @@
       "permalink": "https://www.instagram.com/p/DeyxqJRm0fS/",
       "caption_first_line": "\"힘내\" 다음에 할 수 있는 한 걸음.",
       "likes": 7,
-      "comments": 1
-    },
-    {
-      "id": "18270002710305268",
-      "type": "FEED",
-      "media_type": "CAROUSEL_ALBUM",
-      "timestamp_utc": "2026-10-20T10:33:06+0000",
-      "permalink": "https://www.instagram.com/p/DetoH8JFQ59/",
-      "caption_first_line": "살아 있는 믿음은 움직입니다.",
-      "likes": 11,
       "comments": 1
     }
   ]
