@@ -19,7 +19,7 @@
     if (!id) return;
     if (!isWeapon(id)) {   // 블록·물건: 손에 작게 쥔 모습(그림은 새로 만들어 지울 때 함께 지움)
       dropMats();
-      var flat = isFlat(id), hm = new THREE.Mesh(flat ? itemGeometry(id) : blockGeometry(id), flat ? dropMatF : dropMatB), hu = HT / 32, hg = new THREE.Group();
+      var flat = isFlat(id), hm = new THREE.Mesh(flat ? itemGeometry(id) : shapedGeometry(id), flat ? dropMatF : dropMatB), hu = HT / 32, hg = new THREE.Group();
       hm.scale.setScalar(flat ? 0.55 : 0.36); hg.add(hm);
       hg.position.set(0, -13 * hu, -1.6 * hu);
       pr.armR.add(hg); pr.hand = hg; pr.handId = id;
@@ -47,7 +47,7 @@
     heldMesh.userData.weapon = wpn; heldMesh.scale.set(wpn ? -(id === SWORD ? 0.72 : 0.62) : (isItem(id) ? 0.5 : 0.34), wpn ? (id === SWORD ? 0.72 : 0.62) : (isItem(id) ? 0.5 : 0.34), isItem(id) ? 0.5 : 0.34);
     heldMesh.material.side = wpn ? THREE.DoubleSide : THREE.FrontSide;
     if (avatar) handItem(avatar, heldShown() === id ? id : 0);
-    if (heldMesh.geometry) heldMesh.geometry.dispose(); if (!id) { heldMesh.geometry = new THREE.BufferGeometry(); return; } heldMesh.geometry =isItem(id) || id === TORCH ? itemGeometry(id) : blockGeometry(id); heldMesh.material.alphaTest = isItem(id) || id === TORCH ? 0.5 : 0; heldMesh.material.needsUpdate = true; }
+    if (heldMesh.geometry) heldMesh.geometry.dispose(); if (!id) { heldMesh.geometry = new THREE.BufferGeometry(); return; } heldMesh.geometry =isItem(id) || id === TORCH ? itemGeometry(id) : shapedGeometry(id); heldMesh.material.alphaTest = isItem(id) || id === TORCH ? 0.5 : 0; heldMesh.material.needsUpdate = true; }
   function init() {
     canvasEl = $('game');
     if (isTouch) document.body.classList.add('touch');

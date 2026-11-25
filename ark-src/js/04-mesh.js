@@ -216,6 +216,30 @@
     return g;
   }
   function blockGeometry(id) { return cubeGeometry(function (f) { return faceTile(id, f); }, !B[id][5]); }
+  // 손에 든 모양 블록(의자·계단·반블록 등): 정육면체 대신 실제 모양 상자들로(11/25 「의자를 들었는데 블록으로 보여」)
+  function shapedGeometry(id) {
+    var sp = SHAPE[id], bx = null;
+    if (sp) { try { bx = iconBoxes(id) || shapeBoxes(id, 0, -999, 0); } catch (e) { bx = null; } }
+    if (!bx || !bx.length || (bx.length === 1 && bx[0][0] <= 0 && bx[0][1] <= 0 && bx[0][2] <= 0 && bx[0][3] >= 1 && bx[0][4] >= 1 && bx[0][5] >= 1)) return blockGeometry(id);
+    var Pp = [], Cc = [], Uu = [], Ii = [], shadeOn = !B[id][5];
+    bx.forEach(function (b) {
+      for (var f = 0; f < 6; f++) {
+        var F = FACES[f], t = faceTile(id, f), st = Pp.length / 3, sh = shadeOn ? F.s : 1;
+        for (var k = 0; k < 4; k++) {
+          var v = F.v[k], q = [b[0] + v[0] * (b[3] - b[0]), b[1] + v[1] * (b[4] - b[1]), b[2] + v[2] * (b[5] - b[2])];
+          Pp.push(q[0] - 0.5, q[1] - 0.5, q[2] - 0.5);
+          var luv = F.uv(q), uv = tileUV(t, luv[0], luv[1]); Uu.push(uv[0], uv[1]); Cc.push(sh, shadeOn ? 0 : 1, 0);
+        }
+        Ii.push(st, st + 1, st + 2, st, st + 2, st + 3);
+      }
+    });
+    var g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(Pp, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(Cc, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(Uu, 2));
+    g.setIndex(Ii);
+    return g;
+  }
   // 블록 아이콘(비스듬히 본 모습, 풀·꽃·문은 납작하게)
   var ICON = [];
   function isoPt(x, y, z) { return [32 + 28 * (x - z), 4 + 14 * (x + z) + 28 * (1 - y)]; }
