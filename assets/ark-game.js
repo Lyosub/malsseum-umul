@@ -6406,13 +6406,17 @@
   function lightPatch(mat) {
     mat.onBeforeCompile = function (sh) {
       sh.uniforms.uDay = LU.uDay; sh.uniforms.uTint = LU.uTint; sh.uniforms.uTime = LU.uTime; sh.uniforms.uHand = LU.uHand;
-      sh.vertexShader = 'uniform float uTime;\nvarying vec3 vWpL;\n' + sh.vertexShader.replace('#include <begin_vertex>',
-        '#include <begin_vertex>\n vWpL = (modelMatrix * vec4(position, 1.0)).xyz;\n#ifdef USE_COLOR\n float swayW = color.b;\n if (swayW > 0.5) { vec4 wpS = modelMatrix * vec4(position, 1.0);\n' +
+      sh.vertexShader = 'uniform float uTime;\nvarying vec3 vWpL;\nvarying float vSwy;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+        '#include <begin_vertex>\n vWpL = (modelMatrix * vec4(position, 1.0)).xyz; vSwy = 0.0;\n#ifdef USE_COLOR\n float swayW = color.b; vSwy = swayW;\n if (swayW > 0.5) { vec4 wpS = modelMatrix * vec4(position, 1.0);\n' +
         '  if (swayW < 1.5) { transformed.x += sin(uTime * 1.7 + wpS.x * 0.7 + wpS.z * 0.5) * 0.07; transformed.z += cos(uTime * 1.3 + wpS.z * 0.6 + wpS.x * 0.2) * 0.05; }\n' +
         '  else { transformed.y += sin(uTime * 1.6 + wpS.x * 0.8 + wpS.z * 0.6) * 0.035 - 0.035; } }\n#endif');
-      sh.fragmentShader = 'uniform float uDay;\nuniform vec3 uTint;\nuniform vec4 uHand;\nvarying vec3 vWpL;\n' + sh.fragmentShader.replace('#include <color_fragment>',
+      sh.fragmentShader = 'uniform float uDay;\nuniform vec3 uTint;\nuniform vec4 uHand;\nuniform float uTime;\nvarying vec3 vWpL;\nvarying float vSwy;\n' + sh.fragmentShader.replace('#include <color_fragment>',
         '#if defined( USE_COLOR )\n float handL = uHand.w * clamp(1.0 - distance(vWpL, uHand.xyz) / 7.0, 0.0, 1.0) * (0.55 + 0.45 * vColor.r);\n' +
-        ' diffuseColor.rgb *= max(vColor.r * uDay * uTint, max(vColor.g, handL) * vec3(1.0, 0.86, 0.62));\n#endif');
+        ' diffuseColor.rgb *= max(vColor.r * uDay * uTint, max(vColor.g, handL) * vec3(1.0, 0.86, 0.62));\n#endif\n' +
+        // 11/25 물: 은은한 색 물결 + 햇빛 반짝임(낮일수록 강하게)
+        ' if (vSwy > 1.5) { float wv = sin(vWpL.x * 1.3 + uTime * 0.9) * sin(vWpL.z * 1.1 - uTime * 0.7); diffuseColor.rgb *= 0.94 + 0.08 * wv;\n' +
+        '  float sp = sin(vWpL.x * 5.3 + uTime * 2.3) * sin(vWpL.z * 4.7 - uTime * 1.9) * sin((vWpL.x + vWpL.z) * 2.1 + uTime * 1.3);\n' +
+        '  diffuseColor.rgb += vec3(0.88, 0.95, 1.0) * smoothstep(0.62, 0.96, sp) * 0.38 * clamp(uDay, 0.0, 1.0); }');
     };
   }
   var brightStars = null, starLook = 0, starNight = -1;
