@@ -778,6 +778,16 @@
         "instagram/2026-11-29-cartoon.jpg"
       ],
       "note": "말씀카툰 #011 「그 자리에서」 — 11/29 설교. 발표를 앞두고 무대 뒤에서 떨던 지호가 그 자리에서 기도하고 나간다. 하단 띠 요 20:19. 전도사님 컨펌 2026-11-23."
+    },
+    {
+      "id": "2026-11-25-odyssey",
+      "type": "reels",
+      "publish_at": "2026-11-25 17:30",
+      "status": "pending",
+      "caption_file": "instagram/captions/2026-11-25-odyssey.txt",
+      "first_comment_file": "instagram/captions/2026-11-25-odyssey.tags.txt",
+      "video": "instagram/2026-11-25-odyssey.mp4",
+      "note": "In Odyssey 플레이 영상 v7(세로 64초, 실제 게임 화면 1~8편). BGM 팀룩워십 「주와 함께 걸어가네」(전도사님 지정). 전도사님 「너가 직접 올려」 11/25 즉시 게시. 원본 작업 E:/temp/claude-work/ody-trailer/"
     }
   ],
   "skip_days": [
