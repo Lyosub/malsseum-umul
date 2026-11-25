@@ -637,7 +637,7 @@
 <div id="ch-fx" class="hidden"><div class="rays"></div><div class="big"><small id="ch-fx-sub"></small><b id="ch-fx-t"></b><i id="ch-fx-n"></i></div><div class="tap">화면을 누르면 넘어가요</div></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "8de79d3a", "moses0": "c9b16a71", "sinai2": "8fcd871c", "wild3": "399f9e0d", "joshua": "dcec01a7", "judges": "257038a5", "ruth": "b0ac9b0c", "saul": "dc285af9", "david": "eb5c5b77"};</script>
+<script>window.__SCROLL_V={"devtest": "8de79d3a", "moses0": "c9b16a71", "sinai2": "8fcd871c", "wild3": "fc414ee8", "joshua": "b7411739", "judges": "7aa2cf5b", "ruth": "c91bf8d9", "saul": "5ea7d1b8", "david": "f7542afe"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -811,6 +811,47 @@
     t.needsUpdate = true;
     return t;
   })();
+
+  // 건물 겉면 무늬(2026-11-25): 색만 칠한 상자가 밋밋해 보여서, 월드 좌표로 돌 쌓은 줄눈·회벽 얼룩·나뭇결을 그린다(UV 없이도 상자 크기와 상관없이 고르게)
+  //   kind: 'stone'(어긋쌓기 돌) · 'brick'(작은 돌) · 'plaster'(회벽 얼룩, 아래쪽 흙때) · 'wood'(나뭇결) · 'rock'(바위 결·지층·금, 11/25 고퀄) · 'sand'(물결 모래·젖은 얼룩)
+  const surfMats = new Map();
+  function surfMat(color, kind = 'stone', o = {}){
+    const key = color + kind + JSON.stringify(o); if (surfMats.has(key)) return surfMats.get(key);
+    const m = new THREE.MeshToonMaterial({ color, gradientMap: toonGradient, flatShading: !!o.flat, transparent: !!o.transparent, opacity: o.opacity ?? 1 });
+    const P = { stone: [1.05, 0.5, 0.06, 0.22, 0.68], brick: [0.6, 0.28, 0.045, 0.16, 0.7], plaster: [0, 0, 0, 0.12, 1], wood: [0, 0, 0, 0.16, 1], rock: [0, 0, 0, 0.3, 1], sand: [0, 0, 0, 0.14, 1] }[kind];
+    const f3 = v => (+v).toFixed(4);
+    const bw = o.bw || P[0], bh = o.bh || P[1], mw = o.mw ?? P[2], jit = o.jit ?? P[3], md = o.md ?? P[4];
+    let body;
+    if (kind === 'stone' || kind === 'brick') body = `if (${o.top ? 'true' : '!top'}){ float row = floor(uv.y / ${f3(bh)}); float u = uv.x / ${f3(bw)} + mod(row, 2.0) * 0.5 + sHash(vec2(row, 3.0)) * 0.3; float col = floor(u);
+      vec2 f = vec2(fract(u), fract(uv.y / ${f3(bh)}));
+      float mort = 1.0 - smoothstep(0.0, ${f3(mw / bw)}, min(f.x, 1.0 - f.x)) * smoothstep(0.0, ${f3(mw / bh)}, min(f.y, 1.0 - f.y));
+      float h = sHash(vec2(col, row)); k = mix(1.0 + (h - 0.5) * ${f3(jit)} + (sNoise(uv * 3.0) - 0.5) * 0.06, ${f3(md)}, mort); }
+      else k = 1.0 + (sNoise(uv * 1.3) - 0.5) * 0.12;`;
+    else if (kind === 'plaster') body = `k = 1.0 + (sNoise(uv * 0.9) - 0.5) * ${f3(jit)} + (sNoise(uv * 4.0) - 0.5) * 0.05;
+      if (!top) k -= (1.0 - smoothstep(0.0, 0.9, vSurfP.y - (${f3(o.base ?? 0)}))) * 0.14;`;
+    else if (kind === 'rock') body = `{ float sc = ${f3(o.sc || 1)}; vec3 P3 = vSurfP / sc; float n1 = sNoise(P3.xz * 0.35 + P3.y * 0.2), n2 = sNoise(vec2(P3.x + P3.z, P3.y) * 1.7), n3 = sNoise(uv / sc * 5.0);
+        float strata = sin(P3.y * 1.6 + n1 * 4.0) * 0.5 + 0.5; float band = smoothstep(0.7, 1.0, strata);
+        k = 1.0 + (n1 - 0.5) * ${f3(jit)} + (n2 - 0.5) * 0.16 + (n3 - 0.5) * 0.08 - band * 0.1 + (strata - 0.5) * 0.06;
+        float crack = smoothstep(0.1, 0.0, abs(sNoise(vec2(P3.x * 0.5 + P3.z * 0.4, P3.y * 0.18) * 1.4) - 0.5)) * smoothstep(0.4, 0.7, n2); k -= crack * 0.12;
+        if (top) k += 0.1 + (n3 - 0.5) * 0.08; }`;
+    else if (kind === 'sand') body = `{ float r = sin((vSurfP.x * 0.9 + vSurfP.z * 0.35) * 3.2 + sNoise(vSurfP.xz * 0.5) * 4.0); k = 1.0 + r * 0.09 + (sNoise(vSurfP.xz * 0.25) - 0.5) * ${f3(jit)} + (sNoise(vSurfP.xz * 3.0) - 0.5) * 0.08;
+        float wet = smoothstep(0.62, 0.72, sNoise(vSurfP.xz * 0.18 + 7.0)); k *= mix(1.0, 0.8, wet); }`;
+    else body = `k = 1.0 + (sNoise(vec2(uv.x * 0.6, uv.y * 9.0)) - 0.5) * ${f3(jit)} - (sin(uv.y * 40.0 + sNoise(uv * 2.0) * 6.0) * 0.5 + 0.5) * 0.06;`;
+    m.onBeforeCompile = sh => {
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vSurfP; varying vec3 vSurfN;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSurfP = (modelMatrix * vec4(transformed, 1.0)).xyz; vSurfN = normalize(mat3(modelMatrix) * objectNormal);');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+varying vec3 vSurfP; varying vec3 vSurfN;
+float sHash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float sNoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(sHash(i), sHash(i + vec2(1, 0)), f.x), mix(sHash(i + vec2(0, 1)), sHash(i + vec2(1, 1)), f.x), f.y); }`)
+        .replace('#include <color_fragment>', `#include <color_fragment>
+{ vec3 n = abs(vSurfN); bool top = n.y > 0.7; vec2 uv = top ? vSurfP.xz : (n.x > n.z ? vSurfP.zy : vSurfP.xy); float k = 1.0;
+  ${body}
+  diffuseColor.rgb *= k; }`);
+    };
+    m.customProgramCacheKey = () => 'surf' + key;
+    surfMats.set(key, m); return m;
+  }
 
   // 시드 고정 난수 — 새로고침해도 같은 배치(QA·스크린샷 비교가 가능하도록)
   let seed = 20260924;
@@ -1591,8 +1632,49 @@
     if (Z && Z.id === 'redsea' && (ST.ch > 3 || (ST.ch === 3 && (ST.cleared || ST.step >= stepIdx('c4s10'))))) return [56, 6];   // 바다를 건넌 뒤에는 건너편 해변
     return sp;
   }
+  // 2026-11-25 고퀄: 물 벽을 판 한 장 → 두께 있는 물 덩어리(위쪽이 길 쪽으로 살짝 말림)·깊이에 따른 색·물속 빛 무늬·물고기 그림자·거품 마루·물보라,
+  //   바닥은 젖은 모래 물결·물웅덩이·해초·조개
+  const seaPuffTex = (() => { let t = null; return () => { if (t) return t; const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+    for (let i = 0; i < 18; i++){ const a = Math.random() * 6.28, r = Math.random() * 30, cx = 64 + Math.cos(a) * r, cy = 64 + Math.sin(a) * r * 0.8, rr = 18 + Math.random() * 22, g = x.createRadialGradient(cx, cy, 0, cx, cy, rr);
+      g.addColorStop(0, 'rgba(255,255,255,0.55)'); g.addColorStop(0.6, 'rgba(255,255,255,0.25)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); }
+    t = new THREE.CanvasTexture(c); return t; }; })();
+  const foamTex = (() => { let t = null; return () => { if (t) return t; const c = document.createElement('canvas'); c.width = 256; c.height = 32; const x = c.getContext('2d');
+    for (let i = 0; i < 90; i++){ const cx = Math.random() * 256, cy = 10 + Math.random() * 14, r = 3 + Math.random() * 9, g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 256, 32); }
+    x.fillStyle = 'rgba(255,255,255,0.8)'; x.fillRect(0, 18, 256, 6); t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; return t; }; })();
+  function seaWaterMat(S, top){
+    const m = new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap: toonGradient, transparent: true, opacity: top ? 0.96 : 0.94, side: THREE.DoubleSide });
+    const f = v => (+v).toFixed(3);
+    m.onBeforeCompile = sh => {
+      sh.uniforms.uT = sea.uT; sh.uniforms.uH = sea.uH; sh.uniforms.uB = sea.uB;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+uniform float uT; uniform float uH; uniform float uB; varying vec3 vWP; vec3 wGlow;
+float wH(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float wN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(wH(i), wH(i + vec2(1, 0)), f.x), mix(wH(i + vec2(0, 1)), wH(i + vec2(1, 1)), f.x), f.y); }`)
+        .replace('#include <color_fragment>', `#include <color_fragment>
+{ ${top ? `float t = 1.0;` : `float t = clamp((vWP.y - uB) / max(uH, 0.01), 0.0, 1.0);`}
+  vec3 deep = vec3(0.02, 0.13, 0.24), mid = vec3(0.08, 0.38, 0.58), hi = vec3(0.36, 0.74, 0.86);
+  vec3 col = mix(deep, mid, smoothstep(0.0, 0.55, t)); col = mix(col, hi, smoothstep(0.55, 0.97, t));
+  float sw = wN(vec2(vWP.x * 0.3 + uT * 0.04, vWP.y * 0.45 - uT * 0.12) + vWP.z * 0.2), sw2 = wN(vec2(vWP.x * 0.9 - uT * 0.1, vWP.y * 1.4 + uT * 0.2));
+  col *= 0.86 + sw * 0.22 + sw2 * 0.08;
+  float ca = pow(abs(sin(vWP.x * 1.6 + wN(vWP.xy * 0.7 + uT * 0.25) * 6.0) * sin(vWP.y * 1.1 + vWP.z + wN(vWP.xy * 0.5 - uT * 0.2) * 6.0)), 8.0);
+  float bub = step(0.992, wH(floor(vec2(vWP.x * 5.0, vWP.y * 5.0 - uT * 4.0)))) * smoothstep(0.1, 0.5, t);
+  ${top ? `col = mix(vec3(0.1, 0.42, 0.6), vec3(0.3, 0.66, 0.8), sw); float fm = smoothstep(0.62, 0.8, wN(vWP.xz * 0.6 + uT * 0.15)); col = mix(col, vec3(0.9, 0.97, 1.0), fm * 0.5);` : `
+  for (int i = 0; i < 7; i++){ float fi = float(i), sp = 0.6 + wH(vec2(fi, 2.0)) * 0.9, dir = wH(vec2(fi, 5.0)) > 0.5 ? 1.0 : -1.0;
+    float fx = ${f(S.x0)} + mod(wH(vec2(fi, 1.0)) * 40.0 + uT * sp * dir, ${f(S.x1 - S.x0)}), fy = uB + uH * (0.18 + wH(vec2(fi, 3.0)) * 0.55) + sin(uT * 0.7 + fi) * 0.3;
+    vec2 d = (vWP.xy - vec2(fx, fy)) / vec2(0.55, 0.17); float body = 1.0 - smoothstep(0.75, 1.0, length(d));
+    col *= 1.0 - 0.45 * body * smoothstep(0.05, 0.3, t); }
+  float crest = smoothstep(0.9, 1.0, t) * (0.6 + 0.4 * wN(vec2(vWP.x * 2.0 - uT, uT))); col = mix(col, vec3(0.92, 0.98, 1.0), crest);`}
+  col += vec3(0.5, 0.85, 1.0) * ca * 0.14 * (0.3 + t) + vec3(bub * 0.5);
+  diffuseColor.rgb = col; wGlow = col * (0.22 + ca * 0.35); }`)
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += wGlow;');
+    };
+    m.customProgramCacheKey = () => 'seaW' + (top ? 1 : 0) + S.x0 + '_' + S.x1;
+    return m;
+  }
   function buildSea(){
     const S = Z.sea, g = new THREE.Group(); zoneRoot.add(g);
+    sea.uT = { value: 0 }; sea.uH = { value: 0 }; sea.uB = { value: heightAt((S.x0 + S.x1) / 2, S.gap) - 0.3 };
     const waterMat = new THREE.MeshToonMaterial({ color: 0x3f8fb8, gradientMap: toonGradient, transparent: true, opacity: 0.9 });
     const strip = (z0, z1, mat) => {
       const geo = new THREE.PlaneGeometry(S.x1 - S.x0, z1 - z0, 24, Math.max(2, Math.round((z1 - z0) / 2))); geo.rotateX(-Math.PI / 2);
@@ -1602,21 +1684,36 @@
     };
     strip(S.gap, 64, waterMat); strip(-64, -S.gap, waterMat);
     sea.mid = strip(-S.gap, S.gap, waterMat.clone());
-    const floorMat = new THREE.MeshToonMaterial({ color: 0x9a7a52, gradientMap: toonGradient, transparent: true, opacity: 0 });
-    sea.floor = strip(-S.gap, S.gap, floorMat); sea.floor.position.y -= 0.3;
-    const cx = (S.x0 + S.x1) / 2, hx = (S.x1 - S.x0) / 2;
+    sea.floor = strip(-S.gap, S.gap, surfMat(0xa08260, 'sand', { transparent: true, opacity: 0, jit: 0.2 })); sea.floor.position.y -= 0.3; sea.floor.material.emissive.setHex(0x3a3022);   // 밤에도 젖은 모래가 보이게(구름 기둥이 이쪽을 비춤, 14:20)
+    const cx = (S.x0 + S.x1) / 2, hx = (S.x1 - S.x0) / 2, L = S.x1 - S.x0;
     boxes.push({ x: cx, z: (S.gap + 64) / 2, rot: 0, hx, hz: (64 - S.gap) / 2, top: 99, stand: false });
     boxes.push({ x: cx, z: -(S.gap + 64) / 2, rot: 0, hx, hz: (64 - S.gap) / 2, top: 99, stand: false });
     sea.gate = { x: cx, z: 0, rot: 0, hx, hz: S.gap, top: 99, stand: false }; boxes.push(sea.gate);
-    // 물 벽(가운데 길 양쪽): 아래는 바닥, 위는 k에 따라 솟음
+    const wallM = seaWaterMat(S, false), topM = seaWaterMat(S, true);
+    const foamM = new THREE.MeshBasicMaterial({ map: foamTex(), transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false });
+    foamM.map.repeat.set(L / 3, 1);
+    // 물 벽(가운데 길 양쪽) + 벽 위 물 덩어리(바깥으로 갈수록 바다 높이로) + 거품 마루 + 물보라
     sea.walls = [S.gap, -S.gap].map(zw => {
-      const geo = new THREE.PlaneGeometry(S.x1 - S.x0, 1, 40, 1);
-      const m = new THREE.Mesh(geo, new THREE.MeshToonMaterial({ color: 0x2f7fb0, gradientMap: toonGradient, transparent: true, opacity: 0.82, side: THREE.DoubleSide }));
-      m.position.set(cx, 0, zw); m.userData.zw = zw; m.visible = false; g.add(m);
-      const foam = new THREE.Mesh(new THREE.PlaneGeometry(S.x1 - S.x0, 0.5, 40, 1), new THREE.MeshBasicMaterial({ color: 0xe8f6ff, transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
-      foam.position.set(cx, 0, zw); foam.visible = false; g.add(foam); m.userData.foam = foam;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(L, 1, 64, 12), wallM); m.position.set(cx, 0, 0); m.userData.zw = zw; m.visible = false; m.frustumCulled = false; g.add(m);
+      const top = new THREE.Mesh(new THREE.PlaneGeometry(L, 1, 32, 14), topM); top.position.set(cx, 0, 0); top.visible = false; top.frustumCulled = false; g.add(top); m.userData.top = top;
+      const foam = new THREE.Mesh(new THREE.PlaneGeometry(L, 1, 64, 2), foamM); foam.position.set(cx, 0, 0); foam.visible = false; foam.frustumCulled = false; g.add(foam); m.userData.foam = foam;
+      const N = 220, sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+      const spray = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xeaf8ff, size: 0.16, map: dotTex, transparent: true, opacity: 0, depthWrite: false })); spray.frustumCulled = false; g.add(spray);
+      m.userData.spray = spray; m.userData.seed = Array.from({ length: N }, () => [Math.random(), Math.random(), Math.random()]);
       return m;
     });
+    // 바닥: 물웅덩이·해초·조개·작은 바위(갈라진 뒤에만 보임)
+    const bed = new THREE.Group(); bed.visible = false; g.add(bed); sea.bed = bed;
+    let s7 = 11; const rr = () => { s7 = (s7 * 16807) % 2147483647; return (s7 - 1) / 2147483646; };
+    const T = c => new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient });
+    const puddleM = new THREE.MeshToonMaterial({ color: 0x7aa4b4, gradientMap: toonGradient, transparent: true, opacity: 0.45 }), weedM = [T(0x3f6a3a), T(0x5a7a34), T(0x6a5a2c)], shellM = [T(0xf0e2cc), T(0xe8c4b0), T(0xd8d0c0)], rockM = surfMat(0x6a6258, 'rock', { flat: true, sc: 0.5 });
+    const cone = new THREE.ConeGeometry(0.07, 1, 4), sph = new THREE.SphereGeometry(1, 7, 5), dod = new THREE.DodecahedronGeometry(1, 0);
+    for (let i = 0; i < 22; i++){ const x = S.x0 + 1 + rr() * (L - 2), z = (rr() - 0.5) * (S.gap * 2 - 1.5), r = 0.25 + rr() * 0.55;
+      const p = new THREE.Mesh(new THREE.CircleGeometry(r, 14).rotateX(-Math.PI / 2), puddleM); p.position.set(x, heightAt(x, z) + 0.07 + i * 0.0005, z); p.scale.set(1, 1, 0.5 + rr() * 0.6); p.rotation.y = rr() * 3; bed.add(p); }
+    for (let i = 0; i < 70; i++){ const x = S.x0 + rr() * L, z = (rr() > 0.5 ? 1 : -1) * (S.gap - 0.3 - rr() * 1.6), n = 3 + Math.floor(rr() * 4), mat = weedM[i % 3];
+      for (let k = 0; k < n; k++){ const h = 0.4 + rr() * 0.9, w = new THREE.Mesh(cone, mat); w.scale.set(1, h, 1); w.position.set(x + (rr() - 0.5) * 0.4, heightAt(x, z) + h / 2, z + (rr() - 0.5) * 0.4); w.rotation.set((rr() - 0.5) * 0.6, rr() * 3, (rr() - 0.5) * 0.6); w.userData.sw = rr() * 6; bed.add(w); } }
+    for (let i = 0; i < 60; i++){ const x = S.x0 + rr() * L, z = (rr() - 0.5) * (S.gap * 2 - 0.8), s = 0.06 + rr() * 0.08, sh = new THREE.Mesh(sph, shellM[i % 3]); sh.scale.set(s, s * 0.45, s * 1.2); sh.position.set(x, heightAt(x, z) + 0.07, z); sh.rotation.y = rr() * 6; bed.add(sh); }
+    for (let i = 0; i < 24; i++){ const x = S.x0 + rr() * L, z = (rr() > 0.5 ? 1 : -1) * (S.gap - 0.5 - rr() * 2), s = 0.2 + rr() * 0.4, r = new THREE.Mesh(dod, rockM); r.scale.set(s, s * 0.6, s); r.position.set(x, heightAt(x, z) + s * 0.25, z); r.rotation.set(rr(), rr() * 6, 0); r.castShadow = true; bed.add(r); }
     // 큰 동풍(14:21): 물보라가 서쪽으로
     const N = 300, wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3));
     sea.wind = new THREE.Points(wg, new THREE.PointsMaterial({ color: 0xdff2ff, size: 0.22, map: dotTex, transparent: true, opacity: 0, depthWrite: false })); sea.wind.frustumCulled = false; g.add(sea.wind);
@@ -1625,27 +1722,42 @@
   }
   function applySeaShape(){
     if (!sea.mid || !Z || !Z.sea) return;
-    const S = Z.sea, k = sea.k, cx = (S.x0 + S.x1) / 2;
+    const S = Z.sea, k = sea.k, cx = (S.x0 + S.x1) / 2, now = performance.now(), H = 7.5 * k;
     sea.mid.material.opacity = 0.9 * (1 - k); sea.mid.visible = k < 0.98;
     sea.floor.material.opacity = k; sea.floor.visible = k > 0.02;
+    sea.bed.visible = k > 0.55; sea.bed.scale.y = Math.max(0.01, (k - 0.55) / 0.45); sea.bed.position.y = -0.3 * (1 - sea.bed.scale.y);
+    sea.uH.value = H;
     for (const w of sea.walls){
-      w.visible = w.userData.foam.visible = k > 0.02;
-      const pa = w.geometry.attributes.position, H = 7.5 * k;
-      for (let i = 0; i < pa.count; i++){ const x = pa.getX(i) + cx, base = heightAt(x, w.userData.zw) - 0.3, top = i < pa.count / 2;   // 앞 절반 = 윗줄
-        pa.setY(i, top ? base + H + Math.sin(x * 0.6 + performance.now() * 0.002) * 0.25 * k : base); }
-      pa.needsUpdate = true; w.position.y = 0;
-      const fp = w.userData.foam.geometry.attributes.position;
-      for (let i = 0; i < fp.count; i++){ const x = fp.getX(i) + cx; fp.setY(i, heightAt(x, w.userData.zw) - 0.3 + H + (i < fp.count / 2 ? 0.3 : -0.1) + Math.sin(x * 0.6 + performance.now() * 0.002) * 0.25 * k); }
-      fp.needsUpdate = true;
+      const on = k > 0.02, side = Math.sign(w.userData.zw), top = w.userData.top, foam = w.userData.foam;
+      w.visible = top.visible = foam.visible = on; if (!on) continue;
+      const lip = (x, t0) => { const t = t0 * THREE.MathUtils.smoothstep(x, S.x0 - 0.5, S.x0 + 4) * (1 - THREE.MathUtils.smoothstep(x, S.x1 - 4, S.x1 + 0.5)), wob = Math.sin(x * 0.55 + now * 0.0018) * 0.22 + Math.sin(x * 1.3 - now * 0.0026) * 0.08; return { y: H * t + wob * t * k, z: w.userData.zw + side * (-Math.pow(t, 4) * 0.8 * k + Math.sin(x * 0.35 + now * 0.001) * 0.12 * t * k) }; };
+      const pa = w.geometry.attributes.position, cols = 65, rows = 13;
+      for (let i = 0; i < pa.count; i++){ const j = Math.floor(i / cols), t = 1 - j / (rows - 1), x = pa.getX(i) + cx, base = heightAt(x, w.userData.zw) - 0.3, q = lip(x, t); pa.setY(i, base + q.y); pa.setZ(i, q.z); }
+      pa.needsUpdate = true; w.geometry.computeVertexNormals();
+      // 벽 위 물 덩어리: 가장자리는 벽 꼭대기, 바깥 26m에서 바다 높이로
+      const tp = top.geometry.attributes.position, tc = 33, tr = 15;
+      for (let i = 0; i < tp.count; i++){ const j = Math.floor(i / tc), u = j / (tr - 1), x = tp.getX(i) + cx, dz = u * 26, q = lip(x, 1), sea0 = heightAt(x, w.userData.zw + side * dz) + 0.35, base = heightAt(x, w.userData.zw) - 0.3;
+        const f = THREE.MathUtils.smoothstep(dz, 3, 26); tp.setY(i, (base + q.y) * (1 - f) + sea0 * f + Math.sin(x * 0.7 + dz * 0.5 + now * 0.002) * 0.12 * (1 - f) * k); tp.setZ(i, (j === 0 ? q.z : w.userData.zw + side * dz)); }
+      tp.needsUpdate = true; top.geometry.computeVertexNormals();
+      const fp = foam.geometry.attributes.position, fc = 65;
+      for (let i = 0; i < fp.count; i++){ const j = Math.floor(i / fc), x = fp.getX(i) + cx, base = heightAt(x, w.userData.zw) - 0.3, q = lip(x, 1); fp.setY(i, base + q.y + (j === 0 ? 0.35 : j === 1 ? 0.05 : -0.45)); fp.setZ(i, q.z - side * (j === 0 ? -0.2 : j === 1 ? 0.06 : 0.02)); }
+      fp.needsUpdate = true; foam.material.map.offset.x = now * 0.00004 * side;
     }
     const open = k > 0.7, has = boxes.includes(sea.gate);
     if (open && has) boxes.splice(boxes.indexOf(sea.gate), 1); else if (!open && !has && k < 0.3) boxes.push(sea.gate);
   }
   function updateSea(dt, now){
     if (!Z || !Z.sea || !sea.mid) return;
+    sea.uT.value = now * 0.001;
     const moving = Math.abs(sea.target - sea.k) > 0.001;
     if (moving) sea.k += Math.sign(sea.target - sea.k) * Math.min(Math.abs(sea.target - sea.k), dt * 0.3);
-    if (moving || (sea.k > 0.02 && Math.floor(now / 100) !== sea._t)){ sea._t = Math.floor(now / 100); applySeaShape(); }
+    if (moving || (sea.k > 0.02 && Math.floor(now / 50) !== sea._t)){ sea._t = Math.floor(now / 50); applySeaShape(); }
+    // 물 벽에서 흩날리는 물보라 · 흔들리는 해초
+    if (sea.k > 0.02){ const S = Z.sea, H = 7.5 * sea.k, t = now * 0.001;
+      for (const w of sea.walls){ const sp = w.userData.spray, a = sp.geometry.attributes.position, side = Math.sign(w.userData.zw); sp.material.opacity = 0.55 * sea.k;
+        w.userData.seed.forEach(([u, v, h], i) => { const x = S.x0 + u * (S.x1 - S.x0), ph = (v + t * (0.12 + h * 0.15)) % 1, y = heightAt(x, w.userData.zw) - 0.3 + H * (1 - ph * 0.85) + 0.3;
+          a.setXYZ(i, x + Math.sin(t + u * 40) * 0.3, y, w.userData.zw - side * (0.15 + ph * (0.6 + h * 1.2))); }); a.needsUpdate = true; }
+      if (sea.bed.visible) sea.bed.children.forEach(o => { if (o.userData.sw !== undefined) o.rotation.z = Math.sin(t * 1.4 + o.userData.sw) * 0.18; }); }
     // 동풍 물보라: 갈라지는 동안만
     const on = moving && sea.target > 0.5; sea.wind.material.opacity += ((on ? 0.8 : 0) - sea.wind.material.opacity) * Math.min(1, dt * 3);
     if (sea.wind.material.opacity > 0.01){ const S = Z.sea, a = sea.wind.geometry.attributes.position, t = now * 0.001;
@@ -1695,6 +1807,11 @@
     const stopX = chase.on ? g.userData.x + 1 : cloudOn ? -48 : -44;
     if (!chase.on && g.userData.x < stopX) g.userData.x = Math.min(stopX, g.userData.x + dt * 1.2);
     g.position.x = g.userData.x; const t = now * 0.004, marching = g.userData.x < stopX - 0.01;
+    // 2026-11-25: 바다 가운데 길(폭 ±gap)에 들어서면 대열을 좁혀 물벽 안으로 들어가 보이지 않게
+    if (Z.sea){ const S = Z.sea, lim = S.gap - 0.9; g.children.forEach(s => { if (s.isPoints) return; if (s.userData.z0 === undefined) s.userData.z0 = s.position.z;
+      const wx = g.position.x + s.position.x, inSea = sea.k > 0.3 && wx > S.x0 - 3 && wx < S.x1 + 3, z1 = inSea ? s.userData.z0 * lim / 7 : s.userData.z0;
+      s.position.z += (z1 - s.position.z) * Math.min(1, dt * 4); });
+      const mid = g.position.x > S.x0 - 6 && g.position.x < S.x1 + 6 && sea.k > 0.3; g.userData.dust.scale.z += ((mid ? 0.5 : 1) - g.userData.dust.scale.z) * Math.min(1, dt * 4); }
     g.children.forEach(s => { if (s.userData.ph !== undefined){ s.position.y = heightAt(g.position.x + s.position.x, s.position.z) + (marching ? Math.abs(Math.sin(t + s.userData.ph)) * 0.12 : 0); } else if (!s.isPoints) s.position.y = heightAt(g.position.x + s.position.x, s.position.z); });
     g.userData.dust.material.opacity = marching ? 0.45 : 0.2; g.userData.dust.position.y = heightAt(g.position.x, 0);
   }
@@ -1704,18 +1821,18 @@
     if (cloudObj){ if (cloudObj.parent) cloudObj.parent.remove(cloudObj); cloudObj = null; }
     if (!Z || Z.id !== 'redsea' || ST.ch !== 3) return;
     const wall = cloudOn, g = new THREE.Group();
-    const mk = (x, y, z, s, col) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: col, transparent: true, opacity: 0.85, depthWrite: false, fog: false })); sp.scale.set(s, s, 1); sp.position.set(x, y, z); sp.userData.ph = Math.random() * 6; g.add(sp); };
+    const mk = (x, y, z, s, col) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: seaPuffTex(), color: col, transparent: true, opacity: 0.85, depthWrite: false, fog: false, rotation: Math.random() * 6.28 })); sp.scale.set(s, s, 1); sp.position.set(x, y, z); sp.userData.ph = Math.random() * 6; g.add(sp); };
     if (wall){
-      for (let i = 0; i < 70; i++) mk((Math.random() - 0.5) * 3, 1 + Math.random() * 13, -32 + Math.random() * 64, 5 + Math.random() * 5, i % 3 ? 0xe8e8ee : 0xb8bcc8);
+      for (let i = 0; i < 130; i++) mk((Math.random() - 0.5) * 4, 0.5 + Math.random() * 14, -32 + Math.random() * 64, 5 + Math.random() * 7, i % 3 ? 0xe8e8ee : 0xb8bcc8);
       const L = new THREE.PointLight(0xffd9a0, 2.4, 40, 1.2); L.position.set(4, 6, 0); g.add(L);   // 이쪽은 밤이 밝음(14:20)
       g.position.set(-36, heightAt(-36, 0), 0);
     } else {
-      for (let i = 0; i < 26; i++) mk((Math.random() - 0.5) * 2.2, 1 + i * 0.75, (Math.random() - 0.5) * 2.2, 3.4 + Math.random() * 1.6, i % 3 ? 0xf2f2f6 : 0xd0d4dc);
+      for (let i = 0; i < 44; i++) mk((Math.random() - 0.5) * 2.4, 0.8 + i * 0.45, (Math.random() - 0.5) * 2.4, 3.4 + Math.random() * 2.2, i % 3 ? 0xf2f2f6 : 0xd0d4dc);
       g.position.set(6, heightAt(6, -19), -19);
     }
     zoneRoot.add(g); cloudObj = g;
   }
-  function updateCloud(now){ if (!cloudObj) return; const t = now * 0.0006; cloudObj.children.forEach(o => { if (o.isSprite){ o.material.opacity = 0.7 + 0.2 * Math.sin(t * 3 + o.userData.ph); o.position.x += Math.sin(t + o.userData.ph) * 0.003; } }); }
+  function updateCloud(now){ if (!cloudObj) return; const t = now * 0.0006; cloudObj.children.forEach(o => { if (o.isSprite){ o.material.opacity = 0.7 + 0.2 * Math.sin(t * 3 + o.userData.ph); o.position.x += Math.sin(t + o.userData.ph) * 0.003; o.material.rotation += Math.sin(o.userData.ph) * 0.0008; } }); }
   // 미리암과 여인들의 춤(15:20)
   let danceT = 0;
   function startDance(){ danceT = 40; ['miriam', 'rs_singer', 'rs_mom'].forEach(id => { const m = markers.find(x => x.data.id === id); if (m && m.ai){ m.ai.state = 'act'; m.ai.act = has(m, 'Talk') ? 'Talk' : 'Idle'; m.ai.t = 40; } }); toast('🥁 소고 소리가 울려 퍼져요!', 2200); }
@@ -1757,9 +1874,10 @@
   function buildJerusalem(){
     if (!Z || Z.id !== 'jerusalem') return;
     const J = JERU, T = c => new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient });
-    const mStone = T(0xdccca0), mStone2 = T(0xc9b68a), mCope = T(0xbfa97c), mDark = T(0x3a3028), mCedar = T(0x7a4a2a), mCedar2 = T(0x9a6238),
-      mPlaster = T(0xeee2c4), mRoof = T(0xb89870), mCloth = T(0xf2ece0), mBlue = T(0x3a5a9a), mPurple = T(0x6a3a7a), mGold = T(0xd8b048),
-      mRoad = T(0xd8c89a), mFloor = T(0xd2c29a), mOliveLeaf = T(0x7a8a5a), mOliveLeaf2 = T(0x8f9c6a), mTrunk = T(0x6a5038), mMulLeaf = T(0x5f8a3e), mGrass = T(0xbfc488);
+    // 2026-11-25 무늬 재질(surfMat): 돌 줄눈·회벽 얼룩·나뭇결 — 상자만 있던 성이 밋밋하다는 지적
+    const mStone = surfMat(0xdccca0, 'stone'), mStone2 = surfMat(0xc9b68a, 'stone', { bw: 1.25, bh: 0.58 }), mCope = surfMat(0xbfa97c, 'brick'), mDark = T(0x3a3028), mCedar = surfMat(0x7a4a2a, 'wood'), mCedar2 = surfMat(0x9a6238, 'wood'),
+      mPlaster = surfMat(0xeee2c4, 'plaster'), mRoof = surfMat(0xb89870, 'plaster'), mBase = surfMat(0xb5a079, 'stone', { bw: 1.5, bh: 0.7, jit: 0.28 }), mCloth = T(0xf2ece0), mBlue = T(0x3a5a9a), mPurple = T(0x6a3a7a), mGold = T(0xd8b048),
+      mRoad = surfMat(0xd8c89a, 'stone', { top: true, bw: 0.9, bh: 0.6, jit: 0.2, md: 0.8 }), mFloor = T(0xd2c29a), mOliveLeaf = T(0x7a8a5a), mOliveLeaf2 = T(0x8f9c6a), mTrunk = T(0x6a5038), mMulLeaf = T(0x5f8a3e), mGrass = T(0xbfc488);
     const g = new THREE.Group(); g.userData.ownGPU = true; zoneRoot.add(g);
     const box = new THREE.BoxGeometry(1, 1, 1), sph = new THREE.SphereGeometry(1, 9, 7), cyl = new THREE.CylinderGeometry(1, 1, 1, 12);
     const add = (geo, mat, x, y, z, sx, sy, sz, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
@@ -1774,6 +1892,8 @@
         const cx = (ax + bx) / 2, cz = (az + bz) / 2, L = len / n, y = lo(ax, az, bx, bz), H = J.wallH + (heightAt(cx, cz) - y);
         const sx = alongX ? L + 0.02 : 1.4, sz = alongX ? 1.4 : L + 0.02;
         add(box, i % 2 ? mStone : mStone2, cx, y + H / 2, cz, sx, H, sz);
+        add(box, mBase, cx, y + 0.75, cz, alongX ? L + 0.02 : 1.9, 1.5, alongX ? 1.9 : L + 0.02);   // 아래 두꺼운 기단
+        add(box, mCope, cx, y + H * 0.72, cz, alongX ? L + 0.04 : 1.55, 0.16, alongX ? 1.55 : L + 0.04);   // 가로 띠돌
         add(box, mCope, cx, y + H + 0.12, cz, alongX ? L + 0.1 : 1.6, 0.25, alongX ? 1.6 : L + 0.1);
         for (let k = 0; k < 2; k++){ const t = (k + 0.5) / 2, mx = ax + (bx - ax) * t, mz = az + (bz - az) * t; add(box, mStone, mx, y + H + 0.6, mz, alongX ? 0.9 : 1.2, 0.8, alongX ? 1.2 : 0.9); }
         solid(cx, cz, sx / 2, sz / 2, y + H);
@@ -1782,6 +1902,8 @@
     function tower(x, z, w = 3.4, h = 6.2){
       const y = heightAt(x, z) - 0.4, H = h + 0.4;
       add(box, mStone2, x, y + H / 2, z, w, H, w); add(box, mCope, x, y + H + 0.15, z, w + 0.3, 0.3, w + 0.3);
+      add(box, mBase, x, y + 0.9, z, w + 0.6, 1.8, w + 0.6); add(box, mCope, x, y + H * 0.7, z, w + 0.16, 0.18, w + 0.16);
+      for (const [dx, dz] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) for (let k = -1; k <= 1; k += 2) add(box, mCedar, x + dx * (w / 2 + 0.12) + (dz ? k * w * 0.28 : 0), y + H - 0.45, z + dz * (w / 2 + 0.12) + (dx ? k * w * 0.28 : 0), 0.18, 0.18, 0.18);   // 들보 끝
       for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) add(box, mStone, x + dx * (w / 2 - 0.35), y + H + 0.7, z + dz * (w / 2 - 0.35), 0.7, 0.8, 0.7);
       add(box, mDark, x, y + H * 0.62, z + w / 2 + 0.01, 0.3, 0.7, 0.05); add(box, mDark, x, y + H * 0.62, z - w / 2 - 0.01, 0.3, 0.7, 0.05);   // 활 쏘는 창
       solid(x, z, w / 2, w / 2, y + H);
@@ -1841,13 +1963,55 @@
       solid(tx, tz - 1.4, 2.1, 1.5, y + 2.6);
     }
     // ⑤ 집들 — 계단식으로 붙은 평지붕 집(한두 층)
-    const house = (x, z, w, d, two, ry = 0) => { const y = heightAt(x, z) - 0.3, h = two ? 4.4 : 2.7;
-      add(box, mPlaster, x, y + h / 2, z, w, h, d, ry); add(box, mRoof, x, y + h + 0.15, z, w + 0.3, 0.3, d + 0.3, ry);
-      add(box, mDark, x + Math.sin(ry) * (d / 2 + 0.02), y + 0.9, z + Math.cos(ry) * (d / 2 + 0.02), 0.9, 1.8, 0.08, ry);
-      if (two) add(box, mPlaster, x - Math.cos(ry) * w * 0.22, y + h + 0.9, z + Math.sin(ry) * w * 0.22, w * 0.45, 1.5, d * 0.6, ry);
-      solid(x, z, w / 2 + 0.2, d / 2 + 0.2, y + h); };
-    [[-15, 18, 4, 3.4, 1], [-9, 19, 3.6, 3, 0], [8, 19, 3.6, 3.2, 1], [14, 18, 4, 3.4, 0], [15, 11, 3.4, 3, 0], [-15, 11, 3.6, 3.2, 1],
-     [-15, 3.5, 3.2, 3, 0], [15.5, -3, 3, 3.4, 1], [-16, -9.5, 3.4, 2.8, 0], [15, -10, 3.6, 3, 0], [-5, 15, 3, 2.8, 0], [6, 14, 3, 2.8, 1]].forEach(([x, z, w, d, two]) => house(x, z, w, d, !!two));
+    // 2026-11-25: 집마다 들보 끝·창·문틀·지붕 난간·차양·항아리·사다리를 붙이고, 성 안 빈터를 집으로 채움(사람 다니는 길·이야기 자리는 비움)
+    const PLS = [mPlaster, surfMat(0xe6d6b2, 'plaster'), surfMat(0xf3ead4, 'plaster'), surfMat(0xdcc8a0, 'plaster'), surfMat(0xd6c09a, 'stone', { bw: 0.8, bh: 0.4, jit: 0.3 })];
+    const AWN = [T(0xb0402a), T(0x2f6a8a), T(0xd8a040), T(0x6a8a3a), T(0xf2ece0), T(0x8a3a5a)], mPot = T(0xb5764a), mPot2 = T(0x9a5e3a), mWin = T(0x2a221c);
+    let hs = 7; const hr = () => { hs = (hs * 16807) % 2147483647; return (hs - 1) / 2147483646; };
+    const house = (x, z, w, d, two, ry = 0) => { const y = heightAt(x, z) - 0.3, h = two ? 4.4 : 2.7, c = Math.cos(ry), sn = Math.sin(ry), pl = PLS[Math.floor(hr() * PLS.length)];
+      const L = (dx, dy, dz, geo, mat, sx, sy, sz) => add(geo, mat, x + dx * c + dz * sn, y + dy, z - dx * sn + dz * c, sx, sy, sz, ry);
+      L(0, h / 2, 0, box, pl, w, h, d); L(0, h + 0.12, 0, box, mRoof, w + 0.24, 0.24, d + 0.24);
+      for (const [dx, dz, sx, sz] of [[0, d / 2 + 0.06, w + 0.24, 0.14], [0, -d / 2 - 0.06, w + 0.24, 0.14], [w / 2 + 0.06, 0, 0.14, d + 0.24], [-w / 2 - 0.06, 0, 0.14, d + 0.24]]) L(dx, h + 0.42, dz, box, pl, sx, 0.4, sz);   // 지붕 난간
+      const nb = Math.max(2, Math.floor(w / 0.75)); for (let i = 0; i < nb; i++){ const bx = -w / 2 + (i + 0.5) * w / nb; L(bx, h - 0.32, d / 2 + 0.16, box, mCedar, 0.15, 0.15, 0.36); L(bx, h - 0.32, -d / 2 - 0.16, box, mCedar, 0.15, 0.15, 0.36); }   // 들보 끝
+      const dx0 = (hr() - 0.5) * (w - 1.4) * 0.6;
+      L(dx0, 0.95, d / 2 + 0.03, box, mWin, 0.92, 1.9, 0.06); L(dx0, 1.98, d / 2 + 0.08, box, mCedar, 1.25, 0.18, 0.2);   // 문 + 문 위 들보
+      L(dx0 - 0.52, 0.95, d / 2 + 0.06, box, mCedar2, 0.1, 1.9, 0.1); L(dx0 + 0.52, 0.95, d / 2 + 0.06, box, mCedar2, 0.1, 1.9, 0.1);
+      L(0, 0.12, d / 2 + 0.25, box, mBase, w * 0.6, 0.24, 0.5);   // 문턱 돌
+      for (const wx of [-w * 0.3, w * 0.3]) if (Math.abs(wx - dx0) > 0.9){ L(wx, h * 0.62, d / 2 + 0.03, box, mWin, 0.42, 0.5, 0.05); L(wx, h * 0.62 - 0.3, d / 2 + 0.07, box, mCedar, 0.56, 0.08, 0.14); }
+      L(w / 2 + 0.03, h * 0.62, 0, box, mWin, 0.05, 0.42, 0.36);
+      if (two){ const ux = -w * 0.2, uw = w * 0.5, ud = d * 0.6, uh = 1.6; L(ux, h + uh / 2, -d * 0.12, box, pl, uw, uh, ud); L(ux, h + uh + 0.1, -d * 0.12, box, mRoof, uw + 0.2, 0.2, ud + 0.2);
+        L(ux, h + uh * 0.55, -d * 0.12 + ud / 2 + 0.03, box, mWin, 0.4, 0.46, 0.05); for (let i = 0; i < 3; i++) L(ux - uw / 2 + (i + 0.5) * uw / 3, h + uh - 0.25, -d * 0.12 + ud / 2 + 0.14, box, mCedar, 0.13, 0.13, 0.3); }
+      if (hr() < 0.45){ const col = AWN[Math.floor(hr() * AWN.length)]; const aw = L(dx0, 2.35, d / 2 + 0.75, box, col, 1.9, 0.06, 1.3); aw.rotation.set(0.22, ry, 0, 'YXZ');   // 천 차양
+        L(dx0 - 0.85, 1.15, d / 2 + 1.3, cyl, mCedar2, 0.04, 2.3, 0.04); L(dx0 + 0.85, 1.15, d / 2 + 1.3, cyl, mCedar2, 0.04, 2.3, 0.04); }
+      if (hr() < 0.7){ const n = 1 + Math.floor(hr() * 3); for (let i = 0; i < n; i++) L(dx0 + (i % 2 ? 1 : -1) * (0.95 + i * 0.3), 0.32, d / 2 + 0.35, cyl, i % 2 ? mPot : mPot2, 0.22, 0.6, 0.22); }   // 문 앞 항아리
+      if (hr() < 0.55){ L(w * 0.25, h + 0.55, d * 0.15, cyl, mPot, 0.2, 0.5, 0.2); L(w * 0.32, h + 0.45, d * 0.28, cyl, mPot2, 0.16, 0.36, 0.16); }   // 지붕 위 항아리
+      if (hr() < 0.4){ for (const oz of [0, 0.5]){ const lr = L(w / 2 + 0.45, h * 0.5 + 0.1, d * 0.1 + oz, box, mCedar2, 0.08, h + 0.4, 0.08); lr.rotation.set(0, ry, -0.16, 'YXZ'); }
+        for (let i = 1; i < 6; i++) L(w / 2 + 0.53 - i * 0.05, i * (h / 6), d * 0.1 + 0.25, box, mCedar, 0.06, 0.06, 0.56); }   // 사다리
+      if (hr() < 0.3) L(-w * 0.2, h + 1.0, 0, box, AWN[Math.floor(hr() * AWN.length)], 1.3, 0.9, 0.03);   // 지붕에 넌 천
+      solid(x, z, (Math.abs(c) * w + Math.abs(sn) * d) / 2 + 0.2, (Math.abs(sn) * w + Math.abs(c) * d) / 2 + 0.2, y + h); };
+    const LOTS = [[-15, 18, 4, 3.4, 1], [-9, 19, 3.6, 3, 0], [8, 19, 3.6, 3.2, 1], [14, 18, 4, 3.4, 0], [15, 11, 3.4, 3, 0], [-15, 11, 3.6, 3.2, 1],
+     [-15, 3.5, 3.2, 3, 0], [15.5, -3, 3, 3.4, 1], [-16, -9.5, 3.4, 2.8, 0], [15, -10, 3.6, 3, 0], [-5, 15, 3, 2.8, 0], [6, 14, 3, 2.8, 1]];
+    LOTS.forEach(([x, z, w, d, two]) => house(x, z, w, d, !!two));
+    { // 빈터 채우기 — 길(남북 큰길·동서 길), 궁·장막·이야기 자리(가난한 사람의 집·재료 모으는 곳·성문 앞)와 겹치지 않게
+      const keep = [[-8, 2, 7.5], [-8, 8, 2.5], [8, -6, 6.6], [8, 0, 2.5], [11, 12, 3], [11, 14.6, 2], [-4, 16, 3.2], [0, 24, 5], [0, -14, 5], [20, 5, 5], [-20, 4, 3]];
+      const taken = LOTS.map(([x, z, w, d]) => [x, z, Math.max(w, d) / 2 + 0.9]);
+      const ok = (x, z, r) => Math.abs(x) > 2.4 + r && Math.abs(z - 10) > 1.8 + r && x > J.x0 + 1.6 + r && x < J.x1 - 1.6 - r && z > J.z0 + 1.6 + r && z < J.z1 - 1.6 - r
+        && keep.every(([kx, kz, kr]) => Math.hypot(x - kx, z - kz) > kr + r) && taken.every(([tx, tz, tr]) => Math.hypot(x - tx, z - tz) > tr + r);
+      for (let gx = J.x0 + 3; gx < J.x1 - 2; gx += 3.3) for (let gz = J.z0 + 3; gz < J.z1 - 2; gz += 3.2){
+        const x = gx + (hr() - 0.5) * 1.2, z = gz + (hr() - 0.5) * 1.2, w = 2.6 + hr() * 1.1, d = 2.4 + hr() * 0.9, r = Math.max(w, d) / 2 + 0.4;
+        if (!ok(x, z, r)) continue;
+        const ry = Math.abs(z - 10) < 6 ? (z < 10 ? 0 : Math.PI) : (x < 0 ? Math.PI / 2 : -Math.PI / 2);
+        house(x, z, w, d, hr() < 0.35, ry); taken.push([x, z, r + 0.5]); }
+    }
+    // 동서 길가 장터: 천막 좌판과 바구니
+    for (const [x, z] of [[-12, 12.2], [-6.5, 12.2], [5.5, 7.8], [12, 7.8]]){ const y = heightAt(x, z), col = AWN[Math.floor(hr() * AWN.length)];
+      for (const [dx, dz] of [[-0.9, -0.6], [0.9, -0.6], [-0.9, 0.6], [0.9, 0.6]]) add(cyl, mCedar2, x + dx, y + 1.0, z + dz, 0.04, 2, 0.04);
+      add(box, col, x, y + 2.02, z, 2.1, 0.06, 1.5); add(box, mCedar, x, y + 0.75, z, 1.8, 0.1, 1.1);
+      for (let k = 0; k < 3; k++) add(sph, [T(0xd8b860), T(0x8a5a9a), T(0xa8c060)][k], x - 0.55 + k * 0.55, y + 0.88, z, 0.22, 0.12, 0.22);
+      obstacles.push({ x, z, r: 1.0 }); }
+    // 성 안 종려나무 몇 그루
+    for (const [x, z] of [[-3.5, 4], [3.6, 3.5], [-3.4, 20.5], [3.4, 20.5], [-17.5, 0]]){ const y = heightAt(x, z);
+      add(cyl, mTrunk, x, y + 1.6, z, 0.13, 3.2, 0.13); for (let k = 0; k < 6; k++){ const a = k / 6 * Math.PI * 2, f = add(box, mOliveLeaf, x + Math.cos(a) * 0.8, y + 3.2, z + Math.sin(a) * 0.8, 1.7, 0.06, 0.45); f.rotation.set(0, -a, 0.35, 'YXZ'); }
+      obstacles.push({ x, z, r: 0.35 }); }
     // ⑥ 모리아 — 북쪽 언덕의 아라우나 타작 마당(24:18), 9편 성전 터
     { const [mx, mz] = J.moriah, y = heightAt(mx, mz) - 0.2;
       add(box, mStone2, mx, y + 0.1, mz, 18, 0.6, 15);   // 낮은 돌 바닥(사람이 땅 높이로 서도록 낮게)
@@ -5611,7 +5775,7 @@
     advance: () => advance(), curStep: () => curStep(), saveST: () => saveST(), addMat: (...a) => addMat(...a), loadProps: (...a) => loadProps(...a),
     startCine: (...a) => startCine(...a), mgOpen: (...a) => mgOpen(...a), mgCloseAll: () => mgCloseAll(), recordBest: (...a) => recordBest(...a),
     get Z(){ return Z; }, get zoneRoot(){ return zoneRoot; }, get markers(){ return markers; }, get player(){ return player; }, get propTemplates(){ return propTemplates; },
-    get mgArea(){ return mgArea; }, get mgAct(){ return mgAct; }, get toonGradient(){ return toonGradient; },
+    get mgArea(){ return mgArea; }, get mgAct(){ return mgAct; }, get toonGradient(){ return toonGradient; }, surfMat, loadGLB, toToon, WPM,
     setGlory: on => { kadeshNoGlory = !on; if (Z && Z.id === 'kadesh') buildGlory(on); }, addGeneal2: n => addGeneal(n), get TAB(){ return TAB; },
     setRiver: dry => { if (!Z || !Z._water || !Z._waterBox) return; Z._water.visible = !dry; const i = boxes.indexOf(Z._waterBox); if (dry && i >= 0) boxes.splice(i, 1); else if (!dry && i < 0) boxes.push(Z._waterBox); },
     get mg(){ return mg; }, completeTask: q => completeTask(q), addGeneal: n => addGeneal(n), addJudge: n => addJudge(n), get flameTex(){ return flameTex; }, get obstacles(){ return obstacles; }, reachable: (x, z) => reachable(x, z),
@@ -9438,10 +9602,10 @@
   }
   // 시내 산: 코드로 만든 큰 산 + 산 둘레 경계(출 19:12)
   function buildMountain(){
-    const M = Z.mountain, mat = new THREE.MeshToonMaterial({ color: 0x9a6a4c, gradientMap: toonGradient, flatShading: true });
+    const M = Z.mountain, mat = surfMat(0x9a6a4c, 'rock', { sc: 1.6, jit: 0.34 });   // 11/25: 색만 칠한 산 → 바위 결·지층·금
     // 봉우리 셋(가운데가 가장 높음) — 매끈한 원뿔이 천막처럼 보이지 않게 울퉁불퉁한 바위산으로
     const peak = (r, h, ox, oz, seed) => {
-      const geo = new THREE.ConeGeometry(r, h, 48, 16, true), pa = geo.attributes.position;
+      const geo = new THREE.ConeGeometry(r, h, 96, 32, true), pa = geo.attributes.position;
       for (let i = 0; i < pa.count; i++){
         const x = pa.getX(i), y = pa.getY(i), z = pa.getZ(i), t = y / h + 0.5;   // 0=바닥 1=꼭대기
         const n = Math.sin(x * 0.9 + seed) * 1.0 + Math.sin(z * 1.3 - y * 0.4 + seed * 2) * 0.8 + Math.cos(x * 0.45 + y * 0.7) * 1.2 + Math.sin(Math.atan2(z, x) * 7 + seed) * 1.4;
@@ -9470,11 +9634,14 @@
     if (stormObj){ stormObj.parent && stormObj.parent.remove(stormObj); stormObj = null; }
     if (!on || !Z.mountain) return;
     const M = Z.mountain, g = new THREE.Group(), top = heightAt(M.x, M.z) + M.h - 2;
-    const cm = new THREE.SpriteMaterial({ map: flameTex, color: 0x2a2a34, transparent: true, opacity: 0.85, depthWrite: false });
-    for (let i = 0; i < 26; i++){ const sp = new THREE.Sprite(cm); const a = Math.random() * 6.28, r = Math.random() * 9; sp.position.set(M.x + Math.cos(a) * r, top + 2 + Math.random() * 6, M.z + Math.sin(a) * r); sp.scale.set(12, 7, 1); g.add(sp); }
-    const smoke = new THREE.SpriteMaterial({ map: flameTex, color: 0x6a6660, transparent: true, opacity: 0.6, depthWrite: false });
-    for (let i = 0; i < 14; i++){ const sp = new THREE.Sprite(smoke); sp.position.set(M.x + (Math.random() - 0.5) * 4, top + i * 2.2, M.z + (Math.random() - 0.5) * 4); sp.scale.set(5 + i * 0.6, 5 + i * 0.6, 1); sp.userData.smoke = i; g.add(sp); }
-    const fire = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xff9a3a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); fire.scale.set(9, 12, 1); fire.position.set(M.x, top + 3, M.z); g.add(fire); g.userData.fire = fire;
+    // 2026-11-25 고퀄: 산을 덮은 짙은 구름(19:16) · 옹기 가마 연기처럼 피어오르는 연기(19:18) · 꼭대기의 불 · 번개 줄기
+    const puff = (col, op) => new THREE.SpriteMaterial({ map: seaPuffTex(), color: col, transparent: true, opacity: op, depthWrite: false, rotation: Math.random() * 6.28 });
+    for (let i = 0; i < 80; i++){ const sp = new THREE.Sprite(puff(i % 3 ? 0x34343e : 0x4a4a56, 0.82)); const a = Math.random() * 6.28, r = Math.pow(Math.random(), 0.6) * 15; sp.position.set(M.x + Math.cos(a) * r, top + 1 + Math.random() * 7 - r * 0.15, M.z + Math.sin(a) * r * 0.8); const s = 9 + Math.random() * 9; sp.scale.set(s * 1.3, s, 1); sp.userData.drift = Math.random() * 6; g.add(sp); }
+    for (let i = 0; i < 46; i++){ const sp = new THREE.Sprite(puff(i % 2 ? 0x6e6a64 : 0x8a857e, 0.7)); sp.position.set(M.x + (Math.random() - 0.5) * 3, top + (i / 46) * 30, M.z + (Math.random() - 0.5) * 3); sp.userData.smoke = Math.random(); g.add(sp); }
+    for (let i = 0; i < 9; i++){ const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: i % 2 ? 0xff8a2a : 0xffc060, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); const a = i / 9 * 6.28; f.position.set(M.x + Math.cos(a) * 1.6, top + 1 + Math.random() * 1.5, M.z + Math.sin(a) * 1.6); f.scale.set(6 + Math.random() * 4, 9 + Math.random() * 6, 1); f.userData.flame = Math.random() * 6; g.add(f); }
+    const fire = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xff9a3a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); fire.scale.set(15, 19, 1); fire.position.set(M.x, top + 4, M.z); g.add(fire); g.userData.fire = fire;
+    const glow = new THREE.PointLight(0xff8a3a, 3, 60, 1.4); glow.position.set(M.x, top + 2, M.z + 4); g.add(glow);
+    const bolt = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 12 }, () => new THREE.Vector3())), new THREE.LineBasicMaterial({ color: 0xeef4ff, transparent: true, opacity: 0, fog: false })); bolt.frustumCulled = false; g.add(bolt); g.userData.bolt = bolt;
     const light = new THREE.PointLight(0xbfd4ff, 0, 140); light.position.set(M.x, top + 8, M.z); g.add(light); g.userData.light = light;
     zoneRoot.add(g); stormObj = g; stormFlashT = 1; stormTrumpT = 0.5;
   }
@@ -9493,7 +9660,14 @@
     L.intensity *= Math.pow(0.02, dt);
     stormTrumpT -= dt; if (stormTrumpT <= 0){ stormTrumpT = 9; trumpet(); }
     g.userData.fire.material.opacity = 0.75 + Math.sin(now * 0.02) * 0.2;
-    g.children.forEach(o => { if (o.userData.smoke !== undefined) o.position.y += dt * 0.8, o.position.y > (heightAt(Z.mountain.x, Z.mountain.z) + Z.mountain.h + 30) && (o.position.y -= 30); });
+    const top = heightAt(Z.mountain.x, Z.mountain.z) + Z.mountain.h - 2, bo = g.userData.bolt;
+    if (L.intensity > 4 && bo.material.opacity < 0.1){ const pa = bo.geometry.attributes.position, a = Math.random() * 6.28; let x = Z.mountain.x + Math.cos(a) * 8, y = top + 12, z = Z.mountain.z + Math.sin(a) * 6;
+      for (let i = 0; i < pa.count; i++){ pa.setXYZ(i, x, y, z); x += (Math.random() - 0.5) * 2.2; y -= 1.1 + Math.random() * 0.6; z += (Math.random() - 0.5) * 1.6; } pa.needsUpdate = true; bo.material.opacity = 1; }
+    bo.material.opacity *= Math.pow(0.0005, dt);
+    g.children.forEach(o => { const u = o.userData;
+      if (u.smoke !== undefined){ o.position.y += dt * 1.6; const h = (o.position.y - top) / 30; if (h > 1){ o.position.y -= 30; o.position.x = Z.mountain.x + (Math.random() - 0.5) * 3; } const s = 4 + h * 14; o.scale.set(s, s, 1); o.position.x += dt * (0.6 + h * 1.5); o.material.opacity = 0.75 * (1 - h * 0.7); o.material.rotation += dt * 0.1; }
+      else if (u.flame !== undefined){ o.material.opacity = 0.55 + 0.4 * Math.sin(now * 0.013 + u.flame) * Math.sin(now * 0.007 + u.flame * 2); }
+      else if (u.drift !== undefined){ o.material.rotation += dt * 0.03 * Math.sin(u.drift); } });
     if (stormShakeK > 0){ stormShakeK = Math.max(0, stormShakeK - dt); camera.position.x += (Math.random() - 0.5) * stormShakeK * 0.6; camera.position.y += (Math.random() - 0.5) * stormShakeK * 0.4; }
   }
 

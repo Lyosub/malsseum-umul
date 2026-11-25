@@ -119,7 +119,7 @@
   // 9장: 0 가사 · 1 소렉 골짜기 · 2 세 번의 거짓말 · 3 맷돌 · 4 다곤의 집 · 5 마지막 기도
   // 10장: 0 미가 · 1 레위 청년 · 2 단 지파 다섯 사람 · 3 육백 명 · 4 뒤쫓아 온 미가
   // 11장: 0 미스바 · 1 벧엘 · 2 연기 기둥 · 3 울며 · 4 사사 열두 명
-  let flameShow = false, gateGone = false, templeDown = false, smokeShow = false;
+  let flameShow = false, gateGone = false, templeDown = false, smokeShow = false, templeParts = null; const crowdTpl = {};
   Object.assign(CONDS, {
     jgZorah: at(7, 0, 0), jgMwife: at(7, 1, 1), jgManoah: at(7, 1, 5), jgAltar13: at(7, 4, 4), jgMahaneh: at(7, 5, 5),
     jgSamsonHome: at(8, 0, 0), jgVine: at(8, 1, 1), jgHoney: at(8, 2, 2), jgFeast: at(8, 3, 3), jgFields: at(8, 4, 4), jgEtam: at(8, 5, 5), jgLehi: at(8, 6, 6), jgSpring: at(8, 7, 7),
@@ -145,7 +145,7 @@
   ZP.push({ id: 'jg_lords', x: SOREK[0] + 2.6, z: SOREK[1] + 1, type: 'villager', title: '블레셋 방백', model: 'j5-philistine-lord', persona: 'rs_static', cond: 'jgLords', body: '' });
   ZP.push({ id: 'jg_delilah', x: SOREK[0], z: SOREK[1], type: 'villager', title: '들릴라', model: 'j5-delilah', persona: 'rs_static', cond: 'jgDelilah', body: '' });
   ZP.push({ id: 'jg_mill', x: MILL[0] + 3, z: MILL[1], type: 'lore', title: '가사의 옥 — 맷돌', cond: 'jgMill', body: '' });
-  ZP.push({ id: 'jg_temple', x: TEMPLE[0] + 6, z: TEMPLE[1] + 2, type: 'lore', title: '다곤의 집 — 두 기둥 사이', cond: 'jgTemple', body: '' });
+  ZP.push({ id: 'jg_temple', x: TEMPLE[0], z: TEMPLE[1] + 1.2, type: 'lore', title: '다곤의 집 — 두 기둥 사이', cond: 'jgTemple', body: '' });
   ZS.push({ id: 'jg_micah', x: MICAH_H[0] + 4, z: MICAH_H[1] - 1, type: 'villager', title: '미가', model: 'j5-micah', persona: 'rs_static', cond: 'jgMicahH', body: '' });
   ZS.push({ id: 'jg_levite', x: MICAH_H[0] + 3, z: MICAH_H[1] + 2.6, type: 'villager', title: '레위 청년', model: 'j5-levite-youth', persona: 'rs_static', cond: 'jgLevite', body: '' });
   ZS.push({ id: 'jg_danspy', x: DANROAD[0] + 3, z: DANROAD[1], type: 'villager', title: '단 지파 다섯 사람', model: 'j5-dan-spy', persona: 'rs_static', cond: 'jgDanspy', body: '' });
@@ -1023,9 +1023,74 @@
       // 소렉 골짜기 들릴라의 집 · 가사의 옥과 맷돌(16:21)
       put(new THREE.BoxGeometry(3.6, 2.4, 3.2), wall, SOREK[0] - 3.4, 1.2, SOREK[1] - 1); obst(SOREK[0] - 3.4, SOREK[1] - 1, 2.2);
       put(new THREE.CylinderGeometry(1, 1, 0.5, 14), M(0x8a8478), MILL[0], 0.25, MILL[1]);
-      // 다곤의 집: 집을 버틴 두 기둥(16:29) — 무너진 뒤로는 돌무더기
-      if (!(templeDown || p.ch > 9)){ prop('pillar', TEMPLE[0] - 1.6, TEMPLE[1], 0); prop('pillar', TEMPLE[0] + 1.6, TEMPLE[1], 0); put(new THREE.BoxGeometry(9, 0.6, 6), stone, TEMPLE[0], 4.5, TEMPLE[1]); put(new THREE.BoxGeometry(9, 4.2, 0.6), stone, TEMPLE[0], 2.1, TEMPLE[1] - 3); obst(TEMPLE[0], TEMPLE[1] - 3, 3); }
-      else for (let i = 0; i < 16; i++){ const r = put(new THREE.DodecahedronGeometry(0.5 + Math.random() * 0.6), stone, TEMPLE[0] + (Math.random() - 0.5) * 9, 0.3, TEMPLE[1] + (Math.random() - 0.5) * 6); r.rotation.set(Math.random(), Math.random(), 0); }
+      // 다곤의 집(2026-11-25 고퀄): 돌 기단과 계단·회벽 큰 방·가운데 두 기둥(16:29)·앞 기둥줄·붉고 검은 띠 무늬·천 휘장·화로,
+      //   지붕 위에 모인 남녀(16:27). 신상은 만들지 않는다. 무너질 때는 기둥이 벌어지고 지붕 조각과 사람들이 떨어진 뒤 돌무더기로.
+      {
+        const SM = api.surfMat, tx = TEMPLE[0], tz = TEMPLE[1], y0 = api.heightAt(tx, tz);
+        const sStone = SM(0xcdb896, 'stone'), sBase = SM(0xb09a76, 'stone', { bw: 1.5, bh: 0.55, top: true }), sPl = SM(0xe4d4b2, 'plaster'), sCol = SM(0xd8c49c, 'stone', { bw: 0.7, bh: 0.9 }), sRoof = SM(0xb89a70, 'plaster');
+        const red = M(0x9a3426), blk = M(0x2a2420), cloth = M(0x8e2a22), cloth2 = M(0x2f4a7a), wood = SM(0x6a4a2c, 'wood');
+        const at = (geo, mat, dx, y, dz, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(tx + dx, y0 + y, tz + dz); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
+        const B = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+        const W = 7.2, Z0 = -5.4, Z1 = 3.4, H = 5.4, R = H + 0.75;   // 방 반너비·뒤·앞·벽 높이·지붕 높이
+        if (!(templeDown || p.ch > 9)){
+          const parts = []; templeParts = parts;
+          // 기단과 앞 계단
+          at(B(W * 2 + 1.6, 0.5, Z1 - Z0 + 2.4), sBase, 0, 0.25, (Z0 + Z1) / 2 + 0.4);
+          for (let i = 0; i < 3; i++) at(B(9 - i * 0.6, 0.18, 0.55), sBase, 0, 0.09 + i * 0.17 - 0.17, Z1 + 2.3 - i * 0.5);
+          // 벽: 뒤·양옆(회벽 + 아래 돌 띠), 앞은 가운데 문을 두고 양쪽 벽
+          const wall = (w, d, dx, dz) => { parts.push(at(B(w, H, d), sPl, dx, 0.5 + H / 2, dz), at(B(w + 0.08, 0.9, d + 0.08), sStone, dx, 0.95, dz)); };
+          wall(W * 2, 0.7, 0, Z0); wall(0.7, Z1 - Z0, -W, (Z0 + Z1) / 2); wall(0.7, Z1 - Z0, W, (Z0 + Z1) / 2);
+          wall(W - 2.6, 0.7, -(W + 2.6) / 2, Z1); wall(W - 2.6, 0.7, (W + 2.6) / 2, Z1);
+          // 문 위 들보와 띠 무늬(블레셋 그릇의 붉고 검은 띠처럼)
+          parts.push(at(B(5.6, 0.8, 0.9), sCol, 0, 0.5 + H - 0.4, Z1));
+          for (const [dz, dd] of [[Z1 + 0.37, 0.04], [Z0 - 0.37, 0.04]]){ parts.push(at(B(W * 2 + 0.7, 0.26, dd), red, 0, H - 0.4, dz), at(B(W * 2 + 0.7, 0.1, dd), blk, 0, H - 0.17, dz), at(B(W * 2 + 0.7, 0.1, dd), blk, 0, H - 0.63, dz)); }
+          for (let i = -6; i <= 6; i++) if (Math.abs(i) > 1){ const d = at(B(0.32, 0.32, 0.05), i % 2 ? red : blk, i * 1.05, H - 1.05, Z1 + 0.38, 0); d.rotation.z = Math.PI / 4; parts.push(d); }
+          // 앞 기둥줄(문 양옆 넷)과 휘장
+          for (const dx of [-5.6, -3.6, 3.6, 5.6]){ parts.push(at(new THREE.CylinderGeometry(0.34, 0.4, H - 0.3, 12), sCol, dx, 0.5 + (H - 0.3) / 2, Z1 + 1.2)); at(B(0.95, 0.3, 0.95), sBase, dx, 0.65, Z1 + 1.2); parts.push(at(B(1.0, 0.35, 1.0), sStone, dx, 0.5 + H - 0.1, Z1 + 1.2)); }
+          parts.push(at(B(W * 2 + 0.4, 0.5, 1.3), sStone, 0, 0.5 + H + 0.2, Z1 + 1.0));   // 앞 처마
+          for (const dx of [-4.6, 4.6]){ const c = at(B(1.1, 3.2, 0.04), dx < 0 ? cloth : cloth2, dx, 0.5 + H - 1.9, Z1 + 0.4); parts.push(c, at(B(1.1, 0.14, 0.06), red, dx, 0.5 + H - 3.4, Z1 + 0.42)); }
+          // 가운데 두 기둥(집을 버틴 기둥, 16:29) — 기둥 머리 위 큰 들보
+          for (const dx of [-1.6, 1.6]){ const pl = prop('pillar', tx + dx, tz, 0, 0.5); if (pl){ pl.scale.set(1.15, 1.14, 1.15); pl.userData.pillar = dx; parts.push(pl); } }
+          parts.push(at(B(W * 2 - 0.6, 0.6, 0.8), wood, 0, 0.5 + H - 0.3, 0));
+          // 지붕: 조각마다 따로(무너질 때 흩어지게) + 난간
+          for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++){ const sw = (W * 2 + 0.7) / 4, sd = (Z1 - Z0 + 0.7) / 3; parts.push(at(B(sw - 0.02, 0.45, sd - 0.02), sRoof, -W - 0.35 + sw * (i + 0.5), 0.5 + H + 0.22, Z0 - 0.35 + sd * (j + 0.5))); }
+          for (const [w, d, dx, dz] of [[W * 2 + 0.7, 0.25, 0, Z0 - 0.25], [0.25, Z1 - Z0 + 0.7, -W - 0.25, (Z0 + Z1) / 2], [0.25, Z1 - Z0 + 0.7, W + 0.25, (Z0 + Z1) / 2], [W * 2 + 0.7, 0.25, 0, Z1 + 0.25]]) parts.push(at(B(w, 0.55, d), sRoof, dx, 0.5 + H + 0.7, dz));
+          // 지붕 위 남녀(16:27 "지붕에 있는 남녀도 삼천 명 가량") — 게임 인물 모델을 서 있는 자세로 굳혀 세움, 몇은 손을 들고 즐거워함(16:25)
+          { const who = ['j5-philistine-lord', 'j5-delilah', 'eg-merchant-eg', 'eg-noble-f', 'eg-farmer-m', 'eg-farmer-f', 'pal-servant-m', 'pal-servant-f', 'eg-gatekeeper'], spots = [];
+            let k7 = 3; const r7 = () => { k7 = (k7 * 16807) % 2147483647; return (k7 - 1) / 2147483646; };
+            for (let i = 0; i < 13; i++) spots.push([-W + 0.7 + i * (W * 2 - 1.4) / 12 + (r7() - 0.5) * 0.3, Z1 - 0.35, (r7() - 0.5) * 0.6]);
+            for (let i = 0; i < 4; i++){ spots.push([-W + 0.5, Z0 + 1.2 + i * 2.1, -Math.PI / 2 + (r7() - 0.5) * 0.5]); spots.push([W - 0.5, Z0 + 1.2 + i * 2.1, Math.PI / 2 + (r7() - 0.5) * 0.5]); }
+            for (let i = 0; i < 6; i++) spots.push([-W + 1.5 + r7() * (W * 2 - 3), Z0 + 0.8 + r7() * 5.5, (r7() - 0.5) * 1.2]);
+            const myParts = parts;
+            Promise.all(who.map(n => (crowdTpl[n] = crowdTpl[n] || api.loadGLB(`npc3d/${n}.glb`).then(t => { api.toToon(t.scene); return t; })))).then(ts => {
+              if (templeParts !== myParts || !g.parent) return;
+              const up = new THREE.Vector3(0, 1, 0), pq = new THREE.Quaternion(), rq = new THREE.Quaternion();
+              spots.forEach(([dx, dz, ry], i) => { const t = ts[i % ts.length], m = THREE.SkeletonUtils.clone(t.scene); m.scale.setScalar(api.WPM * (0.92 + r7() * 0.12));
+                const grp = new THREE.Group(); grp.add(m); grp.position.set(tx + dx, y0 + 0.5 + H + 0.45, tz + dz); grp.rotation.y = ry; g.add(grp); grp.userData.person = 1; myParts.push(grp);
+                m.traverse(o => { if (o.isMesh){ o.castShadow = true; o.frustumCulled = false; } });
+                const idle = t.animations.find(c => c.name === 'Idle'); if (idle){ const mx = new THREE.AnimationMixer(m), a = mx.clipAction(idle); a.play(); mx.update(r7() * 2); a.paused = true; }   // 한 번만 자세를 잡고 멈춤(가볍게)
+                if (r7() < 0.5){ grp.updateMatrixWorld(true); const F = new THREE.Vector3(Math.sin(ry), 0, Math.cos(ry)), K = new THREE.Vector3().crossVectors(F, up).normalize();
+                  for (const [n, ang] of [['LeftArm', 2.5], ['RightArm', 2.3]]){ const b = m.getObjectByName(n); if (!b) continue; b.parent.getWorldQuaternion(pq); rq.setFromAxisAngle(K, ang * (n[0] === 'L' ? 1 : 1)); b.quaternion.premultiply(pq.clone().invert().multiply(rq).multiply(pq)); b.updateMatrixWorld(true); } } });
+            }).catch(e => console.error(e));
+          }
+          // 문 앞 화로 둘(불꽃)
+          for (const dx of [-2.6, 2.6]){ at(new THREE.CylinderGeometry(0.45, 0.3, 0.9, 10), M(0x5a4a3a), dx, 0.95, Z1 + 2.9); if (api.flameTex){ const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: api.flameTex, color: 0xffa040, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); f.scale.set(1.0, 1.4, 1); f.position.set(tx + dx, y0 + 2.0, tz + Z1 + 2.9); g.add(f); } }
+          // 막는 곳: 벽을 따라 둥근 막이(문 사이는 열어 둠)
+          for (let x = -W; x <= W + 0.01; x += 1.4){ obst(tx + x, tz + Z0, 0.8); if (Math.abs(x) > 2.4) obst(tx + x, tz + Z1, 0.8); }
+          for (let z = Z0; z <= Z1 + 0.01; z += 1.4){ obst(tx - W, tz + z, 0.8); obst(tx + W, tz + z, 0.8); }
+          obst(tx - 1.6, tz, 0.55); obst(tx + 1.6, tz, 0.55);
+        } else {
+          // 무너진 뒤: 기단 위에 부러진 기둥 토막·기울어진 지붕 판·돌 더미
+          templeParts = null;
+          at(B(W * 2 + 1.6, 0.5, Z1 - Z0 + 2.4), sBase, 0, 0.25, (Z0 + Z1) / 2 + 0.4);
+          let k8 = 9; const r8 = () => { k8 = (k8 * 16807) % 2147483647; return (k8 - 1) / 2147483646; };
+          for (let i = 0; i < 10; i++){ const s = 0.8 + r8() * 1.4, m = at(B(2.6 + r8() * 1.4, 0.42, 2 + r8()), r8() < 0.5 ? sRoof : sPl, (r8() - 0.5) * W * 1.8, 0.7 + r8() * 0.9, Z0 + r8() * (Z1 - Z0)); m.rotation.set((r8() - 0.5) * 0.9, r8() * 3, (r8() - 0.5) * 0.9); m.scale.setScalar(s * 0.7); }
+          for (let i = 0; i < 7; i++){ const m = at(new THREE.CylinderGeometry(0.36, 0.38, 0.9 + r8() * 1.1, 12), sCol, (r8() - 0.5) * W * 1.7, 0.85, Z0 + 1 + r8() * (Z1 - Z0)); m.rotation.set(Math.PI / 2 + (r8() - 0.5) * 0.4, r8() * 3, 0); }
+          for (let i = 0; i < 30; i++){ const r = at(new THREE.DodecahedronGeometry(0.3 + r8() * 0.5, 0), r8() < 0.6 ? sStone : sPl, (r8() - 0.5) * W * 2, 0.55 + r8() * 0.3, Z0 + r8() * (Z1 - Z0 + 1)); r.rotation.set(r8() * 3, r8() * 3, 0); }
+          for (const [dx, dz, h] of [[-W, Z0, 2.2], [W, Z0, 1.4], [-W, Z1, 1.0], [5.6, Z1 + 1.2, 1.8]]) at(B(dx === 5.6 ? 0.7 : 1.4, h, 0.7), sPl, dx, 0.5 + h / 2, dz);   // 남은 벽 모서리
+          obst(tx, tz, 5);
+        }
+      }
       [[-14, -30], [-20, 30], [34, 10], [-36, -8]].forEach(([x, z], i) => prop('env-date-palm', x, z, i));
     }
     if (zid === 'shiloh' && p.ch >= 10){
@@ -1198,7 +1263,32 @@
   Object.assign(api.BADGES, { riddle: { ico: '🍯', name: '수수께끼를 푼 사람' }, last_prayer: { ico: '🙏', name: '"이번만" 기도한 사람' }, twelve_judges: { ico: '🧩', name: '열두 사사를 기억한 사람' } });
   function flameUp(){ flameShow = true; flash('#ffd9a0', 0.4); refresh('philistia'); try { api.startCine('jgFlame', ALTAR13[0], api.heightAt(ALTAR13[0], ALTAR13[1]) + 2, ALTAR13[1], { r: 7, h: 4, dur: 4, spin: 0.4 }); } catch (e){} setTimeout(() => { flameShow = false; refresh('philistia'); }, 6000); }
   function gateCarry(){ gateGone = true; refresh('philistia'); }
-  function templeFall(){ templeDown = true; flash('#e8dcc4', 0.55); refresh('philistia'); try { api.startCine('jgTemple', TEMPLE[0], api.heightAt(TEMPLE[0], TEMPLE[1]) + 3, TEMPLE[1], { r: 14, h: 6, dur: 4.5, spin: 0.3 }); } catch (e){} }
+  // 2026-11-25: 무너지는 모습 — 두 기둥이 벌어지고(16:29-30) 지붕 조각·벽·지붕 위 사람들이 떨어진 뒤 돌무더기로, 흙먼지가 퍼짐
+  function templeFall(){
+    flash('#e8dcc4', 0.55);
+    try { api.startCine('jgTemple', TEMPLE[0], api.heightAt(TEMPLE[0], TEMPLE[1]) + 3, TEMPLE[1], { r: 14, h: 6, dur: 4.5, spin: 0.3 }); } catch (e){}
+    const parts = templeParts; templeParts = null;
+    if (!parts || !parts.length){ templeDown = true; refresh('philistia'); return; }
+    const cx = TEMPLE[0], cz = TEMPLE[1], y0 = api.heightAt(cx, cz), t0 = performance.now();
+    parts.forEach(o => { const u = o.userData; u.p0 = o.position.clone(); u.r0 = o.rotation.clone(); u.d = u.pillar !== undefined ? 0 : u.person ? 0.15 + Math.random() * 0.4 : 0.25 + Math.random() * 0.5;
+      u.v = [(o.position.x - cx) * 0.18 + (Math.random() - 0.5) * 1.4, Math.random() * 1.2, (o.position.z - cz) * 0.12 + (Math.random() - 0.5) * 1.4]; u.w = [(Math.random() - 0.5) * 2.4, (Math.random() - 0.5) * 1.2, (Math.random() - 0.5) * 2.4]; });
+    // 흙먼지(마을 루트에 따로 — 돌무더기로 바뀐 뒤에도 몇 초 남았다 사라짐)
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x2 = c.getContext('2d'), gr = x2.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x2.fillStyle = gr; x2.fillRect(0, 0, 64, 64);
+    const tex = new THREE.CanvasTexture(c), dust = new THREE.Group(); api.zoneRoot.add(dust);
+    for (let i = 0; i < 46; i++){ const a = Math.random() * 6.28, r = Math.random() * 6, s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: 0xd8c8a4, transparent: true, opacity: 0, depthWrite: false }));
+      s.position.set(cx + Math.cos(a) * r, y0 + 0.8 + Math.random() * 4, cz + Math.sin(a) * r); s.userData.v = [Math.cos(a) * (1 + Math.random() * 2.5), 0.4 + Math.random(), Math.sin(a) * (1 + Math.random() * 2.5)]; s.userData.s = 2 + Math.random() * 3; s.userData.d = 0.3 + Math.random() * 0.6; dust.add(s); }
+    let swapped = false;
+    const step = () => { const t = (performance.now() - t0) / 1000;
+      if (!swapped) parts.forEach(o => { const u = o.userData, tt = Math.max(0, t - u.d);
+        if (u.pillar !== undefined){ o.rotation.z = u.r0.z - Math.sign(u.pillar) * Math.min(1.45, tt * tt * 1.6); return; }
+        const y = u.p0.y + u.v[1] * tt - 7 * tt * tt, land = y0 + 0.6; o.position.set(u.p0.x + u.v[0] * tt, Math.max(land, y), u.p0.z + u.v[2] * tt);
+        const k = y > land ? tt : u.tl ?? (u.tl = tt); o.rotation.set(u.r0.x + u.w[0] * k, u.r0.y + u.w[1] * k, u.r0.z + u.w[2] * k); });
+      dust.children.forEach(s => { const tt = Math.max(0, t - s.userData.d), dt = 1 / 60; s.position.x += s.userData.v[0] * dt; s.position.y += s.userData.v[1] * dt; s.position.z += s.userData.v[2] * dt;
+        const sc = s.userData.s * (1 + tt * 0.6); s.scale.set(sc, sc, 1); s.material.opacity = Math.max(0, Math.min(0.42, tt * 3) * (1 - tt / 3.2)); });
+      if (!swapped && t > 2.2){ swapped = true; templeDown = true; refresh('philistia'); }
+      if (t < 5.5) requestAnimationFrame(step); else { api.zoneRoot.remove(dust); tex.dispose(); dust.children.forEach(s => s.material.dispose()); } };
+    requestAnimationFrame(step);
+  }
   function smokeUp(){ smokeShow = true; refresh('gibeon'); try { api.startCine('jgSmoke', GIBEAH[0], api.heightAt(GIBEAH[0], GIBEAH[1]) + 6, GIBEAH[1], { r: 22, h: 9, dur: 4.5, spin: 0.25 }); } catch (e){} }
 
   const T = n => `📜 사사들과 함께 ${n}장`;

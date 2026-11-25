@@ -1985,8 +1985,52 @@
   function anoint16(){ oil16 = true; flash('#ffe9a8', 0.45); refresh('bethlehem'); }
   function gemDavid(){ if (api.addGeneal) api.addGeneal(['다윗']); }
   function ease(){ harpEased = true; flash('#fff4d0', 0.3); refresh('gibeah'); }
+  // 2026-11-25: 사라지던 골리앗 → 물맷돌이 이마에 박히고(17:49) 무릎이 꺾여 얼굴을 땅에 대고 엎드러짐(뼈대를 직접 움직임). 쓰러진 몸은 이 마을에 머무는 동안 남음.
+  let golBody = null;
+  function golFallAnim(m){
+    if (!m || !m.model || !THREE.SkeletonUtils) return;
+    if (golBody && golBody.parent) golBody.parent.remove(golBody);
+    const T = THREE, model = T.SkeletonUtils.clone(m.model), root = new T.Group();
+    root.position.copy(m.mesh.position); root.rotation.copy(m.mesh.rotation); model.position.copy(m.model.position); model.rotation.copy(m.model.rotation); model.scale.copy(m.model.scale); root.add(model);
+    model.traverse(o => { if (o.isMesh){ o.castShadow = true; o.frustumCulled = false; } });
+    api.zoneRoot.add(root); golBody = root; root.updateMatrixWorld(true);
+    const B = n => model.getObjectByName(n), order = ['Hips', 'Spine', 'Spine01', 'Spine02', 'neck', 'Head', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'RightShoulder', 'RightArm', 'RightForeArm', 'LeftUpLeg', 'LeftLeg', 'RightUpLeg', 'RightLeg'];
+    const base = new Map(); order.forEach(n => { const b = B(n); if (b) base.set(n, b.quaternion.clone()); });
+    const ry = root.rotation.y, F = new T.Vector3(Math.sin(ry), 0, Math.cos(ry)), K = new T.Vector3(0, 1, 0).cross(F).normalize(), Kr = K.clone();
+    const pq = new T.Quaternion(), rq = new T.Quaternion(), q0 = root.quaternion.clone(), v = new T.Vector3();
+    const bend = (n, a, ax = K) => { const b = B(n); if (!b || !a) return; b.parent.getWorldQuaternion(pq); rq.setFromAxisAngle(ax, a); b.quaternion.copy(pq.clone().invert().multiply(rq).multiply(pq).multiply(base.get(n))); b.updateMatrixWorld(true); };
+    const feet = ['Head', 'head_end', 'Hips', 'Spine02', 'LeftLeg', 'RightLeg', 'LeftFoot', 'RightFoot', 'LeftToeBase', 'RightToeBase', 'LeftHand', 'RightHand'].map(B).filter(Boolean);
+    const gy = api.heightAt(root.position.x, root.position.z), sc = model.scale.x;
+    // 물맷돌: 다윗 손에서 골리앗 이마로
+    const dv = api.markers.find(x => x.data.id === 'sl_david_v'), from = dv ? dv.mesh.position.clone().add(new T.Vector3(0, 1.5, 0)) : api.player.position.clone().add(new T.Vector3(0, 1.5, 0));
+    const head = B('Head'), to = new T.Vector3(); if (head) head.getWorldPosition(to); else to.copy(root.position).add(new T.Vector3(0, 3, 0));
+    const stone = new T.Mesh(new T.SphereGeometry(0.08, 8, 6), new T.MeshToonMaterial({ color: 0x8a8274, gradientMap: api.toonGradient })); api.zoneRoot.add(stone);
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x2 = c.getContext('2d'), gr = x2.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x2.fillStyle = gr; x2.fillRect(0, 0, 64, 64);
+    const dtex = new T.CanvasTexture(c), dust = new T.Group(); api.zoneRoot.add(dust);
+    const E = x => x * x * (3 - 2 * x), C = (a, b, t) => Math.max(0, Math.min(1, (t - a) / (b - a)));
+    const t0 = performance.now(), HIT = 0.32, LAND = 1.75;
+    const step = () => {
+      if (!root.parent){ stone.parent && stone.parent.remove(stone); return; }
+      const t = (performance.now() - t0) / 1000, k = C(0, HIT, t);
+      stone.visible = t < HIT; if (stone.visible) stone.position.lerpVectors(from, to, k).add(new T.Vector3(0, Math.sin(k * Math.PI) * 0.5, 0));
+      // 자세: 맞고 뒤로 젖힘 → 무릎이 꺾임 → 앞으로 엎드러짐
+      const hitB = t < HIT ? 0 : E(C(HIT, HIT + 0.18, t)) * (1 - E(C(HIT + 0.25, HIT + 0.6, t))), kneel = E(C(HIT + 0.2, HIT + 0.75, t)), fall = C(HIT + 0.7, LAND, t), ff = fall * fall;
+      model.traverse(o => { if (o.isBone && base.has(o.name)) o.quaternion.copy(base.get(o.name)); });
+      root.quaternion.copy(q0); rq.setFromAxisAngle(Kr, 1.56 * ff + (t > LAND ? Math.sin(Math.min(1, (t - LAND) / 0.35) * Math.PI) * 0.05 : 0)); root.quaternion.premultiply(rq); root.updateMatrixWorld(true);
+      bend('Spine01', -0.25 * hitB + 0.35 * kneel * (1 - fall)); bend('Spine02', -0.2 * hitB + 0.15 * kneel); bend('neck', -0.55 * hitB + 0.2 * kneel); bend('Head', -0.3 * hitB);
+      const legK = kneel * (1 - E(C(HIT + 1.0, LAND + 0.2, t)));
+      bend('LeftUpLeg', -0.4 * legK); bend('RightUpLeg', -0.3 * legK); bend('LeftLeg', 1.9 * legK); bend('RightLeg', 1.8 * legK);
+      bend('LeftArm', 0.5 * hitB - 2.5 * E(fall)); bend('RightArm', 0.5 * hitB - 2.3 * E(fall)); bend('LeftForeArm', -0.3 * kneel * (1 - fall)); bend('RightForeArm', -0.4 * kneel * (1 - fall));
+      root.updateMatrixWorld(true); let mn = Infinity; feet.forEach(b => { b.getWorldPosition(v); mn = Math.min(mn, v.y); }); root.position.y += gy + 0.14 - mn; root.updateMatrixWorld(true);
+      if (t > LAND && !dust.userData.on){ dust.userData.on = true; const P = root.position.clone().addScaledVector(F, 1.6);
+        for (let i = 0; i < 22; i++){ const a = Math.random() * 6.28, s = new T.Sprite(new T.SpriteMaterial({ map: dtex, color: 0xd8c4a0, transparent: true, opacity: 0, depthWrite: false })); s.position.set(P.x + Math.cos(a) * 1.2, gy + 0.3 + Math.random() * 0.8, P.z + Math.sin(a) * 1.2); s.userData.v = [Math.cos(a) * (0.6 + Math.random()), 0.3 + Math.random() * 0.4, Math.sin(a) * (0.6 + Math.random())]; s.userData.s = 0.8 + Math.random() * 1.2; dust.add(s); } }
+      if (dust.userData.on){ const tt = t - LAND; dust.children.forEach(s => { s.position.x += s.userData.v[0] / 60; s.position.y += s.userData.v[1] / 60; s.position.z += s.userData.v[2] / 60; const z = s.userData.s * (1 + tt * 1.2); s.scale.set(z, z, 1); s.material.opacity = Math.max(0, Math.min(0.55, tt * 5) * (1 - tt / 2.5)); }); }
+      if (t < LAND + 2.6) requestAnimationFrame(step); else { api.zoneRoot.remove(stone); api.zoneRoot.remove(dust); dtex.dispose(); }
+    };
+    requestAnimationFrame(step);
+  }
   function fall(){ golDown = true;
-    try { const m = api.markers.find(x => x.data.id === 'sl_goliath'); if (m){ m.mesh.visible = false; m.hidden = true; if (m.col) m.col.r = 0; } const s = api.markers.find(x => x.data.id === 'sl_shield'); if (s){ s.mesh.visible = false; s.hidden = true; if (s.col) s.col.r = 0; } } catch (e){}
+    try { const m = api.markers.find(x => x.data.id === 'sl_goliath'); if (m){ try { golFallAnim(m); } catch (e){ console.error(e); } m.mesh.visible = false; m.hidden = true; if (m.col) m.col.r = 0; } const s = api.markers.find(x => x.data.id === 'sl_shield'); if (s){ s.mesh.visible = false; s.hidden = true; if (s.col) s.col.r = 0; } } catch (e){}
     refresh('philistia');
     try { api.startCine('slFall', GOL[0], api.heightAt(GOL[0], GOL[1]) + 3, GOL[1], { r: 30, h: 14, dur: 3.5, spin: 0.25 }); } catch (e){} }
   function dustFn30(){ dust30 = true; refresh('philistia'); try { api.startCine('slAmalek', AMALEK30[0], api.heightAt(AMALEK30[0], AMALEK30[1]) + 3, AMALEK30[1], { r: 28, h: 13, dur: 3.5, spin: 0.25 }); } catch (e){} }

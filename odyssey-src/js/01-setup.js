@@ -170,6 +170,47 @@
     return t;
   })();
 
+  // 건물 겉면 무늬(2026-11-25): 색만 칠한 상자가 밋밋해 보여서, 월드 좌표로 돌 쌓은 줄눈·회벽 얼룩·나뭇결을 그린다(UV 없이도 상자 크기와 상관없이 고르게)
+  //   kind: 'stone'(어긋쌓기 돌) · 'brick'(작은 돌) · 'plaster'(회벽 얼룩, 아래쪽 흙때) · 'wood'(나뭇결) · 'rock'(바위 결·지층·금, 11/25 고퀄) · 'sand'(물결 모래·젖은 얼룩)
+  const surfMats = new Map();
+  function surfMat(color, kind = 'stone', o = {}){
+    const key = color + kind + JSON.stringify(o); if (surfMats.has(key)) return surfMats.get(key);
+    const m = new THREE.MeshToonMaterial({ color, gradientMap: toonGradient, flatShading: !!o.flat, transparent: !!o.transparent, opacity: o.opacity ?? 1 });
+    const P = { stone: [1.05, 0.5, 0.06, 0.22, 0.68], brick: [0.6, 0.28, 0.045, 0.16, 0.7], plaster: [0, 0, 0, 0.12, 1], wood: [0, 0, 0, 0.16, 1], rock: [0, 0, 0, 0.3, 1], sand: [0, 0, 0, 0.14, 1] }[kind];
+    const f3 = v => (+v).toFixed(4);
+    const bw = o.bw || P[0], bh = o.bh || P[1], mw = o.mw ?? P[2], jit = o.jit ?? P[3], md = o.md ?? P[4];
+    let body;
+    if (kind === 'stone' || kind === 'brick') body = `if (${o.top ? 'true' : '!top'}){ float row = floor(uv.y / ${f3(bh)}); float u = uv.x / ${f3(bw)} + mod(row, 2.0) * 0.5 + sHash(vec2(row, 3.0)) * 0.3; float col = floor(u);
+      vec2 f = vec2(fract(u), fract(uv.y / ${f3(bh)}));
+      float mort = 1.0 - smoothstep(0.0, ${f3(mw / bw)}, min(f.x, 1.0 - f.x)) * smoothstep(0.0, ${f3(mw / bh)}, min(f.y, 1.0 - f.y));
+      float h = sHash(vec2(col, row)); k = mix(1.0 + (h - 0.5) * ${f3(jit)} + (sNoise(uv * 3.0) - 0.5) * 0.06, ${f3(md)}, mort); }
+      else k = 1.0 + (sNoise(uv * 1.3) - 0.5) * 0.12;`;
+    else if (kind === 'plaster') body = `k = 1.0 + (sNoise(uv * 0.9) - 0.5) * ${f3(jit)} + (sNoise(uv * 4.0) - 0.5) * 0.05;
+      if (!top) k -= (1.0 - smoothstep(0.0, 0.9, vSurfP.y - (${f3(o.base ?? 0)}))) * 0.14;`;
+    else if (kind === 'rock') body = `{ float sc = ${f3(o.sc || 1)}; vec3 P3 = vSurfP / sc; float n1 = sNoise(P3.xz * 0.35 + P3.y * 0.2), n2 = sNoise(vec2(P3.x + P3.z, P3.y) * 1.7), n3 = sNoise(uv / sc * 5.0);
+        float strata = sin(P3.y * 1.6 + n1 * 4.0) * 0.5 + 0.5; float band = smoothstep(0.7, 1.0, strata);
+        k = 1.0 + (n1 - 0.5) * ${f3(jit)} + (n2 - 0.5) * 0.16 + (n3 - 0.5) * 0.08 - band * 0.1 + (strata - 0.5) * 0.06;
+        float crack = smoothstep(0.1, 0.0, abs(sNoise(vec2(P3.x * 0.5 + P3.z * 0.4, P3.y * 0.18) * 1.4) - 0.5)) * smoothstep(0.4, 0.7, n2); k -= crack * 0.12;
+        if (top) k += 0.1 + (n3 - 0.5) * 0.08; }`;
+    else if (kind === 'sand') body = `{ float r = sin((vSurfP.x * 0.9 + vSurfP.z * 0.35) * 3.2 + sNoise(vSurfP.xz * 0.5) * 4.0); k = 1.0 + r * 0.09 + (sNoise(vSurfP.xz * 0.25) - 0.5) * ${f3(jit)} + (sNoise(vSurfP.xz * 3.0) - 0.5) * 0.08;
+        float wet = smoothstep(0.62, 0.72, sNoise(vSurfP.xz * 0.18 + 7.0)); k *= mix(1.0, 0.8, wet); }`;
+    else body = `k = 1.0 + (sNoise(vec2(uv.x * 0.6, uv.y * 9.0)) - 0.5) * ${f3(jit)} - (sin(uv.y * 40.0 + sNoise(uv * 2.0) * 6.0) * 0.5 + 0.5) * 0.06;`;
+    m.onBeforeCompile = sh => {
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vSurfP; varying vec3 vSurfN;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSurfP = (modelMatrix * vec4(transformed, 1.0)).xyz; vSurfN = normalize(mat3(modelMatrix) * objectNormal);');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+varying vec3 vSurfP; varying vec3 vSurfN;
+float sHash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float sNoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(sHash(i), sHash(i + vec2(1, 0)), f.x), mix(sHash(i + vec2(0, 1)), sHash(i + vec2(1, 1)), f.x), f.y); }`)
+        .replace('#include <color_fragment>', `#include <color_fragment>
+{ vec3 n = abs(vSurfN); bool top = n.y > 0.7; vec2 uv = top ? vSurfP.xz : (n.x > n.z ? vSurfP.zy : vSurfP.xy); float k = 1.0;
+  ${body}
+  diffuseColor.rgb *= k; }`);
+    };
+    m.customProgramCacheKey = () => 'surf' + key;
+    surfMats.set(key, m); return m;
+  }
+
   // 시드 고정 난수 — 새로고침해도 같은 배치(QA·스크린샷 비교가 가능하도록)
   let seed = 20260924;
   const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };

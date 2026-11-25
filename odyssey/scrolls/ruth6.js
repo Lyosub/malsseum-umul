@@ -596,6 +596,40 @@
     const need = names.filter(n => api.PROP_DEFS[n] && !api.propTemplates[n] && !propFail[n]); if (!need.length) return;
     api.loadProps(need).then(() => { need.forEach(n => { if (!api.propTemplates[n]) propFail[n] = true; }); refresh(zid); }).catch(() => { need.forEach(n => propFail[n] = true); });
   }
+  // 2026-11-25: 보리밭 — 뾰족한 덩어리 모델 대신 이삭 달린 줄기 수천 개(줄 맞춰 심은 밭이랑, 줄기마다 키·기울기·색이 조금씩 다름)
+  let barleyG = null;
+  function barleyGeo(){
+    if (barleyG) return barleyG;
+    const parts = [], col = (geo, c) => { const n = geo.attributes.position.count, a = new Float32Array(n * 3), cc = new THREE.Color(c); for (let i = 0; i < n; i++){ a[i * 3] = cc.r; a[i * 3 + 1] = cc.g; a[i * 3 + 2] = cc.b; } geo.setAttribute('color', new THREE.BufferAttribute(a, 3)); return geo; };
+    parts.push(col(new THREE.CylinderGeometry(0.016, 0.022, 1, 4, 1, true).translate(0, 0.5, 0), 0xb8a25a));
+    parts.push(col(new THREE.SphereGeometry(1, 6, 5).scale(0.045, 0.13, 0.045).translate(0, 1.08, 0), 0xe0bc5a));
+    for (let k = 0; k < 4; k++){ const aw = new THREE.ConeGeometry(0.006, 0.2, 3).translate(0, 0.1, 0); aw.rotateZ((k - 1.5) * 0.12); aw.translate(0, 1.12, 0); parts.push(col(aw, 0xf0d888)); }
+    const geo = new THREE.BufferGeometry(), P = [], N = [], C = [], I = []; let off = 0;
+    parts.forEach(pg => { const q = pg.index ? pg : pg; const pa = q.attributes.position, na = q.attributes.normal, ca = q.attributes.color;
+      for (let i = 0; i < pa.count; i++){ P.push(pa.getX(i), pa.getY(i), pa.getZ(i)); N.push(na.getX(i), na.getY(i), na.getZ(i)); C.push(ca.getX(i), ca.getY(i), ca.getZ(i)); }
+      if (q.index) for (let i = 0; i < q.index.count; i++) I.push(q.index.getX(i) + off); else for (let i = 0; i < pa.count; i++) I.push(i + off); off += pa.count; });
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); geo.setIndex(I);
+    barleyG = geo; return geo;
+  }
+  // 보리 단(룻 2:7 "곡식 단 사이에서") — 줄기를 모아 묶은 단
+  function barleySheaf(g, x, z, ry = 0){
+    const geo = barleyGeo(), n = 46, im = new THREE.InstancedMesh(geo, new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: api.toonGradient }), n), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), c = new THREE.Color(), y = api.heightAt(x, z);
+    for (let i = 0; i < n; i++){ const a = Math.random() * 6.28, rr = Math.sqrt(Math.random()) * 0.16, tilt = 0.12 + rr * 1.3; e.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt); q.setFromEuler(e);
+      m4.compose(new THREE.Vector3(x + Math.cos(a) * rr * 0.4, y, z + Math.sin(a) * rr * 0.4), q, new THREE.Vector3(1, 0.85 + Math.random() * 0.2, 1)); im.setMatrixAt(i, m4); c.setHSL(0.12, 0.6, 0.62 + (Math.random() - 0.5) * 0.1); im.setColorAt(i, c); }
+    g.add(im); const band = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.022, 5, 12).rotateX(Math.PI / 2), new THREE.MeshToonMaterial({ color: 0x8a6a34, gradientMap: api.toonGradient })); band.position.set(x, y + 0.42, z); g.add(band);
+  }
+  function barleyField(g, x0, x1, z0, z1, seed = 5){
+    let s = seed; const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; const geo = barleyGeo();
+    const rows = [], sp = 0.13; for (let z = z0 + 0.15; z < z1; z += 0.22) for (let x = x0 + 0.1; x < x1; x += sp) rows.push([x + (r() - 0.5) * 0.1, z + (r() - 0.5) * 0.1]);
+    const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: api.toonGradient }), im = new THREE.InstancedMesh(geo, mat, rows.length);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3(), c = new THREE.Color();
+    rows.forEach(([x, z], i) => { const h = 0.85 + r() * 0.3; e.set((r() - 0.5) * 0.25 + 0.06, r() * 6.28, (r() - 0.5) * 0.25); q.setFromEuler(e); v.set(x, api.heightAt(x, z) - 0.02, z); sc.set(1, h, 1); m4.compose(v, q, sc); im.setMatrixAt(i, m4);
+      c.setHSL(0.12 + (r() - 0.5) * 0.02, 0.55 + r() * 0.15, 0.62 + (r() - 0.5) * 0.12); im.setColorAt(i, c); });
+    im.castShadow = false; im.receiveShadow = true; g.add(im);
+    const soil = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 + 0.4, z1 - z0 + 0.4, 12, 8).rotateX(-Math.PI / 2), api.surfMat(0xa88a5c, 'sand', { jit: 0.2 })); const sp2 = soil.geometry.attributes.position;
+    for (let i = 0; i < sp2.count; i++) sp2.setY(i, api.heightAt(sp2.getX(i) + (x0 + x1) / 2, sp2.getZ(i) + (z0 + z1) / 2) + 0.03); soil.geometry.computeVertexNormals(); soil.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); soil.receiveShadow = true; g.add(soil);
+    return im;
+  }
   function world(zid){
     if (worldObj && worldObj.parent) worldObj.parent.remove(worldObj); worldObj = null;
     const p = cur(); if (!p) return;
@@ -618,14 +652,14 @@
     const house = (x, z, w = 4, d = 3.4, col = 0xd8c4a0) => { put(new THREE.BoxGeometry(w, 2.6, d), M(col), x, 1.3, z); put(new THREE.BoxGeometry(w + 0.4, 0.25, d + 0.4), M(0xb89a70), x, 2.7, z); obst(x, z, Math.max(w, d) / 2 + 0.4); };
     if (zid === 'moab' && p.ch === 0) house(NHOUSE[0], NHOUSE[1]);
     if (zid === 'bethlehem'){
-      needProps(['grain-field', 'barley-sheaf', 'sandal', 'tent-small', 'env-acacia'], 'bethlehem');
+      needProps(['barley-sheaf', 'sandal', 'tent-small', 'env-acacia'], 'bethlehem');
       // 성읍: 북쪽 언덕 위 집들, 서쪽 성문
       [[-14, -24], [-6, -30], [4, -30], [10, -22], [-10, -24], [16, -28], [-2, -20]].forEach(([x, z]) => house(x, z, 3.6, 3, 0xdcc8a2));
       put(new THREE.BoxGeometry(1.4, 4, 4), M(0xcdb896), BGATE[0] - 2.6, 2, BGATE[1]); put(new THREE.BoxGeometry(1.4, 4, 4), M(0xcdb896), BGATE[0] + 2.6, 2, BGATE[1]); put(new THREE.BoxGeometry(6.6, 0.8, 4.2), M(0xcdb896), BGATE[0], 4.4, BGATE[1]);
       obst(BGATE[0] - 2.6, BGATE[1], 1.8); obst(BGATE[0] + 2.6, BGATE[1], 1.8);
       // 보리밭(룻 1:22 보리 추수 시작할 때) — 2장에서는 베는 자들이 지나간 자리에 단
-      for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) prop('grain-field', BFIELD[0] - 5 + i * 5, BFIELD[1] - 3 + j * 3.4, 0);
-      if (p.ch >= 1) [[-4, -6], [-1, -6.4], [2, -5.6]].forEach(([dx, dz], i) => propOr('barley-sheaf', BFIELD[0] + dx, BFIELD[1] + dz, i));
+      barleyField(g, BFIELD[0] - 7.5, BFIELD[0] + 7.5, BFIELD[1] - 4.7, BFIELD[1] + 5.1);
+      if (p.ch >= 1) [[-4, -6], [-1, -6.4], [2, -5.6], [-2.6, -5.4], [0.6, -5.2]].forEach(([dx, dz], i) => barleySheaf(g, BFIELD[0] + dx, BFIELD[1] + dz, i));
       prop('tent-small', BMEAL[0] + 2, BMEAL[1] - 1, 1.2);   // 식사할 때 그늘(2:14)
       // 타작마당(3:2) — 밤 장면은 배경만
       { const f = new THREE.Mesh(new THREE.CircleGeometry(3, 22).rotateX(-Math.PI / 2), M(0xc8b088)); f.position.set(BFLOOR[0], api.heightAt(BFLOOR[0], BFLOOR[1]) + 0.04, BFLOOR[1]); g.add(f); }

@@ -908,6 +908,26 @@
     const need = names.filter(n => api.PROP_DEFS[n] && !api.propTemplates[n] && !propFail[n]); if (!need.length) return;
     api.loadProps(need).then(() => { need.forEach(n => { if (!api.propTemplates[n]) propFail[n] = true; }); refresh(zid); }).catch(() => { need.forEach(n => propFail[n] = true); });
   }
+  // 궤를 멘 레위 사람 넷(모델은 한 번만 받아 복제) — 영상·행렬 연출에서 쓰도록 무리에 userData.arkProc
+  let levTpl = null;
+  function arkBearers(g, ax, az, ry, ark){
+    const place = tpl => { if (!g.parent && g !== worldObj && worldObj) return; const grp = new THREE.Group(), mixers = [], c = Math.cos(ry), sn = Math.sin(ry);
+      for (const [lx, lz] of [[1.05, 0.72], [1.05, -0.72], [-1.05, 0.72], [-1.05, -0.72]]){
+        const m = THREE.SkeletonUtils.clone(tpl.scene); m.scale.setScalar(api.WPM); m.traverse(o => { if (o.isMesh){ o.castShadow = true; o.frustumCulled = false; } });
+        const x = ax + lx * c + lz * sn, z = az - lx * sn + lz * c; m.position.set(x, api.heightAt(x, z), z); m.rotation.y = ry + Math.PI / 2; grp.add(m);
+        const mx = new THREE.AnimationMixer(m), idle = tpl.animations.find(k => k.name === 'Idle'), walk = tpl.animations.find(k => k.name === 'Walk');
+        const acts = { Idle: idle && mx.clipAction(idle), Walk: walk && mx.clipAction(walk) }; if (acts.Idle){ acts.Idle.play(); acts.Idle.time = Math.random() * 2; } mixers.push({ mx, acts, m, lx, lz });
+        api.obstacles.push({ x, z, r: 0.45 }); }
+      grp.userData.arkProc = { mixers, ax, az, ry, ark }; g.add(grp);
+      let last = performance.now(); const tick = () => { if (!grp.parent || !grp.parent.parent) return; const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; mixers.forEach(o => o.mx.update(dt)); grp.updateMatrixWorld(true);
+        if (ark){ let sy = 0; mixers.forEach(o => { o.m.getObjectByName(o.lz > 0 ? 'LeftArm' : 'RightArm').getWorldPosition(_sv); sy += _sv.y; }); ark.position.y = sy / mixers.length + 0.14 - 0.2 * ark.scale.y; }   // 어깨에 채가 닿게
+        mixers.forEach(o => { const arm = o.lz > 0 ? 'Left' : 'Right'; bendW(o.m.getObjectByName(arm + 'Arm'), -0.75); bendW(o.m.getObjectByName(arm + 'ForeArm'), -1.9); });   // 어깨의 채를 손으로 잡음
+        requestAnimationFrame(tick); };
+      const _sv = new THREE.Vector3(), F = new THREE.Vector3(Math.cos(ry), 0, -Math.sin(ry)), K = new THREE.Vector3(0, 1, 0).cross(F).normalize(), pq = new THREE.Quaternion(), rq = new THREE.Quaternion();
+      const bendW = (b, ang) => { if (!b) return; b.parent.getWorldQuaternion(pq); rq.setFromAxisAngle(K, ang); b.quaternion.premultiply(pq.clone().invert().multiply(rq).multiply(pq)); b.updateMatrixWorld(true); }; requestAnimationFrame(tick); };
+    if (levTpl) return place(levTpl);
+    api.loadGLB('npc3d/he-levite.glb').then(t => { t.scene.traverse(o => { if (o.isMesh) o.material = o.material; }); api.toToon(t.scene); t.animations.forEach(k => { k.tracks = k.tracks.filter(tr => !/\.scale$/.test(tr.name)); }); levTpl = t; place(t); }).catch(e => console.error(e));
+  }
   function world(zid){
     if (worldObj && worldObj.parent) worldObj.parent.remove(worldObj); worldObj = null;
     const p = cur(); if (!p) return;
@@ -938,7 +958,10 @@
     }
     if (zid === 'jerusalem' && p.ch === 3){   // 4장 — 궤를 멘 줄이 성 남쪽 길에서 기다림, 행렬 뒤엔 장막 안에
       needProps(['ark'], 'jerusalem');
-      if (!arkHome) prop('ark', ROAD[0] + 1.6, ROAD[1] - 1, 0.4); else prop('ark', TENT[0], TENT[1] - 1.4, 0);
+      if (!arkHome){ // 2026-11-25: 궤를 바닥에 두지 않고 레위 사람 넷이 채로 어깨에 메고 기다림(대상 15:15, 삼하 6:13)
+        const ax = ROAD[0] + 1.6, az = ROAD[1] - 1, ry = 0.46, a = prop('ark', ax, az, ry, 1.95); if (a) a.scale.setScalar(1.1);
+        arkBearers(g, ax, az, ry, a);
+      } else prop('ark', TENT[0], TENT[1] - 1.4, 0);
     }
     if (zid === 'jerusalem' && p.ch >= 4){   // 5장부터 궤는 장막 안에
       needProps(['ark', 'lamb', 'king-table', 'cut-stones', 'cedar-beams', 'gold-silver-chest', 'temple-plan', 'silver-pouch', 'threshing-sledge', 'bull'], 'jerusalem');

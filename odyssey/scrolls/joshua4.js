@@ -1318,6 +1318,43 @@
   function rahabGen(){ api.addGeneal2('보아스'); setTimeout(() => api.toast('📜 족보 조각 「보아스」 — "살몬은 라합에게서 보아스를 낳고" (마 1:5)', 3400), 600); }
   const refresh = (zid, wet) => { if (api.Z && api.Z.id === zid) world(zid, wet); };
 
+  const ARK_DY = 1.95;   // 궤를 어깨에 멜 때 높이(채가 어깨에 오도록)
+  // 2026-11-25: 여리고를 도는 행렬(수 6:8-9, 13) — 무장한 자들 → 양각 나팔 부는 제사장 일곱 → 언약궤(멘 제사장 넷) → 후군. 닫힌 성 둘레를 천천히 돈다
+  const procTpl = {};
+  const loadT = n => procTpl[n] || (procTpl[n] = api.loadGLB(`npc3d/${n}.glb`).then(t => { api.toToon(t.scene); return t; }));
+  function jProcession(g){
+    const names = ['he-levite', 'ca-horn-blower', 'j4-east-tribes', 's7-armor-bearer', 'he-father', 'he-brickmaker', 'ca-craftsman', 'ca-banner-bearer'];
+    Promise.all(names.map(loadT).concat([api.loadProps(['ark'])])).then(ts => {
+      if (!g.parent) return; const T = {}; names.forEach((n, i) => T[n] = ts[i]);
+      const wc = T['he-levite'].animations.find(a => a.name === 'Walk'); if (!wc) return;
+      const walk = wc.clone(); walk.tracks = walk.tracks.filter(t => /\.quaternion$/.test(t.name));   // 같은 뼈대 이름이라 다른 사람에게도 걸음을 입힘(키 차이로 뜨지 않게 회전만)
+      const grp = new THREE.Group(); g.add(grp); const R = JR + 4.4, list = [], spearM = new THREE.MeshToonMaterial({ color: 0x6a4a2c, gradientMap: api.toonGradient }), tipM = new THREE.MeshToonMaterial({ color: 0xb8b8b0, gradientMap: api.toonGradient });
+      const add = (n, s, lat, ex = {}) => { const m = THREE.SkeletonUtils.clone(T[n].scene); m.scale.setScalar(api.WPM); m.traverse(o => { if (o.isMesh){ o.castShadow = true; o.frustumCulled = false; } }); grp.add(m);
+        const mx = new THREE.AnimationMixer(m), a = mx.clipAction(walk); a.play(); a.time = Math.random() * 0.3; const u = { m, mx, s, lat, ...ex }; list.push(u);
+        if (ex.spear){ const sp = new THREE.Group(), pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.04, 3.0, 6), spearM), tip = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.35, 6), tipM); tip.position.y = 1.65; sp.add(pole, tip); grp.add(sp); u.sp = sp; u.hand = m.getObjectByName('RightHand'); }
+        return u; };
+      let s = 0;
+      for (let i = 0; i < 8; i++){ add(i % 2 ? 'j4-east-tribes' : 's7-armor-bearer', s, i % 2 ? 0.75 : -0.75, { spear: true }); if (i % 2) s += 1.5; }
+      s += 0.6; for (let i = 0; i < 7; i++){ add('ca-horn-blower', s, i % 2 ? 0.7 : -0.7); if (i % 2) s += 1.4; } s += 1.6;
+      const arkS = s + 1.1, inner = []; for (const [ds, lat] of [[0, 0.72], [0, -0.72], [2.2, 0.72], [2.2, -0.72]]) inner.push(add('he-levite', s + ds, lat, { bearer: true }));
+      const ark = api.propTemplates.ark ? api.propTemplates.ark.holder.clone(true) : null; if (ark){ ark.scale.setScalar(1.1); grp.add(ark); }
+      s += 2.2 + 1.8; for (let i = 0; i < 6; i++){ add(['he-father', 'he-brickmaker', 'ca-craftsman', 'ca-banner-bearer'][i % 4], s, i % 2 ? 0.7 : -0.7); if (i % 2) s += 1.4; }
+      const up = new THREE.Vector3(0, 1, 0), F = new THREE.Vector3(), K = new THREE.Vector3(), v = new THREE.Vector3(), pq = new THREE.Quaternion(), rq = new THREE.Quaternion();
+      const bend = (b, a) => { if (!b || !a) return; b.parent.getWorldQuaternion(pq); rq.setFromAxisAngle(K, a); b.quaternion.premultiply(pq.clone().invert().multiply(rq).multiply(pq)); b.updateMatrixWorld(true); };
+      const SPEED = 1.05; let th = Math.PI * 0.15, last = performance.now(); grp.userData.jproc = { R, arkS, get th(){ return th; } };
+      const place = (a, lat) => [JC[0] + Math.cos(a) * (R + lat), JC[1] + Math.sin(a) * (R + lat)];
+      const tick = () => { if (!grp.parent || !g.parent) return; const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; th += dt * SPEED / R;
+        list.forEach(u => { const a = th - u.s / R, [x, z] = place(a, u.lat); u.m.position.set(x, api.heightAt(x, z), z); u.m.rotation.y = Math.atan2(-Math.sin(a), Math.cos(a)); u.mx.update(dt); });
+        grp.updateMatrixWorld(true);
+        if (ark){ const a = th - arkS / R, [x, z] = place(a, 0); let sy = 0; inner.forEach(u => { const sb = u.m.getObjectByName(u.lat > 0 ? 'LeftArm' : 'RightArm'); sb.getWorldPosition(v); sy += v.y; });   // 메는 사람들 어깨 높이에 채가 닿게
+          ark.position.set(x, sy / inner.length + 0.14 - 0.2 * ark.scale.y, z); ark.rotation.y = Math.atan2(-Math.cos(a), -Math.sin(a)); }
+        inner.forEach(u => { const a = th - u.s / R; F.set(-Math.sin(a), 0, Math.cos(a)); K.copy(up).cross(F).normalize(); const arm = u.lat > 0 ? 'Left' : 'Right';   // 바깥쪽 사람은 왼손, 안쪽 사람은 오른손으로 어깨의 채를 잡음
+          bend(u.m.getObjectByName(arm + 'Arm'), -0.75); bend(u.m.getObjectByName(arm + 'ForeArm'), -1.9); });
+        list.forEach(u => { if (!u.sp || !u.hand) return; u.hand.getWorldPosition(v); u.sp.position.copy(v).add(new THREE.Vector3(0, 0.55, 0)); u.sp.rotation.set(0, 0, 0.08); });
+        requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    }).catch(e => console.error(e));
+  }
   // 마을에 놓이는 것: 여리고 성벽과 라합의 집(붉은 줄) · 요단 가운데 언약궤 · 길갈의 장막과 열두 돌
   let worldObj = null;
   function world(zid, forceWet){
@@ -1338,14 +1375,29 @@
       // 여리고 성벽(수 2:15 "그의 집이 성벽 위에 있으므로")
       // 수 6:20 뒤로는 무너진 돌더미(6:24 불탄 뒤엔 검게). 라합의 집이 선 성벽 한 칸은 라합을 이끌어 낼 때까지 남는다(6:22-23)
       const down = wallsDown(), burnt = jerichoBurnt();
-      const stone = M(burnt ? 0x6a5a48 : 0xcdb48e), dark = M(burnt ? 0x4a3e32 : 0xa8916c), N = 22;
+      // 2026-11-25: 돌 줄눈 무늬(api.surfMat)·기단·총안·망대 꼭대기·성 안 집 지붕 — 상자 몇 개뿐이라 밋밋하다는 지적
+      const SM = (c, k, o) => api.surfMat ? api.surfMat(c, k, o) : M(c);
+      const stone = SM(burnt ? 0x6a5a48 : 0xcdb48e, 'stone'), dark = SM(burnt ? 0x4a3e32 : 0xb39c76, 'stone', { bw: 1.3, bh: 0.6 }), base = SM(burnt ? 0x55483a : 0xa88f6a, 'stone', { bw: 1.6, bh: 0.75, jit: 0.3 }), cope = SM(burnt ? 0x5a4c3e : 0xbca480, 'brick'), N = 22;
+      const BG = new THREE.BoxGeometry(1, 1, 1);
+      const blk = (mat, x, dy, z, sx, sy, sz, ry) => { const m = put(BG, mat, x, dy, z); m.scale.set(sx, sy, sz); m.rotation.y = ry; return m; };
       const houseSeg = i => Math.abs(i / N * Math.PI * 2 - HOUSE_A) < 0.2;
       for (let i = 0; i < N; i++){ const a = i / N * Math.PI * 2; if (Math.abs(a - Math.PI * 0.02) < 0.12) continue;   // 동쪽 성문 자리
-        const x = JC[0] + Math.cos(a) * JR, z = JC[1] + Math.sin(a) * JR;
-        if (!down || (houseSeg(i) && !burnt)){ const w = put(new THREE.BoxGeometry(3.1, 5, 1.4), i % 2 ? stone : dark, x, 2.5, z); w.rotation.y = -a + Math.PI / 2;
-          if (i % 4 === 0 && !down){ const t = put(new THREE.BoxGeometry(2, 6.4, 2), stone, x, 3.2, z); t.rotation.y = -a; } }
-        else for (let k = 0; k < 4; k++){ const r = put(new THREE.DodecahedronGeometry(0.5 + Math.random() * 0.5, 0), i % 2 ? stone : dark, x + (Math.random() - 0.5) * 3, 0.3, z + (Math.random() - 0.5) * 2.4); r.rotation.set(Math.random() * 3, Math.random() * 3, 0); } }
+        const x = JC[0] + Math.cos(a) * JR, z = JC[1] + Math.sin(a) * JR, ry = -a + Math.PI / 2, tx = -Math.sin(a), tz = Math.cos(a);
+        if (!down || (houseSeg(i) && !burnt)){
+          blk(i % 2 ? stone : dark, x, 2.5, z, 3.15, 5, 1.4, ry); blk(base, x, 0.8, z, 3.15, 1.6, 2.0, ry); blk(cope, x, 3.7, z, 3.2, 0.16, 1.55, ry); blk(cope, x, 5.1, z, 3.25, 0.2, 1.6, ry);
+          for (const k of [-0.9, 0.2]) blk(stone, x + tx * k, 5.55, z + tz * k, 0.7, 0.75, 1.5, ry);   // 총안(凸)
+          if (i % 4 === 0 && !down){ const t = blk(stone, x, 3.4, z, 2.4, 6.8, 2.4, -a); blk(base, x, 1.0, z, 2.9, 2.0, 2.9, -a); blk(cope, x, 6.9, z, 2.7, 0.22, 2.7, -a);
+            for (const [u, v] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) blk(stone, x + (u * Math.cos(a) - v * Math.sin(a)) * 0.95, 7.4, z + (u * Math.sin(a) + v * Math.cos(a)) * 0.95, 0.55, 0.7, 0.55, -a);
+            blk(M(0x2a221c), x + Math.cos(a) * 1.22, 4.6, z + Math.sin(a) * 1.22, 0.06, 0.7, 0.3, -a); } }
+        else for (let k = 0; k < 6; k++){ const r = put(new THREE.DodecahedronGeometry(0.45 + Math.random() * 0.6, 0), i % 2 ? stone : dark, x + (Math.random() - 0.5) * 3.4, 0.25 + Math.random() * 0.3, z + (Math.random() - 0.5) * 2.8); r.rotation.set(Math.random() * 3, Math.random() * 3, 0); } }
+      if (!burnt){ // 성 안 집들 — 성벽 너머로 보이는 평지붕과 들보 끝
+        const pl = [SM(0xe3d3ad, 'plaster'), SM(0xd8c49c, 'plaster'), SM(0xcdb68e, 'stone', { bw: 0.8, bh: 0.4 })], cedar = SM(0x7a4a2a, 'wood');
+        [[0, 0, 4.2, 3.6, 5.2], [3.6, 0.8, 2.8, 2.6, 3.6], [-3.4, 1.4, 3, 2.6, 4.0], [1.2, 4.2, 2.8, 2.4, 3.4], [-1.6, -4, 3.2, 2.6, 4.4], [4.2, -3.2, 2.6, 2.4, 3.2], [-4.6, -2.2, 2.6, 2.6, 3.0], [-2.2, 4.8, 2.4, 2.2, 2.8], [5.4, 3.4, 2.2, 2.2, 3.0]].forEach(([dx, dz, w, d, h], k) => {
+          const x = JC[0] + dx, z = JC[1] + dz, ry = k * 0.37; blk(pl[k % 3], x, h / 2 - 0.2, z, w, h, d, ry); blk(cope, x, h - 0.1, z, w + 0.2, 0.2, d + 0.2, ry);
+          for (let b = 0; b < 3; b++){ const o = -w / 2 + (b + 0.5) * w / 3; blk(cedar, x + Math.cos(ry) * o + Math.sin(ry) * (d / 2 + 0.12), h - 0.45, z - Math.sin(ry) * o + Math.cos(ry) * (d / 2 + 0.12), 0.14, 0.14, 0.3, ry); } });
+      }
       if (!down){ const x = JC[0] + JR, z = JC[1]; put(new THREE.BoxGeometry(0.4, 4, 3.2), M(0x7a5a3a), x + 0.2, 2, z); }   // 닫힌 성문(2:7 · 6:1)
+      if (!down && p.ch === 5) jProcession(g);   // 성을 도는 행렬(6장)
       if (!api.obstacles.some(o => o.j4)){ for (let i = 0; i < 40; i++){ const a = i / 40 * Math.PI * 2; api.obstacles.push({ x: JC[0] + Math.cos(a) * JR, z: JC[1] + Math.sin(a) * JR, r: 1.3, j4: true }); } }
       // 라합의 집: 성벽 위, 창문(줄은 2:21 뒤부터 붉게) — 6:24 성을 불사른 뒤로는 없다
       const hx = JC[0] + Math.cos(HOUSE_A) * JR, hz = JC[1] + Math.sin(HOUSE_A) * JR;

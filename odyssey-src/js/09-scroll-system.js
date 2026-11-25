@@ -26,7 +26,7 @@
     advance: () => advance(), curStep: () => curStep(), saveST: () => saveST(), addMat: (...a) => addMat(...a), loadProps: (...a) => loadProps(...a),
     startCine: (...a) => startCine(...a), mgOpen: (...a) => mgOpen(...a), mgCloseAll: () => mgCloseAll(), recordBest: (...a) => recordBest(...a),
     get Z(){ return Z; }, get zoneRoot(){ return zoneRoot; }, get markers(){ return markers; }, get player(){ return player; }, get propTemplates(){ return propTemplates; },
-    get mgArea(){ return mgArea; }, get mgAct(){ return mgAct; }, get toonGradient(){ return toonGradient; },
+    get mgArea(){ return mgArea; }, get mgAct(){ return mgAct; }, get toonGradient(){ return toonGradient; }, surfMat, loadGLB, toToon, WPM,
     setGlory: on => { kadeshNoGlory = !on; if (Z && Z.id === 'kadesh') buildGlory(on); }, addGeneal2: n => addGeneal(n), get TAB(){ return TAB; },
     setRiver: dry => { if (!Z || !Z._water || !Z._waterBox) return; Z._water.visible = !dry; const i = boxes.indexOf(Z._waterBox); if (dry && i >= 0) boxes.splice(i, 1); else if (!dry && i < 0) boxes.push(Z._waterBox); },
     get mg(){ return mg; }, completeTask: q => completeTask(q), addGeneal: n => addGeneal(n), addJudge: n => addJudge(n), get flameTex(){ return flameTex; }, get obstacles(){ return obstacles; }, reachable: (x, z) => reachable(x, z),

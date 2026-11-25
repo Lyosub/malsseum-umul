@@ -885,13 +885,28 @@
     if (p.ch > 7 || (p.ch === 7 && p.step >= 3)){ const w = new THREE.Mesh(new THREE.CircleGeometry(3.6, 24).rotateX(-Math.PI / 2), new THREE.MeshToonMaterial({ color: 0x4f9fb5, gradientMap: api.toonGradient, transparent: true, opacity: 0.85 }));
       w.position.set(ROCK[0] + 3.4, api.heightAt(ROCK[0] + 3.4, ROCK[1] + 2.6) + 0.07, ROCK[1] + 2.6); g.add(w); }
     if (p.ch > 7 || (p.ch === 7 && p.step >= 1)){ for (let i = 0; i < 9; i++) put(new THREE.DodecahedronGeometry(0.32 + (i < 4 ? 0.12 : 0)), M(0xb8a88e), GRAVE[0] + (Math.random() - 0.5) * 1.6, 0.25 + (i > 5 ? 0.35 : 0), GRAVE[1] + (Math.random() - 0.5) * 1.1); }
-    // 10장 놋뱀 장대(세운 뒤로 가데스에 남음)
-    if ((p.ch > 9 || (p.ch === 9 && (p.step >= 3 || poleUp))) && api.propTemplates['bronze-serpent']){   // 놋뱀 장대(3D)
-      prop(g, 'bronze-serpent', POLE[0], POLE[1], 0.8);
-    } else if (p.ch > 9 || (p.ch === 9 && (p.step >= 3 || poleUp))){
-      const bronze = M(0xb07a3a); put(new THREE.CylinderGeometry(0.09, 0.11, 4.6, 8), M(0x7a5a3a), POLE[0], 2.3, POLE[1]);
-      const coil = put(new THREE.TorusGeometry(0.32, 0.09, 8, 20, Math.PI * 3.2), bronze, POLE[0], 4.2, POLE[1]); coil.rotation.x = Math.PI / 2;
-      put(new THREE.SphereGeometry(0.15, 8, 6), bronze, POLE[0] + 0.34, 4.65, POLE[1]);
+    // 10장 놋뱀 장대(세운 뒤로 가데스에 남음) — 2026-11-25: 덩어리 모델 대신 직접 만듦. 돌무더기에 박은 나무 장대, 장대를 감아 오르다 고개를 든 번쩍이는 놋뱀(민 21:9)
+    if (p.ch > 9 || (p.ch === 9 && (p.step >= 3 || poleUp))){
+      const SM = api.surfMat, gy = api.heightAt(POLE[0], POLE[1]), px = POLE[0], pz = POLE[1];
+      const rockM = SM(0x9a8a72, 'rock', { sc: 0.4 }), woodM = SM(0x7a5634, 'wood');
+      for (let i = 0; i < 11; i++){ const a = i / 11 * 6.28 + Math.random() * 0.3, r = 0.35 + Math.random() * 0.35, s = 0.22 + Math.random() * 0.2, st = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), rockM);
+        st.scale.set(s, s * 0.7, s); st.position.set(px + Math.cos(a) * r, gy + s * 0.35 + (i < 4 ? 0.12 : 0), pz + Math.sin(a) * r); st.rotation.set(Math.random(), Math.random() * 6, 0); st.castShadow = true; g.add(st); }
+      const H = 4.6, pole = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.12, H, 12), woodM); pole.position.set(px, gy + H / 2 - 0.1, pz); pole.castShadow = true; g.add(pole);
+      const bronze = new THREE.MeshPhongMaterial({ color: 0xb87a38, specular: 0xffe0a8, shininess: 70, emissive: 0x2a1604 });
+      const pts = []; const y0 = gy + 2.7, turns = 2.4, rr = 0.2;
+      for (let i = 0; i <= 40; i++){ const t = i / 40, a = t * turns * 6.283; pts.push(new THREE.Vector3(px + Math.cos(a) * rr, y0 + t * 1.45, pz + Math.sin(a) * rr)); }
+      const aE = turns * 6.283, ex = Math.cos(aE), ez = Math.sin(aE);
+      pts.push(new THREE.Vector3(px + ex * 0.12, gy + H + 0.05, pz + ez * 0.12), new THREE.Vector3(px + ex * 0.28, gy + H + 0.32, pz + ez * 0.28), new THREE.Vector3(px + ex * 0.52, gy + H + 0.36, pz + ez * 0.52));
+      const curve = new THREE.CatmullRomCurve3(pts), tube = new THREE.TubeGeometry(curve, 220, 0.075, 10, false), tp = tube.attributes.position;
+      // 꼬리 쪽은 가늘게
+      for (let i = 0; i < tp.count; i++){ const seg = Math.floor(i / 11) / 220; if (seg < 0.18){ const c = curve.getPointAt(seg), k = 0.25 + 0.75 * seg / 0.18; tp.setXYZ(i, c.x + (tp.getX(i) - c.x) * k, c.y + (tp.getY(i) - c.y) * k, c.z + (tp.getZ(i) - c.z) * k); } }
+      tube.computeVertexNormals(); const snake = new THREE.Mesh(tube, bronze); snake.castShadow = true; g.add(snake);
+      const end = curve.getPointAt(1), dir = curve.getTangentAt(1), head = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), bronze);
+      head.scale.set(0.1, 0.085, 0.17); head.position.copy(end).addScaledVector(dir, 0.08); head.lookAt(end.clone().addScaledVector(dir, 1)); g.add(head);
+      for (const sd of [-1, 1]){ const eye = new THREE.Mesh(new THREE.SphereGeometry(0.16, 6, 4), new THREE.MeshBasicMaterial({ color: 0x1a1008 })); head.add(eye); eye.position.set(sd * 0.6, 0.5, 0.45); }
+      const c = document.createElement('canvas'); c.width = c.height = 64; const x2 = c.getContext('2d'), gr = x2.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,225,160,0.85)'); gr.addColorStop(1, 'rgba(255,200,120,0)'); x2.fillStyle = gr; x2.fillRect(0, 0, 64, 64);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.22 })); glow.scale.set(2.2, 2.2, 1); glow.position.set(px, gy + 3.9, pz); g.add(glow);
+      api.obstacles.some(o => o.x === px && o.z === pz) || api.obstacles.push({ x: px, z: pz, r: 0.8 });
     }
     if (p.ch === 9 && p.step >= 1 && p.step <= 3 && !(snakes && snakes.parent)) setTimeout(() => { const q = cur(); if (q && q.ch === 9 && api.Z && api.Z.id === 'kadesh' && !(snakes && snakes.parent)) serpents(); }, 400);
     if (!(p.ch === 9 && p.step >= 1 && p.step <= 3) && snakes && snakes.parent){ snakes.parent.remove(snakes); snakes = null; }

@@ -138,10 +138,10 @@
   }
   // 시내 산: 코드로 만든 큰 산 + 산 둘레 경계(출 19:12)
   function buildMountain(){
-    const M = Z.mountain, mat = new THREE.MeshToonMaterial({ color: 0x9a6a4c, gradientMap: toonGradient, flatShading: true });
+    const M = Z.mountain, mat = surfMat(0x9a6a4c, 'rock', { sc: 1.6, jit: 0.34 });   // 11/25: 색만 칠한 산 → 바위 결·지층·금
     // 봉우리 셋(가운데가 가장 높음) — 매끈한 원뿔이 천막처럼 보이지 않게 울퉁불퉁한 바위산으로
     const peak = (r, h, ox, oz, seed) => {
-      const geo = new THREE.ConeGeometry(r, h, 48, 16, true), pa = geo.attributes.position;
+      const geo = new THREE.ConeGeometry(r, h, 96, 32, true), pa = geo.attributes.position;
       for (let i = 0; i < pa.count; i++){
         const x = pa.getX(i), y = pa.getY(i), z = pa.getZ(i), t = y / h + 0.5;   // 0=바닥 1=꼭대기
         const n = Math.sin(x * 0.9 + seed) * 1.0 + Math.sin(z * 1.3 - y * 0.4 + seed * 2) * 0.8 + Math.cos(x * 0.45 + y * 0.7) * 1.2 + Math.sin(Math.atan2(z, x) * 7 + seed) * 1.4;
@@ -170,11 +170,14 @@
     if (stormObj){ stormObj.parent && stormObj.parent.remove(stormObj); stormObj = null; }
     if (!on || !Z.mountain) return;
     const M = Z.mountain, g = new THREE.Group(), top = heightAt(M.x, M.z) + M.h - 2;
-    const cm = new THREE.SpriteMaterial({ map: flameTex, color: 0x2a2a34, transparent: true, opacity: 0.85, depthWrite: false });
-    for (let i = 0; i < 26; i++){ const sp = new THREE.Sprite(cm); const a = Math.random() * 6.28, r = Math.random() * 9; sp.position.set(M.x + Math.cos(a) * r, top + 2 + Math.random() * 6, M.z + Math.sin(a) * r); sp.scale.set(12, 7, 1); g.add(sp); }
-    const smoke = new THREE.SpriteMaterial({ map: flameTex, color: 0x6a6660, transparent: true, opacity: 0.6, depthWrite: false });
-    for (let i = 0; i < 14; i++){ const sp = new THREE.Sprite(smoke); sp.position.set(M.x + (Math.random() - 0.5) * 4, top + i * 2.2, M.z + (Math.random() - 0.5) * 4); sp.scale.set(5 + i * 0.6, 5 + i * 0.6, 1); sp.userData.smoke = i; g.add(sp); }
-    const fire = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xff9a3a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); fire.scale.set(9, 12, 1); fire.position.set(M.x, top + 3, M.z); g.add(fire); g.userData.fire = fire;
+    // 2026-11-25 고퀄: 산을 덮은 짙은 구름(19:16) · 옹기 가마 연기처럼 피어오르는 연기(19:18) · 꼭대기의 불 · 번개 줄기
+    const puff = (col, op) => new THREE.SpriteMaterial({ map: seaPuffTex(), color: col, transparent: true, opacity: op, depthWrite: false, rotation: Math.random() * 6.28 });
+    for (let i = 0; i < 80; i++){ const sp = new THREE.Sprite(puff(i % 3 ? 0x34343e : 0x4a4a56, 0.82)); const a = Math.random() * 6.28, r = Math.pow(Math.random(), 0.6) * 15; sp.position.set(M.x + Math.cos(a) * r, top + 1 + Math.random() * 7 - r * 0.15, M.z + Math.sin(a) * r * 0.8); const s = 9 + Math.random() * 9; sp.scale.set(s * 1.3, s, 1); sp.userData.drift = Math.random() * 6; g.add(sp); }
+    for (let i = 0; i < 46; i++){ const sp = new THREE.Sprite(puff(i % 2 ? 0x6e6a64 : 0x8a857e, 0.7)); sp.position.set(M.x + (Math.random() - 0.5) * 3, top + (i / 46) * 30, M.z + (Math.random() - 0.5) * 3); sp.userData.smoke = Math.random(); g.add(sp); }
+    for (let i = 0; i < 9; i++){ const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: i % 2 ? 0xff8a2a : 0xffc060, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); const a = i / 9 * 6.28; f.position.set(M.x + Math.cos(a) * 1.6, top + 1 + Math.random() * 1.5, M.z + Math.sin(a) * 1.6); f.scale.set(6 + Math.random() * 4, 9 + Math.random() * 6, 1); f.userData.flame = Math.random() * 6; g.add(f); }
+    const fire = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xff9a3a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); fire.scale.set(15, 19, 1); fire.position.set(M.x, top + 4, M.z); g.add(fire); g.userData.fire = fire;
+    const glow = new THREE.PointLight(0xff8a3a, 3, 60, 1.4); glow.position.set(M.x, top + 2, M.z + 4); g.add(glow);
+    const bolt = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 12 }, () => new THREE.Vector3())), new THREE.LineBasicMaterial({ color: 0xeef4ff, transparent: true, opacity: 0, fog: false })); bolt.frustumCulled = false; g.add(bolt); g.userData.bolt = bolt;
     const light = new THREE.PointLight(0xbfd4ff, 0, 140); light.position.set(M.x, top + 8, M.z); g.add(light); g.userData.light = light;
     zoneRoot.add(g); stormObj = g; stormFlashT = 1; stormTrumpT = 0.5;
   }
@@ -193,7 +196,14 @@
     L.intensity *= Math.pow(0.02, dt);
     stormTrumpT -= dt; if (stormTrumpT <= 0){ stormTrumpT = 9; trumpet(); }
     g.userData.fire.material.opacity = 0.75 + Math.sin(now * 0.02) * 0.2;
-    g.children.forEach(o => { if (o.userData.smoke !== undefined) o.position.y += dt * 0.8, o.position.y > (heightAt(Z.mountain.x, Z.mountain.z) + Z.mountain.h + 30) && (o.position.y -= 30); });
+    const top = heightAt(Z.mountain.x, Z.mountain.z) + Z.mountain.h - 2, bo = g.userData.bolt;
+    if (L.intensity > 4 && bo.material.opacity < 0.1){ const pa = bo.geometry.attributes.position, a = Math.random() * 6.28; let x = Z.mountain.x + Math.cos(a) * 8, y = top + 12, z = Z.mountain.z + Math.sin(a) * 6;
+      for (let i = 0; i < pa.count; i++){ pa.setXYZ(i, x, y, z); x += (Math.random() - 0.5) * 2.2; y -= 1.1 + Math.random() * 0.6; z += (Math.random() - 0.5) * 1.6; } pa.needsUpdate = true; bo.material.opacity = 1; }
+    bo.material.opacity *= Math.pow(0.0005, dt);
+    g.children.forEach(o => { const u = o.userData;
+      if (u.smoke !== undefined){ o.position.y += dt * 1.6; const h = (o.position.y - top) / 30; if (h > 1){ o.position.y -= 30; o.position.x = Z.mountain.x + (Math.random() - 0.5) * 3; } const s = 4 + h * 14; o.scale.set(s, s, 1); o.position.x += dt * (0.6 + h * 1.5); o.material.opacity = 0.75 * (1 - h * 0.7); o.material.rotation += dt * 0.1; }
+      else if (u.flame !== undefined){ o.material.opacity = 0.55 + 0.4 * Math.sin(now * 0.013 + u.flame) * Math.sin(now * 0.007 + u.flame * 2); }
+      else if (u.drift !== undefined){ o.material.rotation += dt * 0.03 * Math.sin(u.drift); } });
     if (stormShakeK > 0){ stormShakeK = Math.max(0, stormShakeK - dt); camera.position.x += (Math.random() - 0.5) * stormShakeK * 0.6; camera.position.y += (Math.random() - 0.5) * stormShakeK * 0.4; }
   }
 
