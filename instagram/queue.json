@@ -783,11 +783,13 @@
       "id": "2026-11-25-odyssey",
       "type": "reels",
       "publish_at": "2026-11-25 17:30",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-11-25-odyssey.txt",
       "first_comment_file": "instagram/captions/2026-11-25-odyssey.tags.txt",
       "video": "instagram/2026-11-25-odyssey.mp4",
-      "note": "In Odyssey 플레이 영상 v7(세로 64초, 실제 게임 화면 1~8편). BGM 팀룩워십 「주와 함께 걸어가네」(전도사님 지정). 전도사님 「너가 직접 올려」 11/25 즉시 게시. 원본 작업 E:/temp/claude-work/ody-trailer/"
+      "note": "In Odyssey 플레이 영상 v7(세로 64초, 실제 게임 화면 1~8편). BGM 팀룩워십 「주와 함께 걸어가네」(전도사님 지정). 전도사님 「너가 직접 올려」 11/25 즉시 게시. 원본 작업 E:/temp/claude-work/ody-trailer/",
+      "media_id": "18125164241294501",
+      "posted_at": "2026-11-25 17:18"
     }
   ],
   "skip_days": [
