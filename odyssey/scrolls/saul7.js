@@ -2005,7 +2005,7 @@
     const dv = api.markers.find(x => x.data.id === 'sl_david_v'), from = dv ? dv.mesh.position.clone().add(new T.Vector3(0, 1.5, 0)) : api.player.position.clone().add(new T.Vector3(0, 1.5, 0));
     const head = B('Head'), to = new T.Vector3(); if (head) head.getWorldPosition(to); else to.copy(root.position).add(new T.Vector3(0, 3, 0));
     const stone = new T.Mesh(new T.SphereGeometry(0.08, 8, 6), new T.MeshToonMaterial({ color: 0x8a8274, gradientMap: api.toonGradient })); api.zoneRoot.add(stone);
-    const c = document.createElement('canvas'); c.width = c.height = 64; const x2 = c.getContext('2d'), gr = x2.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x2.fillStyle = gr; x2.fillRect(0, 0, 64, 64);
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x2 = c.getContext('2d'), gr = x2.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.45, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x2.fillStyle = gr; x2.fillRect(0, 0, 64, 64);
     const dtex = new T.CanvasTexture(c), dust = new T.Group(); api.zoneRoot.add(dust);
     const E = x => x * x * (3 - 2 * x), C = (a, b, t) => Math.max(0, Math.min(1, (t - a) / (b - a)));
     const t0 = performance.now(), HIT = 0.32, LAND = 1.75;
@@ -2023,16 +2023,17 @@
       bend('LeftArm', 0.5 * hitB - 2.5 * E(fall)); bend('RightArm', 0.5 * hitB - 2.3 * E(fall)); bend('LeftForeArm', -0.3 * kneel * (1 - fall)); bend('RightForeArm', -0.4 * kneel * (1 - fall));
       root.updateMatrixWorld(true); let mn = Infinity; feet.forEach(b => { b.getWorldPosition(v); mn = Math.min(mn, v.y); }); root.position.y += gy + 0.14 - mn; root.updateMatrixWorld(true);
       if (t > LAND && !dust.userData.on){ dust.userData.on = true; const P = root.position.clone().addScaledVector(F, 1.6);
-        for (let i = 0; i < 22; i++){ const a = Math.random() * 6.28, s = new T.Sprite(new T.SpriteMaterial({ map: dtex, color: 0xd8c4a0, transparent: true, opacity: 0, depthWrite: false })); s.position.set(P.x + Math.cos(a) * 1.2, gy + 0.3 + Math.random() * 0.8, P.z + Math.sin(a) * 1.2); s.userData.v = [Math.cos(a) * (0.6 + Math.random()), 0.3 + Math.random() * 0.4, Math.sin(a) * (0.6 + Math.random())]; s.userData.s = 0.8 + Math.random() * 1.2; dust.add(s); } }
-      if (dust.userData.on){ const tt = t - LAND; dust.children.forEach(s => { s.position.x += s.userData.v[0] / 60; s.position.y += s.userData.v[1] / 60; s.position.z += s.userData.v[2] / 60; const z = s.userData.s * (1 + tt * 1.2); s.scale.set(z, z, 1); s.material.opacity = Math.max(0, Math.min(0.55, tt * 5) * (1 - tt / 2.5)); }); }
+        for (let i = 0; i < 22; i++){ const a = Math.random() * 6.28, s = new T.Sprite(new T.SpriteMaterial({ map: dtex, color: 0xd8c4a0, transparent: true, opacity: 0, depthWrite: false })); s.position.set(P.x + Math.cos(a) * 1.2, gy + 0.7 + Math.random() * 0.8, P.z + Math.sin(a) * 1.2); s.userData.v = [Math.cos(a) * (0.6 + Math.random()), 0.3 + Math.random() * 0.4, Math.sin(a) * (0.6 + Math.random())]; s.userData.s = 0.8 + Math.random() * 1.2; dust.add(s); } }
+      if (dust.userData.on){ const tt = t - LAND; dust.children.forEach(s => { s.position.x += s.userData.v[0] / 60; s.position.y += s.userData.v[1] / 60; s.position.z += s.userData.v[2] / 60; const z = s.userData.s * (1 + tt * 0.6); s.scale.set(z, z, 1); s.material.opacity = Math.max(0, Math.min(0.42, tt * 5) * (1 - tt / 2.5)); }); }
       if (t < LAND + 2.6) requestAnimationFrame(step); else { api.zoneRoot.remove(stone); api.zoneRoot.remove(dust); dtex.dispose(); }
     };
     requestAnimationFrame(step);
   }
+  let golCine = null;   // 11/25: 쓰러지는 골리앗 가까이에서 연출(무릎 꿇고 엎드러지는 움직임이 보이게)
   function fall(){ golDown = true;
-    try { const m = api.markers.find(x => x.data.id === 'sl_goliath'); if (m){ try { golFallAnim(m); } catch (e){ console.error(e); } m.mesh.visible = false; m.hidden = true; if (m.col) m.col.r = 0; } const s = api.markers.find(x => x.data.id === 'sl_shield'); if (s){ s.mesh.visible = false; s.hidden = true; if (s.col) s.col.r = 0; } } catch (e){}
+    try { const m = api.markers.find(x => x.data.id === 'sl_goliath'); if (m){ golCine = m.mesh.position.clone(); try { golFallAnim(m); } catch (e){ console.error(e); } m.mesh.visible = false; m.hidden = true; if (m.col) m.col.r = 0; } const s = api.markers.find(x => x.data.id === 'sl_shield'); if (s){ s.mesh.visible = false; s.hidden = true; if (s.col) s.col.r = 0; } } catch (e){}
     refresh('philistia');
-    try { api.startCine('slFall', GOL[0], api.heightAt(GOL[0], GOL[1]) + 3, GOL[1], { r: 30, h: 14, dur: 3.5, spin: 0.25 }); } catch (e){} }
+    try { const c = golCine; if (c) api.startCine('slFall', c.x, c.y + 0.2, c.z, { r: 11, h: 5.5, dur: 4.8, spin: 0.35 }); else api.startCine('slFall', GOL[0], api.heightAt(GOL[0], GOL[1]) + 3, GOL[1], { r: 30, h: 14, dur: 3.5, spin: 0.25 }); } catch (e){} }
   function dustFn30(){ dust30 = true; refresh('philistia'); try { api.startCine('slAmalek', AMALEK30[0], api.heightAt(AMALEK30[0], AMALEK30[1]) + 3, AMALEK30[1], { r: 28, h: 13, dur: 3.5, spin: 0.25 }); } catch (e){} }
   function gilboaFar(){ gilboaShow = true; refresh('jezreel'); try { api.startCine('slGilboa', GILB[0], api.heightAt(GILB[0], GILB[1]) + 6, GILB[1], { r: 40, h: 16, dur: 5, spin: 0.15 }); } catch (e){} }
   function hush(){ flash('#141018', 0.8); try { api.startCine('slHush', GILB[0], api.heightAt(GILB[0], GILB[1]) + 6, GILB[1], { r: 44, h: 14, dur: 4, spin: 0.08 }); } catch (e){} }
