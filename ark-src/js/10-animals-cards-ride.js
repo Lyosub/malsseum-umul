@@ -685,7 +685,15 @@
     if (showMessage) toast('첫 안내를 끝냈어요. 위에 나오는 할 일을 따라 첫 집을 지어 보세요! 활·수레 같은 것은 메뉴 「✨ 새 기능」에서 봐요');
     tutorialSave(); renderQuest();
   }
+  // 11/25 처음 10분: 한 단계를 해낼 때마다 작은 축하(소리 + 안내 칸이 금빛으로 반짝 + 알림)
+  function tutorialCheer() {
+    try { sfx('craft'); } catch (e) {}
+    var q = $('quest'); if (q) { q.classList.remove('tut-ok'); void q.offsetWidth; q.classList.add('tut-ok'); }
+    var msg = ['좋아요! 이제 나무를 캐 볼까요', '통나무를 모았어요!', '처음 만든 블록이에요!', '첫 블록을 놓았어요!', '내 땅에 왔어요!', '문을 만들고 지나갔어요!', '지도를 열었어요!', '채팅을 열었어요!', '말씀 카드를 만났어요!'][tutorialStep];
+    if (msg) toast('✓ ' + msg);
+  }
   function tutorialAdvance() {
+    tutorialCheer();
     tutorialStep++;
     if (tutorialStep === 1) tutorialStartLog = stats.log || 0;
     if (tutorialStep === 2) tutorialStartCraft = stats.crafted || 0;
@@ -751,7 +759,7 @@
       4: ['내 땅으로', goHome],
       5: ['문 만들기', function () { invTab = 'craft'; craftCat = 'shape'; openPanel('inv'); }] };
     var action = actions[tutorialStep], btn = $('qBtn');
-    $('qHead').textContent = '처음 안내 ' + (tutorialStep + 1) + '/9';
+    $('qHead').innerHTML = '처음 안내 ' + (tutorialStep + 1) + '/9 <span class="tutbar"><i style="width:' + Math.round(tutorialStep / 9 * 100) + '%"></i></span>';
     $('qText').textContent = text[tutorialStep];
     btn.style.display = action ? '' : 'none';
     btn.textContent = action ? action[0] : '';
