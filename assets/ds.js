@@ -33,6 +33,14 @@
       if (k) { el.innerHTML = icon(k); el.style.fontSize = ''; }
     });
   }
+  // 행사 띠(첫 화면): 「🕯️ 대림절 말씀 달력」처럼 앞에 붙은 이모지 하나를 아이콘으로
+  function lead(root) {
+    (root || document).querySelectorAll('.hv-event > span:first-child').forEach(function (el) {
+      if (el.querySelector('svg')) return;
+      var m = (el.textContent || '').match(/^(\S+)\s+/); if (!m || !MAP[m[1]]) return;
+      el.innerHTML = icon(MAP[m[1]]) + el.textContent.slice(m[0].length).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; });
+    });
+  }
   function rise() {
     if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var vh = innerHeight, io = new IntersectionObserver(function (es) {
@@ -43,6 +51,6 @@
       el.classList.add('ds-rise'); io.observe(el);
     });
   }
-  function go() { swap(); rise(); try { new MutationObserver(function (ms) { ms.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) swap(n.parentNode || n); }); }); }).observe(document.body, { childList: true, subtree: true }); } catch (e) {} }
+  function go() { swap(); lead(); rise(); try { new MutationObserver(function (ms) { ms.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) swap(n.parentNode || n); }); }); }).observe(document.body, { childList: true, subtree: true }); } catch (e) {} }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();

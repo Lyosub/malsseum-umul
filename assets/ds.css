@@ -129,3 +129,8 @@ html.home-v2 .hv-hero #homeVerseCard .text, html.home-v2 .hv-hero .hv-date { tex
 html.home-v2 .hv-hero { animation: ds-hero 22s ease-out both; }
 @keyframes ds-hero { from { background-size: 112%; } to { background-size: 100%; } }
 @media (min-width: 760px) { html.home-v2 .hv-hero { animation: none; } }
+
+/* 말씀 본문은 어느 화면에서나 같은 명조체(첫 화면과 같은 고운바탕) */
+html[data-tone] #homeVerseCard .text { font-family: "Gowun Batang", "Noto Serif KR", serif; font-weight: 700; letter-spacing: -.02em; }
+/* 행사 띠 앞 아이콘 */
+.hv-event .ds-ico { display: inline-block; width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; color: #cdec37; }
