@@ -54,6 +54,14 @@
   sun.shadow.normalBias = 0.03;
   scene.add(sun);
   scene.add(sun.target);
+  // ── 영화 같은 빛(11/25 고퀄 업그레이드): 뒤에서 비추는 차가운 테두리 빛으로 인물 윤곽을 살리고,
+  //    화면 가장자리에 은은한 그늘을 둔다. 해 세기를 따라가므로 밤·재앙 장면에서는 함께 약해진다. 확인용: ?look=0 이면 끔.
+  const LOOK = !/[?&]look=0/.test(location.search);
+  const rim = new THREE.DirectionalLight(0xc6d8ff, 0);
+  rim.position.set(-32, 22, -36); scene.add(rim);
+  if (LOOK){ const vg = document.createElement('div'); vg.id = 'vignette';
+    vg.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse 120% 100% at 50% 44%, rgba(0,0,0,0) 55%, rgba(24,12,0,.30) 100%)';
+    wrap.appendChild(vg); }
 
   // 부드러운 그라데이션 하늘 (스카이돔)
   const skyGeo = new THREE.SphereGeometry(400, 32, 16);

@@ -713,6 +713,20 @@
     body.touch #slabMode { right:calc(14px + var(--sar)); bottom:calc(282px + var(--sab)); }
     body.touch #toast { bottom:calc(292px + var(--sab)); } body.touch #pickup { bottom:calc(326px + var(--sab)); }
   }
+
+  /* ── 화면 정리(11/25 고퀄 업그레이드) ──
+     좌표 숫자는 그대로(위치 찾기·알려 주기에 필요, 전도사님 11/25), 위치·날씨는 반투명 판 하나로, 6초 동안 손대지 않으면 버튼·정보가 옅어진다.
+     긴 안내·대화 글은 읽기 쉬운 한글 글꼴(Pretendard), 버튼·제목·숫자는 픽셀 글꼴 그대로. */
+  #info { background:linear-gradient(180deg, rgba(12,16,34,.46), rgba(12,16,34,.30)); padding:6px 11px 7px; border-radius:6px;
+    -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); box-shadow:0 2px 10px rgba(0,0,0,.18); }
+  #info, #topRight, #mapc, #mapCap, #dpad, #touchPad, #btnRun, #btnFly, #btnSneak, #btnJump, #btnDown, #btnRide { transition:opacity .5s ease; }
+  body.hud-idle #info, body.hud-idle #mapc, body.hud-idle #mapCap { opacity:.42; }
+  body.hud-idle #topRight { opacity:.55; }
+  body.hud-idle #dpad, body.hud-idle #btnRun, body.hud-idle #btnFly, body.hud-idle #btnSneak, body.hud-idle #btnJump, body.hud-idle #btnDown, body.hud-idle #btnRide { opacity:.5; }
+  #qText, #toast, #pickup, #chatLog, #tips p, #tips li, #cardText, .sverse, .spart, .prow, .stok, .sg, #invSide, .tipline, .ptxt {
+    font-family:'Pretendard','Malgun Gothic',sans-serif; letter-spacing:-.01em; }
+  #qText { line-height:1.55; }
+  #toast { font-weight:600; }
 </style>
 </head>
 <body class="menu">
@@ -1100,5 +1114,10 @@
 <script src="assets/vendor/supabase-js.js"></script>
 <script src="assets/verses-data.js"></script>
 <script src="assets/ark-game.js?v=92fa25308a"></script>
+<script>
+// 6초 동안 화면을 만지지 않으면 버튼·정보를 옅게(놀이에 집중), 만지면 바로 돌아온다(11/25)
+(function () { var t, b = document.body; function wake() { b.classList.remove('hud-idle'); clearTimeout(t); t = setTimeout(function () { b.classList.add('hud-idle'); }, 6000); }
+  ['pointerdown', 'touchstart', 'keydown', 'wheel', 'mousemove'].forEach(function (e) { addEventListener(e, wake, { passive: true, capture: true }); }); wake(); })();
+</script>
 </body>
 </html>

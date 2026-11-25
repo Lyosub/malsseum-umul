@@ -246,6 +246,7 @@
 
     // 그림자 카메라·스카이돔이 플레이어를 따라감
     sun.position.copy(player.position).add(SUN_OFFSET);
+    if (LOOK) rim.intensity = sun.intensity * 0.42;
     sun.target.position.copy(player.position);
     sky.position.copy(camera.position); farRing.position.set(camera.position.x, 16, camera.position.z);
     skyMat.uniforms.time.value = performance.now() * 0.001;
