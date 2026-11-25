@@ -92,6 +92,17 @@
     fpShield = new THREE.Group(); fpShield.visible = false; camera.add(fpShield);
     refreshMyAvatar(); avatar.visible = false;
     makeSky(); makeRainbow(); makeBethlehemStar();
+    // 그라데이션 하늘(11/25): 카메라를 감싸는 큰 공, 깊이를 쓰지 않고 가장 먼저 그려 해·달·구름·별이 그 위에 보인다
+    skyDome = new THREE.Mesh(new THREE.SphereGeometry(FOG_FAR + 20, 24, 14), new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false,
+      uniforms: { top: { value: new THREE.Color(0x6fa8e0) }, hor: { value: new THREE.Color(0xc4e2f4) }, sunDir: { value: new THREE.Vector3(0, 1, 0) }, sunCol: { value: new THREE.Color(1, 0.9, 0.7) }, glow: { value: 0 } },
+      vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: 'uniform vec3 top; uniform vec3 hor; uniform vec3 sunDir; uniform vec3 sunCol; uniform float glow; varying vec3 vD;' +
+        'void main(){ vec3 d = normalize(vD); float h = d.y; vec3 c = mix(hor, top, smoothstep(-0.03, 0.62, h));' +
+        'float s = max(dot(d, normalize(sunDir)), 0.0); c += sunCol * (pow(s, 6.0) * 0.22 + pow(s, 48.0) * 0.38) * glow;' +
+        'c = mix(c, hor, (1.0 - smoothstep(-0.25, 0.04, h)) * 0.6); gl_FragColor = vec4(pow(max(c, 0.0), vec3(0.4545)), 1.0); }'
+    }));
+    skyDome.renderOrder = -100; skyDome.frustumCulled = false; scene.add(skyDome);
     cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.88, fog: false });
     for (var c = 0; c < 26; c++) {
       var cl = new THREE.Mesh(new THREE.BoxGeometry(20 + rnd(c) * 30, 3, 12 + rnd(c + 5) * 16), cloudMat);

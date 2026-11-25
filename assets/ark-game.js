@@ -6417,6 +6417,7 @@
   }
   var brightStars = null, starLook = 0, starNight = -1;
   var clouds = [], sunM, moonM, stars, cloudMat, rainLines, rainPos, RAIN_N = 900;
+  var skyDome = null, SKY_TOP = new THREE.Color(), SKY_SUN = new THREE.Color(), C_SUNDAY = new THREE.Color(1.0, 0.93, 0.78), C_SUNDUSK = new THREE.Color(1.0, 0.62, 0.32), C_DUSKTOP = new THREE.Color(0.20, 0.22, 0.45);   // 11/25 그라데이션 하늘
   var C_DAY = new THREE.Color(0x9fcdee), C_NIGHT = new THREE.Color(0x0c1430), C_DUSK = new THREE.Color(0xf09a5a), C_RAIN = new THREE.Color(0x8792a0);
   var C_WHITE = new THREE.Color(1, 1, 1), C_NTINT = new THREE.Color(0.72, 0.8, 1), C_DTINT = new THREE.Color(1, 0.84, 0.68), skyC = new THREE.Color(), fogC = new THREE.Color();
   function makeSky() {
@@ -6551,6 +6552,14 @@
     });
     var cp = camera.position, dx = Math.cos(ang), dy = Math.sin(ang);
     sunM.position.set(cp.x + dx * 250, cp.y + dy * 250, cp.z - 70); sunM.lookAt(cp); sunM.visible = dy > -0.2 && rain < 0.7;
+    if (skyDome) {   // 위는 깊은 하늘색, 지평선은 안개색으로 이어지고 해 쪽에 빛무리(노을 땐 주황)
+      var su = skyDome.material.uniforms; skyDome.position.copy(cp);
+      SKY_TOP.copy(skyC).multiplyScalar(0.72 + 0.28 * (1 - dayF)); SKY_TOP.b = Math.min(1, SKY_TOP.b * (1.04 + 0.08 * dayF)); SKY_TOP.lerp(C_DUSKTOP, Math.min(1, dusk) * 0.45);
+      su.top.value.copy(SKY_TOP); su.hor.value.copy(scene.fog.color);
+      su.sunDir.value.set(dx * 250, dy * 250, -70).normalize();
+      SKY_SUN.copy(C_SUNDAY).lerp(C_SUNDUSK, Math.min(1, dusk * 1.2)); su.sunCol.value.copy(SKY_SUN);
+      su.glow.value = Math.max(0, Math.min(1, (dy + 0.18) * 2.2)) * (1 - rain * 0.85) * (1 - caveK);
+    }
     moonM.position.set(cp.x - dx * 250, cp.y - dy * 250, cp.z + 70); moonM.lookAt(cp); moonM.visible = dy < 0.2; moonM.material.opacity = 1 - rain * 0.8;
     rainbow.forEach(function(line){
       line.visible=dayT<rainbowUntil&&rain<.32&&dayF>.55&&caveK<.3; if (line.visible) noahSawRainbow();
@@ -7180,6 +7189,17 @@
     fpShield = new THREE.Group(); fpShield.visible = false; camera.add(fpShield);
     refreshMyAvatar(); avatar.visible = false;
     makeSky(); makeRainbow(); makeBethlehemStar();
+    // 그라데이션 하늘(11/25): 카메라를 감싸는 큰 공, 깊이를 쓰지 않고 가장 먼저 그려 해·달·구름·별이 그 위에 보인다
+    skyDome = new THREE.Mesh(new THREE.SphereGeometry(FOG_FAR + 20, 24, 14), new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false,
+      uniforms: { top: { value: new THREE.Color(0x6fa8e0) }, hor: { value: new THREE.Color(0xc4e2f4) }, sunDir: { value: new THREE.Vector3(0, 1, 0) }, sunCol: { value: new THREE.Color(1, 0.9, 0.7) }, glow: { value: 0 } },
+      vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: 'uniform vec3 top; uniform vec3 hor; uniform vec3 sunDir; uniform vec3 sunCol; uniform float glow; varying vec3 vD;' +
+        'void main(){ vec3 d = normalize(vD); float h = d.y; vec3 c = mix(hor, top, smoothstep(-0.03, 0.62, h));' +
+        'float s = max(dot(d, normalize(sunDir)), 0.0); c += sunCol * (pow(s, 6.0) * 0.22 + pow(s, 48.0) * 0.38) * glow;' +
+        'c = mix(c, hor, (1.0 - smoothstep(-0.25, 0.04, h)) * 0.6); gl_FragColor = vec4(pow(max(c, 0.0), vec3(0.4545)), 1.0); }'
+    }));
+    skyDome.renderOrder = -100; skyDome.frustumCulled = false; scene.add(skyDome);
     cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.88, fog: false });
     for (var c = 0; c < 26; c++) {
       var cl = new THREE.Mesh(new THREE.BoxGeometry(20 + rnd(c) * 30, 3, 12 + rnd(c + 5) * 16), cloudMat);

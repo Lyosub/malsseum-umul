@@ -17,6 +17,7 @@
   }
   var brightStars = null, starLook = 0, starNight = -1;
   var clouds = [], sunM, moonM, stars, cloudMat, rainLines, rainPos, RAIN_N = 900;
+  var skyDome = null, SKY_TOP = new THREE.Color(), SKY_SUN = new THREE.Color(), C_SUNDAY = new THREE.Color(1.0, 0.93, 0.78), C_SUNDUSK = new THREE.Color(1.0, 0.62, 0.32), C_DUSKTOP = new THREE.Color(0.20, 0.22, 0.45);   // 11/25 그라데이션 하늘
   var C_DAY = new THREE.Color(0x9fcdee), C_NIGHT = new THREE.Color(0x0c1430), C_DUSK = new THREE.Color(0xf09a5a), C_RAIN = new THREE.Color(0x8792a0);
   var C_WHITE = new THREE.Color(1, 1, 1), C_NTINT = new THREE.Color(0.72, 0.8, 1), C_DTINT = new THREE.Color(1, 0.84, 0.68), skyC = new THREE.Color(), fogC = new THREE.Color();
   function makeSky() {
@@ -151,6 +152,14 @@
     });
     var cp = camera.position, dx = Math.cos(ang), dy = Math.sin(ang);
     sunM.position.set(cp.x + dx * 250, cp.y + dy * 250, cp.z - 70); sunM.lookAt(cp); sunM.visible = dy > -0.2 && rain < 0.7;
+    if (skyDome) {   // 위는 깊은 하늘색, 지평선은 안개색으로 이어지고 해 쪽에 빛무리(노을 땐 주황)
+      var su = skyDome.material.uniforms; skyDome.position.copy(cp);
+      SKY_TOP.copy(skyC).multiplyScalar(0.72 + 0.28 * (1 - dayF)); SKY_TOP.b = Math.min(1, SKY_TOP.b * (1.04 + 0.08 * dayF)); SKY_TOP.lerp(C_DUSKTOP, Math.min(1, dusk) * 0.45);
+      su.top.value.copy(SKY_TOP); su.hor.value.copy(scene.fog.color);
+      su.sunDir.value.set(dx * 250, dy * 250, -70).normalize();
+      SKY_SUN.copy(C_SUNDAY).lerp(C_SUNDUSK, Math.min(1, dusk * 1.2)); su.sunCol.value.copy(SKY_SUN);
+      su.glow.value = Math.max(0, Math.min(1, (dy + 0.18) * 2.2)) * (1 - rain * 0.85) * (1 - caveK);
+    }
     moonM.position.set(cp.x - dx * 250, cp.y - dy * 250, cp.z + 70); moonM.lookAt(cp); moonM.visible = dy < 0.2; moonM.material.opacity = 1 - rain * 0.8;
     rainbow.forEach(function(line){
       line.visible=dayT<rainbowUntil&&rain<.32&&dayF>.55&&caveK<.3; if (line.visible) noahSawRainbow();
