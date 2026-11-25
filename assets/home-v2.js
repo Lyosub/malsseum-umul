@@ -7,7 +7,8 @@
   var heroEl = document.getElementById("hvHero");
   try {
     var bgNum = String(getVerseCardBgIndex()).padStart(2, "0");
-    heroEl.style.backgroundImage = "linear-gradient(180deg, rgba(8, 14, 44, .54) 0%, rgba(8, 14, 44, .46) 40%, rgba(8, 14, 44, .68) 100%), url(assets/verse-card-bg/verse-card-bg-" + bgNum + ".jpg)";
+    // 11/25 디자인 시스템: 사진이 더 보이게 가운데는 옅게, 위·아래만 깊게(글자에는 그림자를 따로 준다)
+    heroEl.style.backgroundImage = "linear-gradient(180deg, rgba(8, 14, 44, .60) 0%, rgba(8, 14, 44, .40) 30%, rgba(8, 14, 44, .44) 62%, rgba(8, 14, 44, .86) 100%), url(assets/verse-card-bg/verse-card-bg-" + bgNum + ".jpg)";
   } catch (e) {}
 
   var verse = getVerseFor("daily");

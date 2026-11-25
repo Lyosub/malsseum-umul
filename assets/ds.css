@@ -1,0 +1,131 @@
+/* 말씀우물 디자인 시스템(2026-11-25): 모든 앱 화면 위에 얹는 마지막 층.
+   색·글자·간격·모서리·그림자·움직임을 한 벌로 맞춘다. 페이지 스크립트가 쓰는 id와 구조는 건드리지 않는다.
+   어두운 화면(강제 다크)에서도 누를 곳이 보이도록 테두리는 남기고, 그림자는 은은하게 더한다(11/3 결정 유지). */
+:root {
+  --ds-ink: #141a3c;
+  --ds-soft: #5a6185;
+  --ds-line: #d6dcf0;
+  --ds-line-strong: #b9c2e4;
+  --ds-surface: #ffffff;
+  --ds-r-s: 12px;
+  --ds-r-m: 18px;
+  --ds-r-l: 24px;
+  --ds-e1: 0 1px 2px rgba(20, 26, 60, .05), 0 4px 14px rgba(23, 40, 126, .06);
+  --ds-e2: 0 2px 4px rgba(20, 26, 60, .06), 0 12px 32px rgba(23, 40, 126, .10);
+  --ds-fast: 140ms;
+  --ds-mid: 240ms;
+  --ds-ease: cubic-bezier(.2, .7, .2, 1);
+}
+
+/* 글자: 숫자는 자리 맞춤, 글자 가장자리를 매끈하게 */
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+b, strong, .num, .kc-head b { font-variant-numeric: tabular-nums; }
+::selection { background: rgba(37, 64, 216, .18); }
+
+/* 누를 수 있는 곳: 눌리는 느낌 + 또렷한 초점 표시 */
+a, button, .btn, .v2-tile, .home-row, .pc, .app-tab { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid rgba(37, 64, 216, .45); outline-offset: 2px; border-radius: 10px; }
+.btn, button.btn, a.btn {
+  min-height: 48px;
+  border-radius: 14px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  transition: transform var(--ds-fast) var(--ds-ease), box-shadow var(--ds-mid) var(--ds-ease), background-color var(--ds-mid) var(--ds-ease);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn.block { display: flex; width: 100%; }
+.btn:not(.ghost) { box-shadow: 0 1px 2px rgba(20, 26, 60, .12), 0 6px 16px color-mix(in srgb, var(--tone, #2540d8) 28%, transparent); }
+.btn:active { transform: scale(.97); }
+.btn.ghost { background: var(--ds-surface); border-width: 1.5px; }
+
+/* 카드와 바로가기 칸: 테두리는 옅게, 그림자로 떠 보이게 */
+.card, .dir-group, .home-row, .mind-box { border-radius: var(--ds-r-m); border-color: var(--ds-line); box-shadow: var(--ds-e1); }
+a.card, .home-row, .v2-tile, .pc, .mind-box { border-color: var(--ds-line-strong); }
+.v2-tile {
+  border-radius: var(--ds-r-m);
+  padding: 16px;
+  gap: 10px;
+  box-shadow: var(--ds-e1);
+  transition: transform var(--ds-fast) var(--ds-ease), box-shadow var(--ds-mid) var(--ds-ease), border-color var(--ds-mid);
+}
+.v2-tiles { gap: 10px; }
+.v2-tile::after {
+  content: "";
+  top: 18px; right: 16px;
+  width: 8px; height: 8px;
+  border-top: 2.2px solid var(--tone); border-right: 2.2px solid var(--tone);
+  transform: rotate(45deg);
+  opacity: .75;
+}
+.v2-tile .i { width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(145deg, var(--tone-soft), color-mix(in srgb, var(--tone-soft) 60%, #fff)); }
+.v2-tile b { font-size: 15.5px; }
+a.card:active, .v2-tile:active, .home-row:active, .pc:active { transform: scale(.98); box-shadow: 0 1px 2px rgba(20, 26, 60, .08); }
+@media (hover: hover) {
+  a.card:hover, .v2-tile:hover, .home-row:hover, .pc:hover { transform: translateY(-2px); box-shadow: var(--ds-e2); border-color: color-mix(in srgb, var(--tone, #2540d8) 45%, var(--ds-line-strong)); }
+}
+
+/* 위쪽 색 띠: 한 가지 색 대신 깊이가 있는 그라데이션 + 은은한 빛 */
+.page-hd {
+  background:
+    radial-gradient(420px 220px at 88% 0%, rgba(255, 255, 255, .16), transparent 70%),
+    radial-gradient(360px 200px at 0% 100%, rgba(205, 236, 55, .12), transparent 70%),
+    linear-gradient(160deg, var(--tone) 0%, var(--tone-deep) 100%);
+  border-radius: 0 0 var(--ds-r-l) var(--ds-r-l);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--tone, #2540d8) 22%, transparent);
+}
+header.site { background: var(--tone); }
+.page-hd h1 { font-size: 28px; font-weight: 800; letter-spacing: -.04em; }
+
+/* 구역 제목 */
+.sect-hd h2 { font-size: 19px; font-weight: 800; letter-spacing: -.035em; }
+.sect-hd a { font-weight: 700; }
+
+/* 아래 탭: 반투명 유리 + 고른 표시 */
+.app-tabbar {
+  background: rgba(255, 255, 255, .86);
+  -webkit-backdrop-filter: saturate(1.6) blur(18px);
+  backdrop-filter: saturate(1.6) blur(18px);
+  border-top: 1px solid rgba(20, 26, 60, .08);
+  box-shadow: 0 -6px 24px rgba(20, 26, 60, .06);
+}
+.app-tab { transition: color var(--ds-mid) var(--ds-ease); }
+.app-tab svg { transition: transform var(--ds-mid) var(--ds-ease); }
+.app-tab:active svg { transform: scale(.88); }
+.app-tab.on svg { transform: translateY(-1px); }
+.app-tab.on::before { width: 26px; height: 3px; background: var(--tone, var(--well)); box-shadow: 0 2px 8px color-mix(in srgb, var(--tone, #2540d8) 40%, transparent); }
+
+/* 입력칸 */
+input[type="text"], input[type="search"], input[type="email"], input[type="password"], textarea, select {
+  border-radius: 14px;
+  transition: border-color var(--ds-mid), box-shadow var(--ds-mid);
+}
+input:focus, textarea:focus, select:focus { border-color: var(--tone, #2540d8); box-shadow: 0 0 0 4px color-mix(in srgb, var(--tone, #2540d8) 14%, transparent); outline: none; }
+
+/* 그림 아이콘(이모지를 바꾼 것) */
+.ds-ico { width: 22px; height: 22px; display: block; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.hv-guide-ico .ds-ico { width: 20px; height: 20px; color: var(--tone, #2540d8); }
+
+/* 화면이 바뀔 때: 부드럽게 이어진다(지원하는 브라우저에서만) */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: ds-out 160ms ease-in both; }
+::view-transition-new(root) { animation: ds-in 260ms var(--ds-ease) both; }
+@keyframes ds-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes ds-in { from { opacity: 0; transform: translateY(10px); } }
+.app-tabbar { view-transition-name: tabbar; }
+header.site { view-transition-name: sitehd; }
+
+/* 스크롤하면 카드가 살짝 올라오며 나타남(ds.js가 .ds-rise를 붙인다) */
+.ds-rise { opacity: 0; transform: translateY(14px); transition: opacity 480ms var(--ds-ease), transform 560ms var(--ds-ease); }
+.ds-rise.ds-in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; transition: none !important; }
+  .ds-rise { opacity: 1; transform: none; }
+}
+
+/* 첫 화면 맨 위: 사진이 보이게 덮개를 옅게 한 대신 글자에 그림자, 사진은 천천히 다가옴 */
+html.home-v2 .hv-hero { isolation: isolate; }
+html.home-v2 .hv-hero #homeVerseCard .text, html.home-v2 .hv-hero .hv-date { text-shadow: 0 2px 14px rgba(4, 8, 30, .55), 0 1px 3px rgba(4, 8, 30, .45); }
+html.home-v2 .hv-hero { animation: ds-hero 22s ease-out both; }
+@keyframes ds-hero { from { background-size: 112%; } to { background-size: 100%; } }
+@media (min-width: 760px) { html.home-v2 .hv-hero { animation: none; } }
