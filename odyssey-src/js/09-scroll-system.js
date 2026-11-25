@@ -299,6 +299,27 @@
   function bgmStop(){ if (BGM.src){ try { BGM.gain.gain.linearRampToValueAtTime(0, BGM.ctx.currentTime + 0.4); const s0 = BGM.src; setTimeout(() => { try { s0.stop(); } catch (e){} }, 450); } catch (e){} BGM.src = null; BGM.cur = null; } }
   let bgmTick = 0;
   function updateBgm(dt){ bgmTick += dt; if (bgmTick < 0.5) return; bgmTick = 0; if (BGM.on && BGM.ctx && BGM.cur !== bgmWanted()) bgmStart(); }
+  // ── 환경음(11/25 고퀄 업그레이드): 파일 없이 소리를 만들어 낸다 — 은은한 바람, 걸음마다 모래 밟는 소리, 홍해에선 파도.
+  //    배경음악 켜기/끄기를 그대로 따른다(꺼져 있으면 함께 조용).
+  const AMB = { on: false, noise: null, wind: null, sea: null, stepAcc: 0, t: 0 };
+  function ambNoise(c){ if (AMB.noise) return AMB.noise; const n = c.createBuffer(1, c.sampleRate * 2, c.sampleRate), d = n.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return AMB.noise = n; }
+  function ambLoop(c, freq, q){ const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = ambNoise(c); s.loop = true; f.type = 'lowpass'; f.frequency.value = freq; f.Q.value = q; g.gain.value = 0; s.connect(f).connect(g).connect(c.destination); s.start(); return { s, f, g }; }
+  function ambStep(c, hard){ const t = c.currentTime, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = ambNoise(c);
+    f.type = 'bandpass'; f.frequency.value = (hard ? 2600 : 1300) * (0.85 + Math.random() * 0.3); f.Q.value = hard ? 2.2 : 0.9;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(hard ? 0.2 : 0.32, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0008, t + (hard ? 0.09 : 0.13));
+    s.connect(f).connect(g).connect(c.destination); s.start(t, Math.random() * 1.5, 0.16); }
+  function updateAmb(dt){
+    const c = BGM.ctx; if (!c || c.state !== 'running') return;
+    if (!BGM.on){ if (AMB.on){ [AMB.wind, AMB.sea].forEach(x => x && x.g.gain.setTargetAtTime(0, c.currentTime, 0.3)); AMB.on = false; } return; }
+    if (!AMB.wind){ AMB.wind = ambLoop(c, 420, 0.7); AMB.sea = ambLoop(c, 700, 0.5); }
+    AMB.on = true; AMB.t += dt;
+    const indoor = !!(Z && Z.room && inRoom(player.position.x, player.position.z)), seaZ = !!(Z && Z.id === 'redsea');
+    const wind = indoor ? 0.008 : 0.045 + 0.025 * Math.sin(AMB.t * 0.23) + 0.012 * Math.sin(AMB.t * 0.71);
+    AMB.wind.g.gain.setTargetAtTime(wind, c.currentTime, 0.6); AMB.wind.f.frequency.setTargetAtTime(380 + 160 * Math.sin(AMB.t * 0.17), c.currentTime, 0.8);
+    const wave = seaZ && !indoor ? 0.06 + 0.07 * Math.max(0, Math.sin(AMB.t * 0.9)) : 0;
+    AMB.sea.g.gain.setTargetAtTime(wave, c.currentTime, 0.5);
+    if (typeof moveSpeed === 'number' && grounded && moveSpeed > 0.6 && !climb){ AMB.stepAcc += dt * moveSpeed; if (AMB.stepAcc > 1.05){ AMB.stepAcc = 0; ambStep(c, indoor); } } else AMB.stepAcc = 0.7;
+  }
   ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, () => bgmStart(), { passive: true }));
   document.addEventListener('visibilitychange', () => { if (!BGM.ctx) return; if (document.hidden) BGM.ctx.suspend().catch(() => {}); else if (BGM.on) BGM.ctx.resume().catch(() => {}); });   // 아이폰에서 소리 장치를 못 켜면 그냥 넘어감(10/11 오류)
   function setQuality(level, mode){
