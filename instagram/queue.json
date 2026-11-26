@@ -677,13 +677,15 @@
       "id": "2026-11-22-cartoon",
       "type": "image",
       "publish_at": "2026-11-26 19:30",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-11-22-cartoon.txt",
       "first_comment_file": "instagram/captions/2026-11-22-cartoon.tags.txt",
       "images": [
         "instagram/2026-11-22-cartoon.jpg"
       ],
-      "note": "말씀카툰 #010 「제일 먼저」 — 11/22 설교. 아침에 폰부터 집으려던 지호가 먼저 기도하고 하루를 시작한다. 하단 띠 골 1:18. 전도사님 컨펌 2026-11-17."
+      "note": "말씀카툰 #010 「제일 먼저」 — 11/22 설교. 아침에 폰부터 집으려던 지호가 먼저 기도하고 하루를 시작한다. 하단 띠 골 1:18. 전도사님 컨펌 2026-11-17.",
+      "media_id": "17881279203567752",
+      "posted_at": "2026-11-26 19:32"
     },
     {
       "id": "2026-11-27-advent",
