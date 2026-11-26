@@ -3,12 +3,35 @@
 
   // ① 낚시: 찌가 쑥 들어가면 막대가 나오고, 움직이는 표시가 초록 칸에 왔을 때 누르면 낚는다.
   //    물고기 종류·크기를 적어 두고(퀘스트 → 놀이), 비늘 없는 메기는 놓아 준다(레 11:9-10).
+  // 11/26 물고기 종류 늘림(전도사님): 자리마다 다른 물고기, 깊은 바다·갈릴리·요단·나일·유브라데·남쪽 큰 바다 추가.
+  //   [이름, 작은 크기, 큰 크기, 잘 잡히는 정도, 어려움 0~2, 'noscale'=비늘 없어 놓아 줌(레 11:9-10)]
   var FISH_KINDS = {
-    '호수': [['틸라피아', 15, 42, 5, 0], ['정어리', 8, 16, 5, 0], ['잉어', 28, 62, 2, 1], ['메기', 30, 80, 1.4, 1, 'noscale'], ['큰 틸라피아', 43, 58, 0.5, 2]],
-    '강': [['잉어', 25, 60, 4, 0], ['틸라피아', 14, 36, 4, 0], ['메기', 30, 90, 1.6, 1, 'noscale'], ['큰 잉어', 61, 85, 0.5, 2]],
-    '바다': [['정어리', 9, 20, 5, 0], ['숭어', 25, 55, 4, 0], ['도미', 22, 48, 2, 1], ['큰 숭어', 56, 78, 0.5, 2]],
+    '호수': [['틸라피아', 15, 42, 5, 0], ['정어리', 8, 16, 5, 0], ['붕어', 10, 30, 3, 0], ['잉어', 28, 62, 2, 1], ['수염잉어', 30, 70, 1.5, 1], ['메기', 30, 80, 1.4, 1, 'noscale'], ['큰 틸라피아', 43, 58, 0.5, 2]],
+    '강': [['잉어', 25, 60, 4, 0], ['틸라피아', 14, 36, 4, 0], ['붕어', 10, 28, 3, 0], ['수염잉어', 30, 72, 1.5, 1], ['메기', 30, 90, 1.6, 1, 'noscale'], ['뱀장어', 40, 100, 1, 1, 'noscale'], ['큰 잉어', 61, 85, 0.5, 2]],
+    '바다': [['정어리', 9, 20, 5, 0], ['멸치', 6, 14, 4, 0], ['숭어', 25, 55, 4, 0], ['고등어', 20, 40, 3, 0], ['도미', 22, 48, 2, 1], ['가자미', 20, 45, 2, 1], ['오징어', 15, 40, 1, 1, 'noscale'], ['큰 숭어', 56, 78, 0.5, 2]],
+    '깊은 바다': [['고등어', 22, 42, 4, 0], ['도미', 25, 55, 3, 1], ['농어', 35, 80, 2.5, 1], ['다랑어', 60, 180, 1.5, 2], ['문어', 30, 90, 1, 1, 'noscale'], ['상어', 100, 300, 0.6, 2, 'noscale'], ['큰 다랑어', 181, 260, 0.25, 2]],
+    '갈릴리': [['베드로 고기(틸라피아)', 15, 45, 5, 0], ['갈릴리 정어리', 8, 15, 5, 0], ['수염잉어', 30, 75, 2, 1], ['메기', 30, 90, 1.2, 1, 'noscale'], ['큰 베드로 고기', 46, 60, 0.5, 2]],
+    '요단 강': [['틸라피아', 14, 38, 4, 0], ['잉어', 25, 60, 3, 0], ['붕어', 10, 28, 3, 0], ['수염잉어', 30, 70, 2, 1], ['메기', 30, 90, 1.4, 1, 'noscale']],
+    '나일 강': [['나일 틸라피아', 15, 45, 5, 0], ['코끼리고기', 20, 45, 2, 1], ['나일 메기', 40, 120, 1.5, 1, 'noscale'], ['나일 농어', 50, 150, 1, 2], ['큰 나일 농어', 151, 200, 0.25, 2]],
+    '유브라데 강': [['잉어', 25, 60, 4, 0], ['붕어', 10, 28, 3, 0], ['유브라데 수염잉어', 35, 90, 2, 1], ['메기', 30, 100, 1.4, 1, 'noscale'], ['큰 수염잉어', 91, 130, 0.4, 2]],
+    '남쪽 큰 바다': [['정어리', 9, 20, 5, 0], ['숭어', 25, 55, 4, 0], ['고등어', 20, 40, 3, 0], ['도미', 22, 50, 2, 1], ['가자미', 20, 45, 2, 1], ['다랑어', 60, 160, 1, 2], ['상어', 100, 280, 0.4, 2, 'noscale']],
     '': [['작은 물고기', 6, 14, 1, 0]]
   };
+  // 새 자리에서 잡은 물고기는 가방에는 가까운 종류(강·호수·바다 물고기)로 들어가고, 마을 기록도 그 셋으로 센다
+  var FISH_AREA = { '깊은 바다': '바다', '남쪽 큰 바다': '바다', '갈릴리': '호수', '요단 강': '강', '나일 강': '강', '유브라데 강': '강' };
+  function fishWaterRegion(x, z) {
+    var r = villageWaterRegion(x, z);
+    if (r === '바다') { terrain(Math.floor(x), Math.floor(z)); return T.h <= G - 14 ? '깊은 바다' : '바다'; }
+    if (r) return r;
+    if (newWorldW(x, z) < 0.5) return null;
+    var nr = newRegion(x, z);
+    if (nr === 'galilee') return '갈릴리';
+    if (nr === 'southsea') return '남쪽 큰 바다';
+    if (nr === 'jordan') return '요단 강';
+    if (nr === 'egyptland') return '나일 강';
+    if (nr === 'shinar') return '유브라데 강';
+    terrain(Math.floor(x), Math.floor(z)); return T.rd < 6 ? '강' : null;
+  }
   var fishFun = null, fishBarEl = null, FISH_ZONE = [0.34, 0.26, 0.17];
   function fishBook() { return villageBook.fishBook || (villageBook.fishBook = {}); }
   function fishTotal() { var b = fishBook(), n = 0; for (var k in b) n += b[k].n; return n; }
@@ -64,11 +87,11 @@
     rec.n++; if (best) rec.max = size;
     var region = f.region, item = f.item; fishEnd();
     if (k[5] === 'noscale') { saveVillageBook(); sfx('dig'); return toast('🐟 ' + k[0] + ' ' + size + 'cm! 비늘이 없는 물고기라 놓아 줬어요 (레 11:9-10)'); }
-    var caught = VILLAGE_FISH[region] || RAW_FISH, count = (item === FISH_NET ? 2 : 1) + (perfect ? 1 : 0);
+    var area = FISH_AREA[region] || region, caught = VILLAGE_FISH[area] || RAW_FISH, count = (item === FISH_NET ? 2 : 1) + (perfect ? 1 : 0);
     count = Math.min(count, room(caught)); if (count <= 0) { saveVillageBook(); return bagFull(); }
-    give(caught, count); recordVillageFish(region, count); saveVillageBook(); bagChanged(); sfx('craft');
+    give(caught, count); recordVillageFish(area, count); saveVillageBook(); bagChanged(); sfx('craft');
     var msg = '🐟 ' + k[0] + ' ' + size + 'cm' + (perfect ? ' — 딱 맞았어요! 한 마리 더' : '') + (first ? ' · 처음 낚은 물고기' : (best ? ' · 새 기록!' : ''));
-    if (region === '호수' && Math.random() < 0.02 && !isAdm() && give(ING_AG, 1)) { bagChanged(); msg = '🪙 ' + k[0] + ' 입에서 은이 나왔어요! (마 17:27)'; }
+    if ((region === '호수' || region === '갈릴리') && Math.random() < 0.02 && !isAdm() && give(ING_AG, 1)) { bagChanged(); msg = '🪙 ' + k[0] + ' 입에서 은이 나왔어요! (마 17:27)'; }
     if (before < 153 && fishTotal() >= 153) msg = '🎣 지금까지 백쉰세 마리를 낚았어요! (요 21:11)';
     toast(msg);
   }
@@ -90,7 +113,7 @@
     if (!hit) return deny('가까운 물을 겨누고 눌러요');
     var bob = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), new THREE.MeshBasicMaterial({ color: 0xe8483a }));
     bob.position.set(hit[0], hit[1], hit[2]); scene.add(bob);
-    fishFun = { item: item, x: P.x, z: P.z, wy: hit[1], region: villageWaterRegion(hit[0], hit[2]), phase: 'wait', tBite: performance.now() + 1600 + Math.random() * 3600, bob: bob };
+    fishFun = { item: item, x: P.x, z: P.z, wy: hit[1], region: fishWaterRegion(hit[0], hit[2]), phase: 'wait', tBite: performance.now() + 1600 + Math.random() * 3600, bob: bob };
     toast(item === FISH_NET ? '그물을 던졌어요. 찌를 잘 봐요' : '낚싯줄을 던졌어요. 찌를 잘 봐요'); sfx('dig');
     requestAnimationFrame(fishLoop);
   }

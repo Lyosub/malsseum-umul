@@ -206,7 +206,7 @@
     h = h * (1 - dw) + (base + dune) * dw + 50 * sm * (0.8 + 0.3 * ridge);
     // 갈릴리 호수(마 4:18)
     var ge = galE(x, z);
-    if (ge < 1.6) { var lakeH = base - 1 - Math.floor(9 * Math.max(0, 1 - ge)); h = ge < 1 ? lakeH : h * sstep(1, 1.6, ge) + (base + 1) * (1 - sstep(1, 1.6, ge)); }
+    if (ge < 1.6) { var lakeH = base - 1 - Math.floor(16 * Math.max(0, 1 - ge)); h = ge < 1 ? lakeH : h * sstep(1, 1.6, ge) + (base + 1) * (1 - sstep(1, 1.6, ge)); }
     // 11/24 눈 덮인 산(시 147:16): 둥근 봉우리 여럿
     var snd = Math.hypot(x - SNX, z - SNZ), snw = sstep(SNR + 60, SNR - 40, snd + n);
     if (snw > 0) h += snw * (8 + 30 * ridge * vnoise(x, z, 55, 96) + 6 * roll2);
@@ -221,7 +221,7 @@
     if (jd < 16) { var vf = clamp01((jd - 4) / 12); vf = vf * vf; h = base + (h - base) * vf; if (jd <= 2.6) h = base - 2; }
     // 남쪽 큰 바다(시 107:23)와 섬
     var ssd = z - (SSEA_Z + n);
-    if (ssd > -40) { var sk = sstep(-40, 8, ssd); h = h * (1 - sk) + (base - 1 - Math.min(10, Math.max(0, ssd) * 0.22)) * sk; }
+    if (ssd > -40) { var sk = sstep(-40, 8, ssd); h = h * (1 - sk) + (base - 1 - Math.min(24, Math.max(0, ssd) * 0.3)) * sk; }
     var si = ssd > -40 ? sIsleAt(x, z) : null, sik = 0;
     if (si) { sik = si[1]; var IH = S_ISLES[si[0]][3]; var ih = base - 3 + sstep(0, 0.28, sik) * 4.5 + Math.pow(Math.max(0, sik - 0.2) / 0.8, 1.4) * IH * (0.55 + 0.7 * roll); if (ih > h) h = ih; }
     h = Math.round(h);
@@ -362,7 +362,7 @@
     var h = G - 1 + Math.round(hf);
     // 북쪽 바다: 바닷가에서 점점 깊게
     var seaD = (SEA_Z + (vnoise(x, z, 60, 9) - 0.5) * 40) - z;
-    if (seaD > -12) h = Math.min(h, G - 1 - Math.round(clamp01((seaD + 12) / 40) * 11 + n2 * 2) + (seaD < 0 ? 1 : 0));
+    if (seaD > -12) h = Math.min(h, G - 1 - Math.round(clamp01((seaD + 12) / 70) * 24 + n2 * 2) + (seaD < 0 ? 1 : 0));   // 11/26 바다를 더 깊게(최대 26칸)
     // 강 골짜기
     var rd = riverDist(x, z);
     if (rd < 15) { var vf = clamp01((rd - 4) / 11); vf = vf * vf; h = Math.round(G - 1 + (h - (G - 1)) * vf); }
@@ -376,10 +376,11 @@
     if (h > SY - 4) h = SY - 4;
     var top = GRASS, sub = DIRT, wtop = -1;
     var le = lakeE(x, z), od = Math.hypot(x - OASX, z - OASZ), se = z > 1500 ? saltE(x, z) : 9;
-    if (le < 1) { h = G - 2 - Math.floor(5 * (1 - le)); wtop = G - 1; top = hash2(x, z, 1) < 0.5 ? CLAY : SAND; sub = CLAY; }
+    if (le < 1) { h = G - 2 - Math.floor(11 * (1 - le)); wtop = G - 1; top = hash2(x, z, 1) < 0.5 ? CLAY : SAND; sub = CLAY; }
     else if (od < 11) { h = G - 2 - Math.floor(4 * (1 - od / 11)); wtop = G - 1; top = SAND; sub = CLAY; }
     else if (se < 1) { h = G - 2 - Math.floor(6 * (1 - se)); wtop = G - 1; top = hash2(x, z, 4) < 0.3 ? SALT_CRUST : SAND; sub = SAND; }
-    else if (rd <= 2.2) { wtop = h; h = h - 2; top = hash2(x, z, 2) < 0.5 ? CLAY : SAND; sub = SAND; }
+    else if (rd <= 2.2) { wtop = h; h = h - 2 - Math.round(3 * (1 - rd / 2.2));   // 11/26 강 가운데를 더 깊게(최대 5칸)
+      top = hash2(x, z, 2) < 0.5 ? CLAY : SAND; sub = SAND; }
     else if (h < G - 1) { wtop = G - 1; top = n2 < 0.3 ? 18 : SAND; sub = SAND; }
     else if (le < 1.3 || od < 16 || rd <= 3.2) { top = le < 1.3 && hash2(x, z, 3) < 0.3 ? CLAY : SAND; sub = SAND; }
     else if (desW > 0.5) { top = SAND; sub = SAND; }
@@ -499,7 +500,7 @@
             // 11/20 더 깊게(땅 표면 y 15, 바닥 y -32): 구리 ≤64 · 철 ≤30 · 은 ≤2 · 호마노 ≤-4 · 금 ≤-8 · 청옥 ≤-16 · 금강석 ≤-22
             if (cl < 0.006 && y <= -8) id = ORE_AU;
             else if (cl >= 0.006 && cl < 0.014 && y <= 2) id = ORE_AG;
-            else if (cl >= 0.014 && cl < 0.034 && y <= 30) id = ORE_FE;
+            else if (cl >= 0.014 && cl < 0.024 && y <= 8) id = ORE_FE;   // 11/26 철을 더 귀하게(전도사님): 덩이 절반, 땅 밑 7칸 아래부터
             else if (cl >= 0.034 && cl < 0.06 && y <= 64) id = ORE_CU;
             else if (cl >= 0.06 && cl < 0.064 && y <= -4) id = ORE_ONYX;
             else if (cl >= 0.064 && cl < 0.067 && y <= -16) id = ORE_SAPH;
