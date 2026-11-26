@@ -214,3 +214,6 @@ body.dbg .rspot.area::after { content: attr(data-id); position: absolute; left: 
   .gen-wrap:has(#wlBox) #wlBox { grid-row: 1 / span 2; width: 100%; }
   .gen-wrap:has(#mgBox) #mgBox { width: min(100%, calc(52vh * 1.7778)); }
 }
+
+.tiny-note { font-size: 12px; color: rgba(244, 239, 228, .6); margin: -2px 0 4px; }
+@media (max-height: 520px) and (orientation: landscape) { .profile-panel .tiny-note { grid-column: 2; } }

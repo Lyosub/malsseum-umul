@@ -57,10 +57,10 @@
   document.querySelectorAll('.av').forEach(function (b) { b.onclick = function () { av = b.dataset.av; document.querySelectorAll('.av').forEach(function (x) { x.classList.toggle('on', x === b); }); }; });
   document.querySelector('.av[data-av="m"]').classList.add('on');
   $('btnProfileOk').onclick = function () {
-    var n = $('inNick').value.trim(), d = $('inDept').value, g = $('inGrade').value;
+    var n = $('inNick').value.trim(), real = $('inReal').value.trim();
     if (!n) return ($('profErr').textContent = '닉네임을 적어 주세요');
-    if (!d || !g) return ($('profErr').textContent = '부서와 학년을 골라 주세요');
-    S.nick = n; S.dept = d; S.grade = g; S.av = av; save();
+    if (!real) return ($('profErr').textContent = '실명을 적어 주세요 — 시상할 때만 사용돼요');
+    S.nick = n; S.real = real; S.av = av; save();
     playOpening(function () { S.opening = true; save(); enterMap(); });
   };
 
