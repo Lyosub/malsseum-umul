@@ -464,6 +464,7 @@
       return true;
     }
     if (nm === '한 아이') { loavesQuest(); return true; }
+    if (nm === '오바댜') { obadiahQuest(); return true; }   // 11/26 19-caves
     return false;
   }
   function openTrade() {

@@ -202,7 +202,7 @@
       return overlap(lx, lz, -19, -55, 19, -22) || overlap(lx, lz, -50, 17, -6, 52) || overlap(lx, lz, 19, -17, 48, 19) || overlap(lx, lz, -24, -16, -15, -7) || overlap(lx, lz, 14, 22, 22, 31);
     });
   }
-  var FAR_BUILD = {};   // 18-israel이 채움
+  var FAR_BUILD = {}, FAR_BUILD_EXTRA = [];   // 18-israel·19-caves가 채움
   function buildFarLands(x0, z0) {
     FAR_CITIES.forEach(function (c) {
       var m = c.mb || c.r + 8;
@@ -211,6 +211,7 @@
       if (c.k === 'babylon') buildBabylon(c); else if (c.k === 'nineveh') buildNineveh(c); else if (c.k === 'egypt') buildEgypt(c); else if (FAR_BUILD[c.k]) FAR_BUILD[c.k](c, x0, z0);
       FB = G;
     });
+    FAR_BUILD_EXTRA.forEach(function (fn) { FB = G; fn(x0, z0); }); FB = G;
     if (x0 + CS > JONAH_X - 5 && x0 <= JONAH_X + 5 && z0 + CS > JONAH_Z - 5 && z0 <= JONAH_Z + 5) buildJonahBooth();
   }
 
@@ -293,8 +294,8 @@
     swamp: { label: '🐸 갈대 늪', x: WX(SWX), z: WZ(SWZ), rumor: '요단 강에서 해 지는 쪽으로 한참 가면, 갈대가 우거지고 개구리가 우는 늪이 있대요.' },
     snow: { label: '❄ 눈 덮인 산', x: WX(SNX), z: WZ(SNZ), rumor: '동쪽 큰 숲의 해 지는 쪽 끝에, 늘 눈이 덮인 산이 있대요.' }
   };
-  var FAR_KEYS = ['babylon', 'nineveh', 'egypt', 'swamp', 'snow'], ISR_KEYS = [], SPOT_CITY = {};   // ISR_KEYS·SPOT_CITY는 18-israel이 채움
-  function farAll() { return FAR_KEYS.concat(ISR_KEYS); }
+  var FAR_KEYS = ['babylon', 'nineveh', 'egypt', 'swamp', 'snow'], ISR_KEYS = [], CAVE_KEYS = [], SPOT_CITY = {};   // ISR_KEYS·SPOT_CITY는 18-israel이 채움
+  function farAll() { return FAR_KEYS.concat(ISR_KEYS, CAVE_KEYS); }
   ADVS.push(
     ['far_babylon', '🏛 바벨론 찾기', '아주 먼 큰 강가의 벽돌 성을 찾아요 — 마을 상인에게 소문을 들을 수 있어요', [[GEM_SAPH, 2], [ING_AG, 3]], ['🏛', '바벨론', REGION_INFO.babylon[1], REGION_INFO.babylon[2]]],
     ['far_nineveh', '🏯 니느웨 찾기', '사흘 동안 걸을 만큼 큰 성읍을 찾아요', [[ING_AG, 3], [COOKED_FISH, 4]], ['🏯', '니느웨', REGION_INFO.nineveh[1], REGION_INFO.nineveh[2]]],
@@ -320,6 +321,7 @@
     setTimeout(function () {
       advDone('far_' + k);
       if (FAR_KEYS.every(function (q) { return ADV.regions['far_' + q]; })) setTimeout(function () { advDone('far_all'); }, 7000);
+      if (CAVE_KEYS.length && CAVE_KEYS.every(function (q) { return ADV.regions['far_' + q]; })) setTimeout(function () { advDone('far_caves'); }, 7000);
       if (ISR_KEYS.length && ISR_KEYS.every(function (q) { return ADV.regions['far_' + q]; })) setTimeout(function () { advDone('far_israel'); }, 7000);
     }, 6800);
   }
