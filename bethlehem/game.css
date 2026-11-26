@@ -186,3 +186,31 @@ input, select { display: block; width: 100%; margin-top: 4px; padding: 10px 12px
 .tapfx { position: fixed; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; border: 2px solid rgba(255, 230, 160, .9); pointer-events: none; z-index: 80; animation: tapfx .6s ease-out forwards; }
 @keyframes tapfx { to { transform: scale(7); opacity: 0; } }
 .gcard.right { box-shadow: 0 0 0 2px #f6d58e, 0 0 16px rgba(255, 210, 120, .8); }
+
+body.dbg .rspot.area { outline: 5px solid #ff2d55; background: rgba(255, 45, 85, .25); }
+body.dbg .rspot.area::after { content: attr(data-id); position: absolute; left: 2px; top: 2px; font-size: 26px; color: #fff; background: #ff4d6d; padding: 0 3px; }
+
+/* 가로 휴대폰(낮은 화면): 퍼즐 그림이 창 밖으로 넘치지 않게 높이에 맞춤 */
+#mgBox, #wlBox { width: min(100%, calc(56vh * 1.7778)); margin: 0 auto; }
+#rmSvg { max-height: 58vh; width: auto !important; max-width: 100%; display: block; margin: 0 auto; }
+@media (max-height: 520px) {
+  .modal-card { max-height: 96vh; }
+  .modal-hd { padding: 6px 14px; }
+  .modal-body { padding: 8px 14px; }
+  #mgBox, #wlBox { width: min(100%, calc(60vh * 1.7778)); }
+  #rmSvg { max-height: 54vh; }
+  .gen-wrap { gap: 6px; }
+}
+@media (max-height: 520px) {
+  #mgBox, #wlBox { width: min(100%, calc(44vh * 1.7778)); }
+  .gcard { aspect-ratio: 5 / 4; font-size: 12px; }
+  .gen-row { gap: 4px; }
+}
+/* 알림은 화면 아래쪽(창 제목과 겹치지 않게) */
+#toast { top: auto; bottom: 18px; transform: translate(-50%, 20px); }
+#toast.on { transform: translate(-50%, 0); }
+@media (max-height: 520px) and (orientation: landscape) {
+  .gen-wrap:has(#wlBox) { display: grid; grid-template-columns: 1.5fr 1fr; column-gap: 12px; align-items: center; }
+  .gen-wrap:has(#wlBox) #wlBox { grid-row: 1 / span 2; width: 100%; }
+  .gen-wrap:has(#mgBox) #mgBox { width: min(100%, calc(52vh * 1.7778)); }
+}

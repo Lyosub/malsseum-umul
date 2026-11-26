@@ -135,7 +135,7 @@
       if (sp.act.indexOf('star:') === 0 && S.stars.indexOf(sp.act) >= 0) return;
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
       if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return;
-        b.className = 'rspot area'; b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
+        b.className = 'rspot area'; b.dataset.id = sp.id; b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
         b.onclick = function (e) { ripple(e); act(R, sp, b); }; box.appendChild(b); return; }
       if (sp.fig) { b.className = 'rspot fig'; b.style.setProperty('--h', (sp.h / 100 * 1080) + 'px'); b.innerHTML = '<img src="img/chars/' + sp.fig + '.webp" alt="">' + (sp.name ? '<span class="lbl">' + sp.name + '</span>' : ''); b.onclick = function () { act(R, sp, b); }; box.appendChild(b); return; }
       b.innerHTML = sp.hidden ? '<span class="glint" style="opacity:.25;width:22px;height:22px"></span>' : '<span class="glint"></span><span class="lbl">' + sp.name + '</span>';
@@ -681,5 +681,6 @@
   // 다시 들어왔을 때
   if (S && S.nick && S.opening) { /* 첫 화면에서 「이어 하기」를 누르면 지도로 */ }
   for (var hk in (BN.HINTS_CH1 || {})) BN.HINTS[hk] = BN.HINTS_CH1[hk];
-  if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__bn = { get S() { return S; }, enterRoom: enterRoom, enterMap: enterMap, PUZZLES: PUZZLES, solveNow: function () { solve(BN.ROOMS[cur]); }, give: function (k) { if (S.items.indexOf(k) < 0) S.items.push(k); save(); } };
+  if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname) && /debug/.test(location.search)) document.body.classList.add('dbg');
+  if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__bn = { get S() { return S; }, enterRoom: enterRoom, enterMap: enterMap, PUZZLES: PUZZLES, solveNow: function () { solve(BN.ROOMS[cur]); }, sheep: function () { return sheepData(); }, give: function (k) { if (S.items.indexOf(k) < 0) S.items.push(k); save(); } };
 })();

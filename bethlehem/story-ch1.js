@@ -25,13 +25,13 @@
       ['asaph', 0, '다윗의 동네에서 다윗 집 사람들의 명부를 잃어버렸다고?']
     ],
     spots: [
-      { id: 'table', x: 46, y: 64, w: 30, h: 22, act: 'puzzle:genealogy' },
-      { id: 'card1', x: 4, y: 46, w: 8, h: 14, act: 'card:보아스', msg: '바구니 천 사이에 명부 조각 하나가 끼어 있다.' },
-      { id: 'card2', x: 36, y: 27, w: 7, h: 14, act: 'card:오벳', msg: '항아리 뒤에 명부 조각이 숨어 있다.' },
-      { id: 'card3', x: 41, y: 90, w: 9, h: 12, act: 'card:이새', msg: '의자 밑에 명부 조각이 떨어져 있다.' },
+      { id: 'table', x: 62, y: 64, w: 56, h: 28, act: 'puzzle:genealogy' },
+      { id: 'card1', x: 5, y: 64, w: 9, h: 14, act: 'card:보아스', msg: '바구니 천 사이에 명부 조각 하나가 끼어 있다.' },
+      { id: 'card2', x: 71, y: 41, w: 8, h: 16, act: 'card:오벳', msg: '큰 항아리 뒤에 명부 조각이 숨어 있다.' },
+      { id: 'card3', x: 75, y: 90, w: 10, h: 14, act: 'card:이새', msg: '의자 밑에 명부 조각이 떨어져 있다.' },
       { id: 'asaph', x: 16, y: 100, fig: 'asaph_front', h: 66, act: 'talk:asaph' },
-      { id: 'gilead', x: 86, y: 102, fig: 'gilead_front', h: 52, act: 'talk:gilead' },
-      { id: 'star_gate', x: 19, y: 4, w: 5, h: 8, act: 'star:1' }
+      { id: 'gilead', x: 92, y: 102, fig: 'gilead_front', h: 52, act: 'talk:gilead' },
+      { id: 'star_gate', x: 38, y: 8, w: 4, h: 10, act: 'star:1' }
     ],
     talks: {
       asaph: [['asaph', 0, '다윗의 집안을 적는 법은 룻기 끝에 있다. 나는 눈이 침침해 못 읽으니 네가 펴 보아라.']],
@@ -56,10 +56,10 @@
       ['gilead', 1, '탁자 밑에 자물쇠 달린 상자도 있어요! 글자 자물쇠인데요?']
     ],
     spots: [
-      { id: 'map', x: 45, y: 70, w: 34, h: 26, act: 'puzzle:roadmap' },
-      { id: 'flask', x: 88, y: 70, w: 12, h: 20, act: 'talk:flask' },
-      { id: 'staff', x: 59, y: 38, w: 6, h: 40, act: 'talk:staff' },
-      { id: 'asaph', x: 12, y: 100, fig: 'asaph_side', h: 62, act: 'talk:asaph' }
+      { id: 'map', x: 45, y: 70, w: 52, h: 30, act: 'puzzle:roadmap' },
+      { id: 'flask', x: 80, y: 71, w: 14, h: 24, act: 'talk:flask' },
+      { id: 'staff', x: 18, y: 45, w: 6, h: 50, act: 'talk:staff' },
+      { id: 'asaph', x: 6, y: 102, fig: 'asaph_side', h: 60, act: 'talk:asaph' }
     ],
     talks: {
       flask: [['gilead', 2, '물 부대네요! …텅 비었어요. 주인도 목이 말랐나 봐요.']],
@@ -87,10 +87,12 @@
     spots: [
       { id: 'wellin', x: 52, y: 66, w: 40, h: 26, act: 'puzzle:well' },
       { id: 'bucket', x: 13, y: 52, w: 14, h: 20, act: 'talk:bucket' },
+      { id: 'oldrope', x: 16, y: 67, w: 14, h: 10, act: 'talk:oldrope' },
       { id: 'gilead', x: 88, y: 102, fig: 'gilead_side', h: 50, act: 'talk:gilead' }
     ],
     talks: {
-      bucket: [['gilead', 0, '줄이 짧게 끊어졌어요. 이걸로는 물까지 안 닿겠는데요.']],
+      bucket: [['gilead', 0, '두레박에 달린 줄이 짧게 끊어졌어요. 이걸로는 물까지 안 닿겠는데요.']],
+      oldrope: [['gilead', 1, '옆에 감긴 줄은… 으악, 손만 대도 부스러져요. 다 삭았어요.']],
       gilead: [['gilead', 2, '저 아래 뭐가 반짝인 것 같아요. 동전이면 좋겠다.']]
     },
     done: [
@@ -137,8 +139,8 @@
     ],
     spots: [
       { id: 'ledger', x: 91, y: 30, w: 14, h: 26, act: 'puzzle:ledger' },
-      { id: 'bread', x: 78, y: 50, w: 18, h: 14, act: 'talk:bread' },
-      { id: 'oil', x: 94, y: 88, w: 10, h: 24, act: 'pick:oil', msg: '큰 항아리에 올리브 기름이 가득하다. 작은 단지에 조금 덜어 가자.' },
+      { id: 'bread', x: 60, y: 49, w: 14, h: 9, act: 'talk:bread' },
+      { id: 'oil', x: 88, y: 72, w: 12, h: 34, act: 'pick:oil', msg: '큰 항아리에 올리브 기름이 가득하다. 작은 단지에 조금 덜어 가자.' },
       { id: 'star_kitchen', x: 4, y: 28, w: 5, h: 9, act: 'star:2' },
       { id: 'gilead', x: 40, y: 104, fig: 'gilead_front', h: 52, act: 'talk:bread' }
     ],
@@ -161,11 +163,11 @@
       ['asaph', 0, '양마다 목에 무늬 방울을 달았구나. 목자는 밤을 넷으로 나누어 지킨다고 들었다.']
     ],
     spots: [
-      { id: 'sheep0', x: 27, y: 58, w: 7, h: 10, act: 'sheep:0' },
-      { id: 'sheep1', x: 35, y: 59, w: 7, h: 10, act: 'sheep:1' },
-      { id: 'sheep2', x: 45, y: 53, w: 7, h: 10, act: 'sheep:2' },
-      { id: 'sheep3', x: 66, y: 57, w: 7, h: 10, act: 'sheep:3' },
-      { id: 'staffbox', x: 9, y: 68, w: 12, h: 26, act: 'puzzle:field' },
+      { id: 'sheep0', x: 56, y: 52, w: 7, h: 10, act: 'sheep:0' },
+      { id: 'sheep1', x: 61, y: 60, w: 7, h: 11, act: 'sheep:1' },
+      { id: 'sheep2', x: 74, y: 54, w: 8, h: 13, act: 'sheep:2' },
+      { id: 'sheep3', x: 85, y: 52, w: 7, h: 9, act: 'sheep:3' },
+      { id: 'staffbox', x: 12, y: 68, w: 16, h: 30, act: 'puzzle:field' },
       { id: 'star_field', x: 6, y: 7, w: 5, h: 8, act: 'star:3' }
     ],
     talks: {},
