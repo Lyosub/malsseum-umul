@@ -96,8 +96,8 @@
   var view = { x: 0, y: 0, k: 1 }, W = 1920, H = 1080;
   function fitMin() { var vw = innerWidth, vh = innerHeight; return Math.max(vw / W, vh / H); }
   function clampView() { var vw = innerWidth, vh = innerHeight, k = view.k = Math.min(Math.max(view.k, fitMin()), fitMin() * 2.6); view.x = Math.min(0, Math.max(vw - W * k, view.x)); view.y = Math.min(0, Math.max(vh - H * k, view.y)); $('mapWorld').style.transform = 'translate(' + view.x + 'px,' + view.y + 'px) scale(' + k + ')'; }
-  function enterMap() {
-    $('mapImg').src = 'img/maps/mapA.webp'; show('map'); music('bgm02_village'); $('hudCh').textContent = '1장 「그 밤」';
+  function enterMap() { if (window.BN3D) BN3D.unmount();
+    $('mapImg').src = 'img/maps/mapA@2x.webp'; show('map'); music('bgm02_village'); $('hudCh').textContent = '1장 「그 밤」';
     if (!enterMap.once) { enterMap.once = true; view.k = fitMin() * 1.25; view.x = (innerWidth - W * view.k) * 0.55; view.y = (innerHeight - H * view.k) * 0.8; }
     clampView(); drawSpots(); updHud();
     if (!S.rooms.gate) setTimeout(function () { toast('지도를 끌어 둘러보고, 빛나는 곳을 눌러요'); }, 600);
@@ -140,9 +140,15 @@
   function enterRoom(id) {
     var R = BN.ROOMS[id];
     if (!R) { talk([['asaph', 0, '이곳은 아직 정리 중이다. 곧 열린다.'], ['gilead', 2, '(준비 중이래요. 빵 먹고 기다릴까요?)']]); return; }
-    cur = id; show('room'); music(R.bgm || 'bgm02_village');
+    cur = id; show('room'); $('toast').classList.remove('on'); music(R.bgm || 'bgm02_village');
     var bg = $('roomBg'); bg.style.backgroundImage = 'url(' + R.bg + ')';
     roomFit(R.focus || 50);
+    if (window.BN3D) {
+      var key = R.bg.replace(/^.*\//, '').replace('.webp', '');
+      BN3D.mount($('roomStage'), { img: R.bg, hi: R.bg.replace('.webp', '@2x.webp'), depth: 'img/depth/' + key + '.webp', fx: (BN.FX || {})[cur] || {},
+        panFrac: function () { var vw = innerWidth, sw = 1920 * rv.k, sh = 1080 * rv.k; return { x: sw > vw ? ((rv.x - (vw - sw) / 2) / ((sw - vw) / 2 || 1)) : 0, y: sh > innerHeight ? ((rv.y - (innerHeight - sh) / 2) / ((sh - innerHeight) / 2 || 1)) : 0 }; } });
+      setTimeout(function () { document.querySelectorAll('#roomSpots .rspot').forEach(function (b) { var x = parseFloat(b.style.left) / 100, y = parseFloat(b.style.top) / 100; if (b.classList.contains('fig')) BN3D.track(b, x, Math.min(.98, y - .03), .82); else BN3D.track(b, x, y); }); }, 0);
+    }
     $('roomTitle').textContent = R.title;
     var box = $('roomSpots'); box.innerHTML = '';
     R.spots.forEach(function (sp) {
@@ -158,7 +164,8 @@
     });
     if (!S.seenIntro[id] && R.intro) { S.seenIntro[id] = 1; save(); setTimeout(function () { talk(R.intro); }, 500); }
   }
-  $('btnBack').onclick = function () { var R0 = BN.ROOMS[cur]; if (R0 && R0.back) enterRoom(R0.back); else enterMap(); };
+  function leaveRoom() { if (window.BN3D) BN3D.unmount(); }
+  $('btnBack').onclick = function () { leaveRoom(); var R0 = BN.ROOMS[cur]; if (R0 && R0.back) enterRoom(R0.back); else enterMap(); };
   // 방 화면: 그림(1920×1080)을 화면을 덮는 크기로, 남는 쪽은 끌어서 둘러봄(세로 화면에서는 좌우 파노라마)
   var rv = { x: 0, y: 0, k: 1 };
   function roomClamp() { var vw = innerWidth, vh = innerHeight, k = rv.k; rv.x = Math.min(0, Math.max(vw - 1920 * k, rv.x)); rv.y = Math.min(0, Math.max(vh - 1080 * k, rv.y)); var st = $('roomStage'); st.style.width = '1920px'; st.style.height = '1080px'; st.style.transform = 'translate(' + rv.x + 'px,' + rv.y + 'px) scale(' + k + ')'; }
