@@ -149,7 +149,7 @@
         panFrac: function () { var vw = innerWidth, sw = 1920 * rv.k, sh = 1080 * rv.k; return { x: sw > vw ? ((rv.x - (vw - sw) / 2) / ((sw - vw) / 2 || 1)) : 0, y: sh > innerHeight ? ((rv.y - (innerHeight - sh) / 2) / ((sh - innerHeight) / 2 || 1)) : 0 }; } });
       setTimeout(function () { document.querySelectorAll('#roomSpots .rspot').forEach(function (b) { var x = parseFloat(b.style.left) / 100, y = parseFloat(b.style.top) / 100; if (b.classList.contains('fig')) BN3D.track(b, x, Math.min(.98, y - .03), .82); else BN3D.track(b, x, y); }); }, 0);
     }
-    $('roomTitle').textContent = R.title;
+    $('roomTitle').innerHTML = R.title.split(' · ').map(function (t) { return '<span>' + t + '</span>'; }).join('<i class="sep"> · </i>');
     var box = $('roomSpots'); box.innerHTML = '';
     R.spots.forEach(function (sp) {
       if (sp.act.indexOf('star:') === 0 && S.stars.indexOf(sp.act) >= 0) return;
