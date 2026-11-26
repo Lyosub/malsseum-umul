@@ -533,7 +533,16 @@
     var CH = (BN.CHAPTERS || {})[n] || { title: '그 밤' }, E = (BN.CH_END || {})[n] || { body: '왕은 가장 낮은 곳, 구유에 오셨습니다.<br>그런데 명부의 이름 칸은 아직 비어 있습니다.', next: '2장 「여드레째 · 사십일째」로 이어집니다' };
     var w = el('div', 'gen-wrap');
     w.innerHTML = '<div style="text-align:center;padding:10px 0"><p class="eyebrow">✦ ' + n + '장 완료</p><h2 style="font-family:var(--serif);font-size:30px;margin:4px 0;color:var(--gold2)">' + CH.title + '</h2><p style="color:var(--stone);line-height:1.7">' + E.body + '</p><p style="margin-top:14px;font-size:13px">기록 <b>' + $('hudTime').textContent + '</b> · 도장 <b>' + $('hudStamp').textContent + '</b>/12 · 숨은 별 <b>' + S.stars.length + '</b>/7</p><p style="margin-top:10px;font-family:var(--serif);color:var(--gold)">' + E.next + '</p></div>';
-    modal(n + '장 「' + CH.title + '」', w, function () { nextChapter(n + 1); });
+    modal(n + '장 「' + CH.title + '」', w, function () { if (E.ending) ending(); else nextChapter(n + 1); });
+  }
+  function ending() {
+    S.finished = S.finished || S.ms; save();
+    playOpening(function () {
+      enterRoom('wellgate');
+      var w = el('div', 'gen-wrap');
+      w.innerHTML = '<div style="text-align:center;padding:10px 0"><p class="eyebrow">✦ 완주</p><h2 style="font-family:var(--serif);font-size:32px;margin:4px 0;color:var(--gold2)">베들레헴의 밤</h2><p style="font-family:var(--serif);color:var(--gold);line-height:1.8">「하나님이 우리와 함께 계시다」<br><span style="font-size:12px;color:var(--stone)">마태복음 1:23</span></p><p style="margin-top:14px;font-size:14px">' + S.nick + ' · 기록 <b>' + $('hudTime').textContent + '</b> · 도장 <b>' + $('hudStamp').textContent + '</b>/12 · 숨은 별 <b>' + S.stars.length + '</b>/7</p><p class="gen-help" style="margin-top:10px">끝까지 함께해 주셔서 고맙습니다. 메리 크리스마스!</p></div>';
+      modal('베들레헴의 밤 · 완주', w);
+    }, BN.ENDING);
   }
   function nextChapter(m) {
     var C = (BN.CHAPTERS || {})[m];
