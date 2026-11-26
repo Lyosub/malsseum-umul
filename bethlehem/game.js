@@ -53,7 +53,7 @@
   $('btnStart').onclick = function () { if (S && S.nick && !confirm('처음부터 다시 할까요? 이 기기의 진행이 지워져요.')) return; S = blank(); save(); music('bgm01_main'); show('profile'); };
   function startPrologue() { playOpening(function () { enterRoom('wellroom'); }, BN.PROLOGUE); }
   function afterPrologue() { playOpening(function () { S.opening = true; save(); enterMap(); }); }
-  $('btnContinue').onclick = function () { if (!S.opening) { if (S.rooms.wellroom) afterPrologue(); else enterRoom('wellroom'); return; } enterMap(); };
+  $('btnContinue').onclick = function () { if (!S.opening) { if (S.rooms.wellroom) afterPrologue(); else enterRoom('wellroom'); return; } var C = (BN.CHAPTERS || {})[S.ch || 1]; if (C && C.start && !S.rooms[C.start]) return enterRoom(C.start); enterMap(); };
   $('btnCode').onclick = function () { toast('이어하기 코드는 곧 열려요(서버 연결 준비 중)'); };
   var av = 'm';
   document.querySelectorAll('.av').forEach(function (b) { b.onclick = function () { av = b.dataset.av; document.querySelectorAll('.av').forEach(function (x) { x.classList.toggle('on', x === b); }); }; });
@@ -109,7 +109,9 @@
   function fitMin() { var vw = innerWidth, vh = innerHeight; return Math.max(vw / W, vh / H); }
   function clampView() { var vw = innerWidth, vh = innerHeight, k = view.k = Math.min(Math.max(view.k, fitMin()), fitMin() * 2.6); view.x = Math.min(0, Math.max(vw - W * k, view.x)); view.y = Math.min(0, Math.max(vh - H * k, view.y)); $('mapWorld').style.transform = 'translate(' + view.x + 'px,' + view.y + 'px) scale(' + k + ')'; }
   function enterMap() { if (window.BN3D) BN3D.unmount();
-    $('mapImg').src = 'img/maps/mapA@2x.webp'; show('map'); music('bgm02_village'); $('hudCh').textContent = '1장 「그 밤」';
+    var CH = (BN.CHAPTERS || {})[S.ch || 1] || { title: '그 밤', map: 'A' }, MP = (BN.MAPS || {})[CH.map] || { img: 'img/maps/mapA@2x.webp', bgm: 'bgm02_village' };
+    if ($('mapImg').getAttribute('src') !== MP.img) { $('mapImg').src = MP.img; enterMap.once = false; }
+    show('map'); music(MP.bgm); $('hudCh').textContent = (S.ch || 1) + '장 「' + CH.title + '」';
     if (!enterMap.once) { enterMap.once = true; view.k = fitMin() * 1.25; view.x = (innerWidth - W * view.k) * 0.55; view.y = (innerHeight - H * view.k) * 0.8; }
     clampView(); drawSpots(); updHud();
     if (!S.rooms.gate) setTimeout(function () { toast('지도를 끌어 둘러보고, 빛나는 곳을 눌러요'); }, 600);
@@ -138,6 +140,7 @@
   function drawSpots() {
     var box = $('spots'); box.innerHTML = '';
     BN.SPOTS.forEach(function (sp) {
+      if ((sp.ch || 1) !== (S.ch || 1)) return;
       var b = document.createElement('button'), lock = !unlocked(sp.id), done = !!S.rooms[sp.id];
       b.className = 'spot' + (lock ? ' lock' : '') + (done ? ' done' : ''); b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
       b.innerHTML = '<span class="ring">' + (lock ? '🔒' : done ? '✔' : sp.icon) + '</span><span class="lbl">' + (lock ? '???' : sp.name) + '</span>';
@@ -167,7 +170,7 @@
     R.spots.forEach(function (sp) {
       if (sp.act.indexOf('star:') === 0 && S.stars.indexOf(sp.act) >= 0) return;
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
-      if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return; if (sp.act.indexOf('scrap:') === 0 && (S.scraps || []).indexOf(sp.act.slice(6)) >= 0) return;
+      if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return; if (sp.act.indexOf('scrap:') === 0 && (S.scraps || []).indexOf(sp.act.slice(6)) >= 0) return; if (sp.act.indexOf('tile:') === 0 && (S.tiles || []).indexOf(sp.act.slice(5)) >= 0) return;
         b.className = 'rspot area'; b.dataset.id = sp.id; b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
         b.onclick = function (e) { ripple(e); act(R, sp, b); }; box.appendChild(b); return; }
       if (sp.fig) { b.className = 'rspot fig'; b.style.setProperty('--h', (sp.h / 100 * 1080) + 'px'); b.innerHTML = '<img src="img/chars/' + sp.fig + '.webp" alt="">' + (sp.name ? '<span class="lbl">' + sp.name + '</span>' : ''); b.onclick = function () { act(R, sp, b); }; box.appendChild(b); return; }
@@ -194,9 +197,10 @@
   function act(R, sp, el) {
     var a = sp.act.split(':');
     if (a[0] === 'talk') talk(R.talks[a[1]]);
-    else if (a[0] === 'puzzle') (PUZZLES[a[1]] || PZ_EXTRA[a[1]])(R);
+    else if (a[0] === 'puzzle') { if (PUZZLES[a[1]] || PZ_EXTRA[a[1]]) (PUZZLES[a[1]] || PZ_EXTRA[a[1]])(R); else BN.PZ[a[1]](R, API); }
     else if (a[0] === 'room') enterRoom(a[1]);
     else if (a[0] === 'sheep') sheepBleat2(+a[1], el);
+    else if (a[0] === 'tile') { S.tiles = S.tiles || []; if (S.tiles.indexOf(a[1]) < 0) { S.tiles.push(a[1]); save(); sfx('ok'); toast('🧩 ' + sp.msg + ' (「' + a[1] + '」 · ' + S.tiles.length + '/6)'); el.remove(); } }
     else if (a[0] === 'scrap') { S.scraps = S.scraps || []; if (S.scraps.indexOf(a[1]) < 0) { S.scraps.push(a[1]); save(); sfx('ok'); toast('📜 ' + sp.msg + ' (' + S.scraps.length + '/3)'); el.remove(); } }
     else if (a[0] === 'card') { S.cards = S.cards || []; if (S.cards.indexOf(a[1]) < 0) { S.cards.push(a[1]); save(); sfx('ok'); toast('📜 ' + (sp.msg || '명부 조각을 찾았어요') + ' (「' + a[1] + '」)'); el.remove(); } }
     else if (a[0] === 'pick') { S.taken = S.taken || []; if (S.taken.indexOf(sp.id) < 0) { S.taken.push(sp.id); if (S.items.indexOf(a[1]) < 0) S.items.push(a[1]); save(); sfx('ok'); toast((sp.msg || '') + ' — 「' + BN.ITEMS[a[1]][0] + '」을(를) 가방에 넣었어요'); el.remove(); } }
@@ -245,6 +249,7 @@
       draw(); modal('찢긴 두루마리', wrap);
     }
   };
+  var API = { S: function () { return S; }, talk: function (l, d) { talk(l, d); }, modal: function (t, h, c) { modal(t, h, c); }, closeModal: function () { closeModal(); }, solve: function (R) { solve(R); }, wrong: function (k, m) { wrong(k, m); }, locked: function (k) { return locked(k); }, el: function (a, b, c) { return el(a, b, c); }, seedRnd: function (n) { return seedRnd(n); }, sfx: function (k) { sfx(k); }, toast: function (m) { toast(m); }, save: function () { save(); }, tick: function () { penTick(); } };
   // ── 창
   function modal(title, html, onClose) { $('modalTitle').textContent = title; $('modalBody').innerHTML = ''; if (typeof html === 'string') $('modalBody').innerHTML = html; else $('modalBody').appendChild(html); $('modal').hidden = false; modal.onClose = onClose; }
   function closeModal() { $('modal').hidden = true; if (modal.onClose) { var f = modal.onClose; modal.onClose = null; f(); } }
@@ -274,7 +279,7 @@
         if (R.prologue) return afterPrologue();
         if (R.chapterEnd) return chapterEnd(R.chapterEnd);
         if (R.back) { toast('곁가지 이야기를 마쳤어요'); enterRoom(R.back); return; }
-        toast('도장 「' + ch + '」을 받았어요 — 지도에 새 길이 열렸어요'); enterMap();
+        toast(ch ? '도장 「' + ch + '」을 받았어요 — 지도에 새 길이 열렸어요' : '풀었어요 — 지도에 새 길이 열렸어요'); enterMap();
       });
     };
     if (!ch) { sfx('ok'); setTimeout(after, 400); return; }
@@ -525,10 +530,19 @@
   function chapterEnd(n) {
     sfx('chapter'); music('bgm01_main');
     S.chDone = S.chDone || {}; S.chDone[n] = S.ms; save();
+    var CH = (BN.CHAPTERS || {})[n] || { title: '그 밤' }, E = (BN.CH_END || {})[n] || { body: '왕은 가장 낮은 곳, 구유에 오셨습니다.<br>그런데 명부의 이름 칸은 아직 비어 있습니다.', next: '2장 「여드레째 · 사십일째」로 이어집니다' };
     var w = el('div', 'gen-wrap');
-    w.innerHTML = '<div style="text-align:center;padding:10px 0"><p class="eyebrow">✦ ' + n + '장 완료</p><h2 style="font-family:var(--serif);font-size:30px;margin:4px 0;color:var(--gold2)">그 밤</h2><p style="color:var(--stone);line-height:1.7">왕은 가장 낮은 곳, 구유에 오셨습니다.<br>그런데 명부의 이름 칸은 아직 비어 있습니다.</p><p style="margin-top:14px;font-size:13px">기록 <b>' + $('hudTime').textContent + '</b> · 도장 <b>' + $('hudStamp').textContent + '</b>/12 · 숨은 별 <b>' + S.stars.length + '</b>/7</p><p style="margin-top:10px;font-family:var(--serif);color:var(--gold)">2장 「여드레째 · 사십일째」로 이어집니다</p></div>';
-    modal('1장 「그 밤」', w, function () { enterMap(); });
+    w.innerHTML = '<div style="text-align:center;padding:10px 0"><p class="eyebrow">✦ ' + n + '장 완료</p><h2 style="font-family:var(--serif);font-size:30px;margin:4px 0;color:var(--gold2)">' + CH.title + '</h2><p style="color:var(--stone);line-height:1.7">' + E.body + '</p><p style="margin-top:14px;font-size:13px">기록 <b>' + $('hudTime').textContent + '</b> · 도장 <b>' + $('hudStamp').textContent + '</b>/12 · 숨은 별 <b>' + S.stars.length + '</b>/7</p><p style="margin-top:10px;font-family:var(--serif);color:var(--gold)">' + E.next + '</p></div>';
+    modal(n + '장 「' + CH.title + '」', w, function () { nextChapter(n + 1); });
   }
+  function nextChapter(m) {
+    var C = (BN.CHAPTERS || {})[m];
+    if (!C) { toast(m + '장은 준비 중이에요 — 곧 열려요'); return enterMap(); }
+    S.ch = m; save();
+    var card = el('div', 'ch-card', '<p class="eyebrow">✦ ' + m + '장</p><h2>' + C.title + '</h2>'); document.body.appendChild(card);
+    sfx('chapter'); setTimeout(function () { card.classList.add('out'); }, 2200); setTimeout(function () { card.remove(); if (C.start && !S.rooms[C.start]) enterRoom(C.start); else enterMap(); }, 2900);
+  }
+
 
 
   // ── 난이도 v2: 잠금(세 번 틀리면 30초), 등잔 기름 힌트, 넘나드는 물건 ───────────
