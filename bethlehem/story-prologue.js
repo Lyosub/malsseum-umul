@@ -17,7 +17,7 @@
   BN.OPENING[3] = ['img/maps/mapA.webp', '눈을 떠 보니 베들레헴 성문 곁.<br>나는 늙은 서기관 아삽의 견습생이 되어 있었다.', '', '60% 85%'];
 
   BN.ROOMS.wellroom = {
-    title: '우물 바닥 · 두루마리 방', focus: 50, bgm: 'bgm05_opening', bg: 'img/places/well.webp', noBack: true, prologue: true,
+    title: '우물 바닥 · 두루마리 방', focus: 50, bgm: 'bgm05_opening', bg: 'img/places/wellroom.webp', noBack: true, prologue: true,
     intro: [
       ['keeper', 1, '앗, 너도 빨려 들어왔구나! 여기는 말씀우물 맨 아래, 두루마리 방이야.'],
       ['keeper', 0, '성탄 두루마리가 찢어지면서, 이야기 조각들이 2천 년 전 베들레헴으로 흩어져 버렸어.'],
@@ -26,11 +26,11 @@
       ['keeper', 2, '나도 다 기억이 안 나…. 바닥에 떨어진 두루마리 조각부터 찾아 보자. 세 조각이야.', '(그림 속을 직접 눌러서 찾아요)']
     ],
     spots: [
-      { id: 'scrap1', x: 18, y: 84, w: 12, h: 14, act: 'scrap:1', msg: '돌 틈에 두루마리 조각이 끼어 있다.' },
-      { id: 'scrap2', x: 52, y: 92, w: 12, h: 12, act: 'scrap:2', msg: '물웅덩이 옆에 젖은 조각이 떨어져 있다.' },
-      { id: 'scrap3', x: 86, y: 70, w: 10, h: 16, act: 'scrap:3', msg: '벽 등잔 아래에 그을린 조각이 있다.' },
-      { id: 'door', x: 50, y: 50, w: 22, h: 34, act: 'puzzle:wellscroll' },
-      { id: 'keeper', x: 30, y: 98, fig: 'keeper_front', h: 34, act: 'talk:keeper' }
+      { id: 'scrap1', x: 15, y: 92, w: 10, h: 9, act: 'scrap:1', msg: '돌문 왼쪽 바닥에 두루마리 조각이 떨어져 있다.' },
+      { id: 'scrap2', x: 25, y: 83, w: 8, h: 7, act: 'scrap:2', msg: '등잔 불빛 아래 바닥에 조각이 하나 더 있다.' },
+      { id: 'scrap3', x: 71, y: 90, w: 12, h: 10, act: 'scrap:3', msg: '돌문 오른쪽 바닥에 젖은 조각이 있다.' },
+      { id: 'door', x: 50, y: 44, w: 28, h: 62, act: 'puzzle:wellscroll' },
+      { id: 'keeper', x: 88, y: 99, fig: 'keeper_front', h: 30, act: 'talk:keeper' }
     ],
     talks: {
       keeper: [['keeper', 0, '조각 세 개를 다 찾으면 돌문 앞에서 맞춰 보자. 끌어서 둘러보면 숨은 곳이 보일 거야.']]
@@ -43,7 +43,7 @@
     ]
   };
   BN.FX = BN.FX || {};
-  BN.FX.wellroom = { grade: { shadow: [.8, .88, 1.25], high: [1.02, 1.0, .95], vig: .5, sat: .9 }, rays: [[50, -4, 600, 0]], stars: 20, dust: 30 };
+  BN.FX.wellroom = { grade: { vig: .4 }, rays: [[50, -4, 520, 0]], lights: [[21, 56, 110], [80, 56, 110]], stars: false, dust: 30 };
   BN.HINTS = BN.HINTS || {};
-  BN.HINTS.wellroom = ['조각은 바닥 돌 틈, 물웅덩이, 벽 등잔 아래에 있어요. 화면을 끌어 구석까지 보세요.', '돌문을 눌러 세 조각을 위에서부터 이어지게 바꿔 놓아요(두 조각을 차례로 누르면 자리가 바뀌어요).', '찢긴 선이 이어지는 순서: 「마태복음」 → 「1장」 → 「23절」'];
+  BN.HINTS.wellroom = ['조각은 돌문 앞 바닥에 흩어져 있어요. 화면을 좌우로 끌어 왼쪽 등잔 아래까지 보세요.', '돌문을 눌러 세 조각을 위에서부터 이어지게 바꿔 놓아요(두 조각을 차례로 누르면 자리가 바뀌어요).', '찢긴 선이 이어지는 순서: 「마태복음」 → 「1장」 → 「23절」'];
 })(window.BN);

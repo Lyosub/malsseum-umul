@@ -91,6 +91,7 @@
     function next() {
       i++; if (i >= slides.length) { clearTimeout(timer); if (typing2) clearInterval(typing2); return done(); }
       var my = ++seq, c = slides[i].slice(); if (FB[c[0]] && !playOpening.ok[c[0]]) c[0] = FB[c[0]]; if (typing2) { clearInterval(typing2); typing2 = null; } tx.textContent = ''; ref.textContent = ''; ref.style.opacity = 0; paper.classList.remove('on');
+      if ((window.devicePixelRatio || 1) > 1.5 && /img\/(cuts\/|places\/|maps\/mapA)/.test(c[0])) c[0] = c[0].replace('.webp', '@2x.webp');
       var same = img.style.backgroundImage.indexOf(c[0]) >= 0; if (!same) img.classList.remove('on');
       setTimeout(function () { if (my !== seq) return;
         img.style.backgroundImage = 'url(' + c[0] + ')'; img.style.backgroundPosition = c[3] || 'center'; img.style.transition = 'opacity 1.2s'; img.style.transform = 'none'; img.classList.add('on');

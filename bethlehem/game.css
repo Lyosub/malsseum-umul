@@ -298,3 +298,11 @@ body:has(#dialog:not([hidden])) #panHint { opacity: 0 !important; }
 .scrap-piece.sel { transform: rotate(0) scale(1.05); outline: 2px solid var(--gold); }
 .twelve { display: grid; grid-template-columns: repeat(6, 26px); gap: 6px; margin-top: 8px; }
 .twelve i { width: 26px; height: 26px; border: 1px dashed rgba(232, 183, 90, .6); border-radius: 6px; }
+
+/* 세로 첫 화면: 영화 포스터 느낌 대표 그림, 제목은 하늘 쪽 */
+@media (orientation: portrait) {
+  .title-bg { background-image: url(img/maps/title_port.webp); background-position: center bottom; animation: none; inset: 0; }
+  .title-veil { background: linear-gradient(180deg, rgba(7, 11, 28, .35), rgba(7, 11, 28, 0) 40%, rgba(7, 11, 28, .0) 60%, rgba(7, 11, 28, .75)); }
+  .title-box { top: 0; bottom: 0; left: 0; right: 0; width: auto; transform: none; display: flex; flex-direction: column; align-items: center; padding: 15vh 16px 6vh; }
+  .title-box .title-btns { margin-top: auto; width: 100%; }
+}
