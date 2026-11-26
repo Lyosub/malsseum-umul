@@ -276,7 +276,7 @@
     var step = 0, w = A.el('div', 'psalm-pz'); w.appendChild(A.el('p', 'tiny-note', '기둥에 새겨진 찬송 조각을 부른 순서대로 눌러요.'));
     idx.forEach(function (k) { var b = A.el('button', 'psalm-stone', '「' + BN.SIMEON[k] + '」'); b.onclick = function () {
       if (A.locked('hymn')) return;
-      if (k === step) { b.classList.add('on'); b.disabled = true; step++; A.tick(); if (step === 4) { A.closeModal(); A.solve(R); } }
+      if (k === step) { b.classList.add('on'); b.disabled = true; step++; A.tick(); if (step === 4) { A.closeModal(); if (BN.PZ.readAloud) setTimeout(function () { BN.PZ.readAloud(BN.SIMEON.join(' '), '시므온의 찬송 · 소리 내어', function () { A.solve(R); }, A); }, 300); else A.solve(R); } }
       else { step = 0; w.querySelectorAll('.psalm-stone').forEach(function (x) { x.classList.remove('on'); x.disabled = false; }); A.wrong('hymn', '순서가 아니에요 — 처음부터'); }
     }; w.appendChild(b); });
     A.modal('시므온의 찬송', w);

@@ -827,12 +827,13 @@
     // 부모(상자)에서 먼저 가로채야 캔버스의 「비추기」보다 앞선다
     box.addEventListener('pointerdown', function (e) { if (S.lampOil <= 0 && e.target.id === 'mgDark') { e.stopPropagation(); if (Date.now() - told > 3000) { told = Date.now(); toast('등잔 기름이 없어요'); } } }, true);
     box.addEventListener('pointermove', function (e) { if (e.target.id !== 'mgDark') return; if (S.lampOil <= 0) { e.stopPropagation(); return; } if (e.buttons || e.pointerType === 'touch') burn(); }, true);
-    $('oilFill').onclick = function () { if (!has('oil')) return toast('채울 기름이 없어요'); S.lampOil = 100; $('oilBar').style.width = '100%'; save(); toast('등잔에 기름을 가득 채웠어요'); };
+    $('oilFill').onclick = function () { if (!has('oil')) return toast('채울 기름이 없어요'); if (BN.oilCarry && !$('oilFill').dataset.go) { $('oilFill').dataset.go = 1; return BN.oilCarry(function () { $('oilFill').dataset.go = ''; S.lampOil = 100; $('oilBar').style.width = '100%'; save(); toast('등잔에 기름을 가득 채웠어요'); }); } S.lampOil = 100; $('oilBar').style.width = '100%'; save(); toast('등잔에 기름을 가득 채웠어요'); };
   };
 
   // 다시 들어왔을 때
   if (S && S.nick && S.opening) { /* 첫 화면에서 「이어 하기」를 누르면 지도로 */ }
   for (var hk in (BN.HINTS_CH1 || {})) BN.HINTS[hk] = BN.HINTS_CH1[hk];
+  BN.runPuzzle = function (name, R) { (PUZZLES[name] || PZ_EXTRA[name])(R); };
   if (BN.hook) BN.hook({ S: function () { return S; }, save: save, toast: toast, cur: function () { return $('room').classList.contains('on') ? cur : ''; } });
   if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname) && /debug/.test(location.search)) document.body.classList.add('dbg');
   if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__bn = { get S() { return S; }, resultImage: resultImage, enterRoom: enterRoom, enterMap: enterMap, PUZZLES: PUZZLES, solveNow: function () { solve(BN.ROOMS[cur]); }, sheep: function () { return sheepData(); }, give: function (k) { if (S.items.indexOf(k) < 0) S.items.push(k); save(); } };
