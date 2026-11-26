@@ -291,3 +291,10 @@ body:has(#dialog:not([hidden])) #panHint { opacity: 0 !important; }
   -webkit-mask: radial-gradient(ellipse 60% 100% at 50% 0%, #000 20%, transparent 75%); mask: radial-gradient(ellipse 60% 100% at 50% 0%, #000 20%, transparent 75%);
   animation: rays 7s ease-in-out infinite alternate; }
 @keyframes rays { from { opacity: .35; } to { opacity: .7; } }
+
+/* 프롤로그 두루마리 조각 */
+.scrollfix { display: grid; gap: 10px; justify-items: center; }
+.scrap-piece { width: min(320px, 76vw); padding: 14px 10px; border: 0; cursor: pointer; background: url(img/ui/parchment.webp) center / 100% 100%; color: #2b1a0c; font: 400 28px "Nanum Brush Script", var(--serif); transform: rotate(var(--r)); transition: transform .2s; }
+.scrap-piece.sel { transform: rotate(0) scale(1.05); outline: 2px solid var(--gold); }
+.twelve { display: grid; grid-template-columns: repeat(6, 26px); gap: 6px; margin-top: 8px; }
+.twelve i { width: 26px; height: 26px; border: 1px dashed rgba(232, 183, 90, .6); border-radius: 6px; }

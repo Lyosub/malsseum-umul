@@ -40,7 +40,7 @@
   // ── 시간(게임 화면에 있을 때만 흐름)
   var last = 0;
   setInterval(function () {
-    var on = S && (document.querySelector('#map.on,#room.on')) && !document.hidden;
+    var on = S && S.opening && (document.querySelector('#map.on,#room.on')) && !document.hidden;
     var now = Date.now();
     if (on && last) { S.ms += now - last; }
     last = on ? now : 0;
@@ -51,7 +51,9 @@
   // ── 첫 화면
   if (S && S.nick) { $('btnContinue').hidden = false; $('btnStart').textContent = '처음부터'; }
   $('btnStart').onclick = function () { if (S && S.nick && !confirm('처음부터 다시 할까요? 이 기기의 진행이 지워져요.')) return; S = blank(); save(); music('bgm01_main'); show('profile'); };
-  $('btnContinue').onclick = function () { enterMap(); };
+  function startPrologue() { playOpening(function () { enterRoom('wellroom'); }, BN.PROLOGUE); }
+  function afterPrologue() { playOpening(function () { S.opening = true; save(); enterMap(); }); }
+  $('btnContinue').onclick = function () { if (!S.opening) { if (S.rooms.wellroom) afterPrologue(); else enterRoom('wellroom'); return; } enterMap(); };
   $('btnCode').onclick = function () { toast('이어하기 코드는 곧 열려요(서버 연결 준비 중)'); };
   var av = 'm';
   document.querySelectorAll('.av').forEach(function (b) { b.onclick = function () { av = b.dataset.av; document.querySelectorAll('.av').forEach(function (x) { x.classList.toggle('on', x === b); }); }; });
@@ -61,15 +63,17 @@
     if (!n) return ($('profErr').textContent = '닉네임을 적어 주세요');
     if (!real) return ($('profErr').textContent = '실명을 적어 주세요 — 시상할 때만 사용돼요');
     S.nick = n; S.real = real; S.av = av; save();
-    playOpening(function () { S.opening = true; save(); enterMap(); });
+    startPrologue();
   };
 
   // ── 컷신
   // 오프닝 컷신: 낡은 양피지 띠 위에 손글씨가 한 글자씩(펜 소리). 누르면 그 줄을 다 보이고, 한 번 더 누르면 다음 장면
   function penTick() { if (!soundOn) return; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); var t = actx.currentTime, n = actx.createBufferSource(), buf = actx.createBuffer(1, 1200, actx.sampleRate), d = buf.getChannelData(0); for (var k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / d.length, 3); n.buffer = buf; var f = actx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2500 + Math.random() * 1500; var gn = actx.createGain(); gn.gain.value = .05; n.connect(f); f.connect(gn); gn.connect(actx.destination); n.start(t); } catch (e) {} }
+  playOpening.ok = {}; Object.keys(BN.PROLOGUE_FALLBACK || {}).forEach(function (u) { var im = new Image(); im.onload = function () { playOpening.ok[u] = 1; }; im.src = u; });
   // 손글씨 글꼴은 글자 묶음별로 나눠 받으므로, 첫 화면에서 오프닝 글자들을 미리 받아 둔다(늦게 오면 글자가 잠깐 비어 보임)
-  try { if (document.fonts) document.fonts.load('30px "Nanum Brush Script"', BN.OPENING.map(function (c) { return c[1] + (c[2] || ''); }).join('')); } catch (e) {}
-  function playOpening(done) {
+  try { if (document.fonts) document.fonts.load('30px "Nanum Brush Script"', BN.OPENING.concat(BN.PROLOGUE || []).map(function (c) { return c[1] + (c[2] || ''); }).join('') + '마태복음 1장 23절 0123456789'); } catch (e) {}
+  function playOpening(done, slides) {
+    slides = slides || BN.OPENING; var FB = BN.PROLOGUE_FALLBACK || {};
     show('cine'); music('bgm05_opening'); var i = -1, img = $('cineImg'), tx = $('cineText'), ref = $('cineRef'), paper = $('cinePaper'), timer, typing2 = null, full = '';
     var chars = [], k = 0, seq = 0;
     // 글을 한 덩어리(dn) + 방금 쓴 한 글자(fr)로만 둔다 — 조각난 글 마디가 많으면 글자가 비어 보이거나 깜빡였다
@@ -85,8 +89,8 @@
       }, 62);
     }
     function next() {
-      i++; if (i >= BN.OPENING.length) { clearTimeout(timer); if (typing2) clearInterval(typing2); return done(); }
-      var my = ++seq, c = BN.OPENING[i]; if (typing2) { clearInterval(typing2); typing2 = null; } tx.textContent = ''; ref.textContent = ''; ref.style.opacity = 0; paper.classList.remove('on');
+      i++; if (i >= slides.length) { clearTimeout(timer); if (typing2) clearInterval(typing2); return done(); }
+      var my = ++seq, c = slides[i].slice(); if (FB[c[0]] && !playOpening.ok[c[0]]) c[0] = FB[c[0]]; if (typing2) { clearInterval(typing2); typing2 = null; } tx.textContent = ''; ref.textContent = ''; ref.style.opacity = 0; paper.classList.remove('on');
       var same = img.style.backgroundImage.indexOf(c[0]) >= 0; if (!same) img.classList.remove('on');
       setTimeout(function () { if (my !== seq) return;
         img.style.backgroundImage = 'url(' + c[0] + ')'; img.style.backgroundPosition = c[3] || 'center'; img.style.transition = 'opacity 1.2s'; img.style.transform = 'none'; img.classList.add('on');
@@ -147,7 +151,7 @@
   function enterRoom(id) {
     var R = BN.ROOMS[id];
     if (!R) { talk([['asaph', 0, '이곳은 아직 정리 중이다. 곧 열린다.'], ['gilead', 2, '(준비 중이래요. 빵 먹고 기다릴까요?)']]); return; }
-    cur = id; show('room'); $('toast').classList.remove('on'); music(R.bgm || 'bgm02_village');
+    cur = id; show('room'); $('btnBack').hidden = !!R.noBack; $('toast').classList.remove('on'); music(R.bgm || 'bgm02_village');
     var bg = $('roomBg'); bg.style.backgroundImage = 'url(' + R.bg + ')';
     roomFit(R.focus || 50);
     var pv = $('roomView'); pv.classList.remove('push'); void pv.offsetWidth; pv.classList.add('push');
@@ -162,7 +166,7 @@
     R.spots.forEach(function (sp) {
       if (sp.act.indexOf('star:') === 0 && S.stars.indexOf(sp.act) >= 0) return;
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
-      if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return;
+      if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return; if (sp.act.indexOf('scrap:') === 0 && (S.scraps || []).indexOf(sp.act.slice(6)) >= 0) return;
         b.className = 'rspot area'; b.dataset.id = sp.id; b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
         b.onclick = function (e) { ripple(e); act(R, sp, b); }; box.appendChild(b); return; }
       if (sp.fig) { b.className = 'rspot fig'; b.style.setProperty('--h', (sp.h / 100 * 1080) + 'px'); b.innerHTML = '<img src="img/chars/' + sp.fig + '.webp" alt="">' + (sp.name ? '<span class="lbl">' + sp.name + '</span>' : ''); b.onclick = function () { act(R, sp, b); }; box.appendChild(b); return; }
@@ -189,9 +193,10 @@
   function act(R, sp, el) {
     var a = sp.act.split(':');
     if (a[0] === 'talk') talk(R.talks[a[1]]);
-    else if (a[0] === 'puzzle') PUZZLES[a[1]](R);
+    else if (a[0] === 'puzzle') (PUZZLES[a[1]] || PZ_EXTRA[a[1]])(R);
     else if (a[0] === 'room') enterRoom(a[1]);
     else if (a[0] === 'sheep') sheepBleat2(+a[1], el);
+    else if (a[0] === 'scrap') { S.scraps = S.scraps || []; if (S.scraps.indexOf(a[1]) < 0) { S.scraps.push(a[1]); save(); sfx('ok'); toast('📜 ' + sp.msg + ' (' + S.scraps.length + '/3)'); el.remove(); } }
     else if (a[0] === 'card') { S.cards = S.cards || []; if (S.cards.indexOf(a[1]) < 0) { S.cards.push(a[1]); save(); sfx('ok'); toast('📜 ' + (sp.msg || '명부 조각을 찾았어요') + ' (「' + a[1] + '」)'); el.remove(); } }
     else if (a[0] === 'pick') { S.taken = S.taken || []; if (S.taken.indexOf(sp.id) < 0) { S.taken.push(sp.id); if (S.items.indexOf(a[1]) < 0) S.items.push(a[1]); save(); sfx('ok'); toast((sp.msg || '') + ' — 「' + BN.ITEMS[a[1]][0] + '」을(를) 가방에 넣었어요'); el.remove(); } }
     else if (a[0] === 'star') { if (S.stars.indexOf(sp.act) < 0) { S.stars.push(sp.act); var bonus = S.stars.length % 2 === 0; if (bonus) { oilInit(); S.oil[S.ch] += 1; } save(); updHud(); sfx('star'); toast('✦ 숨은 별! 기록 −1분' + (bonus ? ' · 등잔 기름 한 방울을 얻었어요' : '') + ' (' + S.stars.length + '/7)'); el.remove(); } }
@@ -220,6 +225,25 @@
   $('dialog').onclick = nextLine;
   $('dlgEnd').onclick = function (e) { e.stopPropagation(); endTalk(); };
 
+  // ── 프롤로그 연습 퍼즐: 두루마리 조각 셋을 이어 붙이기(두 조각을 차례로 누르면 자리가 바뀜)
+  var PZ_EXTRA = {
+    wellscroll: function (R) {
+      var got = (S.scraps || []).length;
+      if (got < 3) return talk([['keeper', 2, '돌문 가운데가 비어 있어. 두루마리 조각이 ' + (3 - got) + '개 더 있어야 해.']]);
+      var parts = ['마태복음', '1장', '23절'], rr = seedRnd(3), perms = [[2, 0, 1], [1, 2, 0], [2, 1, 0], [0, 2, 1], [1, 0, 2]], order = perms[Math.floor(rr() * 5)].slice(), sel = -1, wrap = el('div', 'scrollfix');
+      if (order.join() === '0,1,2') order = [2, 0, 1];
+      function draw() {
+        wrap.innerHTML = '<p class="tiny-note">조각을 두 개 차례로 누르면 자리가 바뀌어요.</p>';
+        order.forEach(function (k, i) {
+          var b = el('button', 'scrap-piece' + (sel === i ? ' sel' : '')); b.innerHTML = '<span>' + parts[k] + '</span>'; b.style.setProperty('--r', ((k * 37) % 7 - 3) + 'deg');
+          b.onclick = function () { if (sel < 0) { sel = i; draw(); return; } var t = order[sel]; order[sel] = order[i]; order[i] = t; sel = -1; draw(); if (order.join() === '0,1,2') { sfx('ok'); setTimeout(function () { closeModal(); solve(R); }, 700); } };
+          wrap.appendChild(b);
+        });
+        var boxes = el('div', 'twelve'); for (var j = 0; j < 12; j++) boxes.appendChild(el('i', '')); wrap.appendChild(boxes);
+      }
+      draw(); modal('찢긴 두루마리', wrap);
+    }
+  };
   // ── 창
   function modal(title, html, onClose) { $('modalTitle').textContent = title; $('modalBody').innerHTML = ''; if (typeof html === 'string') $('modalBody').innerHTML = html; else $('modalBody').appendChild(html); $('modal').hidden = false; modal.onClose = onClose; }
   function closeModal() { $('modal').hidden = true; if (modal.onClose) { var f = modal.onClose; modal.onClose = null; f(); } }
@@ -246,6 +270,7 @@
     save(); updHud();
     var after = function () {
       talk(R.done || [], function () {
+        if (R.prologue) return afterPrologue();
         if (R.chapterEnd) return chapterEnd(R.chapterEnd);
         if (R.back) { toast('곁가지 이야기를 마쳤어요'); enterRoom(R.back); return; }
         toast('도장 「' + ch + '」을 받았어요 — 지도에 새 길이 열렸어요'); enterMap();
