@@ -1,13 +1,23 @@
 {
-  "generated_kst": "2026-11-25 13:56",
+  "generated_kst": "2026-11-26 13:12",
   "ok": true,
   "account": {
     "username": "logos_jesusplus",
     "followers_count": 143,
     "follows_count": 110,
-    "media_count": 181
+    "media_count": 182
   },
   "posts": [
+    {
+      "id": "18125164241294501",
+      "type": "REELS",
+      "media_type": "VIDEO",
+      "timestamp_utc": "2026-11-25T08:19:24+0000",
+      "permalink": "https://www.instagram.com/reel/DgKFYZlO9-j/",
+      "caption_first_line": "📜 In Odyssey — 말씀 따라 걷는 성경 게임",
+      "likes": 9,
+      "comments": 1
+    },
     {
       "id": "17914166895308146",
       "type": "FEED",
@@ -15,7 +25,7 @@
       "timestamp_utc": "2026-11-24T10:33:23+0000",
       "permalink": "https://www.instagram.com/p/DgHv-ojIMMO/",
       "caption_first_line": "왜 예수님이 \"만물의 으뜸\"이실까요?",
-      "likes": 9,
+      "likes": 10,
       "comments": 1
     },
     {
@@ -246,16 +256,6 @@
       "permalink": "https://www.instagram.com/p/De5fk0SFkqJ/",
       "caption_first_line": "🍁 가을 원정대 — 말씀우물에서 열려요 🍁",
       "likes": 10,
-      "comments": 1
-    },
-    {
-      "id": "17914495491471594",
-      "type": "FEED",
-      "media_type": "IMAGE",
-      "timestamp_utc": "2026-10-22T10:32:38+0000",
-      "permalink": "https://www.instagram.com/p/DeyxqJRm0fS/",
-      "caption_first_line": "\"힘내\" 다음에 할 수 있는 한 걸음.",
-      "likes": 7,
       "comments": 1
     }
   ]
