@@ -67,24 +67,31 @@
   // ── 컷신
   // 오프닝 컷신: 낡은 양피지 띠 위에 손글씨가 한 글자씩(펜 소리). 누르면 그 줄을 다 보이고, 한 번 더 누르면 다음 장면
   function penTick() { if (!soundOn) return; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); var t = actx.currentTime, n = actx.createBufferSource(), buf = actx.createBuffer(1, 1200, actx.sampleRate), d = buf.getChannelData(0); for (var k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / d.length, 3); n.buffer = buf; var f = actx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2500 + Math.random() * 1500; var gn = actx.createGain(); gn.gain.value = .05; n.connect(f); f.connect(gn); gn.connect(actx.destination); n.start(t); } catch (e) {} }
+  // 손글씨 글꼴은 글자 묶음별로 나눠 받으므로, 첫 화면에서 오프닝 글자들을 미리 받아 둔다(늦게 오면 글자가 잠깐 비어 보임)
+  try { if (document.fonts) document.fonts.load('30px "Nanum Brush Script"', BN.OPENING.map(function (c) { return c[1] + (c[2] || ''); }).join('')); } catch (e) {}
   function playOpening(done) {
     show('cine'); music('bgm05_opening'); var i = -1, img = $('cineImg'), tx = $('cineText'), ref = $('cineRef'), paper = $('cinePaper'), timer, typing2 = null, full = '';
-    function finish() { if (typing2) { clearInterval(typing2); typing2 = null; } tx.innerHTML = full; ref.style.opacity = 1; clearTimeout(timer); timer = setTimeout(next, 3200); }
+    var chars = [], k = 0, seq = 0;
+    // 글을 한 덩어리(dn) + 방금 쓴 한 글자(fr)로만 둔다 — 조각난 글 마디가 많으면 글자가 비어 보이거나 깜빡였다
+    var dn = null, fr = null;
+    function put(ch) { dn.data += fr.textContent; fr.textContent = ch; fr.classList.remove('tw'); void fr.offsetWidth; fr.classList.add('tw'); }
+    function finish() { if (typing2) { clearInterval(typing2); typing2 = null; } tx.textContent = chars.join(''); k = chars.length; ref.style.opacity = 1; clearTimeout(timer); timer = setTimeout(next, 3400); }
     function type(text) {
-      full = text; tx.innerHTML = ''; ref.style.opacity = 0; var chars = Array.from(text.replace(/<br>/g, '\n')), k = 0, out = '';
+      if (typing2) clearInterval(typing2); full = text; tx.textContent = ''; ref.style.opacity = 0; chars = Array.from(text.replace(/<br>/g, '\n')); k = 0; dn = document.createTextNode(''); fr = document.createElement('span'); tx.appendChild(dn); tx.appendChild(fr);
       typing2 = setInterval(function () {
-        var ch = chars[k++]; out += ch === '\n' ? '<br>' : ch === ' ' ? ' ' : '<span class="tw">' + ch + '</span>'; tx.innerHTML = out;
+        var ch = chars[k++]; put(ch);
         if (ch !== ' ' && ch !== '\n' && k % 2) penTick();
         if (k >= chars.length) finish();
       }, 62);
     }
     function next() {
       i++; if (i >= BN.OPENING.length) { clearTimeout(timer); if (typing2) clearInterval(typing2); return done(); }
-      var c = BN.OPENING[i]; img.classList.remove('on'); paper.classList.remove('on');
-      setTimeout(function () {
-        img.style.backgroundImage = 'url(' + c[0] + ')'; img.style.backgroundPosition = c[3] || 'center'; img.style.transition = 'opacity 1.4s, transform 9s linear'; img.style.transform = 'scale(1.0)'; img.classList.add('on'); requestAnimationFrame(function () { img.style.transform = 'scale(1.12)'; });
-        ref.textContent = c[2] || ''; paper.classList.add('on'); setTimeout(function () { type(c[1]); }, 450);
-      }, 500);
+      var my = ++seq, c = BN.OPENING[i]; if (typing2) { clearInterval(typing2); typing2 = null; } tx.textContent = ''; ref.textContent = ''; ref.style.opacity = 0; paper.classList.remove('on');
+      var same = img.style.backgroundImage.indexOf(c[0]) >= 0; if (!same) img.classList.remove('on');
+      setTimeout(function () { if (my !== seq) return;
+        img.style.backgroundImage = 'url(' + c[0] + ')'; img.style.backgroundPosition = c[3] || 'center'; img.style.transition = 'opacity 1.2s'; img.style.transform = 'none'; img.classList.add('on');
+        ref.textContent = c[2] || ''; paper.classList.add('on'); setTimeout(function () { if (my === seq) type(c[1]); }, 420);
+      }, same ? 250 : 500);
       clearTimeout(timer); timer = setTimeout(function () { if (!typing2) next(); }, 15000);
     }
     $('cineSkip').onclick = function (e) { e.stopPropagation(); clearTimeout(timer); if (typing2) clearInterval(typing2); done(); };
@@ -191,7 +198,9 @@
 
   // ── 대화(한 글자씩, 누르면 넘김)
   var dq = [], dqDone = null, typing = null, typingFull = '';
-  function talk(lines, done) { dq = lines.slice(); dqDone = done || null; $('dialog').hidden = false; nextLine(); }
+  var dqTotal = 0;
+  function talk(lines, done) { dq = lines.slice(); dqTotal = dq.length; dqDone = done || null; $('dialog').hidden = false; nextLine(); }
+  function endTalk() { if (typing) { clearInterval(typing); typing = null; } dq = []; $('dialog').hidden = true; var d = dqDone; dqDone = null; if (d) d(); }
   function nextLine() {
     if (typing) { finishType(); return; }
     var L = dq.shift(); if (!L) { $('dialog').hidden = true; var d = dqDone; dqDone = null; if (d) d(); return; }
@@ -199,6 +208,8 @@
     if (face === 'me') face = 'me_' + S.av;
     var fe = $('dlgFace'); if (face) { fe.src = 'img/chars/' + face + '_f' + (L[1] || 0) + '.webp'; fe.style.visibility = 'visible'; } else fe.style.visibility = 'hidden';
     $('dlgName').textContent = L[0] === 'me' ? S.nick : who.name;
+    var nth = dqTotal - dq.length, last = !dq.length; $('dlgCount').textContent = dqTotal > 1 ? nth + ' / ' + dqTotal : '';
+    $('dlgNext').textContent = last ? '■ 끝 · 눌러서 닫기' : '▼ 다음'; $('dlgNext').classList.toggle('last', last); $('dlgEnd').hidden = dqTotal < 3 || last;
     $('dlgSub').textContent = L[3] || ''; $('dlgRef').textContent = L[4] || '';
     var t = $('dlgText'); t.classList.toggle('scripture', !!L[4]); t.textContent = ''; var full = L[2], i = 0;
     typing = setInterval(function () { i += 2; t.textContent = full.slice(0, i); if (i >= full.length) finishType(); }, 28);
@@ -206,6 +217,7 @@
   }
   function finishType() { if (!typing) return; $('dlgText').textContent = typingFull; clearInterval(typing); typing = null; }
   $('dialog').onclick = nextLine;
+  $('dlgEnd').onclick = function (e) { e.stopPropagation(); endTalk(); };
 
   // ── 창
   function modal(title, html, onClose) { $('modalTitle').textContent = title; $('modalBody').innerHTML = ''; if (typeof html === 'string') $('modalBody').innerHTML = html; else $('modalBody').appendChild(html); $('modal').hidden = false; modal.onClose = onClose; }

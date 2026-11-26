@@ -3,8 +3,8 @@
 // 그 위에 ⑤ 등잔·횃불 빛 깜빡임 ⑥ 떠다니는 먼지 ⑦ 별 반짝임 ⑧ 모닥불·솥 연기. WebGL이 안 되면 그냥 그림만 보인다.
 (function () {
   'use strict';
-  var VS = 'attribute vec2 p;varying vec2 v;void main(){v=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}';
-  var FS = 'precision mediump float;varying vec2 v;uniform sampler2D img,dep;uniform vec2 off;uniform float zoom;' +
+  var VS = 'precision highp float;attribute vec2 p;varying vec2 v;void main(){v=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}';
+  var FS = 'precision highp float;varying vec2 v;uniform sampler2D img,dep;uniform vec2 off;uniform float zoom;' +
     'void main(){vec2 c=(v-.5)/zoom+.5;float d=texture2D(dep,c).r;vec2 o=off*(d-.35);' +
     // 가장자리 끊김을 줄이려고 두 번 샘플해 깊이 차이가 큰 곳을 부드럽게
     'float d2=texture2D(dep,c-o).r;o=off*(mix(d,d2,.5)-.35);gl_FragColor=texture2D(img,c-o);}';

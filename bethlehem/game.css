@@ -253,3 +253,30 @@ body.dbg .rspot.area::after { content: attr(data-id); position: absolute; left: 
 .room-title { word-break: keep-all; text-align: center; white-space: nowrap; }
 .room-title .sep { font-style: normal; }
 @media (orientation: portrait) { .room-title { white-space: normal; line-height: 1.3; } .room-title span { display: block; } .room-title .sep { display: none; } }
+
+/* v3(11/26 전도사님 피드백) */
+:root { color-scheme: dark; }
+.title-veil { background: radial-gradient(ellipse at 50% 45%, rgba(7, 11, 28, .05), rgba(7, 11, 28, .62) 72%), linear-gradient(180deg, rgba(7, 11, 28, .1), rgba(7, 11, 28, .7)); }
+.title-box h1 { filter: drop-shadow(0 0 22px rgba(255, 200, 110, .55)) drop-shadow(0 3px 3px rgba(0, 0, 0, .9)); }
+.title-box .sub { color: #efe3c6; text-shadow: 0 2px 8px rgba(0, 0, 0, .9); }
+.title-box .eyebrow { text-shadow: 0 2px 6px rgba(0, 0, 0, .9); }
+/* 오프닝 자막: 그린 양피지 이미지, 더 작게, 어른스러운 붓 손글씨 */
+.cine-paper { clip-path: none; background: url(img/ui/parchment.webp) center / 100% 100% no-repeat; box-shadow: none; filter: drop-shadow(0 10px 26px rgba(0, 0, 0, .7)); width: min(560px, 86vw); padding: 20px 38px 18px; transform: translate(-50%, 8px) rotate(-.4deg); transition: opacity .45s, transform .45s; }
+.cine-paper.on { transform: translate(-50%, 0) rotate(-.4deg); }
+.cine-paper .cine-text { font-family: "Nanum Brush Script", var(--serif); font-size: clamp(27px, 4.6vw, 34px); line-height: 1.28; color: #2b1a0c; letter-spacing: 0; }
+.cine-ref { font-size: 12px; color: #6e4416; }
+.tw { display: inline; animation: twin .16s ease-out; }
+@keyframes twin { from { opacity: 0; } }
+.cine-layer { transform: none !important; animation: none !important; }
+@media (orientation: portrait) { .cine-paper { bottom: 13vh; padding: 16px 26px 14px; } }
+/* 대화창: 몇 번째 줄 · 마지막 줄 · 끝내기 */
+.dlg-count { position: absolute; right: 16px; top: 12px; font-size: 11px; color: rgba(232, 183, 90, .75); letter-spacing: .05em; }
+.dlg-next { font-weight: 700; }
+.dlg-next.last { animation: none; color: #ffd89a; }
+.dlg-end { position: absolute; right: 10px; top: -38px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(232, 183, 90, .45); background: rgba(9, 14, 34, .9); color: #f3e6c8; font: 600 12px var(--sans); cursor: pointer; }
+.dlg-end[hidden] { display: none; }
+.cine-paper .cine-text { white-space: pre-line; word-break: keep-all; }
+/* 종이 그림자는 바뀌지 않는 바탕 층에만(글 층에 filter를 걸면 새로 쓴 글자가 화면에 늦게 그려졌다) */
+.cine-paper { background: none; filter: none; isolation: isolate; }
+.cine-paper::before { content: ""; position: absolute; inset: 0; z-index: -1; background: url(img/ui/parchment.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .7)); }
+body:has(#dialog:not([hidden])) #panHint { opacity: 0 !important; }
