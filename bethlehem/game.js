@@ -681,5 +681,5 @@
   // 다시 들어왔을 때
   if (S && S.nick && S.opening) { /* 첫 화면에서 「이어 하기」를 누르면 지도로 */ }
   for (var hk in (BN.HINTS_CH1 || {})) BN.HINTS[hk] = BN.HINTS_CH1[hk];
-  window.__bn = { get S() { return S; }, enterRoom: enterRoom, enterMap: enterMap, PUZZLES: PUZZLES, solveNow: function () { solve(BN.ROOMS[cur]); }, give: function (k) { if (S.items.indexOf(k) < 0) S.items.push(k); save(); } };
+  if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__bn = { get S() { return S; }, enterRoom: enterRoom, enterMap: enterMap, PUZZLES: PUZZLES, solveNow: function () { solve(BN.ROOMS[cur]); }, give: function (k) { if (S.items.indexOf(k) < 0) S.items.push(k); save(); } };
 })();
