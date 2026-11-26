@@ -65,16 +65,30 @@
   };
 
   // ── 컷신
+  // 오프닝 컷신: 낡은 양피지 띠 위에 손글씨가 한 글자씩(펜 소리). 누르면 그 줄을 다 보이고, 한 번 더 누르면 다음 장면
+  function penTick() { if (!soundOn) return; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); var t = actx.currentTime, n = actx.createBufferSource(), buf = actx.createBuffer(1, 1200, actx.sampleRate), d = buf.getChannelData(0); for (var k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / d.length, 3); n.buffer = buf; var f = actx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2500 + Math.random() * 1500; var gn = actx.createGain(); gn.gain.value = .05; n.connect(f); f.connect(gn); gn.connect(actx.destination); n.start(t); } catch (e) {} }
   function playOpening(done) {
-    show('cine'); music('bgm05_opening'); var i = -1, img = $('cineImg'), tx = $('cineText'), timer;
-    function next() {
-      i++; if (i >= BN.OPENING.length) { clearTimeout(timer); return done(); }
-      var c = BN.OPENING[i]; img.classList.remove('on');
-      setTimeout(function () { img.style.backgroundImage = 'url(' + c[0] + ')'; img.style.backgroundPosition = c[3] || 'center'; img.style.transition = 'opacity 1.4s, transform 9s linear'; img.style.transform = 'scale(1.0)'; img.classList.add('on'); requestAnimationFrame(function () { img.style.transform = 'scale(1.12)'; }); tx.innerHTML = c[1] + (c[2] ? '<small>' + c[2] + '</small>' : ''); tx.style.fontFamily = c[2] ? '' : 'var(--sans)'; }, 500);
-      clearTimeout(timer); timer = setTimeout(next, 6200);
+    show('cine'); music('bgm05_opening'); var i = -1, img = $('cineImg'), tx = $('cineText'), ref = $('cineRef'), paper = $('cinePaper'), timer, typing2 = null, full = '';
+    function finish() { if (typing2) { clearInterval(typing2); typing2 = null; } tx.innerHTML = full; ref.style.opacity = 1; clearTimeout(timer); timer = setTimeout(next, 3200); }
+    function type(text) {
+      full = text; tx.innerHTML = ''; ref.style.opacity = 0; var chars = Array.from(text.replace(/<br>/g, '\n')), k = 0, out = '';
+      typing2 = setInterval(function () {
+        var ch = chars[k++]; out += ch === '\n' ? '<br>' : ch === ' ' ? ' ' : '<span class="tw">' + ch + '</span>'; tx.innerHTML = out;
+        if (ch !== ' ' && ch !== '\n' && k % 2) penTick();
+        if (k >= chars.length) finish();
+      }, 62);
     }
-    $('cineSkip').onclick = function () { clearTimeout(timer); done(); };
-    $('cine').onclick = function (e) { if (e.target.id !== 'cineSkip') { clearTimeout(timer); next(); } };
+    function next() {
+      i++; if (i >= BN.OPENING.length) { clearTimeout(timer); if (typing2) clearInterval(typing2); return done(); }
+      var c = BN.OPENING[i]; img.classList.remove('on'); paper.classList.remove('on');
+      setTimeout(function () {
+        img.style.backgroundImage = 'url(' + c[0] + ')'; img.style.backgroundPosition = c[3] || 'center'; img.style.transition = 'opacity 1.4s, transform 9s linear'; img.style.transform = 'scale(1.0)'; img.classList.add('on'); requestAnimationFrame(function () { img.style.transform = 'scale(1.12)'; });
+        ref.textContent = c[2] || ''; paper.classList.add('on'); setTimeout(function () { type(c[1]); }, 450);
+      }, 500);
+      clearTimeout(timer); timer = setTimeout(function () { if (!typing2) next(); }, 15000);
+    }
+    $('cineSkip').onclick = function (e) { e.stopPropagation(); clearTimeout(timer); if (typing2) clearInterval(typing2); done(); };
+    $('cine').onclick = function (e) { if (e.target.id === 'cineSkip') return; if (typing2) finish(); else { clearTimeout(timer); next(); } };
     next();
   }
 

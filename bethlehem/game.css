@@ -217,3 +217,19 @@ body.dbg .rspot.area::after { content: attr(data-id); position: absolute; left: 
 
 .tiny-note { font-size: 12px; color: rgba(244, 239, 228, .6); margin: -2px 0 4px; }
 @media (max-height: 520px) and (orientation: landscape) { .profile-panel .tiny-note { grid-column: 2; } }
+
+/* 오프닝 자막: 낡은 양피지 띠 + 손글씨 + 한 글자씩 */
+.cine-text { position: static; transform: none; width: auto; min-height: 0; text-shadow: none; }
+.cine-paper { position: absolute; left: 50%; bottom: 12vh; transform: translate(-50%, 12px) rotate(-.6deg); width: min(760px, 90vw); z-index: 3; padding: 22px 34px 18px; text-align: center; opacity: 0; transition: opacity .6s, transform .6s;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(120, 80, 30, .18), transparent 55%),
+    radial-gradient(ellipse at 80% 70%, rgba(110, 70, 25, .22), transparent 60%),
+    radial-gradient(ellipse at 50% 50%, #efe0bd 0%, #e3cc9c 70%, #c9ab72 100%);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .65), inset 0 0 40px rgba(110, 70, 25, .45);
+  clip-path: polygon(0% 8%, 3% 0%, 9% 5%, 16% 1%, 24% 4%, 33% 0%, 41% 3%, 50% 0%, 58% 4%, 67% 1%, 75% 5%, 84% 0%, 92% 4%, 100% 1%, 98% 30%, 100% 55%, 97% 78%, 100% 100%, 92% 96%, 84% 100%, 75% 95%, 66% 99%, 57% 95%, 48% 100%, 39% 96%, 30% 100%, 21% 95%, 12% 99%, 4% 95%, 0% 100%, 2% 70%, 0% 45%, 3% 22%); }
+.cine-paper.on { opacity: 1; transform: translate(-50%, 0) rotate(-.6deg); }
+.cine-paper .cine-text { font-family: "Nanum Pen Script", var(--serif); font-size: clamp(26px, 4.6vw, 40px); line-height: 1.32; color: #3a2410; letter-spacing: .01em; }
+.cine-ref { margin-top: 6px; font-family: var(--sans); font-size: 13px; font-weight: 700; color: #7a4a14; letter-spacing: .06em; opacity: 0; transition: opacity .6s; }
+.tw { display: inline-block; animation: tw .12s ease-out both; }
+@keyframes tw { from { opacity: .15; transform: translateY(2px) scale(1.12); } }
+@media (orientation: portrait) { .cine-paper { bottom: 14vh; padding: 18px 22px 14px; } }
