@@ -281,3 +281,13 @@ body.dbg .rspot.area::after { content: attr(data-id); position: absolute; left: 
 .cine-paper::before { content: ""; position: absolute; inset: 0; z-index: -1; background: url(img/ui/parchment.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .7)); }
 body:has(#dialog:not([hidden])) #panHint { opacity: 0 !important; }
 .cine-paper .cine-text { font-size: clamp(21px, 3.6vw, 27px); line-height: 1.35; } .cine-paper { width: min(500px, 82vw); }
+
+/* 방에 들어갈 때 카메라가 밀고 들어감 */
+.room-view.push { animation: push 1.5s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes push { from { transform: scale(1.16); filter: brightness(.35) blur(2px); } 60% { filter: brightness(1) blur(0); } to { transform: scale(1); } }
+/* 위에서 내리는 빛줄기 */
+.fx-rays { position: absolute; transform-origin: 50% 0; mix-blend-mode: screen; pointer-events: none; opacity: .55;
+  background: repeating-conic-gradient(from 170deg at 50% 0%, rgba(255, 222, 160, .0) 0deg, rgba(255, 222, 160, .16) 2deg, rgba(255, 222, 160, 0) 5deg, rgba(255, 222, 160, .08) 7deg, rgba(255, 222, 160, 0) 10deg);
+  -webkit-mask: radial-gradient(ellipse 60% 100% at 50% 0%, #000 20%, transparent 75%); mask: radial-gradient(ellipse 60% 100% at 50% 0%, #000 20%, transparent 75%);
+  animation: rays 7s ease-in-out infinite alternate; }
+@keyframes rays { from { opacity: .35; } to { opacity: .7; } }

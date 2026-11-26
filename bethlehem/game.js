@@ -150,9 +150,10 @@
     cur = id; show('room'); $('toast').classList.remove('on'); music(R.bgm || 'bgm02_village');
     var bg = $('roomBg'); bg.style.backgroundImage = 'url(' + R.bg + ')';
     roomFit(R.focus || 50);
+    var pv = $('roomView'); pv.classList.remove('push'); void pv.offsetWidth; pv.classList.add('push');
     if (window.BN3D) {
       var key = R.bg.replace(/^.*\//, '').replace('.webp', '');
-      BN3D.mount($('roomStage'), { img: R.bg, hi: R.bg.replace('.webp', '@2x.webp'), depth: 'img/depth/' + key + '.webp', fx: (BN.FX || {})[cur] || {},
+      BN3D.mount($('roomStage'), { img: R.bg, hi: R.bg.replace('.webp', '@2x.webp'), depth: 'img/depth/' + key + '.webp', fx: (BN.FX || {})[cur] || {}, grade: ((BN.FX || {})[cur] || {}).grade,
         panFrac: function () { var vw = innerWidth, sw = 1920 * rv.k, sh = 1080 * rv.k; return { x: sw > vw ? ((rv.x - (vw - sw) / 2) / ((sw - vw) / 2 || 1)) : 0, y: sh > innerHeight ? ((rv.y - (innerHeight - sh) / 2) / ((sh - innerHeight) / 2 || 1)) : 0 }; } });
       setTimeout(function () { document.querySelectorAll('#roomSpots .rspot').forEach(function (b) { var x = parseFloat(b.style.left) / 100, y = parseFloat(b.style.top) / 100; if (b.classList.contains('fig')) BN3D.track(b, x, Math.min(.98, y - .03), .82); else BN3D.track(b, x, y); }); }, 0);
     }

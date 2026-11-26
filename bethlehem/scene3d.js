@@ -4,10 +4,18 @@
 (function () {
   'use strict';
   var VS = 'precision highp float;attribute vec2 p;varying vec2 v;void main(){v=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}';
-  var FS = 'precision highp float;varying vec2 v;uniform sampler2D img,dep;uniform vec2 off;uniform float zoom;' +
+  // 영화 색보정: 밝은 곳 빛 번짐(4방향), 대비·채도, 장면 색(어둠은 남색 쪽·밝음은 금빛 쪽), 가장자리 어둡게, 아주 옅은 필름 알갱이
+  var FS = 'precision highp float;varying vec2 v;uniform sampler2D img,dep;uniform vec2 off,px;uniform float zoom,con,sat,vig,bloom,tm;uniform vec3 shadow,high;' +
+    'vec3 hi(vec2 c){vec3 x=texture2D(img,c).rgb;return max(x-.8,0.);}' +
     'void main(){vec2 c=(v-.5)/zoom+.5;float d=texture2D(dep,c).r;vec2 o=off*(d-.35);' +
-    // 가장자리 끊김을 줄이려고 두 번 샘플해 깊이 차이가 큰 곳을 부드럽게
-    'float d2=texture2D(dep,c-o).r;o=off*(mix(d,d2,.5)-.35);gl_FragColor=texture2D(img,c-o);}';
+    'float d2=texture2D(dep,c-o).r;o=off*(mix(d,d2,.5)-.35);vec2 u=c-o;vec3 col=texture2D(img,u).rgb;' +
+    'vec3 b=hi(u+px*vec2(6.,0.))+hi(u-px*vec2(6.,0.))+hi(u+px*vec2(0.,6.))+hi(u-px*vec2(0.,6.))+hi(u+px*vec2(14.,9.))+hi(u-px*vec2(14.,9.))+hi(u+px*vec2(-9.,14.))+hi(u-px*vec2(-9.,14.));' +
+    'col+=b*bloom*.12;' +
+    'float l=dot(col,vec3(.299,.587,.114));col=mix(vec3(l),col,sat);col=(col-.5)*con+.5;' +
+    'col=mix(col*shadow,col,smoothstep(.05,.55,l));col=mix(col,col*high,smoothstep(.45,1.,l));' +
+    'vec2 q=v-.5;q.x*=1.4;col*=1.-vig*smoothstep(.25,.85,length(q));' +
+    'float g=fract(sin(dot(v*vec2(913.,577.)+tm,vec2(12.9898,78.233)))*43758.5453);col+=(g-.5)*.025;' +
+    'gl_FragColor=vec4(clamp(col,0.,1.),1.);}';
   function load(src) { return new Promise(function (ok, no) { var im = new Image(); im.crossOrigin = 'anonymous'; im.onload = function () { ok(im); }; im.onerror = no; im.src = src; }); }
   function tex(gl, im) { var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, im); return t; }
 
@@ -44,7 +52,10 @@
       var loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
       gl.activeTexture(gl.TEXTURE0); tex(gl, im); gl.uniform1i(gl.getUniformLocation(pr, 'img'), 0);
       gl.activeTexture(gl.TEXTURE1); tex(gl, dp); gl.uniform1i(gl.getUniformLocation(pr, 'dep'), 1);
-      var uOff = gl.getUniformLocation(pr, 'off'), uZoom = gl.getUniformLocation(pr, 'zoom'); gl.uniform1f(uZoom, 1.035);
+      var uOff = gl.getUniformLocation(pr, 'off'), uZoom = gl.getUniformLocation(pr, 'zoom'), uTm = gl.getUniformLocation(pr, 'tm'); gl.uniform1f(uZoom, 1.035);
+      var G = Object.assign({ con: 1.05, sat: 1.0, vig: .32, bloom: 1, shadow: [.93, .95, 1.06], high: [1.02, 1.0, .97] }, opts.grade || {});
+      gl.uniform1f(gl.getUniformLocation(pr, 'con'), G.con); gl.uniform1f(gl.getUniformLocation(pr, 'sat'), G.sat); gl.uniform1f(gl.getUniformLocation(pr, 'vig'), G.vig); gl.uniform1f(gl.getUniformLocation(pr, 'bloom'), G.bloom);
+      gl.uniform3fv(gl.getUniformLocation(pr, 'shadow'), G.shadow); gl.uniform3fv(gl.getUniformLocation(pr, 'high'), G.high); gl.uniform2f(gl.getUniformLocation(pr, 'px'), 1 / im.width * (im.width / 1920), 1 / im.height * (im.height / 1080));
       gl.viewport(0, 0, cv.width, cv.height);
       var t0 = performance.now(), sm = { x: 0, y: 0 };
       (function frame(now) {
@@ -53,7 +64,7 @@
         var tx = pf.x * .9 + tilt.x * .7 + (mouse.on ? mouse.x * .8 : 0) + Math.sin(t * .23) * .18, ty = pf.y * .5 + tilt.y * .5 + (mouse.on ? mouse.y * .5 : 0) + Math.sin(t * .17 + 1) * .1;
         sm.x += (tx - sm.x) * .08; sm.y += (ty - sm.y) * .08;
         state.off.x = sm.x * .028; state.off.y = sm.y * .02;
-        gl.uniform2f(uOff, state.off.x, state.off.y); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        gl.uniform2f(uOff, state.off.x, state.off.y); gl.uniform1f(uTm, (t * 7) % 100); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         moveFigs(state);
         state.raf = requestAnimationFrame(frame);
       })(t0);
@@ -77,6 +88,9 @@
     (fx.lights || []).forEach(function (l, i) {   // [x%, y%, 반지름(무대 px), 색]
       var g = document.createElement('div'); g.className = 'fx-light'; g.style.cssText = 'left:' + l[0] + '%;top:' + l[1] + '%;width:' + l[2] * 2 + 'px;height:' + l[2] * 2 + 'px;background:radial-gradient(circle,' + (l[3] || 'rgba(255,190,100,.55)') + ' 0%,rgba(255,150,60,.16) 38%,transparent 70%);animation-delay:-' + (i * .37).toFixed(2) + 's;animation-duration:' + (2.2 + (i % 3) * .7).toFixed(1) + 's';
       L.appendChild(g); track(g, l[0] / 100, l[1] / 100);
+    });
+    (fx.rays || []).forEach(function (r) {   // [x%, y%, 크기px, 기울기deg] 위에서 내리는 빛줄기
+      var e = document.createElement('div'); e.className = 'fx-rays'; e.style.cssText = 'left:' + r[0] + '%;top:' + r[1] + '%;width:' + r[2] + 'px;height:' + (r[2] * 1.6) + 'px;transform:translateX(-50%) rotate(' + (r[3] || 0) + 'deg)'; L.appendChild(e); track(e, r[0] / 100, Math.min(.95, r[1] / 100 + .3));
     });
     (fx.smoke || []).forEach(function (s) { for (var k = 0; k < 5; k++) { var e = document.createElement('div'); e.className = 'fx-smoke'; e.style.cssText = 'left:' + s[0] + '%;top:' + s[1] + '%;animation-delay:-' + (k * 1.3).toFixed(1) + 's'; L.appendChild(e); track(e, s[0] / 100, s[1] / 100); } });
     if (fx.stars !== false && state.depthPx) {   // 거리 지도에서 가장 먼 곳(하늘)에만 반짝임
