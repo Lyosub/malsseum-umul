@@ -19,33 +19,77 @@
 
   // 1 이름: 자음·모음 조각으로 두 글자 만들기(초성+중성)
   var CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ', JUNG = 'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ';
-  function syl(c, v) { var a = CHO.indexOf(c), b = JUNG.indexOf(v); return a >= 0 && b >= 0 ? String.fromCharCode(0xAC00 + (a * 21 + b) * 28) : ''; }
+  function syl(c, v) { if (!c || !v) return ''; var a = CHO.indexOf(c), b = JUNG.indexOf(v); return a >= 0 && b >= 0 ? String.fromCharCode(0xAC00 + (a * 21 + b) * 28) : ''; }
+  // 조각은 나무 막대라 돌아가 있다: 글꼴 모양(g)·처음 각도(r)·각도별로 읽히는 글자(v)
+  var PIECE = {
+    'ㅇ': { g: 'ㅇ', r: 0, v: ['ㅇ', 'ㅇ', 'ㅇ', 'ㅇ'] }, 'ㅅ': { g: 'ㅅ', r: 2, v: ['ㅅ'] }, 'ㅁ': { g: 'ㅁ', r: 1, v: ['ㅁ', 'ㅁ', 'ㅁ', 'ㅁ'] },
+    'ㅣ': { g: 'ㅣ', r: 1, v: ['ㅣ', 'ㅡ', 'ㅣ', 'ㅡ'] }, 'ㄴ': { g: 'ㄴ', r: 1, v: ['ㄴ', '', 'ㄱ'] }, 'ㅔ': { g: 'ㅔ', r: 3, v: ['ㅔ'] },
+    'ㅜ': { g: 'ㅏ', r: 2, v: ['ㅏ', 'ㅜ', 'ㅓ', 'ㅗ'] }, 'ㄹ': { g: 'ㄹ', r: 1, v: ['ㄹ', '', 'ㄹ'] }, 'ㅖ': { g: 'ㅖ', r: 1, v: ['ㅖ'] }
+  };
+  var VOW = 'ㅣㅔㅜㅖ';
+  function readP(p) { return p ? (PIECE[p.t].v[p.r] || '') : ''; }
   BN.PZ.name = function (R, A) {
     var S = A.S(), got = S.tiles || [];
     if (got.length < 4) return A.talk([['asaph', 0, '조각이 아직 모자라다. 집 안을 더 살펴보아라.']]);
     var w = A.el('div', 'name-pz'), slots = [null, null, null, null];
+    function glyph(t, r) { return '<span class="pc" style="transform:rotate(' + r * 90 + 'deg)">' + PIECE[t].g + '</span>'; }
     function draw() {
-      w.innerHTML = '<p class="tiny-note">찾은 조각 ' + got.length + '/9 · 조각을 누르면 빈칸에 들어가요(빈칸을 누르면 빠져요)</p>';
+      w.innerHTML = '<p class="tiny-note">찾은 조각 ' + got.length + '/9 · 조각은 나무 막대라 돌아가 있어요.<br>조각을 누르면 빈칸에 들어가고, 빈칸을 누르면 90°씩 돌아가요(✕는 빼기)</p>';
       var row = A.el('div', 'name-slots');
       [0, 2].forEach(function (k) {
-        var blk = A.el('div', 'name-blk'); blk.appendChild(A.el('div', 'name-prev', syl(slots[k], slots[k + 1]) || '?'));
+        var blk = A.el('div', 'name-blk'); blk.appendChild(A.el('div', 'name-prev', syl(readP(slots[k]), readP(slots[k + 1])) || '?'));
         var two = A.el('div', 'name-two');
-        [k, k + 1].forEach(function (i) { var b = A.el('button', 'name-slot sm' + (slots[i] ? ' on' : ''), slots[i] || (i % 2 ? '모음' : '자음')); b.onclick = function () { slots[i] = null; draw(); }; two.appendChild(b); });
+        [k, k + 1].forEach(function (i) {
+          var p = slots[i], b = A.el('button', 'name-slot sm' + (p ? ' on' : ''), p ? glyph(p.t, p.r) : (i % 2 ? '모음' : '자음'));
+          if (p) { b.dataset.j = p.t; b.dataset.rot = p.r; }
+          b.onclick = function () { if (!p) return; p.r = (p.r + 1) % 4; A.tick(); draw(); };
+          if (p) { var x = A.el('span', 'name-x', '✕'); x.onclick = function (e) { e.stopPropagation(); slots[i] = null; draw(); }; b.appendChild(x); }
+          two.appendChild(b);
+        });
         blk.appendChild(two); row.appendChild(blk);
       });
       w.appendChild(row);
       var tray = A.el('div', 'name-tray');
-      got.forEach(function (t) { if (slots.indexOf(t) >= 0) return; var b = A.el('button', 'name-tile', t); b.onclick = function () { var vow = JUNG.indexOf(t) >= 0, k = -1; for (var i = 0; i < 4; i++) if (!slots[i] && (i % 2 === 1) === vow) { k = i; break; } if (k < 0) return; slots[k] = t; draw(); }; tray.appendChild(b); });
+      got.forEach(function (t) {
+        if (slots.some(function (p) { return p && p.t === t; })) return;
+        var b = A.el('button', 'name-tile', glyph(t, PIECE[t].r)); b.dataset.j = t;
+        b.onclick = function () { var vow = VOW.indexOf(t) >= 0, k = -1; for (var i = 0; i < 4; i++) if (!slots[i] && (i % 2 === 1) === vow) { k = i; break; } if (k < 0) return; slots[k] = { t: t, r: PIECE[t].r }; draw(); };
+        tray.appendChild(b);
+      });
       w.appendChild(tray);
       var go = A.el('button', 'btn gold', '명부에 적기');
       go.onclick = function () {
         if (A.locked('name')) return;
-        var nm = syl(slots[0], slots[1]) + syl(slots[2], slots[3]);
-        if (nm === '예수') { A.closeModal(); A.solve(R); }
+        var nm = syl(readP(slots[0]), readP(slots[1])) + syl(readP(slots[2]), readP(slots[3]));
+        if (nm === '예수') meaning();
         else if (/^(임|마|누|엘|에|미|이)/.test(nm)) A.wrong('name', '마태복음 1장 23절의 이름을 떠올렸나요? 「천사가 일컬은」 이름은 따로 있어요');
-        else A.wrong('name', '명부의 칸이 받아들이지 않는다');
+        else if (nm.length < 2) A.wrong('name', '아직 읽히지 않는 조각이 있다. 막대를 돌려 보아라');
+        else A.wrong('name', '「' + nm + '」 — 명부의 칸이 받아들이지 않는다');
       };
       w.appendChild(go);
+    }
+    // 2단계: 이름 옆 「뜻」 칸 — 개역개정 원문 넷 중 하나
+    function meaning() {
+      var m = A.el('div', 'name-pz');
+      m.innerHTML = '<p class="tiny-note">이름이 들어갔다. 명부의 그 줄에는 칸이 하나 더 있다 — 「이 이름을 주신 까닭」</p>';
+      var OPT = [
+        ['하나님이 우리와 함께 계시다', 'imm'],
+        ['그리스도 주시니라', 'chr'],
+        ['자기 백성을 그들의 죄에서 구원할 자', 'ok'],
+        ['지극히 높으신 이의 아들이라 일컬어질 것이요', 'son']
+      ];
+      OPT.forEach(function (o) {
+        var b = A.el('button', 'btn ghost offer', '「' + o[0] + '」');
+        b.onclick = function () {
+          if (A.locked('name')) return;
+          if (o[1] === 'ok') { A.closeModal(); A.solve(R); }
+          else if (o[1] === 'imm') A.wrong('name', '그 말은 다른 이름 「임마누엘」을 번역한 뜻이에요. 천사가 요셉에게 「예수라 하라」고 할 때 붙인 까닭을 찾아요');
+          else if (o[1] === 'chr') A.wrong('name', '그건 목자들에게 전한 소식 — 누구신지를 알린 말이에요. 이름에 붙은 「이는 …이심이라」를 찾아요');
+          else A.wrong('name', '그건 마리아가 들은 말 — 이 아기가 어떤 분이 되실지예요. 이름의 까닭은 요셉이 들었어요');
+        };
+        m.appendChild(b);
+      });
+      A.modal('명부의 빈칸 · 이름의 까닭', m);
     }
     draw(); A.modal('명부의 빈칸 · 이름', w);
   };
