@@ -32,7 +32,7 @@
     w.appendChild(A.el('p', 'tiny-note', '놋쇠 원판 두 개 — 바깥 고리는 방향, 안쪽 바늘은 높이. 오늘 밤에 맞춰야 한다.'));
     w.appendChild(wheels(A, [{ label: '방향', vals: DIRS }, { label: '높이(도)', vals: ALTS }], function (v) {
       if (A.locked('astro')) return;
-      if (v[0] === '남서' && v[1] === '55') { A.sfx('ok'); A.toast('바늘이 별에 딱 걸렸다'); if (!flag(R, A, 'astro', ['astro', 'camel'])) { A.closeModal(); A.talk([['asaph', 0, '기구가 맞았다. 이제 짐만 꾸리면 되겠구나.']]); } }
+      if (v[0] === '남서' && v[1] === '55') { A.sfx('ok'); A.toast('바늘이 별에 딱 걸렸다'); if (!flag(R, A, 'astro', ['astro', 'light'])) { A.closeModal(); A.talk([['asaph', 0, '기구가 맞았다. 이제 등잔 빛을 별 지도에 비추면 되겠구나.']]); } }
       else A.wrong('astro', '바늘 끝에 별이 없다');
     }, '바늘 고정', [0, 2]));
     A.modal('별 재는 기구', w);
@@ -67,7 +67,7 @@
         var dup = ['g', 'f', 'm'].some(function (k) { var s = LOAD.map(function (it, i) { return it[2] === k ? side[i] : -1; }).filter(function (x) { return x > 0; }); return s[0] === s[1]; });
         if (L !== Rt) A.wrong('camel', '낙타가 ' + (L > Rt ? '왼쪽' : '오른쪽') + '으로 기우뚱 — 일어나지 않는다');
         else if (dup) A.wrong('camel', '무게는 맞지만, 같은 예물 두 상자가 한쪽에 있다');
-        else { A.sfx('ok'); A.toast('낙타가 일어섰다'); if (!flag(R, A, 'camel', ['astro', 'camel'])) { A.closeModal(); A.talk([['asaph', 0, '짐은 되었다. 기구도 오늘 밤에 맞춰야지.']]); } }
+        else { A.sfx('ok'); A.toast('낙타가 일어섰다'); if (!flag(R, A, 'camel', ['astro', 'light'])) { A.closeModal(); A.talk([['asaph', 0, '짐은 되었다. 기구도 오늘 밤에 맞춰야지.']]); } }
       };
     }
     draw(); A.modal('낙타 짐', w);

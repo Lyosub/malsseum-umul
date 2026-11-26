@@ -113,6 +113,7 @@
   // 2 오르는 길: 기울이기(또는 끌기)로 새장 굴리기 — 비둘기 둘을 모은 뒤 맨 위 문
   BN.PZ.climb = function (R, A) {
     var S0 = A.S();
+    if (!S0.psalmOk && BN.PZ.slide) return BN.PZ.slide(R, A);
     if (!S0.psalmOk) {
       var order = BN.ASCENT.map(function (x, i) { return i; }), r = A.seedRnd(31); order.sort(function () { return r() - .5; });
       var step = 0, pw = A.el('div', 'psalm-pz');

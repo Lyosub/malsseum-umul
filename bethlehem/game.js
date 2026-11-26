@@ -7,7 +7,7 @@
   var S = load() || null;
   function blank() { return { v: 1, nick: '', dept: '', grade: '', av: 'm', ch: 1, ms: 0, hintMin: 0, rooms: {}, items: [], notes: [], stars: [], seenIntro: {}, opening: false, created: Date.now() }; }
   function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} if (BN.netDirty) BN.netDirty(); }
 
   // ── 화면 전환
   function show(id) { document.querySelectorAll('.screen').forEach(function (s) { s.classList.toggle('on', s.id === id); }); document.body.classList.toggle('playing', id === 'map' || id === 'room'); $('hud').hidden = !(id === 'map' || id === 'room'); }
@@ -54,7 +54,6 @@
   function startPrologue() { playOpening(function () { enterRoom('wellroom'); }, BN.PROLOGUE); }
   function afterPrologue() { playOpening(function () { S.opening = true; save(); enterMap(); }); }
   $('btnContinue').onclick = function () { if (!S.opening) { if (S.rooms.wellroom) afterPrologue(); else enterRoom('wellroom'); return; } var C = (BN.CHAPTERS || {})[S.ch || 1]; if (C && C.start && !S.rooms[C.start]) return enterRoom(C.start); enterMap(); };
-  $('btnCode').onclick = function () { toast('이어하기 코드는 곧 열려요(서버 연결 준비 중)'); };
   var av = 'm';
   document.querySelectorAll('.av').forEach(function (b) { b.onclick = function () { av = b.dataset.av; document.querySelectorAll('.av').forEach(function (x) { x.classList.toggle('on', x === b); }); }; });
   document.querySelector('.av[data-av="m"]').classList.add('on');
@@ -62,8 +61,40 @@
     var n = $('inNick').value.trim(), real = $('inReal').value.trim();
     if (!n) return ($('profErr').textContent = '닉네임을 적어 주세요');
     if (!real) return ($('profErr').textContent = '실명을 적어 주세요 — 시상할 때만 사용돼요');
-    S.nick = n; S.real = real; S.av = av; save();
-    startPrologue();
+    var btn = $('btnProfileOk');
+    if (!window.BNNet || !BNNet.on) { S.nick = n; S.real = real; S.av = av; S.pendingReg = 1; save(); return startPrologue(); }
+    btn.disabled = true; $('profErr').textContent = '확인하는 중…';
+    BNNet.register(n, real).then(function (r) {
+      btn.disabled = false; $('profErr').textContent = '';
+      S.nick = r.nick; S.code = r.code; S.av = av; delete S.real; save();
+      showCode(r.code, startPrologue);
+    }).catch(function (e) {
+      btn.disabled = false;
+      if (e && e.offline) { S.nick = n; S.real = real; S.av = av; S.pendingReg = 1; save(); toast('인터넷이 끊겨 있어 이 기기에만 저장해요 — 연결되면 자동으로 등록돼요'); return startPrologue(); }
+      $('profErr').textContent = (e && e.message) || '등록하지 못했어요';
+    });
+  };
+  function showCode(code, next) {
+    var w = el('div', 'gen-wrap');
+    w.innerHTML = '<div style="text-align:center"><p class="gen-help">다른 기기에서 이어 하려면 이 코드가 필요해요.<br>사진을 찍거나 적어 두세요. (수첩 맨 위에서도 다시 볼 수 있어요)</p><p class="code-big">' + code + '</p></div>';
+    modal('이어하기 코드', w, next);
+  }
+  $('btnCode').onclick = function () {
+    if (!window.BNNet || !BNNet.on) return toast('지금은 서버에 연결할 수 없어요');
+    var w = el('div', 'gen-wrap');
+    w.innerHTML = '<p class="gen-help">처음 등록할 때 받은 코드(예: 별빛-노래-0427)를 넣어 주세요.</p><div class="answer"><input id="codeIn" placeholder="이어하기 코드" autocomplete="off"><button class="btn gold" id="codeGo">불러오기</button></div><p class="err" id="codeErr"></p>';
+    modal('이어하기 코드 넣기', w);
+    $('codeGo').onclick = function () {
+      var c = $('codeIn').value.trim(); if (!c) return;
+      if (S && S.nick && S.code !== c && !confirm('이 기기의 진행 대신 코드의 진행을 불러올까요?')) return;
+      $('codeErr').textContent = '불러오는 중…';
+      BNNet.load(c).then(function (r) {
+        if (!r) return ($('codeErr').textContent = '코드를 찾을 수 없어요');
+        S = Object.assign(blank(), r.state || {}); S.nick = r.nick; S.code = c; save(); closeModal();
+        $('btnContinue').hidden = !S.opening && !S.rooms.wellroom && !S.nick; $('btnStart').textContent = '처음부터';
+        toast(r.nick + '님의 진행을 불러왔어요'); $('btnContinue').hidden = false; $('btnContinue').onclick();
+      }).catch(function (e) { $('codeErr').textContent = (e && e.message) || '불러오지 못했어요'; });
+    };
   };
 
   // ── 컷신
@@ -142,7 +173,7 @@
     BN.SPOTS.forEach(function (sp) {
       if ((sp.ch || 1) !== (S.ch || 1)) return;
       var b = document.createElement('button'), lock = !unlocked(sp.id), done = !!S.rooms[sp.id];
-      b.className = 'spot' + (lock ? ' lock' : '') + (done ? ' done' : ''); b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
+      b.dataset.id = sp.id; b.className = 'spot' + (lock ? ' lock' : '') + (done ? ' done' : ''); b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
       b.innerHTML = '<span class="ring">' + (lock ? '🔒' : done ? '✔' : sp.icon) + '</span><span class="lbl">' + (lock ? '???' : sp.name) + '</span>';
       b.onclick = function () { if (lock) return toast('아직 갈 수 없어요 — 앞의 장소를 먼저 풀어요'); enterRoom(sp.id); };
       box.appendChild(b);
@@ -170,6 +201,7 @@
     R.spots.forEach(function (sp) {
       if (sp.act.indexOf('star:') === 0 && S.stars.indexOf(sp.act) >= 0) return;
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
+      if (sp.night) { var hh = new Date().getHours(); if (hh >= 5 && hh < 19) return; }
       if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return; if (sp.act.indexOf('scrap:') === 0 && (S.scraps || []).indexOf(sp.act.slice(6)) >= 0) return; if (sp.act.indexOf('tile:') === 0 && (S.tiles || []).indexOf(sp.act.slice(5)) >= 0) return;
         b.className = 'rspot area'; b.dataset.id = sp.id; b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
         b.onclick = function (e) { ripple(e); act(R, sp, b); }; box.appendChild(b); return; }
@@ -254,7 +286,7 @@
   function modal(title, html, onClose) { $('modalTitle').textContent = title; $('modalBody').innerHTML = ''; if (typeof html === 'string') $('modalBody').innerHTML = html; else $('modalBody').appendChild(html); $('modal').hidden = false; modal.onClose = onClose; }
   function closeModal() { $('modal').hidden = true; if (modal.onClose) { var f = modal.onClose; modal.onClose = null; f(); } }
   $('modalX').onclick = closeModal;
-  $('btnNote').onclick = function () { modal('서기관의 수첩', S.notes.length ? S.notes.map(function (n) { return '<div class="note">' + n.text + '<div class="ref">' + (n.ref || '') + '</div></div>'; }).join('') : '<p class="empty">아직 적은 것이 없어요. 장소를 풀면 단서가 저절로 적혀요.</p>'); };
+  $('btnNote').onclick = function () { modal('서기관의 수첩', (S.code ? '<div class="note" style="text-align:center">이어하기 코드 <b class="code-sm">' + S.code + '</b></div>' : '') + (S.notes.length ? S.notes.map(function (n) { return '<div class="note">' + n.text + '<div class="ref">' + (n.ref || '') + '</div></div>'; }).join('') : '<p class="empty">아직 적은 것이 없어요. 장소를 풀면 단서가 저절로 적혀요.</p>')); };
   $('btnBag').onclick = function () { modal('가방', S.items.length ? '<div class="bag">' + S.items.map(function (k) { var it = BN.ITEMS[k]; return '<div class="it"><img src="' + it[1] + '" alt=""><b>' + it[0] + '</b><br><span style="opacity:.7">' + it[2] + '</span></div>'; }).join('') + '</div>' : '<p class="empty">가방이 비어 있어요.</p>'); };
   $('btnHint').onclick = function () { return hintOil(); };
   var __oldHint = function () {
@@ -271,6 +303,7 @@
   function solve(R) {
     if (S.rooms[cur]) return;
     var ch = BN.STAMPS[cur]; S.rooms[cur] = { at: S.ms, stamp: ch || '' };
+    if (BN.netSolved) BN.netSolved(cur);
     if (R.note) S.notes.push(R.note);
     [R.item, R.item2].forEach(function (k) { if (k && S.items.indexOf(k) < 0) S.items.push(k); });
     save(); updHud();
@@ -536,13 +569,36 @@
     modal(n + '장 「' + CH.title + '」', w, function () { if (E.ending) ending(); else nextChapter(n + 1); });
   }
   function ending() {
-    S.finished = S.finished || S.ms; save();
+    S.finished = S.finished || S.ms; save(); if (BN.netFlush) BN.netFlush();
     playOpening(function () {
       enterRoom('wellgate');
       var w = el('div', 'gen-wrap');
       w.innerHTML = '<div style="text-align:center;padding:10px 0"><p class="eyebrow">✦ 완주</p><h2 style="font-family:var(--serif);font-size:32px;margin:4px 0;color:var(--gold2)">베들레헴의 밤</h2><p style="font-family:var(--serif);color:var(--gold);line-height:1.8">「하나님이 우리와 함께 계시다」<br><span style="font-size:12px;color:var(--stone)">마태복음 1:23</span></p><p style="margin-top:14px;font-size:14px">' + S.nick + ' · 기록 <b>' + $('hudTime').textContent + '</b> · 도장 <b>' + $('hudStamp').textContent + '</b>/12 · 숨은 별 <b>' + S.stars.length + '</b>/7</p><p class="gen-help" style="margin-top:10px">끝까지 함께해 주셔서 고맙습니다. 메리 크리스마스!</p></div>';
+      var sv = el('button', 'btn gold block', '📷 결과 이미지 저장(인스타용)'); sv.style.marginTop = '10px'; sv.onclick = resultImage; w.appendChild(sv);
       modal('베들레헴의 밤 · 완주', w);
     }, BN.ENDING);
+  }
+  // 인스타용 결과 이미지(1080×1080): 닉네임·기록·도장·숨은 별·완주 날짜
+  function resultImage() {
+    var c = document.createElement('canvas'); c.width = 1080; c.height = 1080; var g = c.getContext('2d'), im = new Image();
+    im.onload = function () {
+      var s = Math.max(1080 / im.width, 1080 / im.height); g.drawImage(im, (1080 - im.width * s) / 2, (1080 - im.height * s) / 2, im.width * s, im.height * s);
+      var gr = g.createLinearGradient(0, 0, 0, 1080); gr.addColorStop(0, 'rgba(5,8,20,.55)'); gr.addColorStop(.5, 'rgba(5,8,20,.35)'); gr.addColorStop(1, 'rgba(5,8,20,.9)'); g.fillStyle = gr; g.fillRect(0, 0, 1080, 1080);
+      g.textAlign = 'center'; g.fillStyle = '#e8b75a'; g.font = '700 34px "Gowun Batang", serif'; g.fillText('말씀우물 성탄 방탈출', 540, 120);
+      var t = g.createLinearGradient(0, 160, 0, 260); t.addColorStop(0, '#fff6dc'); t.addColorStop(1, '#e8b75a'); g.fillStyle = t; g.font = '700 104px "Gowun Batang", serif'; g.fillText('베들레헴의 밤', 540, 250);
+      g.fillStyle = '#fff3d6'; g.font = '700 30px "Gowun Batang", serif'; g.fillText('✦ 완주 ✦', 540, 320);
+      g.fillStyle = '#ffffff'; g.font = '700 64px "Pretendard Variable", Pretendard, sans-serif'; g.fillText(S.nick, 540, 640);
+      g.font = '40px "Pretendard Variable", Pretendard, sans-serif'; g.fillStyle = '#ffe2a0'; var tm = Math.floor(S.ms / 60000) + S.hintMin, rec = (tm >= 60 ? Math.floor(tm / 60) + '시간 ' : '') + (tm % 60) + '분'; g.fillText('기록 ' + rec + '  ·  도장 12/12  ·  숨은 별 ' + S.stars.length + '/7', 540, 720);
+      g.fillStyle = '#f3e6c8'; g.font = '700 42px "Gowun Batang", serif'; g.fillText('「하나님이 우리와 함께 계시다」', 540, 860);
+      g.font = '28px "Gowun Batang", serif'; g.fillStyle = '#c9b48a'; g.fillText('마태복음 1:23', 540, 905);
+      var d = new Date(); g.font = '26px "Pretendard Variable", Pretendard, sans-serif'; g.fillStyle = '#b9a88c'; g.fillText(d.getFullYear() + '. ' + (d.getMonth() + 1) + '. ' + d.getDate() + ' · logoswell.kr', 540, 1010);
+      c.toBlob(function (b) {
+        var f = null; try { f = new File([b], 'bethlehem-night.png', { type: 'image/png' }); } catch (e) {}
+        if (f && navigator.canShare && navigator.canShare({ files: [f] })) return navigator.share({ files: [f], title: '베들레헴의 밤 완주' }).catch(function () {});
+        var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'bethlehem-night.png'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      }, 'image/png');
+    };
+    im.src = 'img/cuts/p9.webp';
   }
   function nextChapter(m) {
     var C = (BN.CHAPTERS || {})[m];
@@ -764,6 +820,7 @@
   // 다시 들어왔을 때
   if (S && S.nick && S.opening) { /* 첫 화면에서 「이어 하기」를 누르면 지도로 */ }
   for (var hk in (BN.HINTS_CH1 || {})) BN.HINTS[hk] = BN.HINTS_CH1[hk];
+  if (BN.hook) BN.hook({ S: function () { return S; }, save: save, toast: toast, cur: function () { return $('room').classList.contains('on') ? cur : ''; } });
   if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname) && /debug/.test(location.search)) document.body.classList.add('dbg');
-  if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__bn = { get S() { return S; }, enterRoom: enterRoom, enterMap: enterMap, PUZZLES: PUZZLES, solveNow: function () { solve(BN.ROOMS[cur]); }, sheep: function () { return sheepData(); }, give: function (k) { if (S.items.indexOf(k) < 0) S.items.push(k); save(); } };
+  if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__bn = { get S() { return S; }, resultImage: resultImage, enterRoom: enterRoom, enterMap: enterMap, PUZZLES: PUZZLES, solveNow: function () { solve(BN.ROOMS[cur]); }, sheep: function () { return sheepData(); }, give: function (k) { if (S.items.indexOf(k) < 0) S.items.push(k); save(); } };
 })();

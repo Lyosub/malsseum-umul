@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark">
+<title>베들레헴의 밤 · 실시간 순위</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { color-scheme: dark; --gold: #e8b75a; --gold2: #ffe2a0; --ink: #f3e6c8; --sub: #b9a88c; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 50% 0%, #1c2754, #070a1c 70%); color: var(--ink); font: 18px/1.5 "Pretendard Variable", Pretendard, system-ui, sans-serif; }
+.wrap { max-width: 1400px; margin: 0 auto; padding: 3vh 3vw; }
+h1 { font: 700 clamp(28px, 4vw, 56px) "Gowun Batang", serif; margin: 0; background: linear-gradient(180deg, #fff6dc, #e8b75a 70%, #b67d2c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.top { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 2vh; }
+.stats { display: flex; gap: 14px; } .stats div { background: rgba(255, 255, 255, .06); border: 1px solid rgba(232, 183, 90, .3); border-radius: 14px; padding: 8px 16px; text-align: center; }
+.stats b { display: block; font-size: clamp(22px, 2.4vw, 34px); color: var(--gold2); }
+.grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2vw; }
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+.card { background: rgba(10, 14, 30, .6); border: 1px solid rgba(232, 183, 90, .3); border-radius: 18px; padding: 16px 20px; }
+.card h2 { font: 700 clamp(18px, 1.8vw, 26px) "Gowun Batang", serif; color: var(--gold); margin: 0 0 10px; }
+.row { display: grid; grid-template-columns: 52px 1fr auto auto; gap: 12px; align-items: center; padding: 8px 4px; border-bottom: 1px solid rgba(255, 255, 255, .06); font-size: clamp(16px, 1.5vw, 22px); }
+.row .n { font: 700 1.2em "Gowun Batang", serif; color: var(--sub); text-align: center; }
+.row:nth-child(2) .n { color: #ffd700; } .row:nth-child(3) .n { color: #d8d8e8; } .row:nth-child(4) .n { color: #e0a070; }
+.row .t { color: var(--gold2); font-variant-numeric: tabular-nums; } .row .s { color: var(--sub); font-size: .8em; }
+.go { display: grid; grid-template-columns: 1fr auto; padding: 6px 4px; border-bottom: 1px solid rgba(255, 255, 255, .06); }
+.go .bar { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .1); margin-top: 4px; grid-column: 1 / 3; overflow: hidden; } .go .bar i { display: block; height: 100%; background: linear-gradient(90deg, #b67d2c, #ffe2a0); }
+.feed { margin-top: 2vh; } .feed p { margin: 4px 0; color: var(--sub); } .feed b { color: var(--gold2); }
+.empty { color: var(--sub); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div><p style="margin:0;color:var(--sub)">말씀우물 성탄 방탈출</p><h1>베들레헴의 밤</h1></div>
+    <div class="stats"><div>지금 접속<b id="on">–</b></div><div>참가자<b id="pl">–</b></div><div>완주<b id="fin">–</b></div></div></div>
+  <div class="grid">
+    <div class="card"><h2>✦ 완주 순위</h2><div id="rank"><p class="empty">아직 완주한 사람이 없어요.</p></div></div>
+    <div class="card"><h2>🕯 지금 달리는 중</h2><div id="going"></div><div class="feed" id="feed"></div></div>
+  </div>
+</div>
+<script src="../assets/supabase-config.js"></script>
+<script>
+(function () {
+  var NAMES = { wellroom: '두루마리 방', gate: '성문', road: '나사렛 길', inn: '여관', kitchen: '여관 부엌', well: '우물', field: '들판', angel: '들판 위 하늘', stable: '마구간', house8: '여드레째 집', climb: '오르는 길', tgate: '성전 문', court: '성전 뜰', porch: '솔로몬 행각', anna: '기도처', magi: '박사들의 천막', archive: '서고', council: '회의실', hall: '접견실', roof: '왕궁 지붕', nightroad: '베들레헴 밤길', innl: '몇 달 뒤 여관', door: '그 집 문', worship: '그 집 안', dream: '요셉의 꿈', pack: '떠날 채비', escape: '골목', dawn: '광야 길', wellgate: '우물 문' };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function fmt(sec) { sec = Math.max(0, sec | 0); var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return (h ? h + '시간 ' : '') + m + '분 ' + (s < 10 ? '0' : '') + s + '초'; }
+  var feed = [];
+  function tick() {
+    fetch(SUPABASE_URL + '/rest/v1/rpc/bn_live', { method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }, body: '{}' })
+      .then(function (r) { return r.json(); }).then(function (L) {
+        if (!L || !L.rank) return;
+        document.getElementById('on').textContent = L.online; document.getElementById('pl').textContent = L.players; document.getElementById('fin').textContent = L.rank.length;
+        document.getElementById('rank').innerHTML = L.rank.length ? L.rank.map(function (r, i) { return '<div class="row"><span class="n">' + (i + 1) + '</span><span>' + esc(r.nick) + '</span><span class="t">' + fmt(r.score) + '</span><span class="s">✦' + r.stars + '</span></div>'; }).join('') : '<p class="empty">아직 완주한 사람이 없어요.</p>';
+        document.getElementById('going').innerHTML = (L.going || []).map(function (g) { return '<div class="go"><span>' + esc(g.nick) + '</span><span class="s">' + g.ch + '장 · 도장 ' + g.stamps + '/12</span><div class="bar"><i style="width:' + (g.stamps / 12 * 100) + '%"></i></div></div>'; }).join('') || '<p class="empty">곧 시작해요</p>';
+        (L.firsts || []).forEach(function (f) { var k = f.room + f.nick; if (feed.some(function (x) { return x.k === k; })) return; feed.unshift({ k: k, t: '✦ <b>' + esc(f.nick) + '</b>님이 「' + (NAMES[f.room] || f.room) + '」을 가장 먼저 통과!' }); });
+        feed = feed.slice(0, 6); document.getElementById('feed').innerHTML = feed.map(function (x) { return '<p>' + x.t + '</p>'; }).join('');
+      }).catch(function () {});
+  }
+  tick(); setInterval(tick, 10000);
+})();
+</script>
+</body>
+</html>
