@@ -34,10 +34,10 @@
     var w = A.el('div', 'name-pz'), slots = [null, null, null, null];
     function glyph(t, r) { return '<span class="pc" style="transform:rotate(' + r * 90 + 'deg)">' + PIECE[t].g + '</span>'; }
     function draw() {
-      w.innerHTML = '<p class="tiny-note">찾은 조각 ' + got.length + '/9 · 조각은 나무 막대라 돌아가 있어요.<br>조각을 누르면 빈칸에 들어가고, 빈칸을 누르면 90°씩 돌아가요(✕는 빼기)</p>';
+      w.innerHTML = '<p class="tiny-note">찾은 조각 ' + got.length + '/9 · 조각은 나무 막대라 돌아가 있어요.<br>조각을 누르면 빈칸에 들어가고, 빈칸을 누르면 90°씩 돌아가요(✕는 빼기).<br>명부는 바르게 세운 글자만 읽어요 — 다 맞춘 뒤에야 적혀요</p>';
       var row = A.el('div', 'name-slots');
       [0, 2].forEach(function (k) {
-        var blk = A.el('div', 'name-blk'); blk.appendChild(A.el('div', 'name-prev', syl(readP(slots[k]), readP(slots[k + 1])) || '?'));
+        var blk = A.el('div', 'name-blk');
         var two = A.el('div', 'name-two');
         [k, k + 1].forEach(function (i) {
           var p = slots[i], b = A.el('button', 'name-slot sm' + (p ? ' on' : ''), p ? glyph(p.t, p.r) : (i % 2 ? '모음' : '자음'));
@@ -63,8 +63,7 @@
         var nm = syl(readP(slots[0]), readP(slots[1])) + syl(readP(slots[2]), readP(slots[3]));
         if (nm === '예수') meaning();
         else if (/^(임|마|누|엘|에|미|이)/.test(nm)) A.wrong('name', '마태복음 1장 23절의 이름을 떠올렸나요? 「천사가 일컬은」 이름은 따로 있어요');
-        else if (nm.length < 2) A.wrong('name', '아직 읽히지 않는 조각이 있다. 막대를 돌려 보아라');
-        else A.wrong('name', '「' + nm + '」 — 명부의 칸이 받아들이지 않는다');
+        else A.wrong('name', '명부의 칸이 받아들이지 않는다');
       };
       w.appendChild(go);
     }
