@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>베들레헴의 밤 — 성탄 방탈출</title>
+<meta name="description" content="로고스교회 중고등부 성탄 온라인 방탈출 「베들레헴의 밤」">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0d1530">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="game.css?v=1">
+</head>
+<body>
+<div id="app">
+  <!-- 첫 화면 -->
+  <section id="title" class="screen on">
+    <div class="title-bg"></div>
+    <div class="title-veil"></div>
+    <div class="title-box">
+      <p class="eyebrow">✦ 로고스교회 중고등부 성탄 방탈출</p>
+      <h1>베들레헴의 밤</h1>
+      <p class="sub">왕은 어디서 태어나셨는가</p>
+      <div class="title-btns">
+        <button class="btn gold" id="btnStart">시작하기</button>
+        <button class="btn ghost" id="btnContinue" hidden>이어 하기</button>
+        <button class="btn ghost" id="btnCode">이어하기 코드 넣기</button>
+      </div>
+      <p class="tiny">세로·가로 모두 돼요 · 소리를 켜면 더 좋아요</p>
+    </div>
+  </section>
+
+  <!-- 조사원 등록 -->
+  <section id="profile" class="screen">
+    <div class="panel profile-panel">
+      <p class="eyebrow">✦ 서기관 견습생 등록</p>
+      <h2>나는 누구인가요?</h2>
+      <div class="avatars">
+        <button class="av" data-av="m"><img src="img/chars/me_m_f0.webp" alt=""><span>남학생</span></button>
+        <button class="av" data-av="f"><img src="img/chars/me_f_f0.webp" alt=""><span>여학생</span></button>
+      </div>
+      <label>닉네임 <input id="inNick" maxlength="10" placeholder="순위에 보일 이름(10자 이내)"></label>
+      <div class="row2">
+        <label>부서 <select id="inDept"><option value="">고르기</option><option>중등부</option><option>고등부</option></select></label>
+        <label>학년 <select id="inGrade"><option value="">고르기</option><option>1</option><option>2</option><option>3</option></select></label>
+      </div>
+      <p class="err" id="profErr"></p>
+      <button class="btn gold block" id="btnProfileOk">베들레헴으로</button>
+    </div>
+  </section>
+
+  <!-- 컷신 -->
+  <section id="cine" class="screen">
+    <div class="cine-layer" id="cineImg"></div>
+    <div class="cine-bars"></div>
+    <div class="cine-text" id="cineText"></div>
+    <button class="cine-skip" id="cineSkip">건너뛰기 ›</button>
+  </section>
+
+  <!-- 지도 -->
+  <section id="map" class="screen">
+    <div class="map-view" id="mapView"><div class="map-world" id="mapWorld"><img id="mapImg" alt=""><div id="spots"></div></div></div>
+  </section>
+
+  <!-- 방 -->
+  <section id="room" class="screen">
+    <div class="room-view" id="roomView"><div class="room-stage" id="roomStage"><div class="room-bg" id="roomBg"></div><div id="roomSpots"></div></div></div>
+    <div class="room-veil"></div>
+    <div class="pan-hint" id="panHint">↔ 끌어서 둘러보기</div>
+    <div class="room-title" id="roomTitle"></div>
+    <button class="btn ghost back" id="btnBack">‹ 지도로</button>
+  </section>
+
+  <!-- 위쪽 상태 줄 -->
+  <header id="hud" hidden>
+    <div class="hud-l"><span class="hud-ch" id="hudCh"></span><span class="hud-time" id="hudTime">00:00</span></div>
+    <div class="hud-r">
+      <span class="hud-pill" title="도장"><img src="img/items/seal.webp" alt="">&nbsp;<b id="hudStamp">0</b>/12</span>
+      <span class="hud-pill" title="숨은 별"><img src="img/items/star.webp" alt="">&nbsp;<b id="hudStar">0</b>/7</span>
+      <button class="hud-btn" id="btnNote" title="수첩"><img src="img/items/tablet.webp" alt=""></button>
+      <button class="hud-btn" id="btnBag" title="가방"><img src="img/items/rope.webp" alt=""></button>
+      <button class="hud-btn" id="btnHint" title="힌트">?</button>
+      <button class="hud-btn" id="btnSound" title="소리">♪</button>
+    </div>
+  </header>
+
+  <!-- 대화 -->
+  <div id="dialog" hidden>
+    <img class="dlg-face" id="dlgFace" alt="">
+    <div class="dlg-box">
+      <div class="dlg-name" id="dlgName"></div>
+      <div class="dlg-text" id="dlgText"></div>
+      <div class="dlg-sub" id="dlgSub"></div>
+      <div class="dlg-ref" id="dlgRef"></div>
+      <span class="dlg-next">▼</span>
+    </div>
+  </div>
+
+  <!-- 창(수첩·가방·퍼즐·힌트) -->
+  <div id="modal" hidden><div class="modal-card"><div class="modal-hd"><b id="modalTitle"></b><button id="modalX">✕</button></div><div class="modal-body" id="modalBody"></div></div></div>
+
+  <div id="toast"></div>
+  <div id="stampFx" hidden><div class="stamp"><span id="stampChar"></span></div></div>
+  </div>
+<script src="story.js?v=1"></script>
+<script src="story-ch1.js?v=1"></script>
+<script src="game.js?v=1"></script>
+</body>
+</html>
