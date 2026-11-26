@@ -215,28 +215,32 @@
     var go = A.el('button', 'btn gold wl-go', '원판 돌리기'); w.appendChild(go);
     go.onclick = function () {
       if (A.locked('dial')) return;
-      if (idx.map(function (k) { return VALS[k]; }).join() === '14,32,55,7,4') { f.dial = 1; A.save(); A.sfx('stamp'); A.toast('철컥 — 문 가운데에 마지막 도장 「다」가 새겨졌다'); setTimeout(function () { stamps(R, A); }, 900); }
+      if (idx.map(function (k) { return VALS[k]; }).join() === '14,32,55,7,4') { f.dial = 1; A.save(); A.sfx('stamp'); A.toast('철컥 — 문 가운데에 마지막 그림 도장 ◎이 새겨졌다'); setTimeout(function () { stamps(R, A); }, 900); }
       else A.wrong('dial', '원판이 제자리로 돌아간다');
     };
     A.modal('우물 문 · 다섯 원판', w);
   };
   var SENT = '하나님이우리와함께계시다';
+  // 열두 그림 도장을 「성경에 적힌 차례」(책 → 장 → 절)로 놓으면 글자가 드러난다
   function stamps(R, A) {
-    var r = A.seedRnd(57), tiles = shuffle(SENT.split('').map(function (ch, i) { return { ch: ch, i: i }; }), r), slots = [], w = A.el('div', 'stamp-pz');
-    function draw() {
-      w.innerHTML = '<p class="tiny-note">열두 도장을 문의 열두 칸에 차례로 찍으면 찢긴 두루마리의 마지막 문장이 이어진다.</p>';
+    var I = BN.STAMP_ICON, keys = Object.keys(I), right = keys.slice().sort(function (a, b) { var x = I[a], y = I[b]; return x[3] - y[3] || x[4] - y[4] || x[5] - y[5]; });
+    BN.__stampOrder = right;
+    var r = A.seedRnd(57), tiles = shuffle(keys, r), slots = [], w = A.el('div', 'stamp-pz');
+    function draw(reveal) {
+      w.innerHTML = '<p class="tiny-note">문의 열두 칸 위에 새겨진 글: 「도장은 받은 차례가 아니라, 새겨진 말씀이 성경에 적힌 차례대로 찍어라.」 (창세기에서 요한계시록 쪽으로, 같은 책이면 장·절 차례)</p>';
       var sl = A.el('div', 'sp-slots');
-      for (var i = 0; i < 12; i++) (function (i) { var t = slots[i]; var b = A.el('button', 'sp-slot' + (t ? ' on' : ''), t ? t.ch : ''); b.onclick = function () { if (t) { slots.splice(i, 1); draw(); } }; sl.appendChild(b); })(i);
+      for (var i = 0; i < 12; i++) (function (i) { var k = slots[i]; var b = A.el('button', 'sp-slot' + (k ? ' on' : ''), k ? (reveal ? '<b class="sp-ch">' + BN.STAMPS[k] + '</b>' : I[k][0] + '<small>' + I[k][2] + '</small>') : ''); b.onclick = function () { if (k && !reveal) { slots.splice(i, 1); draw(); } }; sl.appendChild(b); })(i);
       w.appendChild(sl);
+      if (reveal) return;
       var tr = A.el('div', 'sp-tray');
-      tiles.forEach(function (t) { if (slots.indexOf(t) >= 0) return; var b = A.el('button', 'sp-tile', t.ch); b.dataset.i = t.i; b.onclick = function () { if (slots.length < 12) { slots.push(t); A.tick(); draw(); } }; tr.appendChild(b); });
+      tiles.forEach(function (k) { if (slots.indexOf(k) >= 0) return; var b = A.el('button', 'sp-tile', I[k][0] + '<small>' + I[k][2] + '</small>'); b.dataset.k = k; b.onclick = function () { if (slots.length < 12) { slots.push(k); A.tick(); draw(); } }; tr.appendChild(b); });
       w.appendChild(tr);
       var go = A.el('button', 'btn gold', '문 열기'); w.appendChild(go);
       go.onclick = function () {
         if (A.locked('stamps')) return;
         if (slots.length < 12) return A.toast('열두 칸을 다 채워요');
-        if (slots.map(function (t) { return t.ch; }).join('') === SENT) { A.closeModal(); A.solve(R); }
-        else A.wrong('stamps', '문장이 이어지지 않는다');
+        if (slots.join() === right.join()) { A.sfx('stamp'); draw(true); setTimeout(function () { A.closeModal(); A.solve(R); }, 2600); }
+        else A.wrong('stamps', '도장이 문에 붙지 않는다 — 차례가 다르다');
       };
     }
     draw(); A.modal('열두 도장', w);

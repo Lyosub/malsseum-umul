@@ -223,7 +223,7 @@
       t.innerHTML = '<p class="tiny-note">봉인이 감쪽같다. 시종이 문 앞에서 기다린다. 「다 되었으면 왕께 보고하시오.」</p>';
       var big = A.el('button', 'btn gold block trap-big', '👑 왕께 보고하기'), small = A.el('button', 'trap-small', '…다른 길로');
       big.onclick = function () {
-        A.sfx('trap'); A.S().hintMin += 3; A.save(); A.closeModal();
+        A.sfx('trap'); A.S().hintMin += 3; A.S().f3.king = 1; A.save(); A.closeModal();
         A.talk([['narr', 0, '그들은 꿈에 헤롯에게로 돌아가지 말라 지시하심을 받아 다른 길로 고국에 돌아가니라', '', '마태복음 2:12'], ['asaph', 0, '…아직 늦지 않았다. 함정에 빠졌으니 3분이 더해졌다.']], function () { trap(); });
       };
       small.onclick = function () { A.closeModal(); A.solve(R); };

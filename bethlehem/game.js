@@ -200,6 +200,7 @@
     var box = $('roomSpots'); box.innerHTML = '';
     R.spots.forEach(function (sp) {
       if (sp.act.indexOf('star:') === 0 && S.stars.indexOf(sp.act) >= 0) return;
+      if (sp.act.indexOf('bread:') === 0 && (S.bread || []).indexOf(sp.act) >= 0) return;
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
       if (sp.night) { var hh = new Date().getHours(); if (hh >= 5 && hh < 19) return; }
       if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return; if (sp.act.indexOf('scrap:') === 0 && (S.scraps || []).indexOf(sp.act.slice(6)) >= 0) return; if (sp.act.indexOf('tile:') === 0 && (S.tiles || []).indexOf(sp.act.slice(5)) >= 0) return;
@@ -236,6 +237,7 @@
     else if (a[0] === 'scrap') { S.scraps = S.scraps || []; if (S.scraps.indexOf(a[1]) < 0) { S.scraps.push(a[1]); save(); sfx('ok'); toast('📜 ' + sp.msg + ' (' + S.scraps.length + '/3)'); el.remove(); } }
     else if (a[0] === 'card') { S.cards = S.cards || []; if (S.cards.indexOf(a[1]) < 0) { S.cards.push(a[1]); save(); sfx('ok'); toast('📜 ' + (sp.msg || '명부 조각을 찾았어요') + ' (「' + a[1] + '」)'); el.remove(); } }
     else if (a[0] === 'pick') { S.taken = S.taken || []; if (S.taken.indexOf(sp.id) < 0) { S.taken.push(sp.id); if (S.items.indexOf(a[1]) < 0) S.items.push(a[1]); save(); sfx('ok'); toast((sp.msg || '') + ' — 「' + BN.ITEMS[a[1]][0] + '」을(를) 가방에 넣었어요'); el.remove(); } }
+    else if (a[0] === 'bread') { S.bread = S.bread || []; if (S.bread.indexOf(sp.act) < 0) { S.bread.push(sp.act); save(); sfx('ok'); toast('🍞 길르앗이 흘린 빵 부스러기! (' + S.bread.length + '/12)' + (S.bread.length === 12 ? ' — 다 모았어요!' : '')); el.remove(); } }
     else if (a[0] === 'star') { if (S.stars.indexOf(sp.act) < 0) { S.stars.push(sp.act); var bonus = S.stars.length % 2 === 0; if (bonus) { oilInit(); S.oil[S.ch] += 1; } save(); updHud(); sfx('star'); toast('✦ 숨은 별! 기록 −1분' + (bonus ? ' · 등잔 기름 한 방울을 얻었어요' : '') + ' (' + S.stars.length + '/7)'); el.remove(); } }
   }
 
@@ -267,7 +269,7 @@
     wellscroll: function (R) {
       var got = (S.scraps || []).length;
       if (got < 3) return talk([['keeper', 2, '돌문 가운데가 비어 있어. 두루마리 조각이 ' + (3 - got) + '개 더 있어야 해.']]);
-      var parts = ['마태복음', '1장', '23절'], rr = seedRnd(3), perms = [[2, 0, 1], [1, 2, 0], [2, 1, 0], [0, 2, 1], [1, 0, 2]], order = perms[Math.floor(rr() * 5)].slice(), sel = -1, wrap = el('div', 'scrollfix');
+      var parts = BN.SCROLL_PARTS || ['마태복음', '1장', '23절'], rr = seedRnd(3), perms = [[2, 0, 1], [1, 2, 0], [2, 1, 0], [0, 2, 1], [1, 0, 2]], order = perms[Math.floor(rr() * 5)].slice(), sel = -1, wrap = el('div', 'scrollfix');
       if (order.join() === '0,1,2') order = [2, 0, 1];
       function draw() {
         wrap.innerHTML = '<p class="tiny-note">조각을 두 개 차례로 누르면 자리가 바뀌어요.</p>';
@@ -286,7 +288,8 @@
   function modal(title, html, onClose) { $('modalTitle').textContent = title; $('modalBody').innerHTML = ''; if (typeof html === 'string') $('modalBody').innerHTML = html; else $('modalBody').appendChild(html); $('modal').hidden = false; modal.onClose = onClose; }
   function closeModal() { $('modal').hidden = true; if (modal.onClose) { var f = modal.onClose; modal.onClose = null; f(); } }
   $('modalX').onclick = closeModal;
-  $('btnNote').onclick = function () { modal('서기관의 수첩', (S.code ? '<div class="note" style="text-align:center">이어하기 코드 <b class="code-sm">' + S.code + '</b></div>' : '') + (S.notes.length ? S.notes.map(function (n) { return '<div class="note">' + n.text + '<div class="ref">' + (n.ref || '') + '</div></div>'; }).join('') : '<p class="empty">아직 적은 것이 없어요. 장소를 풀면 단서가 저절로 적혀요.</p>')); };
+  function stampRow() { var I = BN.STAMP_ICON || {}, got = Object.keys(S.rooms).filter(function (k) { return I[k]; }); return got.length ? '<div class="note stamp-row"><b>받은 도장 ' + got.length + '/12</b><div>' + got.map(function (k) { return '<span title="' + I[k][1] + '">' + I[k][0] + '<small>' + I[k][2] + '</small></span>'; }).join('') + '</div></div>' : ''; }
+  $('btnNote').onclick = function () { modal('서기관의 수첩', stampRow() + (S.code ? '<div class="note" style="text-align:center">이어하기 코드 <b class="code-sm">' + S.code + '</b></div>' : '') + (S.notes.length ? S.notes.map(function (n) { return '<div class="note">' + n.text + '<div class="ref">' + (n.ref || '') + '</div></div>'; }).join('') : '<p class="empty">아직 적은 것이 없어요. 장소를 풀면 단서가 저절로 적혀요.</p>')); };
   $('btnBag').onclick = function () { modal('가방', S.items.length ? '<div class="bag">' + S.items.map(function (k) { var it = BN.ITEMS[k]; return '<div class="it"><img src="' + it[1] + '" alt=""><b>' + it[0] + '</b><br><span style="opacity:.7">' + it[2] + '</span></div>'; }).join('') + '</div>' : '<p class="empty">가방이 비어 있어요.</p>'); };
   $('btnHint').onclick = function () { return hintOil(); };
   var __oldHint = function () {
@@ -312,11 +315,11 @@
         if (R.prologue) return afterPrologue();
         if (R.chapterEnd) return chapterEnd(R.chapterEnd);
         if (R.back) { toast('곁가지 이야기를 마쳤어요'); enterRoom(R.back); return; }
-        toast(ch ? '도장 「' + ch + '」을 받았어요 — 지도에 새 길이 열렸어요' : '풀었어요 — 지도에 새 길이 열렸어요'); enterMap();
+        var SI = (BN.STAMP_ICON || {})[cur]; toast(ch ? '도장 「' + (SI ? SI[0] + ' ' + SI[1] + ' · ' + SI[2] : ch) + '」을 받았어요 — 지도에 새 길이 열렸어요' : '풀었어요 — 지도에 새 길이 열렸어요'); enterMap();
       });
     };
     if (!ch) { sfx('ok'); setTimeout(after, 400); return; }
-    $('stampChar').textContent = ch; $('stampFx').hidden = false; sfx('stamp');
+    var SI2 = (BN.STAMP_ICON || {})[cur]; $('stampChar').innerHTML = SI2 ? SI2[0] + '<small>' + SI2[2] + '</small>' : ch; $('stampFx').hidden = false; sfx('stamp');
     setTimeout(function () { $('stampFx').hidden = true; after(); }, 1500);
   }
 
@@ -570,13 +573,22 @@
   }
   function ending() {
     S.finished = S.finished || S.ms; save(); if (BN.netFlush) BN.netFlush();
+    var slides = (BN.ENDING || []).slice(); if (S.stars.length >= 7 && BN.HIDDEN_ENDING) slides.splice(1, 0, BN.HIDDEN_ENDING[0], BN.HIDDEN_ENDING[1]);
     playOpening(function () {
       enterRoom('wellgate');
+      if ((S.bread || []).length >= 12 && BN.COOKIE) { music('bgm21_cookie'); return talk(BN.COOKIE, finalCard); }
+      finalCard();
+    }, slides);
+  }
+  function myBadges() { return (BN.BADGES || []).filter(function (b) { try { return b[3](S); } catch (e) { return false; } }); }
+  function finalCard() {
+    {
       var w = el('div', 'gen-wrap');
       w.innerHTML = '<div style="text-align:center;padding:10px 0"><p class="eyebrow">✦ 완주</p><h2 style="font-family:var(--serif);font-size:32px;margin:4px 0;color:var(--gold2)">베들레헴의 밤</h2><p style="font-family:var(--serif);color:var(--gold);line-height:1.8">「하나님이 우리와 함께 계시다」<br><span style="font-size:12px;color:var(--stone)">마태복음 1:23</span></p><p style="margin-top:14px;font-size:14px">' + S.nick + ' · 기록 <b>' + $('hudTime').textContent + '</b> · 도장 <b>' + $('hudStamp').textContent + '</b>/12 · 숨은 별 <b>' + S.stars.length + '</b>/7</p><p class="gen-help" style="margin-top:10px">끝까지 함께해 주셔서 고맙습니다. 메리 크리스마스!</p></div>';
+      var bd = myBadges(); if (bd.length) { var bx = el('div', 'badges', '<p class="eyebrow" style="text-align:center">받은 배지 ' + bd.length + '/' + BN.BADGES.length + '</p>' + bd.map(function (b) { return '<span class="badge" title="' + b[2] + '">' + b[0] + ' ' + b[1] + '</span>'; }).join('')); w.appendChild(bx); }
       var sv = el('button', 'btn gold block', '📷 결과 이미지 저장(인스타용)'); sv.style.marginTop = '10px'; sv.onclick = resultImage; w.appendChild(sv);
       modal('베들레헴의 밤 · 완주', w);
-    }, BN.ENDING);
+    }
   }
   // 인스타용 결과 이미지(1080×1080): 닉네임·기록·도장·숨은 별·완주 날짜
   function resultImage() {
@@ -589,6 +601,7 @@
       g.fillStyle = '#fff3d6'; g.font = '700 30px "Gowun Batang", serif'; g.fillText('✦ 완주 ✦', 540, 320);
       g.fillStyle = '#ffffff'; g.font = '700 64px "Pretendard Variable", Pretendard, sans-serif'; g.fillText(S.nick, 540, 640);
       g.font = '40px "Pretendard Variable", Pretendard, sans-serif'; g.fillStyle = '#ffe2a0'; var tm = Math.floor(S.ms / 60000) + S.hintMin, rec = (tm >= 60 ? Math.floor(tm / 60) + '시간 ' : '') + (tm % 60) + '분'; g.fillText('기록 ' + rec + '  ·  도장 12/12  ·  숨은 별 ' + S.stars.length + '/7', 540, 720);
+      var bd = myBadges(); if (bd.length) { g.font = '34px sans-serif'; g.fillStyle = '#ffe2a0'; g.fillText(bd.map(function (b) { return b[0]; }).join('  '), 540, 785); }
       g.fillStyle = '#f3e6c8'; g.font = '700 42px "Gowun Batang", serif'; g.fillText('「하나님이 우리와 함께 계시다」', 540, 860);
       g.font = '28px "Gowun Batang", serif'; g.fillStyle = '#c9b48a'; g.fillText('마태복음 1:23', 540, 905);
       var d = new Date(); g.font = '26px "Pretendard Variable", Pretendard, sans-serif'; g.fillStyle = '#b9a88c'; g.fillText(d.getFullYear() + '. ' + (d.getMonth() + 1) + '. ' + d.getDate() + ' · logoswell.kr', 540, 1010);
@@ -614,7 +627,7 @@
   function ripple(e) { var r = el('span', 'tapfx'); r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px'; document.body.appendChild(r); setTimeout(function () { r.remove(); }, 600); }
   var LOCK = {};
   function locked(k) { var t = LOCK[k]; if (t && t.until > Date.now()) { toast('자물쇠가 잠시 굳었어요 — ' + Math.ceil((t.until - Date.now()) / 1000) + '초 뒤에 다시'); return true; } return false; }
-  function wrong(k, msg) { var t = LOCK[k] = LOCK[k] || { n: 0, until: 0 }; t.n++; sfx('no'); if (t.n >= 3) { t.n = 0; t.until = Date.now() + 30000; toast('세 번 틀려서 30초 동안 잠겨요'); } else toast(msg || '아니에요'); }
+  function wrong(k, msg) { S.wrongs = (S.wrongs || 0) + 1; S.wrongBy = S.wrongBy || {}; S.wrongBy[k] = (S.wrongBy[k] || 0) + 1; var t = LOCK[k] = LOCK[k] || { n: 0, until: 0 }; t.n++; sfx('no'); if (t.n >= 3) { t.n = 0; t.until = Date.now() + 30000; toast('세 번 틀려서 30초 동안 잠겨요'); } else toast(msg || '아니에요'); }
   function oilInit() { S.oil = S.oil || {}; if (S.oil[S.ch] === undefined) S.oil[S.ch] = (BN.OIL || {})[S.ch] || 6; }
   function hintOil() {
     if (!cur || !$('room').classList.contains('on')) return toast('장소 안에서 힌트를 볼 수 있어요');

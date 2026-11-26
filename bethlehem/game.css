@@ -545,3 +545,13 @@ body:has(#dialog:not([hidden])) #panHint { opacity: 0 !important; }
   .slide-grid { width: min(330px, calc(100dvh - 170px)); }
   .lg-grid { width: min(300px, calc((100dvh - 190px) * 7 / 6)); }
 }
+
+/* 그림 도장 · 배지 · 힌트 버튼 */
+#stampChar small { display: block; font: 700 13px var(--sans); margin-top: 2px; }
+.stamp-row div { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.stamp-row span { display: grid; justify-items: center; width: 52px; padding: 4px 0; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #c0392b, #7e1818); color: #fff3d6; font-size: 18px; aspect-ratio: 1; align-content: center; }
+.stamp-row small, .sp-tile small, .sp-slot small { display: block; font: 700 8.5px var(--sans); line-height: 1.1; }
+.sp-tile { width: 52px; height: 52px; font-size: 17px; } .sp-slot { font-size: 16px; }
+.sp-ch { font: 700 22px var(--serif); color: #fff3d6; animation: chin .6s both; }
+.badges { text-align: center; margin: 6px 0; } .badge { display: inline-block; margin: 3px; padding: 4px 10px; border-radius: 999px; background: rgba(232, 183, 90, .16); border: 1px solid rgba(232, 183, 90, .4); font-size: 12.5px; color: #ffe2a0; }
+.hud-btn.hint-btn { width: auto; padding: 0 10px; font-size: 13px; font-weight: 700; }

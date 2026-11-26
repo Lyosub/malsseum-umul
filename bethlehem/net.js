@@ -72,6 +72,6 @@
   window.BN.netSolved = function (room) {
     var S = G && G.S(); if (!S || !S.code) return;
     dirty = true; trySync(true);
-    N.solved(S, room).then(function (first) { if (first) { seen[room + '|' + S.nick] = 1; setTimeout(function () { G.toast('🏅 이 장소를 모든 참가자 가운데 가장 먼저 통과했어요!'); }, 3000); } }).catch(function () {});
+    N.solved(S, room).then(function (first) { if (first) { S.firsts = (S.firsts || 0) + 1; G.save(); seen[room + '|' + S.nick] = 1; setTimeout(function () { G.toast('🏅 이 장소를 모든 참가자 가운데 가장 먼저 통과했어요!'); }, 3000); } }).catch(function () {});
   };
 })();
