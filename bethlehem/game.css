@@ -280,3 +280,4 @@ body.dbg .rspot.area::after { content: attr(data-id); position: absolute; left: 
 .cine-paper { background: none; filter: none; isolation: isolate; }
 .cine-paper::before { content: ""; position: absolute; inset: 0; z-index: -1; background: url(img/ui/parchment.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .7)); }
 body:has(#dialog:not([hidden])) #panHint { opacity: 0 !important; }
+.cine-paper .cine-text { font-size: clamp(21px, 3.6vw, 27px); line-height: 1.35; } .cine-paper { width: min(500px, 82vw); }
