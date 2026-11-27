@@ -821,11 +821,20 @@
         if (!opts.length) { ok = false; break; }
         var o = opts[Math.floor(r() * opts.length)]; mv.push(o[0]); cur = o[1]; seen.push(cur);
       }
-      if (ok) { nodes = seen; moves = mv; }
+      if (ok) { var py = 0, px = 0, seenP = { '0,0': 1 }, dup = false; mv.forEach(function (d) { py += DV[d][0]; px += DV[d][1]; if (seenP[py + ',' + px]) dup = true; seenP[py + ',' + px] = 1; }); if (!dup) { nodes = seen; moves = mv; } }   /* 뚜껑 글자판에서 한 칸씩 걸을 때 같은 칸을 두 번 밟지 않는 길만 */
     }
     var east = Math.floor(r() * 4), north = (east + 3) % 4, DIRS = ['북', '동', '남', '서'];
     var answer = moves.map(function (d) { return DIRS[(d - north + 4) % 4]; });
-    S.roadAns = answer.join(' · '); save();   // 사람마다 다른 답 — 힌트 3단계가 보여 준다
+    var WORDS = [['요셉', ['ㅇ', 'ㅛ', 'ㅅ', 'ㅔ', 'ㅂ']], ['다윗', ['ㄷ', 'ㅏ', 'ㅇ', 'ㅟ', 'ㅅ']]], wd = WORDS[Math.floor(r() * WORDS.length)];
+    var GV = { '북': [-1, 0], '동': [0, 1], '남': [1, 0], '서': [0, -1] }, pth = [[0, 0]];
+    answer.forEach(function (a) { var q = pth[pth.length - 1]; pth.push([q[0] + GV[a][0], q[1] + GV[a][1]]); });
+    var mr = Math.min.apply(null, pth.map(function (q) { return q[0]; })), Mr = Math.max.apply(null, pth.map(function (q) { return q[0]; })), mc = Math.min.apply(null, pth.map(function (q) { return q[1]; })), Mc = Math.max.apply(null, pth.map(function (q) { return q[1]; }));
+    var orr = -mr + Math.floor(r() * (5 - (Mr - mr))), occ = -mc + Math.floor(r() * (5 - (Mc - mc)));
+    var POOL = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ', 'ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ', 'ㅐ', 'ㅔ', 'ㅟ', 'ㅢ'];
+    var LID = []; for (var gi = 0; gi < 25; gi++) LID.push(POOL[Math.floor(r() * POOL.length)]);
+    pth.forEach(function (q, k) { LID[(q[0] + orr) * 5 + q[1] + occ] = wd[1][k]; });
+    var LSTART = orr * 5 + occ;
+    S.roadAns = answer.join(' · ') + ' → 뚜껑에서 「' + wd[0] + '」'; save();   // 사람마다 다른 답 — 힌트 3단계가 보여 준다
     var ox = (90 + Math.floor(r() * 80)) * (r() < .5 ? -1 : 1), oy = (50 + Math.floor(r() * 50)) * (r() < .5 ? -1 : 1);
     var land = '<path d="M20 150 Q120 118 170 152 T320 138 T450 168 T590 140" stroke="#7aa3c0" stroke-width="5" fill="none" opacity=".75"/><path d="M380 26 l26 -18 l26 18 z M528 250 l20 -15 l20 15 z M34 352 l22 -16 l22 16 z M214 262 l18 -14 l18 14 z M540 362 l16 -12 l16 12 z" fill="#a08660" opacity=".7"/>';
     var roads = '';
@@ -846,17 +855,17 @@
     var STEP = ['<b>출발</b> → ' + star(10), star(10) + ' → ' + star(7), star(7) + ' → ' + star(5), star(5) + ' → <b>베들레헴</b>'];
     var w = el('div', 'gen-wrap');
     w.innerHTML = '<svg viewBox="0 0 600 400" style="width:100%;border-radius:10px;background:linear-gradient(#efe0bb,#d8c095);touch-action:none" id="rmSvg">' + day + '<g style="opacity:.62">' + night + '</g></svg>' +
-      '<div class="rm-steps" id="rmLock"></div><button class="btn gold block" id="rmOk" style="margin-top:8px">상자 열기</button>';
+      '<div class="rm-lid"><div class="rm-lid-h">상자 뚜껑 글자판 · <b>위가 북</b> · <b>★</b>에서 출발</div><div class="rm-grid">' + LID.map(function (c, k) { return '<span' + (k === LSTART ? ' class="st"' : '') + '>' + c + '</span>'; }).join('') + '</div></div>' +
+      '<div class="rm-ans"><input id="rmWord" maxlength="8" placeholder="뚜껑에서 읽은 말" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn gold" id="rmOk">상자 열기</button></div>';
     modal('두 장의 지도', w);
     var svg = $('rmSvg'), ng = $('ngt'), drag = null;
     function pt(e) { var b2 = svg.getBoundingClientRect(); return { x: (e.clientX - b2.left) * 600 / b2.width, y: (e.clientY - b2.top) * 400 / b2.height }; }
     svg.addEventListener('pointerdown', function (e) { var q = pt(e); drag = { x: q.x, y: q.y, ox: ox, oy: oy }; svg.setPointerCapture(e.pointerId); });
     svg.addEventListener('pointermove', function (e) { if (!drag) return; var q = pt(e); ox = Math.max(-240, Math.min(240, drag.ox + q.x - drag.x)); oy = Math.max(-200, Math.min(200, drag.oy + q.y - drag.y)); ng.setAttribute('transform', 'translate(' + ox + ',' + oy + ')'); });
     svg.addEventListener('pointerup', function () { drag = null; });
-    var lock = [0, 0, 0, 0];
-    lock.forEach(function (_, i3) { var b3 = el('button', 'btn ghost rm-lock', DIRS[0]); b3.onclick = function () { lock[i3] = (lock[i3] + 1) % 4; b3.textContent = DIRS[lock[i3]]; }; $('rmLock').appendChild(b3); });
-    $('rmOk').onclick = function () { if (locked('road')) return; if (lock.every(function (v, i4) { return DIRS[v] === answer[i4]; })) { closeModal(); sfx('ok'); solve(R); } else wrong('road', '찰칵… 열리지 않아요'); };
-    if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BN.__road = { answer: answer, align: function () { ox = 0; oy = 0; ng.setAttribute('transform', 'translate(0,0)'); } };
+
+    $('rmOk').onclick = function () { if (locked('road')) return; var v = ($('rmWord').value || '').replace(/\s/g, ''); if (!v) return toast('뚜껑에서 읽은 말을 적어 주세요'); if (v === wd[0]) { closeModal(); sfx('ok'); solve(R); } else wrong('road', '찰칵… 열리지 않아요'); };
+    if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BN.__road = { answer: answer, word: wd[0], lid: LID, start: LSTART, align: function () { ox = 0; oy = 0; ng.setAttribute('transform', 'translate(0,0)'); } };
   };
 
   // 3 우물 v3은 위쪽(PUZZLES.well 첫 자리)에 있다 — 수정 조각 직접 대기 + 초점

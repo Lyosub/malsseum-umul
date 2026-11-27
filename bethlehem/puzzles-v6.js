@@ -57,13 +57,13 @@
     function play() {
       if (ph > 1 || !w.isConnected) return;
       busy = true; mode = 'listen'; go.hidden = true; w.classList.remove('ch-answer'); pos = PH[ph][0];
-      st((ph + 1) + '소절 / 2 — 한 번만 들려요. ' + (quiet ? '(소리가 꺼져 있어 건반 빛으로 보여 줘요)' : '귀 기울여 들으세요'));
+      st((ph + 1) + '소절 / 2 — 한 번만 들려요. 귀 기울여 들으세요');
       var n = PH[ph][1] - PH[ph][0], heard = 0; notes.textContent = '♪'.repeat(0) + '·'.repeat(n);
       var i = PH[ph][0], my = ++pid;
       (function nx() {
         if (!w.isConnected || my !== pid) return;
         if (i >= PH[ph][1]) { busy = false; setMode('find'); return; }
-        tone(NOTES[seq[i]], true, .5); if (quiet) light(seq[i]);
+        tone(NOTES[seq[i]], true, .5);
         heard++; notes.textContent = '♪'.repeat(heard) + '·'.repeat(n - heard);
         i++; setTimeout(nx, 750);
       })();
@@ -82,7 +82,10 @@
         }
       } else { busy = true; tone(196, false, .3); A.toast('가락이 흩어졌다 — 이 소절을 한 번 더 들려줘요'); setTimeout(play, 1400); }
     }
-    setTimeout(play, 900);
+    if (quiet) {   // 소리를 들어야만 풀 수 있다
+      busy = true; st('이 문제는 소리를 들어야 풀 수 있어요.'); notes.innerHTML = '<button class="btn gold" id="chSnd">🔊 소리 켜고 듣기</button>';
+      notes.querySelector('#chSnd').onclick = function () { var sb = document.getElementById('btnSound'); if (sb && !soundOn()) sb.click(); quiet = !soundOn(); if (BN.duck) BN.duck(true); if (!quiet) setTimeout(play, 500); };
+    } else setTimeout(play, 900);
     if (LOCAL) BN.__chorusGo = function () { go.click(); };
   };
 
