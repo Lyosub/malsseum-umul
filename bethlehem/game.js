@@ -939,7 +939,7 @@
     modal('목자의 상자', w);
     var v = [1, 1, 1, 1];
     v.forEach(function (_, i) { var b = el('button', 'btn ghost', '1'); b.style.cssText = 'font-size:26px;width:58px;height:62px;padding:0'; b.onclick = function () { v[i] = v[i] % 6 + 1; b.textContent = v[i]; }; $('fdL').appendChild(b); });
-    $('fdOk').onclick = function () { if (locked('field')) return; if (!v.every(function (x, i) { return x === code[i]; })) return wrong('field', '딸깍… 아니에요'); sfx('ok'); dialPuzzle(R, w); };
+    $('fdOk').onclick = function () { if (locked('field')) return; if (!v.every(function (x, i) { return x === code[i]; })) return wrong('field', '딸깍… 아니에요'); sfx('ok'); if (BN.noDial) { closeModal(); return solve(R); } dialPuzzle(R, w); };
   };
   function dialPuzzle(R, w) {
     (function () { var mb = $('modalBody'), wy = mb.querySelector('.why'), tk = mb.querySelector('.think'), sen = BN.sen || function (x) { return x; };

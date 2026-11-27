@@ -224,4 +224,46 @@
   H('angel', [ah[0], (ah[1] || '') + ' 노래가 끝나면 숫자 양피지: 「2:5-7」은 누가복음 2장 5절의 일곱째 글자(띄어쓰기 빼고).', function (S) { return (typeof ah[2] === 'function' ? ah[2](S) : ah[2]) + ' · 양피지: 「아기를보러가자」'; }]);
   var sh = BN.HINTS.stable || [];
   H('stable', [sh[0] + ' 돌문 다음은 굴 바닥 돌판 — 눌러 돌려 입구에서 구유까지 홈을 이어요.', sh[1], sh[2]]);
+
+  // ══ 11/27 1장 16문제 안팎으로 줄이기: 30걸음 걷기 · 양 몰기 · 하늘 원판 · 노래 조각 순서를 뺀다 ══
+  // 나사렛 길: 겉 자물쇠 뒤 곧바로 두 장의 지도
+  BN.PZ.walk = function (Rm, A) {
+    var S = A.S(); S.f1 = S.f1 || {};
+    if (S.f1.roadPad) { S.walked = 1; return BN.runPuzzle('roadmap', Rm); }
+    var w = A.el('div', 'gen-wrap');
+    w.innerHTML = '<div class="note seq-row"><span>1</span><span>2</span><span>4</span><span>7</span><span>11</span><b>□</b><span>22</span><span>29</span></div><div class="rm-ans"><input id="sqIn" inputmode="numeric" maxlength="2" placeholder="□에 들어갈 수"><button class="btn gold" id="sqOk">자물쇠 맞추기</button></div>';
+    A.modal('상자 겉 자물쇠', w);
+    w.querySelector('#sqOk').onclick = function () {
+      if (A.locked('road')) return;
+      if ((w.querySelector('#sqIn').value || '').replace(/\D/g, '') !== '16') return A.wrong('road', '찰칵… 겉 자물쇠가 안 열린다');
+      S.f1.roadPad = 1; S.walked = 1; S.notes.push({ text: '이정표의 수 1 · 2 · 4 · 7 · 11 · 16 · 22 · 29 — 늘어나는 폭이 하나씩 커진다. 상자 겉 자물쇠가 열렸다.', ref: '' }); A.save(); A.sfx('ok'); A.closeModal(); A.toast('겉 자물쇠가 풀렸다 — 안에 지도 두 장'); setTimeout(function () { BN.runPuzzle('roadmap', Rm); }, 700);
+    };
+  };
+  // 들판: 당번 기록으로 곧바로 상자 자물쇠(양 몰기 · 하늘 원판 없음)
+  BN.noDial = true;
+  BN.PZ.herd = function (Rm, A) { BN.runPuzzle('field', Rm); };
+  R.field.intro = R.field.intro.map(function (l) { return /흩어진 양부터/.test(l[2]) ? ['asaph', 0, '양을 하나씩 눌러 몇 번 우는지 들어 두어라. 그리고 목자들이 어느 끈 양을 어느 때 맡았는지 적어 둔 것이 있을 게다. 상자가 그것을 물을 게다.'] : l; });
+  R.field.done = R.field.done.map(function (l) { return /네 별이 지팡이 눈금/.test(l[2]) ? ['narr', null, '딸깍, 목자의 상자가 열리는 순간 들판의 바람이 멎는다.'] : l; });
+  R.field.note = { text: '찢긴 당번 기록 두 반쪽(바위 · 길르앗)을 맞춰 끈 색마다 경점을 따지고, 저물 때 → 밤중 → 닭 울 때 → 새벽 차례로 그 끈 양의 울음 횟수를 넣어 목자의 상자를 열었다.', ref: '누가복음 2:8 · 마가복음 13:35' };
+  BN.NEED.herd = { c: ['f_log', 'f_log2'], say: ['asaph', 0, '어느 끈 양을 어느 때 맡았는지 기록이 다 있어야 상자를 열 수 있다. 바위를 살피고, 길르앗에게도 물어보아라.'] };
+  // 하늘: 노래 조각을 줍고 차례로 놓던 것을 빼고 곧바로 가락(말씀은 가락을 칠 때 이어서 보임)
+  R.angel.spots = R.angel.spots.filter(function (sp) { return !/^clue:an\d$/.test(sp.act); });
+  delete BN.NEED.chorus;
+  var chorusY = BN.PZ.chorus;
+  BN.PZ.chorus = function (Rm, A) { var S = A.S(); S.f1 = S.f1 || {}; S.f1.chord = 1; return chorusY(Rm, A); };
+
+  if (BN.HOW) {
+    BN.HOW.road = '길가 이정표 돌 셋의 수로 상자 겉 자물쇠를 열어요. 그다음 밤 지도를 손가락으로 끌어 낮 지도에 겹치고(딱 붙지 않아요), 출발 → 별을 따라 베들레헴까지 네 걸음을 나침반으로 읽어, 뚜껑 글자판의 ★에서 그 방향대로 한 칸씩 가며 밟은 글자를 모아요.';
+    BN.HOW.field = '바위 밑 당번 기록 반쪽과, 길르앗이 주운 반쪽을 모아요. 양을 눌러 끈 색과 울음 횟수를 세고, 기록으로 끈마다 경점을 따져 저물 때 → 밤중 → 닭 울 때 → 새벽 차례로 상자 자물쇠에 넣어요.';
+    BN.HOW.angel = '가락은 두 소절로 한 번씩 소리로만 들려요. 건반을 눌러 소리를 찾아보고(채점 안 함) 「이제 치기」 뒤 들은 차례대로. 노래가 끝나면 숫자 양피지 — 누가복음 2장에서 글자를 뽑아요.';
+  }
+  var rd2 = BN.HINTS.road || [];
+  H('road', ['이정표 돌 셋(왼쪽 아래 · 가운데 · 먼 곳)과 등잔 받침 밑 지도, 기둥의 나침반 그림을 찾아요. 1, 2, 4, 7, 11 — 늘어나는 폭이 1, 2, 3, 4…', rd2[1] || '', rd2[2] || '']);
+  H('field', ['당번 기록은 반으로 찢겨 있어요 — 바위 밑에 반쪽, 나머지 반쪽은 길르앗에게(바위 쪽을 먼저 찾은 뒤 말을 거세요). 양을 하나씩 눌러 끈 색과 울음 횟수를 세어 두세요.',
+    '기록 다섯 줄을 차례로 따져요: 새벽이 될 수 있는 끈부터 정하면 나머지가 하나씩 풀려요. 자물쇠는 저물 때 → 밤중 → 닭 울 때 → 새벽 차례.',
+    function () { var c = function (w) { return BN.ribOfWatch ? BN.ribOfWatch(w)[0] : ''; }; return '저물 때 ' + c(0) + ' · 밤중 ' + c(1) + ' · 닭 울 때 ' + c(2) + ' · 새벽 ' + c(3) + ' → 자물쇠 ' + (BN.fieldCode ? BN.fieldCode() : ''); }]);
+  var ah2 = BN.HINTS.angel || [];
+  H('angel', ['가락은 소리를 켜야 들려요. 한 소절씩 듣고, 건반을 눌러 같은 소리를 찾아요. 노래가 끝나면 숫자 양피지가 내려와요.',
+    '「2:5-7」은 누가복음 2장 5절의 일곱째 글자(띄어쓰기·문장부호 빼고, 개역개정). 일곱 글자를 이으면 말이 돼요.',
+    function (S) { return '가락 건반(왼쪽부터 1~7번): ' + (S.chorusSeq || '가락을 한 번 들으면 보여요') + ' · 양피지: 「아기를보러가자」'; }]);
 })(window.BN);
