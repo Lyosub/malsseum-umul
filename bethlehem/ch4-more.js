@@ -46,6 +46,8 @@
   gate('starstop', 'alley', [['gilead', 1, '골목 돌판이 다 어긋나 있어서 낙타가 못 들어가요. 길부터 이어야겠어요.', '(🪨 골목 돌판)']]);
 
   // ════ 몇 달 뒤 여관 · 손님 셋의 증언 조건표
+  // 11/28 블라인드 풀이: 여관 주 문제를 먼저 풀어도 길르앗 수수께끼(두루마리 조각 B)는 계속 열린다 — 안 그러면 그 집 안에서 막힌다
+  R.innl.spots.forEach(function (sp) { if (sp.act === 'puzzle:riddle4') sp.extra = 1; });
   R.innl.spots.push({ id: 'guests', x: 30, y: 62, w: 16, h: 14, act: 'puzzle:witness', label: '🗣 손님들의 말', extra: 1 });
   var HOUSES = ['파란 문 집(골목 어귀)', '무화과나무 집(가운데)', '우물 곁 집(골목 끝)'], FAM = ['나사렛에서 온 목수 가족', '대장장이네', '토기장이네'], SOLF = [2, 0, 1];   // 목수 → 우물 곁, 대장장이 → 파란 문, 토기장이 → 무화과
   BN.PZ.witness = function (Rm, A) {

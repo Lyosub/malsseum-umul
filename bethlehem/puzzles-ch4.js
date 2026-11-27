@@ -204,7 +204,7 @@
   }
   BN.PZ.jigsaw = function (R, A) {
     var f = F(A); if (f.jigsaw) return A.talk([['asaph', 0, '두루마리 한 쪽이 다시 이어졌다.']]);
-    var have = (f.pc || []).length; if (have < 4) return A.talk([['asaph', 0, '찢긴 두루마리 조각이 ' + have + '개뿐이다. 넷을 다 모아야 맞출 수 있다.']]);
+    var have = (f.pc || []).length; if (have < 4) { var WHERE = { A: '밤길 큰 바위 곁', B: '몇 달 뒤 여관의 길르앗(수수께끼)', C: '그 집 문(약속한 가락)', D: '보배합 바닥(세 예물)' }, miss = ['A', 'B', 'C', 'D'].filter(function (k) { return (f.pc || []).indexOf(k) < 0; }).map(function (k) { return WHERE[k]; }); return A.talk([['asaph', 0, '찢긴 두루마리 조각이 ' + have + '개뿐이다. 넷을 다 모아야 맞출 수 있다.'], ['gilead', 2, '(소곤) 아직 못 받은 데: ' + miss.join(' · ') + '.']]); }   // 11/28 블라인드 풀이: 어디서 빠졌는지 알려 준다
     var r = A.seedRnd(45), cells = shuffle([0, 1, 2, 3], r).map(function (id) { return { id: id, rot: 1 + Math.floor(r() * 3) }; }), sel = -1, src = jigImg(), w = A.el('div', 'jig-pz');
     function draw() {
       w.innerHTML = '';
