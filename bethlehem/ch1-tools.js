@@ -222,7 +222,7 @@
       '「' + c(2) + ' 끈 양은 새벽 양이 아니다.」'];
   };
   var logSpot = { id: 'cl_f_log', x: 26, y: 60, w: 7, h: 9, act: 'clue:f_log', msg: '바위에 목자들의 당번 기록이 긁혀 있다 — 수첩에 적었다' };
-  Object.defineProperty(logSpot, 'note', { get: function () { return '목자의 당번 기록 — ' + BN.fieldLog().join(' '); } });
+  Object.defineProperty(logSpot, 'note', { get: function () { return '목자의 당번 기록 — ' + BN.fieldLog().join(' '); }, configurable: true });
   R.field.spots.push(logSpot);
   BN.NEED = BN.NEED || {};
   BN.NEED.herd = { c: ['f_log'], say: ['asaph', 0, '양을 몰기 전에, 목자들이 어느 끈 양을 어느 때 맡았는지부터 알아야 한다. 바위를 살펴보아라.'] };

@@ -77,7 +77,7 @@
         pos++; notes.textContent = '●'.repeat(pos - PH[ph][0]) + '○'.repeat(PH[ph][1] - pos);
         if (pos === PH[ph][1]) {
           w.querySelector('#chLine').textContent = PARTS.slice(0, PH[ph][1]).join(' '); ph++; busy = true;
-          if (ph > 1) return setTimeout(function () { if (BN.duck) BN.duck(false); A.closeModal(); A.solve(R); }, 1200);
+          if (ph > 1) return setTimeout(function () { if (BN.duck) BN.duck(false); if (BN.afterChorus) return BN.afterChorus(R, A); A.closeModal(); A.solve(R); }, 1200);
           st('좋아요! 다음 소절'); setTimeout(play, 1400);
         }
       } else { busy = true; tone(196, false, .3); A.toast('가락이 흩어졌다 — 이 소절을 한 번 더 들려줘요'); setTimeout(play, 1400); }

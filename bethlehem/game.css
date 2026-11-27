@@ -903,3 +903,35 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 .gr-notch b { position: absolute; left: 50%; top: -2px; transform: translateX(-50%); color: #b3261e; font-size: 14px; }
 .gr-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
 .gr-turn { font-size: 12.5px; color: #f3e4bf; opacity: .85; }
+/* 1장 v3: 원근 · 수열 · 돈궤 · 깜박임 · 책 암호 · 돌판 길 */
+.ps-box { position: relative; border-radius: 12px; overflow: hidden; touch-action: none; border: 2px solid #2e1d0c; }
+.ps-box svg { width: 100%; display: block; }
+.ps-hint { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); font-size: 12px; color: #f3e4bf; background: rgba(0, 0, 0, .45); padding: 2px 8px; border-radius: 8px; pointer-events: none; }
+.seq-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; font: 800 20px var(--serif); }
+.seq-row span, .seq-row b { min-width: 38px; text-align: center; padding: 6px 4px; border-radius: 8px; background: rgba(255, 233, 168, .1); border: 1px solid rgba(232, 183, 90, .4); }
+.seq-row b { color: #ffe27a; border-style: dashed; }
+.cb-lid, .bk-scroll, .fl-tab { display: flex; flex-direction: column; gap: 4px; }
+.cb-lid b, .bk-scroll b, .fl-tab b { color: #ffe9a8; }
+.cb-lid span { font-family: var(--serif); font-size: 15.5px; line-height: 1.6; }
+.fl-box { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0 6px; border-radius: 12px; background: radial-gradient(circle at 50% 30%, #2a1d10, #0d0904 70%); }
+.fl-lamp { width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle, #5a3a14 0 40%, transparent 70%); transition: background .08s, box-shadow .08s; }
+.fl-lamp.on { background: radial-gradient(circle, #fffbe0 0 22%, #ffd36a 45%, rgba(255, 160, 40, .4) 65%, transparent 72%); box-shadow: 0 0 40px 14px rgba(255, 200, 90, .5); }
+.fl-cap { min-height: 1.3em; margin: 0; font-size: 12px; color: #f3e4bf; opacity: .8; }
+.fl-tab { font-family: ui-monospace, monospace; font-size: 13px; line-height: 1.7; letter-spacing: .5px; }
+.bk-code { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+.bk-code i { font-style: normal; font: 800 16px var(--serif); padding: 4px 8px; border-radius: 6px; background: #f3e4bf; color: #3a2410; }
+.bk-scroll small { opacity: .75; font-size: 12px; }
+.pt-wrap { position: relative; padding: 0 34px; }
+.pt-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; padding: 6px; border-radius: 10px; background: #1c140c; }
+.pt-t { aspect-ratio: 1; padding: 0; border: 0; border-radius: 6px; background: radial-gradient(circle at 35% 30%, #6e5a44, #3d3023); cursor: pointer; }
+.pt-t svg { width: 100%; height: 100%; display: block; }
+.pt-t polyline { fill: none; stroke: #1a120a; stroke-width: 22; stroke-linecap: round; }
+.pt-t.lit polyline { stroke: #ffd36a; filter: drop-shadow(0 0 6px rgba(255, 200, 90, .9)); }
+.pt-in, .pt-out { position: absolute; transform: translateY(-50%); font-size: 12px; color: #ffe9a8; }
+.pt-in { left: 0; } .pt-out { right: 4px; font-size: 20px; }
+.fl-tab small { opacity: .8; font-size: 12px; }
+.fl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; margin-top: 4px; font-family: var(--sans); }
+.fl-grid span { display: flex; align-items: center; gap: 4px; }
+.fl-grid em { font-style: normal; font-weight: 800; width: 14px; color: #ffe9a8; }
+.fl-grid i { display: inline-block; height: 7px; border-radius: 4px; background: #ffd36a; }
+.fl-grid i.d { width: 7px; } .fl-grid i.l { width: 20px; }

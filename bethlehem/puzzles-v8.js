@@ -66,7 +66,7 @@
     var W = 300, H = 300, cv = A.el('canvas', 'herd-cv'); cv.width = 600; cv.height = 600;
     var w = A.el('div', 'herd-pz');
     w.appendChild(A.el('p', 'tiny-note howto', '목자들은 밤을 넷으로 나눠 지켰다. 양마다 맨 끈 색이 어느 경점인지 「목자의 당번 기록」으로 따져, 그 시각이 붙은 우리로 몰아넣으세요. 양은 손가락을 피해 달아나고, 틀린 우리에 들어가면 뛰쳐나와요.'));
-    if (BN.fieldLog && (S.clues || {}).f_log) w.appendChild(A.el('div', 'note fd-log', '<b>📜 목자의 당번 기록</b>' + BN.fieldLog().map(function (l) { return '<span>' + l + '</span>'; }).join('')));
+    var FL = BN.fieldLogParts ? BN.fieldLogParts(S) : []; if (FL.length) w.appendChild(A.el('div', 'note fd-log', '<b>📜 목자의 당번 기록</b>' + FL.map(function (l) { return '<span>' + l + '</span>'; }).join('')));
     w.appendChild(cv); var st = A.el('p', 'aim-read', ''); w.appendChild(st);
     var PW = 66, PH = 78, GATE = 30, pens = PEN_ORDER.map(function (b, i) { return { x: 9 + i * 72, b: b, n: 0, flash: 0 }; });
     var sheep = [], fin = null, alive = true, ctx = cv.getContext('2d'), r = A.seedRnd(73), pops = [];

@@ -239,7 +239,7 @@
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
       if (sp.night) { var hh = new Date().getHours(); if (hh >= 5 && hh < 19) return; }
       if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return; if (sp.act.indexOf('scrap:') === 0 && (S.scraps || []).indexOf(sp.act.slice(6)) >= 0) return; if (sp.act.indexOf('tile:') === 0 && (S.tiles || []).indexOf(sp.act.slice(5)) >= 0) return;
-        b.className = 'rspot area'; b.dataset.id = sp.id; b.dataset.k = sp.act.split(':')[0]; if (S.rooms[id] && !/^puzzle:(chart|journal|guards)$/.test(sp.act) && !(sp.act === 'puzzle:guards' && !(S.f1 || {}).guards)) b.classList.add('done'); b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.label) b.innerHTML = '<span class="door-lbl spot-lbl">' + sp.label + '</span>'; if (sp.act.indexOf('room:') === 0) { var RT = BN.ROOMS[sp.act.split(':')[1]]; b.innerHTML = '<span class="door-lbl">🚪 ' + ((RT && RT.title) || '') + (sp.lock && !BN.used(sp.id, sp.lock) ? ' 🔒' : '') + '</span>'; } if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="ribbon" style="background:' + sheepRib(+sp.act.split(':')[1])[1] + '"></span>';
+        b.className = 'rspot area'; b.dataset.id = sp.id; b.dataset.k = sp.act.split(':')[0]; if (S.rooms[id] && !/^puzzle:(chart|journal|guards)$/.test(sp.act) && !sp.extra && !(sp.act === 'puzzle:guards' && !(S.f1 || {}).guards)) b.classList.add('done'); b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.label) b.innerHTML = '<span class="door-lbl spot-lbl">' + sp.label + '</span>'; if (sp.act.indexOf('room:') === 0) { var RT = BN.ROOMS[sp.act.split(':')[1]]; b.innerHTML = '<span class="door-lbl">🚪 ' + ((RT && RT.title) || '') + (sp.lock && !BN.used(sp.id, sp.lock) ? ' 🔒' : '') + '</span>'; } if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="ribbon" style="background:' + sheepRib(+sp.act.split(':')[1])[1] + '"></span>';
         b.onclick = function (e) { ripple(e); act(R, sp, b); }; box.appendChild(b); return; }
       if (sp.fig) { b.className = 'rspot fig'; b.style.setProperty('--h', (sp.h / 100 * 1080) + 'px'); b.innerHTML = '<img src="img/chars/' + sp.fig + '.webp" alt="">' + (sp.name ? '<span class="lbl">' + sp.name + '</span>' : '') + (sp.gname ? '<span class="door-lbl gname">' + sp.gname + '</span>' : ''); b.dataset.id = sp.id; b.onclick = function () { act(R, sp, b); }; box.appendChild(b); return; }
       b.innerHTML = sp.hidden ? '<span class="glint" style="opacity:.25;width:22px;height:22px"></span>' : '<span class="glint"></span><span class="lbl">' + sp.name + '</span>';
@@ -275,7 +275,7 @@
     var real = window.event && window.event.isTrusted;   // 실제 손가락 누름만(시험 프로그램의 누름은 통과)
     if (real && (Date.now() - dlgClosedAt < 450 || !$('dialog').hidden)) return;
     if (held) return useOn(R, sp, el);
-    if (/^puzzle:/.test(sp.act) && !/^puzzle:(chart|journal|guards)$/.test(sp.act) && S.rooms[cur] && !PT) { var nt = R.note && R.note.text; return toast('✔ 이미 풀었어요' + (nt ? ' — 수첩에 적혀 있어요' : '')); }
+    if (/^puzzle:/.test(sp.act) && !/^puzzle:(chart|journal|guards)$/.test(sp.act) && !sp.extra && S.rooms[cur] && !PT) { var nt = R.note && R.note.text; return toast('✔ 이미 풀었어요' + (nt ? ' — 수첩에 적혀 있어요' : '')); }
     var a = sp.act.split(':');
     if (a[0] === 'talk') { var tl = (R.talks[a[1]] || []).slice(), ch = BN.clueHint && BN.clueHint(cur); if (ch && sp.fig && /^(asaph|gilead|keeper)_/.test(sp.fig)) tl.push(/^gilead/.test(sp.fig) ? ['gilead', 1, '(소곤) 이 근처에 뭔가 ' + ch.n + '개쯤 더 떨어져 있는 것 같아요. 아까 ' + ch.places[0] + ' 쪽에서 뭐가 반짝였어요!'] : /^keeper/.test(sp.fig) ? ['keeper', 0, '여기 아직 못 찾은 것이 ' + ch.n + '개 있어. ' + ch.places[0] + ' 쪽을 잘 봐.'] : ['asaph', 0, '이곳에 아직 못 찾은 것이 ' + ch.n + '개 있다. ' + ch.places[0] + ' 쪽을 잘 살펴보아라.']); talk(tl); }
     else if (a[0] === 'clue') { if (sp.need && !has(sp.need)) return BN.darkSay ? talk(BN.darkSay(S, sp.need)) : toast('너무 어두워 잘 보이지 않는다'); S.clues = S.clues || {}; if (!S.clues[a[1]]) { S.clues[a[1]] = 1; if (sp.note) S.notes.push({ text: sp.note, ref: sp.ref || '' }); save(); sfx('ok'); toast('🔎 ' + (sp.msg || '단서를 찾았어요') + (sp.note ? ' — 수첩에 적었어요' : '')); el.remove(); if (sp.say) talk(sp.say); } }
@@ -508,7 +508,7 @@
     if (!BN.used('wellin', 'lamp')) return talk([['gilead', 1, '너무 깜깜해서 아무것도 안 보여요. 비출 게 있으면 우물 안으로 내려 볼 텐데…'], ['narr', null, '(가방에서 물건을 골라 「손에 들기」 한 뒤 우물을 누르면 쓸 수 있다)']]);
     // 11/27: 수정 조각을 직접 끌어 글씨 위에 대고, 「가까이 ↔ 멀리」로 초점을 맞춰야 읽힌다(초점 자리는 사람마다 다름)
     var rr = seedRnd(31), FOC = 22 + Math.floor(rr() * 56), M = 2.3, TX = 40, TY = 63, glass = has('lens');
-    var TXT = '<div class="wl-t" style="position:absolute;left:' + TX + '%;top:' + TY + '%;transform:translate(-50%,-50%) rotate(-4deg);font-family:var(--serif);color:#f3d79a;white-space:nowrap">' + (BN.WELL_TXT || '줄은 열넷의 반 규빗') + '</div>';
+    var MIR = BN.WELL_MIRROR && !BN.used('wellin', 'mirror'), TXT = '<div class="wl-t" style="position:absolute;left:' + TX + '%;top:' + TY + '%;transform:translate(-50%,-50%) rotate(-4deg)' + (MIR ? ' scaleX(-1)' : '') + ';font-family:var(--serif);color:#f3d79a;white-space:nowrap">' + (BN.WELL_TXT || '줄은 열넷의 반 규빗') + '</div>';
     var w = el('div', 'gen-wrap');
     w.innerHTML = '<div style="position:relative;border-radius:12px;overflow:hidden;touch-action:none" id="wlBox"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.55)"><div id="wlBase">' + TXT + '</div>' +
       '<canvas id="wlDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas>' +
@@ -935,7 +935,7 @@
   PUZZLES.field = function (R) {
     var d = sheepData(), code = [0, 1, 2, 3].map(function (b) { return d.n[d.bell.indexOf(b)]; }), w = el('div', 'gen-wrap');
     w.innerHTML = '<div style="display:flex;gap:8px;justify-content:center" id="fdL"></div><button class="btn gold block" id="fdOk" style="margin-top:10px">상자 열기</button>';
-    if (BN.fieldLog && (S.clues || {}).f_log) w.insertAdjacentHTML('afterbegin', '<div class="note fd-log"><b>📜 목자의 당번 기록</b>' + BN.fieldLog().map(function (l) { return '<span>' + l + '</span>'; }).join('') + '</div>');
+    var FL = BN.fieldLogParts ? BN.fieldLogParts(S) : []; if (FL.length) w.insertAdjacentHTML('afterbegin', '<div class="note fd-log"><b>📜 목자의 당번 기록</b>' + FL.map(function (l) { return '<span>' + l + '</span>'; }).join('') + '</div>');
     modal('목자의 상자', w);
     var v = [1, 1, 1, 1];
     v.forEach(function (_, i) { var b = el('button', 'btn ghost', '1'); b.style.cssText = 'font-size:26px;width:58px;height:62px;padding:0'; b.onclick = function () { v[i] = v[i] % 6 + 1; b.textContent = v[i]; }; $('fdL').appendChild(b); });
@@ -995,6 +995,7 @@
     if (!BN.used('search', 'lamp')) return talk([['gilead', 1, '아무것도 안 보여요… 굴 안이 너무 깜깜해요.'], ['narr', null, '(불빛이 있어야 한다)']]);
     S.f1 = S.f1 || {};
     if (!S.f1.door) return mgDoor(R);
+    if (!S.f1.path && BN.cavePath) return BN.cavePath(R, API, function () { mgCave(R); });
     mgCave(R);
   };
   var DOOR = [['돌아온 숫자 — 다윗의 집 명부에 떠오른 수', 14], ['다윗이 그리워한 우물, 두레박 줄의 길이(규빗)', 7], ['두 손님의 등잔에 똑같이 나눈 기름(되)', 4], ['그 밤, 여관에 남은 빈방', 0]];
@@ -1006,7 +1007,7 @@
     $('mgOpen').onclick = function () {
       if (locked('stable')) return;
       if (!v.every(function (x, i) { return x === DOOR[i][1]; })) return wrong('stable', '돌문이 꿈쩍도 하지 않는다');
-      S.f1.door = 1; save(); sfx('ok'); closeModal(); toast('쿠르릉… 돌문이 옆으로 밀려난다'); setTimeout(function () { mgCave(R); }, 900);
+      S.f1.door = 1; save(); sfx('ok'); closeModal(); toast('쿠르릉… 돌문이 옆으로 밀려난다'); setTimeout(function () { PUZZLES.manger(R); }, 900);
     };
   }
   function caveLayout() {
