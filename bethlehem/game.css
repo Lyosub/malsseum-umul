@@ -802,3 +802,10 @@ html, body { word-break: keep-all; overflow-wrap: break-word; }
 .room-stage .rspot .bleat-dots { position: absolute; left: 50%; top: 100%; z-index: 6; transform: translateX(-50%); margin-top: calc(3px * var(--inv, 1)); padding: calc(2px * var(--inv, 1)) calc(7px * var(--inv, 1)); border-radius: calc(10px * var(--inv, 1)); background: rgba(9, 14, 34, .78); font-size: calc(12px * var(--inv, 1)); letter-spacing: calc(3px * var(--inv, 1)); color: #ffe27a; text-shadow: 0 0 calc(6px * var(--inv, 1)) rgba(255, 210, 120, .9); white-space: nowrap; pointer-events: none; transition: opacity .7s; }
 .room-stage .rspot .bleat-dots:empty { display: none; }
 .room-stage .rspot .bleat-dots.fade { opacity: 0; }
+/* 하늘 원판: 맞춘 채 2초 그대로 */
+.fd-hold { margin-top: 8px; text-align: center; font-size: 13px; color: #ffe9a8; opacity: 0; transition: opacity .2s; }
+.fd-hold i { display: block; height: 6px; margin: 0 auto 4px; width: 70%; border-radius: 3px; background: rgba(255, 233, 168, .18); position: relative; overflow: hidden; }
+.fd-hold i::after { content: ''; position: absolute; inset: 0; width: 0; background: linear-gradient(90deg, #e8b75a, #ffe9a8); }
+.fd-hold.on { opacity: 1; }
+.fd-hold.on i::after { animation: fdFill 2s linear forwards; }
+@keyframes fdFill { to { width: 100%; } }

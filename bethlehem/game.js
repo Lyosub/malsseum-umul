@@ -21,6 +21,7 @@
 
   // ── 소리: 장면마다 BGM을 1.2초 겹쳐 바꿈(꺼짐 기억) · 효과 음악은 짧게
   var soundOn = localStorage.getItem('bethlehem.sound') !== '0', curTrack = null, curAud = null;
+  BN.duck = function (on) { BN.ducked = !!on; if (curAud) curAud.volume = on ? 0.04 : 0.55; };
   function music(name) {
     if (name === undefined) name = curTrack;
     if (!name) return;
@@ -29,7 +30,7 @@
     var old = curAud, a = new Audio('audio/' + name + '.mp3'); a.loop = !/opening|ending|cookie/.test(name); a.volume = 0;
     a.play().catch(function () {}); curAud = a; curTrack = name;
     var t0 = performance.now();
-    (function fade() { var k = Math.min(1, (performance.now() - t0) / 1200); a.volume = 0.55 * k; if (old) old.volume = Math.max(0, old.volume * (1 - k)); if (k < 1) requestAnimationFrame(fade); else if (old) old.pause(); })();
+    (function fade() { var k = Math.min(1, (performance.now() - t0) / 1200); a.volume = (BN.ducked ? 0.04 : 0.55) * k; if (old) old.volume = Math.max(0, old.volume * (1 - k)); if (k < 1) requestAnimationFrame(fade); else if (old) old.pause(); })();
   }
   $('btnSound').onclick = function () { soundOn = !soundOn; localStorage.setItem('bethlehem.sound', soundOn ? '1' : '0'); if (soundOn) { var n = curTrack; curTrack = null; music(n); } else if (curAud) curAud.pause(); toast(soundOn ? '소리 켬' : '소리 끔'); };
   var STING = { ok: 's1_success', stamp: 's2_stamp', chapter: 's3_chapter', trap: 's4_trap', star: 's5_star', first: 's6_first' };
@@ -888,8 +889,20 @@
       A.map(function (a) { var ang = (a + off - 90) * Math.PI / 180; return '<line x1="' + (Math.cos(ang) * 132).toFixed(1) + '" y1="' + (Math.sin(ang) * 132).toFixed(1) + '" x2="' + (Math.cos(ang) * 156).toFixed(1) + '" y2="' + (Math.sin(ang) * 156).toFixed(1) + '" stroke="#e8b75a" stroke-width="5" stroke-linecap="round"/>'; }).join('') + '</svg>';
     var rot = 0, start = null, svg = $('fdSky'), disc = $('fdDisc'), solved = false;
     svg.addEventListener('pointerdown', function (e) { start = { x: e.clientX, rot: rot }; svg.setPointerCapture(e.pointerId); });
-    svg.addEventListener('pointermove', function (e) { if (!start || solved) return; rot = (start.rot + (e.clientX - start.x) * .6) % 360; if (rot < 0) rot += 360; disc.setAttribute('transform', 'rotate(' + rot + ')'); if (Math.abs(((rot - off) % 360 + 540) % 360 - 180) < 4) { solved = true; disc.setAttribute('transform', 'rotate(' + off + ')'); sfx('ok'); setTimeout(function () { closeModal(); solve(R); }, 900); } });
-    svg.addEventListener('pointerup', function () { start = null; });
+    var hold = null, bar = el('div', 'fd-hold', '<i></i><span>별이 눈금에 앉았다… 그대로 두세요</span>'); w.appendChild(bar);
+    function aligned() { return Math.abs(((rot - off) % 360 + 540) % 360 - 180) < 4; }
+    function check() {
+      if (solved) return;
+      var ok = aligned() && !start;
+      if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BN.__dialAligned = aligned();
+      if (!ok) { if (hold) { clearTimeout(hold); hold = null; } bar.classList.remove('on'); return; }
+      if (hold) return;
+      bar.classList.remove('on'); void bar.offsetWidth; bar.classList.add('on');
+      hold = setTimeout(function () { if (!aligned() || start) { hold = null; bar.classList.remove('on'); return; } solved = true; disc.setAttribute('transform', 'rotate(' + off + ')'); sfx('ok'); setTimeout(function () { closeModal(); solve(R); }, 700); }, 2000);
+    }
+    svg.addEventListener('pointermove', function (e) { if (!start || solved) return; rot = (start.rot + (e.clientX - start.x) * .6) % 360; if (rot < 0) rot += 360; disc.setAttribute('transform', 'rotate(' + rot + ')'); if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BN.__dialAligned = aligned(); if (hold && !aligned()) check(); });
+    svg.addEventListener('pointerup', function () { start = null; check(); });
+    svg.addEventListener('pointerdown', function () { if (hold) { clearTimeout(hold); hold = null; bar.classList.remove('on'); } });
   }
 
   // 6 천사 v2: 건반에는 무늬만. 누르면 조각이 잠깐 보이고 들림. 순서대로

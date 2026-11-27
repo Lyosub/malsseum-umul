@@ -33,27 +33,33 @@
   var PARTS = ['지극히 높은 곳에서는', '하나님께', '영광이요', '땅에서는', '하나님이 기뻐하신', '사람들 중에', '평화로다'];
   var NOTES = [392, 440, 494, 523, 587, 659, 784], GLYPH = ['𝅘𝅥', '♪', '♫', '♬', '𝄞', '𝄢', '𝅗𝅥'];
   BN.PZ.chorus = function (R, A) {
-    var r = A.seedRnd(61), seq = [], w = A.el('div', 'gen-wrap'), round = 1, pos = 0, busy = false;
+    // 11/27: 일곱 마디로 길어지던 것을 두 번으로 — 가락을 한 번만 들려주고, 기억했다가 똑같이 친다(틀리면 그 소절을 다시 한 번 들려줌)
+    var r = A.seedRnd(61), seq = [], w = A.el('div', 'gen-wrap'), PH = [[0, 3], [3, 7]], ph = 0, pos = 0, busy = true;
     for (var i = 0; i < 7; i++) seq.push(Math.floor(r() * 7));
     BN.__chorus = seq; A.S().chorusSeq = seq.map(function (i) { return i + 1; }).join(' '); A.save();
-    w.innerHTML = '<div class="note" id="chLine" style="font-family:var(--serif);font-size:17px;min-height:2.6em"></div><p class="tiny-note" id="chSt"></p><div class="ch-keys" id="chK"></div><button class="btn ghost" id="chAgain">다시 듣기</button>';
-    A.modal('천군의 노래', w);
+    w.innerHTML = '<div class="note" id="chLine" style="font-family:var(--serif);font-size:17px;min-height:2.6em"></div><p class="tiny-note" id="chSt"></p><div class="ch-keys" id="chK"></div>';
+    if (BN.duck) BN.duck(true);
+    A.modal('천군의 노래', w, function () { if (BN.duck) BN.duck(false); });
     var keys = [];
     GLYPH.forEach(function (g, k) { var b = A.el('button', 'gcard ch-key', '<span style="font-size:26px">' + g + '</span>'); b.dataset.k = k; b.onclick = function () { press(k); }; w.querySelector('#chK').appendChild(b); keys.push(b); });
     var pid = 0;
     function flash(k, ok) { if (!keys[k]) return; keys[k].classList.add('lit'); tone(NOTES[k], ok !== false, .5); setTimeout(function () { keys[k].classList.remove('lit'); }, 380); }
+    function st(t) { w.querySelector('#chSt').textContent = t; }
     function play() {
-      if (round > 7 || !w.isConnected) return;
-      busy = true; pos = 0; w.querySelector('#chSt').textContent = round + '마디째 — 잘 들으세요';
-      var i = 0, my = ++pid; (function nx() { if (!w.isConnected || my !== pid) return; if (i >= round) { busy = false; w.querySelector('#chSt').textContent = round + '마디째 — 따라 누르세요'; return; } flash(seq[i]); i++; setTimeout(nx, 650); })();
+      if (ph > 1 || !w.isConnected) return;
+      busy = true; pos = PH[ph][0]; st((ph + 1) + '소절 / 2 — 한 번만 들려요. 잘 들으세요');
+      var i = PH[ph][0], my = ++pid; (function nx() { if (!w.isConnected || my !== pid) return; if (i >= PH[ph][1]) { busy = false; st((ph + 1) + '소절 / 2 — 기억한 대로 누르세요'); return; } flash(seq[i]); i++; setTimeout(nx, 700); })();
     }
     function press(k) {
       if (busy) return;
-      if (k === seq[pos]) { flash(k); pos++; if (pos === round) { w.querySelector('#chLine').textContent = PARTS.slice(0, round).join(' '); round++; if (round > 7) { busy = true; return setTimeout(function () { A.closeModal(); A.solve(R); }, 1200); } setTimeout(play, 900); } }
-      else { keys[k].classList.add('lit'); tone(196, false, .3); setTimeout(function () { keys[k].classList.remove('lit'); }, 300); A.toast('가락이 흩어졌다 — 이 마디를 다시'); setTimeout(play, 900); }
+      if (k === seq[pos]) {
+        flash(k); pos++;
+        if (pos === PH[ph][1]) { w.querySelector('#chLine').textContent = PARTS.slice(0, PH[ph][1]).join(' '); ph++; busy = true;
+          if (ph > 1) return setTimeout(function () { if (BN.duck) BN.duck(false); A.closeModal(); A.solve(R); }, 1200);
+          st('좋아요! 다음 소절'); setTimeout(play, 1300); }
+      } else { busy = true; keys[k].classList.add('lit'); tone(196, false, .3); setTimeout(function () { keys[k].classList.remove('lit'); }, 300); A.toast('가락이 흩어졌다 — 이 소절을 한 번 더 들려줘요'); setTimeout(play, 1400); }
     }
-    w.querySelector('#chAgain').onclick = function () { if (!busy) play(); };
-    setTimeout(play, 600);
+    setTimeout(play, 900);
   };
 
   // ── 2장 계단: 시편 「성전에 올라가는 노래」 돌판 여덟을 밀어 편 번호 순서로(3×3)
