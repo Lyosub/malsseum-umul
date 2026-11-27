@@ -980,3 +980,14 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 .wx-btns { display: flex; flex-direction: column; gap: 6px; }
 .wx-btns .btn { display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 8px 12px; }
 .wx-btns i { width: 16px; height: 16px; border-radius: 50%; display: inline-block; } .wx-btns b { margin-left: auto; color: #ffe27a; }
+/* 4장 v2 */
+.wt-say { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; line-height: 1.5; } .wt-say b { color: #ffe9a8; }
+.wt-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.wt-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; } .wt-row b { font-size: 13px; color: #f3e4bf; } .wt-row .btn { flex: none; min-width: 150px; font-size: 12.5px; padding: 8px 6px; }
+.ld-row { display: grid; grid-template-columns: 40px auto 1fr; align-items: center; gap: 8px; margin-bottom: 10px; } .ld-row > b { font-size: 12.5px; color: #ffe9a8; }
+.ld-lid { display: flex; gap: 1px; padding: 4px; border-radius: 6px; background: #8a6a3a; }
+.ld-h { display: grid; grid-template-columns: repeat(2, 12px); grid-auto-rows: 12px; gap: 2px; }
+.ld-h i { background: #e9d6a8; border-radius: 2px; } .ld-h i.on { background: #3a2410; }
+.ld-h.empty { width: 26px; height: 54px; border: 1px dashed #e9d6a8; }
+.ld-opts { display: flex; gap: 4px; flex-wrap: wrap; } .ld-o { padding: 3px; border-radius: 6px; border: 1.5px solid rgba(232, 183, 90, .4); background: #8a6a3a; } .ld-o.sel { border-color: #ffe27a; box-shadow: 0 0 8px rgba(255, 220, 120, .6); }
+.ld-o .ld-h { grid-template-columns: repeat(2, 9px); grid-auto-rows: 9px; }
