@@ -132,6 +132,12 @@
   var btn = document.createElement('button'); btn.className = 'jr-btn'; btn.innerHTML = '📖<span></span>'; btn.title = '퀘스트 저널'; btn.onclick = function () { journal('q'); };
   var hl = document.querySelector('.hud-l'); if (hl) hl.appendChild(btn);
   var card = document.createElement('div'); card.className = 'jr-float'; card.hidden = true; document.body.appendChild(card);
+  var pill = document.createElement('button'); pill.className = 'jr-pill'; pill.hidden = true; document.body.appendChild(pill); pill.onclick = function () { journal('q'); };
+  setInterval(function () {   // 방 안: 찾을 단서가 남았으면 「🔎 이곳의 단서 n/m」
+    var k = U.cur(), n = k ? needIn(k) : null, S = U.S();
+    if (!k || !n || n[0] >= n[1] || (S && S.rooms[k])) { pill.hidden = true; return; }
+    pill.textContent = '🔎 이곳의 단서 ' + n[0] + ' / ' + n[1]; pill.hidden = false;
+  }, 700);
   var sig = '';
   setInterval(function () {
     var S = U.S(); if (!S || !S.opening && !S.rooms.wellroom) { card.hidden = true; return; }

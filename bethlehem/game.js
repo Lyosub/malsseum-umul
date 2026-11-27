@@ -234,7 +234,7 @@
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
       if (sp.night) { var hh = new Date().getHours(); if (hh >= 5 && hh < 19) return; }
       if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return; if (sp.act.indexOf('scrap:') === 0 && (S.scraps || []).indexOf(sp.act.slice(6)) >= 0) return; if (sp.act.indexOf('tile:') === 0 && (S.tiles || []).indexOf(sp.act.slice(5)) >= 0) return;
-        b.className = 'rspot area'; b.dataset.id = sp.id; b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
+        b.className = 'rspot area'; b.dataset.id = sp.id; b.dataset.k = sp.act.split(':')[0]; if (S.rooms[id] && !/^puzzle:(chart|journal)$/.test(sp.act)) b.classList.add('done'); b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
         b.onclick = function (e) { ripple(e); act(R, sp, b); }; box.appendChild(b); return; }
       if (sp.fig) { b.className = 'rspot fig'; b.style.setProperty('--h', (sp.h / 100 * 1080) + 'px'); b.innerHTML = '<img src="img/chars/' + sp.fig + '.webp" alt="">' + (sp.name ? '<span class="lbl">' + sp.name + '</span>' : ''); b.onclick = function () { act(R, sp, b); }; box.appendChild(b); return; }
       b.innerHTML = sp.hidden ? '<span class="glint" style="opacity:.25;width:22px;height:22px"></span>' : '<span class="glint"></span><span class="lbl">' + sp.name + '</span>';
@@ -267,6 +267,9 @@
   BN.hasClue = function (k) { return !!(S.clues || {})[k]; };
   BN.reRoom = function () { if (cur && $('room').classList.contains('on')) enterRoom(cur); };
   function act(R, sp, el) {
+    var real = window.event && window.event.isTrusted;   // 실제 손가락 누름만(시험 프로그램의 누름은 통과)
+    if (real && (Date.now() - dlgClosedAt < 450 || !$('dialog').hidden)) return;
+    if (/^puzzle:/.test(sp.act) && !/^puzzle:(chart|journal)$/.test(sp.act) && S.rooms[cur] && !PT) { var nt = R.note && R.note.text; return toast('✔ 이미 풀었어요' + (nt ? ' — 수첩에 적혀 있어요' : '')); }
     var a = sp.act.split(':');
     if (a[0] === 'talk') talk(R.talks[a[1]]);
     else if (a[0] === 'clue') { if (sp.need && !has(sp.need)) return toast('너무 어두워 잘 보이지 않는다'); S.clues = S.clues || {}; if (!S.clues[a[1]]) { S.clues[a[1]] = 1; if (sp.note) S.notes.push({ text: sp.note, ref: sp.ref || '' }); save(); sfx('ok'); toast('🔎 ' + (sp.msg || '단서를 찾았어요') + (sp.note ? ' — 수첩에 적었어요' : '')); el.remove(); if (sp.say) talk(sp.say); } }
@@ -287,10 +290,11 @@
   var dqTotal = 0;
   var BIBLE_WHO = { angel: 1, simeon: 1, anna: 1, magi: 1, herod: 1, scribes: 1, shep: 1, mary: 1, joseph: 1, priest: 1 };
   function talk(lines, done) { dq = lines.slice(); dqTotal = dq.length; dqDone = done || null; $('dialog').hidden = false; nextLine(); }
-  function endTalk() { if (typing) { clearInterval(typing); typing = null; } dq = []; $('dialog').hidden = true; var d = dqDone; dqDone = null; if (d) d(); }
+  var dlgClosedAt = 0;
+  function endTalk() { if (typing) { clearInterval(typing); typing = null; } dq = []; $('dialog').hidden = true; dlgClosedAt = Date.now(); var d = dqDone; dqDone = null; if (d) d(); }
   function nextLine() {
     if (typing) { finishType(); return; }
-    var L = dq.shift(); if (!L) { $('dialog').hidden = true; var d = dqDone; dqDone = null; if (d) d(); return; }
+    var L = dq.shift(); if (!L) { $('dialog').hidden = true; dlgClosedAt = Date.now(); var d = dqDone; dqDone = null; if (d) d(); return; }
     var who = BN.CHARS[L[0]] || { name: L[0] }, face = who.face;
     if (face === 'me') face = 'me_' + S.av;
     var fe = $('dlgFace'); if (face) { fe.src = 'img/chars/' + face + '_f' + (L[1] || 0) + '.webp'; fe.style.visibility = 'visible'; } else fe.style.visibility = 'hidden';
