@@ -13,7 +13,7 @@
     var S = A.S(); if ((S.f3 || {}).astro) return A.talk([['asaph', 0, '기구는 이미 오늘 밤에 맞춰 두었다.']]);
     var w = A.el('div', 'scope-pz'), head = null, beta = null, okT = 0, done = false, got = false, on = false;
     var tape = DIR8.concat(DIR8).concat(DIR8).map(function (d, i) { return '<span style="left:' + (i * 60) + 'px">' + d + '</span>'; }).join('');
-    w.innerHTML = '<ol class="scope-steps"><li>「기구 들기」를 누르고 폰을 세워 화면을 봐요.</li><li>몸을 돌려 아래 <b>방향 띠</b>의 ▼를 일지로 알아낸 <b>오늘 밤의 방향</b>에.</li><li>폰 윗부분을 들어 오른쪽 <b>높이 눈금</b>을 오늘 밤의 높이에.</li><li>별이 원 안에 들어오면 <b>2초</b> 그대로.</li></ol>' +
+    w.innerHTML = '<ol class="scope-steps howto"><li>「기구 들기」를 누르고 폰을 세워 화면을 봐요.</li><li>몸을 돌려 아래 <b>방향 띠</b>의 ▼를 일지로 알아낸 <b>오늘 밤의 방향</b>에.</li><li>폰 윗부분을 들어 오른쪽 <b>높이 눈금</b>을 오늘 밤의 높이에.</li><li>별이 원 안에 들어오면 <b>2초</b> 그대로.</li></ol>' +
       '<div class="scope-row"><div class="scope"><div class="scope-sky"></div><div class="scope-star">✦</div><div class="scope-ring"></div></div>' +
       '<div class="scope-alt"><div class="sa-bar">' + [90, 75, 60, 45, 30, 15, 0].map(function (v) { return '<i style="bottom:' + (v / 90 * 100) + '%">' + v + '°</i>'; }).join('') + '<b class="sa-me"></b></div><small>높이</small></div></div>' +
       '<div class="scope-tape"><div class="st-in">' + tape + '</div><em>▼</em></div><p class="aim-read">센서를 켜 주세요</p>' +
@@ -65,7 +65,7 @@
     var S = A.S(); if (S.herded) return BN.runPuzzle('field', R);
     var W = 300, H = 300, cv = A.el('canvas', 'herd-cv'); cv.width = 600; cv.height = 600;
     var w = A.el('div', 'herd-pz');
-    w.appendChild(A.el('p', 'tiny-note', '목자들은 밤을 넷으로 나눠 지켰다. 양마다 단 방울 무늬를 보고, 그 경점에 맞는 시각이 붙은 우리로 몰아넣으세요. 양은 손가락을 피해 달아나고, 틀린 우리에 들어가면 뛰쳐나와요.'));
+    w.appendChild(A.el('p', 'tiny-note howto', '목자들은 밤을 넷으로 나눠 지켰다. 양마다 단 방울 무늬를 보고, 그 경점에 맞는 시각이 붙은 우리로 몰아넣으세요. 양은 손가락을 피해 달아나고, 틀린 우리에 들어가면 뛰쳐나와요.'));
     w.appendChild(cv); var st = A.el('p', 'aim-read', ''); w.appendChild(st);
     var PW = 66, PH = 78, GATE = 30, pens = PEN_ORDER.map(function (b, i) { return { x: 9 + i * 72, b: b, n: 0, flash: 0 }; });
     var sheep = [], fin = null, alive = true, ctx = cv.getContext('2d'), r = A.seedRnd(73), pops = [];
@@ -136,7 +136,7 @@
   BN.PZ.stealth = function (R, A) {
     var C = 40, W = SC * C, H = SR * C, cv = A.el('canvas', 'st-cv'); cv.width = W * 2; cv.height = H * 2;
     var w = A.el('div', 'st-pz');
-    w.appendChild(A.el('p', 'tiny-note', '노란 칸은 지금 등불이 비치는 곳. 움직인 칸이 비치면 들켜요. 순찰꾼이 등불을 어떻게 돌리는지는 순찰 기록(수첩)을 보세요. 몇 수 앞을 내다보고 ✦ 성문까지!'));
+    w.appendChild(A.el('p', 'tiny-note howto', '노란 칸은 지금 등불이 비치는 곳. 움직인 칸이 비치면 들켜요. 순찰꾼이 등불을 어떻게 돌리는지는 순찰 기록(수첩)을 보세요. 몇 수 앞을 내다보고 ✦ 성문까지!'));
     w.appendChild(cv);
     var pad = A.el('div', 'st-pad'); pad.innerHTML = '<button data-d="N">▲</button><div><button data-d="W">◀</button><button data-d="0" class="wait">⏸ 기다리기</button><button data-d="E">▶</button></div><button data-d="S">▼</button>';
     w.appendChild(pad);

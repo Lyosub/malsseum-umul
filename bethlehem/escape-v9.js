@@ -15,7 +15,7 @@
     var r = A.seedRnd(parts.length * 7 + title.length), sh = parts.map(function (p, i) { return i; }), got = [], w = A.el('div', 'ord-pz');
     for (var i = sh.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)), t = sh[i]; sh[i] = sh[j]; sh[j] = t; }
     function draw() {
-      w.innerHTML = '<p class="tiny-note">' + intro + '</p><div class="ord-line">' + got.map(function (k) { return '<span>' + parts[k] + '</span>'; }).join(' ') + '<i>▏</i></div>';
+      w.innerHTML = '<p class="tiny-note howto">' + intro + '</p><div class="ord-line">' + got.map(function (k) { return '<span>' + parts[k] + '</span>'; }).join(' ') + '<i>▏</i></div>';
       var box = A.el('div', 'ord-btns');
       sh.forEach(function (k) { if (got.indexOf(k) >= 0) return; var b = A.el('button', 'ord-b', parts[k]); b.onclick = function () { got.push(k); A.tick && A.tick(); draw(); check(); }; box.appendChild(b); });
       w.appendChild(box); var rs = A.el('button', 'btn ghost', '↺ 다시'); rs.onclick = function () { got = []; draw(); }; w.appendChild(rs);
@@ -39,7 +39,7 @@
   // 부엌: 주인의 쪽지 + 등잔으로 비춰야 보이는 그릇 눈금
   addClues('kitchen', [['k_note', 60, 63, 6, 8, '식탁보 밑 쪽지', '여관 주인의 쪽지 — 「기름 여덟 되를 두 손님께 똑같이 나눠 드릴 것.」'], ['k_marks', 68, 50, 7, 9, '등잔을 비추자 그릇 바닥에 눈금이 보인다', '그릇 바닥 눈금 — 큰 단지 8되 · 중간 그릇 5되 · 작은 그릇 3되', 'lamp']]);
   need('oiljugs', ['k_note', 'k_marks'], LOOK);
-  BN.PZ.oiljugs = (function (orig) { return function (R, A) { orig(R, A); var n = document.querySelector('.jug-pz .tiny-note'); if (n) n.innerHTML = '쪽지대로 나눠야 한다. 그릇을 누르고 다른 그릇을 누르면 붓는다(가득 차거나 빌 때까지).'; var mo = new MutationObserver(function () { var t = document.querySelector('.jug-pz .tiny-note'); if (t && /여관 주인/.test(t.innerHTML)) t.innerHTML = '쪽지대로 나눠야 한다. 그릇을 누르고 다른 그릇을 누르면 붓는다(가득 차거나 빌 때까지).'; }); var w = document.querySelector('.jug-pz'); if (w) mo.observe(w, { childList: true }); }; })(BN.PZ.oiljugs);
+  BN.PZ.oiljugs = (function (orig) { return function (R, A) { orig(R, A); var n = document.querySelector('.jug-pz .tiny-note'); if (n) { n.classList.add('howto'); } if (n) n.innerHTML = '쪽지대로 나눠야 한다. 그릇을 누르고 다른 그릇을 누르면 붓는다(가득 차거나 빌 때까지).'; var mo = new MutationObserver(function () { var t = document.querySelector('.jug-pz .tiny-note'); if (t && /여관 주인/.test(t.innerHTML)) { t.classList.add('howto'); } if (t && /여관 주인/.test(t.innerHTML)) t.innerHTML = '쪽지대로 나눠야 한다. 그릇을 누르고 다른 그릇을 누르면 붓는다(가득 차거나 빌 때까지).'; }); var w = document.querySelector('.jug-pz'); if (w) mo.observe(w, { childList: true }); }; })(BN.PZ.oiljugs);
   // 천사: 천군 노래 조각 일곱을 들판에서 찾아 눅 2:14 차례로 → 가락 따라 하기
   var PARTS = ['지극히 높은 곳에서는', '하나님께', '영광이요', '땅에서는', '하나님이 기뻐하신', '사람들 중에', '평화로다'];
   addClues('angel', [[10, 58], [22, 50], [34, 76], [52, 86], [68, 84], [90, 62], [80, 50]].map(function (p, i) { return ['an' + (i + 1), p[0], p[1], 5, 7, '빛나는 노래 조각 「' + PARTS[(i * 3) % 7] + '」']; }));
@@ -58,12 +58,17 @@
   need('scale', ['w1', 'w3', 'w9', 'w27'], ['asaph', 0, '저울추가 하나도 없구나. 장사꾼이 어디 흘려 두었을 게다.']);
   // 행각: 기다리기는 빼고, 기둥마다 숨은 찬송 조각 넷 → 차례 → 소리 내어 읽기
   addClues('porch', [['pr1', 8, 50, 5, 8, '기둥 밑동에 새긴 글'], ['pr2', 35, 40, 5, 8, '기둥 그늘의 글'], ['pr3', 75, 30, 5, 8, '등잔 걸이의 글'], ['pr4', 95, 60, 4, 8, '벽 끝의 글']]);
-  need('wait', ['pr1', 'pr2', 'pr3', 'pr4'], ['asaph', 0, '저 노인의 찬송이 행각 기둥 곳곳에 새겨져 있다더구나.']);
+  need('wait', ['pr1', 'pr2', 'pr3', 'pr4'], ['asaph', 0, '저 노인의 찬송이 행각 기둥 곳곳에 새겨졌다. 하나도 빠짐없이 찾아보아라.']);
+  BN.NEED.wait.when = function (S) { return !!S.waitOk; };
+  BN.ROOMS.porch.spots.forEach(function (s) { if (/^cl_pr/.test(s.id)) s.when = function (S) { return !!S.waitOk; }; });
+  var wait0 = BN.PZ.wait;
   BN.PZ.wait = function (R, A) {
-    order(A, '시므온의 찬송', '기둥에서 찾은 찬송 넷. 시므온이 찬송한 차례대로 누르세요.', BN.SIMEON, 'wait', function () {
-      if (BN.PZ.readAloud) setTimeout(function () { BN.PZ.readAloud(BN.SIMEON.join(' '), '시므온의 찬송 · 소리 내어', function () { A.solve(R); }, A); }, 300); else A.solve(R);
-    });
+    var S = A.S(), miss = function () { return ['pr1', 'pr2', 'pr3', 'pr4'].some(function (k) { return !(S.clues || {})[k]; }); };
+    // 90초를 다 기다리면 찬송이 기둥에 새겨진다 → 조각 넷을 찾아야 찬송 차례로 넘어간다
+    var A2 = Object.assign({}, A, { talk: function (lines, done) { A.talk(lines, function () { if (miss()) { if (BN.reRoom) BN.reRoom(); A.talk([['asaph', 0, '보았느냐. 저 노인의 찬송이 기둥 곳곳에 새겨졌다. 하나도 빠짐없이 찾아보아라.']]); } else if (done) done(); }); } });
+    wait0(R, A2);
   };
+  // 행각은 원래 문제 그대로(90초 기다리기 → 찬송 차례 → 소리 내어 읽기) — 기둥의 찬송 조각 넷을 찾아야 열린다
 
   // ════ 3장 ════
   addClues('council', [['sv1', 6, 30, 5, 8, '등잔 든 시종이 속삭인다', '회의실 — 등잔 든 시종: 「동문으로는 들이지 않소.」'], ['sv2', 40, 25, 5, 8, '문지기 시종이 속삭인다', '회의실 — 문지기 시종: 「서문이오.」'], ['sv3', 62, 52, 5, 8, '향 피우는 시종이 속삭인다', '회의실 — 향 피우는 시종: 「문지기 시종의 말은 거짓이오.」'], ['sv4', 96, 40, 4, 8, '물 긷는 시종이 속삭인다', '회의실 — 물 긷는 시종: 「남문도 북문도 아니오.」']]);
@@ -84,7 +89,7 @@
       for (var j = 0; j < HJ[i]; j++) svg += '<ellipse cx="' + (x0 + 3 + j * 4.5) + '" cy="' + (y0 - 1.4) + '" rx="1.5" ry="1.6" fill="#a8693a"/>';
       svg += '<rect class="ss-door" x="' + (X(i) - 1.4) + '" y="57" width="2.8" height="5"/></g>';
     }
-    w.innerHTML = svg + '</svg><p class="tiny-note">별이 지붕들 위를 옮겨 다니며 쉬어 간다. 별이 「머물러 선」 그 집을 누르세요.</p>';
+    w.innerHTML = svg + '</svg><p class="tiny-note howto">별이 지붕들 위를 옮겨 다니며 쉬어 간다. 별이 「머물러 선」 그 집을 누르세요.</p>';
     w.querySelectorAll('.ss-h').forEach(function (g) {
       g.onclick = function () { if (A.locked('starstop')) return; if (+g.dataset.i === HFIN) { run++; A.closeModal(); A.solve(R); } else A.wrong('starstop', '별은 그 지붕에서 잠깐 쉬었을 뿐이다 — 단서와 맞지 않는다'); };
     });
@@ -118,7 +123,7 @@
   BN.PZ.knock = function (R, A) {
     var pat = (KN.gold + KN.frank + KN.myrrh).split(''); BN.__knock = pat.join('');
     var w = A.el('div', 'knock-pz'), got = [], t0 = 0;
-    w.appendChild(A.el('p', 'tiny-note', '수첩에 적은 무늬를 떠올려요. ━ 은 꾹 눌렀다 떼고, • 은 톡.'));
+    w.appendChild(A.el('p', 'tiny-note howto', '수첩에 적은 무늬를 떠올려요. ━ 은 꾹 눌렀다 떼고, • 은 톡.'));
     var dots = A.el('div', 'kn-dots'); w.appendChild(dots);
     var pad = A.el('button', 'kn-door', '🚪<small>누르고 있으면 길게</small>'); w.appendChild(pad);
     var row = A.el('div', 'disc-btns'), clr = A.el('button', 'btn ghost', '처음부터'), go = A.el('button', 'btn gold', '다 두드렸다'); row.appendChild(clr); row.appendChild(go); w.appendChild(row);
@@ -154,6 +159,40 @@
   setHints('door', ['약속한 가락이 세 곳에 나뉘어 새겨져 있어요: 왼쪽 창틀, 오른쪽 낙타 안장, 문 앞 상자 뚜껑.', '세 무늬에 예물 이름이 붙어 있어요. 박사들이 예물을 드린 차례(마 2:11)대로 이어 두드려요. ━ 은 꾹(0.4초 넘게), • 은 톡.', '황금 ━ • ━ → 유향 • • → 몰약 ━ ━ (모두 일곱 번)']);
   setHints('pack', ['짐 다섯이 집 안에 흩어져 있어요: 왼쪽 큰 항아리, 오른쪽 벽의 그물 바구니, 베틀, 탁자 위, 왼쪽 아래 바구니.', '안장 주머니 4×4 = 16칸, 짐도 16칸어치. 물부대는 맨 아래 줄, 강보는 맨 위 줄.', '맨 위: 담요 담요 빵 강보 / 둘째: 담요 담요 빵 빵 / 셋째: 보배합 보배합 보리 보리 / 맨 아래: 물부대 물부대 물부대 등잔']);
   setHints('escape', ['골목 지도의 왼쪽 위 벽을 살펴요 — 순찰 기록이 긁혀 있어요.', '나귀가 한 칸 가거나 기다릴 때마다 등불이 오른쪽(시계 방향)으로 한 칸 돌아요. 가려는 칸이 다음 차례에 비칠지 미리 세어 보고, 비칠 것 같으면 기다려요.', '기다림 2 → ▶▶ → ▲ → 기다림 → ▲ → ◀◀ → ▲▲▲ → ▶▶ → ▼ → ▶▶ → ▲ → ▶ → 기다림 → ▶ → ▲▲▲']);
+
+  // ════ 화면에서 「하는 법」 설명을 뺐으니(howto) 힌트 1단계 맨 앞에 하는 법을 둔다 ════
+  setHints('porch', ['행각을 둘러보다 기둥 사이를 눌러요.', '「이스라엘의 위로를 기다리는 자」(눅 2:25). 기다림이 열쇠예요. 찬송이 새겨지면 누가복음 2장 29~32절 차례로 잇고, 소리 내어 끝까지 읽어요.', '기다리기 90초(아무것도 누르지 않기) → 기둥 곳곳의 찬송 넷 찾기 → 「주재여」 → 「내 눈이」 → 「이는 만민 앞에」 → 「이방을 비추는 빛이요」 → 소리 내어 읽기']);
+  var HOW = {
+    wellroom: '두루마리 조각 둘을 차례로 누르면 자리가 바뀌어요.',
+    gate: '명부 조각을 눌러 고른 뒤 아래 빈칸을 누르면 놓여요(놓인 조각을 누르면 돌아가요).',
+    road: '지도 상자를 누르면 먼저 30걸음 걷기(폰을 들고 걷거나 「한 걸음씩 누르기」). 그다음 밤 지도를 끌어 낮 지도에 겹치고, 자물쇠 네 칸은 누를 때마다 방향이 바뀌어요.',
+    well: '우물 안을 손가락으로 문질러 등잔으로 비춰요. 수정 조각을 대면 작은 글씨가 커져요. 막대로 줄 길이를 정해 끌어올려요.',
+    inn: '손님을 누르고 방을 누르면 들어가요(방을 다시 누르면 빠져요).',
+    kitchen: '그릇을 누르고 다른 그릇을 누르면 부어요(가득 차거나 빌 때까지).',
+    field: '상자를 누르면 양 몰기 — 손가락을 양 뒤에 대면 양이 피해 달아나요(입구는 우리 아래 가운데). 숫자 자물쇠는 양이 우는 횟수(방에서 양을 눌러 세요), 별 원판은 돌려서 맞춰요.',
+    angel: '주운 조각은 차례로 누르고, 가락은 「다시 듣기」로 들은 뒤 같은 건반을 눌러요(소리를 끄면 건반 빛을 보세요).',
+    stable: '화면을 문질러 등잔으로 비추고, 찾은 것을 눌러요. 기름이 떨어지면 기름 쟁반을 폰을 기울여(또는 손가락으로 끌어) 등잔까지.',
+    house8: '조각을 빈칸에 넣고 눌러 돌려요(ㅏ를 돌리면 ㅜ).',
+    climb: '빈 자리 옆 돌판을 누르면 밀려 들어가요. 그다음 폰을 기울여(또는 화면을 끌어) 새장을 굴려요 — 벽에 세게 부딪히면 처음부터.',
+    tgate: '문의 숫자를 맞춰 열어요.',
+    court: '동전은 저울 양쪽에 올려 달아 봐요. 큰 저울은 추를 누를 때마다 「추 쪽 → 새장 쪽 → 내림」으로 바뀌어요.',
+    anna: '등잔 받침의 자물쇠를 맞춰요.',
+    magi: '기구: 「기구 들기」 뒤 폰을 세워 들고 몸을 돌려, 아래 방향 띠와 오른쪽 높이 눈금을 맞추면 별이 원 안에 들어와요 — 2초 그대로(안 되면 「바퀴로」: 바깥 고리는 방향, 안쪽 바늘은 높이). 거울: 칸을 누를 때마다 거울 방향이 바뀌어요.',
+    archive: '바구니 상자는 누를 때마다 옮겨져요. 원판은 돌려서 바깥·안쪽 고리가 마주 보는 글자를 짝으로 읽어요.',
+    council: '바퀴 둘(들일 문 · 거짓말한 사람)을 돌려 정해요.',
+    hall: '쪽지는 거울에 비춰 읽고, 편지와 반지는 하나씩 골라요.',
+    roof: '별 둘을 차례로 누르면 선이 이어져요(다시 누르면 지워져요).',
+    nightroad: '별이 머물러 선 집을 누르면 돼요.',
+    innl: '아래 그림에서 달라진 곳을 누르고, 나온 글자를 차례로 눌러 이어요.',
+    door: '문을 꾹(0.4초 넘게) 누르면 길게, 톡 누르면 짧게.',
+    worship: '카드는 두 장씩 뒤집어 짝을 찾아요. 예물은 예물을 누르고 그림자를 눌러요. 경배는 폰을 화면이 바닥을 향하게 엎어 5초(안 되면 10초 누르기). 직소는 두 조각을 차례로 누르면 바뀌고, 같은 조각을 두 번 누르면 돌아가요.',
+    dream: '꿈 카드를 골라 차례로 놓아요. 등잔은 마이크에 「후—」 길게 불어요(안 되면 5초 누르기).',
+    pack: '짐을 고른 뒤 칸을 누르면 그 칸이 짐의 왼쪽 위가 돼요. 넣은 짐을 누르면 빠져요.',
+    escape: '▲▼◀▶로 한 칸씩, ⏸로 기다려요(나귀 옆 칸을 눌러도 돼요). 노란 칸에 들어가면 들켜요.',
+    dawn: '베들레헴에서 손가락을 떼지 말고 애굽까지 그어요. 물이 떨어지면 처음부터. 다 그으면 방울을 세 번 — 폰을 흔들거나(아이폰은 「흔들기 켜기」) 방울을 눌러요.',
+    wellgate: '원판을 돌려 맞추고, 도장을 차례로 눌러 놓아요.'
+  };
+  (function () { var done = []; Object.keys(HOW).forEach(function (k) { [BN.HINTS && BN.HINTS[k], BN.HINTS_CH1 && BN.HINTS_CH1[k]].forEach(function (arr) { if (!arr || done.indexOf(arr) >= 0) return; done.push(arr); arr[0] = '하는 법 — ' + HOW[k] + ' ／ ' + arr[0]; }); }); })();
 
   // 시험용: 모든 단서 한꺼번에
   if (LOCAL) BN.__allClues = function () { var C = {}; Object.keys(BN.NEED).forEach(function (k) { BN.NEED[k].c.forEach(function (c) { C[c] = 1; }); }); return C; };

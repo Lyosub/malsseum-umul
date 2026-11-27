@@ -130,7 +130,7 @@
       return A.modal('성전에 올라가는 노래', pw);
     }
     var W = 300, H = 420, cv = A.el('canvas', 'climb-cv'); cv.width = W * 2; cv.height = H * 2;
-    var w = A.el('div', 'climb-wrap'); w.appendChild(A.el('p', 'tiny-note', '폰을 기울이거나 화면을 끌어 새장을 옮겨요. 벽에 세게 부딪히면 비둘기가 놀라 처음부터!'));
+    var w = A.el('div', 'climb-wrap'); w.appendChild(A.el('p', 'tiny-note howto', '폰을 기울이거나 화면을 끌어 새장을 옮겨요. 벽에 세게 부딪히면 비둘기가 놀라 처음부터!'));
     w.appendChild(cv); var st = A.el('p', 'tiny-note climb-st', ''); w.appendChild(st);
     // 계단 미로(가로선 벽, 틈이 엇갈림)
     var walls = [[0, 350, 190, 362], [240, 350, 300, 362], [0, 270, 60, 282], [110, 270, 300, 282], [0, 190, 200, 202], [250, 190, 300, 202], [0, 110, 40, 122], [95, 110, 300, 122], [140, 282, 152, 312], [200, 122, 212, 152]];   // 짧은 기둥 두 개는 아래로 돌아가야 함
@@ -208,7 +208,7 @@
     function sum() { return WTS.reduce(function (a, k) { return a + (st[k] === 1 ? k : st[k] === 2 ? -k : 0); }, 0); }
     function draw(tiltDeg, msg) {
       var L = WTS.filter(function (k) { return st[k] === 2; }), Rr = WTS.filter(function (k) { return st[k] === 1; });
-      w.innerHTML = '<p class="tiny-note">왼쪽: 비둘기 새장 · 오른쪽: 추. 추를 누르면 「추 쪽 → 새장 쪽 → 내림」. 저울에 올릴 기회 <b>' + left + '</b>번</p>' +
+      w.innerHTML = '<p class="tiny-note howto">왼쪽: 비둘기 새장 · 오른쪽: 추. 추를 누르면 「추 쪽 → 새장 쪽 → 내림」. 저울에 올릴 기회 <b>' + left + '</b>번</p>' +
         '<svg viewBox="0 0 300 150" class="scale-svg"><line x1="150" y1="20" x2="150" y2="130" stroke="#c9a15a" stroke-width="5"/><g transform="rotate(' + tiltDeg + ' 150 30)"><line x1="40" y1="30" x2="260" y2="30" stroke="#e8b75a" stroke-width="5"/><line x1="55" y1="30" x2="55" y2="80" stroke="#bda"/><line x1="245" y1="30" x2="245" y2="80" stroke="#bda"/><path d="M25 80 h60 l-10 16 h-40z" fill="#8a6a3a"/><path d="M215 80 h60 l-10 16 h-40z" fill="#8a6a3a"/><text x="55" y="74" font-size="22" text-anchor="middle">🧺</text><text x="55" y="58" font-size="11" fill="#ffe2a0" text-anchor="middle">' + L.join('+') + '</text><text x="245" y="74" font-size="13" fill="#ffe2a0" text-anchor="middle">' + Rr.join('+') + '</text></g><path d="M120 140 h60 l-8-12 h-44z" fill="#6b5233"/></svg>' + (msg ? '<p class="scale-msg">' + msg + '</p>' : '');
       var row = A.el('div', 'wt-row');
       WTS.forEach(function (k) { var b = A.el('button', 'wt' + (st[k] === 1 ? ' on' : st[k] === 2 ? ' left' : ''), k + '<small>' + (st[k] === 1 ? '추 쪽' : st[k] === 2 ? '새장 쪽' : '세겔') + '</small>'); b.onclick = function () { st[k] = ((st[k] || 0) + 1) % 3; draw(0, ''); }; row.appendChild(b); });

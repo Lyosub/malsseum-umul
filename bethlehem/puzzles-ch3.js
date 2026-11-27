@@ -29,7 +29,7 @@
   BN.PZ.astro = function (R, A) {
     if (has(A, 'astro')) return A.talk([['asaph', 0, '기구는 이미 오늘 밤에 맞춰 두었다.']]);
     var w = A.el('div', 'astro-pz');
-    w.appendChild(A.el('p', 'tiny-note', '놋쇠 원판 두 개 — 바깥 고리는 방향, 안쪽 바늘은 높이. 오늘 밤에 맞춰야 한다.'));
+    w.appendChild(A.el('p', 'tiny-note howto', '놋쇠 원판 두 개 — 바깥 고리는 방향, 안쪽 바늘은 높이. 오늘 밤에 맞춰야 한다.'));
     w.appendChild(wheels(A, [{ label: '방향', vals: DIRS }, { label: '높이(도)', vals: ALTS }], function (v) {
       if (A.locked('astro')) return;
       if (v[0] === '남서' && v[1] === '55') { A.sfx('ok'); A.toast('바늘이 별에 딱 걸렸다'); if (!flag(R, A, 'astro', ['astro', 'light'])) { A.closeModal(); A.talk([['asaph', 0, '기구가 맞았다. 이제 등잔 빛을 별 지도에 비추면 되겠구나.']]); } }
@@ -58,7 +58,7 @@
         cols.appendChild(col);
       });
       w.appendChild(cols);
-      w.appendChild(A.el('p', 'tiny-note', '상자를 누르면 바닥 → 왼쪽 → 오른쪽으로 옮겨져요'));
+      w.appendChild(A.el('p', 'tiny-note howto', '상자를 누르면 바닥 → 왼쪽 → 오른쪽으로 옮겨져요'));
       var go = A.el('button', 'btn gold', '낙타에 싣기'); w.appendChild(go);
       go.onclick = function () {
         if (A.locked('camel')) return;
@@ -119,7 +119,7 @@
       var row = A.el('div', 'disc-btns'), l = A.el('button', 'btn ghost', '◀ 돌리기'), r = A.el('button', 'btn ghost', '돌리기 ▶');
       l.onclick = function () { off = (off + 13) % 14; S.f3.disc = off; A.tick(); draw(); }; r.onclick = function () { off = (off + 1) % 14; S.f3.disc = off; A.tick(); draw(); };
       row.appendChild(l); row.appendChild(r); w.appendChild(row);
-      w.appendChild(A.el('p', 'tiny-note', '바깥 고리와 안쪽 고리가 마주 보는 글자가 서로 짝이다.'));
+      w.appendChild(A.el('p', 'tiny-note howto', '바깥 고리와 안쪽 고리가 마주 보는 글자가 서로 짝이다.'));
     }
     draw(); A.modal('자음 원판', w);
   };
@@ -262,7 +262,7 @@
         if (got === want) { A.closeModal(); A.solve(R); } else A.wrong('stars3', '별들이 아무 모양도 이루지 않는다');
       };
       row.appendChild(clr); row.appendChild(go); w.appendChild(row);
-      w.appendChild(A.el('p', 'tiny-note', '별 둘을 차례로 누르면 선이 이어져요(다시 누르면 지워져요). 지붕에서는 남쪽 하늘을 본다.'));
+      w.appendChild(A.el('p', 'tiny-note howto', '별 둘을 차례로 누르면 선이 이어져요(다시 누르면 지워져요). 지붕에서는 남쪽 하늘을 본다.'));
       if ((S.f3 || {}).chart) { var cb = A.el('button', 'btn ghost', '베껴 둔 별 지도 보기'); cb.onclick = function () { var bk = A.el('div'); bk.appendChild(chartBox(A)); var back = A.el('button', 'btn gold', '하늘로 돌아가기'); back.onclick = function () { A.modal('지붕 위 하늘', w); }; bk.appendChild(back); A.modal('베껴 둔 별 지도', bk); }; w.appendChild(cb); }
     }
     draw(); A.modal('지붕 위 하늘', w);

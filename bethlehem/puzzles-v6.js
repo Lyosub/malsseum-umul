@@ -10,7 +10,7 @@
     var cap = [8, 5, 3], v = [8, 0, 0], sel = -1, moves = 0, w = A.el('div', 'jug-pz');
     var names = ['큰 단지', '중간 그릇', '작은 그릇'];
     function draw() {
-      w.innerHTML = '<p class="tiny-note">여관 주인: 「기름 여덟 되를 두 손님께 똑같이 네 되씩 나눠 드려야 하는데, 눈금 없는 그릇이 이것뿐이오.」<br>그릇을 누르고 다른 그릇을 누르면 붓는다(가득 차거나 빌 때까지).</p>';
+      w.innerHTML = '<p class="tiny-note howto">여관 주인: 「기름 여덟 되를 두 손님께 똑같이 네 되씩 나눠 드려야 하는데, 눈금 없는 그릇이 이것뿐이오.」<br>그릇을 누르고 다른 그릇을 누르면 붓는다(가득 차거나 빌 때까지).</p>';
       var row = A.el('div', 'jug-row');
       cap.forEach(function (c, i) {
         var b = A.el('button', 'jug' + (sel === i ? ' sel' : ''), '<span class="jug-body" style="height:' + (40 + c * 14) + 'px"><i style="height:' + (v[i] / c * 100) + '%"></i></span><b>' + v[i] + ' / ' + c + '되</b><small>' + names[i] + '</small>'); b.dataset.i = i;
@@ -65,7 +65,7 @@
     for (var k = 0; k < 90; k++) { var c = nb(e).filter(function (j) { return j !== last; }), j = c[Math.floor(r() * c.length)]; b[e] = b[j]; b[j] = 8; last = e; e = j; hist.push(j); }
     BN.__slide = hist.slice();
     function draw() {
-      w.innerHTML = '<p class="tiny-note">계단 돌판 여덟에 「성전에 올라가는 노래」의 첫 구절이 새겨져 있다. 돌판을 빈 자리로 밀어, 편 번호가 작은 것부터 왼쪽 위 → 오른쪽 아래 차례로 놓으세요(빈 자리는 오른쪽 아래).</p>';
+      w.innerHTML = '<p class="tiny-note howto">계단 돌판 여덟에 「성전에 올라가는 노래」의 첫 구절이 새겨져 있다. 돌판을 빈 자리로 밀어, 편 번호가 작은 것부터 왼쪽 위 → 오른쪽 아래 차례로 놓으세요(빈 자리는 오른쪽 아래).</p>';
       var g = A.el('div', 'slide-grid');
       b.forEach(function (t, i) {
         var d = A.el('button', 'slide-t' + (t === 8 ? ' empty' : ''), t === 8 ? '' : '「' + STONES8[t][1] + '…」'); d.dataset.i = i;
@@ -97,7 +97,7 @@
     var M = {}, w = A.el('div', 'light-pz');
     function draw() {
       var t = trace(M), n = Object.keys(M).length;
-      var h = '<p class="tiny-note">천막 안 등잔 빛을 놋거울로 꺾어, 탁자의 별 눈금 둘(✦)을 지나 별 지도(📜)에 닿게 하세요. 빈 칸을 누르면 거울이 놓이고 돌아갑니다(／ → ＼ → 없음). 거울은 넷까지.</p><div class="lg-wrap"><div class="lg-lamp">🪔</div><div class="lg-grid">';
+      var h = '<p class="tiny-note howto">천막 안 등잔 빛을 놋거울로 꺾어, 탁자의 별 눈금 둘(✦)을 지나 별 지도(📜)에 닿게 하세요. 빈 칸을 누르면 거울이 놓이고 돌아갑니다(／ → ＼ → 없음). 거울은 넷까지.</p><div class="lg-wrap"><div class="lg-lamp">🪔</div><div class="lg-grid">';
       for (var r = 0; r < 6; r++) for (var c = 0; c < 7; c++) { var ch = LG[r][c], m = M[r + ',' + c], on = t.lit[r + ',' + c]; h += '<button class="lg-c' + (ch === '#' ? ' box' : '') + (on ? ' on' : '') + '" data-rc="' + r + ',' + c + '">' + (ch === '#' ? '📦' : ch === '*' ? '<span class="lg-star' + (on ? ' lit' : '') + '">✦</span>' : ch === 'G' ? '📜' : m === '/' ? '<span class="mir">／</span>' : m ? '<span class="mir">＼</span>' : '') + '</button>'; }
       h += '<svg class="lg-beam" viewBox="-0.5 -0.5 7 6" preserveAspectRatio="none"><polyline points="' + t.pts.map(function (p) { return p[1] + ',' + p[0]; }).join(' ') + '"/></svg></div></div><p class="tiny-note">놓은 거울 ' + n + ' / 4</p>';
       w.innerHTML = h;
@@ -120,7 +120,7 @@
     var f = (A.S().f4 = A.S().f4 || {}); if (f.gifts) return A.talk([['narr', 0, '황금과 유향과 몰약. 보배합은 열려 있다.']]);
     var r = A.seedRnd(46), order = SHADOWS.slice().sort(function () { return r() - .5; }), pick = {}, sel = null, w = A.el('div', 'shadow-pz');
     function draw() {
-      w.innerHTML = '<p class="tiny-note">보배합 곁에 등잔을 놓자 벽에 그림자 넷이 비친다. 그림자 밑에는 구절 번호가 긁혀 있다. 예물을 누르고 그 예물의 그림자를 누르세요(그림자 하나는 예물의 것이 아니다).</p>';
+      w.innerHTML = '<p class="tiny-note howto">보배합 곁에 등잔을 놓자 벽에 그림자 넷이 비친다. 그림자 밑에는 구절 번호가 긁혀 있다. 예물을 누르고 그 예물의 그림자를 누르세요(그림자 하나는 예물의 것이 아니다).</p>';
       var gr = A.el('div', 'sh-gifts');
       GIFT3.forEach(function (g) { var b = A.el('button', 'sh-gift' + (sel === g[0] ? ' sel' : ''), '<img src="img/chars/gift_' + g[0] + '.webp" alt=""><span>' + g[1] + '</span>'); b.dataset.g = g[0]; b.onclick = function () { sel = sel === g[0] ? null : g[0]; draw(); }; gr.appendChild(b); });
       w.appendChild(gr);
@@ -158,7 +158,7 @@
     var path = [], drawing = false, w = A.el('div', 'route-pz'), shook = 0;
     function cellAt(x, y) { var el = document.elementFromPoint(x, y); return el && el.closest && el.closest('.pm-c'); }
     function draw() {
-      w.innerHTML = '<p class="tiny-note">베들레헴에서 손가락을 떼지 말고 애굽까지 길을 그으세요. 마을은 <b>가까운 곳부터</b> 들러요. 바다·산·순찰 마을(🏮)과 그 곁(붉은 칸)은 못 지나요. <b>물 부대는 네 걸음치</b> — 우물(💧)을 지나면 다시 가득 차요. 물이 떨어지면 나귀가 쓰러져요.</p><div class="pm-legend"><span>헤브론 — 아브람이 장막을 옮긴 곳(창 13:18)</span><span>브엘세바 — 아브라함이 판 우물이 있는 곳(창 21:30-31) · 여기서도 물을 채워요</span><span>애굽 시내 — 남쪽 경계(민 34:5)</span></div><p class="pm-water" id="pmWater"></p>';
+      w.innerHTML = '<p class="tiny-note howto">베들레헴에서 손가락을 떼지 말고 애굽까지 길을 그으세요. 마을은 <b>가까운 곳부터</b> 들러요. 바다·산·순찰 마을(🏮)과 그 곁(붉은 칸)은 못 지나요. <b>물 부대는 네 걸음치</b> — 우물(💧)을 지나면 다시 가득 차요. 물이 떨어지면 나귀가 쓰러져요.</p><div class="pm-legend"><span>헤브론 — 아브람이 장막을 옮긴 곳(창 13:18)</span><span>브엘세바 — 아브라함이 판 우물이 있는 곳(창 21:30-31) · 여기서도 물을 채워요</span><span>애굽 시내 — 남쪽 경계(민 34:5)</span></div><p class="pm-water" id="pmWater"></p>';
       var g = A.el('div', 'pm-grid');
       for (var r = 0; r < 10; r++) for (var c = 0; c < 8; c++) {
         var ch = PG[r][c], k = r + ',' + c, inP = path.some(function (p) { return p[0] === r && p[1] === c; });
@@ -191,13 +191,13 @@
     }
     if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname) || /[?&]phonetest=1/.test(location.search)) BN.__routeOk = function () { bells(); };   // 시험용(로컬·폰 시험)
     function bells() {
-      w.innerHTML = '<p class="tiny-note">먼 길이다. 지친 나귀가 멈춰 섰다. 방울을 세 번 울려 걸음을 깨우세요.</p>';
+      w.innerHTML = '<p class="tiny-note howto">먼 길이다. 지친 나귀가 멈춰 섰다. 방울을 세 번 울려 걸음을 깨우세요.</p>';
       var bell = A.el('button', 'rt-bell', '🔔'), cnt = A.el('p', 'bow-st', '0 / 3'); w.appendChild(bell); w.appendChild(cnt);
       var lastT = 0;
       function ring() { if (performance.now() - lastT < 350) return; lastT = performance.now(); shook++; cnt.textContent = shook + ' / 3'; bell.classList.remove('ring'); void bell.offsetWidth; bell.classList.add('ring'); A.sfx('ok'); if (shook >= 3) { window.removeEventListener('devicemotion', mot); setTimeout(function () { A.closeModal(); A.solve(R); }, 600); } }
       function mot(e) { var a = e.accelerationIncludingGravity || e.acceleration; if (!a) return; var m = Math.sqrt((a.x || 0) * (a.x || 0) + (a.y || 0) * (a.y || 0) + (a.z || 0) * (a.z || 0)); if (m > 22) ring(); }
       bell.onclick = ring;
-      // 11/27: 흔들기는 뺌(5장 폰 동작은 등잔 불기·길 긋기 둘로)
+      var DM = window.DeviceMotionEvent; if (DM && typeof DM.requestPermission === 'function') { var p = A.el('button', 'btn ghost', '흔들기 켜기'); p.onclick = function () { DM.requestPermission().then(function (s) { if (s === 'granted') window.addEventListener('devicemotion', mot); }).catch(function () {}); }; w.appendChild(p); } else window.addEventListener('devicemotion', mot);
     }
     draw(); A.modal('애굽으로 가는 길', w);
   };

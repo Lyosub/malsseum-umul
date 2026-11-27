@@ -57,7 +57,7 @@
   BN.PZ.diff = function (R, A) {
     var f = F(A); f.diff = f.diff || [];
     var w = A.el('div', 'diff-pz');
-    w.innerHTML = '<p class="tiny-note">위: 그 밤의 여관(1장) · 아래: 몇 달 뒤. 아래 그림에서 달라진 곳을 누르세요. <b class="df-n">' + f.diff.length + '/7</b></p><img class="df-old" src="img/places/inn.webp" alt=""><div class="df-new"><img src="img/places/inn_later.webp" alt=""></div>';
+    w.innerHTML = '<p class="tiny-note howto">위: 그 밤의 여관(1장) · 아래: 몇 달 뒤. 아래 그림에서 달라진 곳을 누르세요. <b class="df-n">' + f.diff.length + '/7</b></p><img class="df-old" src="img/places/inn.webp" alt=""><div class="df-new"><img src="img/places/inn_later.webp" alt=""></div>';
     var box = w.querySelector('.df-new');
     function mark(d) { var m = A.el('span', 'df-mark'); m.style.left = d[1] + '%'; m.style.top = d[2] + '%'; m.style.width = Math.max(6, d[3]) + '%'; m.style.height = Math.max(8, d[4]) + '%'; box.appendChild(m); }
     DIFF.forEach(function (d) { if (f.diff.indexOf(d[0]) >= 0) mark(d); });
@@ -170,7 +170,7 @@
     if (F(A).bow) return A.talk([['narr', 0, '(조용하다. 등잔 불빛만 흔들린다.)']]);
     var w = A.el('div', 'bow-pz'), st = A.el('p', 'bow-st', '준비'), down = 0, okd = 0;
     w.appendChild(A.el('p', 'bow-q', '「집에 들어가 아기와 그의 어머니 마리아가 함께 있는 것을 보고 엎드려 아기께 경배하고」<br><small>마태복음 2:11</small>'));
-    w.appendChild(A.el('p', 'tiny-note', '휴대폰을 화면이 바닥을 향하게 엎어 두세요. 5초 동안 그대로 두면 됩니다.'));
+    w.appendChild(A.el('p', 'tiny-note howto', '휴대폰을 화면이 바닥을 향하게 엎어 두세요. 5초 동안 그대로 두면 됩니다.'));
     w.appendChild(st);
     function done() { if (okd) return; okd = 1; try { navigator.vibrate && navigator.vibrate([60, 80, 60]); } catch (e) {} window.removeEventListener('deviceorientation', ori); A.sfx('ok'); st.textContent = '✦ 경배했다'; setTimeout(function () { if (!flag(R, A, 'bow')) { A.closeModal(); A.talk([['asaph', 0, '박사들이 엎드렸다. 먼 길을 와서 한 일이 바로 이것이었구나.']]); } }, 900); }
     function ori(e) { var b = e.beta || 0, g = e.gamma || 0, face = Math.abs(b) > 150 || (Math.abs(b) < 30 && Math.abs(g) > 150); if (face) { if (!down) down = performance.now(); else if (performance.now() - down > 5000) done(); } else down = 0; }
@@ -216,7 +216,7 @@
         b.appendChild(t);
       });
       w.appendChild(b);
-      w.appendChild(A.el('p', 'tiny-note', '조각을 누르고 다른 조각을 누르면 자리가 바뀌어요. 같은 조각을 두 번 누르면 돌아가요.'));
+      w.appendChild(A.el('p', 'tiny-note howto', '조각을 누르고 다른 조각을 누르면 자리가 바뀌어요. 같은 조각을 두 번 누르면 돌아가요.'));
       var go = A.el('button', 'btn gold', '이어 붙이기'); w.appendChild(go);
       go.onclick = function () {
         if (A.locked('jigsaw')) return;

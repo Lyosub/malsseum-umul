@@ -14,7 +14,7 @@
   BN.PZ.walk = function (R, A) {
     var S = A.S(); if (S.walked) return BN.runPuzzle('roadmap', R);
     var N = 30, n = 0, w = A.el('div', 'walk-pz'), lastPeak = 0, high = false, done = false;
-    w.innerHTML = '<p class="tiny-note">나사렛에서 베들레헴까지 사흘 길이 넘는다. 요셉과 마리아처럼 걸어 보자 — 폰을 손에 들고 실제로 걸으면 걸음이 세어진다.</p><div class="walk-road"><i></i><span>🚶</span></div><p class="aim-read"><b id="wkN">0</b> / ' + N + ' 걸음</p><button class="btn gold" id="wkGo">걷기 시작(센서 켜기)</button><button class="btn ghost" id="wkTap">걸을 수 없는 곳이면: 한 걸음씩 누르기</button>';
+    w.innerHTML = '<p class="tiny-note howto">나사렛에서 베들레헴까지 사흘 길이 넘는다. 요셉과 마리아처럼 걸어 보자 — 폰을 손에 들고 실제로 걸으면 걸음이 세어진다.</p><div class="walk-road"><i></i><span>🚶</span></div><p class="aim-read"><b id="wkN">0</b> / ' + N + ' 걸음</p><button class="btn gold" id="wkGo">걷기 시작(센서 켜기)</button><button class="btn ghost" id="wkTap">걸을 수 없는 곳이면: 한 걸음씩 누르기</button>';
     var bar = w.querySelector('.walk-road i'), man = w.querySelector('.walk-road span');
     function step() { if (done) return; n++; w.querySelector('#wkN').textContent = n; bar.style.width = (n / N * 100) + '%'; man.style.left = (n / N * 92) + '%'; A.tick(); if (n >= N) { done = true; removeEventListener('devicemotion', mot); S.walked = 1; A.save(); A.sfx('ok'); setTimeout(function () { A.closeModal(); A.toast('성문이 보인다 — 돌 탁자 위에 지도 두 장이 있다'); setTimeout(function () { BN.runPuzzle('roadmap', R); }, 600); }, 600); } }
     function mot(e) { var a = e.accelerationIncludingGravity; if (!a) return; var m = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z), t = performance.now(); if (!high && m > 11.8 && t - lastPeak > 320) { high = true; lastPeak = t; step(); } else if (high && m < 10.2) high = false; }
@@ -26,7 +26,7 @@
   // ── 1장: 기울여 기름 나르기 — 부엌 기름 단지에서 마구간 등잔까지, 구불구불한 길을 벗어나지 않게
   BN.oilCarry = function (onDone) {
     var o = overlay('기름 나르기'), body = o.querySelector('.ov7-body'), W = 300, H = 420;
-    body.innerHTML = '<p class="tiny-note">기름 쟁반을 폰을 기울여(또는 손가락으로 끌어) 길을 따라 등잔(🪔)까지 옮기세요. 길 밖으로 나가면 기름이 흘러요. 세 번 흘리면 처음부터.</p><canvas class="carry-cv" width="600" height="840"></canvas><p class="aim-read" id="cyS">흘린 기름 0 / 3</p>';
+    body.innerHTML = '<p class="tiny-note howto">기름 쟁반을 폰을 기울여(또는 손가락으로 끌어) 길을 따라 등잔(🪔)까지 옮기세요. 길 밖으로 나가면 기름이 흘러요. 세 번 흘리면 처음부터.</p><canvas class="carry-cv" width="600" height="840"></canvas><p class="aim-read" id="cyS">흘린 기름 0 / 3</p>';
     var cv = body.querySelector('canvas'), ctx = cv.getContext('2d'), P = [[40, 390], [40, 300], [150, 300], [150, 210], [260, 210], [260, 120], [120, 120], [120, 40], [250, 40]], RAD = 24;
     var b = { x: 40, y: 390, vx: 0, vy: 0 }, tilt = { x: 0, y: 0 }, drag = null, spills = 0, alive = true, out = false;
     function onT(e) { if (e.gamma == null) return; tilt.x = Math.max(-1, Math.min(1, e.gamma / 25)); tilt.y = Math.max(-1, Math.min(1, (e.beta - 30) / 25)); }
@@ -87,7 +87,7 @@
     deck.sort(function () { return r() - .5; });
     BN.__memDeck = deck.map(function (d) { return d.id; });
     function draw() {
-      w.innerHTML = '<p class="tiny-note">「이는 주께서 선지자로 하신 말씀을 이루려 하심이라」 — 엎어 둔 카드 열 장. 두 장씩 뒤집어 선지자의 말씀과 이루어진 자리를 짝지으세요. (뒤집은 횟수 ' + flips + ')</p>';
+      w.innerHTML = '<p class="tiny-note howto">「이는 주께서 선지자로 하신 말씀을 이루려 하심이라」 — 엎어 둔 카드 열 장. 두 장씩 뒤집어 선지자의 말씀과 이루어진 자리를 짝지으세요. (뒤집은 횟수 ' + flips + ')</p>';
       var g = A.el('div', 'mem-grid');
       deck.forEach(function (d, i) {
         var up = matched[d.id] || open.indexOf(i) >= 0, b = A.el('button', 'mem-c' + (up ? ' up' : '') + (matched[d.id] ? ' done' : '') + (d.side === 'n' ? ' nt' : ''), up ? d.t : '✦'); b.dataset.i = i;

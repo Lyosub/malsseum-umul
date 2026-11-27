@@ -226,6 +226,7 @@
     var box = $('roomSpots'); box.innerHTML = '';
     R.spots.forEach(function (sp) {
       if (sp.act.indexOf('star:') === 0 && S.stars.indexOf(sp.act) >= 0) return;
+      if (sp.when && !sp.when(S)) return;
       if (sp.act.indexOf('clue:') === 0 && (S.clues || {})[sp.act.slice(5)]) return;
       if (sp.act.indexOf('bread:') === 0 && (S.bread || []).indexOf(sp.act) >= 0) return;
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
@@ -256,12 +257,13 @@
   })();
   // 11/27 진짜 방탈출: 문제마다 먼저 찾아야 할 단서(BN.NEED[문제] = { c: [단서 키…], say: 대사 })
   function needClues(name) {
-    var N = (BN.NEED || {})[name]; if (!N) return false;
+    var N = (BN.NEED || {})[name]; if (!N || (N.when && !N.when(S))) return false;
     var C = S.clues || {}, got = N.c.filter(function (k) { return C[k]; }).length; if (got >= N.c.length) return false;
     talk([Array.isArray(N.say) ? N.say : ['asaph', 0, N.say || '아직은 알 수 없다. 이 방을 더 살펴보아라.'], ['narr', null, '(이 문제에 필요한 단서 ' + got + ' / ' + N.c.length + ')']]);
     return true;
   }
   BN.hasClue = function (k) { return !!(S.clues || {})[k]; };
+  BN.reRoom = function () { if (cur && $('room').classList.contains('on')) enterRoom(cur); };
   function act(R, sp, el) {
     var a = sp.act.split(':');
     if (a[0] === 'talk') talk(R.talks[a[1]]);
@@ -314,7 +316,7 @@
       var parts = BN.SCROLL_PARTS || ['마태복음', '1장', '23절'], rr = seedRnd(3), perms = [[2, 0, 1], [1, 2, 0], [2, 1, 0], [0, 2, 1], [1, 0, 2]], order = perms[Math.floor(rr() * 5)].slice(), sel = -1, wrap = el('div', 'scrollfix');
       if (order.join() === '0,1,2') order = [2, 0, 1];
       function draw() {
-        wrap.innerHTML = '<p class="tiny-note">조각을 두 개 차례로 누르면 자리가 바뀌어요.</p>';
+        wrap.innerHTML = '<p class="tiny-note howto">조각을 두 개 차례로 누르면 자리가 바뀌어요.</p>';
         order.forEach(function (k, i) {
           var b = el('button', 'scrap-piece' + (sel === i ? ' sel' : '')); b.innerHTML = '<span>' + parts[k] + '</span>'; b.style.setProperty('--r', ((k * 37) % 7 - 3) + 'deg');
           b.onclick = function () { if (sel < 0) { sel = i; draw(); return; } var t = order[sel]; order[sel] = order[i]; order[i] = t; sel = -1; draw(); if (order.join() === '0,1,2') { sfx('ok'); setTimeout(function () { closeModal(); solve(R); }, 700); } };
@@ -338,7 +340,7 @@
   var __oldHint = function () {
     if (!cur || !$('room').classList.contains('on')) return toast('장소 안에서 힌트를 볼 수 있어요');
     var H2 = (BN.HINTS || {})[cur]; if (!H2) return toast('이 장소의 힌트는 준비 중이에요');
-    var used = (S.hints = S.hints || {})[cur] || 0, cost = [5, 10, 15];
+    var used = (S.hints = S.hints || {})[cur] || 0, cost = [3, 7, 10];
     var html = H2.slice(0, used).map(function (h, i) { return '<div class="note">' + (i + 1) + '단계: ' + h + '</div>'; }).join('');
     if (used < H2.length) html += '<button class="btn gold" id="hintMore">' + (used + 1) + '단계 힌트 보기 (+' + cost[used] + '분)</button>';
     modal('힌트', html);
@@ -382,7 +384,7 @@
         return d;
       }
       var wrap = document.createElement('div'); wrap.className = 'gen-wrap';
-      wrap.innerHTML = '<p class="gen-help">명부 조각을 눌러 고른 뒤 아래 빈칸을 누르면 놓여요. 놓인 조각을 누르면 다시 위로 돌아가요.<br>다윗의 계보 — 베레스에서 다윗까지(룻기 4장 끝).</p>';
+      wrap.innerHTML = '<p class="gen-help howto">명부 조각을 눌러 고른 뒤 아래 빈칸을 누르면 놓여요. 놓인 조각을 누르면 다시 위로 돌아가요.<br>다윗의 계보 — 베레스에서 다윗까지(룻기 4장 끝).</p>';
       var pool = document.createElement('div'); pool.className = 'gen-row'; var slots = document.createElement('div'); slots.className = 'gen-row gen-slots';
       var ans = document.createElement('div'); ans.className = 'answer'; ans.innerHTML = '<input id="genAns" inputmode="numeric" placeholder="조각을 다 놓으면 보이는 숫자"><button class="btn gold" id="genOk">확인</button>';
       wrap.appendChild(pool); wrap.appendChild(slots); wrap.appendChild(ans);
@@ -433,7 +435,7 @@
     var night = '<g class="night"><rect width="600" height="400" fill="#0d1530"/>' + Array.from({ length: 60 }, function () { return '<circle cx="' + Math.floor(r() * 600) + '" cy="' + Math.floor(r() * 400) + '" r="' + (r() * 1.6 + .4).toFixed(1) + '" fill="#fff" opacity="' + (r() * .6 + .2).toFixed(2) + '"/>'; }).join('') +
       pick.map(function (j, k) { var p = J[j], s = sizes[k]; return '<path transform="translate(' + p[0] + ',' + p[1] + ')" d="M0 -' + s + ' L' + s * .28 + ' -' + s * .28 + ' L' + s + ' 0 L' + s * .28 + ' ' + s * .28 + ' L0 ' + s + ' L-' + s * .28 + ' ' + s * .28 + ' L-' + s + ' 0 L-' + s * .28 + ' -' + s * .28 + ' Z" fill="#ffe9a8" filter="url(#glow)"/>'; }).join('') + '</g>';
     var w = el('div', 'gen-wrap');
-    w.innerHTML = '<p class="gen-help">한 장은 낮의 길, 한 장은 밤의 하늘. 아래 막대를 밀어 두 장을 겹쳐 보세요.</p>' +
+    w.innerHTML = '<p class="gen-help howto">한 장은 낮의 길, 한 장은 밤의 하늘. 아래 막대를 밀어 두 장을 겹쳐 보세요.</p>' +
       '<svg viewBox="0 0 600 400" style="width:100%;border-radius:10px;background:linear-gradient(#efe0bb,#d8c095)"><defs><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' + day + '<g id="nightL" style="opacity:0">' + night + '</g></svg>' +
       '<input type="range" id="rmMix" min="0" max="100" value="0" style="width:100%"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--stone)"><span>☀ 낮의 길</span><span>밤의 하늘 ☾</span></div>' +
       '<div style="display:flex;gap:8px;justify-content:center;margin-top:6px" id="rmLock"></div><button class="btn gold block" id="rmOk" style="margin-top:8px">자물쇠 열기</button>';
@@ -448,7 +450,7 @@
   PUZZLES.well = function (R) {
     if (!has('lamp')) return talk([['gilead', 1, '너무 깜깜해요. 불빛이 있어야 보일 것 같아요.'], ['asaph', 0, '나사렛 길 쪽 나그네 쉼터에 무언가 있지 않았느냐.']]);
     var w = el('div', 'gen-wrap');
-    w.innerHTML = '<p class="gen-help">등잔을 들고 우물 안 벽을 손가락으로 문질러 비춰 보세요.</p><div style="position:relative;border-radius:12px;overflow:hidden;touch-action:none" id="wlBox"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.55)"><div style="position:absolute;left:40%;top:63%;transform:translate(-50%,-50%) rotate(-4deg);font-family:var(--serif);font-size:clamp(16px,3.2vw,26px);color:#f3d79a;text-shadow:0 0 8px #000;white-space:nowrap">줄은 열넷의 반</div><canvas id="wlDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas></div>' +
+    w.innerHTML = '<p class="gen-help howto">등잔을 들고 우물 안 벽을 손가락으로 문질러 비춰 보세요.</p><div style="position:relative;border-radius:12px;overflow:hidden;touch-action:none" id="wlBox"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.55)"><div style="position:absolute;left:40%;top:63%;transform:translate(-50%,-50%) rotate(-4deg);font-family:var(--serif);font-size:clamp(16px,3.2vw,26px);color:#f3d79a;text-shadow:0 0 8px #000;white-space:nowrap">줄은 열넷의 반</div><canvas id="wlDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas></div>' +
       '<div id="wlRope" style="display:none"><p class="gen-help" style="margin-top:8px">두레박 줄을 몇 규빗 내릴까요?</p><input type="range" id="wlLen" min="1" max="14" value="1" style="width:100%"><p style="text-align:center;font-size:20px;margin:4px 0"><b id="wlV">1</b> 규빗</p><button class="btn gold block" id="wlUp">끌어올리기</button></div>';
     modal('우물 안', w);
     var cv = $('wlDark'), box = $('wlBox'), ctx, found = 0;
@@ -475,7 +477,7 @@
     var asg = [null, null, null, null, null], sel = null, stage = 1;
     var w = el('div', 'gen-wrap');
     function draw() {
-      w.innerHTML = '<p class="gen-help">손님 쪽지를 읽고, 손님을 고른 뒤 문을 눌러 방을 정해 주세요.</p>' +
+      w.innerHTML = '<p class="gen-help howto">손님 쪽지를 읽고, 손님을 고른 뒤 문을 눌러 방을 정해 주세요.</p>' +
         '<div class="note" style="font-size:13px">' + clues.join('<br>') + '</div>' +
         '<div style="display:flex;flex-wrap:wrap;gap:6px" id="inG"></div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px" id="inR"></div>' +
         '<button class="btn gold block" id="inOk" style="margin-top:10px">방 배정 끝</button>';
@@ -519,7 +521,7 @@
   }
   PUZZLES.field = function (R) {
     var code = bleatCounts(), w = el('div', 'gen-wrap');
-    w.innerHTML = '<p class="gen-help">상자에 숫자 자물쇠 세 칸이 있어요. 양들이 우는 횟수를 왼쪽부터.</p><div style="display:flex;gap:10px;justify-content:center" id="fdL"></div><button class="btn gold block" id="fdOk" style="margin-top:10px">상자 열기</button>';
+    w.innerHTML = '<p class="gen-help howto">상자에 숫자 자물쇠 세 칸이 있어요. 양들이 우는 횟수를 왼쪽부터.</p><div style="display:flex;gap:10px;justify-content:center" id="fdL"></div><button class="btn gold block" id="fdOk" style="margin-top:10px">상자 열기</button>';
     modal('목자의 상자', w);
     var v = [1, 1, 1];
     v.forEach(function (_, i) { var b = el('button', 'btn ghost', '1'); b.style.cssText = 'font-size:28px;width:64px;height:64px;padding:0'; b.onclick = function () { v[i] = v[i] % 5 + 1; b.textContent = v[i]; }; $('fdL').appendChild(b); });
@@ -529,7 +531,7 @@
     };
     function dial() {
       var r = seedRnd(55), off = 40 + Math.floor(r() * 280), A = [15, 100, 170, 265];
-      w.innerHTML = '<p class="gen-help">상자 안에서 「밤 네 경점」 지팡이가 나왔어요 — 저물 때, 밤중, 닭 울 때, 새벽(막 13:35). 지팡이 눈금 넷 위에 큰 별 넷이 동시에 서도록 하늘을 돌려 보세요.</p>' +
+      w.innerHTML = '<p class="gen-help howto">상자 안에서 「밤 네 경점」 지팡이가 나왔어요 — 저물 때, 밤중, 닭 울 때, 새벽(막 13:35). 지팡이 눈금 넷 위에 큰 별 넷이 동시에 서도록 하늘을 돌려 보세요.</p>' +
         '<svg viewBox="-160 -160 320 320" style="width:100%;max-height:56vh;touch-action:none" id="fdSky"><defs><filter id="g2"><feGaussianBlur stdDeviation="2"/></filter></defs>' +
         '<circle r="158" fill="#0b1230" stroke="#6b5226" stroke-width="3"/><g id="fdDisc">' +
         Array.from({ length: 90 }, function () { var a = r() * 6.283, d = 10 + r() * 125; return '<circle cx="' + (Math.cos(a) * d).toFixed(1) + '" cy="' + (Math.sin(a) * d).toFixed(1) + '" r="' + (r() * 1.2 + .3).toFixed(1) + '" fill="#fff" opacity=".7"/>'; }).join('') +
@@ -572,7 +574,7 @@
   PUZZLES.manger = function (R) {
     if (!has('lamp')) return talk([['gilead', 1, '아무것도 안 보여요…'], ['asaph', 0, '등잔이 있어야 한다.']]);
     var w = el('div', 'gen-wrap');
-    w.innerHTML = '<p class="gen-help">화면을 문질러 등잔으로 비추고, 표적을 찾으면 눌러요. (<span id="mgN">0</span>/3)</p><div style="position:relative;border-radius:12px;overflow:hidden;touch-action:none" id="mgBox"><img src="img/places/stable.webp" style="width:100%;display:block"><div id="mgItems"></div><canvas id="mgDark" style="position:absolute;inset:0;width:100%;height:100%;z-index:5"></canvas></div>';
+    w.innerHTML = '<p class="gen-help howto">화면을 문질러 등잔으로 비추고, 표적을 찾으면 눌러요. (<span id="mgN">0</span>/3)</p><div style="position:relative;border-radius:12px;overflow:hidden;touch-action:none" id="mgBox"><img src="img/places/stable.webp" style="width:100%;display:block"><div id="mgItems"></div><canvas id="mgDark" style="position:absolute;inset:0;width:100%;height:100%;z-index:5"></canvas></div>';
     modal('바위 굴 안', w);
     var items = [
       { k: 'cloth', img: 'img/items/cloth.webp', x: 30, y: 74, w: 11, ok: true, name: '강보' },
@@ -676,13 +678,13 @@
   function ripple(e) { var r = el('span', 'tapfx'); r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px'; document.body.appendChild(r); setTimeout(function () { r.remove(); }, 600); }
   var LOCK = {};
   function locked(k) { var t = LOCK[k]; if (t && t.until > Date.now()) { toast('자물쇠가 잠시 굳었어요 — ' + Math.ceil((t.until - Date.now()) / 1000) + '초 뒤에 다시'); return true; } return false; }
-  function wrong(k, msg) { S.wrongs = (S.wrongs || 0) + 1; S.wrongBy = S.wrongBy || {}; S.wrongBy[k] = (S.wrongBy[k] || 0) + 1; var t = LOCK[k] = LOCK[k] || { n: 0, until: 0 }; t.n++; sfx('no'); if (t.n >= 3) { t.n = 0; t.until = Date.now() + 60000; toast('세 번 틀려서 1분 동안 잠겨요'); } else toast(msg || '아니에요'); }
+  function wrong(k, msg) { S.wrongs = (S.wrongs || 0) + 1; S.wrongBy = S.wrongBy || {}; S.wrongBy[k] = (S.wrongBy[k] || 0) + 1; var t = LOCK[k] = LOCK[k] || { n: 0, until: 0 }; t.n++; sfx('no'); if (t.n >= 3) { t.n = 0; t.until = Date.now() + 30000; toast('세 번 틀려서 30초 동안 잠겨요'); } else toast(msg || '아니에요'); }
   function oilInit() { S.oil = S.oil || {}; if (S.oil[S.ch] === undefined) S.oil[S.ch] = (BN.OIL || {})[S.ch] || 6; }
   function hintOil() {
     if (!cur || !$('room').classList.contains('on')) return toast('장소 안에서 힌트를 볼 수 있어요');
     var H2 = BN.HINTS[cur]; if (!H2) return toast('이 장소의 힌트는 준비 중이에요');
     oilInit(); S.hints = S.hints || {};
-    var used = S.hints[cur] || 0, drops = [1, 1, 2], mins = [5, 10, 20], names = ['어디를 볼까', '어떻게 풀까', '정답'];
+    var used = S.hints[cur] || 0, drops = [1, 1, 2], mins = [5, 10, 20], names = ['하는 법 · 어디를 볼까', '어떻게 풀까', '정답'];
     var html = '<p style="margin:0 0 10px">등잔 기름 <b style="color:var(--gold2);font-size:18px">' + '💧'.repeat(Math.max(0, S.oil[S.ch])) + '</b> ' + S.oil[S.ch] + '방울 <span style="opacity:.6">(' + S.ch + '장)</span></p>';
     html += H2.slice(0, used).map(function (h, i) { return '<div class="note"><b>' + (i + 1) + '단계 · ' + names[i] + '</b><br>' + h + '</div>'; }).join('');
     if (used < H2.length) {
@@ -895,6 +897,7 @@
     ['astro', 'magi', '3장 박사 천막', '🧭 실제로 별 겨누기', '폰을 남서쪽으로 향하고 윗부분을 55° 들어 2초. 화면의 방향이 실제 나침반과 맞는지.'],
     ['bow', 'worship', '4장 그 집 안', '🙇 엎드려 경배', '화면이 바닥을 보게 폰을 엎어 5초. 끝나면 진동이 오는지.'],
     ['lamp', 'dream', '5장 요셉의 꿈', '💨 등잔 불어 끄기', '마이크에 「후—」 길게 불어 등잔을 꺼요.'],
+    ['bells', 'dawn', '5장 새벽 길', '🔔 흔들어 방울 울리기', '폰을 흔들어 방울을 세 번(아이폰은 「흔들기 켜기」를 먼저).'],
     ['chorus', 'angel', '1장 들판 위 하늘', '🎵 천군 가락 따라 하기', '소리가 나는지(무음 모드 끄기), 가락을 듣고 따라 누르기 편한지.'],
     ['h', '✋ 손 감각(폰에서 느낌 확인)'],
     ['herd', 'field', '1장 들판', '🐑 양 몰기', '손가락으로 양 7마리를 60초 안에 우리로. 너무 어렵거나 쉬운지.'],
@@ -924,7 +927,7 @@
     modal('📱 폰 시험 목록', w);
     w.querySelectorAll('.pt-item').forEach(function (b) { b.onclick = function () { ptRun(b.dataset.k); }; });
   }
-  if (PT) {
+  if (PT) { document.body.classList.add('pt');
     if (!S || !S.nick) { S = blank(); S.nick = '폰시험'; S.opening = true; S.ch = 5; S.items = ['census', 'lamp', 'rope', 'keys', 'oil', 'lens', 'scrap', 'cloth']; save(); }
     var ptb = el('button', 'pt-fab', '📱 시험 목록'); ptb.onclick = ptMenu; document.body.appendChild(ptb);
     document.querySelector('#title .eyebrow').textContent = '✦ 폰 시험 · 이 기기에만 저장돼요';

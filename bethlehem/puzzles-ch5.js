@@ -18,7 +18,7 @@
     if (F(A).dreams) return A.talk([['asaph', 0, '꿈의 차례는 이미 맞추었다.']]);
     var r = A.seedRnd(51), cards = shuffle(DREAMS, r), slots = [null, null, null, null], w = A.el('div', 'dream-pz');
     function draw() {
-      w.innerHTML = '<p class="tiny-note">요셉이 꿈으로 들은 말씀은 넷이다. 다섯 장 가운데 요셉의 꿈만 골라 일어난 차례대로 놓으세요.</p>';
+      w.innerHTML = '<p class="tiny-note howto">요셉이 꿈으로 들은 말씀은 넷이다. 다섯 장 가운데 요셉의 꿈만 골라 일어난 차례대로 놓으세요.</p>';
       var sl = A.el('div', 'dr-slots');
       slots.forEach(function (k, i) { var c = k && DREAMS.find(function (d) { return d[0] === k; }); var b = A.el('button', 'dr-slot' + (k ? ' on' : ''), '<b>' + (i + 1) + '</b>' + (c ? c[1] : '')); b.dataset.i = i; b.onclick = function () { slots[i] = null; draw(); }; sl.appendChild(b); });
       w.appendChild(sl);
@@ -41,7 +41,7 @@
     if (F(A).lamp) return A.talk([['narr', 0, '등잔은 꺼져 있다. 방이 어둡다.']]);
     var w = A.el('div', 'lamp-pz'), fl = A.el('div', 'lp-flame'), st = A.el('p', 'bow-st', ''), stream = null, raf = 0, hot = 0, life = 1, okd = 0;
     w.appendChild(A.el('div', 'lp-body')); w.appendChild(fl); w.appendChild(st);
-    w.appendChild(A.el('p', 'tiny-note', '불빛이 새어 나가면 안 된다. 마이크에 대고 「후—」 길게 불어 등잔을 끄세요.'));
+    w.appendChild(A.el('p', 'tiny-note howto', '불빛이 새어 나가면 안 된다. 마이크에 대고 「후—」 길게 불어 등잔을 끄세요.'));
     function set() { fl.style.transform = 'scale(' + (.25 + life * .75) + ')'; fl.style.opacity = .3 + life * .7; }
     function out() { if (okd) return; okd = 1; stop(); life = 0; set(); fl.classList.add('off'); A.sfx('ok'); st.textContent = '— 꺼졌다'; setTimeout(function () { if (!flag(R, A, 'lamp', DREAM_NEED)) { A.closeModal(); A.talk([['asaph', 0, '어둠 속에서 짐을 챙긴다. 소리 내지 마라.']]); } }, 900); }
     function stop() { cancelAnimationFrame(raf); if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
@@ -87,7 +87,7 @@
     var grid = [], placed = {}, sel = null, rotk = 0, w = A.el('div', 'pack-pz');
     for (var i = 0; i < 16; i++) grid.push(null);
     function draw() {
-      w.innerHTML = '<p class="tiny-note">안장 주머니는 4×4칸. 짐을 빈틈없이 다 넣어야 나귀가 흔들리지 않는다.<br>① 무거운 물부대는 맨 아래 줄 ② 아기의 강보는 맨 위 줄</p>';
+      w.innerHTML = '<p class="tiny-note howto">안장 주머니는 4×4칸. 짐을 빈틈없이 다 넣어야 나귀가 흔들리지 않는다.<br>① 무거운 물부대는 맨 아래 줄 ② 아기의 강보는 맨 위 줄</p>';
       var g = A.el('div', 'pk-grid');
       grid.forEach(function (v, i) {
         var b = A.el('button', 'pk-c' + (v ? ' p-' + v : ''), v ? PIECES.find(function (p) { return p[0] === v; })[1].slice(0, 2) : ''); b.dataset.i = i;
@@ -112,7 +112,7 @@
         tray.appendChild(b);
       });
       w.appendChild(tray);
-      w.appendChild(A.el('p', 'tiny-note', '짐을 고른 뒤 다시 누르면 돌아가요. 칸을 누르면 그 칸이 짐의 왼쪽 위가 돼요. 넣은 짐을 누르면 빠져요.'));
+      w.appendChild(A.el('p', 'tiny-note howto', '짐을 고른 뒤 다시 누르면 돌아가요. 칸을 누르면 그 칸이 짐의 왼쪽 위가 돼요. 넣은 짐을 누르면 빠져요.'));
       var go = A.el('button', 'btn gold', '나귀에 얹기'); w.appendChild(go);
       go.onclick = function () {
         if (A.locked('pack')) return;

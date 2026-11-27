@@ -654,3 +654,6 @@ body:has(#dialog:not([hidden])) .pt-fab, body:has(#modal:not([hidden])) .pt-fab,
 .ord-btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
 .ord-b { padding: 8px 11px; border-radius: 10px; border: 1px solid var(--rim); background: rgba(255, 255, 255, .06); color: inherit; font: 600 14px var(--serif); }
 .diff-pz .df-mark { display: flex; align-items: center; justify-content: center; color: #ffe27a; font: 700 15px var(--serif); text-shadow: 0 0 6px #000; }
+/* 11/27 하는 법 설명은 화면에 안 보이고 힌트 1단계에(폰 시험에서는 보임) */
+.howto { display: none !important; }
+body.pt .howto { display: block !important; }
