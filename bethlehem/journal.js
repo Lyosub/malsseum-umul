@@ -71,7 +71,7 @@
     return all ? [got, all] : null;
   }
   // 못 찾은 단서의 대략 자리(왼쪽 위쯤 · 가운데쯤 · 오른쪽 아래쯤)
-  function where(x, y) { var h = x < 34 ? '왼쪽' : x > 66 ? '오른쪽' : '가운데', v = y < 36 ? '위' : y > 64 ? '아래' : ''; return (h === '가운데' && !v) ? '한가운데쯤' : h + (v ? ' ' + v : '') + '쯤'; }
+  function where(x, y) { var h = x < 34 ? '왼쪽' : x > 66 ? '오른쪽' : '가운데', v = y < 36 ? '위' : y > 64 ? '아래' : ''; return (h === '가운데' && !v) ? '한가운데' : h + (v ? ' ' + v : ''); }
   BN.clueHint = function (k) {
     var S = U.S(), R = BN.ROOMS[k]; if (!R || !S || S.rooms[k]) return null; var C = S.clues || {}, need = {};
     R.spots.forEach(function (sp) { var m = /^puzzle:(\w+)/.exec(sp.act || ''); if (!m) return; var N = (BN.NEED || {})[m[1]]; if (!N || (N.when && !N.when(S))) return; N.c.forEach(function (c) { need[c] = 1; }); });
@@ -142,7 +142,8 @@
   var btn = document.createElement('button'); btn.className = 'jr-btn'; btn.innerHTML = '📖<span></span>'; btn.title = '퀘스트 저널'; btn.onclick = function () { journal('q'); };
   var hl = document.querySelector('.hud-l'); if (hl) hl.appendChild(btn);
   var card = document.createElement('div'); card.className = 'jr-float'; card.hidden = true; document.body.appendChild(card);
-  var pill = document.createElement('button'); pill.className = 'jr-pill'; pill.hidden = true; document.body.appendChild(pill); pill.onclick = function () { var h = BN.clueHint(U.cur()); if (h) U.toast('🔎 ' + h.places.join(', ') + '에서 뭔가 반짝였던 것 같다'); else journal('q'); };
+  var pop = document.createElement('div'); pop.className = 'jr-pop clue-left'; pop.hidden = true; document.body.appendChild(pop); pop.onclick = function () { pop.hidden = true; };
+  var pill = document.createElement('button'); pill.className = 'jr-pill'; pill.hidden = true; document.body.appendChild(pill); pill.onclick = function () { var h = BN.clueHint(U.cur()); if (h) { pop.innerHTML = '<div class="cl-h">🔎 반짝였던 곳</div><div class="cl-chips">' + h.places.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>'; pop.hidden = false; clearTimeout(pop.t); pop.t = setTimeout(function () { pop.hidden = true; }, 4500); } else journal('q'); };
   setInterval(function () {   // 방 안: 찾을 단서가 남았으면 「🔎 이곳의 단서 n/m」
     var k = U.cur(), n = k ? needIn(k) : null, S = U.S();
     if (!k || !n || n[0] >= n[1] || (S && S.rooms[k])) { pill.hidden = true; return; }

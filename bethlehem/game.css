@@ -752,3 +752,14 @@ body:not(.zoom-far):has(#toast.on) .jr-float { visibility: hidden; }
 .gen-slots { gap: 0 !important; margin-top: 8px; }
 .gen-slots .gcard { border-radius: 0; }
 .clue-left { border-color: #6fa8d6 !important; color: #cfe6ff; }
+/* 못 찾은 단서 카드(수첩 맨 위) */
+.note.clue-left { padding: 12px 14px; border: 1px solid rgba(111, 168, 214, .55) !important; background: rgba(95, 178, 255, .07); border-radius: 12px; }
+.clue-left .cl-h { font: 700 14px var(--sans); color: #dcecff; margin-bottom: 8px; } .clue-left .cl-h b { color: #ffe08a; }
+.clue-left .cl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.clue-left .cl-chips span { padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(111, 168, 214, .6); background: rgba(111, 168, 214, .14); color: #e6f2ff; font: 600 12.5px var(--sans); white-space: nowrap; }
+.clue-left .cl-f { font-size: 12.5px; color: #9fbcd8; }
+/* 알림 글: 한 눈에 읽히게 너비·글자·줄간격 */
+#toast { max-width: min(340px, 88vw); font-size: 14px; line-height: 1.5; text-align: center; word-break: keep-all; }
+.jr-pop { position: fixed; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 58px); z-index: 21; width: min(260px, 72vw); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(111, 168, 214, .6); background: rgba(9, 16, 36, .96); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
+.jr-pop .cl-h { margin-bottom: 6px; } .jr-pop .cl-chips { margin: 0; }
+body:has(#modal:not([hidden])) .jr-pop, body:has(#dialog:not([hidden])) .jr-pop { display: none; }
