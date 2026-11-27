@@ -740,7 +740,7 @@
   // 2 길 v2: 밤 지도를 끌어 강·산에 맞추고, 해 무늬로 동서남북을 읽는다
   PUZZLES.roadmap = function (R) {
     // 11/27 v3: 출발 → 큰 별 → 중간 별 → 작은 별 → 베들레헴, 한 걸음마다 곧은 한 방향. 밤 지도는 딱 붙지 않고 계속 움직인다(강·산을 보고 맞추기)
-    var r = seedRnd(2), GX = [120, 300, 480], GY = [90, 205, 320], jit = [];
+    var r = seedRnd(2), GX = [95, 265, 435], GY = [90, 205, 320], jit = [];
     for (var i = 0; i < 9; i++) jit.push([Math.round((r() - .5) * 44), Math.round((r() - .5) * 30)]);
     function P(n) { return [GX[n % 3] + jit[n][0], GY[Math.floor(n / 3)] + jit[n][1]]; }
     var DV = [[-1, 0], [0, 1], [1, 0], [0, -1]], nodes = null, moves = null;   // 화면 방향 0위 1오른 2아래 3왼
@@ -758,7 +758,7 @@
     var answer = moves.map(function (d) { return DIRS[(d - north + 4) % 4]; });
     S.roadAns = answer.join(' · '); save();   // 사람마다 다른 답 — 힌트 3단계가 보여 준다
     var ox = (90 + Math.floor(r() * 80)) * (r() < .5 ? -1 : 1), oy = (50 + Math.floor(r() * 50)) * (r() < .5 ? -1 : 1);
-    var land = '<path d="M20 150 Q120 118 170 152 T320 138 T450 168 T590 140" stroke="#7aa3c0" stroke-width="5" fill="none" opacity=".75"/><path d="M380 26 l26 -18 l26 18 z M528 250 l20 -15 l20 15 z M34 352 l22 -16 l22 16 z M214 262 l18 -14 l18 14 z M560 46 l16 -12 l16 12 z" fill="#a08660" opacity=".7"/>';
+    var land = '<path d="M20 150 Q120 118 170 152 T320 138 T450 168 T590 140" stroke="#7aa3c0" stroke-width="5" fill="none" opacity=".75"/><path d="M380 26 l26 -18 l26 18 z M528 250 l20 -15 l20 15 z M34 352 l22 -16 l22 16 z M214 262 l18 -14 l18 14 z M540 362 l16 -12 l16 12 z" fill="#a08660" opacity=".7"/>';
     var roads = '';
     for (var n2 = 0; n2 < 9; n2++) { var a = P(n2); if (n2 % 3 < 2) { var b = P(n2 + 1); roads += 'M' + a[0] + ' ' + a[1] + ' L' + b[0] + ' ' + b[1] + ' '; } if (n2 < 6) { var c2 = P(n2 + 3); roads += 'M' + a[0] + ' ' + a[1] + ' L' + c2[0] + ' ' + c2[1] + ' '; } }
     var st = P(nodes[0]), en = P(nodes[4]);
@@ -777,7 +777,7 @@
     var STEP = ['<b>출발</b> → ' + star(10), star(10) + ' → ' + star(7), star(7) + ' → ' + star(5), star(5) + ' → <b>베들레헴</b>'];
     var w = el('div', 'gen-wrap');
     w.innerHTML = '<svg viewBox="0 0 600 400" style="width:100%;border-radius:10px;background:linear-gradient(#efe0bb,#d8c095);touch-action:none" id="rmSvg">' + day + '<g style="opacity:.62">' + night + '</g></svg>' +
-      '<div class="rm-steps">' + STEP.map(function (s2) { return '<div class="rm-step">' + s2 + '</div>'; }).join('') + '</div><div class="rm-steps" id="rmLock"></div><button class="btn gold block" id="rmOk" style="margin-top:8px">상자 열기</button>';
+      '<div class="rm-steps" id="rmLock"></div><button class="btn gold block" id="rmOk" style="margin-top:8px">상자 열기</button>';
     modal('두 장의 지도', w);
     var svg = $('rmSvg'), ng = $('ngt'), drag = null;
     function pt(e) { var b2 = svg.getBoundingClientRect(); return { x: (e.clientX - b2.left) * 600 / b2.width, y: (e.clientY - b2.top) * 400 / b2.height }; }
