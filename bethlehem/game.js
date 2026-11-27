@@ -278,7 +278,7 @@
     if (held) return useOn(R, sp, el);
     var a = sp.act.split(':');
     if (a[0] === 'talk') { var tl = (R.talks[a[1]] || []).slice(), ch = BN.clueHint && BN.clueHint(cur); if (ch && sp.fig && /^(asaph|gilead|keeper)_/.test(sp.fig)) tl.push(/^gilead/.test(sp.fig) ? ['gilead', 1, '(소곤) 이 근처에 뭔가 ' + ch.n + '개쯤 더 떨어져 있는 것 같아요. 아까 ' + ch.places[0] + ' 쪽에서 뭐가 반짝였어요!'] : /^keeper/.test(sp.fig) ? ['keeper', 0, '여기 아직 못 찾은 것이 ' + ch.n + '개 있어. ' + ch.places[0] + ' 쪽을 잘 봐.'] : ['asaph', 0, '이곳에 아직 못 찾은 것이 ' + ch.n + '개 있다. ' + ch.places[0] + ' 쪽을 잘 살펴보아라.']); talk(tl); }
-    else if (a[0] === 'clue') { if (sp.need && !has(sp.need)) return toast('너무 어두워 잘 보이지 않는다'); S.clues = S.clues || {}; if (!S.clues[a[1]]) { S.clues[a[1]] = 1; if (sp.note) S.notes.push({ text: sp.note, ref: sp.ref || '' }); save(); sfx('ok'); toast('🔎 ' + (sp.msg || '단서를 찾았어요') + (sp.note ? ' — 수첩에 적었어요' : '')); el.remove(); if (sp.say) talk(sp.say); } }
+    else if (a[0] === 'clue') { if (sp.need && !has(sp.need)) return BN.darkSay ? talk(BN.darkSay(S, sp.need)) : toast('너무 어두워 잘 보이지 않는다'); S.clues = S.clues || {}; if (!S.clues[a[1]]) { S.clues[a[1]] = 1; if (sp.note) S.notes.push({ text: sp.note, ref: sp.ref || '' }); save(); sfx('ok'); toast('🔎 ' + (sp.msg || '단서를 찾았어요') + (sp.note ? ' — 수첩에 적었어요' : '')); el.remove(); if (sp.say) talk(sp.say); } }
     else if (a[0] === 'puzzle' && needClues(a[1])) return;
     else if (a[0] === 'puzzle') { if (PUZZLES[a[1]] || PZ_EXTRA[a[1]]) (PUZZLES[a[1]] || PZ_EXTRA[a[1]])(R); else BN.PZ[a[1]](R, API); }
     else if (a[0] === 'room') { if (sp.lock && !BN.used(sp.id, sp.lock)) return talk(sp.lockSay || [['narr', null, '문이 잠겨 있다.']]); enterRoom(a[1]); }
@@ -360,6 +360,7 @@
   function useOn(R, sp, el) {
     var k = held; setHeld(null);
     var acc = sp.accept && sp.accept[k], nm = (BN.ITEMS[k] || [k])[0];
+    if (!acc && /^clue:/.test(sp.act) && sp.need === k) return act(R, sp, el);   /* 등잔을 들고 어두운 단서를 누르면 그대로 비춰 본다 */
     if (!acc) return talk([['gilead', 1, NOPE[Math.floor(Math.random() * NOPE.length)].replace('X', nm)]]);
     if (acc.noUse) return talk(acc.say);
     S.used = S.used || {}; if (S.used[sp.id + ':' + k]) return toast('이미 여기에 썼어요');

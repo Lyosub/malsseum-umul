@@ -102,6 +102,17 @@
   // ── 마구간: 굴 안에 켜진 등잔을 쓴다
   R.stable.spots.forEach(function (sp) { if (sp.id === 'search') sp.accept = { lamp: { msg: '켜진 등잔을 높이 들었다. 굴 입구가 보인다.' }, lamp_e: { say: [['gilead', 1, '불 없는 등잔으로는 아무것도 안 보여요…']], noUse: true } }; });
 
+  // ── 어두워서 못 보는 단서를 누르면: 지금 가진 물건에 맞춰 길르앗이 할 일을 말한다
+  BN.darkSay = function (S, need) {
+    var has = function (x) { return S.items.indexOf(x) >= 0; }, L = [['narr', null, '너무 어두워 잘 보이지 않는다.']];
+    if (need !== 'lamp') return L;
+    if (has('lamp_e') && has('oil') && has('flint')) L.push(['gilead', 2, '빈 등잔, 기름, 부싯돌… 다 있잖아요! 가방에서 셋을 같이 골라 「합치기」 해 봐요.']);
+    else if (!has('lamp_e')) L.push(['gilead', 1, '불빛이 있어야겠어요. 성문 문지기들이 빈 등잔을 맡아 뒀다던데…']);
+    else if (!has('oil')) L.push(['gilead', 1, '등잔은 있는데 기름이 없어요. 여기 부엌 어딘가 큰 기름 항아리가 있을 거예요.']);
+    else if (!has('flint')) L.push(['gilead', 1, '기름은 부었는데 불을 붙일 게 없어요. 나사렛 길의 그 상자에 뭐가 있었더라?']);
+    return L;
+  };
+
   // ── 힌트(1 · 2단계는 방향, 3단계는 정답)
   function H(k, list) { BN.HINTS = BN.HINTS || {}; BN.HINTS[k] = list; if (BN.HINTS_CH1) BN.HINTS_CH1[k] = list; }
   var g0 = (BN.HINTS_CH1 && BN.HINTS_CH1.gate) || BN.HINTS.gate || [];
