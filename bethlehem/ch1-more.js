@@ -279,4 +279,12 @@
   var ih = BN.HINTS.inn || [];
   H('inn', ['손님 쪽지 여섯이 마당 곳곳에 있어요: 2층 난간, 별 간판, 문틈, 항아리 밑, 계단 위, 왼쪽 처마 등잔 옆. 다 찾으면 여관 주인(📋 방 정하기)을 눌러요. 계산대의 💰 돈궤는 따로 — 마당에서 세는 문제.', ih[1], ih[2]]);
   if (BN.HOW) BN.HOW.inn = '여관 주인(📋 방 정하기)을 누르면 손님 방 정하기 — 손님을 누르고 방을 누르면 들어가요(방을 다시 누르면 빠져요). 💰 돈궤는 마당에서 센 수 셋.';
+
+  // ══ 11/27 부엌: 천장 등잔 자리를 실제 매달린 등잔(가운데 위)으로, 작은 상자를 받으면 표지 ══
+  R.kitchen.spots.forEach(function (sp) {
+    if (sp.id === 'hanglamp') { sp.x = 48; sp.y = 18; sp.w = 8; sp.h = 18; Object.defineProperty(sp, 'label', { get: function () { var S = BN.ui && BN.ui.S && BN.ui.S(); return S && S.items.indexOf('lensbox') >= 0 ? '🪔 떨리는 등잔' : ''; }, configurable: true }); }
+    if (sp.id === 'cl_k_morse') { sp.x = 34.5; sp.y = 36; sp.msg = '선반 나무 기둥에 등잔지기의 표가 새겨져 있다'; }
+  });
+  var kh2 = BN.HINTS.kitchen || [];
+  H('kitchen', [kh2[0], '그다음 받은 작은 상자: 선반 나무 기둥(가운데 왼쪽)의 「등잔지기의 표」를 찾고, 천장 가운데 매달린 「🪔 떨리는 등잔」을 누르면 불빛이 길게·짧게 떨려요. ' + ((kh2[1] || '').split(' 그다음 받은 작은 상자')[0]), kh2[2]]);
 })(window.BN);
