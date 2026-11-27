@@ -855,16 +855,21 @@
   // 5 들판 v2: 양 넷의 방울 무늬를 막 13:35 순서로, 울음 횟수 네 자리
   var BELLS = ['🌆', '🌑', '🐓', '🌅'];   // 저물 때, 밤중, 닭 울 때, 새벽
   var sheepInfo = null;
-  function sheepData() { if (!sheepInfo) { var r = seedRnd(15), order = [0, 1, 2, 3].sort(function () { return r() - .5; }); sheepInfo = { bell: order, n: [0, 1, 2, 3].map(function () { return 1 + Math.floor(r() * 6); }) }; } return sheepInfo; }
+  function sheepData() { if (!sheepInfo) { var r = seedRnd(15), order = [0, 1, 2, 3]; for (var q = 3; q > 0; q--) { var t = Math.floor(r() * (q + 1)), x = order[q]; order[q] = order[t]; order[t] = x; } /* 어느 브라우저에서나 같은 차례(정렬 방식에 기대지 않음) */ sheepInfo = { bell: order, n: [0, 1, 2, 3].map(function () { return 1 + Math.floor(r() * 6); }) }; } return sheepInfo; }
   function sheepBell(i) { return BELLS[sheepData().bell[i]]; }
   BN.fieldCode = function () { var d = sheepData(); return [0, 1, 2, 3].map(function (b) { return d.n[d.bell.indexOf(b)]; }).join(' '); };   // 사람마다 다른 자물쇠 — 힌트 3단계용
+  var bleating = {};
   function sheepBleat2(i, spot) {
-    var n = sheepData().n[i], k = 0;
+    // 11/27: 한 번에 한 울음씩(겹치지 않게) 「메에~」 말풍선이 뜨고, 발밑에 ● 가 하나씩 쌓인다 — 운 횟수를 또렷하게 센다
+    if (bleating[i]) return; bleating[i] = 1;
+    var n = sheepData().n[i], k = 0; document.querySelectorAll('.bleat-dots').forEach(function (o) { o.remove(); });   /* 양끼리 가까워 ● 줄이 겹치지 않게, 마지막에 누른 양 것만 */
+    var dots = el('span', 'bleat-dots', ''); spot.appendChild(dots);
     (function one() {
-      if (k >= n) return; k++;
-      var rip = el('span', ''); rip.style.cssText = 'position:absolute;left:50%;top:0;transform:translate(-50%,-100%);font-size:20px;color:#ffe9a8;animation:rise .8s ease-out both;pointer-events:none'; rip.textContent = '〰'; spot.appendChild(rip); setTimeout(function () { rip.remove(); }, 800);
+      if (k >= n) { bleating[i] = 0; setTimeout(function () { dots.classList.add('fade'); setTimeout(function () { dots.remove(); }, 700); }, 2600); return; }
+      k++; dots.textContent += '●';
+      var rip = el('span', 'bleat', '메에~'); spot.appendChild(rip); setTimeout(function () { rip.remove(); }, 620);
       if (soundOn) try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); var t = actx.currentTime, o = actx.createOscillator(), g2 = actx.createGain(), lfo = actx.createOscillator(), lg = actx.createGain(); o.type = 'sawtooth'; o.frequency.value = 480 + i * 40; lfo.frequency.value = 14; lg.gain.value = 40; lfo.connect(lg); lg.connect(o.frequency); g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(.07, t + .05); g2.gain.linearRampToValueAtTime(0, t + .45); o.connect(g2); g2.connect(actx.destination); o.start(t); lfo.start(t); o.stop(t + .5); lfo.stop(t + .5); } catch (e) {}
-      setTimeout(one, 520);
+      setTimeout(one, 780);
     })();
   }
   PUZZLES.field = function (R) {
