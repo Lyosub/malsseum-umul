@@ -691,7 +691,7 @@
       "id": "2026-11-27-advent",
       "type": "carousel",
       "publish_at": "2026-11-27 19:30",
-      "status": "pending",
+      "status": "posted",
       "caption_file": "instagram/captions/2026-11-27-advent.txt",
       "first_comment_file": "instagram/captions/2026-11-27-advent.tags.txt",
       "images": [
@@ -706,7 +706,9 @@
         "instagram/2026-11-27-advent-09.jpg",
         "instagram/2026-11-27-advent-10.jpg"
       ],
-      "note": "대림절 설명 특별 게시물(설교와 별개) 10장 — 뜻·언제(진보라→흰색 초, 우리 교회 방식)·초의 색·두 번의 오심·계 22:20·나의 대림절·말씀 달력 안내. 그림책풍 GPT 배경. 전도사님 컨펌 2026-11-24."
+      "note": "대림절 설명 특별 게시물(설교와 별개) 10장 — 뜻·언제(진보라→흰색 초, 우리 교회 방식)·초의 색·두 번의 오심·계 22:20·나의 대림절·말씀 달력 안내. 그림책풍 GPT 배경. 전도사님 컨펌 2026-11-24.",
+      "media_id": "17999855880048050",
+      "posted_at": "2026-11-27 19:32"
     },
     {
       "id": "2026-11-28-preview",
