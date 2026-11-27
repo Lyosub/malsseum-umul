@@ -720,3 +720,24 @@ body:has(#modal:not([hidden])) .jr-float, body:has(#dialog:not([hidden])) .jr-fl
 body:has(#modal:not([hidden])) .jr-pill, body:has(#dialog:not([hidden])) .jr-pill { display: none; }
 .rspot.area[data-id^="cl_"]::after { width: 18px; height: 18px; border-radius: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle, #fffbe8 0 2.5px, rgba(255, 214, 120, .95) 3.5px, rgba(255, 196, 90, .45) 6px, rgba(40, 24, 8, .55) 7.5px, transparent 9px); animation: clueTw3 2.8s ease-in-out infinite; }
 @keyframes clueTw3 { 0%, 100% { opacity: .45; transform: translate(-50%, -50%) scale(.85); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); } }
+/* 11/27 작게 보기: 남는 위아래는 같은 그림을 흐리게, 표시·글자는 화면 크기 그대로 */
+.map-view::before, .room-view::before { content: ''; position: absolute; inset: -40px; background: var(--bgimg) center / cover no-repeat; filter: blur(22px) brightness(.38) saturate(1.1); z-index: 0; pointer-events: none; }
+.map-world, .room-stage { z-index: 1; }
+.spot { transform: translate(-50%, -50%) scale(var(--inv, 1)); }
+.room-stage .rspot:not(.area):not(.fig) { transform: translate(-50%, -50%) scale(var(--inv, 1)); }
+.room-stage .rspot.fig .lbl { transform: translateX(-50%) scale(var(--inv, 1)); transform-origin: 50% 100%; }
+.room-stage .rspot.area[data-id^="cl_"]::after { width: calc(18px * var(--inv, 1)); height: calc(18px * var(--inv, 1)); background: radial-gradient(circle, #fffbe8 0 14%, rgba(255, 214, 120, .95) 20%, rgba(255, 196, 90, .45) 33%, rgba(40, 24, 8, .55) 42%, transparent 50%); }
+.room-stage .rspot.area[data-k="puzzle"]::before { width: calc(26px * var(--inv, 1)); height: calc(26px * var(--inv, 1)); }
+.room-stage .rspot.area[data-id^="star_"]::after { font-size: calc(14px * var(--inv, 1)); }
+.room-stage .rspot.area[data-id^="bread_"]::after { transform: translate(-50%, -50%) scale(var(--inv, 1)); }
+.room-stage .rspot.area .bell { font-size: calc(16px * var(--inv, 1)); }
+.zoom-btn { position: fixed; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 60px); z-index: 19; padding: 7px 11px; border-radius: 999px; border: 1px solid var(--rim); background: rgba(9, 14, 34, .85); color: #e9dcb8; font: 700 12px var(--sans); }
+body:not(:has(#room.on)):not(:has(#map.on)) .zoom-btn { display: none; }
+body:has(#modal:not([hidden])) .zoom-btn, body:has(#dialog:not([hidden])) .zoom-btn { display: none; }
+/* 지도 퀘스트 카드 접기 */
+.jr-float.fold { width: auto; padding: 7px 12px; }
+.jr-float.fold p, .jr-float.fold .jr-go, .jr-float.fold small { display: none; }
+.jr-float.fold b { font-size: 13px; margin: 0; }
+.jr-fold { position: absolute; right: 8px; top: 6px; border: 0; background: none; color: #f2b630; font: 700 14px var(--sans); padding: 2px 6px; }
+.jr-float.fold .jr-fold { position: static; margin-left: 6px; }
+.jr-float.fold { display: flex; align-items: center; }

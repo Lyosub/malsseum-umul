@@ -144,8 +144,11 @@
     var scr = U.screen(), c = current(), P = progress(), s = [scr, c, P.join('/'), U.cur(), JSON.stringify(needIn(c || '') || '')].join('|');
     if (s === sig) return; sig = s;
     if (scr !== 'map' || !c) { card.hidden = true; return; }
-    card.innerHTML = '<small>진행 중</small><b>' + Q[c][0] + '</b><p>' + nextStep(c) + '</p><button class="jr-go">🧭 지도에서 보기</button>';
+    var fold = false; try { fold = localStorage.getItem('bethlehem.jrfold') === '1'; } catch (e) {}
+    card.classList.toggle('fold', fold);
+    card.innerHTML = '<small>진행 중</small><b>' + (fold ? '📜 ' : '') + Q[c][0] + '</b><p>' + nextStep(c) + '</p><button class="jr-go">🧭 지도에서 보기</button><button class="jr-fold" aria-label="접기">' + (fold ? '▸' : '▾') + '</button>';
     card.hidden = false;
+    card.querySelector('.jr-fold').onclick = function (e) { e.stopPropagation(); try { localStorage.setItem('bethlehem.jrfold', fold ? '0' : '1'); } catch (er) {} sig = ''; };
     card.querySelector('.jr-go').onclick = function (e) { e.stopPropagation(); U.showOnMap(c === 'kitchen' ? 'inn' : c); };
     card.onclick = function () { journal('q'); };
   }, 800);

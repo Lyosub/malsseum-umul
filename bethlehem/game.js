@@ -163,15 +163,19 @@
     next();
   }
 
+  // ── 화면 크기(11/27): 세로 폰에서는 그림을 작게 해 한눈에(약 62%가 보임), 🔍로 크게
+  var ZOOM = 'far'; try { ZOOM = localStorage.getItem('bethlehem.zoom') || 'far'; } catch (e) {}
+  function fitK(near) { var vw = innerWidth, vh = innerHeight, cover = Math.max(vw / 1920, vh / 1080); if (near || vw >= vh) return cover; return Math.max(vw / 1920, Math.min(vh / 1080, vw / (1920 * 0.62))); }
+  function setBlur(el, url) { if (el) el.style.setProperty('--bgimg', 'url("' + url + '")'); }
   // ── 지도(끌기·휠·두 손가락 확대)
   var view = { x: 0, y: 0, k: 1 }, W = 1920, H = 1080;
-  function fitMin() { var vw = innerWidth, vh = innerHeight; return Math.max(vw / W, vh / H); }
-  function clampView() { var vw = innerWidth, vh = innerHeight, k = view.k = Math.min(Math.max(view.k, fitMin()), fitMin() * 2.6); view.x = Math.min(0, Math.max(vw - W * k, view.x)); view.y = Math.min(0, Math.max(vh - H * k, view.y)); $('mapWorld').style.transform = 'translate(' + view.x + 'px,' + view.y + 'px) scale(' + k + ')'; }
+  function fitMin() { return fitK(false); }
+  function clampView() { var vw = innerWidth, vh = innerHeight, k = view.k = Math.min(Math.max(view.k, fitMin()), Math.max(fitK(true), fitMin()) * 2.2); view.x = W * k <= vw ? (vw - W * k) / 2 : Math.min(0, Math.max(vw - W * k, view.x)); view.y = H * k <= vh ? (vh - H * k) / 2 : Math.min(0, Math.max(vh - H * k, view.y)); var mw = $('mapWorld'); mw.style.transform = 'translate(' + view.x + 'px,' + view.y + 'px) scale(' + k + ')'; mw.style.setProperty('--inv', (0.9 / k).toFixed(3)); }
   function enterMap() { if (window.BN3D) BN3D.unmount();
     var CH = (BN.CHAPTERS || {})[S.ch || 1] || { title: '그 밤', map: 'A' }, MP = (BN.MAPS || {})[CH.map] || { img: 'img/maps/mapA@2x.webp', bgm: 'bgm02_village' };
-    if ($('mapImg').getAttribute('src') !== MP.img) { $('mapImg').src = MP.img; enterMap.once = false; }
+    if ($('mapImg').getAttribute('src') !== MP.img) { $('mapImg').src = MP.img; enterMap.once = false; } setBlur($('mapView'), MP.img);
     show('map'); music(MP.bgm); $('hudCh').textContent = (S.ch || 1) + '장 「' + CH.title + '」';
-    if (!enterMap.once) { enterMap.once = true; view.k = fitMin() * 1.25; view.x = (innerWidth - W * view.k) * 0.55; view.y = (innerHeight - H * view.k) * 0.8; }
+    if (!enterMap.once) { enterMap.once = true; view.k = fitK(ZOOM === 'near') * (ZOOM === 'near' ? 1.25 : 1); view.x = (innerWidth - W * view.k) * 0.55; view.y = (innerHeight - H * view.k) * 0.8; }
     clampView(); drawSpots(); updHud();
     if (!S.rooms.gate) setTimeout(function () { toast('지도를 끌어 둘러보고, 빛나는 곳을 눌러요'); }, 600);
   }
@@ -217,7 +221,7 @@
     cur = id; show('room'); $('btnBack').hidden = !!R.noBack; $('toast').classList.remove('on'); music(R.bgm || 'bgm02_village');
     var bg = $('roomBg'); bg.style.backgroundImage = 'url(' + R.bg + ')';
     roomFit(R.focus || 50);
-    var pv = $('roomView'); pv.classList.remove('push'); void pv.offsetWidth; pv.classList.add('push');
+    var pv = $('roomView'); setBlur(pv, R.bg); pv.classList.remove('push'); void pv.offsetWidth; pv.classList.add('push');
     if (window.BN3D) {
       var key = R.bg.replace(/^.*\//, '').replace('.webp', '');
       BN3D.mount($('roomStage'), { img: R.bg, hi: R.bg.replace('.webp', '@2x.webp'), depth: 'img/depth/' + key + '.webp', fx: (BN.FX || {})[cur] || {}, grade: ((BN.FX || {})[cur] || {}).grade,
@@ -247,8 +251,8 @@
   $('btnBack').onclick = function () { leaveRoom(); var R0 = BN.ROOMS[cur]; if (R0 && R0.back) enterRoom(R0.back); else enterMap(); };
   // 방 화면: 그림(1920×1080)을 화면을 덮는 크기로, 남는 쪽은 끌어서 둘러봄(세로 화면에서는 좌우 파노라마)
   var rv = { x: 0, y: 0, k: 1 };
-  function roomClamp() { var vw = innerWidth, vh = innerHeight, k = rv.k; rv.x = Math.min(0, Math.max(vw - 1920 * k, rv.x)); rv.y = Math.min(0, Math.max(vh - 1080 * k, rv.y)); var st = $('roomStage'); st.style.width = '1920px'; st.style.height = '1080px'; st.style.transform = 'translate(' + rv.x + 'px,' + rv.y + 'px) scale(' + k + ')'; }
-  function roomFit(focus) { rv.k = Math.max(innerWidth / 1920, innerHeight / 1080); rv.x = innerWidth / 2 - 1920 * rv.k * focus / 100; rv.y = (innerHeight - 1080 * rv.k) / 2; roomClamp(); var wide = 1920 * rv.k - innerWidth > 40; $('panHint').classList.toggle('on', wide); clearTimeout(roomFit.t); roomFit.t = setTimeout(function () { $('panHint').classList.remove('on'); }, 3000); }
+  function roomClamp() { var vw = innerWidth, vh = innerHeight, k = rv.k; rv.x = 1920 * k <= vw ? (vw - 1920 * k) / 2 : Math.min(0, Math.max(vw - 1920 * k, rv.x)); rv.y = 1080 * k <= vh ? (vh - 1080 * k) / 2 : Math.min(0, Math.max(vh - 1080 * k, rv.y)); var st = $('roomStage'); st.style.width = '1920px'; st.style.height = '1080px'; st.style.transform = 'translate(' + rv.x + 'px,' + rv.y + 'px) scale(' + k + ')'; st.style.setProperty('--inv', (1 / k).toFixed(3)); }
+  function roomFit(focus) { rv.k = fitK(ZOOM === 'near'); rv.x = innerWidth / 2 - 1920 * rv.k * focus / 100; rv.y = (innerHeight - 1080 * rv.k) / 2; roomClamp(); var wide = 1920 * rv.k - innerWidth > 40; $('panHint').classList.toggle('on', wide); clearTimeout(roomFit.t); roomFit.t = setTimeout(function () { $('panHint').classList.remove('on'); }, 3000); }
   (function () {
     var v = $('roomView'), s = null, moved = 0;
     v.addEventListener('pointerdown', function (e) { s = { x: e.clientX, y: e.clientY, rx: rv.x, ry: rv.y }; moved = 0; });
@@ -892,6 +896,11 @@
   if (S && S.nick && S.opening) { /* 첫 화면에서 「이어 하기」를 누르면 지도로 */ }
   for (var hk in (BN.HINTS_CH1 || {})) BN.HINTS[hk] = BN.HINTS_CH1[hk];
   BN.runPuzzle = function (name, R) { if (PT && ((ptCur === 'walk' && name === 'roadmap') || (ptCur === 'herd' && name === 'field'))) return ptOk(); (PUZZLES[name] || PZ_EXTRA[name])(R); };
+  var zb = document.createElement('button'); zb.className = 'zoom-btn'; document.body.appendChild(zb);
+  function zoomLabel() { zb.textContent = ZOOM === 'near' ? '🔍 작게' : '🔍 크게'; zb.hidden = innerWidth >= innerHeight; }
+  zb.onclick = function () { ZOOM = ZOOM === 'near' ? 'far' : 'near'; try { localStorage.setItem('bethlehem.zoom', ZOOM); } catch (e) {} zoomLabel();
+    if ($('room').classList.contains('on')) roomFit(50); else if ($('map').classList.contains('on')) { var c = { x: innerWidth / 2, y: innerHeight / 2 }, k0 = view.k, k1 = fitK(ZOOM === 'near') * (ZOOM === 'near' ? 1.25 : 1); view.x = c.x - (c.x - view.x) * k1 / k0; view.y = c.y - (c.y - view.y) * k1 / k0; view.k = k1; clampView(); } };
+  zoomLabel(); addEventListener('resize', zoomLabel);
   // 퀘스트 저널(journal.js)이 쓰는 도구
   BN.ui = { modal: modal, closeModal: closeModal, toast: toast, sfx: sfx, save: save, unlocked: unlocked, S: function () { return S; },
     cur: function () { return $('room').classList.contains('on') ? cur : ''; }, screen: function () { var e = document.querySelector('.screen.on'); return e ? e.id : ''; },
