@@ -867,3 +867,4 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 .held-chip { top: calc(118px + env(safe-area-inset-top)); bottom: auto; }
 .held-chip span { display: flex; flex-direction: column; line-height: 1.25; white-space: nowrap; }
 .held-chip small { font-size: 11px; opacity: .8; }
+.door-lbl.spot-lbl { left: 50%; right: auto; transform: translate(-50%, -50%); }

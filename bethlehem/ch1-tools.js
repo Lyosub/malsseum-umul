@@ -36,9 +36,9 @@
   // ── 성문: 문지기 셋(한 명만 참말) → 빈 등잔
   R.gate.intro = R.gate.intro.concat([
     ['asaph', 0, '등잔이 있어야 밤에 다닐 텐데. 빈 등잔 하나를 문지기들에게 맡겨 두었더니, 셋이 서로 딴소리를 하는구나.'],
-    ['gilead', 1, '셋 중에 참말을 하는 사람은 딱 한 명이래요. 나머지 둘은 저를 놀리는 거래요.', '(늘 당함)']
+    ['gilead', 1, '성문 아래 문지기 아저씨 셋이요? 셋 중에 참말을 하는 사람은 딱 한 명이래요. 나머지 둘은 저를 놀리는 거래요.', '(늘 당함)']
   ]);
-  R.gate.spots.push({ id: 'guards', x: 40, y: 47, w: 18, h: 30, act: 'puzzle:guards' });
+  R.gate.spots.push({ id: 'guards', x: 40, y: 47, w: 18, h: 30, act: 'puzzle:guards', label: '🛡 문지기 셋' });
   BN.PZ.guards = function (Rm, A) {
     var S = A.S(); S.f1 = S.f1 || {};
     if (S.f1.guards) return A.toast('✔ 빈 등잔은 이미 찾았어요 — 가방에 있어요');
