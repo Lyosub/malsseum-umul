@@ -94,7 +94,7 @@
     if (k === 'well' && !has('lens')) return '벽 글씨가 너무 작아요 — 작은 글씨를 키워 볼 맑은 돌이 필요해요(여관 부엌).';
     if (k === 'stable' && !used('search', 'lamp')) return '굴 안이 깜깜해요 — 켜진 등잔을 「손에 들기」 → 굴을 누르세요.';
     if (n && n[0] < n[1]) return '이곳을 뒤져 단서를 더 찾으세요 — ' + n[0] + ' / ' + n[1];
-    return n ? '단서를 다 모았어요. 이제 풀 차례예요.' : '이곳을 살펴보고 문제를 푸세요.';
+    return n ? ((BN.QSTEP || {})[k] || '단서를 다 모았어요. 이제 풀 차례예요.') : '이곳을 살펴보고 문제를 푸세요.';
   }
   function progress() { var S = U.S(), L = order(); return [L.filter(function (k) { return S.rooms[k]; }).length, L.length]; }
 
