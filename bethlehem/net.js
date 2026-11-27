@@ -22,7 +22,7 @@
   function clean(S) { var c = JSON.parse(JSON.stringify(S)); delete c.real; delete c.code; delete c.pendingReg; delete c.acct; return c; }
   function has(S) { return !!(S && (S.code || S.acct)); }
   var N = window.BNNet = {
-    on: !!URL && READY && !/[?&]try=1(&|$)/.test(location.search),
+    on: !!URL && READY && !/[?&](try|phonetest)=1(&|$)/.test(location.search),
     register: function (nick, real) { return seal(real).then(function (enc) { return rpc('bn_register', { p_nick: nick, p_real_enc: enc }); }); },
     nickFree: function (nick) { return rpc('bn_nick_free', { p_nick: nick }); },
     load: function (code) { return rpc('bn_load', { p_code: code }); },

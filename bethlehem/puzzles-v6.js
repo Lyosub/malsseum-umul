@@ -183,7 +183,7 @@
       var seq = path.map(function (p) { return PG[p[0]][p[1]]; }).filter(function (ch) { return 'HSN'.indexOf(ch) >= 0; }).join('');
       if (seq === 'HSN') bells(); else { A.wrong('route', '나귀가 길을 잃었다 — 마을을 가까운 차례로 들러야 한다'); path = []; paint(); }
     }
-    if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BN.__routeOk = function () { bells(); };   // 시험용
+    if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname) || /[?&]phonetest=1/.test(location.search)) BN.__routeOk = function () { bells(); };   // 시험용(로컬·폰 시험)
     function bells() {
       w.innerHTML = '<p class="tiny-note">먼 길이다. 지친 나귀가 멈춰 섰다. 방울을 세 번 울려 걸음을 깨우세요 — 폰을 흔들어도 되고, 방울을 눌러도 됩니다.</p>';
       var bell = A.el('button', 'rt-bell', '🔔'), cnt = A.el('p', 'bow-st', '0 / 3'); w.appendChild(bell); w.appendChild(cnt);

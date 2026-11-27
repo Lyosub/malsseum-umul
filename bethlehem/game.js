@@ -5,7 +5,9 @@
   var $ = function (id) { return document.getElementById(id); };
   // ?try=1 → 1장 시험판(11/27): 이 기기에만 저장(서버·순위·실명 없음), 1장이 끝나면 멈춤. 정식 진행과 저장 칸이 따로다.
   var TRY = window.BN_TRY = /[?&]try=1(&|$)/.test(location.search);
-  var KEY = TRY ? 'bethlehem.try1' : 'bethlehem.v1';
+  // ?phonetest=1 → 폰 시험(11/27): 센서·마이크·소리·손 감각 문제만 골라 바로 해 보기. 이 기기에만 저장, 서버·순위 없음, 풀어도 진행에 안 들어감
+  var PT = /[?&]phonetest=1(&|$)/.test(location.search);
+  var KEY = PT ? 'bethlehem.phonetest' : TRY ? 'bethlehem.try1' : 'bethlehem.v1';
   var S = load() || null;
   function blank() { return { v: 1, nick: '', dept: '', grade: '', av: 'm', ch: 1, ms: 0, hintMin: 0, rooms: {}, items: [], notes: [], stars: [], seenIntro: {}, opening: false, created: Date.now() }; }
   function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
@@ -334,6 +336,7 @@
 
   // ── 방 끝내기: 도장 → 대화 → 수첩·가방
   function solve(R) {
+    if (PT) return ptOk();
     if (S.rooms[cur]) return;
     var ch = BN.STAMPS[cur]; S.rooms[cur] = { at: S.ms, stamp: ch || '' };
     if (BN.netSolved) BN.netSolved(cur);
@@ -868,7 +871,54 @@
   // 다시 들어왔을 때
   if (S && S.nick && S.opening) { /* 첫 화면에서 「이어 하기」를 누르면 지도로 */ }
   for (var hk in (BN.HINTS_CH1 || {})) BN.HINTS[hk] = BN.HINTS_CH1[hk];
-  BN.runPuzzle = function (name, R) { (PUZZLES[name] || PZ_EXTRA[name])(R); };
+  BN.runPuzzle = function (name, R) { if (PT && ((ptCur === 'walk' && name === 'roadmap') || (ptCur === 'herd' && name === 'field'))) return ptOk(); (PUZZLES[name] || PZ_EXTRA[name])(R); };
+  // ── 폰 시험 목록
+  var ptCur = null;
+  function ptOk() { closeModal(); if (ptCur) { S.ptDone = S.ptDone || {}; S.ptDone[ptCur] = 1; save(); } sfx('ok'); toast('✔ 성공! 「📱 시험 목록」에서 다음 것을 해 보세요'); }
+  var PT_LIST = [
+    ['h', '📱 센서 · 마이크 · 소리'],
+    ['walk', 'road', '1장 나사렛 길', '🚶 30걸음 걷기', '폰을 들고 실제로 걸어요. 걸음 수가 잘 올라가는지(너무 쉽게/안 세지는지).'],
+    ['oil', 'stable', '1장 마구간', '🪔 기울여 기름 나르기', '폰을 기울여 쟁반을 길 따라 등잔까지. 기울인 쪽으로 가는지, 너무 예민하거나 둔한지.'],
+    ['climb', 'climb', '2장 오르는 길', '🕊 기울여 새장 굴리기', '폰을 기울여 새장을 굴려 비둘기 둘을 모은 뒤 맨 위 문으로.'],
+    ['read', 'porch', '2장 솔로몬 행각', '🎤 찬송 소리 내어 읽기', '마이크를 허락하고 시므온 찬송을 소리 내어 끝까지. 읽는 만큼 글자가 밝아지는지.'],
+    ['astro', 'magi', '3장 박사 천막', '🧭 실제로 별 겨누기', '폰을 남서쪽으로 향하고 윗부분을 55° 들어 2초. 화면의 방향이 실제 나침반과 맞는지.'],
+    ['bow', 'worship', '4장 그 집 안', '🙇 엎드려 경배', '화면이 바닥을 보게 폰을 엎어 5초. 끝나면 진동이 오는지.'],
+    ['lamp', 'dream', '5장 요셉의 꿈', '💨 등잔 불어 끄기', '마이크에 「후—」 길게 불어 등잔을 꺼요.'],
+    ['bells', 'dawn', '5장 새벽 길', '🔔 흔들어 방울 울리기', '폰을 흔들어 방울을 세 번(아이폰은 「흔들기 켜기」를 먼저).'],
+    ['chorus', 'angel', '1장 들판 위 하늘', '🎵 천군 가락 따라 하기', '소리가 나는지(무음 모드 끄기), 가락을 듣고 따라 누르기 편한지.'],
+    ['h', '✋ 손 감각(폰에서 느낌 확인)'],
+    ['herd', 'field', '1장 들판', '🐑 양 몰기', '손가락으로 양 7마리를 60초 안에 우리로. 너무 어렵거나 쉬운지.'],
+    ['stealth', 'escape', '5장 골목', '🏮 실시간 잠입', '등불을 피해 나귀를 끌어요. 등불 속도가 적당한지.'],
+    ['route', 'dawn', '5장 새벽 길', '✍ 애굽 길 그리기', '손가락을 떼지 않고 길을 그어요(💧힌트에 길이 있어요).']
+  ];
+  function ptRun(k) {
+    var it = PT_LIST.filter(function (x) { return x[0] === k; })[0]; if (!it) return;
+    ptCur = k; S.f3 = S.f3 || {}; S.f4 = S.f4 || {}; S.f5 = S.f5 || {}; delete S.f3.astro; delete S.f4.bow; delete S.f5.lamp; S.walked = 0; S.herded = 0; S.psalmOk = 1; S.seenIntro[it[1]] = 1; save();
+    closeModal(); enterRoom(it[1]); $('dialog').hidden = true;
+    setTimeout(function () {
+      $('dialog').hidden = true; var R = BN.ROOMS[it[1]];
+      if (k === 'oil') return BN.oilCarry(ptOk);
+      if (k === 'read') return BN.PZ.readAloud(BN.SIMEON.join(' '), '시므온의 찬송 · 소리 내어', ptOk, API);
+      if (k === 'bells') { BN.PZ.route(R, API); if (BN.__routeOk) BN.__routeOk(); return; }
+      if (BN.PZ[k]) BN.PZ[k](R, API); else BN.runPuzzle(k, R);
+    }, 900);
+  }
+  function ptMenu() {
+    var d = S.ptDone = S.ptDone || {}, w = el('div', 'gen-wrap pt-list');
+    if ((S.f3 || {}).astro) d.astro = 1; if ((S.f4 || {}).bow) d.bow = 1; if ((S.f5 || {}).lamp) d.lamp = 1; save();
+    w.innerHTML = '<p class="gen-help">폰에서만 확인할 수 있는 문제만 모았어요. 눌러서 바로 해 보고, 어색하거나 안 되는 것을 알려 주세요. (이 기기에만 저장되고 순위·진행에는 안 들어가요)</p>' + PT_LIST.map(function (x) {
+      if (x[0] === 'h') return '<h4>' + x[1] + '</h4>';
+      return '<button class="pt-item" data-k="' + x[0] + '"><b>' + (d[x[0]] ? '✔ ' : '') + x[3] + '</b><span>' + x[2] + '</span><small>' + x[4] + '</small></button>';
+    }).join('');
+    modal('📱 폰 시험 목록', w);
+    w.querySelectorAll('.pt-item').forEach(function (b) { b.onclick = function () { ptRun(b.dataset.k); }; });
+  }
+  if (PT) {
+    if (!S || !S.nick) { S = blank(); S.nick = '폰시험'; S.opening = true; S.ch = 5; S.items = ['census', 'lamp', 'rope', 'keys', 'oil', 'lens', 'scrap', 'cloth']; save(); }
+    var ptb = el('button', 'pt-fab', '📱 시험 목록'); ptb.onclick = ptMenu; document.body.appendChild(ptb);
+    document.querySelector('#title .eyebrow').textContent = '✦ 폰 시험 · 이 기기에만 저장돼요';
+    setTimeout(ptMenu, 400);
+  }
   if (BN.hook) BN.hook({ S: function () { return S; }, save: save, toast: toast, cur: function () { return $('room').classList.contains('on') ? cur : ''; } });
   if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname) && /debug/.test(location.search)) document.body.classList.add('dbg');
   if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__bn = { get S() { return S; }, resultImage: resultImage, enterRoom: enterRoom, enterMap: enterMap, PUZZLES: PUZZLES, solveNow: function () { solve(BN.ROOMS[cur]); }, sheep: function () { return sheepData(); }, give: function (k) { if (S.items.indexOf(k) < 0) S.items.push(k); save(); } };

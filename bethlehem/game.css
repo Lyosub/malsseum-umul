@@ -608,3 +608,9 @@ body:has(#dialog:not([hidden])) #panHint { opacity: 0 !important; }
 #dialog.scroll .dlg-name { display: none; }
 @keyframes unroll { from { clip-path: inset(-60px -20px 100% -20px); opacity: .4; } to { clip-path: inset(-60px -20px -20px -20px); opacity: 1; } }
 .note.heard p { margin: 6px 0; font-family: var(--serif); line-height: 1.5; } .note.heard .hw { color: var(--gold); font-family: var(--sans); font-size: 12px; font-weight: 700; }
+/* 11/27 폰 시험(?phonetest=1) */
+.pt-fab { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); transform: translateX(-50%); z-index: 60; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--rim); background: rgba(9, 14, 34, .94); color: #ffe2a0; font: 700 14px var(--sans); box-shadow: 0 6px 20px rgba(0, 0, 0, .5); }
+body:has(#dialog:not([hidden])) .pt-fab, body:has(#modal:not([hidden])) .pt-fab, body:has(.ov7) .pt-fab { display: none; }
+.pt-list h4 { margin: 14px 0 6px; color: var(--gold); font-size: 14px; }
+.pt-item { display: block; width: 100%; text-align: left; margin: 6px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rim); background: rgba(255, 255, 255, .04); color: inherit; cursor: pointer; }
+.pt-item b { font-size: 15px; } .pt-item span { margin-left: 8px; font-size: 12px; color: var(--gold); } .pt-item small { display: block; margin-top: 3px; color: var(--stone); font-size: 12px; line-height: 1.45; }
