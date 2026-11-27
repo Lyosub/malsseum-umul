@@ -99,6 +99,10 @@
   });
   R.well.talks.gilead = [['gilead', 2, '저 아래 뭐가 반짝인 것 같아요. 동전이면 좋겠다.'], ['gilead', 1, '그런데 너무 깊고 깜깜해요. 비출 것도, 내릴 줄도 있어야겠어요.']];
 
+  // ── 들판: 목자의 상자(지팡이 밑)를 눌러야 한다는 것이 보이게
+  R.field.spots.forEach(function (sp) { if (sp.id === 'staffbox') sp.label = '📦 목자의 상자'; });
+  R.field.intro = R.field.intro.map(function (l) { return /상자는 왼쪽 바위 옆 지팡이 밑에/.test(l[2]) ? ['gilead', 2, '양들이 들판에 다 흩어졌어요! 목자 아저씨들 상자는 왼쪽 바위에 기댄 지팡이 밑에 있어요. 상자부터 눌러 볼까요?'] : l; });
+
   // ── 마구간: 굴 안에 켜진 등잔을 쓴다
   R.stable.spots.forEach(function (sp) { if (sp.id === 'search') sp.accept = { lamp: { msg: '켜진 등잔을 높이 들었다. 굴 입구가 보인다.' }, lamp_e: { say: [['gilead', 1, '불 없는 등잔으로는 아무것도 안 보여요…']], noUse: true } }; });
 
