@@ -40,9 +40,9 @@
   ]);
   // 문지기 셋: 성문 아치 앞에 나란히(왼쪽부터 첫째 · 둘째 · 셋째). 다른 인물·탁자보다 뒤에 서도록 맨 앞에 넣는다
   R.gate.spots.unshift(
-    { id: 'guard1', x: 27, y: 90, fig: 'guard1_front', h: 40, act: 'puzzle:guards', gname: '첫째' },
-    { id: 'guard2', x: 35.5, y: 90, fig: 'guard2_front', h: 37, act: 'puzzle:guards', gname: '둘째' },
-    { id: 'guard3', x: 44, y: 90, fig: 'guard3_front', h: 38, act: 'puzzle:guards', gname: '셋째' });
+    { id: 'guard1', x: 29.5, y: 55, fig: 'guard1_front', h: 27, act: 'puzzle:guards', gname: '첫째' },
+    { id: 'guard2', x: 36, y: 55, fig: 'guard2_front', h: 25, act: 'puzzle:guards', gname: '둘째' },
+    { id: 'guard3', x: 42.5, y: 55, fig: 'guard3_front', h: 26, act: 'puzzle:guards', gname: '셋째' });   // 성문 아치 안쪽 길 위(탁자·명부를 가리지 않게)
   BN.PZ.guards = function (Rm, A) {
     var S = A.S(); S.f1 = S.f1 || {};
     if (S.f1.guards) return A.toast('✔ 빈 등잔은 이미 찾았어요 — 가방에 있어요');
