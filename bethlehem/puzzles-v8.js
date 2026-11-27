@@ -117,7 +117,7 @@
       });
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       sheep.forEach(function (s) { ctx.font = '22px serif'; ctx.fillText('🐑', s.x, s.y); ctx.font = '12px serif'; ctx.fillText(BELL4[s.b], s.x, s.y - 14); });
-      pops = pops.filter(function (q) { q.t--; ctx.globalAlpha = Math.max(0, q.t / 40); ctx.font = '700 13px sans-serif'; ctx.fillStyle = q.ok ? '#ffe27a' : '#ff9a8a'; ctx.fillText(q.ok ? '매애~ 딸랑' : '음매?!', q.x, q.y - (40 - q.t) * .4); ctx.globalAlpha = 1; return q.t > 0; });
+      pops = pops.filter(function (q) { q.t--; ctx.globalAlpha = Math.max(0, q.t / 40); ctx.font = '700 13px sans-serif'; ctx.fillStyle = q.ok ? '#ffe27a' : '#ff9a8a'; ctx.fillText(q.ok ? '메에~ 딸랑' : '메에에?!', q.x, q.y - (40 - q.t) * .4); ctx.globalAlpha = 1; return q.t > 0; });
       if (fin) { ctx.beginPath(); ctx.arc(fin.x, fin.y, 70, 0, 7); ctx.strokeStyle = 'rgba(255,240,200,.22)'; ctx.lineWidth = 2; ctx.stroke(); }
     }
     A.modal('양 몰기', w, function () { alive = false; }); frame();

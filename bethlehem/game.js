@@ -238,7 +238,7 @@
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
       if (sp.night) { var hh = new Date().getHours(); if (hh >= 5 && hh < 19) return; }
       if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return; if (sp.act.indexOf('scrap:') === 0 && (S.scraps || []).indexOf(sp.act.slice(6)) >= 0) return; if (sp.act.indexOf('tile:') === 0 && (S.tiles || []).indexOf(sp.act.slice(5)) >= 0) return;
-        b.className = 'rspot area'; b.dataset.id = sp.id; b.dataset.k = sp.act.split(':')[0]; if (S.rooms[id] && !/^puzzle:(chart|journal)$/.test(sp.act)) b.classList.add('done'); b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
+        b.className = 'rspot area'; b.dataset.id = sp.id; b.dataset.k = sp.act.split(':')[0]; if (S.rooms[id] && !/^puzzle:(chart|journal)$/.test(sp.act)) b.classList.add('done'); b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('room:') === 0) { var RT = BN.ROOMS[sp.act.split(':')[1]]; b.innerHTML = '<span class="door-lbl">🚪 ' + ((RT && RT.title) || '') + '</span>'; } if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
         b.onclick = function (e) { ripple(e); act(R, sp, b); }; box.appendChild(b); return; }
       if (sp.fig) { b.className = 'rspot fig'; b.style.setProperty('--h', (sp.h / 100 * 1080) + 'px'); b.innerHTML = '<img src="img/chars/' + sp.fig + '.webp" alt="">' + (sp.name ? '<span class="lbl">' + sp.name + '</span>' : ''); b.onclick = function () { act(R, sp, b); }; box.appendChild(b); return; }
       b.innerHTML = sp.hidden ? '<span class="glint" style="opacity:.25;width:22px;height:22px"></span>' : '<span class="glint"></span><span class="lbl">' + sp.name + '</span>';
@@ -458,24 +458,47 @@
 
   // 3 우물: 등잔으로 어둠을 문질러 벽 글씨 찾기 → 두레박 줄을 7 규빗에
   PUZZLES.well = function (R) {
-    if (!has('lamp')) return talk([['gilead', 1, '너무 깜깜해요. 불빛이 있어야 보일 것 같아요.'], ['asaph', 0, '나사렛 길 쪽 나그네 쉼터에 무언가 있지 않았느냐.']]);
+    if (!has('lamp')) return talk([['gilead', 1, '너무 깜깜해서 아무것도 안 보여요.']]);
+    // 11/27: 수정 조각을 직접 끌어 글씨 위에 대고, 「가까이 ↔ 멀리」로 초점을 맞춰야 읽힌다(초점 자리는 사람마다 다름)
+    var rr = seedRnd(31), FOC = 22 + Math.floor(rr() * 56), M = 2.3, TX = 40, TY = 63, glass = has('lens');
+    var TXT = '<div class="wl-t" style="position:absolute;left:' + TX + '%;top:' + TY + '%;transform:translate(-50%,-50%) rotate(-4deg);font-family:var(--serif);color:#f3d79a;white-space:nowrap">줄은 열넷의 반 규빗</div>';
     var w = el('div', 'gen-wrap');
-    w.innerHTML = '<p class="gen-help howto">등잔을 들고 우물 안 벽을 손가락으로 문질러 비춰 보세요.</p><div style="position:relative;border-radius:12px;overflow:hidden;touch-action:none" id="wlBox"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.55)"><div style="position:absolute;left:40%;top:63%;transform:translate(-50%,-50%) rotate(-4deg);font-family:var(--serif);font-size:clamp(16px,3.2vw,26px);color:#f3d79a;text-shadow:0 0 8px #000;white-space:nowrap">줄은 열넷의 반</div><canvas id="wlDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas></div>' +
-      '<div id="wlRope" style="display:none"><p class="gen-help" style="margin-top:8px">두레박 줄을 몇 규빗 내릴까요?</p><input type="range" id="wlLen" min="1" max="14" value="1" style="width:100%"><p style="text-align:center;font-size:20px;margin:4px 0"><b id="wlV">1</b> 규빗</p><button class="btn gold block" id="wlUp">끌어올리기</button></div>';
+    w.innerHTML = '<div style="position:relative;border-radius:12px;overflow:hidden;touch-action:none" id="wlBox"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.55)"><div id="wlBase">' + TXT + '</div>' +
+      '<canvas id="wlDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas>' +
+      (glass ? '<div id="wlGlass" class="wl-glass"><div id="wlIn" class="wl-in"><div class="wl-blur"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.62)">' + TXT + '</div><canvas id="wlInDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas></div></div><div id="wlRim" class="wl-rim"></div>' : '') + '</div>' +
+      (glass ? '<div class="wl-foc"><span>가까이</span><input type="range" id="wlFoc" min="0" max="100" value="' + (FOC > 50 ? 4 : 96) + '"><span>멀리</span></div><p class="gen-help" style="margin:2px 0 0;text-align:center">💎 수정 조각을 손가락으로 끌어 벽에 대 보세요</p>' : '') +
+      '<div id="wlRope" style="margin-top:6px">' + (has('rope') ? '<input type="range" id="wlLen" min="1" max="14" value="1" style="width:100%"><p style="text-align:center;font-size:20px;margin:4px 0"><b id="wlV">1</b> 규빗</p><button class="btn gold block" id="wlUp">끌어올리기</button>' : '<p class="gen-help">두레박 줄이 짧게 끊어져 있다.</p>') + '</div>';
     modal('우물 안', w);
-    var cv = $('wlDark'), box = $('wlBox'), ctx, found = 0;
+    var cv = $('wlDark'), box = $('wlBox');
+    var base = w.querySelector('#wlBase .wl-t'); base.style.fontSize = '7px'; base.style.filter = 'blur(1.2px)';
     whenImg(box, function () {
-      cv.width = box.clientWidth; cv.height = box.clientHeight; ctx = cv.getContext('2d'); ctx.fillStyle = 'rgba(4,6,14,.97)'; ctx.fillRect(0, 0, cv.width, cv.height);
-      function light(e) { var b = cv.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top; ctx.globalCompositeOperation = 'destination-out'; var gr = ctx.createRadialGradient(x, y, 4, x, y, 46); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, 46, 0, 7); ctx.fill(); ctx.globalCompositeOperation = 'source-over';
-        if (Math.abs(x / cv.width - .40) < .14 && Math.abs(y / cv.height - .63) < .1) { found++; if (found === 25) { sfx('ok'); toast('벽에 새긴 글씨가 보여요!'); $('wlRope').style.display = 'block'; } } }
-      cv.addEventListener('pointermove', function (e) { if (e.buttons || e.pointerType === 'touch') light(e); });
-      cv.addEventListener('pointerdown', light);
+      var BW = box.clientWidth, BH = box.clientHeight, L = Math.round(BW * .5), gx = BW * .78, gy = BH * .78;
+      cv.width = BW; cv.height = BH; var ctx = cv.getContext('2d'); ctx.fillStyle = 'rgba(4,6,14,.97)'; ctx.fillRect(0, 0, BW, BH);
+      var ID = $('wlInDark'), ictx = ID && ID.getContext('2d'); if (ID) { ID.width = BW; ID.height = BH; }
+      function mirror() { if (ictx) { ictx.clearRect(0, 0, BW, BH); ictx.drawImage(cv, 0, 0); } }
+      function light(x, y) { ctx.globalCompositeOperation = 'destination-out'; var gr = ctx.createRadialGradient(x, y, 4, x, y, 42); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, 42, 0, 7); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; mirror(); }
+      var G = $('wlGlass'), IN = $('wlIn'), RIM = $('wlRim'), FC = $('wlFoc');
+      function placeGlass() {
+        if (!G) return;
+        gx = Math.max(0, Math.min(BW, gx)); gy = Math.max(0, Math.min(BH, gy));
+        [G, RIM].forEach(function (e) { e.style.width = e.style.height = L + 'px'; e.style.left = (gx - L / 2) + 'px'; e.style.top = (gy - L / 2) + 'px'; });
+        IN.style.width = (BW * M) + 'px'; IN.style.height = (BH * M) + 'px'; IN.style.left = (L / 2 - gx * M) + 'px'; IN.style.top = (L / 2 - gy * M) + 'px';
+        IN.querySelector('.wl-t').style.fontSize = (7 * M) + 'px';
+        var d = Math.abs(+FC.value - FOC); IN.querySelector('.wl-blur').style.filter = 'blur(' + (d <= 3 ? 0 : Math.min(7, (d - 3) / 4 + .8)).toFixed(1) + 'px)';
+      }
+      if (FC) FC.addEventListener('input', placeGlass);
+      placeGlass(); mirror();
+      var drag = null;
+      function xy(e) { var b = cv.getBoundingClientRect(); return { x: (e.clientX - b.left) * BW / b.width, y: (e.clientY - b.top) * BH / b.height }; }
+      cv.addEventListener('pointerdown', function (e) { var q = xy(e); try { cv.setPointerCapture(e.pointerId); } catch (er) {} if (G && Math.hypot(q.x - gx, q.y - gy) < L / 2) drag = { x: q.x, y: q.y, gx: gx, gy: gy }; else { drag = null; light(q.x, q.y); } });
+      cv.addEventListener('pointermove', function (e) { var q = xy(e); if (drag) { gx = drag.gx + q.x - drag.x; gy = drag.gy + q.y - drag.y; placeGlass(); } else if (e.buttons || e.pointerType === 'touch') light(q.x, q.y); });
+      cv.addEventListener('pointerup', function () { drag = null; });
+      if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BN.__well = { focus: FOC, read: function () { light(BW * TX / 100, BH * TY / 100); gx = BW * TX / 100; gy = BH * TY / 100; FC.value = FOC; placeGlass(); } };
     });
     w.addEventListener('input', function (e) { if (e.target.id === 'wlLen') $('wlV').textContent = e.target.value; });
     w.addEventListener('click', function (e) {
-      if (e.target.id !== 'wlUp') return; var v = +$('wlLen').value;
-      if (v === 7) { closeModal(); solve(R); }
-      else { sfx('no'); toast(v < 7 ? '빈 두레박만 올라왔어요 — 물에 닿지 않았나 봐요' : '줄이 바닥 진흙에 박혔어요 — 너무 길어요'); }
+      if (e.target.id !== 'wlUp') return; if (locked('well')) return; var v = +$('wlLen').value;
+      if (v === 7) { closeModal(); solve(R); } else wrong('well', v < 7 ? '빈 두레박만 올라왔어요' : '줄이 바닥 진흙에 박혔어요');
     });
   };
 
@@ -790,28 +813,7 @@
     if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BN.__road = { answer: answer, align: function () { ox = 0; oy = 0; ng.setAttribute('transform', 'translate(0,0)'); } };
   };
 
-  // 3 우물 v2: 등잔(어둠) + 수정 조각(작은 글씨) + 두레박 줄(여관 나귀 짐)
-  PUZZLES.well = function (R) {
-    if (!has('lamp')) return talk([['gilead', 1, '너무 깜깜해서 아무것도 안 보여요.']]);
-    var w = el('div', 'gen-wrap'), lens = false;
-    w.innerHTML = '<div style="position:relative;border-radius:12px;overflow:hidden;touch-action:none" id="wlBox"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.55)"><div id="wlTxt" style="position:absolute;left:40%;top:63%;transform:translate(-50%,-50%) rotate(-4deg);font-family:var(--serif);font-size:7px;color:#f3d79a;filter:blur(1.2px);white-space:nowrap">줄은 열넷의 반 규빗</div><canvas id="wlDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas></div>' +
-      '<div style="display:flex;gap:8px;margin-top:8px">' + (has('lens') ? '<button class="btn ghost" id="wlLens">💎 수정 조각 대기</button>' : '') + '</div>' +
-      '<div id="wlRope" style="margin-top:6px">' + (has('rope') ? '<input type="range" id="wlLen" min="1" max="14" value="1" style="width:100%"><p style="text-align:center;font-size:20px;margin:4px 0"><b id="wlV">1</b> 규빗</p><button class="btn gold block" id="wlUp">끌어올리기</button>' : '<p class="gen-help">두레박 줄이 짧게 끊어져 있다.</p>') + '</div>';
-    modal('우물 안', w);
-    var lb = $('wlLens'); if (lb) lb.onclick = function () { lens = !lens; var t = $('wlTxt'); t.style.fontSize = lens ? 'clamp(16px,3.2vw,26px)' : '7px'; t.style.filter = lens ? 'none' : 'blur(1.2px)'; lb.textContent = lens ? '💎 수정 조각 치우기' : '💎 수정 조각 대기'; };
-    var cv = $('wlDark'), box = $('wlBox');
-    whenImg(box, function () {
-      cv.width = box.clientWidth; cv.height = box.clientHeight; var ctx = cv.getContext('2d'); ctx.fillStyle = 'rgba(4,6,14,.97)'; ctx.fillRect(0, 0, cv.width, cv.height);
-      function light(e) { var b = cv.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top; ctx.globalCompositeOperation = 'destination-out'; var gr = ctx.createRadialGradient(x, y, 4, x, y, 42); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, 42, 0, 7); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
-      cv.addEventListener('pointermove', function (e) { if (e.buttons || e.pointerType === 'touch') light(e); });
-      cv.addEventListener('pointerdown', light);
-    });
-    w.addEventListener('input', function (e) { if (e.target.id === 'wlLen') $('wlV').textContent = e.target.value; });
-    w.addEventListener('click', function (e) {
-      if (e.target.id !== 'wlUp') return; if (locked('well')) return; var v = +$('wlLen').value;
-      if (v === 7) { closeModal(); solve(R); } else wrong('well', v < 7 ? '빈 두레박만 올라왔어요' : '줄이 바닥 진흙에 박혔어요');
-    });
-  };
+  // 3 우물 v3은 위쪽(PUZZLES.well 첫 자리)에 있다 — 수정 조각 직접 대기 + 초점
 
   // 4 여관 v2: 손님 여섯, 방 다섯(레위인은 제사장 가족과 같은 방 가능), 구절을 찾아야 풀리는 쪽지
   PUZZLES.inn = function (R) {
@@ -819,12 +821,14 @@
     var guests = ['갈릴리 상인', '로마 세리', '목수 형제', '나이 든 과부', '제사장 가족', '레위인 노래꾼'];
     var sol = { 0: [0], 1: [1], 2: [2], 3: [3], 4: [4, 5] };
     var clues = ['제사장 가족(넷): 「레위기 12장 8절에 나오는 예물이 그려진 방이면 좋겠소. 우리는 넷이오.」', '갈릴리 상인: 「누가복음 5장 1~2절의 그 물가에서 그물을 다루다 왔소. 그 물에서 나는 것이 그려진 방!」', '나이 든 과부: 「계단은 못 올라가요. 시편 52편 8절처럼 살고 싶은데…」', '로마 세리: 「저 갈릴리 상인과 같은 층으로 주시오.」', '목수 형제(둘): 「마태복음 20장 1절의 품꾼처럼 일하던 곳이 생각나는 방.」', '레위인 노래꾼: 「방이 없으면 제사장님 가족과 같은 방도 괜찮습니다.」'];
-    var asg = [[], [], [], [], []], sel = null, w = el('div', 'gen-wrap');
+    var asg = [[], [], [], [], []], sel = null, w = el('div', 'gen-wrap'), sr = seedRnd(41);
+    function mix(n) { var a = []; for (var q = 0; q < n; q++) a.push(q); for (var q2 = n - 1; q2 > 0; q2--) { var t = Math.floor(sr() * (q2 + 1)), x = a[q2]; a[q2] = a[t]; a[t] = x; } return a; }
+    var gOrd = mix(6), rOrd = mix(5); if (gOrd.join() === '0,1,2,3,4,5') gOrd.reverse(); if (rOrd.join() === '0,1,2,3,4') rOrd.reverse();
     function draw() {
       w.innerHTML = '<div class="note" style="font-size:13px;line-height:1.6">' + clues.join('<br>') + '</div><div style="display:flex;flex-wrap:wrap;gap:6px" id="inG"></div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px" id="inR"></div><button class="btn gold block" id="inOk" style="margin-top:10px">방 배정 끝</button>';
       var placed = [].concat.apply([], asg);
-      guests.forEach(function (g, i) { if (placed.indexOf(i) >= 0) return; var b = el('button', 'btn ' + (sel === i ? 'gold' : 'ghost'), g); b.style.padding = '8px 10px'; b.onclick = function () { sel = sel === i ? null : i; draw(); }; w.querySelector('#inG').appendChild(b); });
-      rooms.forEach(function (rm, i) { var b = el('button', 'gcard', '<span style="font-size:26px;display:block">' + rm[0] + '</span><small>' + rm[1] + '</small><b style="display:block;font-size:11px;color:#7a2a10;min-height:28px;line-height:1.3">' + asg[i].map(function (x) { return guests[x]; }).join('<br>') + '</b>'); b.style.aspectRatio = 'auto'; b.style.padding = '6px 2px';
+      gOrd.forEach(function (i) { var g = guests[i]; if (placed.indexOf(i) >= 0) return; var b = el('button', 'btn ' + (sel === i ? 'gold' : 'ghost'), g); b.style.padding = '8px 10px'; b.onclick = function () { sel = sel === i ? null : i; draw(); }; w.querySelector('#inG').appendChild(b); });
+      rOrd.forEach(function (i) { var rm = rooms[i]; var b = el('button', 'gcard', '<span style="font-size:26px;display:block">' + rm[0] + '</span><small>' + rm[1] + '</small><b style="display:block;font-size:11px;color:#7a2a10;min-height:28px;line-height:1.3">' + asg[i].map(function (x) { return guests[x]; }).join('<br>') + '</b>'); b.style.aspectRatio = 'auto'; b.style.padding = '6px 2px';
         b.onclick = function () { if (sel !== null) { if (asg[i].length >= 2) return toast('한 방에 두 손님까지만'); asg[i].push(sel); sel = null; } else if (asg[i].length) asg[i].pop(); draw(); }; w.querySelector('#inR').appendChild(b); });
       w.querySelector('#inOk').onclick = function () {
         if (locked('inn')) return;
@@ -836,7 +840,7 @@
     }
     function stage2() {
       w.innerHTML = '<p class="gen-help">문 앞에 나사렛에서 온 부부가 서 있어요. 요셉과 마리아는 어디에?</p><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="inQ"></div>';
-      rooms.concat([['', '있을 곳이 없다']]).forEach(function (rm, i) { var b = el('button', 'btn ghost', (rm[0] || '∅') + (i < 5 ? '' : ' ' + rm[1])); b.style.fontSize = i < 5 ? '22px' : '15px'; b.onclick = function () { if (i < 5) { sfx('no'); toast('그 방은 이미 찼어요'); } else { closeModal(); solve(R); } }; w.querySelector('#inQ').appendChild(b); });
+      rOrd.concat([5]).forEach(function (i) { var rm = rooms.concat([['', '있을 곳이 없다']])[i]; var b = el('button', 'btn ghost', (rm[0] || '∅') + (i < 5 ? '' : ' ' + rm[1])); b.style.fontSize = i < 5 ? '22px' : '15px'; b.onclick = function () { if (i < 5) { sfx('no'); toast('그 방은 이미 찼어요'); } else { closeModal(); solve(R); } }; w.querySelector('#inQ').appendChild(b); });
     }
     draw(); modal('손님 쪽지', w);
   };
@@ -935,7 +939,7 @@
   var edgeL = document.createElement('div'), edgeR = document.createElement('div'); edgeL.className = 'edge-hint l'; edgeR.className = 'edge-hint r'; edgeL.textContent = '‹ ✦'; edgeR.textContent = '✦ ›'; document.body.appendChild(edgeL); document.body.appendChild(edgeR);
   function edgeHints() {
     var on = $('room').classList.contains('on'), L = false, Rt = false;
-    if (on) document.querySelectorAll('#roomSpots .rspot.area').forEach(function (e) { if (!/^(clue|card|scrap|tile|pick)$/.test(e.dataset.k || '')) return; var r = e.getBoundingClientRect(), cx = r.left + r.width / 2; if (cx < 6) L = true; else if (cx > innerWidth - 6) Rt = true; });
+    if (on) document.querySelectorAll('#roomSpots .rspot.area').forEach(function (e) { if (!/^(clue|card|scrap|tile|pick|room)$/.test(e.dataset.k || '')) return; var r = e.getBoundingClientRect(), cx = r.left + r.width / 2; if (cx < 6) L = true; else if (cx > innerWidth - 6) Rt = true; });
     edgeL.classList.toggle('on', L); edgeR.classList.toggle('on', Rt);
   }
   setInterval(edgeHints, 600);
@@ -988,9 +992,13 @@
   }
   if (CT) {
     if (!S || !S.nick) {
-      S = blank(); S.nick = CT + '장시험'; S.opening = true; S.ch = CT; S.chDone = {}; S.items = ['census', 'lamp', 'rope', 'keys', 'oil', 'lens', 'scrap', 'cloth', 'doves'];
+      S = blank(); S.nick = CT + '장시험'; S.opening = true; S.ch = CT; S.chDone = {}; S.items = CT > 1 ? ['census', 'lamp', 'rope', 'keys', 'oil', 'lens', 'scrap', 'cloth'].concat(CT > 2 ? ['doves'] : []) : [];
       var done = ['wellroom']; for (var c = 1; c < CT; c++) { var st = (BN.CHAPTERS[c] || {}).start; if (st) done.push(st); BN.SPOTS.forEach(function (sp) { if ((sp.ch || 1) === c) done.push(sp.id); }); if (c === 1) done.push('kitchen'); S.chDone[c] = 1; }
       done.forEach(function (k) { S.rooms[k] = { at: 0, stamp: BN.STAMPS[k] || '' }; }); save();
+    }
+    if (CT === 1 && S.items && S.items.length) {   // 예전에 물건을 미리 받은 1장 시험 판: 아직 안 푼 곳의 물건은 돌려놓는다
+      var src = {}; Object.keys(BN.ROOMS).forEach(function (k) { var R0 = BN.ROOMS[k]; if (R0.item) src[R0.item] = k; (R0.spots || []).forEach(function (sp) { var m = /^pick:(\w+)/.exec(sp.act || ''); if (m) src[m[1]] = k; }); });
+      var before = S.items.length; S.items = S.items.filter(function (it) { return src[it] && S.rooms[src[it]]; }); if (S.items.length !== before) save();
     }
     document.querySelector('#title .eyebrow').textContent = '✦ ' + CT + '장 시험 · 이 기기에만 저장돼요'; $('btnCode').hidden = true; $('btnContinue').hidden = false; updHud();
   }
