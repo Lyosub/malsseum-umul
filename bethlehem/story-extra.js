@@ -30,7 +30,7 @@
   BN.SCROLL_PARTS = ['흑암에 행하던 백성이', '큰 빛을', '보고'];
 
   // 길르앗의 빵 부스러기 12개(방마다 하나, 작게 숨어 있음)
-  var BREAD = { gate: [48, 92], road: [64, 92], inn: [48, 92], field: [40, 88], house8: [60, 90], court: [8, 88], porch: [96, 38], archive: [48, 92], hall: [28, 90], innl: [66, 92], dream: [55, 92], dawn: [88, 92] };
+  var BREAD = { gate: [48, 92], road: [64, 92], inn: [48, 92], field: [40, 88], house8: [60, 90], court: [18, 88], porch: [96, 38], archive: [48, 92], hall: [28, 90], innl: [66, 92], dream: [55, 92], dawn: [88, 92] };
   Object.keys(BREAD).forEach(function (k, i) { var R = BN.ROOMS[k]; if (R) R.spots.push({ id: 'bread_' + k, x: BREAD[k][0], y: BREAD[k][1], w: 5, h: 7, act: 'bread:' + (i + 1) }); });
   var K = BN.ROOMS.kitchen;
   if (K && K.done) K.done.push(['gilead', 2, '아, 그리고요… 제가 돌아다니면서 빵 부스러기를 열두 군데 흘렸어요. 혹시 보이면 주워 주세요. 다 모으면 좋은 일이 생길지도요?', '(수상함)']);

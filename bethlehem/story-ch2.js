@@ -54,7 +54,7 @@
       { id: 'n7', x: 68, y: 66, w: 8, h: 8, act: 'tile:ㅜ', msg: '베틀 밑 바구니 속 털실 사이에 조각이 있다.' },
       { id: 'n8', x: 11, y: 45, w: 8, h: 12, act: 'tile:ㄹ', msg: '큰 항아리 손잡이에 조각이 매달려 있다.' },
       { id: 'table', x: 44, y: 52, w: 34, h: 8, act: 'puzzle:name' },
-      { id: 'asaph', x: 8, y: 101, fig: 'asaph_front', h: 64, act: 'talk:asaph' },
+      { id: 'asaph', x: 31, y: 101, fig: 'asaph_front', h: 64, act: 'talk:asaph' },
       { id: 'gilead', x: 90, y: 102, fig: 'gilead_front', h: 52, act: 'puzzle:riddle' }
     ],
     talks: {
@@ -79,7 +79,7 @@
     ],
     spots: [
       { id: 'stairs', x: 50, y: 72, w: 60, h: 44, act: 'puzzle:climb' },
-      { id: 'star_climb', x: 56, y: 7, w: 4, h: 7, act: 'star:4' },
+      { id: 'star_climb', x: 74, y: 14, w: 4, h: 7, act: 'star:4' },
       { id: 'gilead', x: 86, y: 103, fig: 'gilead_front', h: 50, act: 'talk:gilead' }
     ],
     talks: { gilead: [['gilead', 2, '폰을 살살 기울여 보세요. 아니면 손가락으로 살살….', '(본인은 세 번 넘어짐)']] },

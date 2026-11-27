@@ -67,7 +67,7 @@
       ['gilead', 0, '애굽까지 걸어서요? 빵이 몇 개 필요할지 계산하다가 포기했어요.', '(현실)']
     ],
     spots: [
-      { id: 'star_dawn', x: 93, y: 7, w: 4, h: 7, act: 'star:7' },
+      { id: 'star_dawn', x: 86, y: 15, w: 4, h: 7, act: 'star:7' },
       { id: 'stones', x: 50, y: 80, w: 50, h: 30, act: 'puzzle:route' },
       { id: 'gilead', x: 8, y: 103, fig: 'gilead_front', h: 42, act: 'talk:gilead' }
     ],

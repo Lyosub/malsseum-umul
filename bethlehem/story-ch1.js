@@ -170,7 +170,7 @@
       { id: 'sheep2', x: 74, y: 54, w: 8, h: 13, act: 'sheep:2' },
       { id: 'sheep3', x: 85, y: 52, w: 7, h: 9, act: 'sheep:3' },
       { id: 'staffbox', x: 12, y: 68, w: 16, h: 30, act: 'puzzle:herd' },
-      { id: 'star_field', x: 6, y: 7, w: 5, h: 8, act: 'star:3' }
+      { id: 'star_field', x: 8, y: 15, w: 5, h: 8, act: 'star:3' }
     ],
     talks: {},
     done: [

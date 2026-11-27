@@ -116,7 +116,7 @@
       ['asaph', 0, '지도는 해 뜨는 쪽을 위로 그렸다. 그런데 우리는 지금 남쪽을 보고 서 있지.']
     ],
     spots: [
-      { id: 'star_roof', x: 9, y: 6, w: 4, h: 7, act: 'star:5' },
+      { id: 'star_roof', x: 10, y: 15, w: 4, h: 7, act: 'star:5' },
       { id: 'sky', x: 55, y: 22, w: 70, h: 34, act: 'puzzle:stars3' },
       { id: 'astro', x: 34, y: 62, w: 10, h: 10, act: 'talk:astro' },
       { id: 'gilead', x: 88, y: 103, fig: 'gilead_front', h: 44, act: 'talk:gilead' }

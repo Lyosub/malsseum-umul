@@ -23,7 +23,7 @@
       ['asaph', 0, '잘 보아라. 별은 지붕마다 잠깐 쉬어 가지만, 머물러 서는 곳은 한 곳뿐이다.']
     ],
     spots: [
-      { id: 'star_night', x: 92, y: 6, w: 4, h: 7, act: 'star:6', night: true },
+      { id: 'star_night', x: 88, y: 15, w: 4, h: 7, act: 'star:6', night: true },
       { id: 'sky', x: 62, y: 16, w: 60, h: 26, act: 'puzzle:starstop' },
       { id: 'rock', x: 86, y: 72, w: 16, h: 16, act: 'puzzle:pieceA' },
       { id: 'camels', x: 63, y: 42, w: 10, h: 8, act: 'talk:camels' },

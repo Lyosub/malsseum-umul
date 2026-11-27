@@ -582,3 +582,12 @@ body:has(#dialog:not([hidden])) #panHint { opacity: 0 !important; }
 .mem-c.up { background: #f0e2c0; color: #2b1a0c; font: 11.5px/1.4 var(--serif); } .mem-c.up small { display: block; font: 700 10px var(--sans); color: #8a5a2a; } .mem-c.up b { display: block; font: 700 17px var(--sans); }
 .mem-c.done { background: #e8c25a; opacity: .75; }
 @media (max-height: 520px) { .mem-grid { grid-template-columns: repeat(5, 1fr); } .mem-c { min-height: 64px; } }
+/* 2026-11-27 전체 점검: 숨은 별·빵 부스러기가 아예 안 보이던 것 → 희미하게 반짝이게, 글자판은 누름을 가로채지 않게 */
+.rspot.area[data-id^="star_"]::after { content: '✦'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 14px; color: #fff3c4; text-shadow: 0 0 6px rgba(255, 230, 150, .9); opacity: .28; animation: hidTw 3.4s ease-in-out infinite; pointer-events: none; }
+.rspot.area[data-id^="bread_"]::after { content: ''; position: absolute; left: 50%; top: 55%; width: 12px; height: 7px; transform: translate(-50%, -50%); background: radial-gradient(circle at 30% 50%, #e0b878 0 2px, transparent 2.5px), radial-gradient(circle at 70% 40%, #d6aa66 0 1.6px, transparent 2px), radial-gradient(circle at 55% 80%, #e8c48a 0 1.3px, transparent 1.8px); opacity: .75; pointer-events: none; }
+@keyframes hidTw { 0%, 100% { opacity: .12; } 50% { opacity: .5; } }
+.room-title, #hud > div.hud-l, #hud > div.hud-r, #hud .hud-pill { pointer-events: none; }
+#hud .hud-btn { pointer-events: auto; }
+.hud-ch:empty { display: none; }
+@keyframes rtFade { to { opacity: 0; visibility: hidden; } }
+@media (orientation: landscape) and (max-height: 500px) { .room-title.fade { animation: rtFade .8s 4s forwards; } }
