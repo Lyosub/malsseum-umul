@@ -8,37 +8,7 @@
   function overlay(title) { var o = document.createElement('div'); o.className = 'ov7'; o.innerHTML = '<div class="ov7-box"><div class="ov7-head"><b>' + title + '</b><button class="ov7-x">✕</button></div><div class="ov7-body"></div></div>'; document.body.appendChild(o); o.querySelector('.ov7-x').onclick = function () { o.remove(); }; return o; }
 
   // ── 3장: 별 재는 기구 — 폰을 들고 실제로 그 방향을 향해, 그 높이만큼 기울여 별을 겨눈다
-  var astroWheels = BN.PZ.astro;
-  var DIR8 = ['북', '북동', '동', '동남', '남', '남서', '서', '북서'];
-  BN.PZ.astro = function (R, A) {
-    var S = A.S(); if ((S.f3 || {}).astro) return A.talk([['asaph', 0, '기구는 이미 오늘 밤에 맞춰 두었다.']]);
-    var w = A.el('div', 'aim-pz'), head = null, beta = null, okT = 0, done = false, got = false;
-    w.innerHTML = '<p class="tiny-note">놋쇠 기구를 폰처럼 들어 보세요. 폰 윗부분이 별을 가리키게 하고, 일지의 규칙으로 찾은 「오늘 밤」의 <b>방향</b>을 실제로 향해 서서 <b>높이(기울기)</b>만큼 들어 올리면 별이 바늘에 걸립니다. 2초 동안 그대로.</p><div class="aim-dial"><div class="aim-needle"></div><div class="aim-star">✦</div></div><p class="aim-read">센서를 켜 주세요</p><button class="btn gold" id="aimGo">기구 들기(센서 켜기)</button><button class="btn ghost" id="aimWheel">센서가 안 되나요? 바퀴로 맞추기</button>';
-    var read = w.querySelector('.aim-read'), needle = w.querySelector('.aim-needle'), star = w.querySelector('.aim-star');
-    function dirName(h) { return DIR8[Math.round(h / 45) % 8]; }
-    function ori(e) {
-      var h = e.webkitCompassHeading != null ? e.webkitCompassHeading : (e.absolute || e.type === 'deviceorientationabsolute') && e.alpha != null ? (360 - e.alpha) % 360 : null;
-      if (h != null) head = h; if (e.beta != null) beta = e.beta; got = true;
-      if (head == null) { read.textContent = '방향을 알 수 없어요 — 아래 「바퀴로 맞추기」를 써요'; return; }
-      read.textContent = '방향 ' + Math.round(head) + '° (' + dirName(head) + ') · 높이 ' + Math.round(beta || 0) + '°';
-      needle.style.transform = 'rotate(' + (head - 225) + 'deg)'; star.style.transform = 'translateY(' + ((beta || 0) - 55) * 2 + 'px)';
-      var dh = Math.abs(((head - 225) % 360 + 540) % 360 - 180), on = dh <= 15 && Math.abs((beta || 0) - 55) <= 7;
-      w.classList.toggle('lock', on);
-      if (on) { if (!okT) okT = performance.now(); else if (performance.now() - okT > 2000) finish(); } else okT = 0;
-    }
-    function finish() { if (done) return; done = true; stop(); A.sfx('ok'); A.toast('바늘이 별에 딱 걸렸다'); S.f3 = S.f3 || {}; S.f3.astro = 1; A.save(); setTimeout(function () { A.closeModal(); if (['astro', 'light'].every(function (k) { return S.f3[k]; })) A.solve(R); else A.talk([['asaph', 0, '기구가 맞았다. 이제 등잔 빛을 별 지도에 비추면 되겠구나.']]); }, 700); }
-    function stop() { removeEventListener('deviceorientationabsolute', ori); removeEventListener('deviceorientation', ori); }
-    w.querySelector('#aimGo').onclick = function () {
-      needPerm(window.DeviceOrientationEvent, function (ok) {
-        if (!ok) return (read.textContent = '센서를 쓸 수 없어요 — 「바퀴로 맞추기」를 써요');
-        addEventListener('deviceorientationabsolute', ori); addEventListener('deviceorientation', ori); read.textContent = '폰을 들어 천천히 돌아보세요…';
-        setTimeout(function () { if (!got) read.textContent = '센서 신호가 없어요 — 「바퀴로 맞추기」를 써요'; }, 2500);
-      });
-    };
-    w.querySelector('#aimWheel').onclick = function () { stop(); astroWheels(R, A); };
-    A.modal('별 재는 기구', w, stop);
-    if (LOCAL) BN.__aim = function (h, b) { ori({ webkitCompassHeading: h, beta: b }); };
-  };
+  BN.PZ.astroWheels = BN.PZ.astro;   // 바퀴로 맞추기(3장 원래 문제) — 망원경 화면은 puzzles-v8.js
 
   // ── 1장: 나사렛 길 — 지도 상자를 열기 전에 폰을 들고 30걸음(안 되면 30번 누르기)
   BN.PZ.walk = function (R, A) {
@@ -106,94 +76,6 @@
       order.forEach(function (i) { var b = A.el('button', 'read-w', words[i]); b.onclick = function () { if (words[i] !== words[k]) return A.toast('찬송의 다음 어절이 아니에요'); line.textContent += (k ? ' ' : '') + words[k]; k++; b.disabled = true; bar.style.width = (k / words.length * 100) + '%'; if (k === words.length) fin(); }; box.appendChild(b); });
     };
     A.modal(title || '소리 내어 읽기', w, stop);
-  };
-
-  // ── 1장: 들판 양 몰기 — 60초 안에 흩어진 양 일곱을 우리로(양은 손가락을 피해 달아난다)
-  BN.PZ.herd = function (R, A) {
-    var S = A.S(); if (S.herded) return BN.runPuzzle('field', R);
-    var W = 300, H = 300, cv = A.el('canvas', 'herd-cv'); cv.width = 600; cv.height = 600;
-    var w = A.el('div', 'herd-pz'); w.appendChild(A.el('p', 'tiny-note', '목자들의 상자에 가려면 먼저 흩어진 양 일곱 마리를 오른쪽 위 우리에 몰아넣어야 한다. 양은 손가락을 피해 달아난다. 60초!')); w.appendChild(cv);
-    var st = A.el('p', 'aim-read', ''); w.appendChild(st);
-    var pen = { x: 210, y: 0, w: 90, h: 90 }, sheep = [], fin = null, t0 = 0, alive = true, ctx = cv.getContext('2d'), r = A.seedRnd(71);
-    function reset() { sheep = []; for (var i = 0; i < 7; i++) sheep.push({ x: 30 + r() * 160, y: 130 + r() * 150, vx: 0, vy: 0, inP: false }); t0 = performance.now(); }
-    reset();
-    function pos(e) { var b = cv.getBoundingClientRect(); return { x: (e.clientX - b.left) / b.width * W, y: (e.clientY - b.top) / b.height * H }; }
-    cv.addEventListener('pointerdown', function (e) { fin = pos(e); cv.setPointerCapture(e.pointerId); });
-    cv.addEventListener('pointermove', function (e) { if (fin) fin = pos(e); });
-    cv.addEventListener('pointerup', function () { fin = null; });
-    function frame() {
-      if (!alive || !cv.isConnected) return;
-      var left = 60 - (performance.now() - t0) / 1000;
-      sheep.forEach(function (s) {
-        if (s.inP) { s.vx *= .8; s.vy *= .8; s.x = Math.max(pen.x + 10, Math.min(W - 10, s.x + s.vx)); s.y = Math.max(10, Math.min(pen.h - 10, s.y + s.vy)); return; }
-        if (fin) { var dx = s.x - fin.x, dy = s.y - fin.y, d = Math.hypot(dx, dy); if (d < 75) { s.vx += dx / d * 0.9; s.vy += dy / d * 0.9; } }
-        s.vx += (r() - .5) * .25; s.vy += (r() - .5) * .25; s.vx *= .9; s.vy *= .9;
-        var sp = Math.hypot(s.vx, s.vy); if (sp > 3.2) { s.vx *= 3.2 / sp; s.vy *= 3.2 / sp; }
-        s.x += s.vx; s.y += s.vy;
-        if (s.x < 10) { s.x = 10; s.vx = -s.vx; } if (s.x > W - 10) { s.x = W - 10; s.vx = -s.vx; } if (s.y < 10) { s.y = 10; s.vy = -s.vy; } if (s.y > H - 10) { s.y = H - 10; s.vy = -s.vy; }
-        // 우리 담: 왼쪽 벽(x=210, y<90)과 아래 벽(y=90, x 210~255) — 입구는 아래 오른쪽(x 255~300)
-        if (s.x > pen.x - 8 && s.x < pen.x + 8 && s.y < pen.h) { s.x = s.vx > 0 ? pen.x - 8 : pen.x + 8; s.vx = -s.vx; }
-        if (s.y > pen.h - 8 && s.y < pen.h + 8 && s.x > pen.x && s.x < 255) { s.y = s.vy > 0 ? pen.h - 8 : pen.h + 8; s.vy = -s.vy; }
-        if (s.x > pen.x + 8 && s.y < pen.h - 8) s.inP = true;
-      });
-      var n = sheep.filter(function (s) { return s.inP; }).length;
-      ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.fillStyle = '#3d5a2a'; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#6b5a32'; ctx.fillRect(pen.x, 0, pen.w, pen.h);
-      ctx.strokeStyle = '#d8b06a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(pen.x, 0); ctx.lineTo(pen.x, pen.h); ctx.lineTo(255, pen.h); ctx.stroke();
-      ctx.fillStyle = '#ffe2a0'; ctx.font = '700 13px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('우리', 255, 30); ctx.fillText('↑ 입구', 278, 108);
-      ctx.font = '20px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; sheep.forEach(function (s) { ctx.fillText('🐑', s.x, s.y); });
-      if (fin) { ctx.beginPath(); ctx.arc(fin.x, fin.y, 75, 0, 7); ctx.strokeStyle = 'rgba(255,240,200,.25)'; ctx.lineWidth = 2; ctx.stroke(); }
-      st.textContent = '우리 안 ' + n + ' / 7 · 남은 시간 ' + Math.max(0, Math.ceil(left)) + '초';
-      if (n === 7) { alive = false; S.herded = 1; A.save(); A.sfx('ok'); setTimeout(function () { A.closeModal(); A.toast('양들이 다 들어왔다 — 목자의 상자가 보인다'); setTimeout(function () { BN.runPuzzle('field', R); }, 600); }, 500); return; }
-      if (left <= 0) { A.toast('시간이 다 됐다 — 양들이 다시 흩어졌다'); reset(); }
-      requestAnimationFrame(frame);
-    }
-    A.modal('양 몰기', w, function () { alive = false; }); frame();
-    if (LOCAL) BN.__herdWin = function () { sheep.forEach(function (s) { s.inP = true; s.x = 260; s.y = 40; }); };
-  };
-
-  // ── 5장: 골목 실시간 잠입 — 순찰꾼 등불이 실제로 좌우로 돈다. 손가락으로 나귀를 끌어 빛을 피해 ✦까지
-  var MAP = ['#.....#...G', '#.###.#.##.', '#.#...#..#.', '#.#.###.##.', '#...#.....#', '###.#.###.#', '#...#...#.#', '#.###.#.#.#', 'S.....#...#'];
-  var GU = [{ r: 2, c: 8, a: 180, sw: 70, sp: .9 }, { r: 4, c: 9, a: 180, sw: 80, sp: 1.1 }, { r: 6, c: 2, a: 90, sw: 80, sp: .8 }, { r: 2, c: 4, a: 90, sw: 70, sp: 1 }, { r: 8, c: 8, a: 180, sw: 60, sp: .7 }, { r: 6, c: 7, a: 180, sw: 70, sp: 1.2 }];
-  BN.PZ.stealth = function (R, A) {
-    var C = 30, W = 11 * C, H = 9 * C, cv = A.el('canvas', 'st-cv'); cv.width = W * 2; cv.height = H * 2;
-    var w = A.el('div', 'st-pz'); w.appendChild(A.el('p', 'tiny-note', '나귀를 손가락으로 끌어 골목을 빠져나가세요. 순찰꾼의 등불(노란 부채꼴)이 좌우로 돌아요. 빛에 닿으면 처음 자리로. 벽 뒤에서 기다렸다가 지나가요. ✦까지!')); w.appendChild(cv);
-    var me = { x: C / 2, y: 8 * C + C / 2 }, drag = null, t0 = performance.now(), alive = true, ctx = cv.getContext('2d'), caught = 0;
-    function wall(x, y) { var c = Math.floor(x / C), r = Math.floor(y / C); return r < 0 || r > 8 || c < 0 || c > 10 || MAP[r][c] === '#'; }
-    function pos(e) { var b = cv.getBoundingClientRect(); return { x: (e.clientX - b.left) / b.width * W, y: (e.clientY - b.top) / b.height * H }; }
-    cv.addEventListener('pointerdown', function (e) { drag = pos(e); cv.setPointerCapture(e.pointerId); });
-    cv.addEventListener('pointermove', function (e) { if (drag) drag = pos(e); });
-    cv.addEventListener('pointerup', function () { drag = null; });
-    function ang(g, t) { return g.a + Math.sin(t * g.sp) * g.sw; }
-    function seen(px, py, t) {
-      return GU.some(function (g) {
-        var gx = g.c * C + C / 2, gy = g.r * C + C / 2, dx = px - gx, dy = py - gy, d = Math.hypot(dx, dy);
-        if (d < C * .6) return true; if (d > C * 2.6) return false;
-        var a = Math.atan2(dy, dx) * 180 / Math.PI, da = Math.abs(((a - ang(g, t)) % 360 + 540) % 360 - 180); if (da > 24) return false;
-        for (var k = 1; k < 10; k++) { if (wall(gx + dx * k / 10, gy + dy * k / 10)) return false; } return true;
-      });
-    }
-    function frame() {
-      if (!alive || !cv.isConnected) return;
-      var t = (performance.now() - t0) / 1000;
-      if (drag) { var dx = drag.x - me.x, dy = drag.y - me.y, d = Math.hypot(dx, dy), sp = Math.min(1.6, d * .08); if (d > 1) { var nx = me.x + dx / d * sp, ny = me.y + dy / d * sp, rr = 7; if (!wall(nx - rr, me.y - rr) && !wall(nx + rr, me.y - rr) && !wall(nx - rr, me.y + rr) && !wall(nx + rr, me.y + rr)) me.x = nx; if (!wall(me.x - rr, ny - rr) && !wall(me.x + rr, ny - rr) && !wall(me.x - rr, ny + rr) && !wall(me.x + rr, ny + rr)) me.y = ny; } }
-      ctx.setTransform(2, 0, 0, 2, 0, 0);
-      for (var r = 0; r < 9; r++) for (var c = 0; c < 11; c++) { ctx.fillStyle = MAP[r][c] === '#' ? '#3a2a18' : '#141a30'; ctx.fillRect(c * C, r * C, C - 1, C - 1); }
-      ctx.fillStyle = '#ffd27a'; ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('✦', 10 * C + C / 2, C / 2);
-      GU.forEach(function (g) {
-        var gx = g.c * C + C / 2, gy = g.r * C + C / 2, a0 = ang(g, t) * Math.PI / 180;
-        ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
-        ctx.beginPath(); ctx.moveTo(gx, gy); for (var k = -24; k <= 24; k += 4) { var aa = a0 + k * Math.PI / 180, L = C * 2.6; for (var s = 1; s <= 13; s++) { if (wall(gx + Math.cos(aa) * L * s / 13, gy + Math.sin(aa) * L * s / 13)) { L = L * (s - 1) / 13; break; } } ctx.lineTo(gx + Math.cos(aa) * L, gy + Math.sin(aa) * L); }
-        ctx.closePath(); ctx.fillStyle = 'rgba(255,210,110,.42)'; ctx.fill(); ctx.restore();
-        ctx.fillText('🏮', gx, gy);
-      });
-      ctx.fillText('🫏', me.x, me.y);
-      if (seen(me.x, me.y, t)) { caught++; A.sfx('no'); A.toast('등불에 비쳤다! 처음 자리로'); me.x = C / 2; me.y = 8 * C + C / 2; drag = null; }
-      if (Math.floor(me.y / C) === 0 && Math.floor(me.x / C) === 10) { alive = false; A.sfx('ok'); setTimeout(function () { A.closeModal(); A.solve(R); }, 500); return; }
-      requestAnimationFrame(frame);
-    }
-    A.modal('골목 빠져나가기', w, function () { alive = false; }); frame();
-    if (LOCAL) BN.__stealthWin = function () { me.x = 10 * C + C / 2; me.y = C / 2; };
   };
 
   // ── 4장: 예언 카드 뒤집기 짝 맞추기(엎어 둔 카드 10장)

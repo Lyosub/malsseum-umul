@@ -562,8 +562,8 @@ body:has(#dialog:not([hidden])) #panHint { opacity: 0 !important; }
 .ov7-head { display: flex; justify-content: space-between; align-items: center; color: #ffe2a0; font-family: var(--serif); font-size: 18px; margin-bottom: 6px; }
 .ov7-x { border: 0; background: none; color: #f3e6c8; font-size: 20px; }
 .carry-cv, .herd-cv { width: min(300px, 80vw); display: block; margin: 6px auto; border-radius: 12px; touch-action: none; }
-.carry-cv { aspect-ratio: 300 / 420; max-height: 62vh; width: auto; } .herd-cv { aspect-ratio: 1; max-height: 58vh; width: auto; }
-.st-cv { width: min(330px, 86vw); aspect-ratio: 11 / 9; display: block; margin: 6px auto; border-radius: 10px; touch-action: none; max-height: 60vh; }
+.carry-cv { aspect-ratio: 300 / 420; width: min(300px, 80vw, calc(62vh * 300 / 420)); height: auto; } .herd-cv { aspect-ratio: 1; width: min(320px, 84vw, 56vh); height: auto; }
+.st-cv { width: min(280px, 74vw, calc(50vh * 7 / 9)); height: auto; aspect-ratio: 7 / 9; display: block; margin: 6px auto; border-radius: 10px; touch-action: manipulation; }
 .aim-pz, .walk-pz, .read-pz { display: grid; gap: 10px; justify-items: center; text-align: center; }
 .aim-dial { position: relative; width: 150px; height: 150px; border-radius: 50%; border: 3px solid #c9a15a; background: radial-gradient(circle, #1c2754, #070a1c); overflow: hidden; }
 .aim-needle { position: absolute; left: 50%; top: 8px; width: 4px; height: 67px; margin-left: -2px; background: #e8b75a; transform-origin: 50% 67px; }
@@ -614,3 +614,34 @@ body:has(#dialog:not([hidden])) .pt-fab, body:has(#modal:not([hidden])) .pt-fab,
 .pt-list h4 { margin: 14px 0 6px; color: var(--gold); font-size: 14px; }
 .pt-item { display: block; width: 100%; text-align: left; margin: 6px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rim); background: rgba(255, 255, 255, .04); color: inherit; cursor: pointer; }
 .pt-item b { font-size: 15px; } .pt-item span { margin-left: 8px; font-size: 12px; color: var(--gold); } .pt-item small { display: block; margin-top: 3px; color: var(--stone); font-size: 12px; line-height: 1.45; }
+/* 11/27 애굽 길: 물 부대 */
+.pm-c.well { background: #2c5f86; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.pm-c.well.on { background: #4a8fc0; }
+.pm-water { margin: 6px 0 2px; font-size: 13px; font-weight: 700; color: #bfe3ff; display: flex; align-items: center; gap: 4px; justify-content: center; }
+.pm-water i { width: 16px; height: 16px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: rgba(120, 170, 210, .25); border: 1px solid #6fa8d6; display: inline-block; }
+.pm-water i.on { background: #5fb2ff; }
+.pm-water.low { color: #ffb0a0; animation: blink .8s infinite; }
+@keyframes blink { 50% { opacity: .55; } }
+/* 11/27 다시 만든 문제: 망원경 · 골목 차례 */
+.scope-steps { margin: 0 0 8px 18px; padding: 0; font-size: 12.5px; line-height: 1.55; color: var(--stone); }
+.scope-row { display: flex; gap: 12px; justify-content: center; align-items: stretch; }
+.scope { position: relative; width: min(210px, 56vw); aspect-ratio: 1; border-radius: 50%; overflow: hidden; border: 3px solid #b8862b; box-shadow: 0 0 0 6px rgba(184, 134, 43, .2), inset 0 0 30px rgba(0, 0, 0, .8); }
+.scope-sky { position: absolute; inset: 0; background: radial-gradient(1.2px 1.2px at 20% 30%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 70% 60%, #cfe 50%, transparent 51%), radial-gradient(1.4px 1.4px at 45% 80%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 85% 20%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 10% 70%, #dde 50%, transparent 51%), linear-gradient(#0a1030, #1a2350); background-size: 90px 90px, 70px 70px, 110px 110px, 60px 60px, 80px 80px, 100% 100%; }
+.scope-star { position: absolute; left: 50%; top: 50%; margin: -14px 0 0 -9px; font-size: 26px; color: #ffe9a8; text-shadow: 0 0 12px #ffd27a, 0 0 26px #ffb84a; opacity: 0; transition: opacity .3s; }
+.scope-ring { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; border: 2px dashed rgba(255, 226, 150, .7); }
+.scope-pz.lock .scope-ring { border-style: solid; border-color: #ffe27a; box-shadow: 0 0 18px #ffd27a; }
+.scope-alt { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: var(--stone); }
+.sa-bar { position: relative; flex: 1; width: 34px; min-height: 160px; border-radius: 8px; background: linear-gradient(#2a3460, #141a34); border: 1px solid var(--rim); }
+.sa-bar i { position: absolute; right: 2px; transform: translateY(50%); font-style: normal; font-size: 9px; color: #c9b88a; }
+.sa-me { position: absolute; left: -4px; right: -4px; height: 3px; background: #ffe27a; box-shadow: 0 0 8px #ffd27a; transform: translateY(50%); }
+.scope-tape { position: relative; overflow: hidden; height: 34px; margin: 10px auto 0; width: min(300px, 82vw); border-radius: 8px; background: #141a34; border: 1px solid var(--rim); }
+.st-in { position: absolute; left: 50%; top: 0; height: 100%; transition: transform .15s linear; }
+.st-in span { position: absolute; top: 14px; width: 40px; margin-left: -20px; text-align: center; font-size: 12px; font-weight: 700; color: #e9dcb8; }
+.scope-tape em { position: absolute; left: 50%; top: -1px; transform: translateX(-50%); font-style: normal; color: #ffe27a; font-size: 12px; }
+.scope-btns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 8px; }
+.scope-log { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: rgba(244, 230, 196, .08); border: 1px solid var(--rim); font-size: 13px; line-height: 1.6; }
+.st-pad { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 8px 0 2px; }
+.st-pad div { display: flex; gap: 4px; }
+.st-pad button { min-width: 54px; height: 42px; border-radius: 10px; border: 1px solid var(--rim); background: rgba(255, 255, 255, .06); color: #ffe2a0; font: 700 16px var(--sans); }
+.st-pad button.wait { min-width: 104px; font-size: 13px; }
+.st-pad button:active { background: rgba(255, 226, 150, .25); }

@@ -148,20 +148,22 @@
   };
 
   // ── 5장 남쪽 길: 지도 위에 손가락으로 길 긋기(헤브론 → 브엘세바 → 애굽 시내 → 애굽), 물·산·순찰 마을과 그 곁은 못 지남
-  var PG = ['~~..B..^', '~...v..^', '~..^....', '~...H.^.', '~.^...v.', '~v....^.', '~...S...', '~..^^.v.', '~.N.....', 'E......^'];
+  // 11/27 물 부대: 물은 네 걸음치, 우물(w)·브엘세바에서 다시 가득. 물 제한이 없으면 길이 2300가지(최단 17)지만 물 때문에 2가지(21걸음)만 남는다(route_gen2.py로 셈)
+  var PG = ['~...B.^^', '~^..^..^', '~.^w...^', '~^.H.w^.', '~.^.....', '~^....^^', '~w...S^.', '~..^.v..', '~.Nw^..^', 'Ew......'], WATER = 4;
+  function water(path) { var wv = WATER; for (var i = 1; i < path.length; i++) { if (wv <= 0) return -1; var ch = PG[path[i][0]][path[i][1]]; wv = (ch === 'w' || ch === 'S') ? WATER : wv - 1; } return wv; }
   BN.PATH5 = PG;
-  function pbad(r, c) { var ch = PG[r][c]; if (ch === '~' || ch === '^' || ch === 'v') return true; return [[0, 1], [1, 0], [0, -1], [-1, 0]].some(function (d) { var rr = r + d[0], cc = c + d[1]; return rr >= 0 && rr < 10 && cc >= 0 && cc < 8 && PG[rr][cc] === 'v'; }) && 'BHSNE'.indexOf(ch) < 0; }
+  function pbad(r, c) { var ch = PG[r][c]; if (ch === '~' || ch === '^' || ch === 'v') return true; return [[0, 1], [1, 0], [0, -1], [-1, 0]].some(function (d) { var rr = r + d[0], cc = c + d[1]; return rr >= 0 && rr < 10 && cc >= 0 && cc < 8 && PG[rr][cc] === 'v'; }) && 'BHSNEw'.indexOf(ch) < 0; }
   var TOWN = { B: '베들레헴', H: '헤브론', S: '브엘세바', N: '애굽 시내', E: '애굽' };
   BN.PZ.route = function (R, A) {
     var path = [], drawing = false, w = A.el('div', 'route-pz'), shook = 0;
     function cellAt(x, y) { var el = document.elementFromPoint(x, y); return el && el.closest && el.closest('.pm-c'); }
     function draw() {
-      w.innerHTML = '<p class="tiny-note">베들레헴에서 손가락을 떼지 말고 애굽까지 길을 그으세요. 마을은 <b>가까운 곳부터</b> 들러야 하고(헤브론 → 브엘세바 → 애굽 시내), 바다·산·순찰 마을(🏮)과 그 바로 곁(붉은 칸)은 지날 수 없어요.</p><div class="pm-legend"><span>헤브론 — 아브람이 장막을 옮긴 곳(창 13:18)</span><span>브엘세바 — 「단에서부터 브엘세바까지」(삿 20:1)</span><span>애굽 시내 — 남쪽 경계(민 34:5)</span></div>';
+      w.innerHTML = '<p class="tiny-note">베들레헴에서 손가락을 떼지 말고 애굽까지 길을 그으세요. 마을은 <b>가까운 곳부터</b>(헤브론 → 브엘세바 → 애굽 시내). 바다·산·순찰 마을(🏮)과 그 곁(붉은 칸)은 못 지나요. <b>물 부대는 네 걸음치</b> — 우물(💧)을 지나면 다시 가득 차요. 물이 떨어지면 나귀가 쓰러져요.</p><div class="pm-legend"><span>헤브론 — 아브람이 장막을 옮긴 곳(창 13:18)</span><span>브엘세바 — 아브라함이 판 우물이 있는 곳(창 21:30-31) · 여기서도 물을 채워요</span><span>애굽 시내 — 남쪽 경계(민 34:5)</span></div><p class="pm-water" id="pmWater"></p>';
       var g = A.el('div', 'pm-grid');
       for (var r = 0; r < 10; r++) for (var c = 0; c < 8; c++) {
         var ch = PG[r][c], k = r + ',' + c, inP = path.some(function (p) { return p[0] === r && p[1] === c; });
-        var cls = 'pm-c' + (ch === '~' ? ' sea' : ch === '^' ? ' mt' : ch === 'v' ? ' vil' : pbad(r, c) ? ' seen' : TOWN[ch] ? ' town' : '') + (inP ? ' on' : '');
-        var d = A.el('div', cls, ch === 'v' ? '🏮' : ch === '^' ? '⛰' : TOWN[ch] ? '<small>' + TOWN[ch] + '</small>' : ''); d.dataset.rc = k; g.appendChild(d);
+        var cls = 'pm-c' + (ch === '~' ? ' sea' : ch === '^' ? ' mt' : ch === 'v' ? ' vil' : ch === 'w' ? ' well' : pbad(r, c) ? ' seen' : TOWN[ch] ? ' town' : '') + (inP ? ' on' : '');
+        var d = A.el('div', cls, ch === 'v' ? '🏮' : ch === '^' ? '⛰' : ch === 'w' ? '💧' : TOWN[ch] ? '<small>' + TOWN[ch] + (ch === 'S' ? ' 💧' : '') + '</small>' : ''); d.dataset.rc = k; g.appendChild(d);
       }
       w.appendChild(g);
       g.addEventListener('pointerdown', function (e) { var t = cellAt(e.clientX, e.clientY); if (!t) return; var rc = t.dataset.rc.split(',').map(Number); if (PG[rc[0]][rc[1]] !== 'B') return A.toast('베들레헴에서 시작하세요'); path = [rc]; drawing = true; g.setPointerCapture(e.pointerId); paint(); });
@@ -172,11 +174,15 @@
         if (Math.abs(rc[0] - lp[0]) + Math.abs(rc[1] - lp[1]) !== 1) return;
         if (path.some(function (p) { return p[0] === rc[0] && p[1] === rc[1]; })) return;
         if (pbad(rc[0], rc[1])) { drawing = false; A.sfx('no'); A.toast('~^'.indexOf(PG[rc[0]][rc[1]]) >= 0 ? '지날 수 없는 곳이에요' : '순찰꾼의 등불이 닿는 곳이에요'); path = []; return paint(); }
-        path.push(rc); paint();
+        path.push(rc);
+        if (water(path) < 0) { drawing = false; A.sfx('no'); A.toast('물이 떨어져 나귀가 주저앉았다 — 우물(💧)을 이어 가며 걸음을 세어 봐요'); path = []; return paint(); }
+        paint();
       });
       g.addEventListener('pointerup', function () { if (!drawing) return; drawing = false; check(); });
+      paint();
     }
-    function paint() { w.querySelectorAll('.pm-c').forEach(function (d) { var rc = d.dataset.rc.split(',').map(Number); d.classList.toggle('on', path.some(function (p) { return p[0] === rc[0] && p[1] === rc[1]; })); }); }
+    function paint() { w.querySelectorAll('.pm-c').forEach(function (d) { var rc = d.dataset.rc.split(',').map(Number); d.classList.toggle('on', path.some(function (p) { return p[0] === rc[0] && p[1] === rc[1]; })); });
+      var wv = path.length ? water(path) : WATER, el = w.querySelector('#pmWater'); if (el) { el.innerHTML = '물 부대 ' + Array.from({ length: WATER }, function (_, i) { return '<i class="' + (i < wv ? 'on' : '') + '"></i>'; }).join('') + ' <b>' + Math.max(0, wv) + '걸음</b>'; el.classList.toggle('low', wv <= 1); } }
     function check() {
       if (A.locked('route')) { path = []; return paint(); }
       var last = path[path.length - 1]; if (!last || PG[last[0]][last[1]] !== 'E') { path = []; paint(); return A.toast('애굽까지 이어서 그어야 해요'); }
