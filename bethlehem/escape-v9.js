@@ -194,6 +194,50 @@
   };
   (function () { var done = []; Object.keys(HOW).forEach(function (k) { [BN.HINTS && BN.HINTS[k], BN.HINTS_CH1 && BN.HINTS_CH1[k]].forEach(function (arr) { if (!arr || done.indexOf(arr) >= 0) return; done.push(arr); arr[0] = '하는 법 — ' + HOW[k] + ' ／ ' + arr[0]; }); }); })();
 
+  // ════ 「왜 하는지」는 언제나 화면 맨 위에(하는 법은 힌트로) — 창 이름으로 붙인다 ════
+  var WHY = {
+    '찢긴 두루마리': '찢긴 두루마리 조각들. 바르게 이어 붙이면 글이 다시 이어진다.',
+    '명부 조각 맞추기': '인구조사 명부에서 다윗 집안 칸이 찢겨 있다. 계보가 바르게 이어져야 명부를 받을 수 있다.',
+    '나사렛에서 오는 길': '나사렛에서 베들레헴까지는 사흘 길이 넘는다. 요셉과 마리아처럼 걸어서 지도 상자까지 가자.',
+    '두 장의 지도': '낮의 길이 그려진 지도와 밤하늘 지도. 베들레헴으로 가는 갈림길마다 어느 쪽인지 알아내야 상자가 열린다.',
+    '우물 안': '다윗이 그토록 마시고 싶어 한 성문 곁 우물(삼하 23:15). 바닥에 무언가 있는데 깜깜하다.',
+    '손님 쪽지': '여관 주인이 오늘 밤 손님들 방을 정해 달라고 부탁했다. 손님마다 바라는 것이 다르다.',
+    '기름 나누기': '여관 주인의 부탁 — 기름을 두 손님께 똑같이 나눠 드려야 한다. 그런데 눈금 있는 그릇이 하나도 없다.',
+    '양 몰기': '목자들의 상자는 들판 건너편에 있다. 흩어진 양들을 저마다 제 우리에 들여야 상자에 갈 수 있다.',
+    '목자의 상자': '목자들의 상자가 잠겨 있다. 양들이 무언가 알려 주는 것 같다.',
+    '천군의 노래 조각': '천군의 찬송이 조각조각 흩어졌다. 바르게 이어지면 그 노래가 다시 들릴 것이다.',
+    '천군의 노래': '천군이 부른 노래의 가락이 들려온다. 함께 따라 부르자.',
+    '바위 굴 안': '어두운 바위 굴 마구간. 천사가 말한 「표적」을 찾아야 한다(눅 2:12).',
+    '기름 나르기': '등잔 기름이 다 떨어졌다. 기름 쟁반을 한 방울도 흘리지 않고 등잔까지 옮겨야 한다.',
+    '성전에 올라가는 노래': '예루살렘으로 오르는 계단의 돌판이 뒤섞여 있다. 순례자들이 올라가며 부르던 노래의 돌판이다.',
+    '새장을 흔들지 말고': '제물로 드릴 산비둘기 두 마리를 새장에 모아 성전 문까지 데려가야 한다(레 12:8).',
+    '장수의 저울': '비둘기 장수의 큰 저울. 제물의 무게를 맞춰야 값을 치를 수 있다.',
+    '별 재는 기구': '박사들이 별을 재던 놋쇠 기구. 오늘 밤 「그의 별」이 떠 있는 자리를 겨누어야 한다.',
+    '놋거울과 등잔 빛': '천막 안 등잔 빛을 별 지도까지 보내야 지도에 숨은 것이 드러난다.',
+    '자음 원판': '자음이 새겨진 놋쇠 원판 두 겹. 독서대의 알 수 없는 글을 읽는 열쇠 같다.',
+    '지붕 위 하늘': '왕궁 지붕에서 남쪽 하늘을 본다. 박사의 별 지도에 그려진 그 별자리는 어디에 있을까?',
+    '별을 따라': '박사들이 따라온 별이 베들레헴 지붕들 위를 옮겨 다닌다. 아기가 있는 집은 어디일까?',
+    '그 밤과 다른 곳': '위: 그 밤의 여관(1장) · 아래: 몇 달 뒤. 무엇이 달라졌을까?',
+    '흩어진 글자 일곱': '달라진 곳에서 나온 글자 일곱. 이으면 그 가족이 있는 곳을 말해 줄 것 같다.',
+    '그 집 문': '이 밤에 낯선 이가 두드리면 문을 열지 않는다. 약속된 가락이어야 한다.',
+    '예언 카드 뒤집기': '「이는 주께서 선지자로 하신 말씀을 이루려 하심이라」 — 선지자의 말씀은 어디서 이루어졌을까?',
+    '세 예물의 그림자': '보배합 곁에 등잔을 놓자 벽에 그림자 넷이 비친다. 그림자 밑에는 구절 번호가 긁혀 있다.',
+    '엎드려 경배': '박사들은 아기를 보고 엎드려 경배했다(마 2:11).',
+    '요셉의 꿈': '꿈 이야기 다섯 장. 요셉이 꿈으로 들은 말씀은 넷이다.',
+    '등잔': '불빛이 새어 나가면 헤롯의 사람들이 알아챈다. 등잔을 꺼야 한다.',
+    '나귀 짐': '안장 주머니는 4×4칸. 짐을 빈틈없이 다 넣어야 나귀가 흔들리지 않는다.',
+    '골목 빠져나가기': '순찰꾼들이 등불을 들고 골목을 지킨다. 들키지 않고 성문까지 가야 한다.',
+    '애굽으로 가는 길': '헤롯의 손을 피해 애굽까지 — 남쪽 광야를 건너는 먼 길이다.',
+    '시므온의 찬송': '시므온이 아기를 안고 부른 찬송이 기둥마다 새겨졌다.'
+  };
+  function addWhy() {
+    var m = document.getElementById('modal');
+    if (m && !m.hidden) { var t = (document.getElementById('modalTitle') || {}).textContent, b = document.getElementById('modalBody'); if (WHY[t] && b && !b.querySelector('.why')) { var q = document.createElement('p'); q.className = 'why'; q.textContent = WHY[t]; b.insertBefore(q, b.firstChild); } }
+    document.querySelectorAll('.ov7').forEach(function (o) { var t = (o.querySelector('.ov7-head b') || {}).textContent, bd = o.querySelector('.ov7-body'); if (WHY[t] && bd && !bd.querySelector('.why')) { var q = document.createElement('p'); q.className = 'why'; q.textContent = WHY[t]; bd.insertBefore(q, bd.firstChild); } });
+  }
+  function startWhy() { new MutationObserver(addWhy).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] }); }
+  if (document.body) startWhy(); else addEventListener('DOMContentLoaded', startWhy);
+
   // 시험용: 모든 단서 한꺼번에
   if (LOCAL) BN.__allClues = function () { var C = {}; Object.keys(BN.NEED).forEach(function (k) { BN.NEED[k].c.forEach(function (c) { C[c] = 1; }); }); return C; };
 })(window.BN);
