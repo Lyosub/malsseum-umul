@@ -192,3 +192,5 @@ revoke all on function public.bn_mine(), public.bn_link(text) from public;
 grant execute on function public.bn_mine(), public.bn_link(text) to authenticated;
 revoke all on function public.bn_nick_free(text), public.bn_register(text, text), public.bn_save(text, jsonb, text), public.bn_load(text), public.bn_solved(text, text), public.bn_cheer(text, text, text), public.bn_live(timestamptz), public.bn_award_list() from public;
 grant execute on function public.bn_nick_free(text), public.bn_register(text, text), public.bn_save(text, jsonb, text), public.bn_load(text), public.bn_solved(text, text), public.bn_cheer(text, text, text), public.bn_live(timestamptz), public.bn_award_list() to anon, authenticated;
+-- 11/27 실행 뒤 덧붙임: Supabase 기본 권한으로 anon에도 열려 있던 아이디 전용 함수 닫기
+revoke all on function public.bn_mine(), public.bn_link(text) from anon;

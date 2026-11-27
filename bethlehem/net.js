@@ -2,7 +2,7 @@
 // Supabase RPC(bn_*)만 부른다. 실명은 전도사님 공개키(RSA-OAEP)로 잠가서 보낸다 — 이 파일에는 푸는 열쇠가 없다.
 (function () {
   var URL = window.SUPABASE_URL, KEY = window.SUPABASE_ANON_KEY;
-  var READY = false;   // 서버 SQL(2026-11-27-bethlehem-server.sql)을 넣은 뒤 true로 — 그 전엔 이 기기에만 저장
+  var READY = true;    // 11/27 서버 SQL 실행·확인 끝(2026-11-27-bethlehem-server.sql). 문제가 생기면 false로 — 이 기기에만 저장
   var PUB = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzef4P5M7l4AxWaH/WzcxxnRORpVYc2YZ4Oz635u63GCk9+T639drFU3wfirVWpiuRl+m6HBoHyFKiEPkvaOMzMGuowJfF7VHk9Wzuf2vplcX1pnmTJdFMHZi2vIhmx2GLKva5aYzHaD0ApXpG01i1vNQHuaM6rBY6FHuiMaDjfNxnnYfZqLVoYaPwfh/VOmU2tuoOBw1/0ihSPTapJ4rfIT7hA6GO0mUJsOn0cBbMXudNaCEYbaKX58vKPGRo5qPsmVpHXomwSavQrisVWngG2zqCoqmW/ePVU7RbHc1H98FwfgEsJ5LuYJhhk6EvDtdzMGpK1NQa9XroaavIm6A/QIDAQAB';
   // 말씀우물에 로그인해 있으면 그 아이디로 부른다(서버가 auth.uid()로 진행을 찾음)
   function token() { try { return typeof window.getSession === 'function' ? window.getSession().then(function (s) { return s ? s.access_token : null; }, function () { return null; }) : Promise.resolve(null); } catch (e) { return Promise.resolve(null); } }
@@ -22,7 +22,7 @@
   function clean(S) { var c = JSON.parse(JSON.stringify(S)); delete c.real; delete c.code; delete c.pendingReg; delete c.acct; return c; }
   function has(S) { return !!(S && (S.code || S.acct)); }
   var N = window.BNNet = {
-    on: !!URL && READY,
+    on: !!URL && READY && !/[?&]try=1(&|$)/.test(location.search),
     register: function (nick, real) { return seal(real).then(function (enc) { return rpc('bn_register', { p_nick: nick, p_real_enc: enc }); }); },
     nickFree: function (nick) { return rpc('bn_nick_free', { p_nick: nick }); },
     load: function (code) { return rpc('bn_load', { p_code: code }); },

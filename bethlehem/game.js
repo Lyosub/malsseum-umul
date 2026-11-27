@@ -3,7 +3,9 @@
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
-  var KEY = 'bethlehem.v1';
+  // ?try=1 → 1장 시험판(11/27): 이 기기에만 저장(서버·순위·실명 없음), 1장이 끝나면 멈춤. 정식 진행과 저장 칸이 따로다.
+  var TRY = window.BN_TRY = /[?&]try=1(&|$)/.test(location.search);
+  var KEY = TRY ? 'bethlehem.try1' : 'bethlehem.v1';
   var S = load() || null;
   function blank() { return { v: 1, nick: '', dept: '', grade: '', av: 'm', ch: 1, ms: 0, hintMin: 0, rooms: {}, items: [], notes: [], stars: [], seenIntro: {}, opening: false, created: Date.now() }; }
   function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
@@ -50,6 +52,7 @@
 
   // ── 첫 화면
   if (S && S.nick) { $('btnContinue').hidden = false; $('btnStart').textContent = '처음부터'; }
+  if (TRY) { document.querySelector('#title .eyebrow').textContent = '✦ 1장 시험판 · 이 기기에만 저장돼요'; $('btnCode').hidden = true; var rl = $('inReal').closest('label'); if (rl) rl.hidden = true; var tn = document.querySelector('.tiny-note'); if (tn) tn.textContent = '시험판이라 실명은 받지 않아요. 순위에도 올라가지 않아요.'; $('inNick').placeholder = '시험판에서 쓸 이름(10자 이내)'; }
   $('btnStart').onclick = function () { if (S && S.nick && !confirm('처음부터 다시 할까요? 이 기기의 진행이 지워져요.')) return; S = blank(); save(); music('bgm01_main'); show('profile'); };
   function startPrologue() { playOpening(function () { enterRoom('wellroom'); }, BN.PROLOGUE); }
   function afterPrologue() { playOpening(function () { S.opening = true; save(); enterMap(); }); }
@@ -60,7 +63,8 @@
   $('btnProfileOk').onclick = function () {
     var n = $('inNick').value.trim(), real = $('inReal').value.trim();
     if (!n) return ($('profErr').textContent = '닉네임을 적어 주세요');
-    if (!real) return ($('profErr').textContent = '실명을 적어 주세요 — 시상할 때만 사용돼요');
+    if (!real && !TRY) return ($('profErr').textContent = '실명을 적어 주세요 — 시상할 때만 사용돼요');
+    if (TRY) { S.nick = n; S.av = av; save(); return startPrologue(); }
     var btn = $('btnProfileOk');
     if (!window.BNNet || !BNNet.on) { S.nick = n; S.real = real; S.av = av; S.pendingReg = 1; save(); return startPrologue(); }
     btn.disabled = true; $('profErr').textContent = '확인하는 중…';
@@ -595,7 +599,12 @@
     var CH = (BN.CHAPTERS || {})[n] || { title: '그 밤' }, E = (BN.CH_END || {})[n] || { body: '왕은 가장 낮은 곳, 구유에 오셨습니다.<br>그런데 명부의 이름 칸은 아직 비어 있습니다.', next: '2장 「여드레째 · 사십일째」로 이어집니다' };
     var w = el('div', 'gen-wrap');
     w.innerHTML = '<div style="text-align:center;padding:10px 0"><p class="eyebrow">✦ ' + n + '장 완료</p><h2 style="font-family:var(--serif);font-size:30px;margin:4px 0;color:var(--gold2)">' + CH.title + '</h2><p style="color:var(--stone);line-height:1.7">' + E.body + '</p><p style="margin-top:14px;font-size:13px">기록 <b>' + $('hudTime').textContent + '</b> · 도장 <b>' + $('hudStamp').textContent + '</b>/12 · 숨은 별 <b>' + S.stars.length + '</b>/7</p><p style="margin-top:10px;font-family:var(--serif);color:var(--gold)">' + E.next + '</p></div>';
-    modal(n + '장 「' + CH.title + '」', w, function () { if (E.ending) ending(); else nextChapter(n + 1); });
+    modal(n + '장 「' + CH.title + '」', w, function () { if (TRY) return tryEnd(); if (E.ending) ending(); else nextChapter(n + 1); });
+  }
+  function tryEnd() {
+    var w = el('div', 'gen-wrap');
+    w.innerHTML = '<div style="text-align:center;padding:10px 0"><p class="eyebrow">✦ 1장 시험판</p><h2 style="font-family:var(--serif);font-size:26px;margin:4px 0;color:var(--gold2)">시험판은 여기까지예요</h2><p style="color:var(--stone);line-height:1.7">해 보면서 막히거나 어색했던 곳이 있으면 알려 주세요.<br>정식판은 <b>12월 6일</b>에 다섯 장 모두 열려요.<br>(시험판 기록은 이 기기에만 있고, 정식판과 따로예요)</p></div>';
+    modal('베들레헴의 밤 · 시험판', w, function () { show('title'); music('bgm01_main'); });
   }
   function ending() {
     S.finished = S.finished || S.ms; save(); if (BN.netFlush) BN.netFlush();
