@@ -901,6 +901,11 @@
   zb.onclick = function () { ZOOM = ZOOM === 'near' ? 'far' : 'near'; try { localStorage.setItem('bethlehem.zoom', ZOOM); } catch (e) {} zoomLabel();
     if ($('room').classList.contains('on')) roomFit(50); else if ($('map').classList.contains('on')) { var c = { x: innerWidth / 2, y: innerHeight / 2 }, k0 = view.k, k1 = fitK(ZOOM === 'near') * (ZOOM === 'near' ? 1.25 : 1); view.x = c.x - (c.x - view.x) * k1 / k0; view.y = c.y - (c.y - view.y) * k1 / k0; view.k = k1; clampView(); } };
   zoomLabel(); addEventListener('resize', zoomLabel);
+  function zoomBody() { document.body.classList.toggle('zoom-far', ZOOM !== 'near' && innerWidth < innerHeight); }
+  zoomBody(); addEventListener('resize', zoomBody); zb.addEventListener('click', zoomBody);
+  // 위쪽 막대가 폰 너비보다 넓으면 통째로 줄여 맞춘다(좁은 폰에서 ♪가 잘리던 것)
+  function fitHud() { var h = $('hud'), l = h.querySelector('.hud-l'), r = h.querySelector('.hud-r'); if (!l || !r || h.hidden) return; h.style.zoom = ''; var need = l.scrollWidth + r.scrollWidth + 26; h.style.zoom = need > innerWidth ? (innerWidth / need).toFixed(3) : ''; }
+  addEventListener('resize', fitHud); setInterval(fitHud, 1500); setTimeout(fitHud, 300);
   // 퀘스트 저널(journal.js)이 쓰는 도구
   BN.ui = { modal: modal, closeModal: closeModal, toast: toast, sfx: sfx, save: save, unlocked: unlocked, S: function () { return S; },
     cur: function () { return $('room').classList.contains('on') ? cur : ''; }, screen: function () { var e = document.querySelector('.screen.on'); return e ? e.id : ''; },

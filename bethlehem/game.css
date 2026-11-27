@@ -741,3 +741,6 @@ body:has(#modal:not([hidden])) .zoom-btn, body:has(#dialog:not([hidden])) .zoom-
 .jr-fold { position: absolute; right: 8px; top: 6px; border: 0; background: none; color: #f2b630; font: 700 14px var(--sans); padding: 2px 6px; }
 .jr-float.fold .jr-fold { position: static; margin-left: 6px; }
 .jr-float.fold { display: flex; align-items: center; }
+/* 지도 퀘스트 카드: 작게 보기(세로)에서는 위쪽 빈 자리에, 알림 글이 뜨면 잠깐 숨김 */
+body.zoom-far .jr-float { top: 60px; bottom: auto; }
+body:not(.zoom-far):has(#toast.on) .jr-float { visibility: hidden; }
