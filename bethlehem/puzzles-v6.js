@@ -32,34 +32,58 @@
   // ── 1장 하늘: 천군의 가락 따라 하기(한 마디씩 길어짐) — 마디마다 눅 2:14 조각이 열림
   var PARTS = ['지극히 높은 곳에서는', '하나님께', '영광이요', '땅에서는', '하나님이 기뻐하신', '사람들 중에', '평화로다'];
   var NOTES = [392, 440, 494, 523, 587, 659, 784], GLYPH = ['𝅘𝅥', '♪', '♫', '♬', '𝄞', '𝄢', '𝅗𝅥'];
+  var LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
   BN.PZ.chorus = function (R, A) {
-    // 11/27: 일곱 마디로 길어지던 것을 두 번으로 — 가락을 한 번만 들려주고, 기억했다가 똑같이 친다(틀리면 그 소절을 다시 한 번 들려줌)
-    var r = A.seedRnd(61), seq = [], w = A.el('div', 'gen-wrap'), PH = [[0, 3], [3, 7]], ph = 0, pos = 0, busy = true;
+    // 11/27 v3: 가락은 소리로만 한 번 들려준다(건반이 빛나지 않음). 들은 뒤 건반을 눌러 소리를 찾아보고(채점 안 함), 「이제 치기」 뒤에 들은 대로 친다.
+    //           소리를 꺼 둔 기기는 소리로 풀 수 없으니 그때만 건반 빛으로 보여 준다.
+    var r = A.seedRnd(61), seq = [], w = A.el('div', 'gen-wrap'), PH = [[0, 3], [3, 7]], ph = 0, pos = 0, busy = true, mode = 'listen';
     for (var i = 0; i < 7; i++) seq.push(Math.floor(r() * 7));
     BN.__chorus = seq; A.S().chorusSeq = seq.map(function (i) { return i + 1; }).join(' '); A.save();
-    w.innerHTML = '<div class="note" id="chLine" style="font-family:var(--serif);font-size:17px;min-height:2.6em"></div><p class="tiny-note" id="chSt"></p><div class="ch-keys" id="chK"></div>';
+    w.innerHTML = '<div class="note" id="chLine" style="font-family:var(--serif);font-size:17px;min-height:2.6em"></div><p class="tiny-note" id="chSt"></p><p class="ch-notes" id="chNotes"></p><div class="ch-keys" id="chK"></div><button class="btn gold block" id="chGo" hidden>✅ 다 찾았어요 — 이제 치기</button>';
     if (BN.duck) BN.duck(true);
     A.modal('천군의 노래', w, function () { if (BN.duck) BN.duck(false); });
-    var keys = [];
+    var keys = [], quiet = !soundOn();
     GLYPH.forEach(function (g, k) { var b = A.el('button', 'gcard ch-key', '<span style="font-size:26px">' + g + '</span>'); b.dataset.k = k; b.onclick = function () { press(k); }; w.querySelector('#chK').appendChild(b); keys.push(b); });
-    var pid = 0;
-    function flash(k, ok) { if (!keys[k]) return; keys[k].classList.add('lit'); tone(NOTES[k], ok !== false, .5); setTimeout(function () { keys[k].classList.remove('lit'); }, 380); }
+    var pid = 0, go = w.querySelector('#chGo'), notes = w.querySelector('#chNotes');
+    function light(k, ms) { keys[k].classList.add('lit'); setTimeout(function () { keys[k].classList.remove('lit'); }, ms || 380); }
     function st(t) { w.querySelector('#chSt').textContent = t; }
+    function setMode(m) {
+      mode = m; go.hidden = m !== 'find'; w.classList.toggle('ch-answer', m === 'answer');
+      var n = PH[ph][1] - PH[ph][0];
+      if (m === 'find') st((ph + 1) + '소절 / 2 — 건반을 눌러 방금 들은 ' + n + '음을 찾아보세요(아직 채점 안 해요)');
+      if (m === 'answer') { st((ph + 1) + '소절 / 2 — 들은 차례대로 ' + n + '음을 누르세요'); notes.textContent = '○'.repeat(n); }
+    }
+    go.onclick = function () { if (mode === 'find') { pos = PH[ph][0]; setMode('answer'); } };
     function play() {
       if (ph > 1 || !w.isConnected) return;
-      busy = true; pos = PH[ph][0]; st((ph + 1) + '소절 / 2 — 한 번만 들려요. 잘 들으세요');
-      var i = PH[ph][0], my = ++pid; (function nx() { if (!w.isConnected || my !== pid) return; if (i >= PH[ph][1]) { busy = false; st((ph + 1) + '소절 / 2 — 기억한 대로 누르세요'); return; } flash(seq[i]); i++; setTimeout(nx, 700); })();
+      busy = true; mode = 'listen'; go.hidden = true; w.classList.remove('ch-answer'); pos = PH[ph][0];
+      st((ph + 1) + '소절 / 2 — 한 번만 들려요. ' + (quiet ? '(소리가 꺼져 있어 건반 빛으로 보여 줘요)' : '귀 기울여 들으세요'));
+      var n = PH[ph][1] - PH[ph][0], heard = 0; notes.textContent = '♪'.repeat(0) + '·'.repeat(n);
+      var i = PH[ph][0], my = ++pid;
+      (function nx() {
+        if (!w.isConnected || my !== pid) return;
+        if (i >= PH[ph][1]) { busy = false; setMode('find'); return; }
+        tone(NOTES[seq[i]], true, .5); if (quiet) light(seq[i]);
+        heard++; notes.textContent = '♪'.repeat(heard) + '·'.repeat(n - heard);
+        i++; setTimeout(nx, 750);
+      })();
     }
     function press(k) {
       if (busy) return;
+      light(k); tone(NOTES[k], true, .5);
+      if (mode !== 'answer') return;   // 찾아보는 동안은 소리만
+      var n = PH[ph][1] - PH[ph][0];
       if (k === seq[pos]) {
-        flash(k); pos++;
-        if (pos === PH[ph][1]) { w.querySelector('#chLine').textContent = PARTS.slice(0, PH[ph][1]).join(' '); ph++; busy = true;
+        pos++; notes.textContent = '●'.repeat(pos - PH[ph][0]) + '○'.repeat(PH[ph][1] - pos);
+        if (pos === PH[ph][1]) {
+          w.querySelector('#chLine').textContent = PARTS.slice(0, PH[ph][1]).join(' '); ph++; busy = true;
           if (ph > 1) return setTimeout(function () { if (BN.duck) BN.duck(false); A.closeModal(); A.solve(R); }, 1200);
-          st('좋아요! 다음 소절'); setTimeout(play, 1300); }
-      } else { busy = true; keys[k].classList.add('lit'); tone(196, false, .3); setTimeout(function () { keys[k].classList.remove('lit'); }, 300); A.toast('가락이 흩어졌다 — 이 소절을 한 번 더 들려줘요'); setTimeout(play, 1400); }
+          st('좋아요! 다음 소절'); setTimeout(play, 1400);
+        }
+      } else { busy = true; tone(196, false, .3); A.toast('가락이 흩어졌다 — 이 소절을 한 번 더 들려줘요'); setTimeout(play, 1400); }
     }
     setTimeout(play, 900);
+    if (LOCAL) BN.__chorusGo = function () { go.click(); };
   };
 
   // ── 2장 계단: 시편 「성전에 올라가는 노래」 돌판 여덟을 밀어 편 번호 순서로(3×3)

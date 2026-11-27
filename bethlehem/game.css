@@ -876,3 +876,5 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 .room-stage .rspot .bleat-dots em { font-style: normal; font-weight: 800; color: #fff3c8; letter-spacing: 0; margin-right: calc(2px * var(--inv, 1)); }
 .room-stage .rspot .bleat-dots i { font-style: normal; }
 .fd-how { text-align: center; font-size: 13px; margin: 6px 0 0; }
+.ch-notes { text-align: center; font-size: 22px; letter-spacing: 8px; color: #ffe9a8; min-height: 1.4em; margin: 2px 0 6px; }
+#chGo { margin-top: 10px; }
