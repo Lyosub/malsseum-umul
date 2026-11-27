@@ -7,7 +7,7 @@
 
   // 컷 그림이 오기 전에는 있는 그림으로 대신한다(컷_P1·P2가 오면 img/cuts/p1.webp, p2.webp로 바꿈)
   BN.PROLOGUE = [
-    ['img/cuts/p1.webp', '12월 24일 밤.<br>잠들기 전, 말씀우물을 열었다.', '', 'center'],
+    ['img/cuts/p1.webp', '12월 어느 날 밤.<br>잠들기 전, 말씀우물을 열었다.', '', 'center'],
     ['img/cuts/p1.webp', '화면 속 우물에서<br>금빛이 새어 나오기 시작했다.', '', 'center'],
     ['img/cuts/p2.webp', '찢긴 두루마리 조각들이 우물 아래로 빨려 들어간다.<br>— 그리고, 나도.', '', 'center']
   ];
