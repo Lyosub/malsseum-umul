@@ -66,17 +66,17 @@
     btn.disabled = true; $('profErr').textContent = '확인하는 중…';
     BNNet.register(n, real).then(function (r) {
       btn.disabled = false; $('profErr').textContent = '';
-      S.nick = r.nick; S.code = r.code; S.av = av; delete S.real; save();
-      showCode(r.code, startPrologue);
+      S.nick = r.nick; S.code = r.code; S.av = av; if (r.linked) S.acct = 1; delete S.real; save();
+      showCode(r.code, startPrologue, r.linked);
     }).catch(function (e) {
       btn.disabled = false;
       if (e && e.offline) { S.nick = n; S.real = real; S.av = av; S.pendingReg = 1; save(); toast('인터넷이 끊겨 있어 이 기기에만 저장해요 — 연결되면 자동으로 등록돼요'); return startPrologue(); }
       $('profErr').textContent = (e && e.message) || '등록하지 못했어요';
     });
   };
-  function showCode(code, next) {
+  function showCode(code, next, linked) {
     var w = el('div', 'gen-wrap');
-    w.innerHTML = '<div style="text-align:center"><p class="gen-help">다른 기기에서 이어 하려면 이 코드가 필요해요.<br>사진을 찍거나 적어 두세요. (수첩 맨 위에서도 다시 볼 수 있어요)</p><p class="code-big">' + code + '</p></div>';
+    w.innerHTML = '<div style="text-align:center"><p class="gen-help">' + (linked ? '말씀우물 아이디에 저장돼요. 다른 기기에서도 로그인만 하면 이어져요.<br>로그인하지 않은 기기에서는 아래 코드로 이어 할 수 있어요. (수첩 맨 위에서도 다시 볼 수 있어요)' : '다른 기기에서 이어 하려면 이 코드가 필요해요.<br>사진을 찍거나 적어 두세요. (수첩 맨 위에서도 다시 볼 수 있어요)') + '</p><p class="code-big">' + code + '</p></div>';
     modal('이어하기 코드', w, next);
   }
   $('btnCode').onclick = function () {
@@ -96,6 +96,26 @@
       }).catch(function (e) { $('codeErr').textContent = (e && e.message) || '불러오지 못했어요'; });
     };
   };
+  // 말씀우물 아이디 연동(11/27): 로그인해 있으면 아이디에 저장된 진행을 찾고, 코드로 하던 진행은 아이디에 붙인다
+  function useAcct(m, quiet) {
+    S = Object.assign(blank(), m.state || {}); S.nick = m.nick; S.acct = 1; save();
+    $('btnContinue').hidden = false; $('btnStart').textContent = '처음부터'; $('btnAcct').hidden = true;
+    if (!quiet) { toast(m.nick + '님의 진행을 아이디에서 불러왔어요'); $('btnContinue').onclick(); } else toast('아이디에 저장된 가장 최근 진행을 불러왔어요');
+  }
+  if (window.BNNet && BNNet.on) BNNet.loggedIn().then(function (li) {
+    var line = $('acctLine');
+    if (!li) { line.innerHTML = '말씀우물에 <a href="../login.html?next=/bethlehem/">로그인</a>하면 코드 없이 어느 기기에서나 이어져요'; return; }
+    line.textContent = '☁ 말씀우물 아이디로 저장돼요';
+    return BNNet.mine().then(function (m) {
+      if (m) {
+        if (S && S.nick === m.nick) { if (((m.state || {}).ms || 0) > (S.ms || 0) + 5000) useAcct(m, true); else { S.acct = 1; save(); } return; }
+        var b = $('btnAcct'); b.hidden = false; b.textContent = '☁ 아이디로 이어 하기 (' + m.nick + ')';
+        b.onclick = function () { if (S && S.nick && !confirm('이 기기의 진행 대신 아이디에 저장된 「' + m.nick + '」의 진행을 불러올까요?')) return; useAcct(m); };
+      } else if (S && S.code) {
+        BNNet.link(S.code).then(function () { S.acct = 1; save(); toast('지금까지의 진행을 말씀우물 아이디에 연결했어요'); }).catch(function () {});
+      }
+    });
+  }).catch(function () {});
 
   // ── 컷신
   // 오프닝 컷신: 낡은 양피지 띠 위에 손글씨가 한 글자씩(펜 소리). 누르면 그 줄을 다 보이고, 한 번 더 누르면 다음 장면
@@ -244,6 +264,7 @@
   // ── 대화(한 글자씩, 누르면 넘김)
   var dq = [], dqDone = null, typing = null, typingFull = '';
   var dqTotal = 0;
+  var BIBLE_WHO = { angel: 1, simeon: 1, anna: 1, magi: 1, herod: 1, scribes: 1, shep: 1, mary: 1, joseph: 1, priest: 1 };
   function talk(lines, done) { dq = lines.slice(); dqTotal = dq.length; dqDone = done || null; $('dialog').hidden = false; nextLine(); }
   function endTalk() { if (typing) { clearInterval(typing); typing = null; } dq = []; $('dialog').hidden = true; var d = dqDone; dqDone = null; if (d) d(); }
   function nextLine() {
@@ -255,9 +276,13 @@
     $('dlgName').textContent = L[0] === 'me' ? S.nick : who.name;
     var nth = dqTotal - dq.length, last = !dq.length; $('dlgCount').textContent = dqTotal > 1 ? nth + ' / ' + dqTotal : '';
     $('dlgNext').textContent = last ? '■ 끝 · 눌러서 닫기' : '▼ 다음'; $('dlgNext').classList.toggle('last', last); $('dlgEnd').hidden = dqTotal < 3 || last;
-    $('dlgSub').textContent = L[3] || ''; $('dlgRef').textContent = L[4] || '';
+    // 11/27: 서술 구절은 「두루마리에 글자가 떠오르는」 모양, 성경 인물의 말은 구절 번호를 대화창 대신 수첩 「들은 말씀」에 모은다
+    var scr = L[0] === 'scroll' || (L[0] === 'narr' && !!L[4]); $('dialog').classList.toggle('scroll', scr);
+    var heard = !scr && L[4] && BIBLE_WHO[L[0]];
+    if (heard) { S.heard = S.heard || []; if (!S.heard.some(function (h) { return h[0] === L[4]; })) { S.heard.push([L[4], who.name, L[2]]); save(); } }
+    $('dlgSub').textContent = L[3] || ''; $('dlgRef').textContent = heard ? '' : (L[4] || '');
     var t = $('dlgText'); t.classList.toggle('scripture', !!L[4]); t.textContent = ''; var full = L[2], i = 0;
-    typing = setInterval(function () { i += 2; t.textContent = full.slice(0, i); if (i >= full.length) finishType(); }, 28);
+    typing = setInterval(function () { i += scr ? 1 : 2; t.textContent = full.slice(0, i); if (i >= full.length) finishType(); }, scr ? 45 : 28);
     typingFull = full;
   }
   function finishType() { if (!typing) return; $('dlgText').textContent = typingFull; clearInterval(typing); typing = null; }
@@ -289,7 +314,8 @@
   function closeModal() { $('modal').hidden = true; if (modal.onClose) { var f = modal.onClose; modal.onClose = null; f(); } }
   $('modalX').onclick = closeModal;
   function stampRow() { var I = BN.STAMP_ICON || {}, got = Object.keys(S.rooms).filter(function (k) { return I[k]; }); return got.length ? '<div class="note stamp-row"><b>받은 도장 ' + got.length + '/12</b><div>' + got.map(function (k) { return '<span title="' + I[k][1] + '">' + I[k][0] + '<small>' + I[k][2] + '</small></span>'; }).join('') + '</div></div>' : ''; }
-  $('btnNote').onclick = function () { modal('서기관의 수첩', stampRow() + (S.code ? '<div class="note" style="text-align:center">이어하기 코드 <b class="code-sm">' + S.code + '</b></div>' : '') + (S.notes.length ? S.notes.map(function (n) { return '<div class="note">' + n.text + '<div class="ref">' + (n.ref || '') + '</div></div>'; }).join('') : '<p class="empty">아직 적은 것이 없어요. 장소를 풀면 단서가 저절로 적혀요.</p>')); };
+  $('btnNote').onclick = function () { modal('서기관의 수첩', stampRow() + (S.code ? '<div class="note" style="text-align:center">이어하기 코드 <b class="code-sm">' + S.code + '</b></div>' : '') + (S.notes.length ? S.notes.map(function (n) { return '<div class="note">' + n.text + '<div class="ref">' + (n.ref || '') + '</div></div>'; }).join('') : '<p class="empty">아직 적은 것이 없어요. 장소를 풀면 단서가 저절로 적혀요.</p>') + heardList()); };
+  function heardList() { var H = S.heard || []; if (!H.length) return ''; return '<div class="note heard"><b>📖 들은 말씀 ' + H.length + '</b>' + H.map(function (h) { return '<p><span class="hw">' + h[1] + '</span> 「' + h[2] + '」 <span class="ref">' + h[0] + '</span></p>'; }).join('') + '</div>'; }
   $('btnBag').onclick = function () { modal('가방', S.items.length ? '<div class="bag">' + S.items.map(function (k) { var it = BN.ITEMS[k]; return '<div class="it"><img src="' + it[1] + '" alt=""><b>' + it[0] + '</b><br><span style="opacity:.7">' + it[2] + '</span></div>'; }).join('') + '</div>' : '<p class="empty">가방이 비어 있어요.</p>'); };
   $('btnHint').onclick = function () { return hintOil(); };
   var __oldHint = function () {

@@ -2,6 +2,7 @@
 -- 진행 저장 · 이어하기 코드 · 닉네임 중복 막기 · 순위(하나) · 첫 통과 알림 · 방마다 지금 몇 명 · 응원(🙏✨)
 -- 실명은 브라우저에서 전도사님 공개키(RSA-OAEP)로 잠근 글자(real_enc)만 저장한다. 푸는 열쇠는 전도사님 컴퓨터에만 있다.
 -- 표는 모두 잠그고(anon 직접 접근 없음) 아래 함수로만 쓴다.
+-- 말씀우물 아이디 연동(11/27 추가): 로그인한 사람은 아이디(auth.uid())로 진행이 이어지고, 로그인 안 한 사람은 이어하기 코드로 한다.
 
 create table if not exists public.bn_players (
   id uuid primary key default gen_random_uuid(),
@@ -19,8 +20,10 @@ create table if not exists public.bn_players (
   finished_score int,
   finished_at timestamptz,
   last_seen timestamptz not null default now(),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  user_id uuid unique references auth.users(id) on delete set null
 );
+alter table public.bn_players add column if not exists user_id uuid unique references auth.users(id) on delete set null;
 create table if not exists public.bn_events (
   id bigserial primary key,
   kind text not null,
@@ -50,6 +53,14 @@ language sql immutable as $func$ select lower(regexp_replace(coalesce(p, ''), '\
 create or replace function public.bn_hash(p text) returns text
 language sql immutable as $func$ select encode(sha256(convert_to(upper(regexp_replace(coalesce(p, ''), '\s+', '', 'g')), 'UTF8')), 'hex') $func$;
 
+-- 이 요청의 참가자: 코드가 있으면 코드로, 없으면 로그인한 아이디로(밖에서 직접 부르지 않음)
+create or replace function public.bn_pid(p_code text) returns uuid
+language sql stable security definer set search_path = public as $func$
+  select coalesce(
+    (select id from public.bn_players where coalesce(p_code, '') <> '' and code_hash = public.bn_hash(p_code)),
+    (select id from public.bn_players where auth.uid() is not null and user_id = auth.uid()));
+$func$;
+
 -- 닉네임 쓸 수 있나
 create or replace function public.bn_nick_free(p_nick text) returns boolean
 language sql stable security definer set search_path = public as $func$
@@ -69,13 +80,14 @@ begin
   if char_length(v_nick) < 1 or char_length(v_nick) > 10 then raise exception '닉네임은 1~10자로 적어 주세요'; end if;
   if v_nick ~ '[<>]' then raise exception '닉네임에 < > 는 쓸 수 없어요'; end if;
   if exists (select 1 from public.bn_players where nick_key = public.bn_nick_key(v_nick)) then raise exception '이미 쓰는 닉네임이에요'; end if;
+  if auth.uid() is not null and exists (select 1 from public.bn_players where user_id = auth.uid()) then raise exception '이 아이디는 이미 참가 중이에요 — 첫 화면에서 「아이디로 이어 하기」를 눌러 주세요'; end if;
   loop
     v_code := w1[1 + floor(random() * 16)::int] || '-' || w2[1 + floor(random() * 16)::int] || '-' || lpad((floor(random() * 10000))::int::text, 4, '0');
     exit when not exists (select 1 from public.bn_players where code_hash = public.bn_hash(v_code));
     v_try := v_try + 1; if v_try > 20 then raise exception '잠시 뒤 다시 해 주세요'; end if;
   end loop;
-  insert into public.bn_players (nick, nick_key, code_hash, real_enc) values (v_nick, public.bn_nick_key(v_nick), public.bn_hash(v_code), left(coalesce(p_real_enc, ''), 1000));
-  return json_build_object('code', v_code, 'nick', v_nick);
+  insert into public.bn_players (nick, nick_key, code_hash, real_enc, user_id) values (v_nick, public.bn_nick_key(v_nick), public.bn_hash(v_code), left(coalesce(p_real_enc, ''), 1000), auth.uid());
+  return json_build_object('code', v_code, 'nick', v_nick, 'linked', auth.uid() is not null);
 exception when unique_violation then raise exception '이미 쓰는 닉네임이에요';
 end $func$;
 
@@ -85,7 +97,7 @@ create or replace function public.bn_save(p_code text, p_state jsonb, p_room tex
 language plpgsql security definer set search_path = public as $func$
 declare v public.bn_players; v_stamps int; v_ms bigint; v_hint int; v_stars int; v_fin boolean;
 begin
-  select * into v from public.bn_players where code_hash = public.bn_hash(p_code);
+  select * into v from public.bn_players where id = public.bn_pid(p_code);
   if not found then raise exception '이어하기 코드를 찾을 수 없어요'; end if;
   if octet_length(p_state::text) > 20000 then raise exception '저장 내용이 너무 커요'; end if;
   v_stamps := (select count(*) from jsonb_each(coalesce(p_state->'rooms', '{}'::jsonb)) e where coalesce(e.value->>'stamp', '') <> '');
@@ -108,12 +120,33 @@ language sql stable security definer set search_path = public as $func$
   select json_build_object('nick', nick, 'state', state) from public.bn_players where code_hash = public.bn_hash(p_code);
 $func$;
 
+-- 로그인한 아이디의 진행(없으면 null)
+create or replace function public.bn_mine() returns json
+language sql stable security definer set search_path = public as $func$
+  select json_build_object('nick', nick, 'state', state) from public.bn_players where auth.uid() is not null and user_id = auth.uid();
+$func$;
+
+-- 코드로 하던 진행을 로그인한 아이디에 붙이기(아이디에 아직 진행이 없고, 그 진행이 다른 아이디에 붙어 있지 않을 때만)
+create or replace function public.bn_link(p_code text) returns json
+language plpgsql security definer set search_path = public as $func$
+declare v public.bn_players;
+begin
+  if auth.uid() is null then raise exception '로그인이 필요해요'; end if;
+  select * into v from public.bn_players where code_hash = public.bn_hash(p_code);
+  if not found then raise exception '이어하기 코드를 찾을 수 없어요'; end if;
+  if v.user_id = auth.uid() then return json_build_object('nick', v.nick, 'linked', true); end if;
+  if v.user_id is not null then raise exception '이 진행은 다른 아이디에 연결돼 있어요'; end if;
+  if exists (select 1 from public.bn_players where user_id = auth.uid()) then raise exception '이 아이디에는 이미 다른 진행이 있어요'; end if;
+  update public.bn_players set user_id = auth.uid() where id = v.id;
+  return json_build_object('nick', v.nick, 'linked', true);
+end $func$;
+
 -- 방을 풀었을 때: 그 방을 가장 먼저 푼 사람이면 true
 create or replace function public.bn_solved(p_code text, p_room text) returns boolean
 language plpgsql security definer set search_path = public as $func$
 declare v_nick text;
 begin
-  select nick into v_nick from public.bn_players where code_hash = public.bn_hash(p_code);
+  select nick into v_nick from public.bn_players where id = public.bn_pid(p_code);
   if v_nick is null then return false; end if;
   insert into public.bn_events (kind, room, nick) values ('first', left(coalesce(p_room, ''), 20), v_nick) on conflict do nothing;
   return found;
@@ -124,7 +157,7 @@ create or replace function public.bn_cheer(p_code text, p_room text, p_emoji tex
 language plpgsql security definer set search_path = public as $func$
 declare v_id uuid;
 begin
-  select id into v_id from public.bn_players where code_hash = public.bn_hash(p_code);
+  v_id := public.bn_pid(p_code);
   if v_id is null or p_emoji not in ('🙏', '✨') then return false; end if;
   if exists (select 1 from public.bn_cheers where player = v_id and at > now() - interval '3 seconds') then return false; end if;
   insert into public.bn_cheers (player, room, emoji) values (v_id, left(coalesce(p_room, ''), 20), p_emoji);
@@ -154,5 +187,8 @@ language sql stable security definer set search_path = public as $func$
   from public.bn_players where finished_score is not null;
 $func$;
 
+revoke all on function public.bn_pid(text), public.bn_nick_key(text), public.bn_hash(text) from public, anon, authenticated;
+revoke all on function public.bn_mine(), public.bn_link(text) from public;
+grant execute on function public.bn_mine(), public.bn_link(text) to authenticated;
 revoke all on function public.bn_nick_free(text), public.bn_register(text, text), public.bn_save(text, jsonb, text), public.bn_load(text), public.bn_solved(text, text), public.bn_cheer(text, text, text), public.bn_live(timestamptz), public.bn_award_list() from public;
 grant execute on function public.bn_nick_free(text), public.bn_register(text, text), public.bn_save(text, jsonb, text), public.bn_load(text), public.bn_solved(text, text), public.bn_cheer(text, text, text), public.bn_live(timestamptz), public.bn_award_list() to anon, authenticated;

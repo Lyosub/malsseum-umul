@@ -7,6 +7,7 @@ BN.CHARS = {
   gilead: { name: '길르앗', face: 'gilead' },
   me: { name: '나', face: 'me' },
   narr: { name: '', face: null },
+  scroll: { name: '', face: null },
   joseph: { name: '요셉', face: 'joseph' },
   mary: { name: '마리아', face: 'mary' },
   innkeeper: { name: '여관 주인', face: 'innkeeper' }

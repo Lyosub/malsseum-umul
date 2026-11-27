@@ -591,3 +591,20 @@ body:has(#dialog:not([hidden])) #panHint { opacity: 0 !important; }
 .hud-ch:empty { display: none; }
 @keyframes rtFade { to { opacity: 0; visibility: hidden; } }
 @media (orientation: landscape) and (max-height: 500px) { .room-title.fade { animation: rtFade .8s 4s forwards; } }
+.acct-line { margin-top: 8px; } .acct-line a { color: var(--gold2, #ffd98a); text-decoration: underline; }
+.acct-line:empty { display: none; }
+/* 11/27 두루마리에 글자가 떠오르는 말씀(서술 구절) */
+#dialog.scroll { justify-content: center; align-items: center; }
+#dialog.scroll .dlg-face { display: none; }
+#dialog.scroll .dlg-box { flex: 0 0 auto; width: min(640px, calc(100% - 20px)); min-height: 0; margin-bottom: 8px; text-align: center; padding: 22px 34px 26px; border-radius: 6px; border: 0; color: #4a3118;
+  background: radial-gradient(ellipse at 50% 40%, #fff6dc, #ecd6a8 70%, #d6b880);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .55), inset 0 0 26px rgba(150, 100, 40, .35); animation: unroll .55s cubic-bezier(.2, .8, .2, 1) both; }
+#dialog.scroll .dlg-box::before, #dialog.scroll .dlg-box::after { content: ''; position: absolute; left: -10px; right: -10px; height: 14px; border-radius: 7px; background: linear-gradient(#a8743a, #6e4520 60%, #8a5a2c); box-shadow: 0 2px 6px rgba(0, 0, 0, .5); width: auto; }
+#dialog.scroll .dlg-box::before { top: -7px; bottom: auto; }
+#dialog.scroll .dlg-box::after { bottom: -7px; }
+#dialog.scroll .dlg-text { word-break: keep-all; font-family: var(--serif); color: #5a3a12; font-size: clamp(17px, 2.4vw, 21px); line-height: 1.7; text-shadow: 0 0 10px rgba(255, 200, 90, .55); }
+#dialog.scroll .dlg-ref { color: #8a5a20; font-weight: 700; margin-top: 8px; }
+#dialog.scroll .dlg-next, #dialog.scroll .dlg-count { color: #8a5a20; }
+#dialog.scroll .dlg-name { display: none; }
+@keyframes unroll { from { clip-path: inset(-60px -20px 100% -20px); opacity: .4; } to { clip-path: inset(-60px -20px -20px -20px); opacity: 1; } }
+.note.heard p { margin: 6px 0; font-family: var(--serif); line-height: 1.5; } .note.heard .hw { color: var(--gold); font-family: var(--sans); font-size: 12px; font-weight: 700; }
