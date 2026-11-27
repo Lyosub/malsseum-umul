@@ -81,11 +81,15 @@
     var S = A.S(); S.f1 = S.f1 || {};
     if (S.f1.cash) return A.toast('✔ 돈궤는 이미 열었어요 — 열쇠는 가방에');
     var w = A.el('div', 'gen-wrap');
-    w.innerHTML = '<div class="note cb-lid"><b>돈궤 뚜껑에 새긴 글</b><span>「첫째 칸은 손님방 문, 둘째 칸은 여관 벽의 창, 셋째 칸은 짐을 진 짐승. 마당에서 세어 보라.」</span></div><div class="rm-ans"><input id="cbIn" inputmode="numeric" maxlength="3" placeholder="숫자 셋"><button class="btn gold" id="cbOk">열기</button></div>';
+    var CB = [['🚪', '손님방 문'], ['🪟', '여관 벽의 창'], ['🫏', '짐을 진 짐승']], cv = [0, 0, 0];
+    w.innerHTML = '<div class="note cb-lid"><b>돈궤 뚜껑에 새긴 글</b><span>「첫째 칸은 손님방 문, 둘째 칸은 여관 벽의 창, 셋째 칸은 짐을 진 짐승. 마당에서 세어 보라.」</span></div>' +
+      '<div class="cb-slots">' + CB.map(function (c, i) { return '<div class="cb-slot"><small>' + ['첫째', '둘째', '셋째'][i] + ' 칸</small><button class="btn ghost cb-up" data-i="' + i + '">▲</button><b id="cbV' + i + '">0</b><button class="btn ghost cb-dn" data-i="' + i + '">▼</button><span>' + c[0] + '<br>' + c[1] + '</span></div>'; }).join('') + '</div>' +
+      '<button class="btn gold block" id="cbOk" style="margin-top:10px">돈궤 열기</button>';
     A.modal('계산대 돈궤', w);
+    w.querySelectorAll('.cb-up, .cb-dn').forEach(function (b) { b.onclick = function () { var i = +b.dataset.i; cv[i] = (cv[i] + (b.classList.contains('cb-up') ? 1 : 9)) % 10; w.querySelector('#cbV' + i).textContent = cv[i]; }; });
     w.querySelector('#cbOk').onclick = function () {
       if (A.locked('inn')) return;
-      if ((w.querySelector('#cbIn').value || '').replace(/\D/g, '') !== '552') return A.wrong('inn', '돈궤가 열리지 않는다 — 다시 세어 보자');
+      if (cv.join('') !== '552') return A.wrong('inn', '돈궤가 열리지 않는다 — 다시 세어 보자');
       S.f1.cash = 1; add(S, 'keys'); S.notes.push({ text: '여관 돈궤: 손님방 문 5 · 여관 벽의 창 5 · 짐을 진 나귀 2 → 552. 안에 열쇠 꾸러미.', ref: '' }); A.save(); A.sfx('ok'); A.closeModal();
       A.talk([['narr', null, '딸깍. 돈궤 안에 동전 몇 닢과 열쇠 꾸러미가 들어 있다.'], ['gilead', 2, '열쇠다! 이걸로 부엌 문도 열리지 않을까요?', '(빵 냄새 쪽을 봄)']]);
     };
