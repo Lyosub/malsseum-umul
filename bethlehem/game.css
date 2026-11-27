@@ -763,3 +763,15 @@ body:not(.zoom-far):has(#toast.on) .jr-float { visibility: hidden; }
 .jr-pop { position: fixed; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 58px); z-index: 21; width: min(260px, 72vw); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(111, 168, 214, .6); background: rgba(9, 16, 36, .96); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
 .jr-pop .cl-h { margin-bottom: 6px; } .jr-pop .cl-chips { margin: 0; }
 body:has(#modal:not([hidden])) .jr-pop, body:has(#dialog:not([hidden])) .jr-pop { display: none; }
+/* 11/27 숨은 것(단서·명부 조각·두루마리 조각·물건)은 모두 빛나는 점 + 퍼지는 고리 */
+.room-stage .rspot.area:is([data-k="clue"], [data-k="card"], [data-k="scrap"], [data-k="tile"], [data-k="pick"])::after { content: ''; position: absolute; left: 50%; top: 50%; width: calc(16px * var(--inv, 1)); height: calc(16px * var(--inv, 1)); border-radius: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle, #fffef4 0 22%, rgba(255, 220, 130, .95) 38%, rgba(255, 190, 80, .35) 62%, transparent 72%); box-shadow: 0 0 calc(9px * var(--inv, 1)) calc(3px * var(--inv, 1)) rgba(255, 210, 120, .55); animation: clueTw3 2.4s ease-in-out infinite; pointer-events: none; }
+.room-stage .rspot.area:is([data-k="clue"], [data-k="card"], [data-k="scrap"], [data-k="tile"], [data-k="pick"])::before { content: ''; position: absolute; left: 50%; top: 50%; width: calc(34px * var(--inv, 1)); height: calc(34px * var(--inv, 1)); border-radius: 50%; border: calc(1.6px * var(--inv, 1)) solid rgba(255, 226, 150, .85); transform: translate(-50%, -50%); animation: pzRing 2.4s ease-out infinite; pointer-events: none; }
+.hint-buy { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 14px; line-height: 1.3; }
+.hint-buy b { font-size: 15px; } .hint-buy small { font-size: 12.5px; font-weight: 600; opacity: .85; }
+.btn.hint-buy { display: flex !important; flex-direction: column; } .hint-buy b, .hint-buy small { display: block; }
+.edge-hint { position: fixed; top: 50%; z-index: 18; padding: 10px 8px; transform: translateY(-50%); font: 800 16px var(--sans); color: #ffe9a8; text-shadow: 0 0 10px rgba(255, 210, 120, .9); background: linear-gradient(90deg, rgba(9, 14, 34, .75), rgba(9, 14, 34, 0)); pointer-events: none; opacity: 0; transition: opacity .3s; }
+.edge-hint.l { left: 0; border-radius: 0 12px 12px 0; }
+.edge-hint.r { right: 0; border-radius: 12px 0 0 12px; background: linear-gradient(270deg, rgba(9, 14, 34, .75), rgba(9, 14, 34, 0)); }
+.edge-hint.on { opacity: 1; animation: edgePulse 1.6s ease-in-out infinite; }
+@keyframes edgePulse { 50% { opacity: .45; } }
+body:has(#modal:not([hidden])) .edge-hint, body:has(#dialog:not([hidden])) .edge-hint { display: none; }

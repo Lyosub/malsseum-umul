@@ -697,10 +697,10 @@
     var used = S.hints[cur] || 0, drops = [1, 1, 2], mins = [5, 10, 20], names = ['어디를 볼까', '어떻게 풀까', '정답'];
     var html = '<p style="margin:0 0 10px">등잔 기름 <b style="color:var(--gold2);font-size:18px">' + '💧'.repeat(Math.max(0, S.oil[S.ch])) + '</b> ' + S.oil[S.ch] + '방울 <span style="opacity:.6">(' + S.ch + '장)</span></p>';
     var HW = (BN.HOW || {})[cur]; if (HW) html = '<div class="note how-free"><b>❔ 하는 법</b> <small>(기름·시간 안 듦)</small><br>' + HW + '</div>' + html;
-    html += H2.slice(0, used).map(function (h, i) { return '<div class="note"><b>' + (i + 1) + '단계 · ' + names[i] + '</b><br>' + h + '</div>'; }).join('');
+    html += H2.slice(0, used).map(function (h, i) { if (typeof h === 'function') h = h(S); return '<div class="note"><b>' + (i + 1) + '단계 · ' + names[i] + '</b><br>' + h + '</div>'; }).join('');
     if (used < H2.length) {
       var can = S.oil[S.ch] >= drops[used];
-      html += can ? '<button class="btn gold block" id="hintMore">' + (used + 1) + '단계 「' + names[used] + '」 — 기름 ' + drops[used] + '방울 · +' + mins[used] + '분</button>'
+      html += can ? '<button class="btn gold block hint-buy" id="hintMore"><b>' + (used + 1) + '단계 「' + names[used] + '」 보기</b><small>기름 ' + drops[used] + '방울 · 기록 +' + mins[used] + '분</small></button>'
         : '<p class="gen-help">기름이 모자라요.</p><button class="btn ghost block" id="hintBeg">아삽 노인에게 매달리기 — +30분</button>';
     } else html += '<p class="gen-help">이 장소의 힌트를 모두 봤어요.</p>';
     modal('힌트 · 등잔 기름', html);
@@ -714,7 +714,7 @@
     var have = names.filter(function (n) { return hidden.indexOf(n) < 0 || (S.cards || []).indexOf(n) >= 0; }).concat(decoys);
     var r = seedRnd(1), pool = have.slice().sort(function () { return r() - .5; }), placed = new Array(10).fill(null), sel = null;
     // 11/27: 빈칸은 늘 다섯 장씩 두 줄. 금빛 줄이 열 장 모두에 걸친 큰 「14」 한 그림이 된다(왼쪽 두 줄 = 1, 오른쪽 세 줄 = 4) — 성경을 안 펴도 그림으로 얼추 맞출 수 있다
-    var PATH = 'M30 78 L120 18 L120 246 M40 246 L190 246 M428 18 L222 168 L486 168 M372 60 L372 250 M440 44 Q484 74 462 112 M262 30 L292 22';
+    var PATH = 'M30 78 L120 18 L120 246 M40 246 L480 246 M490 18 L428 18 L222 168 L486 168 M372 60 L372 246';
     var DECOYS = ['M10 96 L90 60 M30 30 L70 30', 'M50 12 L50 120 M20 70 L80 70', 'M10 124 L90 94 M10 50 L90 22'];
     function card(nm, cls) {
       var i = names.indexOf(nm), d = el('div', 'gcard ' + (cls || ''));
@@ -743,19 +743,20 @@
     var arrows = J.map(function () { return Math.floor(r() * 4); }), east = Math.floor(r() * 4);   // 해 무늬가 가리키는 화면 방향(0위 1오른 2아래 3왼)
     var pick = []; while (pick.length < 4) { var c = Math.floor(r() * 9); if (pick.indexOf(c) < 0) pick.push(c); }
     var north = (east + 3) % 4, DIRS = ['북', '동', '남', '서'], answer = pick.map(function (j) { return DIRS[(arrows[j] - north + 4) % 4]; });
+    S.roadAns = answer.join(' · '); save();   // 사람마다 다른 답 — 힌트 3단계가 이것을 보여 준다
     var ox = 60 + Math.floor(r() * 80) * (r() < .5 ? -1 : 1), oy = 40 + Math.floor(r() * 50) * (r() < .5 ? -1 : 1), sizes = [16, 12, 9, 6];
     var land = '<path d="M30 140 Q120 120 160 150 T300 130 T420 160" stroke="#7aa3c0" stroke-width="5" fill="none" opacity=".75"/><path d="M380 30 l25 -18 l25 18 z M520 100 l20 -15 l20 15 z M40 330 l22 -16 l22 16 z M230 240 l18 -14 l18 14 z" fill="#a08660" opacity=".65"/>';
     var roads = 'M300 20 C260 50 150 50 120 70 M120 70 L250 60 L420 90 M120 70 L90 190 L300 170 L470 210 M250 60 L300 170 M420 90 L470 210 M90 190 L170 300 L360 290 L520 330 M300 170 L360 290 M470 210 L520 330 M360 290 C380 340 330 360 300 385';
     var sunAng = [0, 90, 180, 270][east];
     var day = '<g>' + land + '<path d="' + roads + '" stroke="#8a6a3a" stroke-width="7" fill="none" stroke-dasharray="2 10" stroke-linecap="round"/>' +
       J.map(function (p, i) { return '<g transform="translate(' + p[0] + ',' + p[1] + ')"><circle r="15" fill="#f3e4bf" stroke="#7a5a2a" stroke-width="2"/><text y="6" text-anchor="middle" font-size="18" fill="#5a3a14" font-weight="700">' + ARW[arrows[i]] + '</text></g>'; }).join('') +
-      '<g transform="translate(560,40) rotate(' + sunAng + ')"><circle r="22" fill="none" stroke="#7a5a2a" stroke-width="1.5"/><path d="M0 -20 L5 0 L0 20 L-5 0 Z" fill="#7a5a2a" opacity=".5"/><g transform="translate(0,-30)"><circle r="6" fill="#d9a043"/>' + [0, 45, 90, 135, 180, 225, 270, 315].map(function (a) { return '<line x1="0" y1="-8" x2="0" y2="-11" stroke="#d9a043" stroke-width="2" transform="rotate(' + a + ')"/>'; }).join('') + '</g></g></g>';
+      (function () { var na = [0, 90, 180, 270][north], L = ['북', '동', '남', '서'], g = '<g transform="translate(536,64) scale(1.55)"><circle r="34" fill="rgba(243,228,191,.92)" stroke="#7a5a2a" stroke-width="2"/>'; L.forEach(function (t, i) { var a = (na + i * 90) * Math.PI / 180, x = Math.sin(a) * 23, y = -Math.cos(a) * 23; g += '<text x="' + x.toFixed(1) + '" y="' + (y + 5).toFixed(1) + '" text-anchor="middle" font-size="' + (i ? 13 : 15) + '" font-weight="800" fill="' + (i ? '#5a3a14' : '#b3261e') + '">' + t + '</text>'; }); var a0 = na * Math.PI / 180; g += '<path d="M' + (Math.sin(a0) * 13).toFixed(1) + ' ' + (-Math.cos(a0) * 13).toFixed(1) + ' L' + (Math.cos(a0) * 4).toFixed(1) + ' ' + (Math.sin(a0) * 4).toFixed(1) + ' L' + (-Math.cos(a0) * 4).toFixed(1) + ' ' + (-Math.sin(a0) * 4).toFixed(1) + ' Z" fill="#b3261e"/><circle r="2.5" fill="#5a3a14"/></g>'; return g; })() + '</g>';
     var night = '<g id="ngt" transform="translate(' + ox + ',' + oy + ')"><rect x="-200" y="-200" width="1000" height="800" fill="#0d1530" opacity=".82"/>' + land.replace(/#7aa3c0/, '#9ec4ff').replace(/#a08660/, '#c9d4ff') +
       Array.from({ length: 50 }, function () { return '<circle cx="' + Math.floor(r() * 600) + '" cy="' + Math.floor(r() * 400) + '" r="' + (r() * 1.4 + .4).toFixed(1) + '" fill="#fff" opacity="' + (r() * .5 + .2).toFixed(2) + '"/>'; }).join('') +
       pick.map(function (j, k) { var p = J[j], s = sizes[k]; return '<path transform="translate(' + p[0] + ',' + p[1] + ')" d="M0 -' + s + ' L' + s * .28 + ' -' + s * .28 + ' L' + s + ' 0 L' + s * .28 + ' ' + s * .28 + ' L0 ' + s + ' L-' + s * .28 + ' ' + s * .28 + ' L-' + s + ' 0 L-' + s * .28 + ' -' + s * .28 + ' Z" fill="#ffe9a8"/>'; }).join('') + '</g>';
     var w = el('div', 'gen-wrap');
     w.innerHTML = '<svg viewBox="0 0 600 400" style="width:100%;border-radius:10px;background:linear-gradient(#efe0bb,#d8c095);touch-action:none" id="rmSvg">' + day + '<g style="opacity:.62">' + night + '</g></svg>' +
-      '<div style="display:flex;gap:8px;justify-content:center;margin-top:8px" id="rmLock"></div><button class="btn gold block" id="rmOk" style="margin-top:8px">상자 열기</button>';
+      '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">' + sizes.map(function (z) { return '<div style="width:58px;text-align:center"><svg width="34" height="34" viewBox="-17 -17 34 34"><path d="M0 -' + z + ' L' + z * .28 + ' -' + z * .28 + ' L' + z + ' 0 L' + z * .28 + ' ' + z * .28 + ' L0 ' + z + ' L-' + z * .28 + ' ' + z * .28 + ' L-' + z + ' 0 L-' + z * .28 + ' -' + z * .28 + ' Z" fill="#ffe9a8" stroke="#b8862b" stroke-width="1"/></svg></div>'; }).join('') + '</div><div style="display:flex;gap:8px;justify-content:center;margin-top:2px" id="rmLock"></div><button class="btn gold block" id="rmOk" style="margin-top:8px">상자 열기</button>';
     modal('두 장의 지도', w);
     var svg = $('rmSvg'), ng = $('ngt'), drag = null, snapped = false;
     function pt(e) { var b = svg.getBoundingClientRect(); return { x: (e.clientX - b.left) * 600 / b.width, y: (e.clientY - b.top) * 400 / b.height }; }
@@ -830,6 +831,7 @@
   var sheepInfo = null;
   function sheepData() { if (!sheepInfo) { var r = seedRnd(15), order = [0, 1, 2, 3].sort(function () { return r() - .5; }); sheepInfo = { bell: order, n: [0, 1, 2, 3].map(function () { return 1 + Math.floor(r() * 6); }) }; } return sheepInfo; }
   function sheepBell(i) { return BELLS[sheepData().bell[i]]; }
+  BN.fieldCode = function () { var d = sheepData(); return [0, 1, 2, 3].map(function (b) { return d.n[d.bell.indexOf(b)]; }).join(' '); };   // 사람마다 다른 자물쇠 — 힌트 3단계용
   function sheepBleat2(i, spot) {
     var n = sheepData().n[i], k = 0;
     (function one() {
@@ -907,6 +909,14 @@
   // 위쪽 막대가 폰 너비보다 넓으면 통째로 줄여 맞춘다(좁은 폰에서 ♪가 잘리던 것)
   function fitHud() { var h = $('hud'), l = h.querySelector('.hud-l'), r = h.querySelector('.hud-r'); if (!l || !r || h.hidden) return; h.style.zoom = ''; var need = l.scrollWidth + r.scrollWidth + 26; h.style.zoom = need > innerWidth ? (innerWidth / need).toFixed(3) : ''; }
   addEventListener('resize', fitHud); setInterval(fitHud, 1500); setTimeout(fitHud, 300);
+  // 화면 밖에 아직 못 찾은 것이 있으면 그쪽 가장자리에 반짝이는 화살표(끌어서 보라는 뜻)
+  var edgeL = document.createElement('div'), edgeR = document.createElement('div'); edgeL.className = 'edge-hint l'; edgeR.className = 'edge-hint r'; edgeL.textContent = '‹ ✦'; edgeR.textContent = '✦ ›'; document.body.appendChild(edgeL); document.body.appendChild(edgeR);
+  function edgeHints() {
+    var on = $('room').classList.contains('on'), L = false, Rt = false;
+    if (on) document.querySelectorAll('#roomSpots .rspot.area').forEach(function (e) { if (!/^(clue|card|scrap|tile|pick)$/.test(e.dataset.k || '')) return; var r = e.getBoundingClientRect(), cx = r.left + r.width / 2; if (cx < 6) L = true; else if (cx > innerWidth - 6) Rt = true; });
+    edgeL.classList.toggle('on', L); edgeR.classList.toggle('on', Rt);
+  }
+  setInterval(edgeHints, 600);
   // 퀘스트 저널(journal.js)이 쓰는 도구
   BN.ui = { modal: modal, closeModal: closeModal, toast: toast, sfx: sfx, save: save, unlocked: unlocked, S: function () { return S; },
     cur: function () { return $('room').classList.contains('on') ? cur : ''; }, screen: function () { var e = document.querySelector('.screen.on'); return e ? e.id : ''; },

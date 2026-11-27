@@ -35,7 +35,7 @@
   BN.PZ.chorus = function (R, A) {
     var r = A.seedRnd(61), seq = [], w = A.el('div', 'gen-wrap'), round = 1, pos = 0, busy = false;
     for (var i = 0; i < 7; i++) seq.push(Math.floor(r() * 7));
-    BN.__chorus = seq;
+    BN.__chorus = seq; A.S().chorusSeq = seq.map(function (i) { return i + 1; }).join(' '); A.save();
     w.innerHTML = '<div class="note" id="chLine" style="font-family:var(--serif);font-size:17px;min-height:2.6em"></div><p class="tiny-note" id="chSt"></p><div class="ch-keys" id="chK"></div><button class="btn ghost" id="chAgain">다시 듣기</button>';
     A.modal('천군의 노래', w);
     var keys = [];
