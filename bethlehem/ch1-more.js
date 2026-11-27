@@ -82,7 +82,7 @@
     if (S.f1.cash) return A.toast('✔ 돈궤는 이미 열었어요 — 열쇠는 가방에');
     var w = A.el('div', 'gen-wrap');
     var CB = [['🚪', '손님방 문'], ['🪟', '여관 벽의 창'], ['🫏', '짐을 진 짐승']], cv = [0, 0, 0];
-    w.innerHTML = '<div class="note cb-lid"><b>돈궤 뚜껑에 새긴 글</b><span>「첫째 칸은 손님방 문, 둘째 칸은 여관 벽의 창, 셋째 칸은 짐을 진 짐승. 마당에서 세어 보라.」</span></div>' +
+    w.innerHTML = '<div class="note cb-lid"><b>돈궤 뚜껑에 새긴 글</b><span>「첫째 칸은 손님방 문, 둘째 칸은 여관 벽의 창, 셋째 칸은 짐을 진 짐승. 마당에서 세어 보라.」</span><small class="cb-tip">숫자는 어디에도 적혀 있지 않아요 — 창을 닫고 여관 마당 그림을 끌어 보며 직접 세요.</small></div>' +
       '<div class="cb-slots">' + CB.map(function (c, i) { return '<div class="cb-slot"><small>' + ['첫째', '둘째', '셋째'][i] + ' 칸</small><button class="btn ghost cb-up" data-i="' + i + '">▲</button><b id="cbV' + i + '">0</b><button class="btn ghost cb-dn" data-i="' + i + '">▼</button><span>' + c[0] + '<br>' + c[1] + '</span></div>'; }).join('') + '</div>' +
       '<button class="btn gold block" id="cbOk" style="margin-top:10px">돈궤 열기</button>';
     A.modal('계산대 돈궤', w);
@@ -94,7 +94,7 @@
       A.talk([['narr', null, '딸깍. 돈궤 안에 동전 몇 닢과 열쇠 꾸러미가 들어 있다.'], ['gilead', 2, '열쇠다! 이걸로 부엌 문도 열리지 않을까요?', '(빵 냄새 쪽을 봄)']]);
     };
   };
-  why('계산대 돈궤', '계산대 위의 돈궤에 숫자 자물쇠 셋. 뚜껑에 무엇을 세라는 글이 새겨져 있다.', '손님방 문… 2층도 있었지. 창은 여관 건물 벽에 난 것만이겠지? 화면을 끌어 구석까지 봐야겠다.');
+  why('계산대 돈궤', '계산대 위의 돈궤에 숫자 자물쇠 셋. 뚜껑에 무엇을 세라는 글이 새겨져 있다. 답은 이 여관 마당 그림 속에 있다.', '숫자가 적힌 데는 없네… 마당에 있는 문이랑 창, 짐 실은 짐승을 내가 직접 세어야겠다. 2층도 있고, 뒤 언덕 마을 창은 여관 것이 아니지.');
 
   // ════ 4. 부엌 · 깜박임 부호: 매달린 등잔의 길고 짧은 깜박임 + 등잔지기의 표 → 수정 상자
   R.kitchen.item = 'lensbox';
