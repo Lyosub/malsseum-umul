@@ -7,7 +7,9 @@
   var TRY = window.BN_TRY = /[?&]try=1(&|$)/.test(location.search);
   // ?phonetest=1 → 폰 시험(11/27): 센서·마이크·소리·손 감각 문제만 골라 바로 해 보기. 이 기기에만 저장, 서버·순위 없음, 풀어도 진행에 안 들어감
   var PT = /[?&]phonetest=1(&|$)/.test(location.search);
-  var KEY = PT ? 'bethlehem.phonetest' : TRY ? 'bethlehem.try1' : 'bethlehem.v1';
+  // ?chtest=N → N장부터 바로 시험(11/27): 앞 장은 다 푼 것으로, 이 기기에만 저장(서버·순위 없음)
+  var CT = +((location.search.match(/[?&]chtest=([1-5])(&|$)/) || [])[1] || 0);
+  var KEY = PT ? 'bethlehem.phonetest' : CT ? 'bethlehem.chtest' + CT : TRY ? 'bethlehem.try1' : 'bethlehem.v1';
   var S = load() || null;
   function blank() { return { v: 1, nick: '', dept: '', grade: '', av: 'm', ch: 1, ms: 0, hintMin: 0, rooms: {}, items: [], notes: [], stars: [], seenIntro: {}, opening: false, created: Date.now() }; }
   function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
@@ -932,6 +934,14 @@
     }).join('');
     modal('📱 폰 시험 목록', w);
     w.querySelectorAll('.pt-item').forEach(function (b) { b.onclick = function () { ptRun(b.dataset.k); }; });
+  }
+  if (CT) {
+    if (!S || !S.nick) {
+      S = blank(); S.nick = CT + '장시험'; S.opening = true; S.ch = CT; S.chDone = {}; S.items = ['census', 'lamp', 'rope', 'keys', 'oil', 'lens', 'scrap', 'cloth', 'doves'];
+      var done = ['wellroom']; for (var c = 1; c < CT; c++) { var st = (BN.CHAPTERS[c] || {}).start; if (st) done.push(st); BN.SPOTS.forEach(function (sp) { if ((sp.ch || 1) === c) done.push(sp.id); }); if (c === 1) done.push('kitchen'); S.chDone[c] = 1; }
+      done.forEach(function (k) { S.rooms[k] = { at: 0, stamp: BN.STAMPS[k] || '' }; }); save();
+    }
+    document.querySelector('#title .eyebrow').textContent = '✦ ' + CT + '장 시험 · 이 기기에만 저장돼요'; $('btnCode').hidden = true; $('btnContinue').hidden = false; updHud();
   }
   if (PT) { document.body.classList.add('pt');
     if (!S || !S.nick) { S = blank(); S.nick = '폰시험'; S.opening = true; S.ch = 5; S.items = ['census', 'lamp', 'rope', 'keys', 'oil', 'lens', 'scrap', 'cloth']; save(); }
