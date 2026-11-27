@@ -739,33 +739,55 @@
 
   // 2 길 v2: 밤 지도를 끌어 강·산에 맞추고, 해 무늬로 동서남북을 읽는다
   PUZZLES.roadmap = function (R) {
-    var r = seedRnd(2), J = [[120, 70], [250, 60], [420, 90], [90, 190], [300, 170], [470, 210], [170, 300], [360, 290], [520, 330]];
-    var arrows = J.map(function () { return Math.floor(r() * 4); }), east = Math.floor(r() * 4);   // 해 무늬가 가리키는 화면 방향(0위 1오른 2아래 3왼)
-    var pick = []; while (pick.length < 4) { var c = Math.floor(r() * 9); if (pick.indexOf(c) < 0) pick.push(c); }
-    var north = (east + 3) % 4, DIRS = ['북', '동', '남', '서'], answer = pick.map(function (j) { return DIRS[(arrows[j] - north + 4) % 4]; });
-    S.roadAns = answer.join(' · '); save();   // 사람마다 다른 답 — 힌트 3단계가 이것을 보여 준다
-    var ox = 60 + Math.floor(r() * 80) * (r() < .5 ? -1 : 1), oy = 40 + Math.floor(r() * 50) * (r() < .5 ? -1 : 1), sizes = [16, 12, 9, 6];
-    var land = '<path d="M30 140 Q120 120 160 150 T300 130 T420 160" stroke="#7aa3c0" stroke-width="5" fill="none" opacity=".75"/><path d="M380 30 l25 -18 l25 18 z M520 100 l20 -15 l20 15 z M40 330 l22 -16 l22 16 z M230 240 l18 -14 l18 14 z" fill="#a08660" opacity=".65"/>';
-    var roads = 'M300 20 C260 50 150 50 120 70 M120 70 L250 60 L420 90 M120 70 L90 190 L300 170 L470 210 M250 60 L300 170 M420 90 L470 210 M90 190 L170 300 L360 290 L520 330 M300 170 L360 290 M470 210 L520 330 M360 290 C380 340 330 360 300 385';
-    var sunAng = [0, 90, 180, 270][east];
+    // 11/27 v3: 출발 → 큰 별 → 중간 별 → 작은 별 → 베들레헴, 한 걸음마다 곧은 한 방향. 밤 지도는 딱 붙지 않고 계속 움직인다(강·산을 보고 맞추기)
+    var r = seedRnd(2), GX = [120, 300, 480], GY = [90, 205, 320], jit = [];
+    for (var i = 0; i < 9; i++) jit.push([Math.round((r() - .5) * 44), Math.round((r() - .5) * 30)]);
+    function P(n) { return [GX[n % 3] + jit[n][0], GY[Math.floor(n / 3)] + jit[n][1]]; }
+    var DV = [[-1, 0], [0, 1], [1, 0], [0, -1]], nodes = null, moves = null;   // 화면 방향 0위 1오른 2아래 3왼
+    for (var t = 0; t < 400 && !nodes; t++) {
+      var cur = Math.floor(r() * 9), seen = [cur], mv = [], ok = true;
+      for (var k = 0; k < 4 && ok; k++) {
+        var opts = [];
+        DV.forEach(function (d, di) { if (mv.length && mv[mv.length - 1] === di) return; for (var dist = 1; dist <= 2; dist++) { var rr = Math.floor(cur / 3) + d[0] * dist, cc = cur % 3 + d[1] * dist; if (rr < 0 || rr > 2 || cc < 0 || cc > 2) break; var n = rr * 3 + cc; if (seen.indexOf(n) >= 0) break; opts.push([di, n]); } });
+        if (!opts.length) { ok = false; break; }
+        var o = opts[Math.floor(r() * opts.length)]; mv.push(o[0]); cur = o[1]; seen.push(cur);
+      }
+      if (ok) { nodes = seen; moves = mv; }
+    }
+    var east = Math.floor(r() * 4), north = (east + 3) % 4, DIRS = ['북', '동', '남', '서'];
+    var answer = moves.map(function (d) { return DIRS[(d - north + 4) % 4]; });
+    S.roadAns = answer.join(' · '); save();   // 사람마다 다른 답 — 힌트 3단계가 보여 준다
+    var ox = (90 + Math.floor(r() * 80)) * (r() < .5 ? -1 : 1), oy = (50 + Math.floor(r() * 50)) * (r() < .5 ? -1 : 1);
+    var land = '<path d="M20 150 Q120 118 170 152 T320 138 T450 168 T590 140" stroke="#7aa3c0" stroke-width="5" fill="none" opacity=".75"/><path d="M380 26 l26 -18 l26 18 z M528 250 l20 -15 l20 15 z M34 352 l22 -16 l22 16 z M214 262 l18 -14 l18 14 z M560 46 l16 -12 l16 12 z" fill="#a08660" opacity=".7"/>';
+    var roads = '';
+    for (var n2 = 0; n2 < 9; n2++) { var a = P(n2); if (n2 % 3 < 2) { var b = P(n2 + 1); roads += 'M' + a[0] + ' ' + a[1] + ' L' + b[0] + ' ' + b[1] + ' '; } if (n2 < 6) { var c2 = P(n2 + 3); roads += 'M' + a[0] + ' ' + a[1] + ' L' + c2[0] + ' ' + c2[1] + ' '; } }
+    var st = P(nodes[0]), en = P(nodes[4]);
     var day = '<g>' + land + '<path d="' + roads + '" stroke="#8a6a3a" stroke-width="7" fill="none" stroke-dasharray="2 10" stroke-linecap="round"/>' +
-      J.map(function (p, i) { return '<g transform="translate(' + p[0] + ',' + p[1] + ')"><circle r="15" fill="#f3e4bf" stroke="#7a5a2a" stroke-width="2"/><text y="6" text-anchor="middle" font-size="18" fill="#5a3a14" font-weight="700">' + ARW[arrows[i]] + '</text></g>'; }).join('') +
-      (function () { var na = [0, 90, 180, 270][north], L = ['북', '동', '남', '서'], g = '<g transform="translate(536,64) scale(1.55)"><circle r="34" fill="rgba(243,228,191,.92)" stroke="#7a5a2a" stroke-width="2"/>'; L.forEach(function (t, i) { var a = (na + i * 90) * Math.PI / 180, x = Math.sin(a) * 23, y = -Math.cos(a) * 23; g += '<text x="' + x.toFixed(1) + '" y="' + (y + 5).toFixed(1) + '" text-anchor="middle" font-size="' + (i ? 13 : 15) + '" font-weight="800" fill="' + (i ? '#5a3a14' : '#b3261e') + '">' + t + '</text>'; }); var a0 = na * Math.PI / 180; g += '<path d="M' + (Math.sin(a0) * 13).toFixed(1) + ' ' + (-Math.cos(a0) * 13).toFixed(1) + ' L' + (Math.cos(a0) * 4).toFixed(1) + ' ' + (Math.sin(a0) * 4).toFixed(1) + ' L' + (-Math.cos(a0) * 4).toFixed(1) + ' ' + (-Math.sin(a0) * 4).toFixed(1) + ' Z" fill="#b3261e"/><circle r="2.5" fill="#5a3a14"/></g>'; return g; })() + '</g>';
-    var night = '<g id="ngt" transform="translate(' + ox + ',' + oy + ')"><rect x="-200" y="-200" width="1000" height="800" fill="#0d1530" opacity=".82"/>' + land.replace(/#7aa3c0/, '#9ec4ff').replace(/#a08660/, '#c9d4ff') +
+      [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (q) { var p = P(q); return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="11" fill="#f3e4bf" stroke="#7a5a2a" stroke-width="2"/>'; }).join('') +
+      '<g transform="translate(' + st[0] + ',' + st[1] + ')"><path d="M-2 0 L-2 -34 L20 -27 L-2 -20" fill="#b3261e" stroke="#5a3a14" stroke-width="2"/><rect x="-26" y="12" width="52" height="20" rx="6" fill="#5a3a14"/><text y="27" text-anchor="middle" font-size="14" font-weight="800" fill="#ffe9c0">출발</text></g>' +
+      '<g transform="translate(' + en[0] + ',' + en[1] + ')"><path d="M-14 -4 L0 -20 L14 -4 Z M-11 -4 L-11 10 L11 10 L11 -4" fill="#e9c98a" stroke="#5a3a14" stroke-width="2"/><rect x="-34" y="14" width="68" height="20" rx="6" fill="#5a3a14"/><text y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#ffe9c0">베들레헴</text></g>' +
+      (function () { var na = [0, 90, 180, 270][north], L = ['북', '동', '남', '서'], g = '<g transform="translate(536,64) scale(1.55)"><circle r="34" fill="rgba(243,228,191,.92)" stroke="#7a5a2a" stroke-width="2"/>';
+        L.forEach(function (tx, i2) { var an = (na + i2 * 90) * Math.PI / 180, x = Math.sin(an) * 23, y = -Math.cos(an) * 23; g += '<text x="' + x.toFixed(1) + '" y="' + (y + 5).toFixed(1) + '" text-anchor="middle" font-size="' + (i2 ? 13 : 15) + '" font-weight="800" fill="' + (i2 ? '#5a3a14' : '#b3261e') + '">' + tx + '</text>'; });
+        var a0 = na * Math.PI / 180; g += '<path d="M' + (Math.sin(a0) * 13).toFixed(1) + ' ' + (-Math.cos(a0) * 13).toFixed(1) + ' L' + (Math.cos(a0) * 4).toFixed(1) + ' ' + (Math.sin(a0) * 4).toFixed(1) + ' L' + (-Math.cos(a0) * 4).toFixed(1) + ' ' + (-Math.sin(a0) * 4).toFixed(1) + ' Z" fill="#b3261e"/><circle r="2.5" fill="#5a3a14"/></g>'; return g; })() + '</g>';
+    var SZ = [17, 12, 8];
+    var night = '<g id="ngt" transform="translate(' + ox + ',' + oy + ')"><rect x="-260" y="-220" width="1120" height="840" fill="#0d1530" opacity=".82"/>' + land.replace(/#7aa3c0/, '#9ec4ff').replace(/#a08660/, '#c9d4ff') +
       Array.from({ length: 50 }, function () { return '<circle cx="' + Math.floor(r() * 600) + '" cy="' + Math.floor(r() * 400) + '" r="' + (r() * 1.4 + .4).toFixed(1) + '" fill="#fff" opacity="' + (r() * .5 + .2).toFixed(2) + '"/>'; }).join('') +
-      pick.map(function (j, k) { var p = J[j], s = sizes[k]; return '<path transform="translate(' + p[0] + ',' + p[1] + ')" d="M0 -' + s + ' L' + s * .28 + ' -' + s * .28 + ' L' + s + ' 0 L' + s * .28 + ' ' + s * .28 + ' L0 ' + s + ' L-' + s * .28 + ' ' + s * .28 + ' L-' + s + ' 0 L-' + s * .28 + ' -' + s * .28 + ' Z" fill="#ffe9a8"/>'; }).join('') + '</g>';
+      [1, 2, 3].map(function (k2) { var p = P(nodes[k2]), s = SZ[k2 - 1]; return '<path transform="translate(' + p[0] + ',' + p[1] + ')" d="M0 -' + s + ' L' + s * .28 + ' -' + s * .28 + ' L' + s + ' 0 L' + s * .28 + ' ' + s * .28 + ' L0 ' + s + ' L-' + s * .28 + ' ' + s * .28 + ' L-' + s + ' 0 L-' + s * .28 + ' -' + s * .28 + ' Z" fill="#ffe9a8"/>'; }).join('') + '</g>';
+    function star(z) { return '<svg width="' + (z * 2 + 4) + '" height="' + (z * 2 + 4) + '" viewBox="-' + (z + 2) + ' -' + (z + 2) + ' ' + (z * 2 + 4) + ' ' + (z * 2 + 4) + '"><path d="M0 -' + z + ' L' + z * .28 + ' -' + z * .28 + ' L' + z + ' 0 L' + z * .28 + ' ' + z * .28 + ' L0 ' + z + ' L-' + z * .28 + ' ' + z * .28 + ' L-' + z + ' 0 L-' + z * .28 + ' -' + z * .28 + ' Z" fill="#ffe9a8" stroke="#b8862b"/></svg>'; }
+    var STEP = ['<b>출발</b> → ' + star(10), star(10) + ' → ' + star(7), star(7) + ' → ' + star(5), star(5) + ' → <b>베들레헴</b>'];
     var w = el('div', 'gen-wrap');
     w.innerHTML = '<svg viewBox="0 0 600 400" style="width:100%;border-radius:10px;background:linear-gradient(#efe0bb,#d8c095);touch-action:none" id="rmSvg">' + day + '<g style="opacity:.62">' + night + '</g></svg>' +
-      '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">' + sizes.map(function (z) { return '<div style="width:58px;text-align:center"><svg width="34" height="34" viewBox="-17 -17 34 34"><path d="M0 -' + z + ' L' + z * .28 + ' -' + z * .28 + ' L' + z + ' 0 L' + z * .28 + ' ' + z * .28 + ' L0 ' + z + ' L-' + z * .28 + ' ' + z * .28 + ' L-' + z + ' 0 L-' + z * .28 + ' -' + z * .28 + ' Z" fill="#ffe9a8" stroke="#b8862b" stroke-width="1"/></svg></div>'; }).join('') + '</div><div style="display:flex;gap:8px;justify-content:center;margin-top:2px" id="rmLock"></div><button class="btn gold block" id="rmOk" style="margin-top:8px">상자 열기</button>';
+      '<div class="rm-steps">' + STEP.map(function (s2) { return '<div class="rm-step">' + s2 + '</div>'; }).join('') + '</div><div class="rm-steps" id="rmLock"></div><button class="btn gold block" id="rmOk" style="margin-top:8px">상자 열기</button>';
     modal('두 장의 지도', w);
-    var svg = $('rmSvg'), ng = $('ngt'), drag = null, snapped = false;
-    function pt(e) { var b = svg.getBoundingClientRect(); return { x: (e.clientX - b.left) * 600 / b.width, y: (e.clientY - b.top) * 400 / b.height }; }
-    svg.addEventListener('pointerdown', function (e) { if (snapped) return; var q = pt(e); drag = { x: q.x, y: q.y, ox: ox, oy: oy }; svg.setPointerCapture(e.pointerId); });
-    svg.addEventListener('pointermove', function (e) { if (!drag) return; var q = pt(e); ox = drag.ox + q.x - drag.x; oy = drag.oy + q.y - drag.y; if (Math.abs(ox) < 7 && Math.abs(oy) < 7) { ox = 0; oy = 0; snapped = true; drag = null; sfx('ok'); } ng.setAttribute('transform', 'translate(' + ox + ',' + oy + ')'); });
+    var svg = $('rmSvg'), ng = $('ngt'), drag = null;
+    function pt(e) { var b2 = svg.getBoundingClientRect(); return { x: (e.clientX - b2.left) * 600 / b2.width, y: (e.clientY - b2.top) * 400 / b2.height }; }
+    svg.addEventListener('pointerdown', function (e) { var q = pt(e); drag = { x: q.x, y: q.y, ox: ox, oy: oy }; svg.setPointerCapture(e.pointerId); });
+    svg.addEventListener('pointermove', function (e) { if (!drag) return; var q = pt(e); ox = Math.max(-240, Math.min(240, drag.ox + q.x - drag.x)); oy = Math.max(-200, Math.min(200, drag.oy + q.y - drag.y)); ng.setAttribute('transform', 'translate(' + ox + ',' + oy + ')'); });
     svg.addEventListener('pointerup', function () { drag = null; });
     var lock = [0, 0, 0, 0];
-    lock.forEach(function (_, i) { var b = el('button', 'btn ghost', DIRS[0]); b.style.cssText = 'font-size:22px;width:58px;height:58px;padding:0;font-family:var(--serif)'; b.onclick = function () { lock[i] = (lock[i] + 1) % 4; b.textContent = DIRS[lock[i]]; }; $('rmLock').appendChild(b); });
-    $('rmOk').onclick = function () { if (locked('road')) return; if (lock.every(function (v, i) { return DIRS[v] === answer[i]; })) { closeModal(); sfx('ok'); solve(R); } else wrong('road', '찰칵… 열리지 않아요'); };
+    lock.forEach(function (_, i3) { var b3 = el('button', 'btn ghost rm-lock', DIRS[0]); b3.onclick = function () { lock[i3] = (lock[i3] + 1) % 4; b3.textContent = DIRS[lock[i3]]; }; $('rmLock').appendChild(b3); });
+    $('rmOk').onclick = function () { if (locked('road')) return; if (lock.every(function (v, i4) { return DIRS[v] === answer[i4]; })) { closeModal(); sfx('ok'); solve(R); } else wrong('road', '찰칵… 열리지 않아요'); };
+    if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BN.__road = { answer: answer, align: function () { ox = 0; oy = 0; ng.setAttribute('transform', 'translate(0,0)'); } };
   };
 
   // 3 우물 v2: 등잔(어둠) + 수정 조각(작은 글씨) + 두레박 줄(여관 나귀 짐)

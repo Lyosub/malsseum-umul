@@ -775,3 +775,9 @@ body:has(#modal:not([hidden])) .jr-pop, body:has(#dialog:not([hidden])) .jr-pop 
 .edge-hint.on { opacity: 1; animation: edgePulse 1.6s ease-in-out infinite; }
 @keyframes edgePulse { 50% { opacity: .45; } }
 body:has(#modal:not([hidden])) .edge-hint, body:has(#dialog:not([hidden])) .edge-hint { display: none; }
+/* 11/27 길 지도 v3: 걸음 차례(출발 → 별 → 베들레헴)와 자물쇠 네 칸을 같은 줄 맞춤으로 */
+.rm-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.rm-step { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 30px; padding: 2px; font-size: 11.5px; color: #f3e4bf; background: rgba(255, 233, 168, .08); border-radius: 8px; white-space: nowrap; }
+.rm-step b { font-weight: 800; color: #ffe9a8; }
+.rm-step svg { flex: none; }
+.btn.rm-lock { min-height: 54px; font-size: 22px; font-weight: 800; padding: 0; }
