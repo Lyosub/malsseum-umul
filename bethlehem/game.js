@@ -9,7 +9,7 @@
   var PT = /[?&]phonetest=1(&|$)/.test(location.search);
   // ?chtest=N → N장부터 바로 시험(11/27): 앞 장은 다 푼 것으로, 이 기기에만 저장(서버·순위 없음)
   var CT = +((location.search.match(/[?&]chtest=([1-5])(&|$)/) || [])[1] || 0);
-  var KEY = PT ? 'bethlehem.phonetest' : CT ? 'bethlehem.chtest' + CT : TRY ? 'bethlehem.try1' : 'bethlehem.v1';
+  var KEY = PT ? 'bethlehem.phonetest' : CT ? 'bethlehem.chtest' + CT + (CT === 1 ? 'b' : '') : TRY ? 'bethlehem.try1b' : 'bethlehem.v1';
   var S = load() || null;
   function blank() { return { v: 1, nick: '', dept: '', grade: '', av: 'm', ch: 1, ms: 0, hintMin: 0, rooms: {}, items: [], notes: [], stars: [], seenIntro: {}, opening: false, created: Date.now() }; }
   function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
@@ -239,7 +239,7 @@
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
       if (sp.night) { var hh = new Date().getHours(); if (hh >= 5 && hh < 19) return; }
       if (sp.w) { if (sp.act.indexOf('card:') === 0 && (S.cards || []).indexOf(sp.act.slice(5)) >= 0) return; if (sp.act.indexOf('pick:') === 0 && (S.taken || []).indexOf(sp.id) >= 0) return; if (sp.act.indexOf('scrap:') === 0 && (S.scraps || []).indexOf(sp.act.slice(6)) >= 0) return; if (sp.act.indexOf('tile:') === 0 && (S.tiles || []).indexOf(sp.act.slice(5)) >= 0) return;
-        b.className = 'rspot area'; b.dataset.id = sp.id; b.dataset.k = sp.act.split(':')[0]; if (S.rooms[id] && !/^puzzle:(chart|journal)$/.test(sp.act)) b.classList.add('done'); b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('room:') === 0) { var RT = BN.ROOMS[sp.act.split(':')[1]]; b.innerHTML = '<span class="door-lbl">🚪 ' + ((RT && RT.title) || '') + '</span>'; } if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
+        b.className = 'rspot area'; b.dataset.id = sp.id; b.dataset.k = sp.act.split(':')[0]; if (S.rooms[id] && !/^puzzle:(chart|journal|guards)$/.test(sp.act) && !(sp.act === 'puzzle:guards' && !(S.f1 || {}).guards)) b.classList.add('done'); b.style.width = sp.w + '%'; b.style.height = sp.h + '%'; if (sp.act.indexOf('room:') === 0) { var RT = BN.ROOMS[sp.act.split(':')[1]]; b.innerHTML = '<span class="door-lbl">🚪 ' + ((RT && RT.title) || '') + (sp.lock && !BN.used(sp.id, sp.lock) ? ' 🔒' : '') + '</span>'; } if (sp.act.indexOf('sheep:') === 0) b.innerHTML = '<span class="bell">' + sheepBell(+sp.act.split(':')[1]) + '</span>';
         b.onclick = function (e) { ripple(e); act(R, sp, b); }; box.appendChild(b); return; }
       if (sp.fig) { b.className = 'rspot fig'; b.style.setProperty('--h', (sp.h / 100 * 1080) + 'px'); b.innerHTML = '<img src="img/chars/' + sp.fig + '.webp" alt="">' + (sp.name ? '<span class="lbl">' + sp.name + '</span>' : ''); b.onclick = function () { act(R, sp, b); }; box.appendChild(b); return; }
       b.innerHTML = sp.hidden ? '<span class="glint" style="opacity:.25;width:22px;height:22px"></span>' : '<span class="glint"></span><span class="lbl">' + sp.name + '</span>';
@@ -274,13 +274,14 @@
   function act(R, sp, el) {
     var real = window.event && window.event.isTrusted;   // 실제 손가락 누름만(시험 프로그램의 누름은 통과)
     if (real && (Date.now() - dlgClosedAt < 450 || !$('dialog').hidden)) return;
-    if (/^puzzle:/.test(sp.act) && !/^puzzle:(chart|journal)$/.test(sp.act) && S.rooms[cur] && !PT) { var nt = R.note && R.note.text; return toast('✔ 이미 풀었어요' + (nt ? ' — 수첩에 적혀 있어요' : '')); }
+    if (/^puzzle:/.test(sp.act) && !/^puzzle:(chart|journal|guards)$/.test(sp.act) && S.rooms[cur] && !PT) { var nt = R.note && R.note.text; return toast('✔ 이미 풀었어요' + (nt ? ' — 수첩에 적혀 있어요' : '')); }
+    if (held) return useOn(R, sp, el);
     var a = sp.act.split(':');
     if (a[0] === 'talk') { var tl = (R.talks[a[1]] || []).slice(), ch = BN.clueHint && BN.clueHint(cur); if (ch && sp.fig && /^(asaph|gilead|keeper)_/.test(sp.fig)) tl.push(/^gilead/.test(sp.fig) ? ['gilead', 1, '(소곤) 이 근처에 뭔가 ' + ch.n + '개쯤 더 떨어져 있는 것 같아요. 아까 ' + ch.places[0] + ' 쪽에서 뭐가 반짝였어요!'] : /^keeper/.test(sp.fig) ? ['keeper', 0, '여기 아직 못 찾은 것이 ' + ch.n + '개 있어. ' + ch.places[0] + ' 쪽을 잘 봐.'] : ['asaph', 0, '이곳에 아직 못 찾은 것이 ' + ch.n + '개 있다. ' + ch.places[0] + ' 쪽을 잘 살펴보아라.']); talk(tl); }
     else if (a[0] === 'clue') { if (sp.need && !has(sp.need)) return toast('너무 어두워 잘 보이지 않는다'); S.clues = S.clues || {}; if (!S.clues[a[1]]) { S.clues[a[1]] = 1; if (sp.note) S.notes.push({ text: sp.note, ref: sp.ref || '' }); save(); sfx('ok'); toast('🔎 ' + (sp.msg || '단서를 찾았어요') + (sp.note ? ' — 수첩에 적었어요' : '')); el.remove(); if (sp.say) talk(sp.say); } }
     else if (a[0] === 'puzzle' && needClues(a[1])) return;
     else if (a[0] === 'puzzle') { if (PUZZLES[a[1]] || PZ_EXTRA[a[1]]) (PUZZLES[a[1]] || PZ_EXTRA[a[1]])(R); else BN.PZ[a[1]](R, API); }
-    else if (a[0] === 'room') enterRoom(a[1]);
+    else if (a[0] === 'room') { if (sp.lock && !BN.used(sp.id, sp.lock)) return talk(sp.lockSay || [['narr', null, '문이 잠겨 있다.']]); enterRoom(a[1]); }
     else if (a[0] === 'sheep') sheepBleat2(+a[1], el);
     else if (a[0] === 'tile') { S.tiles = S.tiles || []; if (S.tiles.indexOf(a[1]) < 0) { S.tiles.push(a[1]); save(); sfx('ok'); toast('🧩 ' + sp.msg + ' (「' + a[1] + '」 · ' + S.tiles.length + '/6)'); el.remove(); } }
     else if (a[0] === 'scrap') { S.scraps = S.scraps || []; if (S.scraps.indexOf(a[1]) < 0) { S.scraps.push(a[1]); save(); sfx('ok'); toast('📜 ' + sp.msg + ' (' + S.scraps.length + '/3)'); el.remove(); } }
@@ -346,7 +347,48 @@
   function stampRow() { var I = BN.STAMP_ICON || {}, got = Object.keys(S.rooms).filter(function (k) { return I[k]; }); return got.length ? '<div class="note stamp-row"><b>받은 도장 ' + got.length + '/12</b><div>' + got.map(function (k) { return '<span title="' + I[k][1] + '">' + I[k][0] + '<small>' + I[k][2] + '</small></span>'; }).join('') + '</div></div>' : ''; }
   $('btnNote').onclick = function () { var ch = $('room').classList.contains('on') && BN.clueHint && BN.clueHint(cur); modal('서기관의 수첩', (ch ? '<div class="note clue-left"><div class="cl-h">🔎 이 장소에서 아직 못 찾은 것 <b>' + ch.n + '개</b></div><div class="cl-chips">' + ch.places.map(function (p) { return '<span>' + p + '</span>'; }).join('') + '</div><div class="cl-f">이 근처 어딘가에 떨어뜨린 것 같다</div></div>' : '') + stampRow() + (S.code ? '<div class="note" style="text-align:center">이어하기 코드 <b class="code-sm">' + S.code + '</b></div>' : '') + (S.notes.length ? S.notes.map(function (n) { return '<div class="note">' + n.text + '<div class="ref">' + (n.ref || '') + '</div></div>'; }).join('') : '<p class="empty">아직 적은 것이 없어요. 장소를 풀면 단서가 저절로 적혀요.</p>') + heardList()); };
   function heardList() { var H = S.heard || []; if (!H.length) return ''; return '<div class="note heard"><b>📖 들은 말씀 ' + H.length + '</b>' + H.map(function (h) { return '<p><span class="hw">' + h[1] + '</span> 「' + h[2] + '」 <span class="ref">' + h[0] + '</span></p>'; }).join('') + '</div>'; }
-  $('btnBag').onclick = function () { modal('가방', S.items.length ? '<div class="bag">' + S.items.map(function (k) { var it = BN.ITEMS[k]; return '<div class="it"><img src="' + it[1] + '" alt=""><b>' + it[0] + '</b><br><span style="opacity:.7">' + it[2] + '</span></div>'; }).join('') + '</div>' : '<p class="empty">가방이 비어 있어요.</p>'); };
+  // 11/27 1장 견본: 가방에서 물건을 골라 「손에 들기」(쓸 곳을 직접 누름) · 여러 개 골라 「합치기」
+  var held = null, heldEl = document.createElement('div'); heldEl.className = 'held-chip'; heldEl.hidden = true; document.body.appendChild(heldEl);
+  BN.used = function (spId, k) { return !!(S && S.used || {})[spId + ':' + k]; };
+  function setHeld(k) {
+    held = k || null; heldEl.hidden = !held;
+    if (held) { var it = BN.ITEMS[held] || [held, '']; heldEl.innerHTML = '<img src="' + it[1] + '" alt="" class="' + (held === 'lamp_e' ? 'dim' : '') + '"><span><b>✋ ' + it[0] + '</b><small>쓸 곳을 누르세요</small></span><button type="button" aria-label="내려놓기">내려놓기</button>'; heldEl.querySelector('button').onclick = function (e) { e.stopPropagation(); setHeld(null); }; }
+    document.body.classList.toggle('holding', !!held);
+  }
+  BN.setHeld = setHeld;
+  var NOPE = ['「X」… 여기엔 쓸 데가 없는 것 같아요.', '「X」… 이건 다른 데 쓰는 거 아닐까요?', '(「X」 — 대 보았지만 아무 일도 일어나지 않는다)'];
+  function useOn(R, sp, el) {
+    var k = held; setHeld(null);
+    var acc = sp.accept && sp.accept[k], nm = (BN.ITEMS[k] || [k])[0];
+    if (!acc) return talk([['gilead', 1, NOPE[Math.floor(Math.random() * NOPE.length)].replace('X', nm)]]);
+    if (acc.noUse) return talk(acc.say);
+    S.used = S.used || {}; if (S.used[sp.id + ':' + k]) return toast('이미 여기에 썼어요');
+    S.used[sp.id + ':' + k] = 1; if (acc.consume) S.items = S.items.filter(function (x) { return x !== k; }); save(); sfx('ok');
+    var next = function () { if (acc.go) enterRoom(acc.go); else if (cur) BN.reRoom(); };
+    if (acc.say) talk(acc.say, next); else { toast(acc.msg || '썼다'); setTimeout(next, acc.go ? 900 : 0); }
+  }
+  function bagOpen() {
+    var sel = [], inRoom = $('room').classList.contains('on'), w = el('div', 'gen-wrap');
+    function draw() {
+      if (!S.items.length) { w.innerHTML = '<p class="gen-help">아직 가방이 비어 있어요.</p>'; return; }
+      w.innerHTML = '<p class="gen-help bag-tip">물건을 눌러 고르세요. <b>하나</b>를 골라 「손에 들기」 하면 장소에서 쓸 곳을 직접 눌러요. <b>여러 개</b>를 고르면 「합치기」.</p>' +
+        '<div class="bag bag2">' + S.items.map(function (k) { var it = BN.ITEMS[k] || [k, '', '']; return '<button type="button" class="it' + (sel.indexOf(k) >= 0 ? ' sel' : '') + '" data-k="' + k + '"><img src="' + it[1] + '" alt="" class="' + (k === 'lamp_e' ? 'dim' : '') + '"><b>' + it[0] + '</b><span>' + (it[2] || '') + '</span></button>'; }).join('') + '</div>' +
+        '<div class="bag-act"><button type="button" class="btn gold" id="bgHold"' + (sel.length === 1 && inRoom ? '' : ' disabled') + '>✋ 손에 들기</button><button type="button" class="btn ghost" id="bgMix"' + (sel.length >= 2 ? '' : ' disabled') + '>🔧 합치기</button></div>' +
+        (inRoom ? '' : '<p class="gen-help" style="text-align:center;font-size:12px">손에 들기는 장소 안에서 할 수 있어요</p>');
+      w.querySelectorAll('.it').forEach(function (b) { b.onclick = function () { var k = b.dataset.k, i = sel.indexOf(k); if (i >= 0) sel.splice(i, 1); else sel.push(k); draw(); }; });
+      w.querySelector('#bgHold').onclick = function () { if (sel.length !== 1 || !inRoom) return; var k = sel[0]; closeModal(); setHeld(k); };
+      w.querySelector('#bgMix').onclick = function () {
+        if (sel.length < 2) return;
+        var key = sel.slice().sort().join('+'), rc = (BN.COMBINE || []).filter(function (c) { return c.of.slice().sort().join('+') === key; })[0];
+        if (!rc) { var part = (BN.COMBINE_HINT || {})[key]; sfx('no'); return toast(part || '이것들은 합쳐지지 않는다'); }
+        S.items = S.items.filter(function (x) { return rc.of.indexOf(x) < 0 || (rc.keep || []).indexOf(x) >= 0; }); if (S.items.indexOf(rc.make) < 0) S.items.push(rc.make);
+        S.made = S.made || {}; S.made[rc.make] = 1; save(); sfx('ok'); sel = []; draw(); toast('🔧 ' + rc.msg);
+        if (inRoom) BN.reRoom();
+      };
+    }
+    draw(); modal('가방', w);
+  }
+  $('btnBag').onclick = function () { bagOpen(); };
   $('btnHint').onclick = function () { return hintOil(); };
   var __oldHint = function () {
     if (!cur || !$('room').classList.contains('on')) return toast('장소 안에서 힌트를 볼 수 있어요');
@@ -372,7 +414,9 @@
         if (R.prologue) return afterPrologue();
         if (R.chapterEnd) return chapterEnd(R.chapterEnd);
         if (R.back) { toast('곁가지 이야기를 마쳤어요'); enterRoom(R.back); return; }
-        var SI = (BN.STAMP_ICON || {})[cur]; toast(ch ? '도장 「' + (SI ? SI[0] + ' ' + SI[1] + ' · ' + SI[2] : ch) + '」을 받았어요 — 지도에 새 길이 열렸어요' : '풀었어요 — 지도에 새 길이 열렸어요'); enterMap();
+        var SI = (BN.STAMP_ICON || {})[cur]; toast(ch ? '도장 「' + (SI ? SI[0] + ' ' + SI[1] + ' · ' + SI[2] : ch) + '」을 받았어요 — 지도에 새 길이 열렸어요' : '풀었어요 — 지도에 새 길이 열렸어요');
+        if (R.stay) return enterRoom(cur);   /* 받은 도구를 이 자리에서 바로 쓰는 방(여관 → 부엌 문) */
+        enterMap();
       });
     };
     if (!ch) { sfx('ok'); setTimeout(after, 400); return; }
@@ -459,7 +503,7 @@
 
   // 3 우물: 등잔으로 어둠을 문질러 벽 글씨 찾기 → 두레박 줄을 7 규빗에
   PUZZLES.well = function (R) {
-    if (!has('lamp')) return talk([['gilead', 1, '너무 깜깜해서 아무것도 안 보여요.']]);
+    if (!BN.used('wellin', 'lamp')) return talk([['gilead', 1, '너무 깜깜해서 아무것도 안 보여요. 비출 게 있으면 우물 안으로 내려 볼 텐데…'], ['narr', null, '(가방에서 물건을 골라 「손에 들기」 한 뒤 우물을 누르면 쓸 수 있다)']]);
     // 11/27: 수정 조각을 직접 끌어 글씨 위에 대고, 「가까이 ↔ 멀리」로 초점을 맞춰야 읽힌다(초점 자리는 사람마다 다름)
     var rr = seedRnd(31), FOC = 22 + Math.floor(rr() * 56), M = 2.3, TX = 40, TY = 63, glass = has('lens');
     var TXT = '<div class="wl-t" style="position:absolute;left:' + TX + '%;top:' + TY + '%;transform:translate(-50%,-50%) rotate(-4deg);font-family:var(--serif);color:#f3d79a;white-space:nowrap">줄은 열넷의 반 규빗</div>';
@@ -468,7 +512,7 @@
       '<canvas id="wlDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas>' +
       (glass ? '<div id="wlGlass" class="wl-glass"><div id="wlIn" class="wl-in"><div class="wl-blur"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.62)">' + TXT + '</div><canvas id="wlInDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas></div></div><div id="wlRim" class="wl-rim"></div>' : '') + '</div>' +
       (glass ? '<div class="wl-foc"><span>가까이</span><input type="range" id="wlFoc" min="0" max="100" value="' + (FOC > 50 ? 4 : 96) + '"><span>멀리</span></div><p class="gen-help" style="margin:2px 0 0;text-align:center">💎 수정 조각을 손가락으로 끌어 벽에 대 보세요</p>' : '') +
-      '<div id="wlRope" style="margin-top:6px">' + (has('rope') ? '<input type="range" id="wlLen" min="1" max="14" value="1" style="width:100%"><p style="text-align:center;font-size:20px;margin:4px 0"><b id="wlV">1</b> 규빗</p><button class="btn gold block" id="wlUp">끌어올리기</button>' : '<p class="gen-help">두레박 줄이 짧게 끊어져 있다.</p>') + '</div>';
+      '<div id="wlRope" style="margin-top:6px">' + (BN.used('wellin', 'bucket') ? '<input type="range" id="wlLen" min="1" max="14" value="1" style="width:100%"><p style="text-align:center;font-size:20px;margin:4px 0"><b id="wlV">1</b> 규빗</p><button class="btn gold block" id="wlUp">끌어올리기</button>' : '<p class="gen-help">물을 길을 두레박이 걸려 있지 않다. 줄 맨 두레박을 우물에 걸어야 한다.</p>') + '</div>';
     modal('우물 안', w);
     var cv = $('wlDark'), box = $('wlBox');
     var base = w.querySelector('#wlBase .wl-t'); base.style.fontSize = '7px'; base.style.filter = 'blur(1.2px)';
@@ -928,7 +972,7 @@
   PUZZLES.manger = function (R) {
     // 11/27 v3: ① 굴 입구 돌문 — 1장에서 지나온 숫자 넷(성문 14 · 우물 7 · 부엌 4 · 여관 빈방 0)
     //           ② 굴 안 — 등잔 기름은 세 번. 벽에 긁힌 굴 그림(짐승 먹이는 자리)과 아기 울음이 들린 줄을 맞춰 비출 곳을 고르고, 천사가 말한 표적(눅 2:12)이 다 맞는 곳을 고른다
-    if (!has('lamp')) return talk([['gilead', 1, '아무것도 안 보여요…']]);
+    if (!BN.used('search', 'lamp')) return talk([['gilead', 1, '아무것도 안 보여요… 굴 안이 너무 깜깜해요.'], ['narr', null, '(불빛이 있어야 한다)']]);
     S.f1 = S.f1 || {};
     if (!S.f1.door) return mgDoor(R);
     mgCave(R);
@@ -1068,7 +1112,7 @@
   }
   if (CT) {
     if (!S || !S.nick) {
-      S = blank(); S.nick = CT + '장시험'; S.opening = true; S.ch = CT; S.chDone = {}; S.items = CT > 1 ? ['census', 'lamp', 'rope', 'keys', 'oil', 'lens', 'scrap', 'cloth'].concat(CT > 2 ? ['doves'] : []) : [];
+      S = blank(); S.nick = CT + '장시험'; S.opening = true; S.ch = CT; S.chDone = {}; S.items = CT > 1 ? ['census', 'lamp', 'flint', 'keys', 'oil', 'lens', 'scrap', 'cloth'].concat(CT > 2 ? ['doves'] : []) : [];
       var done = ['wellroom']; for (var c = 1; c < CT; c++) { var st = (BN.CHAPTERS[c] || {}).start; if (st) done.push(st); BN.SPOTS.forEach(function (sp) { if ((sp.ch || 1) === c) done.push(sp.id); }); if (c === 1) done.push('kitchen'); S.chDone[c] = 1; }
       done.forEach(function (k) { S.rooms[k] = { at: 0, stamp: BN.STAMPS[k] || '' }; }); save();
     }

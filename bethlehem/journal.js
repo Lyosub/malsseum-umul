@@ -83,9 +83,16 @@
   function nextStep(k) {
     if (!k) return '이 장의 장소를 모두 풀었어요. 다음 장으로!';
     var S = U.S(), here = U.cur() === k, n = needIn(k);
-    if (!here) return k === 'kitchen' ? '여관에 들어가 부엌 문으로 가세요.' : '지도에서 「' + spotName(k) + '」(으)로 가세요.';
+    var has = function (x) { return S.items.indexOf(x) >= 0; }, used = BN.used || function () { return false; };
+    if (!here) return k === 'kitchen' ? (used('kitchen', 'keys') ? '여관에 들어가 부엌 문으로 가세요.' : '여관 부엌 문이 잠겨 있어요. 여관의 문제를 풀면 열쇠를 받을 거예요 — 가방에서 「손에 들기」 → 부엌 문.') : '지도에서 「' + spotName(k) + '」(으)로 가세요.';
+    // 1장 견본: 도구 흐름
+    if (k === 'gate' && !(S.f1 || {}).guards) return '문지기 셋 가운데 참말을 하는 한 명을 가려 빈 등잔을 찾으세요(성문 가운데).';
+    if (k === 'kitchen' && !has('lamp')) return !has('oil') ? '부엌의 큰 항아리에서 기름부터 챙기세요.' : !has('lamp_e') ? '빈 등잔은 성문 문지기들이 맡아 두었대요.' : !has('flint') ? '불을 붙일 게 없어요 — 나사렛 길의 지도 상자를 열어 보세요.' : '빈 등잔 · 기름 · 부싯돌 — 가방에서 셋을 골라 「합치기」.';
+    if (k === 'well' && !used('wellin', 'lamp')) return has('lamp') ? '켜진 등잔을 가방에서 「손에 들기」 → 우물 안을 누르세요.' : '우물 안이 깜깜해요. 켜진 등잔이 있어야 해요(여관 부엌에서 만들 수 있어요).';
+    if (k === 'well' && !used('wellin', 'bucket')) return has('bucket') ? '줄 맨 두레박을 「손에 들기」 → 우물 안.' : !has('bucket_b') ? '우물가의 끊어진 두레박을 챙기세요.' : !has('rope') ? '두레박에 맬 튼튼한 줄이 필요해요 — 여관 나귀 짐을 보세요.' : '끊어진 두레박 + 밧줄을 가방에서 「합치기」.';
+    if (k === 'well' && !has('lens')) return '벽 글씨가 너무 작아요 — 작은 글씨를 키워 볼 맑은 돌이 필요해요(여관 부엌).';
+    if (k === 'stable' && !used('search', 'lamp')) return '굴 안이 깜깜해요 — 켜진 등잔을 「손에 들기」 → 굴을 누르세요.';
     if (n && n[0] < n[1]) return '이곳을 뒤져 단서를 더 찾으세요 — ' + n[0] + ' / ' + n[1];
-    if (k === 'kitchen' && !S.items.includes('lamp')) return '그릇 바닥이 어두워 안 보여요. 등잔이 있어야 해요.';
     return n ? '단서를 다 모았어요. 이제 풀 차례예요.' : '이곳을 살펴보고 문제를 푸세요.';
   }
   function progress() { var S = U.S(), L = order(); return [L.filter(function (k) { return S.rooms[k]; }).length, L.length]; }

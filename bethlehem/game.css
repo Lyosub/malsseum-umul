@@ -840,3 +840,30 @@ html, body { word-break: keep-all; overflow-wrap: break-word; }
 .mg-cave img { height: 310px; object-fit: cover; }
 .mg-t { font-size: 11px; }
 .mg-sg { grid-template-columns: repeat(3, 32px); } .mg-sg span { height: 26px; line-height: 25px; font-size: 15px; }
+/* 11/27 1장 견본: 가방 고르기 · 손에 든 물건 */
+.bag2 .it { cursor: pointer; color: inherit; font: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.bag2 .it b { font-size: 13px; color: #ffe9a8; }
+.bag2 .it span { opacity: .75; font-size: 11px; line-height: 1.35; }
+.bag2 .it.sel { border-color: #ffe9a8; background: rgba(255, 226, 150, .16); box-shadow: 0 0 0 2px rgba(255, 226, 150, .55), 0 0 14px rgba(255, 210, 120, .35); }
+.bag .it img.dim, .held-chip img.dim { filter: grayscale(.85) brightness(.6); }
+.bag-tip { font-size: 13px; }
+.bag-act { display: flex; gap: 8px; margin-top: 12px; }
+.bag-act .btn { flex: 1; }
+.bag-act .btn[disabled] { opacity: .4; pointer-events: none; }
+.held-chip { position: fixed; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 8px; max-width: calc(100vw - 24px); padding: 6px 8px 6px 6px; border-radius: 14px; background: rgba(9, 14, 34, .92); border: 1.5px solid #e8b75a; box-shadow: 0 0 18px rgba(255, 210, 120, .4); font-size: 13px; color: #f3e4bf; animation: edgePulse 2s ease-in-out infinite; }
+.held-chip img { width: 34px; height: 34px; object-fit: contain; }
+.held-chip b { color: #ffe9a8; }
+.held-chip button { flex: none; font: inherit; font-size: 12px; color: #f3e4bf; background: rgba(255, 255, 255, .08); border: 1px solid rgba(232, 183, 90, .5); border-radius: 8px; padding: 4px 8px; }
+body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150, .35); }
+/* 성문 문지기 셋 */
+.gd-rule { text-align: center; padding: 8px; border-radius: 10px; background: rgba(255, 226, 150, .1); border: 1px solid rgba(232, 183, 90, .45); color: #f3e4bf; }
+.gd-rule b { color: #ffe9a8; }
+.gd-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.gd-one { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .04); border-left: 3px solid #e8b75a; }
+.gd-one b { font-size: 13px; color: #e8b75a; }
+.gd-one span { font-family: var(--serif); font-size: 16px; color: #fff8e6; }
+.gd-seats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.gd-seats .btn { padding: 10px 4px; font-size: 13.5px; }
+.held-chip { top: calc(118px + env(safe-area-inset-top)); bottom: auto; }
+.held-chip span { display: flex; flex-direction: column; line-height: 1.25; white-space: nowrap; }
+.held-chip small { font-size: 11px; opacity: .8; }

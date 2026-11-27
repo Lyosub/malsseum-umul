@@ -350,7 +350,7 @@
     '우물 문 · 다섯 원판': '숫자 다섯… 다섯 장을 지나며 수첩에 적어 둔 숫자들 같은데?',
     '열두 도장': '받은 차례가 아니라고? 새겨진 구절이 성경에 나오는 차례…'
   };
-  BN.THINK = THINK;
+  BN.THINK = THINK; BN.WHY = WHY;
 
   function sen(t) { return String(t).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }).replace(/([.?!…])\s+(?![\]」])/g, '$1\u0000').split('\u0000').map(function (x) { return '<span class="sen">' + x + '</span>'; }).join(' '); }
   BN.sen = sen;
