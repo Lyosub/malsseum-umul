@@ -65,7 +65,8 @@
     var S = A.S(); if (S.herded) return BN.runPuzzle('field', R);
     var W = 300, H = 300, cv = A.el('canvas', 'herd-cv'); cv.width = 600; cv.height = 600;
     var w = A.el('div', 'herd-pz');
-    w.appendChild(A.el('p', 'tiny-note howto', '목자들은 밤을 넷으로 나눠 지켰다. 양마다 단 방울 무늬를 보고, 그 경점에 맞는 시각이 붙은 우리로 몰아넣으세요. 양은 손가락을 피해 달아나고, 틀린 우리에 들어가면 뛰쳐나와요.'));
+    w.appendChild(A.el('p', 'tiny-note howto', '목자들은 밤을 넷으로 나눠 지켰다. 양마다 맨 끈 색이 어느 경점인지 「목자의 당번 기록」으로 따져, 그 시각이 붙은 우리로 몰아넣으세요. 양은 손가락을 피해 달아나고, 틀린 우리에 들어가면 뛰쳐나와요.'));
+    if (BN.fieldLog && (S.clues || {}).f_log) w.appendChild(A.el('div', 'note fd-log', '<b>📜 목자의 당번 기록</b>' + BN.fieldLog().map(function (l) { return '<span>' + l + '</span>'; }).join('')));
     w.appendChild(cv); var st = A.el('p', 'aim-read', ''); w.appendChild(st);
     var PW = 66, PH = 78, GATE = 30, pens = PEN_ORDER.map(function (b, i) { return { x: 9 + i * 72, b: b, n: 0, flash: 0 }; });
     var sheep = [], fin = null, alive = true, ctx = cv.getContext('2d'), r = A.seedRnd(73), pops = [];
@@ -89,7 +90,7 @@
           var p = pens[k];
           if (s.y >= PH - 2 && inGate(p, nx)) {
             if (p.b === s.b) { s.pen = k; s.slot = p.n++; p.flash = 30; pops.push({ x: p.x + PW / 2, y: PH + 8, t: 40, ok: true }); A.sfx('ok'); }
-            else { s.vy = 3.2; s.vx = (r() - .5) * 2; ny = PH + 12; nx = s.x; pops.push({ x: p.x + PW / 2, y: PH + 8, t: 40, ok: false }); A.sfx('no'); A.toast(BELL4[s.b] + ' 방울 양은 「' + PENT[p.b] + '」 우리가 아니에요'); }
+            else { s.vy = 3.2; s.vx = (r() - .5) * 2; ny = PH + 12; nx = s.x; pops.push({ x: p.x + PW / 2, y: PH + 8, t: 40, ok: false }); A.sfx('no'); A.toast('이 양은 「' + PENT[p.b] + '」 우리 양이 아니에요 — 당번 기록을 다시 보세요'); }
           } else { if (s.y >= PH - 2) { s.vy = Math.abs(s.vy) + .4; ny = s.y; } else { s.vx = -s.vx; nx = s.x; } }
         }
         s.x = Math.max(10, Math.min(W - 10, nx)); s.y = Math.max(10, Math.min(H - 10, ny));
@@ -116,7 +117,7 @@
         ctx.fillStyle = '#ffe2a0'; ctx.font = '700 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(PENT[p.b], gx, PH - 12);
       });
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      sheep.forEach(function (s) { ctx.font = '22px serif'; ctx.fillText('🐑', s.x, s.y); ctx.font = '12px serif'; ctx.fillText(BELL4[s.b], s.x, s.y - 14); });
+      sheep.forEach(function (s) { ctx.font = '22px serif'; ctx.fillText('🐑', s.x, s.y); var rc = BN.ribOfWatch ? BN.ribOfWatch(s.b)[1] : '#fff'; ctx.beginPath(); ctx.arc(s.x, s.y - 15, 4.5, 0, 7); ctx.fillStyle = rc; ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = '#1a1a1a'; ctx.stroke(); });
       pops = pops.filter(function (q) { q.t--; ctx.globalAlpha = Math.max(0, q.t / 40); ctx.font = '700 13px sans-serif'; ctx.fillStyle = q.ok ? '#ffe27a' : '#ff9a8a'; ctx.fillText(q.ok ? '메에~ 딸랑' : '메에에?!', q.x, q.y - (40 - q.t) * .4); ctx.globalAlpha = 1; return q.t > 0; });
       if (fin) { ctx.beginPath(); ctx.arc(fin.x, fin.y, 70, 0, 7); ctx.strokeStyle = 'rgba(255,240,200,.22)'; ctx.lineWidth = 2; ctx.stroke(); }
     }

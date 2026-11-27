@@ -889,3 +889,17 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 .rm-ans { display: flex; gap: 8px; margin-top: 10px; }
 .rm-ans input { flex: 1; min-width: 0; font: 700 18px var(--sans); padding: 10px 12px; border-radius: 10px; border: 1.5px solid rgba(232, 183, 90, .6); background: rgba(255, 255, 255, .06); color: #fff8e6; text-align: center; }
 .rm-ans .btn { flex: none; }
+/* 들판 색 끈 · 당번 기록 */
+.room-stage .rspot .ribbon { position: absolute; left: 50%; top: calc(-6px * var(--inv, 1)); transform: translateX(-50%); width: calc(14px * var(--inv, 1)); height: calc(14px * var(--inv, 1)); border-radius: 50%; border: calc(2px * var(--inv, 1)) solid #1a1a1a; box-shadow: 0 0 calc(6px * var(--inv, 1)) rgba(255, 255, 255, .5); pointer-events: none; }
+.fd-log { display: flex; flex-direction: column; gap: 3px; font-size: 13px; line-height: 1.45; margin-bottom: 8px; }
+.fd-log b { color: #ffe9a8; }
+/* 명부와 가림판 */
+.gr-wrap { position: relative; max-width: 300px; margin: 0 auto; padding: 10px; border-radius: 10px; background: #e9d6a8; }
+.gr-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; }
+.gr-grid span { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font: 700 19px var(--serif); border-radius: 4px; }
+.gr-grid span.cover { background: #5a3818; color: transparent; box-shadow: inset 0 0 6px rgba(0, 0, 0, .45); }
+.gr-grid span.hole { background: #f6e8c4; color: #3a2410; box-shadow: inset 0 0 0 2px #2e1d0c; }
+.gr-notch { position: absolute; inset: 0; pointer-events: none; transition: transform .25s; }
+.gr-notch b { position: absolute; left: 50%; top: -2px; transform: translateX(-50%); color: #b3261e; font-size: 14px; }
+.gr-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
+.gr-turn { font-size: 12.5px; color: #f3e4bf; opacity: .85; }
