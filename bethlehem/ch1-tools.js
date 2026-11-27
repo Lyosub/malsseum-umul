@@ -27,6 +27,9 @@
     'flint+oil': '기름에 불을 붙일 수는 있겠지만 담을 그릇이 없다.'
   };
 
+  // ── 퀘스트 저널의 「다음 장소」 차례: 우물은 등잔(부엌)이 있어야 하므로 여관 · 부엌 뒤
+  BN.QORDER = { 1: ['gate', 'road', 'inn', 'kitchen', 'well', 'field', 'angel', 'stable'] };
+
   // ── 방이 열리는 차례: 성문을 풀면 여관 · 나사렛 길 · 우물이 한꺼번에 열린다(어디부터 갈지는 고르기)
   Object.assign(BN.UNLOCK, { gate: [], road: ['gate'], inn: ['gate'], well: ['gate'], kitchen: [], field: ['road', 'well'], angel: ['field'], stable: ['angel'] });
 

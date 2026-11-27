@@ -51,7 +51,8 @@
   ];
   function order() {
     var L = ['wellroom'];
-    for (var c = 1; c <= 5; c++) { var st = (BN.CHAPTERS[c] || {}).start; if (st && L.indexOf(st) < 0) L.push(st); BN.SPOTS.forEach(function (s) { if ((s.ch || 1) === c && L.indexOf(s.id) < 0) L.push(s.id); }); if (c === 1 && L.indexOf('kitchen') < 0) L.splice(L.indexOf('inn') + 1, 0, 'kitchen'); }
+    for (var c = 1; c <= 5; c++) { if (BN.QORDER && BN.QORDER[c]) { BN.QORDER[c].forEach(function (k) { if (L.indexOf(k) < 0) L.push(k); }); continue; }   /* 장마다 정한 퀘스트 차례(도구 흐름대로) */
+      var st = (BN.CHAPTERS[c] || {}).start; if (st && L.indexOf(st) < 0) L.push(st); BN.SPOTS.forEach(function (s) { if ((s.ch || 1) === c && L.indexOf(s.id) < 0) L.push(s.id); }); if (c === 1 && L.indexOf('kitchen') < 0) L.splice(L.indexOf('inn') + 1, 0, 'kitchen'); }
     return L.filter(function (k) { return Q[k]; });
   }
   function chOf(k) { if (k === 'wellroom') return 0; if (k === 'kitchen') return 1; var s = BN.SPOTS.find(function (x) { return x.id === k; }); if (s) return s.ch || 1; for (var c = 1; c <= 5; c++) if ((BN.CHAPTERS[c] || {}).start === k) return c; return 1; }
@@ -84,7 +85,7 @@
     if (!k) return '이 장의 장소를 모두 풀었어요. 다음 장으로!';
     var S = U.S(), here = U.cur() === k, n = needIn(k);
     var has = function (x) { return S.items.indexOf(x) >= 0; }, used = BN.used || function () { return false; };
-    if (!here) return k === 'kitchen' ? (used('kitchen', 'keys') ? '여관에 들어가 부엌 문으로 가세요.' : '여관 부엌 문이 잠겨 있어요. 여관의 문제를 풀면 열쇠를 받을 거예요 — 가방에서 「손에 들기」 → 부엌 문.') : '지도에서 「' + spotName(k) + '」(으)로 가세요.';
+    if (!here) return k === 'kitchen' ? (used('kitchen', 'keys') ? '여관에 들어가 부엌 문으로 가세요.' : has('keys') ? '여관에 들어가 열쇠 꾸러미를 「손에 들기」 → 오른쪽 「🚪 여관 부엌」 문을 누르세요.' : '여관 부엌 문이 잠겨 있어요. 여관의 문제를 풀면 열쇠를 받아요.') : '지도에서 「' + spotName(k) + '」(으)로 가세요.';
     // 1장 견본: 도구 흐름
     if (k === 'gate' && !(S.f1 || {}).guards) return '문지기 셋 가운데 참말을 하는 한 명을 가려 빈 등잔을 찾으세요(성문 가운데).';
     if (k === 'kitchen' && !has('lamp')) return !has('oil') ? '부엌의 큰 항아리에서 기름부터 챙기세요.' : !has('lamp_e') ? '빈 등잔은 성문 문지기들이 맡아 두었대요.' : !has('flint') ? '불을 붙일 게 없어요 — 나사렛 길의 지도 상자를 열어 보세요.' : '빈 등잔 · 기름 · 부싯돌 — 가방에서 셋을 골라 「합치기」.';
