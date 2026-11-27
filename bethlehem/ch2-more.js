@@ -18,8 +18,8 @@
   function tone(f, len) { if (!soundOn()) return; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); var t = actx.currentTime; [1, 2, 3].forEach(function (h) { var o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.value = f * h; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.16 / h / h, t + .01); g.gain.exponentialRampToValueAtTime(.0005, t + (len || 1.4)); o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + (len || 1.4)); }); } catch (e) {} }
   BN.NEED = BN.NEED || {};
 
-  BN.ITEMS.stick = ['놋채', 'img/items/stick.svg', '끝에 천을 감은 놋 막대. 무언가를 두드려 소리를 낸다.'];
-  BN.ITEMS.silver = ['은전 다섯', 'img/items/silver.svg', '헌금함 곁 상자에서 나온 은전. 제물 값을 치를 수 있다.'];
+  BN.ITEMS.stick = ['놋채', 'img/items/stick.webp', '끝에 천을 감은 놋 막대. 무언가를 두드려 소리를 낸다.'];
+  BN.ITEMS.silver = ['은전 다섯', 'img/items/silver.webp', '헌금함 곁 상자에서 나온 은전. 제물 값을 치를 수 있다.'];
 
   // ════ 여드레째 집 · 님 게임: 빵 조각 열다섯, 번갈아 1~3개, 마지막 조각을 가져가면 진다
   BN.PZ.riddle = function (Rm, A) {

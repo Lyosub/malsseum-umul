@@ -12,7 +12,7 @@
 
   // 새 물건
   BN.ITEMS.mirror = ['청동 거울', 'img/items/mirror.webp', '닦아 놓은 둥근 청동 거울. 뒤집힌 글씨를 바로 비춰 본다.'];
-  BN.ITEMS.lensbox = ['잠긴 작은 상자', 'img/items/lensbox.svg', '여관 주인이 건넨 나무 상자. 숫자 자물쇠가 셋. 주인은 등잔을 가리키며 눈을 깜박였다.'];
+  BN.ITEMS.lensbox = ['잠긴 작은 상자', 'img/items/lensbox.webp', '여관 주인이 건넨 나무 상자. 숫자 자물쇠가 셋. 주인은 등잔을 가리키며 눈을 깜박였다.'];
 
   // ════ 1. 성문 · 원근 맞추기: 아치 돌에 흩어진 금빛 자국을 맞는 자리에서 보면 숫자 셋 → 궤짝 → 청동 거울
   R.gate.spots.push({ id: 'marks', x: 40, y: 16, w: 22, h: 18, act: 'puzzle:persp', extra: 1 });

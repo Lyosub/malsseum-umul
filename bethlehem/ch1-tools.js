@@ -11,9 +11,9 @@
   // ── 새 물건
   BN.ITEMS.lamp_e = ['빈 등잔', 'img/items/lamp.webp', '기름도 불도 없는 질그릇 등잔. 이대로는 비출 수 없다.'];
   BN.ITEMS.lamp = ['켜진 등잔', 'img/items/lamp.webp', '기름을 붓고 부싯돌로 불을 붙인 등잔. 어두운 곳에 쓴다.'];
-  BN.ITEMS.flint = ['부싯돌', 'img/items/flint.svg', '두 돌을 부딪치면 불티가 튄다.'];
-  BN.ITEMS.bucket_b = ['끊어진 두레박', 'img/items/bucket_b.svg', '줄이 짧게 끊어진 두레박. 이대로는 물까지 닿지 않는다.'];
-  BN.ITEMS.bucket = ['줄 맨 두레박', 'img/items/bucket.svg', '튼튼한 밧줄을 맨 두레박. 우물에 내릴 수 있다.'];
+  BN.ITEMS.flint = ['부싯돌', 'img/items/flint.webp', '두 돌을 부딪치면 불티가 튄다.'];
+  BN.ITEMS.bucket_b = ['끊어진 두레박', 'img/items/bucket_b.webp', '줄이 짧게 끊어진 두레박. 이대로는 물까지 닿지 않는다.'];
+  BN.ITEMS.bucket = ['줄 맨 두레박', 'img/items/bucket.webp', '튼튼한 밧줄을 맨 두레박. 우물에 내릴 수 있다.'];
   BN.ITEMS.rope = ['튼튼한 밧줄', 'img/items/rope.webp', '나귀 짐에서 빌린 긴 밧줄.'];
 
   // ── 합치기(고른 물건이 꼭 이것들일 때만, 차례는 상관없음). keep: 합친 뒤에도 남는 것
@@ -165,7 +165,7 @@
   // ══ 11/27 어려운 문제 셋: 겹쳐 읽기(성문) → 자모 바꿔 읽기(우물) · 조건표 추리(들판) ══
 
   // ── 가림판: 나사렛 길 상자에서 부싯돌과 함께 나온다
-  BN.ITEMS.grille = ['구멍 뚫린 가림판', 'img/items/grille.svg', '네모난 가죽에 구멍 여섯이 뚫려 있다. 무언가에 겹쳐 대는 것 같다.'];
+  BN.ITEMS.grille = ['구멍 뚫린 가림판', 'img/items/grille.webp', '네모난 가죽에 구멍 여섯이 뚫려 있다. 무언가에 겹쳐 대는 것 같다.'];
   R.road.item2 = 'grille';
   R.road.done[0] = ['narr', null, '자물쇠가 풀리자 상자에서 부싯돌 두 개와, 구멍이 숭숭 뚫린 네모난 가죽 조각이 나온다.'];
   R.road.done[2] = ['asaph', 0, '부싯돌은 불을 붙이는 돌이다. 그 가죽은… 글자 위에 겹쳐 대는 가림판 같구나. 명부 크기와 비슷하다.'];
