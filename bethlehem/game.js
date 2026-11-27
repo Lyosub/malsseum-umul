@@ -219,7 +219,7 @@
   function enterRoom(id) {
     var R = BN.ROOMS[id];
     if (!R) { talk([['asaph', 0, '이곳은 아직 정리 중이다. 곧 열린다.'], ['gilead', 2, '(준비 중이래요. 빵 먹고 기다릴까요?)']]); return; }
-    cur = id; show('room'); $('btnBack').hidden = !!R.noBack; $('toast').classList.remove('on'); music(R.bgm || 'bgm02_village');
+    cur = id; show('room'); $('btnBack').hidden = !!R.noBack && !S.rooms[id];   /* 장 첫 방은 풀기 전에만 못 나간다(풀고 나면 「지도로」) */ $('toast').classList.remove('on'); music(R.bgm || 'bgm02_village');
     var bg = $('roomBg'); bg.style.backgroundImage = 'url(' + R.bg + ')';
     roomFit(R.focus || 50);
     var pv = $('roomView'); setBlur(pv, R.bg); pv.classList.remove('push'); void pv.offsetWidth; pv.classList.add('push');
@@ -362,7 +362,7 @@
   function solve(R) {
     if (PT) return ptOk();
     if (S.rooms[cur]) return;
-    var ch = BN.STAMPS[cur]; S.rooms[cur] = { at: S.ms, stamp: ch || '' };
+    var ch = BN.STAMPS[cur]; S.rooms[cur] = { at: S.ms, stamp: ch || '' }; $('btnBack').hidden = false;
     if (BN.netSolved) BN.netSolved(cur);
     if (R.note) S.notes.push(R.note);
     [R.item, R.item2].forEach(function (k) { if (k && S.items.indexOf(k) < 0) S.items.push(k); });
