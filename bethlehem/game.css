@@ -942,3 +942,5 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 .cb-slot .btn { padding: 4px 0; width: 70%; font-size: 13px; }
 .cb-slot span { text-align: center; font-size: 12.5px; line-height: 1.35; color: #f3e4bf; }
 .cb-tip { display: block; margin-top: 4px; font-size: 12px; color: #ffd98a; }
+.wl-notes p { margin: 6px 0 0; padding: 6px 10px; border-radius: 8px; background: rgba(255, 226, 150, .08); border: 1px solid rgba(232, 183, 90, .35); font-size: 12.5px; line-height: 1.5; color: #f3e4bf; }
+.wl-notes b { color: #ffe27a; }

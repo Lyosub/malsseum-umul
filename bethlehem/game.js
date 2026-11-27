@@ -514,6 +514,7 @@
       '<canvas id="wlDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas>' +
       (glass ? '<div id="wlGlass" class="wl-glass"><div id="wlIn" class="wl-in"><div class="wl-blur"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.62)">' + TXT + '</div><canvas id="wlInDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas></div></div><div id="wlRim" class="wl-rim"></div>' : '') + '</div>' +
       (glass ? '<div class="wl-foc"><span>가까이</span><input type="range" id="wlFoc" min="0" max="100" value="' + (FOC > 50 ? 4 : 96) + '"><span>멀리</span></div><p class="gen-help" style="margin:2px 0 0;text-align:center">💎 수정 조각을 손가락으로 끌어 벽에 대 보세요</p>' : '') +
+      '<div class="wl-notes">' + (MIR ? '<p>🪞 물에 비쳐 <b>좌우가 뒤집힌</b> 글씨예요 — 청동 거울을 우물에 쓰면 바로 보여요(성문 아치의 궤짝).</p>' : '') + (BN.WELL_TXT ? '<p>🔐 바로 읽어도 <b>뒤틀린 글자</b>예요 — 성문 명부에 가림판을 대어 읽은 말과, 우물 테두리의 자모 차례로 풀어요.</p>' : '') + '</div>' +
       '<div id="wlRope" style="margin-top:6px">' + (BN.used('wellin', 'bucket') ? '<input type="range" id="wlLen" min="1" max="14" value="1" style="width:100%"><p style="text-align:center;font-size:20px;margin:4px 0"><b id="wlV">1</b> 규빗</p><button class="btn gold block" id="wlUp">끌어올리기</button>' : '<p class="gen-help">물을 길을 두레박이 걸려 있지 않다. 줄 맨 두레박을 우물에 걸어야 한다.</p>') + '</div>';
     modal('우물 안', w);
     var cv = $('wlDark'), box = $('wlBox');
