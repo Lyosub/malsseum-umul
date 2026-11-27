@@ -868,3 +868,8 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 .held-chip span { display: flex; flex-direction: column; line-height: 1.25; white-space: nowrap; }
 .held-chip small { font-size: 11px; opacity: .8; }
 .door-lbl.spot-lbl { left: 50%; right: auto; transform: translate(-50%, -50%); }
+/* 성문 문지기 셋: 발밑 이름표 · 말 상자 얼굴 */
+.door-lbl.gname { top: auto; bottom: calc(-4px * var(--inv, 1)); left: 50%; right: auto; transform: translate(-50%, 0); font-size: calc(11px * var(--inv, 1)); }
+.gd-one { flex-direction: row !important; align-items: center; gap: 10px !important; }
+.gd-one > div { display: flex; flex-direction: column; gap: 2px; }
+.gd-face { flex: none; width: 46px; height: 46px; border-radius: 50%; object-fit: cover; object-position: 50% 4%; background: #2a2440; border: 1.5px solid rgba(232, 183, 90, .6); }

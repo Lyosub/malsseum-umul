@@ -38,7 +38,11 @@
     ['asaph', 0, '등잔이 있어야 밤에 다닐 텐데. 빈 등잔 하나를 문지기들에게 맡겨 두었더니, 셋이 서로 딴소리를 하는구나.'],
     ['gilead', 1, '성문 아래 문지기 아저씨 셋이요? 셋 중에 참말을 하는 사람은 딱 한 명이래요. 나머지 둘은 저를 놀리는 거래요.', '(늘 당함)']
   ]);
-  R.gate.spots.push({ id: 'guards', x: 40, y: 47, w: 18, h: 30, act: 'puzzle:guards', label: '🛡 문지기 셋' });
+  // 문지기 셋: 성문 아치 앞에 나란히(왼쪽부터 첫째 · 둘째 · 셋째). 다른 인물·탁자보다 뒤에 서도록 맨 앞에 넣는다
+  R.gate.spots.unshift(
+    { id: 'guard1', x: 27, y: 90, fig: 'guard1_front', h: 40, act: 'puzzle:guards', gname: '첫째' },
+    { id: 'guard2', x: 35.5, y: 90, fig: 'guard2_front', h: 37, act: 'puzzle:guards', gname: '둘째' },
+    { id: 'guard3', x: 44, y: 90, fig: 'guard3_front', h: 38, act: 'puzzle:guards', gname: '셋째' });
   BN.PZ.guards = function (Rm, A) {
     var S = A.S(); S.f1 = S.f1 || {};
     if (S.f1.guards) return A.toast('✔ 빈 등잔은 이미 찾았어요 — 가방에 있어요');
@@ -50,7 +54,7 @@
     say[Z] = '「등잔은 내 자리 밑에 없다니까.」';
     var w = A.el('div', 'gen-wrap');
     w.innerHTML = '<div class="gd-rule">셋 가운데 <b>참말을 하는 문지기는 한 명뿐</b>이다.</div>' +
-      '<div class="gd-list">' + [0, 1, 2].map(function (i) { return '<div class="gd-one"><b>' + NM[i] + ' 문지기</b><span>' + say[i] + '</span></div>'; }).join('') + '</div>' +
+      '<div class="gd-list">' + [0, 1, 2].map(function (i) { return '<div class="gd-one"><img class="gd-face" src="img/chars/guard' + (i + 1) + '_front.webp" alt=""><div><b>' + NM[i] + ' 문지기</b><span>' + say[i] + '</span></div></div>'; }).join('') + '</div>' +
       '<p class="gen-help" style="text-align:center;margin:10px 0 6px">빈 등잔은 누구 자리 밑에 있을까?</p>' +
       '<div class="gd-seats">' + [0, 1, 2].map(function (i) { return '<button class="btn ghost" data-s="' + i + '">' + NM[i] + ' 자리 밑</button>'; }).join('') + '</div>';
     A.modal('성문 문지기 셋', w);
