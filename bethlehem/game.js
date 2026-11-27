@@ -9,7 +9,7 @@
   var PT = /[?&]phonetest=1(&|$)/.test(location.search);
   // ?chtest=N → N장부터 바로 시험(11/27): 앞 장은 다 푼 것으로, 이 기기에만 저장(서버·순위 없음)
   var CT = +((location.search.match(/[?&]chtest=([1-5])(&|$)/) || [])[1] || 0);
-  var KEY = PT ? 'bethlehem.phonetest' : CT ? 'bethlehem.chtest' + CT + (CT === 1 ? 'b' : '') : TRY ? 'bethlehem.try1b' : 'bethlehem.v1';
+  var KEY = PT ? 'bethlehem.phonetest' : CT ? 'bethlehem.chtest' + CT + (CT === 1 ? 'c' : '') : TRY ? 'bethlehem.try1b' : 'bethlehem.v1';
   var S = load() || null;
   function blank() { return { v: 1, nick: '', dept: '', grade: '', av: 'm', ch: 1, ms: 0, hintMin: 0, rooms: {}, items: [], notes: [], stars: [], seenIntro: {}, opening: false, created: Date.now() }; }
   function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
