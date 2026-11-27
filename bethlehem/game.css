@@ -999,3 +999,7 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 .sk { position: relative; width: 80px; height: 120px; border-radius: 30px 30px 14px 14px; border: 2px solid #8a6a3a; background: rgba(255, 255, 255, .05); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 6px; color: #fff8e6; }
 .sk.sel { border-color: #ffe27a; box-shadow: 0 0 12px rgba(255, 220, 120, .6); }
 .sk-in { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(#5aa0d8, #2d6aa8); opacity: .75; } .sk b { position: relative; font: 800 24px var(--serif); } .sk small { position: relative; font-size: 11px; }
+
+/* 11/28 두 장의 지도 v4: 뚜껑 6×6 */
+.rm-grid.g6 { grid-template-columns: repeat(6, 1fr); gap: 3px; max-width: 324px; }
+.rm-grid.g6 span { font-size: 19px; }

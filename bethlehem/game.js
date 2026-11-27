@@ -808,65 +808,73 @@
     $('genOk').onclick = function () { if (locked('gate')) return; if ($('genAns').value.replace(/\D/g, '') === '14' && placed.every(function (v, p) { return v === names[p]; })) { closeModal(); sfx('ok'); solve(R); } else wrong('gate'); };
   };
 
-  // 2 길 v2: 밤 지도를 끌어 강·산에 맞추고, 해 무늬로 동서남북을 읽는다
+  // 2 길 v4 (11/28): 갈림길 4×4, 일곱 걸음(한 걸음에 갈림길 1~3개), 밤 지도 별 아래 빛점 수 = 차례(빛점 없는 별 둘은 길과 상관없음).
+  // 뚜껑 6×6에서 동서남북으로 지난 갈림길 수만큼 걷고, 멈춘 칸 글자만 이어 읽는다 → 여덟 자모
   PUZZLES.roadmap = function (R) {
-    // 11/27 v3: 출발 → 큰 별 → 중간 별 → 작은 별 → 베들레헴, 한 걸음마다 곧은 한 방향. 밤 지도는 딱 붙지 않고 계속 움직인다(강·산을 보고 맞추기)
-    var r = seedRnd(2), GX = [95, 265, 435], GY = [90, 205, 320], jit = [];
-    for (var i = 0; i < 9; i++) jit.push([Math.round((r() - .5) * 44), Math.round((r() - .5) * 30)]);
-    function P(n) { return [GX[n % 3] + jit[n][0], GY[Math.floor(n / 3)] + jit[n][1]]; }
-    var DV = [[-1, 0], [0, 1], [1, 0], [0, -1]], nodes = null, moves = null;   // 화면 방향 0위 1오른 2아래 3왼
-    for (var t = 0; t < 400 && !nodes; t++) {
-      var cur = Math.floor(r() * 9), seen = [cur], mv = [], ok = true;
-      for (var k = 0; k < 4 && ok; k++) {
+    var r = seedRnd(2), GX = [65, 195, 325, 455], GY = [125, 225, 325, 420], jit = [], VH = 470;
+    for (var i = 0; i < 16; i++) jit.push([Math.round((r() - .5) * 40), Math.round((r() - .5) * 26)]);
+    function P(n) { return [GX[n % 4] + jit[n][0], GY[Math.floor(n / 4)] + jit[n][1]]; }
+    var DV = [[-1, 0], [0, 1], [1, 0], [0, -1]], nodes = null, moves = null, dists = null, walked = null, MV = 7;   // 화면 방향 0위 1오른 2아래 3왼
+    for (var t = 0; t < 4000 && !nodes; t++) {
+      var cur = Math.floor(r() * 16), seen = [cur], stops = [cur], mv = [], ds = [], ok = true;
+      for (var k = 0; k < MV && ok; k++) {
         var opts = [];
-        DV.forEach(function (d, di) { if (mv.length && mv[mv.length - 1] === di) return; for (var dist = 1; dist <= 2; dist++) { var rr = Math.floor(cur / 3) + d[0] * dist, cc = cur % 3 + d[1] * dist; if (rr < 0 || rr > 2 || cc < 0 || cc > 2) break; var n = rr * 3 + cc; if (seen.indexOf(n) >= 0) break; opts.push([di, n]); } });
+        DV.forEach(function (d, di) {
+          if (mv.length && (mv[mv.length - 1] === di || (mv[mv.length - 1] + 2) % 4 === di)) return;   // 걸음마다 꺾는다
+          for (var dist = 1; dist <= 3; dist++) { var rr = Math.floor(cur / 4) + d[0] * dist, cc = cur % 4 + d[1] * dist; if (rr < 0 || rr > 3 || cc < 0 || cc > 3) break; var n = rr * 4 + cc; if (seen.indexOf(n) >= 0) break; opts.push([di, dist, n]); }
+        });
         if (!opts.length) { ok = false; break; }
-        var o = opts[Math.floor(r() * opts.length)]; mv.push(o[0]); cur = o[1]; seen.push(cur);
+        var o = opts[Math.floor(r() * opts.length)];
+        for (var s = 1; s <= o[1]; s++) seen.push((Math.floor(cur / 4) + DV[o[0]][0] * s) * 4 + cur % 4 + DV[o[0]][1] * s);   // 지나간 갈림길도 다시 밟지 않는다
+        mv.push(o[0]); ds.push(o[1]); cur = o[2]; stops.push(cur);
       }
-      if (ok) { var py = 0, px = 0, seenP = { '0,0': 1 }, dup = false; mv.forEach(function (d) { py += DV[d][0]; px += DV[d][1]; if (seenP[py + ',' + px]) dup = true; seenP[py + ',' + px] = 1; }); if (!dup) { nodes = seen; moves = mv; } }   /* 뚜껑 글자판에서 한 칸씩 걸을 때 같은 칸을 두 번 밟지 않는 길만 */
+      if (ok && seen.length <= 14 && ds.filter(function (x) { return x > 1; }).length >= 3) { nodes = stops; moves = mv; dists = ds; walked = seen; }
     }
     var east = Math.floor(r() * 4), north = (east + 3) % 4, DIRS = ['북', '동', '남', '서'];
-    var answer = moves.map(function (d) { return DIRS[(d - north + 4) % 4]; });
-    var WORDS = [['요셉', ['ㅇ', 'ㅛ', 'ㅅ', 'ㅔ', 'ㅂ']], ['다윗', ['ㄷ', 'ㅏ', 'ㅇ', 'ㅟ', 'ㅅ']]], wd = WORDS[Math.floor(r() * WORDS.length)];
+    var answer = moves.map(function (d, k2) { return DIRS[(d - north + 4) % 4] + dists[k2]; });
+    var WORDS = [['아기예수', ['ㅇ', 'ㅏ', 'ㄱ', 'ㅣ', 'ㅇ', 'ㅖ', 'ㅅ', 'ㅜ']], ['목자들', ['ㅁ', 'ㅗ', 'ㄱ', 'ㅈ', 'ㅏ', 'ㄷ', 'ㅡ', 'ㄹ']], ['구유에서', ['ㄱ', 'ㅜ', 'ㅇ', 'ㅠ', 'ㅇ', 'ㅔ', 'ㅅ', 'ㅓ']]], wd = WORDS[Math.floor(r() * WORDS.length)];
     var GV = { '북': [-1, 0], '동': [0, 1], '남': [1, 0], '서': [0, -1] }, pth = [[0, 0]];
-    answer.forEach(function (a) { var q = pth[pth.length - 1]; pth.push([q[0] + GV[a][0], q[1] + GV[a][1]]); });
+    moves.forEach(function (d, k2) { var a = DIRS[(d - north + 4) % 4], q = pth[pth.length - 1]; pth.push([q[0] + GV[a][0] * dists[k2], q[1] + GV[a][1] * dists[k2]]); });
     var mr = Math.min.apply(null, pth.map(function (q) { return q[0]; })), Mr = Math.max.apply(null, pth.map(function (q) { return q[0]; })), mc = Math.min.apply(null, pth.map(function (q) { return q[1]; })), Mc = Math.max.apply(null, pth.map(function (q) { return q[1]; }));
-    var orr = -mr + Math.floor(r() * (5 - (Mr - mr))), occ = -mc + Math.floor(r() * (5 - (Mc - mc)));
-    var POOL = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ', 'ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ', 'ㅐ', 'ㅔ', 'ㅟ', 'ㅢ'];
-    var LID = []; for (var gi = 0; gi < 25; gi++) LID.push(POOL[Math.floor(r() * POOL.length)]);
-    pth.forEach(function (q, k) { LID[(q[0] + orr) * 5 + q[1] + occ] = wd[1][k]; });
-    var LSTART = orr * 5 + occ;
-    S.roadAns = answer.join(' · ') + ' → 뚜껑에서 「' + wd[0] + '」'; save();   // 사람마다 다른 답 — 힌트 3단계가 보여 준다
+    var LN = 6, orr = -mr + Math.floor(r() * (LN - (Mr - mr))), occ = -mc + Math.floor(r() * (LN - (Mc - mc)));
+    var POOL = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ', 'ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ', 'ㅐ', 'ㅔ', 'ㅖ', 'ㅟ', 'ㅢ'];
+    var LID = []; for (var gi = 0; gi < LN * LN; gi++) LID.push(POOL[Math.floor(r() * POOL.length)]);
+    pth.forEach(function (q, k2) { LID[(q[0] + orr) * LN + q[1] + occ] = wd[1][k2]; });
+    var LSTART = orr * LN + occ;
+    S.roadAns = answer.join(' · ') + ' → 멈춘 칸 「' + wd[1].join('') + '」 = ' + wd[0]; save();   // 사람마다 다른 답 — 힌트 3단계가 보여 준다
     var ox = (90 + Math.floor(r() * 80)) * (r() < .5 ? -1 : 1), oy = (50 + Math.floor(r() * 50)) * (r() < .5 ? -1 : 1);
-    var land = '<path d="M20 150 Q120 118 170 152 T320 138 T450 168 T590 140" stroke="#7aa3c0" stroke-width="5" fill="none" opacity=".75"/><path d="M380 26 l26 -18 l26 18 z M528 250 l20 -15 l20 15 z M34 352 l22 -16 l22 16 z M214 262 l18 -14 l18 14 z M540 362 l16 -12 l16 12 z" fill="#a08660" opacity=".7"/>';
+    var land = '<path d="M20 170 Q120 138 170 172 T320 158 T450 188 T590 160" stroke="#7aa3c0" stroke-width="5" fill="none" opacity=".75"/><path d="M380 30 l26 -18 l26 18 z M528 290 l20 -15 l20 15 z M28 455 l22 -16 l22 16 z M262 278 l18 -14 l18 14 z M540 430 l16 -12 l16 12 z M120 60 l14 -10 l14 10 z" fill="#a08660" opacity=".7"/>';
     var roads = '';
-    for (var n2 = 0; n2 < 9; n2++) { var a = P(n2); if (n2 % 3 < 2) { var b = P(n2 + 1); roads += 'M' + a[0] + ' ' + a[1] + ' L' + b[0] + ' ' + b[1] + ' '; } if (n2 < 6) { var c2 = P(n2 + 3); roads += 'M' + a[0] + ' ' + a[1] + ' L' + c2[0] + ' ' + c2[1] + ' '; } }
-    var st = P(nodes[0]), en = P(nodes[4]);
+    for (var n2 = 0; n2 < 16; n2++) { var a = P(n2); if (n2 % 4 < 3) { var b = P(n2 + 1); roads += 'M' + a[0] + ' ' + a[1] + ' L' + b[0] + ' ' + b[1] + ' '; } if (n2 < 12) { var c2 = P(n2 + 4); roads += 'M' + a[0] + ' ' + a[1] + ' L' + c2[0] + ' ' + c2[1] + ' '; } }
+    var st = P(nodes[0]), en = P(nodes[MV]);
     var day = '<g>' + land + '<path d="' + roads + '" stroke="#8a6a3a" stroke-width="7" fill="none" stroke-dasharray="2 10" stroke-linecap="round"/>' +
-      [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (q) { var p = P(q); return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="11" fill="#f3e4bf" stroke="#7a5a2a" stroke-width="2"/>'; }).join('') +
+      Array.from({ length: 16 }, function (_, q) { var p = P(q); return '<circle class="rm-node" cx="' + p[0] + '" cy="' + p[1] + '" r="10" fill="#f3e4bf" stroke="#7a5a2a" stroke-width="2"/>'; }).join('') +
       '<g transform="translate(' + st[0] + ',' + st[1] + ')"><path d="M-2 0 L-2 -34 L20 -27 L-2 -20" fill="#b3261e" stroke="#5a3a14" stroke-width="2"/><rect x="-26" y="12" width="52" height="20" rx="6" fill="#5a3a14"/><text y="27" text-anchor="middle" font-size="14" font-weight="800" fill="#ffe9c0">출발</text></g>' +
       '<g transform="translate(' + en[0] + ',' + en[1] + ')"><path d="M-14 -4 L0 -20 L14 -4 Z M-11 -4 L-11 10 L11 10 L11 -4" fill="#e9c98a" stroke="#5a3a14" stroke-width="2"/><rect x="-34" y="14" width="68" height="20" rx="6" fill="#5a3a14"/><text y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#ffe9c0">베들레헴</text></g>' +
-      (function () { var na = [0, 90, 180, 270][north], L = ['북', '동', '남', '서'], g = '<g transform="translate(536,64) scale(1.55)"><circle r="34" fill="rgba(243,228,191,.92)" stroke="#7a5a2a" stroke-width="2"/>';
+      (function () { var na = [0, 90, 180, 270][north], L = ['북', '동', '남', '서'], g = '<g transform="translate(548,52) scale(1.2)"><circle r="34" fill="rgba(243,228,191,.92)" stroke="#7a5a2a" stroke-width="2"/>';
         L.forEach(function (tx, i2) { var an = (na + i2 * 90) * Math.PI / 180, x = Math.sin(an) * 23, y = -Math.cos(an) * 23; g += '<text x="' + x.toFixed(1) + '" y="' + (y + 5).toFixed(1) + '" text-anchor="middle" font-size="' + (i2 ? 13 : 15) + '" font-weight="800" fill="' + (i2 ? '#5a3a14' : '#b3261e') + '">' + tx + '</text>'; });
         var a0 = na * Math.PI / 180; g += '<path d="M' + (Math.sin(a0) * 13).toFixed(1) + ' ' + (-Math.cos(a0) * 13).toFixed(1) + ' L' + (Math.cos(a0) * 4).toFixed(1) + ' ' + (Math.sin(a0) * 4).toFixed(1) + ' L' + (-Math.cos(a0) * 4).toFixed(1) + ' ' + (-Math.sin(a0) * 4).toFixed(1) + ' Z" fill="#b3261e"/><circle r="2.5" fill="#5a3a14"/></g>'; return g; })() + '</g>';
-    var SZ = [17, 12, 8];
-    var night = '<g id="ngt" transform="translate(' + ox + ',' + oy + ')"><rect x="-260" y="-220" width="1120" height="840" fill="#0d1530" opacity=".82"/>' + land.replace(/#7aa3c0/, '#9ec4ff').replace(/#a08660/, '#c9d4ff') +
-      Array.from({ length: 50 }, function () { return '<circle cx="' + Math.floor(r() * 600) + '" cy="' + Math.floor(r() * 400) + '" r="' + (r() * 1.4 + .4).toFixed(1) + '" fill="#fff" opacity="' + (r() * .5 + .2).toFixed(2) + '"/>'; }).join('') +
-      [1, 2, 3].map(function (k2) { var p = P(nodes[k2]), s = SZ[k2 - 1]; return '<path transform="translate(' + p[0] + ',' + p[1] + ')" d="M0 -' + s + ' L' + s * .28 + ' -' + s * .28 + ' L' + s + ' 0 L' + s * .28 + ' ' + s * .28 + ' L0 ' + s + ' L-' + s * .28 + ' ' + s * .28 + ' L-' + s + ' 0 L-' + s * .28 + ' -' + s * .28 + ' Z" fill="#ffe9a8"/>'; }).join('') + '</g>';
-    function star(z) { return '<svg width="' + (z * 2 + 4) + '" height="' + (z * 2 + 4) + '" viewBox="-' + (z + 2) + ' -' + (z + 2) + ' ' + (z * 2 + 4) + ' ' + (z * 2 + 4) + '"><path d="M0 -' + z + ' L' + z * .28 + ' -' + z * .28 + ' L' + z + ' 0 L' + z * .28 + ' ' + z * .28 + ' L0 ' + z + ' L-' + z * .28 + ' ' + z * .28 + ' L-' + z + ' 0 L-' + z * .28 + ' -' + z * .28 + ' Z" fill="#ffe9a8" stroke="#b8862b"/></svg>'; }
-    var STEP = ['<b>출발</b> → ' + star(10), star(10) + ' → ' + star(7), star(7) + ' → ' + star(5), star(5) + ' → <b>베들레헴</b>'];
+    function starPath(x, y, s) { return '<path class="rm-star" transform="translate(' + x + ',' + y + ')" d="M0 -' + s + ' L' + s * .28 + ' -' + s * .28 + ' L' + s + ' 0 L' + s * .28 + ' ' + s * .28 + ' L0 ' + s + ' L-' + s * .28 + ' ' + s * .28 + ' L-' + s + ' 0 L-' + s * .28 + ' -' + s * .28 + ' Z" fill="#ffe9a8"/>'; }
+    function dots(x, y, k3) { var h = '', row = [Math.min(k3, 3), Math.max(0, k3 - 3)]; row.forEach(function (n, ri) { for (var q = 0; q < n; q++) h += '<circle class="rm-dot" cx="' + (x - (n - 1) * 6 + q * 12).toFixed(1) + '" cy="' + (y + 22 + ri * 11) + '" r="4.2" fill="#fff6d0" stroke="#0d1530" stroke-width="1"/>'; }); return h; }   // 빛점: 세 개씩 두 줄
+    var free = []; for (var q2 = 0; q2 < 16; q2++) if (walked.indexOf(q2) < 0) free.push(q2);   // 가짜 별은 지나가는 길과 겹치지 않는 갈림길에만
+    var decoy = []; while (decoy.length < 2 && free.length) decoy.push(free.splice(Math.floor(r() * free.length), 1)[0]);
+    var night = '<g id="ngt" transform="translate(' + ox + ',' + oy + ')"><rect x="-260" y="-260" width="1120" height="1000" fill="#0d1530" opacity=".82"/>' + land.replace(/#7aa3c0/, '#9ec4ff').replace(/#a08660/, '#c9d4ff') +
+      Array.from({ length: 60 }, function () { return '<circle cx="' + Math.floor(r() * 600) + '" cy="' + Math.floor(r() * VH) + '" r="' + (r() * 1.4 + .4).toFixed(1) + '" fill="#fff" opacity="' + (r() * .5 + .2).toFixed(2) + '"/>'; }).join('') +
+      nodes.slice(1, MV).map(function (nd, k2) { var p = P(nd); return starPath(p[0], p[1], 12) + dots(p[0], p[1], k2 + 1); }).join('') +
+      decoy.map(function (nd) { var p = P(nd); return starPath(p[0], p[1], 12); }).join('') + '</g>';
     var w = el('div', 'gen-wrap');
-    w.innerHTML = '<svg viewBox="0 0 600 400" style="width:100%;border-radius:10px;background:linear-gradient(#efe0bb,#d8c095);touch-action:none" id="rmSvg">' + day + '<g style="opacity:.62">' + night + '</g></svg>' +
-      '<div class="rm-lid"><div class="rm-lid-h">상자 뚜껑 글자판 · <b>위가 북</b> · <b>★</b>에서 출발</div><div class="rm-grid">' + LID.map(function (c, k) { return '<span' + (k === LSTART ? ' class="st"' : '') + '>' + c + '</span>'; }).join('') + '</div></div>' +
-      '<div class="rm-ans"><input id="rmWord" maxlength="8" placeholder="뚜껑에서 읽은 말" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn gold" id="rmOk">상자 열기</button></div>';
+    w.innerHTML = '<p class="gen-help howto">밤 지도를 끌어 강과 산을 낮 지도에 맞추면 별이 갈림길 위에 앉아요. <b>별 아래 빛점 수가 차례</b>예요(빛점 없는 별은 길과 상관없어요). 출발 → 빛점 1 → 2 → … → 6 → 베들레헴, 한 번에 곧게 갑니다. 갈 때마다 <b>어느 쪽으로 갈림길 몇 개</b>를 갔는지 세어 두세요.</p>' +
+      '<svg viewBox="0 0 600 ' + VH + '" style="width:100%;border-radius:10px;background:linear-gradient(#efe0bb,#d8c095);touch-action:none" id="rmSvg">' + day + '<g style="opacity:.62">' + night + '</g></svg>' +
+      '<div class="rm-lid"><div class="rm-lid-h">상자 뚜껑 글자판 · <b>위가 북</b> · <b>★</b>에서 출발<br>지도에서 간 쪽(동서남북)으로 <b>간 갈림길 수만큼</b> 칸을 옮겨요. 지나친 칸은 읽지 않고 <b>멈춘 칸만</b> 읽어요.</div><div class="rm-grid g6">' + LID.map(function (c, k2) { return '<span' + (k2 === LSTART ? ' class="st"' : '') + '>' + c + '</span>'; }).join('') + '</div></div>' +
+      '<div class="rm-ans"><input id="rmWord" maxlength="8" placeholder="멈춘 칸 여덟 글자로 된 말" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn gold" id="rmOk">상자 열기</button></div>';
     modal('두 장의 지도', w);
     var svg = $('rmSvg'), ng = $('ngt'), drag = null;
-    function pt(e) { var b2 = svg.getBoundingClientRect(); return { x: (e.clientX - b2.left) * 600 / b2.width, y: (e.clientY - b2.top) * 400 / b2.height }; }
+    function pt(e) { var b2 = svg.getBoundingClientRect(); return { x: (e.clientX - b2.left) * 600 / b2.width, y: (e.clientY - b2.top) * VH / b2.height }; }
     svg.addEventListener('pointerdown', function (e) { var q = pt(e); drag = { x: q.x, y: q.y, ox: ox, oy: oy }; svg.setPointerCapture(e.pointerId); });
-    svg.addEventListener('pointermove', function (e) { if (!drag) return; var q = pt(e); ox = Math.max(-240, Math.min(240, drag.ox + q.x - drag.x)); oy = Math.max(-200, Math.min(200, drag.oy + q.y - drag.y)); ng.setAttribute('transform', 'translate(' + ox + ',' + oy + ')'); });
+    svg.addEventListener('pointermove', function (e) { if (!drag) return; var q = pt(e); ox = Math.max(-240, Math.min(240, drag.ox + q.x - drag.x)); oy = Math.max(-220, Math.min(220, drag.oy + q.y - drag.y)); ng.setAttribute('transform', 'translate(' + ox + ',' + oy + ')'); });
     svg.addEventListener('pointerup', function () { drag = null; });
 
-    $('rmOk').onclick = function () { if (locked('road')) return; var v = ($('rmWord').value || '').replace(/\s/g, ''); if (!v) return toast('뚜껑에서 읽은 말을 적어 주세요'); if (v === wd[0]) { closeModal(); sfx('ok'); solve(R); } else wrong('road', '찰칵… 열리지 않아요'); };
+    $('rmOk').onclick = function () { if (locked('road')) return; var v = ($('rmWord').value || '').replace(/\s/g, ''); if (!v) return toast('뚜껑에서 읽은 말을 적어 주세요'); if (v === wd[0]) { closeModal(); sfx('ok'); solve(R); } else wrong('road', v === wd[1].join('') ? '자모는 맞아요 — 여덟 자모를 모아 낱말로 적어 보세요' : '찰칵… 열리지 않아요'); };
     if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BN.__road = { answer: answer, word: wd[0], lid: LID, start: LSTART, align: function () { ox = 0; oy = 0; ng.setAttribute('transform', 'translate(0,0)'); } };
   };
 
