@@ -713,11 +713,12 @@
     var names = BN.GENEALOGY, decoys = ['엘리멜렉', '말론', '기룐'], hidden = ['보아스', '오벳', '이새'];
     var have = names.filter(function (n) { return hidden.indexOf(n) < 0 || (S.cards || []).indexOf(n) >= 0; }).concat(decoys);
     var r = seedRnd(1), pool = have.slice().sort(function () { return r() - .5; }), placed = new Array(10).fill(null), sel = null;
-    var PATH = 'M258 50 L300 22 L300 112 M262 112 L338 112 M640 22 L540 86 L720 86 M650 50 L650 112';
-    var DECOYS = ['M0 40 L100 40', 'M50 20 L50 112 M30 112 L100 112', 'M0 86 L100 86 M60 50 L60 112'];
+    // 11/27: 빈칸은 늘 다섯 장씩 두 줄. 금빛 줄이 열 장 모두에 걸친 큰 「14」 한 그림이 된다(왼쪽 두 줄 = 1, 오른쪽 세 줄 = 4) — 성경을 안 펴도 그림으로 얼추 맞출 수 있다
+    var PATH = 'M30 78 L120 18 L120 246 M40 246 L190 246 M428 18 L222 168 L486 168 M372 60 L372 250 M440 44 Q484 74 462 112 M262 30 L292 22';
+    var DECOYS = ['M10 96 L90 60 M30 30 L70 30', 'M50 12 L50 120 M20 70 L80 70', 'M10 124 L90 94 M10 50 L90 22'];
     function card(nm, cls) {
       var i = names.indexOf(nm), d = el('div', 'gcard ' + (cls || ''));
-      d.innerHTML = '<svg viewBox="' + (i >= 0 ? i * 100 : 0) + ' 0 100 133" preserveAspectRatio="none"><path d="' + (i >= 0 ? PATH : DECOYS[decoys.indexOf(nm)]) + '" stroke="#b8862b" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/></svg><span style="position:relative">' + nm + '</span>';
+      d.innerHTML = '<svg viewBox="' + (i >= 0 ? (i % 5) * 100 + ' ' + Math.floor(i / 5) * 133 : '0 0') + ' 100 133" preserveAspectRatio="none"><path d="' + (i >= 0 ? PATH : DECOYS[decoys.indexOf(nm)]) + '" stroke="#b8862b" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/></svg><span style="position:relative">' + nm + '</span>';
       return d;
     }
     var wrap = el('div', 'gen-wrap'), poolEl = el('div', 'gen-row'), slots = el('div', 'gen-row gen-slots'), ans = el('div', 'answer');

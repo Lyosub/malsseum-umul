@@ -744,3 +744,10 @@ body:has(#modal:not([hidden])) .zoom-btn, body:has(#dialog:not([hidden])) .zoom-
 /* 지도 퀘스트 카드: 작게 보기(세로)에서는 위쪽 빈 자리에, 알림 글이 뜨면 잠깐 숨김 */
 body.zoom-far .jr-float { top: 60px; bottom: auto; }
 body:not(.zoom-far):has(#toast.on) .jr-float { visibility: hidden; }
+/* 11/27 속마음 한 줄 */
+.think { margin: -4px 0 10px; padding: 0 4px; font-family: var(--serif); font-size: 13.5px; line-height: 1.6; color: #c9b88a; font-style: italic; }
+/* 명부 조각: 언제나 다섯 장씩(그림이 5×2로 이어지게) */
+.gen-wrap:has(.gen-slots) { max-width: 520px; margin: 0 auto; }
+.gen-row, .gen-row.gen-slots { grid-template-columns: repeat(5, 1fr) !important; }
+.gen-slots { gap: 0 !important; margin-top: 8px; }
+.gen-slots .gcard { border-radius: 0; }
