@@ -751,3 +751,4 @@ body:not(.zoom-far):has(#toast.on) .jr-float { visibility: hidden; }
 .gen-row, .gen-row.gen-slots { grid-template-columns: repeat(5, 1fr) !important; }
 .gen-slots { gap: 0 !important; margin-top: 8px; }
 .gen-slots .gcard { border-radius: 0; }
+.clue-left { border-color: #6fa8d6 !important; color: #cfe6ff; }
