@@ -102,6 +102,18 @@
   // ── 마구간: 굴 안에 켜진 등잔을 쓴다
   R.stable.spots.forEach(function (sp) { if (sp.id === 'search') sp.accept = { lamp: { msg: '켜진 등잔을 높이 들었다. 굴 입구가 보인다.' }, lamp_e: { say: [['gilead', 1, '불 없는 등잔으로는 아무것도 안 보여요…']], noUse: true } }; });
 
+  // ── 11/27 되돌리기: 1장 시험 판에서 새로 고침 때 지워졌던 물건(주운 기름·밧줄·두레박, 문지기의 빈 등잔)을 돌려놓는다
+  BN.repairItems = function (S) {
+    var has = function (x) { return S.items.indexOf(x) >= 0; }, add = function (x) { if (!has(x)) { S.items.push(x); fixed = 1; } }, used = function (a, b) { return !!(S.used || {})[a + ':' + b]; };
+    var taken = S.taken || [], fixed = 0, f1 = S.f1 || {};
+    if (taken.indexOf('oil') >= 0) add('oil');
+    if (taken.indexOf('donkey') >= 0 && !has('bucket') && !used('wellin', 'bucket')) add('rope');
+    if (taken.indexOf('bucket') >= 0 && !has('bucket') && !used('wellin', 'bucket')) add('bucket_b');
+    if (f1.guards && !has('lamp')) add('lamp_e');
+    if (S.rooms && S.rooms.road && !has('lamp')) add('flint');
+    return fixed;
+  };
+
   // ── 어두워서 못 보는 단서를 누르면: 지금 가진 물건에 맞춰 길르앗이 할 일을 말한다
   BN.darkSay = function (S, need) {
     var has = function (x) { return S.items.indexOf(x) >= 0; }, L = [['narr', null, '너무 어두워 잘 보이지 않는다.']];

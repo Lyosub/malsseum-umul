@@ -1117,10 +1117,7 @@
       var done = ['wellroom']; for (var c = 1; c < CT; c++) { var st = (BN.CHAPTERS[c] || {}).start; if (st) done.push(st); BN.SPOTS.forEach(function (sp) { if ((sp.ch || 1) === c) done.push(sp.id); }); if (c === 1) done.push('kitchen'); S.chDone[c] = 1; }
       done.forEach(function (k) { S.rooms[k] = { at: 0, stamp: BN.STAMPS[k] || '' }; }); save();
     }
-    if (CT === 1 && S.items && S.items.length) {   // 예전에 물건을 미리 받은 1장 시험 판: 아직 안 푼 곳의 물건은 돌려놓는다
-      var src = {}; Object.keys(BN.ROOMS).forEach(function (k) { var R0 = BN.ROOMS[k]; if (R0.item) src[R0.item] = k; (R0.spots || []).forEach(function (sp) { var m = /^pick:(\w+)/.exec(sp.act || ''); if (m) src[m[1]] = k; }); });
-      var before = S.items.length; S.items = S.items.filter(function (it) { return src[it] && S.rooms[src[it]]; }); if (S.items.length !== before) save();
-    }
+    if (BN.repairItems && S && S.items) { if (BN.repairItems(S)) save(); }   /* 11/27: 새로 고침 때 지워졌던 1장 물건 되돌리기 */
     document.querySelector('#title .eyebrow').textContent = '✦ ' + CT + '장 시험 · 이 기기에만 저장돼요'; $('btnCode').hidden = true; $('btnContinue').hidden = false; updHud();
   }
   if (PT) { document.body.classList.add('pt');
