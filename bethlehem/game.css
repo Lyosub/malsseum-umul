@@ -645,3 +645,12 @@ body:has(#dialog:not([hidden])) .pt-fab, body:has(#modal:not([hidden])) .pt-fab,
 .st-pad button { min-width: 54px; height: 42px; border-radius: 10px; border: 1px solid var(--rim); background: rgba(255, 255, 255, .06); color: #ffe2a0; font: 700 16px var(--sans); }
 .st-pad button.wait { min-width: 104px; font-size: 13px; }
 .st-pad button:active { background: rgba(255, 226, 150, .25); }
+/* 11/27 단서(진짜 방탈출): 아주 희미한 반짝임 — 찾아야 보인다 */
+.rspot.area[data-id^="cl_"]::after { content: ''; position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; transform: translate(-50%, -50%) rotate(45deg); background: radial-gradient(circle, rgba(255, 244, 210, .95), rgba(255, 220, 150, .2) 60%, transparent 70%); opacity: .2; animation: clueTw 4.6s ease-in-out infinite; pointer-events: none; }
+@keyframes clueTw { 0%, 70%, 100% { opacity: .08; } 82% { opacity: .55; } }
+/* 11/27 차례 맞추기 */
+.ord-line { min-height: 3.2em; margin: 8px 0; padding: 10px 12px; border-radius: 10px; background: rgba(244, 230, 196, .08); border: 1px solid var(--rim); font-family: var(--serif); font-size: 16px; line-height: 1.6; }
+.ord-line span { color: #ffe2a0; } .ord-line i { font-style: normal; opacity: .6; animation: blink 1s infinite; }
+.ord-btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+.ord-b { padding: 8px 11px; border-radius: 10px; border: 1px solid var(--rim); background: rgba(255, 255, 255, .06); color: inherit; font: 600 14px var(--serif); }
+.diff-pz .df-mark { display: flex; align-items: center; justify-content: center; color: #ffe27a; font: 700 15px var(--serif); text-shadow: 0 0 6px #000; }

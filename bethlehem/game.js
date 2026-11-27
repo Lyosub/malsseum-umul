@@ -226,6 +226,7 @@
     var box = $('roomSpots'); box.innerHTML = '';
     R.spots.forEach(function (sp) {
       if (sp.act.indexOf('star:') === 0 && S.stars.indexOf(sp.act) >= 0) return;
+      if (sp.act.indexOf('clue:') === 0 && (S.clues || {})[sp.act.slice(5)]) return;
       if (sp.act.indexOf('bread:') === 0 && (S.bread || []).indexOf(sp.act) >= 0) return;
       var b = document.createElement('button'); b.className = 'rspot'; b.style.left = sp.x + '%'; b.style.top = sp.y + '%';
       if (sp.night) { var hh = new Date().getHours(); if (hh >= 5 && hh < 19) return; }
@@ -253,9 +254,19 @@
     v.addEventListener('click', function (e) { if (moved > 8) e.stopPropagation(); }, true);
     addEventListener('resize', function () { if ($('room').classList.contains('on')) roomFit(50); });
   })();
+  // 11/27 진짜 방탈출: 문제마다 먼저 찾아야 할 단서(BN.NEED[문제] = { c: [단서 키…], say: 대사 })
+  function needClues(name) {
+    var N = (BN.NEED || {})[name]; if (!N) return false;
+    var C = S.clues || {}, got = N.c.filter(function (k) { return C[k]; }).length; if (got >= N.c.length) return false;
+    talk([Array.isArray(N.say) ? N.say : ['asaph', 0, N.say || '아직은 알 수 없다. 이 방을 더 살펴보아라.'], ['narr', null, '(이 문제에 필요한 단서 ' + got + ' / ' + N.c.length + ')']]);
+    return true;
+  }
+  BN.hasClue = function (k) { return !!(S.clues || {})[k]; };
   function act(R, sp, el) {
     var a = sp.act.split(':');
     if (a[0] === 'talk') talk(R.talks[a[1]]);
+    else if (a[0] === 'clue') { if (sp.need && !has(sp.need)) return toast('너무 어두워 잘 보이지 않는다'); S.clues = S.clues || {}; if (!S.clues[a[1]]) { S.clues[a[1]] = 1; if (sp.note) S.notes.push({ text: sp.note, ref: sp.ref || '' }); save(); sfx('ok'); toast('🔎 ' + (sp.msg || '단서를 찾았어요') + (sp.note ? ' — 수첩에 적었어요' : '')); el.remove(); if (sp.say) talk(sp.say); } }
+    else if (a[0] === 'puzzle' && needClues(a[1])) return;
     else if (a[0] === 'puzzle') { if (PUZZLES[a[1]] || PZ_EXTRA[a[1]]) (PUZZLES[a[1]] || PZ_EXTRA[a[1]])(R); else BN.PZ[a[1]](R, API); }
     else if (a[0] === 'room') enterRoom(a[1]);
     else if (a[0] === 'sheep') sheepBleat2(+a[1], el);
@@ -327,7 +338,7 @@
   var __oldHint = function () {
     if (!cur || !$('room').classList.contains('on')) return toast('장소 안에서 힌트를 볼 수 있어요');
     var H2 = (BN.HINTS || {})[cur]; if (!H2) return toast('이 장소의 힌트는 준비 중이에요');
-    var used = (S.hints = S.hints || {})[cur] || 0, cost = [3, 7, 10];
+    var used = (S.hints = S.hints || {})[cur] || 0, cost = [5, 10, 15];
     var html = H2.slice(0, used).map(function (h, i) { return '<div class="note">' + (i + 1) + '단계: ' + h + '</div>'; }).join('');
     if (used < H2.length) html += '<button class="btn gold" id="hintMore">' + (used + 1) + '단계 힌트 보기 (+' + cost[used] + '분)</button>';
     modal('힌트', html);
@@ -884,16 +895,16 @@
     ['astro', 'magi', '3장 박사 천막', '🧭 실제로 별 겨누기', '폰을 남서쪽으로 향하고 윗부분을 55° 들어 2초. 화면의 방향이 실제 나침반과 맞는지.'],
     ['bow', 'worship', '4장 그 집 안', '🙇 엎드려 경배', '화면이 바닥을 보게 폰을 엎어 5초. 끝나면 진동이 오는지.'],
     ['lamp', 'dream', '5장 요셉의 꿈', '💨 등잔 불어 끄기', '마이크에 「후—」 길게 불어 등잔을 꺼요.'],
-    ['bells', 'dawn', '5장 새벽 길', '🔔 흔들어 방울 울리기', '폰을 흔들어 방울을 세 번(아이폰은 「흔들기 켜기」를 먼저).'],
     ['chorus', 'angel', '1장 들판 위 하늘', '🎵 천군 가락 따라 하기', '소리가 나는지(무음 모드 끄기), 가락을 듣고 따라 누르기 편한지.'],
     ['h', '✋ 손 감각(폰에서 느낌 확인)'],
     ['herd', 'field', '1장 들판', '🐑 양 몰기', '손가락으로 양 7마리를 60초 안에 우리로. 너무 어렵거나 쉬운지.'],
-    ['stealth', 'escape', '5장 골목', '🏮 실시간 잠입', '등불을 피해 나귀를 끌어요. 등불 속도가 적당한지.'],
-    ['route', 'dawn', '5장 새벽 길', '✍ 애굽 길 그리기', '손가락을 떼지 않고 길을 그어요(💧힌트에 길이 있어요).']
+    ['stealth', 'escape', '5장 골목', '🏮 실시간 잠입', '한 칸씩 움직여 성문까지. 규칙: 나귀가 한 걸음 가거나 기다릴 때마다 등불이 오른쪽으로 한 칸 돈다. 너무 어렵거나 쉬운지.'],
+    ['route', 'dawn', '5장 새벽 길', '✍ 애굽 길 그리기', '손가락을 떼지 않고 길을 그어요(💧힌트에 길이 있어요).'],
+    ['stars3', 'roof', '3장 왕궁 지붕', '✨ 별자리 선 긋기', '별과 별을 손가락으로 이어요. 선이 잘 그어지는지.']
   ];
   function ptRun(k) {
     var it = PT_LIST.filter(function (x) { return x[0] === k; })[0]; if (!it) return;
-    ptCur = k; S.f3 = S.f3 || {}; S.f4 = S.f4 || {}; S.f5 = S.f5 || {}; delete S.f3.astro; delete S.f4.bow; delete S.f5.lamp; S.walked = 0; S.herded = 0; S.psalmOk = 1; S.seenIntro[it[1]] = 1; save();
+    ptCur = k; S.f3 = S.f3 || {}; S.f4 = S.f4 || {}; S.f5 = S.f5 || {}; delete S.f3.astro; delete S.f4.bow; delete S.f5.lamp; S.walked = 0; S.herded = 0; S.psalmOk = 1; S.f1 = S.f1 || {}; S.f1.chord = 1; S.seenIntro[it[1]] = 1; save();
     closeModal(); enterRoom(it[1]); $('dialog').hidden = true;
     setTimeout(function () {
       $('dialog').hidden = true; var R = BN.ROOMS[it[1]];
@@ -921,5 +932,5 @@
   }
   if (BN.hook) BN.hook({ S: function () { return S; }, save: save, toast: toast, cur: function () { return $('room').classList.contains('on') ? cur : ''; } });
   if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname) && /debug/.test(location.search)) document.body.classList.add('dbg');
-  if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__bn = { get S() { return S; }, resultImage: resultImage, enterRoom: enterRoom, enterMap: enterMap, PUZZLES: PUZZLES, solveNow: function () { solve(BN.ROOMS[cur]); }, sheep: function () { return sheepData(); }, give: function (k) { if (S.items.indexOf(k) < 0) S.items.push(k); save(); } };
+  if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) window.__bn = { allClues: function () { S.clues = Object.assign(S.clues || {}, BN.__allClues ? BN.__allClues() : {}); save(); }, get S() { return S; }, resultImage: resultImage, enterRoom: enterRoom, enterMap: enterMap, PUZZLES: PUZZLES, solveNow: function () { solve(BN.ROOMS[cur]); }, sheep: function () { return sheepData(); }, give: function (k) { if (S.items.indexOf(k) < 0) S.items.push(k); save(); } };
 })();

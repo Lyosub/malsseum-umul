@@ -65,7 +65,7 @@
     var S = A.S(); if (S.herded) return BN.runPuzzle('field', R);
     var W = 300, H = 300, cv = A.el('canvas', 'herd-cv'); cv.width = 600; cv.height = 600;
     var w = A.el('div', 'herd-pz');
-    w.appendChild(A.el('p', 'tiny-note', '목자들은 밤을 넷으로 나눠 지켰다. 양마다 단 방울 무늬(🌆 저물 때 · 🌑 밤중 · 🐓 닭 울 때 · 🌅 새벽)를 보고, 그 경점에 맞는 시각이 붙은 우리로 몰아넣으세요. 양은 손가락을 피해 달아나요. 틀린 우리에 들어가면 뛰쳐나와요.'));
+    w.appendChild(A.el('p', 'tiny-note', '목자들은 밤을 넷으로 나눠 지켰다. 양마다 단 방울 무늬를 보고, 그 경점에 맞는 시각이 붙은 우리로 몰아넣으세요. 양은 손가락을 피해 달아나고, 틀린 우리에 들어가면 뛰쳐나와요.'));
     w.appendChild(cv); var st = A.el('p', 'aim-read', ''); w.appendChild(st);
     var PW = 66, PH = 78, GATE = 30, pens = PEN_ORDER.map(function (b, i) { return { x: 9 + i * 72, b: b, n: 0, flash: 0 }; });
     var sheep = [], fin = null, alive = true, ctx = cv.getContext('2d'), r = A.seedRnd(73), pops = [];
@@ -136,7 +136,7 @@
   BN.PZ.stealth = function (R, A) {
     var C = 40, W = SC * C, H = SR * C, cv = A.el('canvas', 'st-cv'); cv.width = W * 2; cv.height = H * 2;
     var w = A.el('div', 'st-pz');
-    w.appendChild(A.el('p', 'tiny-note', '나귀가 한 칸 움직일 때마다(기다려도) 순찰꾼은 등불을 <b>시계 방향으로 한 칸</b> 돌려요. 노란 칸은 지금 비치는 곳, <b>점선 칸은 다음 차례에 비칠 곳</b>. 움직인 칸이 비치면 들켜요. 몇 수 앞을 내다보고 ✦ 성문까지!'));
+    w.appendChild(A.el('p', 'tiny-note', '노란 칸은 지금 등불이 비치는 곳. 움직인 칸이 비치면 들켜요. 순찰꾼이 등불을 어떻게 돌리는지는 순찰 기록(수첩)을 보세요. 몇 수 앞을 내다보고 ✦ 성문까지!'));
     w.appendChild(cv);
     var pad = A.el('div', 'st-pad'); pad.innerHTML = '<button data-d="N">▲</button><div><button data-d="W">◀</button><button data-d="0" class="wait">⏸ 기다리기</button><button data-d="E">▶</button></div><button data-d="S">▼</button>';
     w.appendChild(pad);
@@ -165,16 +165,12 @@
       ctx.fillStyle = '#ffe2a0'; ctx.font = '700 18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('✦', gx, gy - 4); ctx.font = '700 9px sans-serif'; ctx.fillText('성문', gx, gy + 11);
       // 지금 비치는 곳 · 다음에 비칠 곳
       Object.keys(now).forEach(function (k) { var a = k.split(',').map(Number); var x = a[1] * C, y = a[0] * C; var rg2 = ctx.createRadialGradient(x + C / 2, y + C / 2, 4, x + C / 2, y + C / 2, C * .75); rg2.addColorStop(0, 'rgba(255,214,120,.62)'); rg2.addColorStop(1, 'rgba(255,190,90,.25)'); ctx.fillStyle = rg2; ctx.fillRect(x + 1, y + 1, C - 2, C - 2); });
-      ctx.setLineDash([4, 3]); ctx.strokeStyle = 'rgba(255,226,150,.85)'; ctx.lineWidth = 1.5;
-      Object.keys(nxt).forEach(function (k) { if (now[k]) return; var a = k.split(',').map(Number); ctx.strokeRect(a[1] * C + 4, a[0] * C + 4, C - 8, C - 8); });
-      ctx.setLineDash([]);
       // 순찰꾼
       SG.forEach(function (g) {
         var x = g.c * C + C / 2, y = g.r * C + C / 2, d = SD[g.p[t % 4]];
         ctx.fillStyle = 'rgba(20,14,8,.85)'; ctx.beginPath(); ctx.arc(x, y, 14, 0, 7); ctx.fill(); ctx.strokeStyle = '#ffcf7a'; ctx.lineWidth = 1.5; ctx.stroke();
         ctx.font = '16px serif'; ctx.fillText('🏮', x, y + 1);
         ctx.fillStyle = '#ffcf7a'; ctx.beginPath(); var ax = x + d[1] * 17, ay = y + d[0] * 17; ctx.moveTo(ax + d[1] * 6, ay + d[0] * 6); ctx.lineTo(ax - d[0] * 5, ay + d[1] * 5); ctx.lineTo(ax + d[0] * 5, ay - d[1] * 5); ctx.fill();
-        ctx.font = '700 9px sans-serif'; ctx.fillStyle = '#ffe2a0'; ctx.fillText('⟳', x + 13, y - 12);
       });
       // 나귀
       ctx.font = '26px serif'; ctx.fillText('🫏', me.c * C + C / 2, me.r * C + C / 2 + 1);

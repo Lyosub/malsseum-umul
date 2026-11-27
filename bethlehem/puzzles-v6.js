@@ -191,13 +191,13 @@
     }
     if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname) || /[?&]phonetest=1/.test(location.search)) BN.__routeOk = function () { bells(); };   // 시험용(로컬·폰 시험)
     function bells() {
-      w.innerHTML = '<p class="tiny-note">먼 길이다. 지친 나귀가 멈춰 섰다. 방울을 세 번 울려 걸음을 깨우세요 — 폰을 흔들어도 되고, 방울을 눌러도 됩니다.</p>';
+      w.innerHTML = '<p class="tiny-note">먼 길이다. 지친 나귀가 멈춰 섰다. 방울을 세 번 울려 걸음을 깨우세요.</p>';
       var bell = A.el('button', 'rt-bell', '🔔'), cnt = A.el('p', 'bow-st', '0 / 3'); w.appendChild(bell); w.appendChild(cnt);
       var lastT = 0;
       function ring() { if (performance.now() - lastT < 350) return; lastT = performance.now(); shook++; cnt.textContent = shook + ' / 3'; bell.classList.remove('ring'); void bell.offsetWidth; bell.classList.add('ring'); A.sfx('ok'); if (shook >= 3) { window.removeEventListener('devicemotion', mot); setTimeout(function () { A.closeModal(); A.solve(R); }, 600); } }
       function mot(e) { var a = e.accelerationIncludingGravity || e.acceleration; if (!a) return; var m = Math.sqrt((a.x || 0) * (a.x || 0) + (a.y || 0) * (a.y || 0) + (a.z || 0) * (a.z || 0)); if (m > 22) ring(); }
       bell.onclick = ring;
-      var DM = window.DeviceMotionEvent; if (DM && typeof DM.requestPermission === 'function') { var p = A.el('button', 'btn ghost', '흔들기 켜기'); p.onclick = function () { DM.requestPermission().then(function (s) { if (s === 'granted') window.addEventListener('devicemotion', mot); }).catch(function () {}); }; w.appendChild(p); } else window.addEventListener('devicemotion', mot);
+      // 11/27: 흔들기는 뺌(5장 폰 동작은 등잔 불기·길 긋기 둘로)
     }
     draw(); A.modal('애굽으로 가는 길', w);
   };
