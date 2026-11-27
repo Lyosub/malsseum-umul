@@ -873,3 +873,6 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 .gd-one { flex-direction: row !important; align-items: center; gap: 10px !important; }
 .gd-one > div { display: flex; flex-direction: column; gap: 2px; }
 .gd-face { flex: none; width: 46px; height: 46px; border-radius: 50%; object-fit: cover; object-position: 50% 4%; background: #2a2440; border: 1.5px solid rgba(232, 183, 90, .6); }
+.room-stage .rspot .bleat-dots em { font-style: normal; font-weight: 800; color: #fff3c8; letter-spacing: 0; margin-right: calc(2px * var(--inv, 1)); }
+.room-stage .rspot .bleat-dots i { font-style: normal; }
+.fd-how { text-align: center; font-size: 13px; margin: 6px 0 0; }

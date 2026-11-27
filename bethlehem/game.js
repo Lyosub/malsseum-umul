@@ -909,10 +909,11 @@
     // 11/27: 한 번에 한 울음씩(겹치지 않게) 「메에~」 말풍선이 뜨고, 발밑에 ● 가 하나씩 쌓인다 — 운 횟수를 또렷하게 센다
     if (bleating[i]) return; bleating[i] = 1;
     var n = sheepData().n[i], k = 0; document.querySelectorAll('.bleat-dots').forEach(function (o) { o.remove(); });   /* 양끼리 가까워 ● 줄이 겹치지 않게, 마지막에 누른 양 것만 */
-    var dots = el('span', 'bleat-dots', ''); spot.appendChild(dots);
+    var BN4 = ['저물 때', '밤중', '닭 울 때', '새벽'], bi = sheepData().bell[i];
+    var dots = el('span', 'bleat-dots', '<em>' + BELLS[bi] + ' ' + BN4[bi] + '</em> <i></i>'); spot.appendChild(dots); var dd = dots.querySelector('i'); toast(BELLS[bi] + ' 「' + BN4[bi] + '」 방울을 단 양 — 몇 번 우는지 세어 보세요');
     (function one() {
       if (k >= n) { bleating[i] = 0; setTimeout(function () { dots.classList.add('fade'); setTimeout(function () { dots.remove(); }, 700); }, 2600); return; }
-      k++; dots.textContent += '●';
+      k++; dd.textContent += '●';
       var rip = el('span', 'bleat', '메에~'); spot.appendChild(rip); setTimeout(function () { rip.remove(); }, 620);
       if (soundOn) try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); var t = actx.currentTime, o = actx.createOscillator(), g2 = actx.createGain(), lfo = actx.createOscillator(), lg = actx.createGain(); o.type = 'sawtooth'; o.frequency.value = 480 + i * 40; lfo.frequency.value = 14; lg.gain.value = 40; lfo.connect(lg); lg.connect(o.frequency); g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(.07, t + .05); g2.gain.linearRampToValueAtTime(0, t + .45); o.connect(g2); g2.connect(actx.destination); o.start(t); lfo.start(t); o.stop(t + .5); lfo.stop(t + .5); } catch (e) {}
       setTimeout(one, 780);
@@ -927,6 +928,9 @@
     $('fdOk').onclick = function () { if (locked('field')) return; if (!v.every(function (x, i) { return x === code[i]; })) return wrong('field', '딸깍… 아니에요'); sfx('ok'); dialPuzzle(R, w); };
   };
   function dialPuzzle(R, w) {
+    (function () { var mb = $('modalBody'), wy = mb.querySelector('.why'), tk = mb.querySelector('.think'), sen = BN.sen || function (x) { return x; };
+      if (wy) wy.innerHTML = sen('딸깍, 상자가 열렸다. 안에는 밤하늘을 새긴 둥근 원판이 들어 있고, 바깥 테두리에 금 눈금 넷이 박혀 있다.');
+      if (tk) tk.innerHTML = sen('[ 큰 별도 넷, 눈금도 넷… 원판을 돌려서 별을 눈금에 하나씩 앉혀 볼까? ]'); })();
     var r = seedRnd(55), off = 40 + Math.floor(r() * 280), A = [15, 100, 170, 265];
     w.innerHTML = '<svg viewBox="-160 -160 320 320" style="width:100%;max-height:56vh;touch-action:none" id="fdSky"><defs><filter id="g2"><feGaussianBlur stdDeviation="2"/></filter></defs><circle r="158" fill="#0b1230" stroke="#6b5226" stroke-width="3"/><g id="fdDisc">' +
       Array.from({ length: 110 }, function () { var a = r() * 6.283, dd = 10 + r() * 125; return '<circle cx="' + (Math.cos(a) * dd).toFixed(1) + '" cy="' + (Math.sin(a) * dd).toFixed(1) + '" r="' + (r() * 1.6 + .3).toFixed(1) + '" fill="#fff" opacity=".75"/>'; }).join('') +
@@ -934,6 +938,7 @@
       A.map(function (a) { var ang = (a + off - 90) * Math.PI / 180; return '<line x1="' + (Math.cos(ang) * 132).toFixed(1) + '" y1="' + (Math.sin(ang) * 132).toFixed(1) + '" x2="' + (Math.cos(ang) * 156).toFixed(1) + '" y2="' + (Math.sin(ang) * 156).toFixed(1) + '" stroke="#e8b75a" stroke-width="5" stroke-linecap="round"/>'; }).join('') + '</svg>';
     var rot = 0, start = null, svg = $('fdSky'), disc = $('fdDisc'), solved = false;
     svg.addEventListener('pointerdown', function (e) { start = { x: e.clientX, rot: rot }; svg.setPointerCapture(e.pointerId); });
+    w.appendChild(el('p', 'gen-help fd-how', '원판을 손가락으로 옆으로 끌어 돌려요. 큰 별 넷이 금 눈금 넷에 다 앉으면 손을 떼고 2초 그대로.'));
     var hold = null, bar = el('div', 'fd-hold', '<i></i><span>별이 눈금에 앉았다… 그대로 두세요</span>'); w.appendChild(bar);
     function aligned() { return Math.abs(((rot - off) % 360 + 540) % 360 - 180) < 4; }
     function check() {
