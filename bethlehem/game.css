@@ -809,3 +809,34 @@ html, body { word-break: keep-all; overflow-wrap: break-word; }
 .fd-hold.on { opacity: 1; }
 .fd-hold.on i::after { animation: fdFill 2s linear forwards; }
 @keyframes fdFill { to { width: 100%; } }
+/* 11/27 마구간 v3: 돌문 + 굴 안 표적 가려내기 */
+.mg-door { display: flex; flex-direction: column; gap: 8px; }
+.mg-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 233, 168, .07); border: 1px solid rgba(232, 183, 90, .3); }
+.mg-q { flex: 1; font-family: var(--serif); font-size: 14px; line-height: 1.45; color: #f3e4bf; }
+.mg-dial { display: flex; align-items: center; gap: 4px; flex: none; }
+.mg-dial .btn { padding: 4px 8px; min-width: 34px; font-size: 13px; }
+.mg-dial b { min-width: 30px; text-align: center; font-size: 22px; color: #ffe9a8; }
+.mg-sketch { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(243, 228, 191, .1); border: 1px dashed rgba(232, 183, 90, .5); font-size: 12.5px; color: #f3e4bf; flex-wrap: wrap; }
+.mg-sketch b { font-family: var(--serif); }
+.mg-sg { display: grid; grid-template-columns: repeat(3, 26px); gap: 3px; }
+.mg-sg span { height: 22px; border: 1px solid rgba(232, 183, 90, .55); border-radius: 4px; text-align: center; line-height: 21px; font-size: 13px; }
+.mg-sketch small { flex-basis: 100%; opacity: .8; }
+.mg-cave { position: relative; margin-top: 8px; border-radius: 12px; overflow: hidden; }
+.mg-cave img { width: 100%; display: block; filter: brightness(.22) saturate(.6); }
+.mg-grid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 4px; padding: 4px; }
+.mg-nook { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px; border-radius: 10px; border: 1px dashed rgba(255, 226, 150, .35); text-align: center; cursor: pointer; }
+.mg-nook.lit { border: 1px solid rgba(255, 226, 150, .9); background: radial-gradient(circle, rgba(255, 214, 130, .55), rgba(120, 70, 20, .55) 75%); box-shadow: inset 0 0 18px rgba(255, 220, 140, .45); }
+.mg-q2 { font-size: 22px; color: rgba(255, 233, 168, .45); }
+.mg-e { font-size: 24px; line-height: 1; }
+.mg-t { font-size: 10.5px; line-height: 1.3; color: #fff8e6; text-shadow: 0 1px 3px #000; }
+.btn.mg-pick { padding: 3px 10px; font-size: 12px; margin-top: 2px; }
+.mg-cry { position: absolute; top: 2px; transform: translateX(-50%); font: 700 13px var(--serif); color: #ffe9c0; text-shadow: 0 0 8px rgba(255, 220, 160, .9); opacity: 0; pointer-events: none; }
+.mg-cry.on { animation: mgCry 2.2s ease-out; }
+@keyframes mgCry { 0% { opacity: 0; transform: translate(-50%, 6px); } 25% { opacity: .95; } 100% { opacity: 0; transform: translate(-50%, -4px); } }
+.mg-in, .mg-out { position: absolute; left: 6px; font-size: 10px; color: rgba(255, 233, 168, .6); pointer-events: none; }
+.mg-in { top: 4px; } .mg-out { bottom: 4px; }
+.mg-oil { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; color: #f3e4bf; }
+.mg-oil b { flex: 1; letter-spacing: 3px; color: #ffcf6a; }
+.mg-cave img { height: 310px; object-fit: cover; }
+.mg-t { font-size: 11px; }
+.mg-sg { grid-template-columns: repeat(3, 32px); } .mg-sg span { height: 26px; line-height: 25px; font-size: 15px; }

@@ -926,18 +926,76 @@
   // 7 마구간 v2: 등잔 기름이 닳는다. 다 쓰면 올리브 기름 단지로 채운다
   var __manger1 = PUZZLES.manger;
   PUZZLES.manger = function (R) {
+    // 11/27 v3: ① 굴 입구 돌문 — 1장에서 지나온 숫자 넷(성문 14 · 우물 7 · 부엌 4 · 여관 빈방 0)
+    //           ② 굴 안 — 등잔 기름은 세 번. 벽에 긁힌 굴 그림(짐승 먹이는 자리)과 아기 울음이 들린 줄을 맞춰 비출 곳을 고르고, 천사가 말한 표적(눅 2:12)이 다 맞는 곳을 고른다
     if (!has('lamp')) return talk([['gilead', 1, '아무것도 안 보여요…']]);
-    __manger1(R);
-    S.lampOil = S.lampOil === undefined ? 100 : S.lampOil;
-    var bar = el('div', ''); bar.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span>🪔</span><div style="flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden"><i id="oilBar" style="display:block;height:100%;width:' + S.lampOil + '%;background:linear-gradient(90deg,#f2994a,#ffe08a)"></i></div><button class="btn ghost" id="oilFill" style="padding:6px 10px">기름 채우기</button></div>';
-    $('modalBody').appendChild(bar);
-    var box = $('mgBox'), told = 0;
-    function burn() { S.lampOil = Math.max(0, S.lampOil - 0.8); $('oilBar').style.width = S.lampOil + '%'; if (S.lampOil <= 0 && Date.now() - told > 3000) { told = Date.now(); toast('등잔 기름이 다 떨어졌어요'); } }
-    // 부모(상자)에서 먼저 가로채야 캔버스의 「비추기」보다 앞선다
-    box.addEventListener('pointerdown', function (e) { if (S.lampOil <= 0 && e.target.id === 'mgDark') { e.stopPropagation(); if (Date.now() - told > 3000) { told = Date.now(); toast('등잔 기름이 없어요'); } } }, true);
-    box.addEventListener('pointermove', function (e) { if (e.target.id !== 'mgDark') return; if (S.lampOil <= 0) { e.stopPropagation(); return; } if (e.buttons || e.pointerType === 'touch') burn(); }, true);
-    $('oilFill').onclick = function () { if (!has('oil')) return toast('채울 기름이 없어요'); if (BN.oilCarry && !$('oilFill').dataset.go) { $('oilFill').dataset.go = 1; return BN.oilCarry(function () { $('oilFill').dataset.go = ''; S.lampOil = 100; $('oilBar').style.width = '100%'; save(); toast('등잔에 기름을 가득 채웠어요'); }); } S.lampOil = 100; $('oilBar').style.width = '100%'; save(); toast('등잔에 기름을 가득 채웠어요'); };
+    S.f1 = S.f1 || {};
+    if (!S.f1.door) return mgDoor(R);
+    mgCave(R);
   };
+  var DOOR = [['돌아온 숫자 — 다윗의 집 명부에 떠오른 수', 14], ['다윗이 그리워한 우물, 두레박 줄의 길이(규빗)', 7], ['두 손님의 등잔에 똑같이 나눈 기름(되)', 4], ['그 밤, 여관에 남은 빈방', 0]];
+  function mgDoor(R) {
+    var v = [0, 0, 0, 0], w = el('div', 'gen-wrap');
+    w.innerHTML = '<div class="mg-door">' + DOOR.map(function (d, i) { return '<div class="mg-row"><span class="mg-q">' + (i + 1) + '. 「' + d[0] + '」</span><span class="mg-dial"><button class="btn ghost" data-d="' + i + '" data-s="-1">▼</button><b id="mgV' + i + '">0</b><button class="btn ghost" data-d="' + i + '" data-s="1">▲</button></span></div>'; }).join('') + '</div><button class="btn gold block" id="mgOpen" style="margin-top:10px">돌문 밀기</button>';
+    modal('굴 입구 돌문', w);
+    w.querySelectorAll('[data-d]').forEach(function (b) { b.onclick = function () { var i = +b.dataset.d; v[i] = (v[i] + +b.dataset.s + 21) % 21; $('mgV' + i).textContent = v[i]; }; });
+    $('mgOpen').onclick = function () {
+      if (locked('stable')) return;
+      if (!v.every(function (x, i) { return x === DOOR[i][1]; })) return wrong('stable', '돌문이 꿈쩍도 하지 않는다');
+      S.f1.door = 1; save(); sfx('ok'); closeModal(); toast('쿠르릉… 돌문이 옆으로 밀려난다'); setTimeout(function () { mgCave(R); }, 900);
+    };
+  }
+  function caveLayout() {
+    var r = seedRnd(81), c = Math.floor(r() * 3), aRow = r() < .5 ? 0 : 1, A = aRow * 3 + c, D = (1 - aRow) * 3 + c;
+    var rest = [0, 1, 2, 3, 4, 5].filter(function (k) { return k % 3 !== c; });
+    for (var q = rest.length - 1; q > 0; q--) { var t = Math.floor(r() * (q + 1)), x = rest[q]; rest[q] = rest[t]; rest[t] = x; }
+    var L = {}; L[A] = 'A'; L[D] = 'D'; L[rest[0]] = 'T'; L[rest[1]] = 'G'; L[rest[2]] = 'N'; L[rest[3]] = 'H';
+    return { c: c, A: A, aRow: aRow, L: L, feed: [A, D, rest[0]] };
+  }
+  BN.caveAns = function () { var o = caveLayout(); return ['왼쪽', '가운데', '오른쪽'][o.c] + ' 줄의 ' + (o.aRow ? '입구 쪽' : '안쪽') + ' 구유'; };
+  var NOOK = {
+    A: ['👶', '짚 구유 · 강보에 싸인 아기 · 곁에 마리아와 요셉'],
+    D: ['🧺', '짚 구유 · 비어 있음 · 곁 줄에 강보 천만'],
+    T: ['🐑', '구유 · 잠든 새끼 양'],
+    G: ['✨', '금빛 그릇과 비단 천(아까 반짝인 것)'],
+    N: ['🫏', '나귀 짐과 물 항아리'],
+    H: ['🌾', '마른 짚더미']
+  };
+  function mgCave(R) {
+    var o = caveLayout(); S.mgLit = S.mgLit || []; if (S.mgOil === undefined) S.mgOil = 3;
+    var w = el('div', 'gen-wrap');
+    w.innerHTML = '<div class="mg-sketch"><b>벽에 긁힌 굴 그림</b><div class="mg-sg">' + [0, 1, 2, 3, 4, 5].map(function (k) { return '<span>' + (o.feed.indexOf(k) >= 0 ? '🐾' : '') + '</span>'; }).join('') + '</div><small>🐾 짐승 먹이는 자리 · 위가 굴 안쪽</small></div>' +
+      '<div class="mg-cave" id="mgCave"><img src="img/places/stable.webp" alt=""><div class="mg-grid" id="mgGrid"></div><span class="mg-cry" id="mgCry">응애…</span><span class="mg-in">안쪽</span><span class="mg-out">입구</span></div>' +
+      '<div class="mg-oil"><span>🪔 남은 기름</span><b id="mgOil"></b><button class="btn ghost" id="mgFill" style="padding:6px 10px">기름 채우기</button></div>';
+    modal('바위 굴 안', w);
+    var cry = $('mgCry'); cry.style.left = ((o.c + .5) / 3 * 100) + '%';
+    var ct = setInterval(function () { if (!cry.isConnected) return clearInterval(ct); cry.classList.remove('on'); void cry.offsetWidth; cry.classList.add('on'); }, 3600);
+    setTimeout(function () { cry.classList.add('on'); }, 500);
+    function draw() {
+      $('mgOil').textContent = '●'.repeat(S.mgOil) + '○'.repeat(Math.max(0, 3 - S.mgOil));
+      var g = $('mgGrid'); g.innerHTML = '';
+      [0, 1, 2, 3, 4, 5].forEach(function (k) {
+        var lit = S.mgLit.indexOf(k) >= 0, n = NOOK[o.L[k]], b = el('div', 'mg-nook' + (lit ? ' lit' : ''));
+        b.innerHTML = lit ? '<span class="mg-e">' + n[0] + '</span><span class="mg-t">' + n[1] + '</span><button class="btn gold mg-pick" data-k="' + k + '">여기다</button>' : '<span class="mg-q2">?</span>';
+        b.onclick = function (e) {
+          if (e.target.classList.contains('mg-pick')) { if (locked('stable')) return; if (k === o.A) { sfx('ok'); S.mgLit = []; save(); setTimeout(function () { closeModal(); solve(R); }, 500); } else wrong('stable', '천사가 말한 표적과 다르다 — 강보에 싸여 구유에 뉘어 있는 아기'); return; }
+          if (lit) return;
+          if (S.mgOil <= 0) return toast('등잔 기름이 다 떨어졌어요 — 「기름 채우기」');
+          S.mgOil--; S.mgLit.push(k); save(); draw();
+        };
+        g.appendChild(b);
+      });
+    }
+    draw();
+    $('mgFill').onclick = function () {
+      if (S.mgOil >= 3) return toast('등잔에 기름이 넉넉해요');
+      if (!has('oil')) return toast('채울 기름이 없어요 — 여관 부엌의 큰 항아리에서 덜어 와야 해요');
+      var done = function () { S.mgOil = 3; save(); draw(); toast('등잔에 기름을 채웠다'); };
+      if (BN.oilCarry && !$('mgFill').dataset.go) { $('mgFill').dataset.go = 1; return BN.oilCarry(function () { if ($('mgFill')) $('mgFill').dataset.go = ''; if ($('mgGrid')) done(); else { S.mgOil = 3; save(); } }); }
+      done();
+    };
+    if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BN.__cave = o;
+  }
 
   // 다시 들어왔을 때
   if (S && S.nick && S.opening) { /* 첫 화면에서 「이어 하기」를 누르면 지도로 */ }
