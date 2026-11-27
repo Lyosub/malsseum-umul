@@ -676,7 +676,7 @@
   function ripple(e) { var r = el('span', 'tapfx'); r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px'; document.body.appendChild(r); setTimeout(function () { r.remove(); }, 600); }
   var LOCK = {};
   function locked(k) { var t = LOCK[k]; if (t && t.until > Date.now()) { toast('자물쇠가 잠시 굳었어요 — ' + Math.ceil((t.until - Date.now()) / 1000) + '초 뒤에 다시'); return true; } return false; }
-  function wrong(k, msg) { S.wrongs = (S.wrongs || 0) + 1; S.wrongBy = S.wrongBy || {}; S.wrongBy[k] = (S.wrongBy[k] || 0) + 1; var t = LOCK[k] = LOCK[k] || { n: 0, until: 0 }; t.n++; sfx('no'); if (t.n >= 3) { t.n = 0; t.until = Date.now() + 30000; toast('세 번 틀려서 30초 동안 잠겨요'); } else toast(msg || '아니에요'); }
+  function wrong(k, msg) { S.wrongs = (S.wrongs || 0) + 1; S.wrongBy = S.wrongBy || {}; S.wrongBy[k] = (S.wrongBy[k] || 0) + 1; var t = LOCK[k] = LOCK[k] || { n: 0, until: 0 }; t.n++; sfx('no'); if (t.n >= 3) { t.n = 0; t.until = Date.now() + 60000; toast('세 번 틀려서 1분 동안 잠겨요'); } else toast(msg || '아니에요'); }
   function oilInit() { S.oil = S.oil || {}; if (S.oil[S.ch] === undefined) S.oil[S.ch] = (BN.OIL || {})[S.ch] || 6; }
   function hintOil() {
     if (!cur || !$('room').classList.contains('on')) return toast('장소 안에서 힌트를 볼 수 있어요');
