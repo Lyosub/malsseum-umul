@@ -654,11 +654,47 @@ body:has(#dialog:not([hidden])) .pt-fab, body:has(#modal:not([hidden])) .pt-fab,
 .ord-btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
 .ord-b { padding: 8px 11px; border-radius: 10px; border: 1px solid var(--rim); background: rgba(255, 255, 255, .06); color: inherit; font: 600 14px var(--serif); }
 .diff-pz .df-mark { display: flex; align-items: center; justify-content: center; color: #ffe27a; font: 700 15px var(--serif); text-shadow: 0 0 6px #000; }
-/* 11/27 하는 법 설명은 화면에 안 보이고 힌트 1단계에(폰 시험에서는 보임) */
-.howto { display: none !important; }
-body.pt .howto { display: block !important; }
 /* 11/27 왜 하는지(이야기) — 모든 퍼즐 창 맨 위 */
 .why { margin: 0 0 10px; padding: 8px 12px; border-left: 3px solid var(--gold, #e8b75a); background: rgba(244, 230, 196, .07); border-radius: 0 8px 8px 0; font-family: var(--serif); font-size: 14px; line-height: 1.6; color: #efe3c4; }
-.diff-pz .tiny-note.howto { display: block !important; font-size: 0; margin: 0 0 4px; text-align: right; }
-.diff-pz .tiny-note.howto .df-n { font-size: 13px; }
-body.pt .diff-pz .tiny-note.howto { font-size: 12px; text-align: left; }
+.how-free { border-color: #6fa8d6 !important; background: rgba(95, 178, 255, .08) !important; }
+.how-free b { color: #9fd3ff; }
+/* 11/27 퀘스트 저널 */
+.jr-btn { pointer-events: auto; font-size: 16px; line-height: 1; padding: 6px 8px; border-radius: 10px; background: var(--glass); border: 1px solid #e8b75a; white-space: nowrap; }
+#hud .hud-l .hud-ch { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jr-tabs { display: flex; gap: 8px; margin-bottom: 10px; border-bottom: 1px solid var(--rim); padding-bottom: 10px; }
+.jr-tabs button { padding: 8px 14px; border-radius: 10px; border: 0; background: transparent; color: #e9dcb8; font: 700 14px var(--sans); }
+.jr-tabs button.on { background: #f2b630; color: #1a1408; }
+.jr-sum { font-size: 13px; color: var(--stone); margin: 0 0 8px; }
+.jr-card { border: 1px solid rgba(232, 183, 90, .35); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; background: rgba(8, 12, 30, .55); }
+.jr-card small { color: #f2b630; font-weight: 800; font-size: 12px; }
+.jr-card > b { display: block; font-size: 16px; margin: 4px 0; }
+.jr-card p { margin: 4px 0; font-size: 13.5px; line-height: 1.55; color: #e5dccb; }
+.jr-card .jr-next { color: #ffe08a; font-weight: 700; }
+.jr-card summary { cursor: pointer; color: #f2b630; font-weight: 800; font-size: 14px; }
+.jr-done { padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, .08); font-size: 13px; line-height: 1.5; }
+.jr-done b { display: block; } .jr-done span { color: #cfc4ad; } .jr-done em { display: block; font-style: normal; color: #f2b630; font-size: 12px; margin-top: 2px; }
+.jr-note { padding: 7px 0; border-top: 1px solid rgba(255, 255, 255, .08); font-size: 13px; line-height: 1.55; }
+.jr-note em { display: block; font-style: normal; color: #f2b630; font-size: 12px; }
+.jr-q { padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, .08); font-size: 13.5px; }
+.jr-q b { display: block; margin-bottom: 6px; } .jr-q div { display: flex; flex-wrap: wrap; gap: 6px; }
+.jr-q div button { padding: 7px 11px; border-radius: 9px; border: 1px solid var(--rim); background: rgba(255, 255, 255, .06); color: inherit; font: 600 13px var(--sans); }
+.jr-q small { display: block; margin-top: 6px; color: #9fd3ff; font-size: 12px; } .jr-q.done span { color: #f2b630; font-size: 12.5px; }
+.jr-h { color: #f2b630; font-weight: 800; margin: 12px 0 6px; font-size: 14px; }
+.jr-tl { display: flex; gap: 12px; padding: 8px 10px; border: 1px solid rgba(255, 255, 255, .08); border-radius: 10px; margin-bottom: 6px; font-size: 13px; }
+.jr-tl b { color: #f2b630; min-width: 64px; }
+.jr-story { border-left: 3px solid #f2b630; padding: 4px 0 4px 12px; margin-bottom: 12px; } .jr-story b { color: #ffe2a0; } .jr-story p { margin: 4px 0; font-size: 13.5px; line-height: 1.6; color: #e5dccb; } .jr-story.now { border-left-color: #6fa8d6; }
+.jr-empty { font-size: 13px; color: var(--stone); }
+.jr-float { position: fixed; left: 10px; top: 54px; z-index: 19; width: min(260px, 70vw); padding: 10px 12px; border-radius: 14px; background: rgba(9, 14, 34, .9); border: 1px solid #e8b75a; box-shadow: 0 6px 20px rgba(0, 0, 0, .5); cursor: pointer; }
+.jr-float small { color: #f2b630; font-weight: 800; font-size: 11px; } .jr-float b { display: block; font-size: 14px; margin: 2px 0; } .jr-float p { margin: 2px 0 6px; font-size: 12px; line-height: 1.45; color: #e5dccb; }
+.jr-go { border: 0; background: none; color: #ffe08a; font: 700 12px var(--sans); padding: 0; }
+.spot.pulse .ring { animation: jrPulse 1s ease-in-out infinite; box-shadow: 0 0 0 4px rgba(255, 226, 120, .8); }
+@keyframes jrPulse { 50% { transform: scale(1.25); box-shadow: 0 0 0 10px rgba(255, 226, 120, .2); } }
+body:has(#modal:not([hidden])) .jr-float, body:has(#dialog:not([hidden])) .jr-float { display: none; }
+@media (max-width: 440px) {
+  #hud > div { gap: 4px; }
+  #hud .hud-pill, #hud .hud-time { padding: 4px 6px; font-size: 11.5px; }
+  #hud .hud-btn { padding: 4px 6px; min-width: 0; }
+  #hud .hud-btn img { width: 19px; height: 19px; }
+  #hud .hint-btn { font-size: 11.5px; }
+  .jr-btn { padding: 4px 6px; font-size: 15px; }
+}

@@ -684,8 +684,9 @@
     if (!cur || !$('room').classList.contains('on')) return toast('장소 안에서 힌트를 볼 수 있어요');
     var H2 = BN.HINTS[cur]; if (!H2) return toast('이 장소의 힌트는 준비 중이에요');
     oilInit(); S.hints = S.hints || {};
-    var used = S.hints[cur] || 0, drops = [1, 1, 2], mins = [5, 10, 20], names = ['하는 법 · 어디를 볼까', '어떻게 풀까', '정답'];
+    var used = S.hints[cur] || 0, drops = [1, 1, 2], mins = [5, 10, 20], names = ['어디를 볼까', '어떻게 풀까', '정답'];
     var html = '<p style="margin:0 0 10px">등잔 기름 <b style="color:var(--gold2);font-size:18px">' + '💧'.repeat(Math.max(0, S.oil[S.ch])) + '</b> ' + S.oil[S.ch] + '방울 <span style="opacity:.6">(' + S.ch + '장)</span></p>';
+    var HW = (BN.HOW || {})[cur]; if (HW) html = '<div class="note how-free"><b>❔ 하는 법</b> <small>(기름·시간 안 듦)</small><br>' + HW + '</div>' + html;
     html += H2.slice(0, used).map(function (h, i) { return '<div class="note"><b>' + (i + 1) + '단계 · ' + names[i] + '</b><br>' + h + '</div>'; }).join('');
     if (used < H2.length) {
       var can = S.oil[S.ch] >= drops[used];
@@ -885,6 +886,11 @@
   if (S && S.nick && S.opening) { /* 첫 화면에서 「이어 하기」를 누르면 지도로 */ }
   for (var hk in (BN.HINTS_CH1 || {})) BN.HINTS[hk] = BN.HINTS_CH1[hk];
   BN.runPuzzle = function (name, R) { if (PT && ((ptCur === 'walk' && name === 'roadmap') || (ptCur === 'herd' && name === 'field'))) return ptOk(); (PUZZLES[name] || PZ_EXTRA[name])(R); };
+  // 퀘스트 저널(journal.js)이 쓰는 도구
+  BN.ui = { modal: modal, closeModal: closeModal, toast: toast, sfx: sfx, save: save, unlocked: unlocked, S: function () { return S; },
+    cur: function () { return $('room').classList.contains('on') ? cur : ''; }, screen: function () { var e = document.querySelector('.screen.on'); return e ? e.id : ''; },
+    oilAdd: function (n) { oilInit(); S.oil[S.ch] = (S.oil[S.ch] || 0) + n; save(); },
+    showOnMap: function (id) { closeModal(); leaveRoom(); enterMap(); setTimeout(function () { var s = document.querySelector('#spots .spot[data-id="' + id + '"]'); if (s) { s.classList.add('pulse'); setTimeout(function () { s.classList.remove('pulse'); }, 5000); } }, 700); } };
   // ── 폰 시험 목록
   var ptCur = null;
   function ptOk() { closeModal(); if (ptCur) { S.ptDone = S.ptDone || {}; S.ptDone[ptCur] = 1; save(); } sfx('ok'); toast('✔ 성공! 「📱 시험 목록」에서 다음 것을 해 보세요'); }
