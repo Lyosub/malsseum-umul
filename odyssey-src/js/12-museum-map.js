@@ -764,7 +764,7 @@
   function logStep(q, secs){ if (!msuOn() || (typeof REPLAY !== 'undefined' && REPLAY)) return; MSU.client.rpc('log_odyssey_step', { p_ch: AP().ch + 1, p_step: ST.cur === 'moses' ? q.id : (ST.cur + '/' + q.id).slice(0, 20), p_secs: Math.round(secs), p_dev: DEV }).then(() => {}, () => {}); }
   // 게임 오류를 말씀우물 오류 기록(client_errors)에 — 한 번 켤 때 최대 4건, 같은 메시지는 1번
   (() => { let sent = 0; const seen = new Set();
-    const rep = (msg, stack) => { if (sent >= 4 || !msuOn()) return; const k = String(msg).slice(0, 200); if (seen.has(k) || /ResizeObserver/.test(k)) return; seen.add(k); sent++;
+    const rep = (msg, stack) => { if (sent >= 4 || !msuOn() || /^(localhost|127\.0\.0\.1|\[::1\])?$/.test(location.hostname)) return; const k = String(msg).slice(0, 200); if (seen.has(k) || /ResizeObserver/.test(k)) return; seen.add(k); sent++;
       MSU.client.rpc('log_client_error', { p_page: '/odyssey/', p_message: String(msg || '').slice(0, 1000), p_stack: String(stack || '').slice(0, 4000), p_ua: navigator.userAgent }).then(() => {}, () => {}); };
     window.addEventListener('error', e => rep(e.message || 'script error', (e.error && e.error.stack) || ''));
     window.addEventListener('unhandledrejection', e => { const r = e.reason; rep('unhandledrejection: ' + (r && r.message ? r.message : String(r)), (r && r.stack) || ''); });

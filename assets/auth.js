@@ -521,6 +521,9 @@ function initHeaderAuthState() {
   var sent = 0, seen = {};
   function reportClientError(msg, stack) {
     if (sent >= 6) return;
+    // 내 컴퓨터에서 돌린 시험(localhost·127.0.0.1·파일 열기)은 학생 오류로 세지 않는다(11/28 시험 오류가 헬스체크 경고로 잡힘).
+    var h = location.hostname;
+    if (!h || h === "localhost" || h === "127.0.0.1" || h === "[::1]" || h === "::1") return;
     var page = location.pathname + location.search;
     var key = page + "|" + (msg || "");
     if (seen[key]) return;

@@ -4851,7 +4851,7 @@
   (function () {
     var sent = 0, seen = {}, pend = [];
     function send(msg, stack) {
-      msg = String(msg || 'script error'); if (sent >= 6 || seen[msg]) return; seen[msg] = 1; sent++;
+      msg = String(msg || 'script error'); if (sent >= 6 || seen[msg] || /^(localhost|127\.0\.0\.1|\[::1\])?$/.test(location.hostname)) return; seen[msg] = 1; sent++;
       var go = function () { try { client.rpc('log_client_error', { p_page: location.pathname + location.search, p_message: msg.slice(0, 1000), p_stack: String(stack || '').slice(0, 4000), p_ua: navigator.userAgent }).then(function () {}, function () {}); } catch (e) {} };
       if (typeof client !== 'undefined' && client && client.rpc) go(); else pend.push(go);
     }

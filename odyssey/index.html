@@ -673,7 +673,7 @@
 <div id="ch-fx" class="hidden"><div class="rays"></div><div class="big"><small id="ch-fx-sub"></small><b id="ch-fx-t"></b><i id="ch-fx-n"></i></div><div class="tap">화면을 누르면 넘어가요</div></div>
 
 <!-- three.js r160 + GLTFLoader 번들(외부 CDN 의존 없음). 빌드 시 이 태그가 파일 내용으로 인라인된다. -->
-<script>window.__SCROLL_V={"devtest": "8de79d3a", "moses0": "c9b16a71", "sinai2": "8fcd871c", "wild3": "fc414ee8", "joshua": "b7411739", "judges": "7aa2cf5b", "ruth": "c91bf8d9", "saul": "5ea7d1b8", "david": "f7542afe"};</script>
+<script>window.__SCROLL_V={"devtest": "8de79d3a", "moses0": "c9b16a71", "sinai2": "8fcd871c", "wild3": "fc414ee8", "joshua": "b7411739", "judges": "7aa2cf5b", "ruth": "c91bf8d9", "saul": "7fca7f3e", "david": "f7542afe"};</script>
 <script src="three-bundle.min.js"></script>
 <script>
 (function(){
@@ -8595,7 +8595,7 @@ float wN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); 
   function logStep(q, secs){ if (!msuOn() || (typeof REPLAY !== 'undefined' && REPLAY)) return; MSU.client.rpc('log_odyssey_step', { p_ch: AP().ch + 1, p_step: ST.cur === 'moses' ? q.id : (ST.cur + '/' + q.id).slice(0, 20), p_secs: Math.round(secs), p_dev: DEV }).then(() => {}, () => {}); }
   // 게임 오류를 말씀우물 오류 기록(client_errors)에 — 한 번 켤 때 최대 4건, 같은 메시지는 1번
   (() => { let sent = 0; const seen = new Set();
-    const rep = (msg, stack) => { if (sent >= 4 || !msuOn()) return; const k = String(msg).slice(0, 200); if (seen.has(k) || /ResizeObserver/.test(k)) return; seen.add(k); sent++;
+    const rep = (msg, stack) => { if (sent >= 4 || !msuOn() || /^(localhost|127\.0\.0\.1|\[::1\])?$/.test(location.hostname)) return; const k = String(msg).slice(0, 200); if (seen.has(k) || /ResizeObserver/.test(k)) return; seen.add(k); sent++;
       MSU.client.rpc('log_client_error', { p_page: '/odyssey/', p_message: String(msg || '').slice(0, 1000), p_stack: String(stack || '').slice(0, 4000), p_ua: navigator.userAgent }).then(() => {}, () => {}); };
     window.addEventListener('error', e => rep(e.message || 'script error', (e.error && e.error.stack) || ''));
     window.addEventListener('unhandledrejection', e => { const r = e.reason; rep('unhandledrejection: ' + (r && r.message ? r.message : String(r)), (r && r.stack) || ''); });
