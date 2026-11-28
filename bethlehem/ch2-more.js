@@ -55,7 +55,7 @@
 
   // ════ 오르는 길 · 해시계(제 구 시) + 문양표 비석
   R.climb.spots.push({ id: 'cl_pray', x: 18, y: 56, w: 6, h: 9, act: 'clue:pray', msg: '길가 돌에 기도 시간이 새겨져 있다', note: '오르는 길 돌 — 「제 구 시 기도 시간에 … 성전에 올라갈새」(행 3:1). 성전 위 문은 기도 시간에 열린다.' });
-  R.climb.spots.push({ id: 'cl_glyph', x: 8, y: 74, w: 7, h: 10, act: 'clue:glyph', msg: '돌비석에 문양과 글자의 짝이 새겨져 있다 — 수첩에 적었다' });
+  R.climb.spots.push({ id: 'cl_glyph', x: 8, y: 74, w: 7, h: 10, act: 'clue:glyph', msg: '돌비석에 문양과 글자의 짝이 새겨져 있다' });
   R.climb.spots.push({ id: 'sundial', x: 82, y: 52, w: 8, h: 12, act: 'puzzle:sundial', label: '☀ 해시계', extra: 1 });
   var GLY = ['🕎', '🐑', '🕊', '🌾', '🔥', '💧', '🍞', '⭐', '📜', '🔔'], SYL = ['정', '결', '예', '식', '법', '모', '세', '날', '차', '매'];
   function glyphMap(S) { var r = rnd(S, 201), g = mix(r, GLY); var m = {}; SYL.forEach(function (s, i) { m[s] = g[i]; }); return m; }

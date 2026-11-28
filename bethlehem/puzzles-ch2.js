@@ -8,8 +8,8 @@
       var col = A.el('div', 'wl-col'), up = A.el('button', 'wl-btn', '▲'), v = A.el('div', 'wl-val'), dn = A.el('button', 'wl-btn', '▼');
       if (sp.label) col.appendChild(A.el('div', 'wl-lbl', sp.label));
       function show() { v.textContent = sp.vals[idx[i]]; }
-      up.onclick = function () { idx[i] = (idx[i] + sp.vals.length - 1) % sp.vals.length; show(); A.tick(); };
-      dn.onclick = function () { idx[i] = (idx[i] + 1) % sp.vals.length; show(); A.tick(); };
+      up.onclick = function () { idx[i] = (idx[i] + 1) % sp.vals.length;   /* 11/28: ▲는 다음 값(숫자는 커짐) */ show(); A.tick(); };
+      dn.onclick = function () { idx[i] = (idx[i] + sp.vals.length - 1) % sp.vals.length; show(); A.tick(); };
       show(); col.appendChild(up); col.appendChild(v); col.appendChild(dn); box.appendChild(col);
     });
     var go = A.el('button', 'btn gold wl-go', label || '열기');
@@ -182,7 +182,8 @@
       if (A.locked('days')) return; var n = +(v[0] + v[1]);
       if (n === 32) { A.closeModal(); A.solve(R); }
       else if (n === 40) A.wrong('days', '그건 태어난 날부터 센 날이에요. 문지기는 이름을 받은 날부터 센다던데…');
-      else if (n === 8 || n === 7 || n === 33) A.wrong('days', '그건 날수의 한 부분이에요');
+      else if (n === 33) A.wrong('days', '33일은 정결 기한 전체예요. 이름을 받은 여드레째가 그 첫날이니, 그날부터 며칠 「뒤」인지 세어 보세요');
+      else if (n === 8 || n === 7) A.wrong('days', '그건 날수의 한 부분이에요');
       else A.wrong('days', '문이 꿈쩍도 하지 않는다');
     }, '문 두드리기');
     A.modal('이름을 받은 날부터 며칠 뒤?', w);

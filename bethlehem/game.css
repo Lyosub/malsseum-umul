@@ -1003,3 +1003,6 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 /* 11/28 두 장의 지도 v4: 뚜껑 6×6 */
 .rm-grid.g6 { grid-template-columns: repeat(6, 1fr); gap: 3px; max-width: 324px; }
 .rm-grid.g6 span { font-size: 19px; }
+
+/* 11/28 광야 지도: 마을은 꿈에서 본 그림으로 */
+.pm-c .pm-ic { font-size: 20px; line-height: 1; }

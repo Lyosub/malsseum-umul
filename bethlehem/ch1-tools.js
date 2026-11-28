@@ -221,7 +221,7 @@
       '「' + c(0) + ' 끈 양 바로 다음 경점이 ' + c(1) + ' 끈 양이다.」',
       '「' + c(2) + ' 끈 양은 새벽 양이 아니다.」'];
   };
-  var logSpot = { id: 'cl_f_log', x: 26, y: 60, w: 7, h: 9, act: 'clue:f_log', msg: '바위에 목자들의 당번 기록이 긁혀 있다 — 수첩에 적었다' };
+  var logSpot = { id: 'cl_f_log', x: 26, y: 60, w: 7, h: 9, act: 'clue:f_log', msg: '바위에 목자들의 당번 기록이 긁혀 있다' };
   Object.defineProperty(logSpot, 'note', { get: function () { return '목자의 당번 기록 — ' + BN.fieldLog().join(' '); }, configurable: true });
   R.field.spots.push(logSpot);
   BN.NEED = BN.NEED || {};

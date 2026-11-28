@@ -71,7 +71,7 @@
   // ════ 그 집 문 · 문 위 기호(낙타 짐 꼬리표) → 빗장 숫자 세기 → 두드리기
   var SYM = ['☉', '☾', '✶', '◆', '♁', '☼', '✚', '⌘'], WORD = ['임', '마', '누', '엘'], DEC = ['임', '마', '누', '엘', '왕', '별', '빛', '길'];
   function symMap(S) { var r = rnd(S, 411), s = mix(r, SYM), m = {}; DEC.forEach(function (d, i) { m[d] = s[i]; }); return m; }
-  var tagSpot = { id: 'cl_tag', x: 64, y: 48, w: 6, h: 9, act: 'clue:tag', msg: '낙타 짐에 박사들의 꼬리표가 매달려 있다 — 수첩에 적었다' };
+  var tagSpot = { id: 'cl_tag', x: 64, y: 48, w: 6, h: 9, act: 'clue:tag', msg: '낙타 짐에 박사들의 꼬리표가 매달려 있다' };
   Object.defineProperty(tagSpot, 'note', { get: function () { var S = BN.ui && BN.ui.S && BN.ui.S(); if (!S) return ''; var m = symMap(S); return '낙타 짐 꼬리표(박사들의 기호) — ' + DEC.map(function (d) { return m[d] + '=' + d; }).join(' · '); }, configurable: true });
   R.nightroad.spots.push(tagSpot);
   R.door.spots.push({ id: 'lintel', x: 33, y: 14, w: 22, h: 8, act: 'puzzle:lintel', label: '✦ 문 위 기호', extra: 1 });

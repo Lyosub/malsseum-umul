@@ -208,7 +208,7 @@
       var col = A.el('div', 'wl-col'), up = A.el('button', 'wl-btn', '▲'), v = A.el('div', 'wl-val'), dn = A.el('button', 'wl-btn', '▼');
       col.appendChild(A.el('div', 'wl-lbl', lb[0] + ' ' + lb[1]));
       function sh() { v.textContent = VALS[idx[i]]; }
-      up.onclick = function () { idx[i] = (idx[i] + VALS.length - 1) % VALS.length; sh(); A.tick(); }; dn.onclick = function () { idx[i] = (idx[i] + 1) % VALS.length; sh(); A.tick(); };
+      up.onclick = function () { idx[i] = (idx[i] + 1) % VALS.length; sh(); A.tick(); }; dn.onclick = function () { idx[i] = (idx[i] + VALS.length - 1) % VALS.length; sh(); A.tick(); };   /* 11/28: ▲는 큰 쪽으로 */
       sh(); col.appendChild(up); col.appendChild(v); col.appendChild(dn); cols.appendChild(col);
     });
     w.appendChild(cols);

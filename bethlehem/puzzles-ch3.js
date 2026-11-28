@@ -7,8 +7,8 @@
       var col = A.el('div', 'wl-col'), up = A.el('button', 'wl-btn', '▲'), v = A.el('div', 'wl-val'), dn = A.el('button', 'wl-btn', '▼');
       if (sp.label) col.appendChild(A.el('div', 'wl-lbl', sp.label));
       function show() { v.textContent = sp.vals[idx[i]]; }
-      up.onclick = function () { idx[i] = (idx[i] + sp.vals.length - 1) % sp.vals.length; show(); A.tick(); };
-      dn.onclick = function () { idx[i] = (idx[i] + 1) % sp.vals.length; show(); A.tick(); };
+      up.onclick = function () { idx[i] = (idx[i] + 1) % sp.vals.length;   /* 11/28: ▲는 다음 값(숫자는 커짐) */ show(); A.tick(); };
+      dn.onclick = function () { idx[i] = (idx[i] + sp.vals.length - 1) % sp.vals.length; show(); A.tick(); };
       show(); col.appendChild(up); col.appendChild(v); col.appendChild(dn); box.appendChild(col);
     });
     var go = A.el('button', 'btn gold wl-go', label || '맞추기');

@@ -11,7 +11,7 @@
   var LOOK = '아직은 풀 수 없다. 이 방을 더 꼼꼼히 살펴보아라.';
 
   // 순서 맞추기(찾은 조각을 차례로 누르기) — 천군 노래·시므온 찬송·여관 글자에 같이 쓴다
-  function order(A, title, intro, parts, key, onDone) {
+  function order(A, title, intro, parts, key, onDone, alts) {   // alts: 함께 받을 다른 차례(글자 이은 말)
     var r = A.seedRnd(parts.length * 7 + title.length), sh = parts.map(function (p, i) { return i; }), got = [], w = A.el('div', 'ord-pz');
     for (var i = sh.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)), t = sh[i]; sh[i] = sh[j]; sh[j] = t; }
     function draw() {
@@ -22,7 +22,8 @@
     }
     function check() {
       if (got.length < parts.length) return;
-      if (got.every(function (k, i) { return k === i; })) { A.sfx('ok'); setTimeout(function () { A.closeModal(); onDone(); }, 500); }
+      var said = got.map(function (k) { return parts[k]; }).join('');
+      if (said === parts.join('') || (alts || []).indexOf(said) >= 0) { A.sfx('ok'); setTimeout(function () { A.closeModal(); onDone(); }, 500); }
       else { if (A.locked(key)) return; A.wrong(key, '차례가 맞지 않는다'); got = []; draw(); }
     }
     draw(); A.modal(title, w);
@@ -31,7 +32,7 @@
 
   // ════ 1장 ════
   // 나사렛 길: 밤 지도 + 해 무늬를 찾아야 지도 상자(걷기 → 지도 겹치기)
-  addClues('road', [['road_map', 79, 57, 6, 8, '등잔 받침 밑에 접힌 지도', '나사렛 길 — 등잔 밑에서 찾은 「밤 지도」. 별 여덟이 찍혀 있고, 그중 여섯 아래에 작은 빛점이 하나에서 여섯까지 달려 있다. 「낮 지도에 강과 산을 맞춰 겹쳐라. 빛점 없는 별은 따르지 마라.」'], ['road_sun', 93, 25, 5, 10, '기둥에 새긴 나침반 그림', '나사렛 길 — 기둥의 나침반 그림: 「지도의 화살표는 지도 위에서 본 방향이다. 나침반의 붉은 북쪽을 보고 동서남북으로 고쳐 읽어라. 위가 북쪽이라고 믿지 마라.」']]);
+  addClues('road', [['road_map', 79, 57, 6, 8, '등잔 받침 밑에 접힌 지도', '나사렛 길 — 등잔 밑에서 찾은 「밤 지도」. 별 여덟이 찍혀 있고, 그중 여섯 아래에 작은 빛점이 하나에서 여섯까지 달려 있다. 「낮 지도에 강과 산을 맞춰 겹쳐라. 빛점 없는 별은 따르지 마라.」'], ['road_sun', 93, 25, 5, 10, '기둥에 새긴 나침반 그림', '나사렛 길 — 기둥의 나침반 그림: 「지도에서 간 쪽은 지도 위에서 본 방향일 뿐이다. 나침반의 붉은 북쪽을 보고 동서남북으로 고쳐 읽어라. 위가 북쪽이라고 믿지 마라.」']]);
   need('walk', ['road_map', 'road_sun'], LOOK);
   // 여관: 손님 쪽지 여섯이 마당 곳곳에
   addClues('inn', [['inn1', 52, 13, 5, 7, '난간에 걸린 쪽지', '손님 쪽지 — 갈릴리 상인: 「누가복음 5장 1~2절의 그 물가에서 그물을 다루다 왔소. 그 물에서 나는 것이 그려진 방!」'], ['inn2', 79, 18, 5, 7, '별 간판 뒤 쪽지', '손님 쪽지 — 로마 세리: 「저 갈릴리 상인과 같은 층으로 주시오.」'], ['inn3', 46, 47, 5, 7, '문틈에 낀 쪽지', '손님 쪽지 — 목수 형제(둘): 「마태복음 20장 1절의 품꾼처럼 일하던 곳이 생각나는 방.」'], ['inn4', 55, 62, 5, 7, '항아리 밑 쪽지', '손님 쪽지 — 나이 든 과부: 「계단은 못 올라가요. 시편 52편 8절처럼 살고 싶은데…」'], ['inn5', 84, 40, 5, 7, '계단 위 쪽지', '손님 쪽지 — 제사장 가족(넷): 「레위기 12장 8절에 나오는 예물이 그려진 방이면 좋겠소. 우리는 넷이오.」'], ['inn6', 24, 38, 5, 7, '처마 등잔 옆 쪽지', '손님 쪽지 — 레위인 노래꾼: 「방이 없으면 제사장님 가족과 같은 방도 괜찮습니다.」']]);
@@ -106,7 +107,7 @@
   var diff0 = BN.PZ.diff;
   BN.PZ.diff = function (R, A) {
     var S = A.S(); S.f4 = S.f4 || {};
-    var solve0 = A.solve, A2 = Object.assign({}, A, { solve: function () { A.toast('달라진 곳마다 숨은 글자 하나 — 「' + SYL.join(' ') + '」'); setTimeout(function () { order(A, '흩어진 글자 일곱', '달라진 곳에서 나온 글자들이다. 그 가족이 머무는 곳을 말하는 대로 이어 보세요.', PHRASE, 'diff', function () { solve0(R); }); }, 900); } });
+    var solve0 = A.solve, A2 = Object.assign({}, A, { solve: function () { A.toast('달라진 곳마다 숨은 글자 하나 — 「' + SYL.join(' ') + '」'); setTimeout(function () { order(A, '흩어진 글자 일곱', '달라진 곳에서 나온 글자들이다. 그 가족이 머무는 곳을 말하는 대로 이어 보세요.', PHRASE, 'diff', function () { solve0(R); }, ['불켜진골목끝집']); }, 900); } });
     if ((S.f4.diff || []).length >= 7) return A2.solve(R);
     diff0(R, A2);
     function label() { document.querySelectorAll('.diff-pz .df-mark').forEach(function (m) { if (m.dataset.t) return; var k = (BN.DIFF4 || []).findIndex(function (d) { return m.style.left === d[1] + '%' && m.style.top === d[2] + '%'; }); if (k >= 0) { m.dataset.t = 1; m.textContent = SYL[k]; } }); }
@@ -169,7 +170,7 @@
   }
   function recNote(r) { return r[0] + ' — ' + r[1].map(function (l) { return l[0] + ': ' + l[1]; }).join(' · '); }
   // 3장 회의실: 궁 물시계(2시간 느림) ↔ 성 시각 — 대제사장들이 나간 뒤 손님을 「가만히」 들인 때(마 2:7)
-  var X3G = ['궁 문지기 일지 · 궁 물시계', [['8시', '동방 손님들의 낙타 방울이 들림'], ['10시', '대제사장과 서기관들이 회의실에서 나감'], ['11시', '쪽문 빗장을 열고 손님들을 들임']]];
+  var X3G = ['궁 문지기 일지 · 궁 물시계', [['8시', '동방 손님들의 낙타 방울이 들림'], ['10시', '대제사장과 서기관들이 회의실에서 나감'], ['11시', '빗장을 열고 손님들을 가만히 들임']]];
   var X3W = ['성 망대 파수꾼 일지 · 성 시각', [['10시', '동방에서 온 낙타 방울, 궁 쪽으로'], ['11시', '망대 등잔을 갈아 끼움']]];
   addClues('council', [['xt_gate', 50, 60, 5, 7, '탁자 밑에 떨어진 궁 문지기 일지', recNote(X3G)]]);
   addClues('archive', [['xt_watch', 66, 52, 5, 8, '항아리 곁에 꽂힌 망대 일지 사본', recNote(X3W)]]);

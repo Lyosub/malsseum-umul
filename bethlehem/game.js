@@ -173,6 +173,8 @@
   function fitMin() { return fitK(false); }
   function clampView() { var vw = innerWidth, vh = innerHeight, k = view.k = Math.min(Math.max(view.k, fitMin()), Math.max(fitK(true), fitMin()) * 2.2); view.x = W * k <= vw ? (vw - W * k) / 2 : Math.min(0, Math.max(vw - W * k, view.x)); view.y = H * k <= vh ? (vh - H * k) / 2 : Math.min(0, Math.max(vh - H * k, view.y)); var mw = $('mapWorld'); mw.style.transform = 'translate(' + view.x + 'px,' + view.y + 'px) scale(' + k + ')'; mw.style.setProperty('--inv', (0.9 / k).toFixed(3)); }
   function enterMap() { if (window.BN3D) BN3D.unmount();
+    // 11/28 블라인드 풀이: 장이 바뀌는 사이 「지도로」를 누르면, 지도에 없는 다음 장 첫 방(여드레째 등)으로 못 가고 잠긴 지도에 갇혔다 → 첫 방으로 바로 보낸다
+    var CH0 = (BN.CHAPTERS || {})[S.ch || 1]; if (CH0 && CH0.start && !S.rooms[CH0.start] && BN.ROOMS[CH0.start] && !BN.SPOTS.some(function (sp) { return sp.id === CH0.start && (sp.ch || 1) === (S.ch || 1); })) return enterRoom(CH0.start);
     var CH = (BN.CHAPTERS || {})[S.ch || 1] || { title: '그 밤', map: 'A' }, MP = (BN.MAPS || {})[CH.map] || { img: 'img/maps/mapA@2x.webp', bgm: 'bgm02_village' };
     if ($('mapImg').getAttribute('src') !== MP.img) { $('mapImg').src = MP.img; enterMap.once = false; } setBlur($('mapView'), MP.img);
     show('map'); music(MP.bgm); $('hudCh').textContent = (S.ch || 1) + '장 「' + CH.title + '」';
@@ -283,7 +285,7 @@
     else if (a[0] === 'puzzle') { if (PUZZLES[a[1]] || PZ_EXTRA[a[1]]) (PUZZLES[a[1]] || PZ_EXTRA[a[1]])(R); else BN.PZ[a[1]](R, API); }
     else if (a[0] === 'room') { if (sp.lock && !BN.used(sp.id, sp.lock)) return talk(sp.lockSay || [['narr', null, '문이 잠겨 있다.']]); enterRoom(a[1]); }
     else if (a[0] === 'sheep') sheepBleat2(+a[1], el);
-    else if (a[0] === 'tile') { S.tiles = S.tiles || []; if (S.tiles.indexOf(a[1]) < 0) { S.tiles.push(a[1]); save(); sfx('ok'); toast('🧩 ' + sp.msg + ' (「' + a[1] + '」 · ' + S.tiles.length + '/6)'); el.remove(); } }
+    else if (a[0] === 'tile') { S.tiles = S.tiles || []; if (S.tiles.indexOf(a[1]) < 0) { S.tiles.push(a[1]); save(); sfx('ok'); toast('🧩 ' + sp.msg + ' (「' + a[1] + '」 · ' + S.tiles.length + '/9)'); el.remove(); } }
     else if (a[0] === 'scrap') { S.scraps = S.scraps || []; if (S.scraps.indexOf(a[1]) < 0) { S.scraps.push(a[1]); save(); sfx('ok'); toast('📜 ' + sp.msg + ' (' + S.scraps.length + '/3)'); el.remove(); } }
     else if (a[0] === 'card') { S.cards = S.cards || []; if (S.cards.indexOf(a[1]) < 0) { S.cards.push(a[1]); save(); sfx('ok'); toast('📜 ' + (sp.msg || '명부 조각을 찾았어요') + ' (「' + a[1] + '」)'); el.remove(); } }
     else if (a[0] === 'pick') { S.taken = S.taken || []; if (S.taken.indexOf(sp.id) < 0) { S.taken.push(sp.id); if (S.items.indexOf(a[1]) < 0) S.items.push(a[1]); save(); sfx('ok'); toast((sp.msg || '') + ' — 「' + BN.ITEMS[a[1]][0] + '」을(를) 가방에 넣었어요'); el.remove(); } }
@@ -513,8 +515,8 @@
     w.innerHTML = '<div style="position:relative;border-radius:12px;overflow:hidden;touch-action:none" id="wlBox"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.55)"><div id="wlBase">' + TXT + '</div>' +
       '<canvas id="wlDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas>' +
       (glass ? '<div id="wlGlass" class="wl-glass"><div id="wlIn" class="wl-in"><div class="wl-blur"><img src="img/places/well.webp" style="width:100%;display:block;filter:brightness(.62)">' + TXT + '</div><canvas id="wlInDark" style="position:absolute;inset:0;width:100%;height:100%"></canvas></div></div><div id="wlRim" class="wl-rim"></div>' : '') + '</div>' +
-      (glass ? '<div class="wl-foc"><span>가까이</span><input type="range" id="wlFoc" min="0" max="100" value="' + (FOC > 50 ? 4 : 96) + '"><span>멀리</span></div><p class="gen-help" style="margin:2px 0 0;text-align:center">💎 수정 조각을 손가락으로 끌어 벽에 대 보세요</p>' : '') +
-      '<div class="wl-notes">' + (MIR ? '<p>🪞 물에 비쳐 <b>좌우가 뒤집힌</b> 글씨예요 — 청동 거울을 우물에 쓰면 바로 보여요(성문 아치의 궤짝).</p>' : '') + (BN.WELL_TXT ? '<p>🔐 바로 읽어도 <b>뒤틀린 글자</b>예요 — 성문 명부에 가림판을 대어 읽은 말과, 우물 테두리의 자모 차례로 풀어요.</p>' : '') + '</div>' +
+      (glass ? '<div class="wl-foc"><span>가까이</span><input type="range" id="wlFoc" min="0" max="100" value="' + (FOC > 50 ? 4 : 96) + '"><span>멀리</span></div><p class="gen-help" style="margin:2px 0 0;text-align:center">🪔 깜깜한 곳을 손가락으로 <b>문지르면</b> 등잔 빛이 비쳐요 · 💎 수정 조각은 끌어서 글씨 위에 대요</p>' : '') +
+      '<div class="wl-notes">' + (glass ? '' : '<p>🪔 깜깜한 곳을 손가락으로 <b>문지르면</b> 등잔 빛이 비쳐요.</p>') + (MIR ? '<p>🪞 물에 비쳐 <b>좌우가 뒤집힌</b> 글씨예요 — 청동 거울을 우물에 쓰면 바로 보여요(성문 아치의 궤짝).</p>' : '') + (BN.WELL_TXT ? '<p>🔐 바로 읽어도 <b>뒤틀린 글자</b>예요 — 성문 명부에 가림판을 대어 읽은 말과, 우물 테두리의 자모 차례로 풀어요.</p>' : '') + '</div>' +
       '<div id="wlRope" style="margin-top:6px">' + (BN.used('wellin', 'bucket') ? '<input type="range" id="wlLen" min="1" max="14" value="1" style="width:100%"><p style="text-align:center;font-size:20px;margin:4px 0"><b id="wlV">1</b> 규빗</p><button class="btn gold block" id="wlUp">끌어올리기</button>' : '<p class="gen-help">물을 길을 두레박이 걸려 있지 않다. 줄 맨 두레박을 우물에 걸어야 한다.</p>') + '</div>';
     modal('우물 안', w);
     var cv = $('wlDark'), box = $('wlBox');
@@ -748,7 +750,7 @@
   function nextChapter(m) {
     var C = (BN.CHAPTERS || {})[m];
     if (!C) { toast(m + '장은 준비 중이에요 — 곧 열려요'); return enterMap(); }
-    S.ch = m; save();
+    S.ch = m; save(); $('btnBack').hidden = true;   /* 넘어가는 동안 「지도로」를 숨긴다 */
     var card = el('div', 'ch-card', '<p class="eyebrow">✦ ' + m + '장</p><h2>' + C.title + '</h2>'); document.body.appendChild(card);
     sfx('chapter'); setTimeout(function () { card.classList.add('out'); }, 2200); setTimeout(function () { card.remove(); if (C.start && !S.rooms[C.start]) enterRoom(C.start); else enterMap(); }, 2900);
   }

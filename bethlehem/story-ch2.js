@@ -6,7 +6,7 @@
   BN.CHARS.anna = { name: '안나', face: 'anna' };
   BN.CHARS.priest = { name: '성전 문지기', face: 'priest' };
   BN.ITEMS.doves = ['산비둘기 한 쌍', 'img/items/doves.webp', '제물로 드릴 비둘기. 새장을 흔들지 말 것.'];
-  BN.ITEMS.weights = ['세겔 추', 'img/items/weights.webp', '1 · 2 · 4 · 8 · 16 세겔'];
+  BN.ITEMS.weights = ['세겔 추', 'img/items/weights.webp', '1 · 3 · 9 · 27 세겔 — 저울 어느 접시에 올려도 된다'];
 
   // 장 정보: 지도와 시작 방
   BN.CHAPTERS = BN.CHAPTERS || {};

@@ -136,7 +136,7 @@
     if (C.f_log2) out = out.concat(all.slice(3));
     return out;
   };
-  R.field.spots.forEach(function (sp) { if (sp.id === 'cl_f_log') { sp.msg = '바위 밑에 찢긴 당번 기록 반쪽이 끼어 있다 — 수첩에 적었다'; Object.defineProperty(sp, 'note', { get: function () { return '목자의 당번 기록(바위의 반쪽) — ' + (BN.fieldLog ? BN.fieldLog().slice(0, 3).join(' ') : ''); }, configurable: true }); } });
+  R.field.spots.forEach(function (sp) { if (sp.id === 'cl_f_log') { sp.msg = '바위 밑에 찢긴 당번 기록 반쪽이 끼어 있다'; Object.defineProperty(sp, 'note', { get: function () { return '목자의 당번 기록(바위의 반쪽) — ' + (BN.fieldLog ? BN.fieldLog().slice(0, 3).join(' ') : ''); }, configurable: true }); } });
   R.field.spots.push({ id: 'gilead', x: 50, y: 104, fig: 'gilead_side', h: 46, act: 'puzzle:halflog', extra: 1 });
   BN.PZ.halflog = function (Rm, A) {
     var S = A.S(); S.clues = S.clues || {};

@@ -96,7 +96,7 @@
     if (k === 'well' && has('mirror') && !used('wellin', 'mirror')) return '물에 비친 글씨는 좌우가 뒤집혀 보여요 — 청동 거울을 손에 들고 우물 안을 눌러요.';
     if (k === 'stable' && !used('search', 'lamp')) return '굴 안이 깜깜해요 — 켜진 등잔을 「손에 들기」 → 굴을 누르세요.';
     if (n && n[0] < n[1]) return '이곳을 뒤져 단서를 더 찾으세요 — ' + n[0] + ' / ' + n[1];
-    return n ? ((BN.QSTEP || {})[k] || '단서를 다 모았어요. 이제 풀 차례예요.') : '이곳을 살펴보고 문제를 푸세요.';
+    return n ? ((BN.QSTEP || {})[k] || '단서를 다 모았어요. 이제 풀 차례예요.') : (function () { var hw = (BN.HOW || {})[k]; if (hw) { var one = String(hw).replace(/<[^>]+>/g, '').split(/(?<=[.요다])\s/)[0]; if (one) return one; } return '화면을 옆으로 끌어 둘러보고, 반짝이는 곳이나 사람을 눌러 보세요.'; })();   // 11/28: 「이곳」이 어디인지 모호했다
   }
   BN.questNow = function () { var c = current(); return c ? { k: c, step: nextStep(c) } : null; };   /* 길르앗이 「아 맞다」 하고 지금 할 일을 귀띔할 때 */
   function progress() { var S = U.S(), L = order(); return [L.filter(function (k) { return S.rooms[k]; }).length, L.length]; }

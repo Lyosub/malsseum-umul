@@ -65,6 +65,8 @@
   };
   why('칙령 초안', '서기관 책상 위에 헤롯의 칙령 초안이 놓여 있다. 낱말 사이에 다른 말이 숨어 있다.', '목록 낱말을 다 지우면 남는 글자가 있겠지. 헤롯이 숨기려던 게 그거 아닐까?');
   gate('shelf', 'edict', [['gilead', 1, '서가가 높아서… 그 전에 책상 위 칙령 초안이 자꾸 눈에 걸려요.', '(📜 칙령 초안)']]);
+  // 11/28 블라인드 풀이: 꼬리표 작은 글씨(읽는 법)를 안 읽어도 서가가 풀려 문제 하나가 그냥 지나갔다 → 서가 전에 꼭 읽게
+  (function () { var o = BN.PZ.shelf; BN.PZ.shelf = function (Rm, A) { var S = A.S(); if (!(S.f3 && S.f3.tiny)) return A.talk([['asaph', 0, '어느 두루마리를 꺼내야 하는지는 독서대의 이상한 글에 있을 게다. 그 글을 읽는 법부터 찾아라.'], ['gilead', 2, '(소곤) 왼쪽 아래 바구니 두루마리에 꼬리표가 달려 있었어요. 글씨가 엄청 작던데…', '(💎 수정 조각)']]); return o(Rm, A); }; })();
 
   // ════ 회의실 · 바닥 무늬 돌 돌리기 → 반지 함 열쇠
   R.council.spots.forEach(function (sp) { if (sp.id === 'mosaic') { sp.act = 'puzzle:mosaic'; sp.label = '◈ 바닥 무늬'; sp.extra = 1; } });

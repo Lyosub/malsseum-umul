@@ -187,16 +187,17 @@
   BN.PATH5 = PG;
   function pbad(r, c) { var ch = PG[r][c]; if (ch === '~' || ch === '^' || ch === 'v') return true; return [[0, 1], [1, 0], [0, -1], [-1, 0]].some(function (d) { var rr = r + d[0], cc = c + d[1]; return rr >= 0 && rr < 10 && cc >= 0 && cc < 8 && PG[rr][cc] === 'v'; }) && 'BHSNEw'.indexOf(ch) < 0; }
   var TOWN = { B: '베들레헴', H: '헤브론', S: '브엘세바', N: '애굽 시내', E: '애굽' };
+  var TICON = { B: '🏘', H: '⛺', S: '🏜', N: '🌊', E: '🏛' };   // 11/28: 지도엔 꿈에서 본 그림만 — 「꿈에 본 길」에서 외운 것을 쓴다
   BN.PZ.route = function (R, A) {
     var path = [], drawing = false, w = A.el('div', 'route-pz'), shook = 0;
     function cellAt(x, y) { var el = document.elementFromPoint(x, y); return el && el.closest && el.closest('.pm-c'); }
     function draw() {
-      w.innerHTML = '<p class="tiny-note howto">베들레헴에서 손가락을 떼지 말고 애굽까지 길을 그으세요. 마을은 <b>가까운 곳부터</b> 들러요. 바다·산·순찰 마을(🏮)과 그 곁(붉은 칸)은 못 지나요. <b>물 부대는 네 걸음치</b> — 우물(💧)을 지나면 다시 가득 차요. 물이 떨어지면 나귀가 쓰러져요.</p><div class="pm-legend"><span>헤브론 — 아브람이 장막을 옮긴 곳(창 13:18)</span><span>브엘세바 — 아브라함이 판 우물이 있는 곳(창 21:30-31) · 여기서도 물을 채워요</span><span>애굽 시내 — 남쪽 경계(민 34:5)</span></div><p class="pm-water" id="pmWater"></p>';
+      w.innerHTML = '<p class="tiny-note howto">베들레헴에서 손가락을 떼지 말고 애굽까지 길을 그으세요. 마을은 <b>가까운 곳부터</b> 들러요. 바다·산·순찰 마을(🏮)과 그 곁(붉은 칸)은 못 지나요. <b>물 부대는 네 걸음치</b> — 우물(💧)을 지나면 다시 가득 차요. 물이 떨어지면 나귀가 쓰러져요. 지도에는 땅 이름 없이 <b>꿈에서 본 그림</b>만 있어요 — 어느 그림이 어느 땅이었는지 떠올려요.</p><div class="pm-legend"><span>헤브론 — 아브람이 장막을 옮긴 곳(창 13:18)</span><span>브엘세바 — 아브라함이 판 우물이 있는 곳(창 21:30-31) · 여기서도 물을 채워요</span><span>애굽 시내 — 남쪽 경계(민 34:5)</span></div><p class="pm-water" id="pmWater"></p>';
       var g = A.el('div', 'pm-grid');
       for (var r = 0; r < 10; r++) for (var c = 0; c < 8; c++) {
         var ch = PG[r][c], k = r + ',' + c, inP = path.some(function (p) { return p[0] === r && p[1] === c; });
         var cls = 'pm-c' + (ch === '~' ? ' sea' : ch === '^' ? ' mt' : ch === 'v' ? ' vil' : ch === 'w' ? ' well' : pbad(r, c) ? ' seen' : TOWN[ch] ? ' town' : '') + (inP ? ' on' : '');
-        var d = A.el('div', cls, ch === 'v' ? '🏮' : ch === '^' ? '⛰' : ch === 'w' ? '💧' : TOWN[ch] ? '<small>' + TOWN[ch] + (ch === 'S' ? ' 💧' : '') + '</small>' : ''); d.dataset.rc = k; g.appendChild(d);
+        var d = A.el('div', cls, ch === 'v' ? '🏮' : ch === '^' ? '⛰' : ch === 'w' ? '💧' : TOWN[ch] ? '<b class="pm-ic">' + TICON[ch] + '</b>' + (ch === 'S' ? '<small>💧</small>' : '') : ''); d.dataset.rc = k; g.appendChild(d);
       }
       w.appendChild(g);
       g.addEventListener('pointerdown', function (e) { var t = cellAt(e.clientX, e.clientY); if (!t) return; var rc = t.dataset.rc.split(',').map(Number); if (PG[rc[0]][rc[1]] !== 'B') return A.toast('베들레헴에서 시작하세요'); path = [rc]; drawing = true; g.setPointerCapture(e.pointerId); paint(); });
