@@ -1005,4 +1005,6 @@ body.holding .room-stage .rspot.area { outline: 1.5px dashed rgba(255, 226, 150,
 .rm-grid.g6 span { font-size: 19px; }
 
 /* 11/28 광야 지도: 마을은 꿈에서 본 그림으로 */
-.pm-c .pm-ic { font-size: 20px; line-height: 1; }
+.pm-c .pm-ic { font-size: 22px; line-height: 1; filter: drop-shadow(0 0 1px #2a1a08) drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+.pm-c.town:not(.on) { background: #5c3b1e; box-shadow: inset 0 0 0 2px #e8b75a; }
+.pm-c.town small { color: #fff; }

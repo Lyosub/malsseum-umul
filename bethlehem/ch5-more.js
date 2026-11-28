@@ -80,7 +80,7 @@
   gate('route', 'vision', [['asaph', 0, '갈림길이 많구나. 꿈에서 본 길을 떠올려야 한다 — 요셉의 집 들보 곁에서 본 그것 말이다.', '(✨ 꿈에 본 길 — 요셉의 꿈 장소)']]);
 
   // ════ 떠날 채비: 물부대 나누기(10 · 7 · 3 → 5 · 5)
-  R.pack.spots.push({ id: 'skins', x: 94, y: 76, w: 10, h: 20, act: 'puzzle:skins', label: '💧 물부대', extra: 1 });   // 11/28: 짐 「벽에 걸린 물부대」 자리와 겹치지 않게 오른쪽 바닥으로
+  R.pack.spots.push({ id: 'skins', x: 67, y: 76, w: 9, h: 14, act: 'puzzle:skins', label: '💧 물부대', extra: 1 });   // 11/28: 짐 「벽에 걸린 물부대」 자리와 겹치지 않게 베틀 아래 바구니로(길르앗과도 안 겹치게)
   R.pack.spots.forEach(function (sp) { if (sp.id === 'cl_pk_lamp') { sp.x = 53; sp.y = 48; } });   // 탁자 위 등잔 그림 자리
   BN.PZ.skins = function (Rm, A) {
     var S = A.S(), F = g5(S), cap = [10, 7, 3], v = [10, 0, 0], sel = null, n = 0, w = A.el('div', 'gen-wrap');
